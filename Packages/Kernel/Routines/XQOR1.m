@@ -1,11 +1,11 @@
-XQOR1 ; SLC/KCM - Main Unwinding Loop ;08/24/98  12:35
+XQOR1 ; SLC/KCM - Main Unwinding Loop ;2017-06-08  4:47 PM
  ;;8.0;KERNEL;**48,56,94**;Jul 10, 1995
 LOOP ;From: EN^XQOR
  I "QOLD"[$P(^TMP("XQORS",$J,XQORS,"FLG"),"^"),'$D(^TMP("XQORS",$J,0,"CTXT","ADD")) D ENTRY^XQORO G:$D(XQORQUIT)!$D(XQORPOP)!$D(DIROUT)!$D(DTOUT) EXCT
  D EACH G:$D(XQORQUIT)!$D(XQORPOP)!$D(DIROUT)!$D(DTOUT) EXCT
  ; resource usage monitor
  D:$D(XQXFLG)[0 ABT^XQ12 I $P(XQXFLG,U,2) D
- .I $D(^TMP("XQORS",$J,XQORS,"REF")) N ORX S ORX=$P(@(^("REF")_"0)"),"^") D RP^%ZOSVKR($S($D(XQY0):$P(XQY0,U),1:"")_"^"_ORX)
+ .I $D(^TMP("XQORS",$J,XQORS,"REF")) N ORX S ORX=$P(@(^("REF")_"0)"),"^") ; D RP^%ZOSVKR($S($D(XQY0):$P(XQY0,U),1:"")_"^"_ORX)
  I $D(@(^TMP("XQORS",$J,XQORS,"REF")_"20)"))'[0 S Y=^(20) I $L(Y) N X X Y S:$D(X)'[0 ^TMP("XQORS",$J,XQORS,"X")=X
  I $D(XQORQUIT)!$D(XQORPOP)!$D(DIROUT)!$D(DTOUT) G EXAT
  I $D(XQORFLG) S:$D(XQORFLG("PS")) $P(^TMP("XQORS",$J,XQORS,"FLG"),"^",2)=+XQORFLG("PS") S:$D(XQORFLG("SH")) $P(^TMP("XQORS",$J,XQORS,"FLG"),"^",5)=+XQORFLG("SH") K XQORFLG
