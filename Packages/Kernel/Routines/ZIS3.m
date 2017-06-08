@@ -1,9 +1,7 @@
-%ZIS3 ;SFISC/AC,RWF -- DEVICE HANDLER(DEVICE TYPES & PARAMETERS) ; 3/6/17 11:44am
- ;;8.0;KERNEL;**18,36,69,104,391,440,499,546**;JUL 10, 1995;Build 12
+%ZIS3 ;SFISC/AC,RWF -- DEVICE HANDLER(DEVICE TYPES & PARAMETERS) ;06/09/10  17:47
+ ;;8.0;KERNEL;**18,36,69,104,391,440,499,546**;JUL 10, 1995;Build 9
+ ;Per VHA Directive 2004-038, this routine should not be modified
  ;Call with a Go from ^%ZIS2
- ; Original Routine authored by US Dept of Veteran Affairs
- ; MARGN tag modified by DSS 2016
- ;
  I %ZIS'["T",$G(^%ZIS(1,+%E,"POX"))]"" D XPOX^ZISX(%E) ;Pre-Open
  I $D(%ZISQUIT) S POP=1 K %ZISQUIT
  S %ZISCHK=1
@@ -38,19 +36,6 @@ MARGN ;Get the margin and page length
  I %A?1A.ANP D SUBIEN(.%A,1) I $D(^%ZIS(2,%A,1)) K %Z91 D ST(1) S %Y=$P(%Y,";",2,9),%ZISMY=$P(%ZISMY,";",2,9) G MARGN
  I %A>3 S $P(%Z91,"^")=$S(%A>255:255,1:+%A)
  I $P(%Y,";",2) S $P(%Z91,"^",3)=+$S($P(%Y,";",2)>65534:65534,1:$P(%Y,";",2)) ;Cache fix for $Y#65535 wrap
- ; DSS/SMH BEGIN MODS - Attempt to get the best margins for the terminal
- ; %ZIS'[0 to not pick up Null Device; %ZISIOST must be a terminal; User shouldn't have specified actual margins.
- I $T(AUTOMARG^%ZIS4)]"",%ZTYPE["TRM",%ZIS'[0,$E(%ZISIOST,1,2)="C-",'($P(%Y,";",1)!$P(%Y,";",2)) D
- . N RMPL,RM,PL S RMPL=$$AUTOMARG^%ZIS4() ; Query terminal for best margins.
- . I 'RMPL QUIT               ; NB: Not always possible to query the terminal, esp if we do it multiple times in succession
- . S RM=$P(RMPL,"^",1)        ; Right Margin (normally IOM)
- . S PL=$P(RMPL,"^",2)        ; Page Length  (normally IOSL)
- . S %A=RM,$P(%Z91,"^")=$S(%A>255:255,1:+%A),$P(%Y,";")=RM ; copy of line above
- . S $P(%Y,";",2)=PL,$P(%Z91,"^",3)=+$S($P(%Y,";",2)>65534:65534,1:$P(%Y,";",2)) ; ditto
- . ; %ZIS="T" taskman (I think?), %ZISB means no "N" in %ZIS. IOP and IO("Q") are well known.
- . I %ZIS'["T",%ZISB=1,'$D(IOP),'$D(IO("Q")) D
- .. W "   Terminal Size: "_$P(%Z91,"^")_" x "_$P(%Z91,"^",3)
- ; DSS/SMH END MODS
  ;
 ALTP I '$D(IO("P")) Q:%A>3  G ASKMAR:%ZTYPE["TRM" Q
  S %X=$F(IO("P"),"M") I %X S %A=+$E(IO("P"),%X,99),$P(%Z91,"^")=$S(%A>255:255,1:%A)

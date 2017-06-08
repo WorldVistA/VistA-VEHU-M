@@ -1,8 +1,6 @@
-%ZIS4 ;SFISC/RWF,AC - DEVICE HANDLER SPOOL SPECIFIC CODE (Cache) ; 3/6/17 11:46am
- ;;8.0;KERNEL;**34,59,69,191,278,293,440,499,524,546,543,584**;Jul 10, 1995;Build 12
- ;Per VHA Directive 2004-038, this routine should not be modified
- ; Original Routine authored by US Dept of Veteran Affairs
- ; $$AUTOMARG tag new by DSS 2016
+%ZIS4 ;SFISC/RWF,AC - DEVICE HANDLER SPOOL SPECIFIC CODE (Cache) ;06/16/14  13:23
+ ;;8.0;KERNEL;**34,59,69,191,278,293,440,499,524,546,543,584,638**;Jul 10, 1995;Build 15
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
 OPEN ;Called for TRM devices
  G OPN2:$D(IO(1,IO))
@@ -39,20 +37,18 @@ O1 N $ET S $ET="G OPNERR^%ZIS4"
  O @%A S:'$T&(%A?.E1":".N) POP=1 S:'POP IO(1,IO)=""
  S IO("ERROR")=""
  Q
- ;Version 3 used ip/port, Version 4 has ip:port|xx
-ZIO I $D(IO("IP")),$D(IO("ZIO")) Q  ;p499,p524
- N %,%1 S %=$ZIO,%1=$$VERSION^%ZOSV
- S IO("ZIO")=$S(%1<4:$I,1:$ZIO),%1=$S(%["/":"/",1:":")
- ;Drop prefix
- S:%["|TNT|" %=$E(%,6,999) S:%["|TNA|" %=$E(%,6,999)
+ZIO  ;Obtain Client IP and Node Name if available
+ I $D(IO("IP")),$D(IO("ZIO")) Q  ;p499,p524
+ N PROCESS
+ S IO("ZIO")=$ZIO
  ;Get IP name or number
- S:$P(%,%1)["." IO("IP")=$P(%,%1)
  I $$OS^%ZOSV="VMS",$G(IO("IP"))="" S IO("IP")=$P($ZF("TRNLNM","SYS$REM_NODE"),":") ;For SSH, p499
  I $$OS^%ZOSV="UNIX",$G(IO("IP"))="" S IO("IP")=$P($SYSTEM.Util.GetEnviron("SSH_CLIENT")," ") ;For SSH, p543
- S:'$L(IO("ZIO")) IO("ZIO")=$G(IO("IP"))
- ;If have FQDN keep it in IO("CLNM") and get IP.
- ;I $L($G(IO("IP"))),IO("IP")'?1.3N1P1.3N1P1.3N1P1.3N S:'$D(IO("CLNM")) IO("CLNM")=IO("IP") S IO("IP")=$P($ZU(54,13,IO("IP")),",") ;p499,p546
- I $L($G(IO("IP"))),IO("IP")'?1.3N1P1.3N1P1.3N1P1.3N S:'$D(IO("CLNM")) IO("CLNM")=IO("IP") S IO("IP")=$P(##class(%Library.Function).IPAddresses(IO("IP")),",") ;Cache2010
+ S PROCESS=##class(%SYS.ProcessQuery).%OpenId($J)
+ I ('$L($G(IO("IP"))))&(PROCESS'="") D
+ . S IO("IP")=PROCESS.ClientIPAddress ; last resort, get IP address from current process
+ . S IO("CLNM")=PROCESS.ClientNodeName
+ I '$L($G(IO("ZIO"))) S IO("ZIO")=$G(IO("IP"))
  Q
  ;
 SPOOL ;%ZDA=pointer to ^XMB(3.51, %ZFN=spool file Num/Name.
@@ -143,21 +139,3 @@ REW1 ;ZIS set % to the current $I so need to update % if = IO
 REWERR ;Error encountered
  S IO("ERROR")=$EC,$ECODE=""
  Q 0
- ; DSS/SMH - BEGIN MODS - This is new code to be called from %ZIS3
-AUTOMARG() ;RETURNS IOM^IOSL IF IT CAN and resets terminal to those dimensions; Cache Version
- ; Stolen from George Timson's %ZIS3.
- ; ZEXCEPT: APC,TERM,WIDTH - these are not really variables
- N X S X=0 X ^%ZOSF("RM")
- N %I,%T,ESC,DIM S %I=$I,%T=$T D
- . ; resize terminal to match actual dimensions
- . S ESC=$C(27)
- . W ESC,"7",ESC,"[r",ESC,"[999;999H",ESC,"[6n"
- . U $P:(:"+S+I":"R") R DIM:1 E  Q
- . W ESC,"8"
- . I DIM?.APC U $P:("") Q
- . S DIM=+$P(DIM,";",2)_"^"_+$P(DIM,"[",2)
- . U $P:(+DIM:"")
- ; restore state
- U %I I %T
- Q:$Q $S(DIM:DIM,1:"") Q
- ; DSS/SMH - END MODS
