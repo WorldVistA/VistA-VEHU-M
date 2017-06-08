@@ -1,0 +1,136 @@
+IBDEI1OP ; ; 06-AUG-2015
+ ;;3.0;IB ENCOUNTER FORM IMP/EXP;;JUN 29, 2015
+ Q:'DIFQR(358.3)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,358.3,29893,1,4,0)
+ ;;=4^Z04.9
+ ;;^UTILITY(U,$J,358.3,29893,2)
+ ;;=^5062666
+ ;;^UTILITY(U,$J,358.3,29894,0)
+ ;;=Z71.3^^177^1906^3
+ ;;^UTILITY(U,$J,358.3,29894,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29894,1,3,0)
+ ;;=3^Dietary Counseling/Surveillance
+ ;;^UTILITY(U,$J,358.3,29894,1,4,0)
+ ;;=4^Z71.3
+ ;;^UTILITY(U,$J,358.3,29894,2)
+ ;;=^5063245
+ ;;^UTILITY(U,$J,358.3,29895,0)
+ ;;=Z00.00^^177^1906^5
+ ;;^UTILITY(U,$J,358.3,29895,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29895,1,3,0)
+ ;;=3^General Adult Medical Exam w/o Abnormal Findings
+ ;;^UTILITY(U,$J,358.3,29895,1,4,0)
+ ;;=4^Z00.00
+ ;;^UTILITY(U,$J,358.3,29895,2)
+ ;;=^5062599
+ ;;^UTILITY(U,$J,358.3,29896,0)
+ ;;=Z01.89^^177^1906^11
+ ;;^UTILITY(U,$J,358.3,29896,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29896,1,3,0)
+ ;;=3^Special Exam NEC
+ ;;^UTILITY(U,$J,358.3,29896,1,4,0)
+ ;;=4^Z01.89
+ ;;^UTILITY(U,$J,358.3,29896,2)
+ ;;=^5062632
+ ;;^UTILITY(U,$J,358.3,29897,0)
+ ;;=Z11.59^^177^1906^12
+ ;;^UTILITY(U,$J,358.3,29897,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29897,1,3,0)
+ ;;=3^Viral Disease Screening NEC
+ ;;^UTILITY(U,$J,358.3,29897,1,4,0)
+ ;;=4^Z11.59
+ ;;^UTILITY(U,$J,358.3,29897,2)
+ ;;=^5062675
+ ;;^UTILITY(U,$J,358.3,29898,0)
+ ;;=Z12.39^^177^1906^7
+ ;;^UTILITY(U,$J,358.3,29898,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29898,1,3,0)
+ ;;=3^Malig Neop of Breast Screening NEC
+ ;;^UTILITY(U,$J,358.3,29898,1,4,0)
+ ;;=4^Z12.39
+ ;;^UTILITY(U,$J,358.3,29898,2)
+ ;;=^5062686
+ ;;^UTILITY(U,$J,358.3,29899,0)
+ ;;=Z12.12^^177^1906^9
+ ;;^UTILITY(U,$J,358.3,29899,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29899,1,3,0)
+ ;;=3^Malig Neop of Rectum Screening
+ ;;^UTILITY(U,$J,358.3,29899,1,4,0)
+ ;;=4^Z12.12
+ ;;^UTILITY(U,$J,358.3,29899,2)
+ ;;=^5062682
+ ;;^UTILITY(U,$J,358.3,29900,0)
+ ;;=Z12.5^^177^1906^8
+ ;;^UTILITY(U,$J,358.3,29900,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29900,1,3,0)
+ ;;=3^Malig Neop of Prostate Screening
+ ;;^UTILITY(U,$J,358.3,29900,1,4,0)
+ ;;=4^Z12.5
+ ;;^UTILITY(U,$J,358.3,29900,2)
+ ;;=^5062688
+ ;;^UTILITY(U,$J,358.3,29901,0)
+ ;;=Z13.5^^177^1906^4
+ ;;^UTILITY(U,$J,358.3,29901,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29901,1,3,0)
+ ;;=3^Eye and Ear Disorder Screening
+ ;;^UTILITY(U,$J,358.3,29901,1,4,0)
+ ;;=4^Z13.5
+ ;;^UTILITY(U,$J,358.3,29901,2)
+ ;;=^5062706
+ ;;^UTILITY(U,$J,358.3,29902,0)
+ ;;=Z13.1^^177^1906^2
+ ;;^UTILITY(U,$J,358.3,29902,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29902,1,3,0)
+ ;;=3^Diabetes Mellitus Screening
+ ;;^UTILITY(U,$J,358.3,29902,1,4,0)
+ ;;=4^Z13.1
+ ;;^UTILITY(U,$J,358.3,29902,2)
+ ;;=^5062700
+ ;;^UTILITY(U,$J,358.3,29903,0)
+ ;;=Z13.220^^177^1906^6
+ ;;^UTILITY(U,$J,358.3,29903,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29903,1,3,0)
+ ;;=3^Lipoid Disorder Screening
+ ;;^UTILITY(U,$J,358.3,29903,1,4,0)
+ ;;=4^Z13.220
+ ;;^UTILITY(U,$J,358.3,29903,2)
+ ;;=^5062702
+ ;;^UTILITY(U,$J,358.3,29904,0)
+ ;;=Z11.1^^177^1906^10
+ ;;^UTILITY(U,$J,358.3,29904,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29904,1,3,0)
+ ;;=3^Respiratory Tuberculosis Screening
+ ;;^UTILITY(U,$J,358.3,29904,1,4,0)
+ ;;=4^Z11.1
+ ;;^UTILITY(U,$J,358.3,29904,2)
+ ;;=^5062670
+ ;;^UTILITY(U,$J,358.3,29905,0)
+ ;;=Z13.6^^177^1906^1
+ ;;^UTILITY(U,$J,358.3,29905,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29905,1,3,0)
+ ;;=3^Cardiovascular Disorder Screening
+ ;;^UTILITY(U,$J,358.3,29905,1,4,0)
+ ;;=4^Z13.6
+ ;;^UTILITY(U,$J,358.3,29905,2)
+ ;;=^5062707
+ ;;^UTILITY(U,$J,358.3,29906,0)
+ ;;=C34.91^^177^1907^10
+ ;;^UTILITY(U,$J,358.3,29906,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29906,1,3,0)
+ ;;=3^Malig Neop of Right Bronchus/Lung,Unspec Part
+ ;;
+ ;;$END ROU IBDEI1OP

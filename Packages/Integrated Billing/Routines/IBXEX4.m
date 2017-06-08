@@ -1,0 +1,3 @@
+IBXEX4 ; ;10/30/02
+ S X=DE(5),DIC=DIE
+ K ^IBA(354.1,"AR",$E(X,1,30),DA)

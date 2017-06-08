@@ -1,0 +1,72 @@
+PXRMDLG1 ; SLC/PJH - Reminder Dialog Edit/Inquiry (overflow) ;08/20/2012
+ ;;2.0;CLINICAL REMINDERS;**12,26**;Feb 04, 2005;Build 404
+ ;
+ ;Either dialog text or P/N text
+ ;------------------------------
+TSUB(IEN,VIEW) ;
+ ;Dialog View uses Dialog text
+ I VIEW=1 Q 25
+ I VIEW=2,$D(^PXRMD(801.41,IEN,25)) Q 25
+ ;P/N View uses P/N TEXT if defined
+ I $D(^PXRMD(801.41,IEN,35)) Q 35
+ ;Otherwise Dialog Text
+ Q 25
+ ;
+ ;additional prompts in the dialog file
+ ;-------------------------------------
+PROMPT(IEN,TAB,TEXT,DGRP) ;
+ N DATA,DDIS,DGSEQ,DSUB,DTITLE,DTXT,DTYP,SEQ,SUB
+ S SEQ=0
+ F  S SEQ=$O(^PXRMD(801.41,IEN,10,"B",SEQ)) Q:'SEQ  D
+ .S SUB=$O(^PXRMD(801.41,IEN,10,"B",SEQ,"")) Q:'SUB
+ .S DSUB=$P($G(^PXRMD(801.41,IEN,10,SUB,0)),U,2) Q:'DSUB 
+ .S DATA=$G(^PXRMD(801.41,DSUB,0)) Q:DATA=""
+ .S DNAME=$P(DATA,U),DDIS=$P(DATA,U,3),DTYP=$P(DATA,U,4)
+ .I VIEW,('DGRP),(DTYP'="P") Q
+ .I ('VIEW),('DGRP),("FP"'[DTYP) Q
+ .S:VIEW DDIS=""
+ .I DTYP="F" S DNAME=DNAME_" (forced value)"
+ .I DGRP D
+ ..S DGSEQ=$P($G(^PXRMD(801.41,IEN,10,SUB,0)),U)
+ ..S DNAME=DGSEQ_$J("",3-$L(DGSEQ))_DNAME
+ .I TAB=0,DTYP="P" D
+ ..;Override prompt caption
+ ..S DTITLE=$P($G(^PXRMD(801.41,IEN,10,SUB,0)),U,6)
+ ..I DTITLE="" S DTITLE=$P($G(^PXRMD(801.41,DSUB,2)),U,4)
+ ..S DNAME=$J("",3)_DTITLE
+ .I TAB=0,DTYP="F" S DNAME=$J("",3)_DNAME
+ .S DNAME=$J("",15)_$G(TEXT)_DNAME
+ .;S:DDIS]"" DNAME=DNAME_$J("",72-$L(DNAME))_DDIS
+ .S:+DDIS>0 DNAME=DNAME_$J("",72-$L(DNAME))_" (Disabled)"
+ .S VALMCNT=VALMCNT+1
+ .S ^TMP("PXRMDLG",$J,VALMCNT,0)=DNAME
+ .S TEXT=$J("",TAB)
+ Q
+ ;
+FIND(FIEN,SEQ,DIEN,NLINE,NODE) ;
+ N FNUM,TIEN,HIST,SUB,CODE,CODES,CODESYS,BDATE,EDATE,DATE,DESC,DTEXT
+ S HIST=0
+ S TIEN=$P(FIEN,";")
+ D BLDCODE^PXRMDTAX("ALL",.CODESYS)
+ D CODES^PXRMDLLB(TIEN,.CODESYS,.CODES)
+ S TEXT=$J("",15)_"Selectable codes:",TAB=18
+ S STR=$$LJ^XLFSTR($G(TEXT),60)
+ S STR=STR_"Activation Periods"
+ S NLINE=NLINE+1
+ S ^TMP(NODE,$J,NLINE,0)=STR
+ S BDATE=""
+ F  S BDATE=$O(CODES(BDATE)) Q:BDATE=""  D
+ .I $G(BDATE)=0 Q
+ .S EDATE=$P(CODES(BDATE),U),DESC=$P(CODES(BDATE),U,2)
+ .S BDATE=$$FMTE^XLFDT(BDATE)
+ .I $G(EDATE)'="" S EDATE=$$FMTE^XLFDT(EDATE)
+ .S DATE=BDATE I $G(EDATE)'="" S DATE=DATE_"-"_EDATE
+ .S STR=$$LJ^XLFSTR($G(CODE),8)
+ .S STR=STR_$$LJ^XLFSTR(DESC,31)
+ .S DTEXT=STR_DATE
+ .S NLINE=NLINE+1
+ .S ^TMP(NODE,$J,NLINE,0)=$J("",15)_DTEXT
+ S NLINE=NLINE+1
+ S ^TMP(NODE,$J,NLINE,0)=$J("",79)
+ Q
+ ;

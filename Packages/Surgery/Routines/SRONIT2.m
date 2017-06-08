@@ -1,0 +1,11 @@
+SRONIT2 ; ; 09-FEB-1993
+ ;;3.0; Surgery ;;24 Jun 93
+ ;
+ ;
+ K ^UTILITY("ORVROM",$J),DIC
+ Q
+DT W !
+ I '$D(DTIME) S DTIME=999
+ K %DT D NOW^%DTC S DT=X
+ K DIK,DIC,%I,DICS Q
+ ;

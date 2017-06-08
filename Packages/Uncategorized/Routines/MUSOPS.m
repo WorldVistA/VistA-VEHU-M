@@ -1,0 +1,44 @@
+MUSOPS ;B'HAM ISC/MAM - SELECT CASE ; 3 AUG 1990  2:20 PM
+SET ; set site parameters
+ S SRSITE=1,S(0)=^SRO(133,SRSITE,0),SRSITE("AML")=$P(S(0),"^",4),SRSITE("REQ")=$P(S(0),"^",2) K:SRSITE("REQ")="" SRSITE("REQ")
+ S SRSITE("IV")=$P(S(0),"^",7) K:SRSITE("IV")="" SRSITE("IV")
+ S SRSITE("DIV")=$P(S(0),"^"),SRSITE("SITE")=$P(^DIC(4,SRSITE("DIV"),0),"^")
+ S SRSITE("NRPT")=$P(S(0),"^",6) I SRSITE("NRPT")="" S SRSITE("NRPT")=1
+ S SRSITE("ORPT")=$P(S(0),"^",8) I SRSITE("ORPT")="" S SRSITE("ORPT")=1
+ S SRSITE("RISK")=$P(S(0),"^",5) I SRSITE("RISK")="" S SRSITE("RISK")="N"
+ S SRSOUT=0,Y=DA
+ S DFN=+Y D DEM^VADPT W @IOF,!,?1,VADM(1)_"   "_VA("PID")
+ I $D(^DPT(DFN,.35)),$P(^(.35),"^") S SRDT=$P(^(.35),"^") W "         * DIED "_$E(SRDT,4,5)_"/"_$E(SRDT,6,7)_"/"_$E(SRDT,2,3)_" *"
+ W ! S (SRDT,CNT)=0 F I=0:0 S SRDT=$O(^SRF("ADT",DFN,SRDT)) Q:'SRDT!(SRSOUT)  S SROP=0 F I=0:0 S SROP=$O(^SRF("ADT",DFN,SRDT,SROP)) Q:'SROP!($D(SRTN))!(SRSOUT)  D LIST
+ I $D(SRTN) Q
+ I '$D(SRNEWOP),'$D(SRCASE(1)) W !!,"There are no cases entered for "_VADM(1)_".",!!,"Press RETURN to continue  " R X:DTIME G END
+ I $D(SRNEWOP) S CNT=CNT+1,SRCASE(CNT)="" W !,CNT,". ENTER NEW SURGICAL CASE"
+OPT W !!!,"Select Operation: " R X:DTIME I '$T!("^"[X) S SRSOUT=1,MUSOUT=1 G END
+ I '$D(SRCASE(X)) W !!,"Enter the number of the desired operation" W $S('$D(SRNEWOP):".",1:", or '"_CNT_"' to enter a new case.") G OPT
+ I $D(SRNEWOP),(X=CNT) D NEW^SROPER Q
+ S SRTN=+SRCASE(X)
+ Q
+LIST ; list cases
+ I $P($G(^SRF(SROP,"NON")),"^")="Y" Q
+ S SRSCAN=1 I $D(^SRF(SROP,.2)),$P(^(.2),"^",12)'="" K SRSCAN
+ I $D(SRSCAN),$D(^SRF(SROP,30)),$P(^(30),"^") Q
+ I $D(SRSCAN),$D(^SRF(SROP,31)),$P(^(31),"^",8) Q
+ I $D(^SRF(SROP,37)),$P(^(37),"^") Q
+ I $Y+5>IOSL S SRBACK=0 D SEL^SROPER Q:$D(SRTN)!(SRSOUT)  I SRBACK S CNT=0,SROP=SRCASE(1)-1,SRDT=$P(SRCASE(1),"^",2) W @IOF,!,?1,VADM(1)_"   "_VA("PID"),! Q
+ S CNT=CNT+1,SRSDATE=$P(^SRF(SROP,0),"^",9)
+ W !,CNT_". "_$E(SRSDATE,4,5)_"-"_$E(SRSDATE,6,7)_"-"_$E(SRSDATE,2,3)
+ S SROPER=$P(^SRF(SROP,"OP"),"^") I $O(^SRF(SROP,13,0)) S SROTHER=0 F I=0:0 S SROTHER=$O(^SRF(SROP,13,SROTHER)) Q:'SROTHER  D OTHER
+ D ^SROP1 K SROPS,MM,MMM S:$L(SROPER)<65 SROPS(1)=SROPER I $L(SROPER)>64 S SROPER=SROPER_"  " F M=1:1 D LOOP Q:MMM=""
+ W ?14,SROPS(1) I $D(SROPS(2)) W !,?14,SROPS(2) I $D(SROPS(3)) W !,?14,SROPS(3) W:$D(SROPS(4)) !,?14,SROPS(4)
+ W ! S SRCASE(CNT)=SROP_"^"_SRDT
+ Q
+OTHER ; other operations
+ S SRLONG=1 I $L(SROPER)+$L($P(^SRF(SROP,13,SROTHER,0),"^"))>235 S SRLONG=0,SROTHER=999,SROPERS=" ..."
+ I SRLONG S SROPERS=$P(^SRF(SROP,13,SROTHER,0),"^")
+ S SROPER=SROPER_$S(SROPERS=" ...":SROPERS,1:", "_SROPERS)
+ Q
+LOOP ; break procedure
+ S SROPS(M)="" F LOOP=1:1 S MM=$P(SROPER," "),MMM=$P(SROPER," ",2,200) Q:MMM=""  Q:$L(SROPS(M))+$L(MM)'<65  S SROPS(M)=SROPS(M)_MM_" ",SROPER=MMM
+ Q
+END K SRTN D ^SRSKILL W @IOF
+ Q

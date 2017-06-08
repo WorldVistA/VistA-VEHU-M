@@ -1,0 +1,148 @@
+FSESNOIS               ; JAS/ISA 3/29/2000
+ ; V1.O
+ K ^TMP($J),^TEMP($J)
+ S U="^"
+ D CLRSCR
+ D PREP^XGF
+ X ^%ZOSF("EON")
+ S STATUS="New",PRIORITY="Routine",SOURCE="E-Mail"
+ D CAT I FLAG=1 D KILLIT Q
+ D TYPE I FLAG=1 D KILLIT Q
+ D ITEM I FLAG=1 D KILLIT Q
+ I FLAG=0 D
+ . D CUSTID I Y="^" S Z="CUSTOMER ID OMITTED...START OVER" D ERROR(Z,.FLAG) D KILLIT Q
+ . D PHONE I Y="^" S Z="PHONE NUMBER OMITTED...START OVER" D ERROR(Z,.FLAG) D KILLIT Q
+ . D LOCATE I Y="^" S Z="LOCATION OMITTED...START OVER" D ERROR(Z,.FLAG) D KILLIT Q
+ . D TICKET I Y="^" S Z="TICKET TYPE OMITTED...START OVER" D ERROR(Z,.FLAG) D KILLIT Q
+ . D SUBJECT
+ . D DETAILS
+ . D MAIL
+ . ;D KILLIT
+ Q
+KILLIT ;
+ K SIGN,FLAG,CAT,Y,X,Z,OUTUPT,^TMP($J),^TEMP($J),XMTEXT,DIC,I,J,K,L,ITEM,IITEM,CCAT
+ K TICKET,UDUZ,XGSCR,XMDUZ,XMZ,XMY,XGATRSET,TTYPE,PHONE,LOCATE,DIR
+ Q
+CAT S DIC="^FSES(7125,",DIC(0)="AEQM",DIC("B")="Applications" D ^DIC S CCAT=$P(Y,"^",2),CAT=+Y I +Y=-1 S Z="CATEGORY OMITTED...START OVER" D ERROR(Z,.FLAG)
+ K DIC
+ Q
+TYPE S DIC="^FSES(7125,",DA(1)=CAT,DIC(0)="AEQM",DIC("B")="VistA"
+ S DIC=DIC_DA(1)_",1," D ^DIC S TTYPE=$P(Y,"^",2),TYPE=+Y
+ I +Y=-1 S Z="TYPE OMITTED...START OVER" D ERROR(Z,.FLAG)
+ K DIC
+ Q
+ITEM S DIC="^FSES(7125,",DA(2)=TYPE,DIC(0)="AEQM"
+ S DIC=DIC_DA(1)_",1,"_DA(2)_",1," D ^DIC S IITEM=$P(Y,"^",2),ITEM=+Y
+ I +Y=-1 S Z="ITEM OMITTED...START OVER" D ERROR(Z,.FLAG)
+ Q
+CUSTID ;
+ S DIR(0)="N;1:99999",DIR("A")="CUSTOMER NUMBER" S DIR("B")=$P(^VA(200,DUZ,776000),"^",2)
+ D ^DIR S CUSTID=Y
+ K DIC
+ Q
+PHONE ;
+ S DIR(0)="F^12",DIR("A")="PHONE NUMBER",DIR("?")="Enter Area Code & Phone Number 518-876-9087"
+ S DIR("B")=$P(^VA(200,DUZ,.13),"^",2) D ^DIR S PHONE=Y
+ Q
+LOCATE ;
+ K DIR S DIR(0)="P^7105.1:EMZ",DIR("A")="CUSTOMER LOCATION"
+ D ^DIR S LOCATE=$P(^FSC("SITE",+Y,776000),"^",1)
+ Q
+TICKET ;
+ S DIR(0)="S^P:Problem;R:Request",DIR("A")="REQUEST TYPE"
+ D ^DIR S TICKET=Y
+ I TICKET="P" S TICKET="Problem" Q
+ S TICKET="Request"
+ Q
+SUBJECT ;
+ S DIC="^TEMP($J,"
+ S DIWESUB="SUBJECT OF TICKET"
+ D EN^DIWE
+ Q
+DETAILS ;
+ S DIC="^TMP($J,"
+ S DIWESUB="DETAILS OF TICKET"
+ D EN^DIWE
+ Q
+ERROR(OUTPUT,SIGN) 
+ W @IOF
+ S SIGN=1
+ D WIN^XGF(3,17,8,58)
+ D SAY^XGF(5,22,OUTPUT)
+ D SAY^XGF(6,22,"TO ENTER A NEW TICKET REQUEST")
+ D SAY^XGF(20,22,"")      
+ Q
+CLRSCR ;
+ S FLAG=0
+ S IOP="HOME" D ^%ZIS W @IOF
+ Q
+MAIL ;
+ S J=12
+ S UDUZ=DUZ
+ S XMDUZ=DUZ,U="^"
+ S XMSUB="ESS Query"
+ D RECPT
+ S XMTEXT(1)="INSERT INTO "
+ S XMTEXT(2)="'ESS-HelpDesk' ("
+ S XMTEXT(3)="'RequesterName', 'Requester ID', 'Phone Number',"
+ S XMTEXT(4)="'Site', 'Category', 'Type', 'Item', 'Status',"
+ S XMTEXT(5)="'Priority', 'Ticket Type', 'Source', 'Subject',"
+ S XMTEXT(6)="'Details')"
+ S XMTEXT(7)="VALUES ("_""""_$P(^VA(200,UDUZ,776000),U,1)_""""_","
+ S XMTEXT(8)=""""_CUSTID_""""_","_""""_PHONE_""""_","
+ S XMTEXT(9)=""""_LOCATE_""""_","
+ S XMTEXT(10)=""""_CCAT_""""_","_""""_TTYPE_""""_","
+ S XMTEXT(11)=""""_IITEM_""""_","_""""_STATUS_""""_","_""""_PRIORITY_""""_","
+ S XMTEXT(12)=""""_TICKET_""""_","_""""_SOURCE_""""_","
+ F I=1:1:$P(^TEMP($J,0),U,3) S XMTEXT(J+I)=""""_^TEMP($J,I,0)_""""
+ S XMTEXT(J+I+1)=","
+ F K=1:1:$P(^TMP($J,0),"^",3) S XMTEXT(J+I+1+K)=""""_^TMP($J,K,0)_""""
+ S XMTEXT(J+I+1+K+1)=") ;"
+ S XMTEXT="XMTEXT("
+ D ^XMD
+ Q
+UPDATE ;
+ D CLRSCR
+ D PREP^XGF
+ D TKTID I TKTID["^" Q
+ D UPDT
+ D MESSAG
+ D SAY^XGF(6,22,"Your Response Will Be Transmitted")
+ D SAY^XGF(7,22,"    to the Forum E-Mail System")
+ D SAY^XGF(15,22,"")
+ Q                
+TKTID ;
+ S DIR(0)="N^1:9999999",DIR("A")="INPUT TICKET ID"
+ D ^DIR S TKTID=Y I Y["^" Q
+ S LEN=$L(TKTID)
+ I LEN=1 S TKTID="000000"_TKTID
+ I LEN=2 S TKTID="00000"_TKTID
+ I LEN=3 S TKTID="0000"_TKTID
+ I LEN=4 S TKTID="000"_TKTID
+ I LEN=5 S TKTID="00"_TKTID
+ I LEN=6 S TKTID="0"_TKTID
+ I LEN=7 S TKTID=TKTID
+ S DIR(0)="Y",DIR("A")="Is Ticket Number "_TKTID_" the correct ticket? " D ^DIR I Y=0 D CLRSCR K DIR G TKTID
+ Q
+UPDT ;
+ S XMDUZ=DUZ,U="^",XMSUB="ESS Query"
+ D RECPT
+ S XMTEXT(1)="Select 'Ticket ID', 'SiteA', 'Status', 'Notes Log' "
+ S XMTEXT(2)="From 'ESS-HelpDesk'"
+ S XMTEXT(3)="Where 'Ticket ID' = "_""""_TKTID_""""
+ S XMTEXT(4)=";"
+ S XMTEXT="XMTEXT("
+ S XMCHAN=1
+ D ^XMD                       
+ Q
+RECPT ;
+ S XMY("essresource@med.va.gov")=""
+ ;S XMY("jerry.sicard@med.va.gov")=""
+ S XMY(983)=""
+ Q
+MESSAG ;
+ D WIN^XGF(4,17,8,58)
+ S MESSAGE="Message "_XMZ_" Transmitted to ESS"
+ D SAY^XGF(5,22,MESSAGE)
+ D SAY^XGF(15,22,"")
+ Q

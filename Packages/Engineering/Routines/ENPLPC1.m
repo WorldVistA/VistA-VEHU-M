@@ -1,0 +1,28 @@
+ENPLPC1 ; GENERATED FROM 'ENPLP005' PRINT TEMPLATE (#1437) ; 09/29/94 ; (continued)
+ G BEGIN
+N W !
+T W:$X ! I '$D(DIOT(2)),DN,$D(IOSL),$S('$D(DIWF):1,$P(DIWF,"B",2):$P(DIWF,"B",2),1:1)+$Y'<IOSL,$D(^UTILITY($J,1))#2,^(1)?1U1P1E.E X ^(1)
+ S DISTP=DISTP+1 D:'(DISTP#100) CSTP
+ Q
+CSTP I '$D(ZTQUEUED) K DISTOP Q
+ Q:$G(DISTOP)=0  S:$G(DISTOP)="" DISTOP=1
+ I DISTOP'=1 X DISTOP K:'$T DISTOP S DISTOP=$T Q:'$T
+ Q:'$$S^%ZTLOAD
+ W:$G(IO)]"" !,"*** TASK "_ZTSK_" STOPPED BY USER - DURING "_$S($D(DPQ):"SORT",1:"PRINT")_" EXECUTION ***",!! S ZTSTOP=1,DN=0 Q
+DT I Y W $P("JAN^FEB^MAR^APR^MAY^JUN^JUL^AUG^SEP^OCT^NOV^DEC",U,$E(Y,4,5))_" " W:Y#100 $J(Y#100\1,2)_"," W Y\10000+1700 W:Y#1 "  "_$E(Y_0,9,10)_":"_$E(Y_"000",11,12) Q
+ W Y Q
+M D @DIXX
+ Q
+BEGIN ;
+ S:'$D(DN) DN=1 S DISTP=$G(DISTP)
+ S I(1)=27,J(1)=6925.06 F D1=0:0 Q:$O(^ENG("PROJ",D0,27,D1))'>0  S D1=$O(^(D1)) D:$X>11 T Q:'DN  D C1
+ G C1R
+C1 ;
+ S X=$G(^ENG("PROJ",D0,27,D1,0)) S DIWL=1,DIWR=67 D ^DIWP
+ Q
+C1R ;
+ D 0^DIWW K DIP K:DN Y
+ D ^DIWW K Y K DIWF
+ Q
+HEAD ;
+ W !,"--------------------------------------------------------------------------------",!!

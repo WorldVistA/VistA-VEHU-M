@@ -1,0 +1,256 @@
+LA7VOBX3 ;DALOI/JMC - LAB OBX Segment message builder (MI subscripts) cont'd ;Dec 4, 2008
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,68,74**;Sep 27, 1994;Build 229
+ ;
+ ; Reference to ^DD supported by DBIA #999
+ ;
+MI ; Build OBX segments for results that are microbiology subscript.
+ ; Called by LA7VOBX
+ ;
+ N I,LA761,LA76305,LA7ALT,LA7CODE,LA7DIV,LA7IENS,LA7LOINC,LA7NLT,LA7OBX,LA7PARNT,LA7PLREF,LA7SAVID,LA7SUBFL,LA7VAL,LA7VERP
+ ;
+ I $P(LRIDT,",",2) S LRIDT(2)=$P(LRIDT,",",2),LRIDT(3)=$P(LRIDT,",",3),LRIDT=$P(LRIDT,",")
+ ;
+ I '$D(^LR(LRDFN,LRSS,LRIDT)) Q
+ ;
+ S LA76305(0)=$G(^LR(LRDFN,LRSS,LRIDT,0))
+ S (LA7ALT,LA7CODE,LA7ISOID,LA7LOINC,LA7NLT,LA7SAVID,LA7SUBFL,LA7VAL,LA7VERP)=""
+ S LA7NLT=$G(LA("NLT")),LA7CODE=LA7NLT_"!"
+ ;
+ ; Specimen topography
+ S LA761=$P(LA76305(0),"^",5)
+ ; Default codes
+ S LA7CODE=$$DEFCODE^LA7VHLU5(LRSS,LRSB,LA7CODE,LA761)
+ ; Initialize performing lab reference
+ S LA7PLREF=""
+ ;
+ D SEC
+ ; Don't build segment if no value to send
+ I LA7VAL="" Q
+ D GEN^LA7VOBX4
+ Q
+ ;
+ ;
+SEC ; Build section specific fields
+ N LA7X,LA7Y
+ ;
+ ; Bacteriology report
+ I $P(LRSB,",")=11 D  Q
+ . N LA7ERR
+ . S LA76305(1)=$G(^LR(LRDFN,LRSS,LRIDT,1))
+ . S LA7VERP=$P(LA76305(1),"^",3)
+ . S LA7ORS=$P(LA76305(1),"^",2)
+ . S LA7OBX(2)=$$OBX2^LA7VOBX(63.05,13)
+ . S LA7IENS=LRIDT(2)_","_LRIDT_","_LRDFN_","
+ . S LA7VAL=$$GET1^DIQ(63.33,LA7IENS,.01,"","LA7ERR")
+ . S LA7Y="MI-"_$P(LRSB,",")_"^"_$$GET1^DID(63.33,.01,"","LABEL")_"^99VA63"
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",1"
+ ;
+ ; Urine screen
+ I LRSB=11.57 D  Q
+ . N LA7ERR
+ . S LA76305(1)=$G(^LR(LRDFN,LRSS,LRIDT,1))
+ . S LA7VERP=$P(LA76305(1),"^",3),LA7ORS=$P(LA76305(1),"^",2)
+ . S LA7OBX(2)=$$OBX2^LA7VOBX(63.05,11.57)
+ . S LA7IENS=LRIDT_","_LRDFN_","
+ . S LA7VAL=$$GET1^DIQ(63.29,LA7IENS,11.57,"","LA7ERR")
+ . S LA7X=$P(^LR(LRDFN,LRSS,LRIDT,1),"^",6)
+ . S LA7Y=$S(LA7X="P":10828004,LA7X="N":260385009,1:"")
+ . I LA7Y S LA7X=LA7VAL D MTSCT^LA7VOBX4
+ . S LA7Y="MI-"_LRSB_"^"_$$GET1^DID(63.05,11.57,"","LABEL")_"^99VA63"
+ . S LA7ALT=LA7Y_"^"_LA7Y
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",1;6"
+ ;
+ ; Sputum Screen
+ I LRSB=11.58 D  Q
+ . N LA7ERR
+ . S LA76305(1)=$G(^LR(LRDFN,LRSS,LRIDT,1))
+ . S LA7VERP=$P(LA76305(1),"^",3)
+ . S LA7ORS=$P(LA76305(1),"^",2)
+ . S LA7OBX(2)=$$OBX2^LA7VOBX(63.05,11.58)
+ . S LA7VAL=$P(^LR(LRDFN,LRSS,LRIDT,1),"^",5)
+ . S LA7Y="MI-"_LRSB_"^"_$$GET1^DID(63.05,11.58,"","LABEL")_"^99VA63"
+ . S LA7ALT=LA7Y_"^"_LA7Y
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",1;5"
+ ;
+ ; Gram stain
+ I LRSB=11.6 D  Q
+ . N LA7ERR
+ . S LA76305(1)=$G(^LR(LRDFN,LRSS,LRIDT,1))
+ . S LA7VERP=$P(LA76305(1),"^",3)
+ . S LA7ORS=$P(LA76305(1),"^",2)
+ . S LA7OBX(2)=$$OBX2^LA7VOBX(63.05,11.6)
+ . S LA7IENS=LRIDT(2)_","_LRIDT_","_LRDFN_","
+ . S LA7VAL=$$GET1^DIQ(63.29,LA7IENS,.01,"","LA7ERR")
+ . S LA7Y="MI-"_LRSB_"^"_$$GET1^DID(63.29,.01,"","LABEL")_"^99VA63"
+ . S LA7ALT=LA7Y_"^"_LA7Y
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",2,"_LRIDT(2)_",0"
+ ;
+ ; Micro organism
+ I $P(LRSB,",")=12 D  Q
+ . S LA76305(1)=$G(^LR(LRDFN,LRSS,LRIDT,1))
+ . S LA7VERP=$P(LA76305(1),"^",3)
+ . S LA7ORS=$P(LA76305(1),"^",2)
+ . S LA7SUBFL=63.3
+ . ; Working on colony count
+ . I $P(LRSB,",",2)=1 D CC^LA7VOBX4 Q
+ . ; Working on organism
+ . I $G(LRIDT(3))="" D ORG^LA7VOBX4 Q
+ . ; Working on susceptibilities
+ . I $P(LA76305(1),"^",4) S LA7VERP=$P(LA76305(1),"^",4)
+ . I $P(LRSB,",",2)<3 D MIC^LA7VOBX4 Q
+ . I $P(LRSB,",",2)=3 D MICA^LA7VOBX4 Q
+ ;
+ ; Parasitology report
+ I $P(LRSB,",")=14 D  Q
+ . N LA7ERR
+ . S LA76305(5)=$G(^LR(LRDFN,LRSS,LRIDT,5))
+ . I $P(LA76305(5),"^",3) S LA7VERP=$P(LA76305(5),"^",3)
+ . S LA7ORS=$P(LA76305(5),"^",2)
+ . S LA7OBX(2)=$$OBX2^LA7VOBX(63.36,.01)
+ . S LA7IENS=LRIDT(2)_","_LRIDT_","_LRDFN_","
+ . S LA7VAL=$$GET1^DIQ(63.36,LA7IENS,.01,"","LA7ERR")
+ . S LA7Y="MI-"_$P(LRSB,",")_"^"_$$GET1^DID(63.36,.01,"","LABEL")_"^99VA63"
+ . S LA7ALT=LA7Y_"^"_LA7Y
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",4"
+ ;
+ ; Parasite organism
+ I $P(LRSB,",")=16 D  Q
+ . S LA76305(5)=$G(^LR(LRDFN,LRSS,LRIDT,5))
+ . S LA7ORS=$P(LA76305(5),"^",2)
+ . I $P(LA76305(5),"^",3) S LA7VERP=$P(LA76305(5),"^",3)
+ . ; Working on parasite
+ . I $G(LRIDT(3))="" S LA7SUBFL=63.34 D ORG^LA7VOBX4 Q
+ . ; Working on parasite's stages/quantity
+ . S LA7SUBFL=63.35
+ . I $P(LRSB,",",2)=.01 D PSTAGE^LA7VOBX4 Q
+ . I $P(LRSB,",",2)=1 D PQTY^LA7VOBX4 Q
+ ;
+ ; Mycology report
+ I $P(LRSB,",")=18 D  Q
+ . N LA7ERR
+ . S LA76305(8)=$G(^LR(LRDFN,LRSS,LRIDT,8))
+ . S LA7VERP=$P(LA76305(8),"^",3)
+ . S LA7ORS=$P(LA76305(8),"^",2)
+ . S LA7OBX(2)=$$OBX2^LA7VOBX(63.38,.01)
+ . S LA7IENS=LRIDT(2)_","_LRIDT_","_LRDFN_","
+ . S LA7VAL=$$GET1^DIQ(63.38,LA7IENS,.01,"","LA7ERR")
+ . S LA7Y="MI-"_$P(LRSB,",")_"^"_$$GET1^DID(63.38,.01,"","LABEL")_"^99VA63"
+ . S LA7ALT=LA7Y_"^"_LA7Y
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",8"
+ ;
+ ; Mycology organism
+ I $P(LRSB,",")=20 D  Q
+ . S LA76305(8)=$G(^LR(LRDFN,LRSS,LRIDT,8))
+ . S LA7ORS=$P(LA76305(8),"^",2)
+ . S LA7VERP=$P(LA76305(8),"^",3)
+ . S LA7SUBFL=63.37
+ . ; Working on colony count
+ . I $P(LRSB,",",2)=1 D CC^LA7VOBX4 Q
+ . ; Working on organism
+ . D ORG^LA7VOBX4
+ ;
+ ; Mycobacterium report
+ I $P(LRSB,",")=22 D  Q
+ . N LA7ERR
+ . S LA76305(11)=$G(^LR(LRDFN,LRSS,LRIDT,11))
+ . S LA7VERP=$P(LA76305(11),"^",3)
+ . S LA7ORS=$P(LA76305(11),"^",2)
+ . S LA7OBX(2)=$$OBX2^LA7VOBX(63.41,.01)
+ . S LA7IENS=LRIDT(2)_","_LRIDT_","_LRDFN_","
+ . S LA7VAL=$$GET1^DIQ(63.41,LA7IENS,.01,"","LA7ERR")
+ . S LA7Y="MI-"_$P(LRSB,",")_"^"_$$GET1^DID(63.41,.01,"","LABEL")_"^99VA63"
+ . S LA7ALT=LA7Y_"^"_LA7Y
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",12"
+ ;
+ ; Acid Fast stain
+ I LRSB=24 D  Q
+ . N LA7ERR
+ . S LA76305(11)=$G(^LR(LRDFN,LRSS,LRIDT,11))
+ . S LA7VERP=$P(LA76305(11),"^",3)
+ . S LA7ORS=$P(LA76305(11),"^",2)
+ . S LA7OBX(2)=$$OBX2^LA7VOBX(63.05,24)
+ . S LA7IENS=LRIDT_","_LRDFN_","
+ . S LA7VAL=$$GET1^DIQ(63.05,LA7IENS,24,"","LA7ERR")
+ . S LA7Y="MI-"_LRSB_"^"_$$GET1^DID(63.05,24,"","LABEL")_"^99VA63"
+ . S LA7ALT=LA7Y_"^"_LA7Y
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",12;3"
+ ;
+ ; Acid Fast stain quantity
+ I LRSB=25 D  Q
+ . N LA7ERR
+ . S LA76305(11)=$G(^LR(LRDFN,LRSS,LRIDT,11))
+ . S LA7VERP=$P(LA76305(11),"^",3)
+ . S LA7ORS=$P(LA76305(11),"^",2)
+ . S LA7OBX(2)=$$OBX2^LA7VOBX(63.05,25)
+ . S LA7IENS=LRIDT_","_LRDFN_","
+ . S LA7VAL=$$GET1^DIQ(63.05,LA7IENS,25,"","LA7ERR")
+ . S LA7Y="MI-"_LRSB_"^"_$$GET1^DID(63.05,25,"","LABEL")_"^99VA63"
+ . S LA7ALT=LA7Y_"^"_LA7Y
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",12;3"
+ ;
+ ; TB organism
+ I $P(LRSB,",")=26 D  Q
+ . S LA76305(11)=$G(^LR(LRDFN,LRSS,LRIDT,11))
+ . S LA7ORS=$P(LA76305(11),"^",2)
+ . S LA7VERP=$P(LA76305(11),"^",5)
+ . S LA7SUBFL=63.39
+ . ; Working on colony count
+ . I $P(LRSB,",",2)=1 D CC^LA7VOBX4 Q
+ . ; Working on organism
+ . I $G(LRIDT(3))="" D ORG^LA7VOBX4 Q
+ . ; Working on susceptibilities
+ . D MIC^LA7VOBX4
+ ;
+ ; Virology report
+ I $P(LRSB,",")=33 D  Q
+ . N LA7ERR
+ . S LA76305(16)=$G(^LR(LRDFN,LRSS,LRIDT,16))
+ . S LA7VERP=$P(LA76305(16),"^",3)
+ . S LA7ORS=$P(LA76305(16),"^",2)
+ . S LA7OBX(2)=$$OBX2^LA7VOBX(63.44,.01)
+ . S LA7IENS=LRIDT(2)_","_LRIDT_","_LRDFN_","
+ . S LA7VAL=$$GET1^DIQ(63.44,LA7IENS,.01,"","LA7ERR")
+ . S LA7Y="MI-"_$P(LRSB,",")_"^"_$$GET1^DID(63.44,.01,"","LABEL")_"^99VA63"
+ . S LA7ALT=LA7Y_"^"_LA7Y
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",16"
+ ;
+ ; Virology virus
+ I $P(LRSB,",")=36 D  Q
+ . S LA76305(16)=$G(^LR(LRDFN,LRSS,LRIDT,16))
+ . S LA7ORS=$P(LA76305(16),"^",2)
+ . S LA7VERP=$P(LA76305(16),"^",3)
+ . ; Working on virus
+ . S LA7SUBFL=63.43
+ . D ORG^LA7VOBX4
+ ;
+ ; Antibiotic levels
+ I $P(LRSB,",")=28 D  Q
+ . S LA76305(1)=$G(^LR(LRDFN,LRSS,LRIDT,1))
+ . S LA7VERP=$P(LA76305(1),"^",3)
+ . S LA7ORS=$P(LA76305(1),"^",2)
+ . S LA7SUBFL=63.42
+ . S LA7OBX(2)="SN"
+ . S LA7X=$G(^LR(LRDFN,LRSS,LRIDT,14,LRIDT(2),0))
+ . S $P(LA7CODE,"!",2)="93978.0000"
+ . S $P(LA7CODE,"!",3)=$S($P(LA7X,"^",2)="P":44433,$P(LA7X,"^",2)="T":44434,1:23816)
+ . S LA7VAL=$P(LA7X,"^",3)
+ . S LA7Y="MI-"_$P(LRSB,",")_"-"_$P(LRSB,",",2)_"^"_$P(LA7X,"^")_"^99VA63"
+ . S LA7ALT=LA7Y_"^"_LA7Y
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",14"
+ ;
+ ; Sterility report
+ I LRSB=11.52 D  Q
+ . N LA7ERR
+ . S LA76305(1)=$G(^LR(LRDFN,LRSS,LRIDT,1))
+ . S LA7VERP=$P(LA76305(1),"^",3)
+ . S LA7ORS=$P(LA76305(1),"^",2)
+ . S LA7SUBFL=63.292
+ . S LA7OBX(2)=$$OBX2^LA7VOBX(LA7SUBFL,.01)
+ . S LA7IENS=LRIDT(2)_","_LRIDT_","_LRDFN_","
+ . S LA7VAL=$$GET1^DIQ(LA7SUBFL,LA7IENS,.01,"","LA7ERR")
+ . S LA7Y="MI-"_$P(LRSB,",")_"^"_$$GET1^DID(63.292,.01,"","LABEL")_"^99VA63"
+ . S LA7ALT=LA7Y_"^"_LA7Y
+ . S LA7PLREF=LRDFN_",MI,"_LRIDT_",31"
+ ;
+ ;
+ Q

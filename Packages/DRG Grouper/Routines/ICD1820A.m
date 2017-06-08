@@ -1,0 +1,213 @@
+ICD1820A ;;ALB/EG/JAT - ADD NEW DRGs; 6/19/05 4:08pm ; 6/24/05 3:29pm
+ ;;18.0;DRG Grouper;**20**;Oct 13,2000
+ ;
+ Q
+ADDDRG  ;-- Add new DRGs
+ N DIC,X,Y,DINUM,LINE,ICDDRG,DA,DRGX,DRGY,MDC,SURG,ROUTINE,ICDIEN
+ D BMES^XPDUTL(">>> Adding New DRGs - Please verify that 16 added")
+ ; create top-level record (weights & trims will be added later)
+ F LINE=1:1 S X=$T(ADD+LINE) S ICDDRG=$P(X,";;",2) Q:ICDDRG="EXIT"  D
+ .S DIC="^ICD(",DIC(0)="L"
+ .S MDC=$P(ICDDRG,U,2) I MDC="PRE" S MDC=98
+ .S SURG=$P(ICDDRG,U,3)
+ .S DIC("DR")="5///^S X=MDC;.06///^S X=SURG"
+ .S X="DRG",X=X_$P(ICDDRG,U)
+ .; check for duplicates in case install is being rerun
+ .I $D(^ICD($P(ICDDRG,U),0)) Q
+ .K DO D FILE^DICN
+ .K DIC,DA
+ .;create 80.21A subfile
+ .S DA(1)=$P(ICDDRG,U)
+ .S DIC="^ICD("_DA(1)_",1,"
+ .S DIC(0)="L"
+ .S X=$P(ICDDRG,U,4)
+ .K DO D FILE^DICN
+ .;create 80.266 subfile
+ .K DIC,DA
+ .S DA(1)=$P(ICDDRG,U)
+ .S DIC="^ICD("_DA(1)_",66,"
+ .S DIC(0)="L"
+ .I SURG="" S SURG=0
+ .S DIC("DR")=".03///1;.05///^S X=MDC;.06///^S X=SURG"
+ .S X=3051001
+ .K DO D FILE^DICN
+ .; create 80.271 subfile
+ .K DIC,DA
+ .S DA(1)=$P(ICDDRG,U)
+ .S DIC="^ICD("_DA(1)_",2,"
+ .S DIC(0)="L"
+ .S ROUTINE=$P(ICDDRG,U,5)
+ .S DIC("DR")="1///^S X=ROUTINE"
+ .S X=3051001
+ .K DO D FILE^DICN
+ .; create 80.268 and 80.2681 subfiles
+ .K DIC,DA
+ .N FDA
+ .S ICDIEN=$P(ICDDRG,U)
+ .S FDA(1820,80.2,"?1,",.01)=ICDIEN
+ .S FDA(1820,80.268,"+2,?1,",.01)=3051001
+ .D UPDATE^DIE("","FDA(1820)") K FDA(1820)
+ .S FDA(1820,80.2,"?1,",.01)=ICDIEN
+ .S FDA(1820,80.268,"?2,?1,",.01)=3051001
+ .S FDA(1820,80.2681,"+3,?2,?1,",.01)=$P(ICDDRG,U,4)
+ .D UPDATE^DIE("","FDA(1820)")
+ .; displays listing
+ .S DRGX=$P(ICDDRG,U),DRGY=$P(ICDDRG,U,4)
+ .D MES^XPDUTL("  DRG"_DRGX_"     "_DRGY_" added.")
+ ; now update entire file
+ D UPDTDRG^ICD1820B
+ ; inactivate DRGs for this year
+ D INACTDRG^ICD1820B
+ Q
+ ;
+ADD ;New DRGs
+ ;;544^8^1^MAJOR JOINT REPLACEMENT OR REATTACHMENT OF LOWER EXTREMITY^ICDTLB6B
+ ;;545^8^1^REVISION OF HIP OR KNEE REPLACEMENT^ICDTLB6B
+ ;;546^8^1^SPINAL FUSION EXC CERV WITH CURVATURE OF THE SPINE OR MALIG^ICDTLB6B
+ ;;547^5^1^CORONARY BYPASS W CARDIAC CATH W MAJOR CV DX^ICDTLB6B
+ ;;548^5^1^CORONARY BYPASS W CARDIAC CATH W/O MAJOR CV DX^ICDTLB6B
+ ;;549^5^1^CORONARY BYPASS W/O CARDIAC CATH W MAJOR CV DX^ICDTLB6B
+ ;;550^5^1^CORONARY BYPASS W/O CARDIAC CATH W/O MAJOR CV DX^ICDTLB6B
+ ;;551^5^1^PERMANENT CARDIAC PACEMAKER IMPL W MAJ CV OR AICD LEAD OR GNRTR^ICDTLB6B
+ ;;552^5^1^OTHER PERMANENT CARDIAC PACEMAKER IMPLANT W/O MAJOR CV DX^ICDTLB6B
+ ;;553^5^1^OTHER VASCULAR PROCEDURES W CC W MAJOR CV DX^ICDTLB6B
+ ;;554^5^1^OTHER VASCULAR PROCEDURES W CC W/O MAJOR CV DX^ICDTLB6B
+ ;;555^5^1^PERCUTANEOUS CARDIOVASCULAR PROC W MAJOR CV DX^ICDTLB6B
+ ;;556^5^1^PERCUTANEOUS CARDIOVASCULAR PROC W NON-DRUG-ELUTING STENT W/O MAJ CV DX^ICDTLB6B
+ ;;557^5^1^PERCUTANEOUS CARDIOVASCULAR PROC W DRUG-ELUTING STENT W MAJOR CV DX^ICDTLB6B
+ ;;558^5^1^PERCUTANEOUS CARDIOVASCULAR PROC W DRUG-ELUTING STENT W/O MAJ CV DX^ICDTLB6B
+ ;;559^1^^ACUTE ISCHEMIC STROKE WITH USE OF THROMBOLYTIC AGENT^ICDTLB6B
+ ;;EXIT
+ ;
+PRO ;-update operation/procedure codes
+ ; from Table 6B in Fed Reg - assumes new codes already added by Lexicon
+ D BMES^XPDUTL(">>>Modifying new op/pro codes - file 80.1")
+ N LINE,X,ICDPROC,ENTRY,DA,DIE,DR,IDENT,MDC24,SUBLINE,DATA,FDA
+ F LINE=1:1 S X=$T(REV+LINE) S ICDPROC=$P(X,";;",2) Q:ICDPROC="EXIT"  D
+ .Q:ICDPROC["+"
+ .S ENTRY=+$O(^ICD0("BA",$P(ICDPROC,U)_" ",0))
+ .I ENTRY D
+ ..;check for possible inactive dupe
+ ..I $P($G(^ICD0(ENTRY,0)),U,9)=1 S ENTRY=+$O(^ICD0("BA",$P(ICDPROC,U)_" ",ENTRY)) I 'ENTRY Q
+ ..S DA=ENTRY,DIE="^ICD0("
+ ..S IDENT=$P(ICDPROC,U,2)
+ ..;this is from the OR column in Table 6B 
+ ..I IDENT="Y" S IDENT="O"
+ ..I DA=4284 S IDENT="O1"
+ ..S MDC24=$P(ICDPROC,U,3)
+ ..S DR="2///^S X=IDENT;5///^S X=MDC24"
+ ..I IDENT=""&(MDC24="") Q
+ ..D ^DIE
+ ..; check if already created in case patch being re-installed
+ ..Q:$D(^ICD0(ENTRY,2))
+ ..;add 80.171, 80.1711 and 80.17111 records
+ ..F SUBLINE=1:1 S X=$T(REV+LINE+SUBLINE) S DATA=$P(X,";;",2) Q:DATA'["+"  D
+ ...I SUBLINE=1 D
+ ....S FDA(1820,80.1,"?1,",.01)="`"_ENTRY
+ ....S FDA(1820,80.171,"+2,?1,",.01)=3051001
+ ....D UPDATE^DIE("","FDA(1820)") K FDA(1820)
+ ...S DATA=$E(DATA,2,99)
+ ...S FDA(1820,80.1,"?1,",.01)="`"_ENTRY
+ ...S FDA(1820,80.171,"?2,?1,",.01)=3051001
+ ...S FDA(1820,80.1711,"+3,?2,?1,",.01)=$P(DATA,U)
+ ...D UPDATE^DIE("","FDA(1820)") K FDA(1820)
+ ...S FDA(1820,80.1,"?1,",.01)="`"_ENTRY
+ ...S FDA(1820,80.171,"?2,?1,",.01)=3051001
+ ...S FDA(1820,80.1711,"?3,?2,?1,",.01)=$P(DATA,U)
+ ...S FDA(1820,80.17111,"+4,?3,?2,?1,",.01)=$P(DATA,U,2)
+ ...I $P(DATA,U,3) S FDA(1820,80.17111,"+5,?3,?2,?1,",.01)=$P(DATA,U,3)
+ ...I $P(DATA,U,4) S FDA(1820,80.17111,"+6,?3,?2,?1,",.01)=$P(DATA,U,4)
+ ...I $P(DATA,U,5) S FDA(1820,80.17111,"+7,?3,?2,?1,",.01)=$P(DATA,U,5)
+ ...I $P(DATA,U,6) S FDA(1820,80.17111,"+8,?3,?2,?1,",.01)=$P(DATA,U,6)
+ ...I $P(DATA,U,7) S FDA(1820,80.17111,"+9,?3,?2,?1,",.01)=$P(DATA,U,7)
+ ...D UPDATE^DIE("","FDA(1820)") K FDA(1820)
+ Q
+ ; 
+REV ;
+ ;;00.18^^
+ ;;00.40^^
+ ;;00.41^^
+ ;;00.42^^
+ ;;00.43^^
+ ;;00.45^^
+ ;;00.46^^
+ ;;00.47^^
+ ;;00.48^^
+ ;;00.66^Y^
+ ;;+5^106^518^555^556^557^558
+ ;;00.70^Y^2
+ ;;+8^471^545
+ ;;+10^292^293
+ ;;+21^442^443
+ ;;+24^485
+ ;;00.71^Y^2
+ ;;+8^471^545
+ ;;+10^292^293
+ ;;+21^442^443
+ ;;+24^485 
+ ;;00.72^Y^2
+ ;;+8^471^545
+ ;;+10^292^293
+ ;;+21^442^443
+ ;;+24^485
+ ;;00.73^Y^2
+ ;;+8^471^545
+ ;;+10^292^293
+ ;;+21^442^443
+ ;;+24^485
+ ;;00.74^^
+ ;;00.75^^
+ ;;00.76^^
+ ;;00.80^Y^2
+ ;;+8^471^545
+ ;;+21^442^443
+ ;;+24^486
+ ;;00.81^Y^2
+ ;;+8^471^545
+ ;;+21^442^443
+ ;;+24^486
+ ;;00.82^Y^2
+ ;;+8^471^545
+ ;;+21^442^443
+ ;;+24^486
+ ;;00.83^Y^2
+ ;;+8^471^545
+ ;;+21^442^443
+ ;;+24^486
+ ;;00.84^Y^2
+ ;;+8^471^545
+ ;;+21^442^443
+ ;;+24^486
+ ;;01.26^^
+ ;;01.27^^
+ ;;37.41^Y^
+ ;;+5^110^111
+ ;;37.49^Y^2
+ ;;+5^110^111
+ ;;+21^442^443
+ ;;+24^486
+ ;;39.73^Y^2
+ ;;+5^110^111
+ ;;+11^315
+ ;;+21^442^443
+ ;;+24^486
+ ;;81.18^Y^2
+ ;;+8^233^234
+ ;;+21^442^443
+ ;;+24^486
+ ;;84.56^^
+ ;;84.57^^
+ ;;84.58^Y^2
+ ;;+1^531^532
+ ;;+8^499^500
+ ;;+21^442^443
+ ;;+24^486
+ ;;84.71^^
+ ;;84.72^^
+ ;;84.73^^
+ ;;86.97^Y^
+ ;;+1^7^8
+ ;;86.98^Y^
+ ;;+1^7^8
+ ;;92.20^^
+ ;;EXIT

@@ -1,0 +1,134 @@
+IBDEI1VP ; ; 06-AUG-2015
+ ;;3.0;IB ENCOUNTER FORM IMP/EXP;;JUN 29, 2015
+ Q:'DIFQR(358.3)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,358.3,33052,1,4,0)
+ ;;=4^K71.2
+ ;;^UTILITY(U,$J,358.3,33052,2)
+ ;;=^5008796
+ ;;^UTILITY(U,$J,358.3,33053,0)
+ ;;=K71.3^^182^1995^27
+ ;;^UTILITY(U,$J,358.3,33053,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33053,1,3,0)
+ ;;=3^Toxic Liver Disease w/ Chronic Persistent Hepatitis
+ ;;^UTILITY(U,$J,358.3,33053,1,4,0)
+ ;;=4^K71.3
+ ;;^UTILITY(U,$J,358.3,33053,2)
+ ;;=^5008797
+ ;;^UTILITY(U,$J,358.3,33054,0)
+ ;;=K71.4^^182^1995^26
+ ;;^UTILITY(U,$J,358.3,33054,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33054,1,3,0)
+ ;;=3^Toxic Liver Disease w/ Chronic Lobular Hepatitis
+ ;;^UTILITY(U,$J,358.3,33054,1,4,0)
+ ;;=4^K71.4
+ ;;^UTILITY(U,$J,358.3,33054,2)
+ ;;=^5008798
+ ;;^UTILITY(U,$J,358.3,33055,0)
+ ;;=K75.81^^182^1995^19
+ ;;^UTILITY(U,$J,358.3,33055,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33055,1,3,0)
+ ;;=3^Nonalcoholic Steatohepatitis (NASH)
+ ;;^UTILITY(U,$J,358.3,33055,1,4,0)
+ ;;=4^K75.81
+ ;;^UTILITY(U,$J,358.3,33055,2)
+ ;;=^5008828
+ ;;^UTILITY(U,$J,358.3,33056,0)
+ ;;=K75.89^^182^1995^16
+ ;;^UTILITY(U,$J,358.3,33056,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33056,1,3,0)
+ ;;=3^Inflammatory Liver Disease,Oth Spec
+ ;;^UTILITY(U,$J,358.3,33056,1,4,0)
+ ;;=4^K75.89
+ ;;^UTILITY(U,$J,358.3,33056,2)
+ ;;=^5008829
+ ;;^UTILITY(U,$J,358.3,33057,0)
+ ;;=K76.4^^182^1995^21
+ ;;^UTILITY(U,$J,358.3,33057,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33057,1,3,0)
+ ;;=3^Peliosis Hepatis
+ ;;^UTILITY(U,$J,358.3,33057,1,4,0)
+ ;;=4^K76.4
+ ;;^UTILITY(U,$J,358.3,33057,2)
+ ;;=^91041
+ ;;^UTILITY(U,$J,358.3,33058,0)
+ ;;=K71.50^^182^1995^24
+ ;;^UTILITY(U,$J,358.3,33058,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33058,1,3,0)
+ ;;=3^Toxic Liver Disease w/ Chronic Active Hepatitis w/o Ascites
+ ;;^UTILITY(U,$J,358.3,33058,1,4,0)
+ ;;=4^K71.50
+ ;;^UTILITY(U,$J,358.3,33058,2)
+ ;;=^5008799
+ ;;^UTILITY(U,$J,358.3,33059,0)
+ ;;=K71.51^^182^1995^25
+ ;;^UTILITY(U,$J,358.3,33059,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33059,1,3,0)
+ ;;=3^Toxic Liver Disease w/ Chronic Active Hepatitis w/o Ascites
+ ;;^UTILITY(U,$J,358.3,33059,1,4,0)
+ ;;=4^K71.51
+ ;;^UTILITY(U,$J,358.3,33059,2)
+ ;;=^5008800
+ ;;^UTILITY(U,$J,358.3,33060,0)
+ ;;=K71.7^^182^1995^28
+ ;;^UTILITY(U,$J,358.3,33060,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33060,1,3,0)
+ ;;=3^Toxic Liver Disease w/ Fibrosis & Cirrhosis of Liver
+ ;;^UTILITY(U,$J,358.3,33060,1,4,0)
+ ;;=4^K71.7
+ ;;^UTILITY(U,$J,358.3,33060,2)
+ ;;=^5008802
+ ;;^UTILITY(U,$J,358.3,33061,0)
+ ;;=K71.8^^182^1995^32
+ ;;^UTILITY(U,$J,358.3,33061,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33061,1,3,0)
+ ;;=3^Toxic Liver Disease w/ Oth Disorders of Liver
+ ;;^UTILITY(U,$J,358.3,33061,1,4,0)
+ ;;=4^K71.8
+ ;;^UTILITY(U,$J,358.3,33061,2)
+ ;;=^5008803
+ ;;^UTILITY(U,$J,358.3,33062,0)
+ ;;=K71.9^^182^1995^33
+ ;;^UTILITY(U,$J,358.3,33062,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33062,1,3,0)
+ ;;=3^Toxic Liver Disease,Unspec
+ ;;^UTILITY(U,$J,358.3,33062,1,4,0)
+ ;;=4^K71.9
+ ;;^UTILITY(U,$J,358.3,33062,2)
+ ;;=^5008804
+ ;;^UTILITY(U,$J,358.3,33063,0)
+ ;;=K75.2^^182^1995^20
+ ;;^UTILITY(U,$J,358.3,33063,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33063,1,3,0)
+ ;;=3^Nonspecific Reactive Hepatitis
+ ;;^UTILITY(U,$J,358.3,33063,1,4,0)
+ ;;=4^K75.2
+ ;;^UTILITY(U,$J,358.3,33063,2)
+ ;;=^5008826
+ ;;^UTILITY(U,$J,358.3,33064,0)
+ ;;=K75.3^^182^1995^13
+ ;;^UTILITY(U,$J,358.3,33064,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33064,1,3,0)
+ ;;=3^Granulomatous Hepatitis NEC
+ ;;^UTILITY(U,$J,358.3,33064,1,4,0)
+ ;;=4^K75.3
+ ;;^UTILITY(U,$J,358.3,33064,2)
+ ;;=^5008827
+ ;;^UTILITY(U,$J,358.3,33065,0)
+ ;;=F02.80^^182^1996^9
+ ;;^UTILITY(U,$J,358.3,33065,1,0)
+ ;;=^358.31IA^4^2
+ ;;
+ ;;$END ROU IBDEI1VP

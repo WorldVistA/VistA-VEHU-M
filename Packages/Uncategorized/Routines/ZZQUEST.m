@@ -1,0 +1,2 @@
+ZZQUEST ;TEST
+START F I=1:1:50 W !,"?",*7

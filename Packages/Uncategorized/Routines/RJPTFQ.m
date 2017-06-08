@@ -1,0 +1,5 @@
+RJPTFQ ;RJ WILM DE -QUEUE REPORTS DRIVER; 6-19-86
+ ;;4.0
+ K IO("Q") R !,"REQUESTED TIME TO RUN REPORT: NOW// ",X Q:X["^"  S Y=$H I $P("NOW",X,1)]"" S:X'["@" X="T@"_X S %DT(0)=0,%DT="TXE" D ^%DT K %DT G RJPTFQ:Y<1 S X=+Y D H^%DTC S Y=Y_"000",Y=%H_","_($E(Y,9,10)*60+$E(Y,11,12)*60)
+ S X=Y L ^%ZTSK S (^%ZTSK(0),ZTSK)=^%ZTSK(0)+1 L  X ^%ZOSF("UCI")
+ S ^%ZTSK(ZTSK,0)=PGM_"^"_$S($D(DUZ)#2:DUZ,1:"")_"^"_Y_"^"_$H,^%ZTSCH(X,ZTSK)=IO W !,"REQUEST QUEUED!",! Q

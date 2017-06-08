@@ -1,0 +1,130 @@
+IBDEI1YA ; ; 06-AUG-2015
+ ;;3.0;IB ENCOUNTER FORM IMP/EXP;;JUN 29, 2015
+ Q:'DIFQR(358.3)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,358.3,34233,0)
+ ;;=Z47.81^^183^2017^13
+ ;;^UTILITY(U,$J,358.3,34233,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34233,1,3,0)
+ ;;=3^Ortho aftercare following surgical amp
+ ;;^UTILITY(U,$J,358.3,34233,1,4,0)
+ ;;=4^Z47.81
+ ;;^UTILITY(U,$J,358.3,34233,2)
+ ;;=^5063030
+ ;;^UTILITY(U,$J,358.3,34234,0)
+ ;;=Z47.82^^183^2017^12
+ ;;^UTILITY(U,$J,358.3,34234,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34234,1,3,0)
+ ;;=3^Ortho aftercare following scoliosis surgery
+ ;;^UTILITY(U,$J,358.3,34234,1,4,0)
+ ;;=4^Z47.82
+ ;;^UTILITY(U,$J,358.3,34234,2)
+ ;;=^5063031
+ ;;^UTILITY(U,$J,358.3,34235,0)
+ ;;=Z47.89^^183^2017^11
+ ;;^UTILITY(U,$J,358.3,34235,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34235,1,3,0)
+ ;;=3^Ortho Aftercare NEC
+ ;;^UTILITY(U,$J,358.3,34235,1,4,0)
+ ;;=4^Z47.89
+ ;;^UTILITY(U,$J,358.3,34235,2)
+ ;;=^5063032
+ ;;^UTILITY(U,$J,358.3,34236,0)
+ ;;=S06.0X5S^^183^2018^1
+ ;;^UTILITY(U,$J,358.3,34236,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34236,1,3,0)
+ ;;=3^Concussion w LOC >24 hr w ret consc lev, sequela
+ ;;^UTILITY(U,$J,358.3,34236,1,4,0)
+ ;;=4^S06.0X5S
+ ;;^UTILITY(U,$J,358.3,34236,2)
+ ;;=^5020683
+ ;;^UTILITY(U,$J,358.3,34237,0)
+ ;;=S06.0X6S^^183^2018^2
+ ;;^UTILITY(U,$J,358.3,34237,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34237,1,3,0)
+ ;;=3^Concussion w LOC >24 hr w/o ret consc w surv, sequela
+ ;;^UTILITY(U,$J,358.3,34237,1,4,0)
+ ;;=4^S06.0X6S
+ ;;^UTILITY(U,$J,358.3,34237,2)
+ ;;=^5020686
+ ;;^UTILITY(U,$J,358.3,34238,0)
+ ;;=S06.0X3S^^183^2018^3
+ ;;^UTILITY(U,$J,358.3,34238,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34238,1,3,0)
+ ;;=3^Concussion w LOC of 1-5 hrs 59 min, sequela
+ ;;^UTILITY(U,$J,358.3,34238,1,4,0)
+ ;;=4^S06.0X3S
+ ;;^UTILITY(U,$J,358.3,34238,2)
+ ;;=^5020677
+ ;;^UTILITY(U,$J,358.3,34239,0)
+ ;;=S06.0X1S^^183^2018^4
+ ;;^UTILITY(U,$J,358.3,34239,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34239,1,3,0)
+ ;;=3^Concussion w LOC of 30 minutes or less, sequela
+ ;;^UTILITY(U,$J,358.3,34239,1,4,0)
+ ;;=4^S06.0X1S
+ ;;^UTILITY(U,$J,358.3,34239,2)
+ ;;=^5020671
+ ;;^UTILITY(U,$J,358.3,34240,0)
+ ;;=S06.0X2S^^183^2018^5
+ ;;^UTILITY(U,$J,358.3,34240,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34240,1,3,0)
+ ;;=3^Concussion w LOC of 31-59 min, sequela
+ ;;^UTILITY(U,$J,358.3,34240,1,4,0)
+ ;;=4^S06.0X2S
+ ;;^UTILITY(U,$J,358.3,34240,2)
+ ;;=^5020674
+ ;;^UTILITY(U,$J,358.3,34241,0)
+ ;;=S06.0X4S^^183^2018^6
+ ;;^UTILITY(U,$J,358.3,34241,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34241,1,3,0)
+ ;;=3^Concussion w LOC of 6 hours to 24 hours, sequela
+ ;;^UTILITY(U,$J,358.3,34241,1,4,0)
+ ;;=4^S06.0X4S
+ ;;^UTILITY(U,$J,358.3,34241,2)
+ ;;=^5020680
+ ;;^UTILITY(U,$J,358.3,34242,0)
+ ;;=S06.0X9S^^183^2018^7
+ ;;^UTILITY(U,$J,358.3,34242,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34242,1,3,0)
+ ;;=3^Concussion w LOC of unsp duration, sequela
+ ;;^UTILITY(U,$J,358.3,34242,1,4,0)
+ ;;=4^S06.0X9S
+ ;;^UTILITY(U,$J,358.3,34242,2)
+ ;;=^5020695
+ ;;^UTILITY(U,$J,358.3,34243,0)
+ ;;=S06.0X0S^^183^2018^8
+ ;;^UTILITY(U,$J,358.3,34243,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34243,1,3,0)
+ ;;=3^Concussion w/o LOC, sequela
+ ;;^UTILITY(U,$J,358.3,34243,1,4,0)
+ ;;=4^S06.0X0S
+ ;;^UTILITY(U,$J,358.3,34243,2)
+ ;;=^5020668
+ ;;^UTILITY(U,$J,358.3,34244,0)
+ ;;=S06.335S^^183^2018^9
+ ;;^UTILITY(U,$J,358.3,34244,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,34244,1,3,0)
+ ;;=3^Contus/lac cereb, w LOC >24 hr w ret consc lev, sequela
+ ;;^UTILITY(U,$J,358.3,34244,1,4,0)
+ ;;=4^S06.335S
+ ;;^UTILITY(U,$J,358.3,34244,2)
+ ;;=^5020863
+ ;;^UTILITY(U,$J,358.3,34245,0)
+ ;;=S06.336S^^183^2018^10
+ ;;^UTILITY(U,$J,358.3,34245,1,0)
+ ;;=^358.31IA^4^2
+ ;;
+ ;;$END ROU IBDEI1YA

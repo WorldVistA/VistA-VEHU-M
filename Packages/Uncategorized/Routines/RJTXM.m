@@ -1,0 +1,7 @@
+RJTXM ;
+ S XMSUB="WHOA BOY"
+ S XMTEXT="RJT("
+ S XMY(1039)=""
+ S XMDUZ=.5
+ D ^XMD
+ Q

@@ -1,0 +1,119 @@
+NURCCG6Y ;HISC/RM-DATA ROUTINE FOR DATA TRANSFER UTILITY ;12/12/91
+ ;;3.0;Nursing Clinical;;Jan 24, 1996
+ ;;
+ F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO I  S @X=Y
+Q Q
+ ;;^UTILITY("^GMRD(124.2,",$J,2857,0)
+ ;;=teach breathing exercises to decrease pain^3^NURSC^11^1^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2857,9)
+ ;;=D EN2^NURCCPU2
+ ;;^UTILITY("^GMRD(124.2,",$J,2857,10)
+ ;;=D EN1^NURCCPU3
+ ;;^UTILITY("^GMRD(124.2,",$J,2858,0)
+ ;;=teach distraction techniques to minimize pain^3^NURSC^11^1^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2858,9)
+ ;;=D EN2^NURCCPU2
+ ;;^UTILITY("^GMRD(124.2,",$J,2858,10)
+ ;;=D EN1^NURCCPU3
+ ;;^UTILITY("^GMRD(124.2,",$J,2859,0)
+ ;;=teach the use of imagery to decrease pain^3^NURSC^11^1^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2859,9)
+ ;;=D EN2^NURCCPU2
+ ;;^UTILITY("^GMRD(124.2,",$J,2859,10)
+ ;;=D EN1^NURCCPU3
+ ;;^UTILITY("^GMRD(124.2,",$J,2860,0)
+ ;;=skin warm to touch^3^NURSC^^2^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2861,0)
+ ;;=perineal hygiene^3^NURSC^^1^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2862,0)
+ ;;=[Extra Goal]^3^NURSC^9^33^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2862,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2862,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2863,0)
+ ;;=[Extra Goal]^3^NURSC^9^35^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2863,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2863,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2864,0)
+ ;;=[Extra Goal]^3^NURSC^9^36^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2864,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2864,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2865,0)
+ ;;=[Extra Goal]^3^NURSC^9^37^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2865,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2865,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2866,0)
+ ;;=[Extra Goal]^3^NURSC^9^41^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2866,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2866,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2867,0)
+ ;;=[Extra Goal]^3^NURSC^9^42^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2867,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2867,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2868,0)
+ ;;=[Extra Goal]^3^NURSC^9^43^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2868,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2868,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2869,0)
+ ;;=[Extra Goal]^3^NURSC^9^44^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2869,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2869,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2870,0)
+ ;;=[Extra Goal]^3^NURSC^9^45^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2870,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2870,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2871,0)
+ ;;=[Extra Goal]^3^NURSC^9^46^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2871,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2871,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2872,0)
+ ;;=[Extra Goal]^3^NURSC^9^47^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2872,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2872,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2873,0)
+ ;;=[Extra Goal]^3^NURSC^9^50^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2873,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2873,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2874,0)
+ ;;=[Extra Goal]^3^NURSC^9^51^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2874,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2874,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2875,0)
+ ;;=[Extra Goal]^3^NURSC^9^52^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2875,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2875,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2876,0)
+ ;;=[Extra Goal]^3^NURSC^9^53^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,2876,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,2876,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,2877,0)
+ ;;=[Extra Goal]^3^NURSC^9^54^^^T

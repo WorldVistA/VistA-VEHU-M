@@ -1,0 +1,9 @@
+IBXF51 ; COMPILED XREF FOR FILE #357.5 ; 05/23/94
+ ; 
+ S DIKZK=2
+ S DIKZ(0)=$S($D(^IBE(357.5,DA,0))#2:^(0),1:"")
+ S X=$P(DIKZ(0),U,1)
+ I X'="" K ^IBE(357.5,"B",$E(X,1,30),DA)
+ S X=$P(DIKZ(0),U,2)
+ I X'="" K ^IBE(357.5,"C",$E(X,1,30),DA)
+END G ^IBXF52

@@ -1,0 +1,38 @@
+APSPT161 ; GENERATED FROM 'PSO INTERVENTIONS' PRINT TEMPLATE (#1407) ; 03/29/94 ; (continued)
+ G BEGIN
+CP G CP^DIO2
+C S DQ(C)=Y
+S S Q(C)=Y*Y+Q(C) S:L(C)>Y L(C)=Y S:H(C)<Y H(C)=Y
+P S N(C)=N(C)+1
+A S S(C)=S(C)+Y
+ Q
+D I Y=DITTO(C) S Y="" Q
+ S DITTO(C)=Y
+ Q
+N W !
+T W:$X ! I '$D(DIOT(2)),DN,$D(IOSL),$S('$D(DIWF):1,$P(DIWF,"B",2):$P(DIWF,"B",2),1:1)+$Y'<IOSL,$D(^UTILITY($J,1))#2,^(1)?1U1P1E.E X ^(1)
+ S DISTP=DISTP+1 D:'(DISTP#100) CSTP
+ Q
+CSTP I '$D(ZTQUEUED) K DISTOP Q
+ Q:$G(DISTOP)=0  S:$G(DISTOP)="" DISTOP=1
+ I DISTOP'=1 X DISTOP K:'$T DISTOP S DISTOP=$T Q:'$T
+ Q:'$$S^%ZTLOAD
+ W:$G(IO)]"" !,"*** TASK "_ZTSK_" STOPPED BY USER - DURING "_$S($D(DPQ):"SORT",1:"PRINT")_" EXECUTION ***",!! S ZTSTOP=1,DN=0 Q
+DT I Y W $P("JAN^FEB^MAR^APR^MAY^JUN^JUL^AUG^SEP^OCT^NOV^DEC",U,$E(Y,4,5))_" " W:Y#100 $J(Y#100\1,2)_"," W Y\10000+1700 W:Y#1 "  "_$E(Y_0,9,10)_":"_$E(Y_"000",11,12) Q
+ W Y Q
+M D @DIXX
+ Q
+BEGIN ;
+ S:'$D(DN) DN=1 S DISTP=$G(DISTP)
+ D N:$X>0 Q:'DN  W ?0 W:$D(^APSPQA(32.4,D0,16)) "FINANCIAL IMPACT:" K DIP K:DN Y
+ S:'$D(DIWF) DIWF="" S:DIWF'["N" DIWF=DIWF_"N" S X="" S I(1)=16,J(1)=9009032.416 F D1=0:0 Q:$O(^APSPQA(32.4,D0,16,D1))'>0  S D1=$O(^(D1)) D:$X>11 T Q:'DN  D F1
+ G F1R
+F1 ;
+ S X=$G(^APSPQA(32.4,D0,16,D1,0)) S DIWL=1,DIWR=78 D ^DIWP
+ Q
+F1R ;
+ D 0^DIWW K DIP K:DN Y
+ D ^DIWW K Y K DIWF
+ Q
+HEAD ;
+ W !,"--------------------------------------------------------------------------------",!!

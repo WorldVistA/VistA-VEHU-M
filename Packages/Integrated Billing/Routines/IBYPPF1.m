@@ -1,0 +1,117 @@
+IBYPPF1 ;ALB/ARH - IB*2*131 POST INIT: CPT 2000 REPLACEMENTS FOR RC V1 ; 05/25/00
+ ;;2.0;INTEGRATED BILLING;**131**;21-MAR-94
+ ; 
+ Q
+CPT2000 ;
+ N IBA
+ S IBA(1)="",IBA(2)="    CPT 2000 REPLACEMENT CPT CHARGES .....",IBA(3)="" D MES^XPDUTL(.IBA) K IBA
+ ;
+ D DEL2000 ; delete any existing RC charges for the new codes (site defined)
+ D ADD2000 ; add charges for new CPT codes, replacements for inactivated CPT codes
+ ;
+ S IBA(1)="",IBA(2)="    CPT 2000 REPLACEMENT CPT CHARGES DONE",IBA(3)="" D MES^XPDUTL(.IBA) K IBA
+ Q
+ ;
+ADD2000 ; add CPT replacement codes to RC charge sets, use the current charge of the CPT they are replacing
+ N IBA,IBI,IBLN,IBOLD,IBNEW,IBITM,IBCI,IBCIN,IBCS,IBCSN,IBERR,X,Y,DIC S IBERR=0
+ ;
+ F IBI=1:1 S IBLN=$P($T(F2000+IBI),";;",2) Q:IBLN=""  I $E(IBLN,1)'=" " D
+ . ;
+ . S IBOLD=$P(IBLN,U,1) I IBOLD'?5N Q
+ . S IBNEW=$P(IBLN,U,2) I IBNEW'?5N Q
+ . ;
+ . S IBITM=IBOLD_";ICPT(",IBCI=0 F  S IBCI=$O(^IBA(363.2,"B",IBITM,IBCI)) Q:'IBCI  D
+ .. ;
+ .. S IBCIN=$G(^IBA(363.2,+IBCI,0)) I $P(IBCIN,U,3)'=2990901,$P(IBCIN,U,3)'=2981001 Q
+ .. S IBCS=$P(IBCIN,U,2),IBCSN=$G(^IBE(363.1,+IBCS,0)) I '$$CSRC(IBCS) Q
+ .. ;
+ .. I '$$ADDCI^IBCREF(IBCS,IBNEW,3000201,$P(IBCIN,U,5),$P(IBCIN,U,6),$P(IBCIN,U,7)) D
+ ... S IBERR=IBERR+1 D MSG("       ERROR: unable to replace "_IBOLD_" with "_IBNEW_" in "_$P(IBCSN,U,1))
+ ;
+ S IBA(1)="    >> Add CPT 2000 Replacement charges: "_IBERR_" ERRORS"
+ D MES^XPDUTL(.IBA)
+ Q
+ ;
+DEL2000 ; delete any existing charges the site may have added to RC charge sets for the New CPT replacement codes
+ N IBA,IBI,IBLN,IBNEW,IBITM,IBCI,IBCIN,IBCS,IBCNT,X,Y,DIC S IBCNT=0
+ ;
+ F IBI=1:1 S IBLN=$P($T(F2000+IBI),";;",2) Q:IBLN=""  I $E(IBLN,1)'=" " D
+ . ;
+ . S IBNEW=$P(IBLN,U,2) I IBNEW'?5N Q
+ . ;
+ . S IBITM=IBNEW_";ICPT(",IBCI=0 F  S IBCI=$O(^IBA(363.2,"B",IBITM,IBCI)) Q:'IBCI  D
+ .. ;
+ .. S IBCIN=$G(^IBA(363.2,+IBCI,0))
+ .. S IBCS=$P(IBCIN,U,2) I '$$CSRC(IBCS) Q
+ .. ;
+ .. S DA=IBCI,DIK="^IBA(363.2," D ^DIK K DA,DIK S IBCNT=IBCNT+1
+ ;
+ S IBA(1)="    >> Delete any existing charges for CPT 2000 Replacement codes: "_IBCNT_" deleted"
+ D MES^XPDUTL(.IBA)
+ Q
+ ;
+CSRC(IBCS) ; return true if the Charge Set is Reasonable Charges and CPT based
+ N IBX,IBCSN,IBBRN S IBX=0
+ I +$G(IBCS) S IBCSN=$G(^IBE(363.1,+IBCS,0))
+ I $G(IBCSN)'="" S IBBRN=$G(^IBE(363.3,+$P(IBCSN,U,2),0))
+ ;
+ I $G(IBBRN)'="",$E(IBBRN,1,3)="RC ",$P(IBBRN,U,4)=2 S IBX=1
+ ;
+ Q IBX
+ ;
+ ;
+MSG(X) ; 
+ N IBX S IBX=$O(IBA(999999),-1) S:'IBX IBX=1 S IBX=IBX+1
+ S IBA(IBX)=$G(X)
+ Q
+ ;
+ ;
+F2000 ; old^new CPTs
+ ;;32001^32997
+ ;;56300^49320
+ ;;56301^58670
+ ;;56302^58671
+ ;;56303^58662
+ ;;56304^58660
+ ;;56305^49321
+ ;;56306^49322
+ ;;56307^58661
+ ;;56308^58550
+ ;;56309^58551
+ ;;56310^44200
+ ;;56311^38570
+ ;;56312^38571
+ ;;56313^38572
+ ;;56314^49323
+ ;;56315^44970
+ ;;56316^49650
+ ;;56317^49651
+ ;;56318^54690
+ ;;56320^55550
+ ;;56322^43651
+ ;;56323^43652
+ ;;56324^47570
+ ;;56340^47562
+ ;;56341^47563
+ ;;56342^47564
+ ;;56343^58673
+ ;;56344^58672
+ ;;56346^43653
+ ;;56348^44202
+ ;;56349^43280
+ ;;56350^58555
+ ;;56351^58558
+ ;;56352^58559
+ ;;56353^58560
+ ;;56354^58561
+ ;;56355^58562
+ ;;56356^58563
+ ;;56362^47560
+ ;;56363^47561
+ ;;64442^64475
+ ;;64443^64476
+ ;;80049^80048
+ ;;80054^80053
+ ;;80058^80076
+ ;;80059^80074
+ ;;

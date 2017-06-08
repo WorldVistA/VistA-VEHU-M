@@ -1,0 +1,83 @@
+ZRESUTL1 ;UTILS FOR RESPONDER
+GRAPH ;GRAPH THE ARRAY CHOICES
+ I '$D(CHOICES) W !," No data gathered...",*7 Q 
+ I $P(CHOICES(1),"^",2)="" W !," No data gathered...",*7 Q
+ D MINMAX^ZRESUTIL
+ S SPREAD=MAX-MIN,ORIGIN=MIN,MAXX=MAX
+ S INCRE=MAXX-ORIGIN/6,TITLE=$P(KB,"^",4),INCRE=$J(INCRE,1,2)
+ ;
+ ;
+ S SCALE=60/SPREAD
+ ;I SPREAD>60 S SCALE=60/SPREAD
+ENT W # W ?30,"GRAPH OF "_TITLE,!
+ S D=0
+ F K=1:1 S D=$O(CHOICES(D)) Q:D'>0!(K=19)  D  
+ .S Q=CHOICES(D),POS=($P(Q,"^",2)-ORIGIN)*SCALE+12 ;POS=SCALE*$P(Q,"^",2)
+ .W !,$P(Q,"^",3),?11,"|",?+POS,"*"
+ W !,?11,"+----+----+----+----+----+----+----+----+----+----+----+----+----+"
+ S PLOT=ORIGIN
+ W !,?10,ORIGIN F I=2:1:7 S PLOT=PLOT+INCRE W ?(I*10)-1,$J(PLOT,1,1)
+ Q
+HELP W !!!,"The Commands for the Responder are:"
+ W !!,"File Selections",?30,"Field Selections",?50,"General Selections"
+ S $P(LINE,"-",79)="-" W !,LINE
+ W !,"SELECT",?30,"DISPLAY",?50,"CALC"
+ W !,"CHOOSE",?30,"SHOW",?50,"GRAPH"
+ W !?30,"GATHER",?50,"PLOT"
+ W !?30,"LAST",?50,"EXIT"
+ W !!,"Examples of Some Commands",!
+ W !,"Enter Text: SELECT PATIENT",!,"Enter PATIENT:DUCK,D"
+ W !,"Enter Text: DISPLAY SEX =>MALE"
+ W !,"Enter Text: SHOW RELIGION =>CATHOLIC"
+ W !,"Enter Text: DISPLAY LAST GLUCOSE =>146 mg/dl"
+ K LINE W !!!
+ Q
+FIELD K SFLG S $Y=0 R !,"Field to START WITH: ",SFIELD Q:SFIELD=""!(SFIELD="^")
+ R !,"Field to GO TO: ",GFIELD Q:GFIELD=""!(GFIELD="^")  S GFIELD=GFIELD_"Z"
+DISNOD ;SHOW NODE YOUR ON
+ S XFIELD=SFIELD I $D(^ZRKB(SFIELD,1))=11 D  ; EXISTS WITH DESCENDANTS
+ .S XFIELD=SFIELD,SFIELD=$E(XFIELD,1,$L(SFIELD)-1)
+ F  S SFIELD=$O(^ZRKB(SFIELD)) Q:SFIELD=""!($D(SFLG))  D  
+ .I SFIELD]GFIELD S SFLG=1 Q
+ .I SFIELD'[XFIELD Q
+ .S SNUM=0 F  S SNUM=$O(^ZRKB(SFIELD,SNUM)) Q:SNUM'>0  W !,SFIELD,?31,"in file ",$P($G(^ZRKB(SFIELD,SNUM,"FRAME")),"^",1),?50,$P($G(^("FRAME")),"^",2) I $Y>20 R !,"Press return to continue or ^ to exit ",CONT S $Y=0 I CONT="^" S SFLG=1 Q
+ Q
+DRUG ;DRUG INQUIRY
+ S DIC(0)="EM",DIC="^PSDRUG(" D ^DIC I +Y'>0 W !,*7,"Drug does not Exist" S ERR=1 Q
+ S DIK=1,DK=50,DPP(1)="50^^^@",DI=DIC,DIQ(0)="C",^UTILITY("^",$J,1,+Y)=""
+ S S=1 F DIK=1:1:DIK S DA=+$O(^UTILITY(U,$J,DIK,0)),DIC=DI,E="N<0",N=-1,DD=DK W ! X:DIK>1 DX(0) Q:'S  D GUY^DIQ Q:'S
+ W ! K DDH,DI,DIK,DIQ,DISYS,DK,DL,DX,S,DPP,DREF,D0,A
+ Q
+APP ;APPOINTMENT LISTING
+ I DRDA']"" G PAT
+ S SDAMTYP="P",SDFN=DA,SDY="DPT(",ZMUS=1 D EN^SDAM
+ K ZMUS,ORX Q
+OPER ;VIEW OPERATIONS
+ I DRDA']"" G PAT
+ D ^MUSOPS I '$D(MUSOUT) D ^SROPRPT1
+ S ANS="" K SRSITE,SRTN,MUSOUT
+ Q
+HEALTH ;HEALTH SUMMARY VIEW
+ I DRDA']"" G PAT
+ S ARG=$P(ARG," HEALTH",1) I ARG["," F MUSF=1:1 S X=$P(ARG,",",MUSF) Q:X=""  D MUSG D:Y<0 HLH I +Y>0 S HEALTH=Y(0) D MUS^MUSGMTS R !,"Press Return to Continue or ^ to quit: ",RET I RET="^" Q
+ I ARG'["," S X=ARG D MUSG D:Y<0 HLH I +Y>0 S HEALTH=Y(0) D MUS^MUSGMTS
+ Q
+HLH W !!,"I'm sorry there is no Health Summary Component "_X,! H 2
+ Q
+MUSG S DIC="^GMT(142,12,1,",DIC(0)="QMZ" D ^DIC
+ Q
+CATH I DRDA']"" G PAT
+ S DIC="^MCAR(691.1,",MCARZ="CATHETERIZATION REPORT",MCARGRTN="CATH1"
+LOOK S DIC(0)="EMQ",X=$P(^DPT(DRDA,0),"^",1) D ^DIC Q:Y<0  S (MCARGDA,DA)=+Y D PRINT^MCARP
+ Q
+CY I DRDA']"" G PAT
+ S HOLD=LRDFN,X="CYTOPATHOLOGY" D ^LRUTL G:Y<0 ENDLR D ^MUSCUM,V^LRU S LRDFN=HOLD Q
+SP I DRDA']"" G PAT
+ S HOLD=LRDFN,X="SURGICAL PATHOLOGY" D ^LRUTL G:Y<0 ENDLR D ^MUSCUM,V^LRU S LRDFN=HOLD Q
+EM I DRDA']"" G PAT
+ S HOLD=LRDFN,X="EM" D ^LRUTL G:Y<0 ENDLR D ^MUSCUM,V^LRU S LRDFN=HOLD Q
+ENDLR ;
+ W !,"Sorry No Reports for this Patient",!
+ D V^LRU Q
+PAT ;
+ W !,"Patient has not been Selected",*7,! S ERR=1 Q

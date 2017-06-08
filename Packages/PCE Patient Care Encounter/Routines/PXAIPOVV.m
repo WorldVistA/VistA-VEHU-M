@@ -1,0 +1,37 @@
+PXAIPOVV ;ISL/JVS,SCK - VALIDATE DIAGNOSIS ;6/6/96  07:40
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**121,194,199**;Aug 12, 1996;Build 52
+ ;
+VAL ;--VALIDATE ENOUGH DATA
+ N ICDDATA,PXDXDATE
+ ;----Missing a pointer to DIAGNOSIS (ICD) name
+ I ($G(PXAA("DIAGNOSIS"))']"")!(+$G(PXAA("DIAGNOSIS"))=0) D  Q:$G(STOP)
+ .S STOP=1 ;--USED TO STOP DO LOOP
+ .S PXAERRF=1 ;--FLAG INDICATES THERE IS AN ERROR
+ .S PXADI("DIALOG")=8390001.001
+ .S PXAERR(9)="DIAGNOSIS"
+ .S PXAERR(11)=$G(PXAA("DIAGNOSIS"))
+ .S PXAERR(12)="You are missing a pointer that represents a diagnosis in the DIAGNOSIS file."
+ ;
+ ;----Only necessary to get the ICD data once from the API in the case of this routine
+ S PXDXDATE=$$CSDATE^PXDXUTL(PXAVISIT)
+ S ICDDATA=$$ICDDATA^ICDXCODE("DIAG",$G(PXAA("DIAGNOSIS")),PXDXDATE,"I")
+ ;----NOT a pointer to DIAGNOSIS ICD FILE #80
+ I $P(ICDDATA,U,1)'>0,$G(PXAA("DELETE"))'=1 D  Q:$G(STOP)
+ .S STOP=1
+ .S PXAERRF=1
+ .S PXADI("DIALOG")=8390001.001
+ .S PXAERR(9)="DIAGNOSIS"
+ .S PXAERR(11)=$G(PXAA("DIAGNOSIS"))
+ .S PXAERR(12)=PXAERR(11)_" points to an "_$P(ICDDATA,U,2)_"."
+ ;
+ ;----not an Active ICD code
+ I $P(ICDDATA,U,10)'=1 D  Q:$G(STOP)
+ .S STOP=1
+ .S PXAERRF=1
+ .S PXADI("DIALOG")=8390001.001
+ .S PXAERR(9)="DIAGNOSIS"
+ .S PXAERR(11)=$G(PXAA("DIAGNOSIS"))
+ .S PXAERR(12)=PXAERR(11)_" is NOT an Active ICD code."
+ ;
+ ;
+ Q

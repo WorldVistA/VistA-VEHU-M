@@ -1,0 +1,113 @@
+AXAPCHA ;WPB/GBH-PATCH OPTIONS FOR ADPACS
+ ;;2.0;WPB Patch Tracking;10-SEP-1998;;Build 2
+ ;
+ ;S LINE="============================================================"
+ ;G FIND
+START ;D FIND I COUNT=0 D SORRY G EXIT
+ ;D DISPLAY G:$G(ANS)["^"!($G(ANS)']"") EXIT
+ ;G START
+ ;
+FIND ;
+ K ^TMP($J)
+ ;S COUNT=0
+ ;
+PACKAGE ;
+ S NSP=""
+ F  D  Q:$G(NSP)']""
+ .S NSP=$O(^AXA(548260,"ADNS",165,NSP)) Q:$G(NSP)']""
+ .D PATCHES
+ Q
+ ;
+PATCHES ;
+ S RECNR=0
+ F  D  Q:RECNR'>0
+ .S RECNR=$O(^AXA(548261,"ANSP",NSP,RECNR)) Q:+RECNR'>0
+ .S RECORD=$G(^AXA(548261,RECNR,0))
+ .D PIECES
+ Q
+ ;
+PIECES ;
+ S STATS=$S($P($G(RECORD),U,14)]"":$P($G(RECORD),U,14),1:"*")
+ I STATS'="*" S STATS=$P($G(^AXA(548260.1,STATS,0)),U,1)
+ I STATS'="IN TEST" Q
+ S DESIG=$S($P($G(RECORD),U,1)]"":$P($G(RECORD),U,1),1:"*")
+ S NAMSP=$S($P($G(RECPRD),U,2)]"":$P($G(RECORD),U,2),1:"*")
+ S TSTVR=$S($P($G(RECORD),U,4)]"":$P($G(RECORD),U,4),1:"*")
+ S INTST=$S($P($G(RECORD),U,8)]"":$P($G(RECORD),U,8),1:"*")
+ S SUBJT=$S($P($G(RECORD),U,17)]"":$P($G(RECORD),U,17),1:"*")
+ S SEQUE=$S($P($G(RECORD),U,18)]"":$P($G(RECORD),U,18),1:"*")
+ S MSGTS=$S($P($G(RECORD),U,19)]"":$P($G(RECORD),U,19),1:"*")
+ S MSGLI=$S($P($G(RECORD),U,20)]"":$P($G(RECORD),U,20),1:"*")
+ S ^TMP($J,1,DESIG,SEQUE,TSTVR,SUBJT,MSGTS,STATS)=""
+ S COUNT=COUNT+1
+ S TL(COUNT)=$P($G(RECORD),U,1)
+ S SVCPTR=$P($G(RECORD),U,5)
+ S SVC(COUNT)=$P(^DIC(49,+SVCPTR,0),"^",1)
+ S SEC(COUNT)=$P($G(RECORD),U,6)
+ S AUT(COUNT)=AUTH(AUTH)
+ Q
+ ;
+DISPLAY ;----  Display the T&L units and authorizations  ----
+ ;
+ W @IOF,!!
+ W ?11,"YOU HAVE 'SUPERVISOR' ACCESS TO THE FOLLOWING T&L UNIT(S)",!!
+ W ?10,LINE,!,?12,"ITEM",?24,"T&L",?36,"SERVICE",?57,"SECTION",!
+ W ?10,LINE,! F X=1:1:COUNT D
+ .W !,?13,X,?24,$G(TL(X))
+ .W ?33,$E($G(SVC(X)),1,15),?54,$E($G(SEC(X)),1,15)
+ ;
+SELECT W !!,"REPORT FOR WHICH ITEM? (1-",COUNT,", ALL, or '^' to exit): "
+ S ANS="" R ANS:DTIME Q:$G(ANS)["^"!($G(ANS)']"")
+ I "ALLall"[ANS D ALL Q
+ I (ANS<1)!(ANS>COUNT) W !,*7,"SELECT (1-",COUNT,") ONLY" G SELECT
+ I +ANS S MYTL=TL(ANS) D GETIO,PRINT
+ Q
+ALL ;
+ D GETIO S IOP=ION
+ S ZZX=0 D  Q:$G(ZZX)']""
+ .F  D  Q:$G(ZZX)']""
+ ..S ZZX=$O(TL(ZZX)) Q:$G(ZZX)']""
+ ..S MYTL=TL(ZZX) D PRINT
+ Q
+GETIO ;
+ D ^%ZIS U IO S IOP=ION
+ Q
+SORRY ;
+ W @IOF,!!!!!,?8,LINE
+ W !,?10,"Sorry, you are not on file as SUPERVISOR for any T&L Unit.",*7
+ W !,?13,"Only SUPERVISORS for T&L Units may use this option."
+ W !,?8,LINE,!!!!!,$C(7)
+ Q
+PRINT ;
+ I MYTL
+ S ZEND1="END OF T&L UNIT: "
+ S ZEND2=" ... Hit <ENTER> to continue."
+ S DIC=450,L=0
+ S BY="80;@,7,.01"
+ S FR(1)="N",FR(2)=MYTL,FR(3)=""
+ S TO(1)="N",TO(2)=MYTL,TO(3)=""
+ S FLDS="[AXA BALANCES]"
+ S DIOBEG="W:$E(IOST,1,2)=""C-"" @IOF"
+ S DIOEND="W !!,ZEND1,MYTL I $E(IOST,1,2)=""C-"" W ZEND2 R ZCONT:DTIME"
+ S IOP=ION
+ D EN1^DIP
+ Q
+ ;
+SET N X1 S X1=$P($G(^AXA(548260,DA,0)),U,2) Q:X1']""
+ S ^AXA(548260,"ADNS",X,X1,DA)="" Q
+ ;
+KILL N X1 S X1=$P($G(^AXA(548260,DA,0)),U,2) Q:X1']""
+ K ^AXA(548260,"ADNS",X,X1,DA) Q
+ ;
+SET2 N X1 S X1=$P($G(^AXA(548260,DA,0)),U,5) Q:X1']""
+ S ^AXA(548260,"ADNS",X1,X,DA)="" Q
+ ;
+KILL2 N X1 S X1=$P($G(^AXA(548260,DA,0)),U,5) Q:X1']""
+ K ^AXA(548260,"ADNS",X1,X,DA) Q
+ ;
+EXIT D ^%ZISC
+ K ANS,AUT,AUTH,BY,COUNT,DIOBEG,DIOEND,DHD,DIC,FLDS,FOUND,FR,IEN,IOP
+ K L,LINE,MYTL,NAM,NAME,RECNR,RECORD,SEC,SELECT,SVC,SVCPTR,TL,TO,X,Y
+ K ZEND1,ZEND2,ZZX,ZZY
+ W !!!!!,?32,"Goodby...",!
+ Q

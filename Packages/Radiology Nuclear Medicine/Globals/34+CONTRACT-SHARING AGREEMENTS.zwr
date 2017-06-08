@@ -1,0 +1,18 @@
+OSEHRA ZGO Export: CONTRACT/SHARING AGREEMENTS
+08-JUN-2017 10:36:47 ZWR
+^DIC(34,0)="CONTRACT/SHARING AGREEMENTS^34^3^3"
+^DIC(34,0,"DD")="@"
+^DIC(34,0,"DEL")="@"
+^DIC(34,0,"GL")="^DIC(34,"
+^DIC(34,0,"LAYGO")="@"
+^DIC(34,0,"RD")="D"
+^DIC(34,0,"WR")="@"
+^DIC(34,1,0)="DOD^S"
+^DIC(34,2,0)="CVS^C"
+^DIC(34,3,0)="RETRO LOG INPATIENT^C"
+^DIC(34,"%D",0)="^^2^2^2950822^^^^"
+^DIC(34,"%D",1,0)="This file contains the Contract and Sharing agreements used in"
+^DIC(34,"%D",2,0)="Radiology."
+^DIC(34,"B","CVS",2)=""
+^DIC(34,"B","DOD",1)=""
+^DIC(34,"B","RETRO LOG INPATIENT",3)=""

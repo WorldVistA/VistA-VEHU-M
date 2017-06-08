@@ -1,0 +1,49 @@
+ADXTAFL4 ;523/KC stuff follow-up fields into 165.5 ;10-aug-1992
+ ;;1.1;;
+ ; (FIRST RECURRENCE)
+EN ;
+ ; INPUT VARIABLES: ADXT(""), MRS FIELD VALUES ARE STORED BY SUBSCRIPT
+ ; ADXTDA: 165.5 ENTRY TO STUFF INTO
+ ; OUTPUT VARIABLES: NONE
+ ;
+ N ADXTFLD,ADXTFNUM,ADXTLINE,ADXTZZ,ADXTI
+ ;
+ U IO
+ S ADXTFNUM=165.5
+ ;
+ ; if already a recurrence, goto SUBSEQUENT recurrence routine
+ I $P($G(^ONCO(165.5,ADXTDA,5)),"^",1)]"" D ^ADXTAFL6 Q
+ ;
+ ; goto exit if no valid TYPE for recurrence
+ I $$TRANSET^ADXTUT1("FTYPRC",ADXT("FTYPRC"))<0 G EXIT
+ ;
+ ; if NEVER DISEASE-FREE, only add Type as never disease free
+ I $$TRANSET^ADXTUT1("FTYPRC",ADXT("FTYPRC"))=4 D  Q
+ .S ADXTLINE=$P($T(FIELDS2+1),";;",2),ADXTFLD=$P(ADXTLINE,"^",2)
+ .K ADXTSBF,ADXTSBDA D ^ADXTEDIT
+ ;
+ ; if a first RECURRENCE:
+ I '+$$DTCVT^ADXTUT(ADXT("FFRC")) Q  ; quit if no date!!
+ F ADXTI=1:1 S ADXTLINE=$P($TEXT(FIELDS+ADXTI),";;",2) Q:ADXTLINE=""  D
+ .S ADXTFLD=$P(ADXTLINE,"^",2)
+ .K ADXTSBF,ADXTSBDA
+ .D ^ADXTEDIT
+EXIT ;
+ K ADXTFLD,ADXTFNUM,ADXTLINE,ADXTZZ,ADXTI
+ Q
+ ; PIECE LISTING:
+ ; ==============
+ ; 1: VA file MRS var to be added into
+ ; 2: VA field MRS var to be added into
+ ; 3: MRS field to add
+ ; 4: 3 OR 4 FOR SLASHES, OR W IF WORD PROCESSING
+ ; 5:50: input transform
+ ;
+FIELDS2 ;
+ ;;165.5^71^FTYPRC^3^S X=$$TRANSET^ADXTUT1("FTYPRC",X) K:(+X<0) X
+FIELDS ;
+ ;;165.5^70^FFRC^4^S X=$$DTCVT^ADXTUT(X) K:'+X X
+ ;;165.5^71^FTYPRC^3^S X=$$TRANSET^ADXTUT1("FTYPRC",X) K:(+X<0) X
+ ;;165.5^71.1^FST1^3^S X=$$TRANSET^ADXTUT1("FST1",X) K:(+X<0) X
+ ;;165.5^71.2^FST2^3^S X=$$TRANSET^ADXTUT1("FST2",X) K:(+X<0) X
+ ;;165.5^71.3^FST3^3^S X=$$TRANSET^ADXTUT1("FST3",X) K:(+X<0) X

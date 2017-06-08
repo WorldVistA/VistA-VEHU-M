@@ -1,0 +1,19 @@
+LRXO8 ;SLC/DCM - Check max freq of lab orders ;8/30/89  10:09 [ 06/06/97  9:19 AM ]
+ ;;5.2;LAB SERVICE;**100**;Sep 27, 1994
+SING ;
+ ;K LRZX S LRSAMP=0 F  S LRSAMP=$O(^XUTL("OR",$J,"LROT",LRSAMP)) Q:LRSAMP<1  S LRSPEC=0 F  S LRSPEC=$O(^XUTL("OR",$J,"LROT",LRSAMP,LRSPEC)) Q:LRSPEC<1  D
+ ;.S LRSPN=0 F  S LRSPN=$O(^XUTL("OR",$J,"LROT",LRSAMP,LRSPEC,LRSPN)) Q:LRSPN<1  S LRTY=+^XUTL("OR",$J,"LROT",LRSAMP,LRSPEC,LRSPN) D MAX
+ Q
+MAX ;Check max in a single day
+ Q:'LRTY!('$D(^LAB(60,LRTST,3,"B",LRSAMP)))  S LRMAXX=^LAB(60,LRTST,3,$O(^LAB(60,LRTST,3,"B",LRSAMP,0)),0)
+CHK N GO S LRMAX1=+$P(LRMAXX,"^",7),GO=0 I LRMAX1,$D(TT(LRTY,LRSPEC)),TT(LRTY,LRSPEC)'<LRMAX1 D
+DAY . W !!,?7,$C(7),LRTSTNM_" order has exceeded the DAILY maximum.",!," Do you really want order another one?" S %=2 D YN^DICN Q:%=1  I %=0 W !,"YOU ARE ALLOWED TO OVERRIDE THIS DAILY MAXIMUM CHECK BY ENTERING YES" G DAY
+ S LRMAX2=+$P(LRMAXX,"^",5) D:LRMAX2 NEW
+ Q
+NEW ;Check max for number of days
+ K LRDAX S X1=$O(TT(LRTY,LRSPEC,LROST\1-1)),Y=$O(TT(LRTY,LRSPEC,-LROST\1-1))
+ I X1 S X2=LROST\1 D ^%DTC S:X<LRMAX2 LRDAX(2)=X
+ I Y S X2=-Y,X1=LROST\1 D ^%DTC S:X<LRMAX2 LRDAX(1)=X
+N1 Q:'$D(LRDAX)  W !!,LRTSTNM," Exceeds maximum order FREQUENCY. Do You really want another? " S %=2 D YN^DICN Q:%=1  I %=0 W !,"This test has a maximum order frequency" G N1
+ I %'=1 S LREND=1
+ Q

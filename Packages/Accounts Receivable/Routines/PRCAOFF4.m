@@ -1,0 +1,74 @@
+PRCAOFF4 ;WASH-ISC@ALTOONA,PA/TJK-IRS pre-offsets ;6/12/95  10:56 AM
+V ;;4.5;Accounts Receivable;**11**;Mar 20, 1995
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
+ N DIE,DA,DR,PERS,PRCFASYS,PRCHAUTO,X,X1,X2,CSLENGTH
+ S (CT1,CT2)=0
+ F PRCADEB=0:0 S PRCADEB=$O(^PRCA(430,"C",PRCADEB)) Q:'PRCADEB  S PRCADEBT=0 K ^TMP($J,"PRCAOFF4","BILL") D M
+ D SEND
+ Q
+M S PRCALDD="" F PRCABN=0:0 S PRCABN=$O(^PRCA(430,"C",PRCADEB,PRCABN)) Q:'PRCABN  D:$D(^PRCA(430,PRCABN,0)) CHKM I $O(^PRCA(430,"C",PRCADEB,PRCABN))="" D CM
+ Q
+CHKM ;Check for valid IRS OFFSET MASTER bill
+ I $P(^RCD(340,PRCADEB,0),"^")'["DPT" Q
+ I ",1,2,18,22,23,"'[(","_$P(^PRCA(430,PRCABN,0),"^",2)_",") Q
+ Q:$S('$D(^PRCA(430,PRCABN,6)):1,$P(^(0),"^",8)'=16:1,1:0)
+ S PRCALDD=$P(^PRCA(430,PRCABN,0),"^",10),PRCA0=$G(^PRCA(430,PRCABN,0))
+ S Y=^PRCA(430,PRCABN,7),PRCATOT=0 F X=1:1:5 S PRCATOT=PRCATOT+$P(Y,"^",X)
+ S PRCADEBT=PRCADEBT+PRCATOT,X=DT_"^"_$P(Y,"^")_"^"_$P(Y,"^",2)_"^"_($P(Y,"^",3)+$P(Y,"^",4)+$P(Y,"^",5))_"^^"_PRCATOT,^TMP($J,"PRCAOFF4","BILL",PRCABN)=X
+ Q
+CM ;Create IRS OFFSET MASTER code sheet
+ G CMQ:PRCADEBT<25 S PRCHAUTO=1,PRCFA("TTF")=999,PRCFASYS="IRS" D TT^PRCFAC,NEWCS^PRCFAC I '$D(DA) H 15 G CM
+ S DFN=+^RCD(340,PRCADEB,0) D DEM^VADPT
+ S PRCAN01=$TR($P(VADM(1),",",1),"'`-_/\.()=, ")
+ S ^PRCF(423,DA,1005)="04^81^"_$E($P($P(PRCAN01,"^"),","),1,4)_"^"_$P(VADM(2),"^",1)_"^^^  ^^"_$S($E(DT,2,3)=99:"00",$L(+$E(DT,2,3))=1:0_($E(DT,2,3)+1),1:($E(DT,2,3)+1))_"^^0^"_$E($P(VADM(1),","),1,20)
+ S ^PRCF(423,DA,1005)=^PRCF(423,DA,1005)_"^"_$E($P(VADM(1),",",2),1,15)_"^"_PRCADEBT_"^  ^000^"_$E("000000000",1,9-$L(PRCADEB))_PRCADEB_"^"_PRCALDD_"^ ^1"
+ S $P(^PRCF(423,DA,0),"^",2)=PRC("SITE"),$P(^(1),"^",16)="$",$P(^(300),"^",12)="   "
+ S CSLENGTH=151 D XMIT
+ K DFN,VADM,VAERR
+CMQ Q
+ERR ;Setup mailman message of rejected code sheets
+ S ^TMP($J,"PRCAOFF4",1)="IRS OFFSET rejected code sheets"
+ S DFN=+^RCD(340,PRCADEB,0) D DEM^VADPT
+ S CT1=CT1+1,^TMP($J,"PRCAOFF4",1,CT1)="Code sheet for debtor #"_PRCADEB_" ("_VADM(1)_") could not be processed!"
+ S CT1=CT1+1,^TMP($J,"PRCAOFF4",1,CT1)=^PRCF(423,DA,"CODE",1,0)
+ S DIK="^PRCF(423," D ^DIK
+ D KVAR^VADPT
+ Q
+XMIT ;Give record to code sheet package
+ D ^PRCFACX1 S X=0 F Y=0:0 S Y=$O(^PRCF(423,DA,"CODE",Y)) Q:'Y  S X=X+$L(^(Y,0))
+ I X'=CSLENGTH D ERR G XMITQ
+ D ENCODE^PRCFES1(DA,ARDUZ,.X) I X<1 D ERR G XMITQ
+ S DR=".3///^S X=""N"";.5///^S X=DT;.6///^S X=""IRS"";.8///^S X=3",DIE="^PRCF(423," D ^DIE
+ ;F X=0:0 S X=$O(^TMP($J,"PRCAOFF4","BILL",X)) Q:'X  S $P(^PRCA(430,X,6),"^",15,20)=^(X)
+ S:'$D(^TMP($J,"PRCAOFF4",2)) ^(2)="IRS PRE-OFFSET LIST"
+ S CT2=CT2+1
+ S ^TMP($J,"PRCAOFF4",2,CT2)=VADM(1)_" (Debtor #"_PRCADEB_")   AMOUNT: "_PRCADEBT
+XMITQ Q
+SEND ;Send mailman message
+ N XMY,XMDUZ,XMSUB,XMTEXT
+ F PRCA=0:0 S PRCA=$O(^TMP($J,"PRCAOFF4",PRCA)) Q:'PRCA  S XMSUB=^(PRCA) D SEND1
+ Q
+SEND1 ;Send message
+ S XMDUZ="AR Package",XMTEXT="^TMP($J,""PRCAOFF4"","_PRCA_",",XMY("G.IRS")="",XMY(ARDUZ)=""
+ D ^XMD
+ Q
+IRSPRE ;IRS PRE-OFFSET CODE SHEET FROM BACKGROUND JOB
+ N ZTDESC,ZTASK,ZDTDTH,ZTIO,ZTRTN,PRC,PRCF,ARDUZ,PRCASIG
+ I $E(DT,5,7)=725 D
+    .S ARDUZ=$P(^RC(342,1,3),U,4) Q:'ARDUZ
+    .D PARAM
+    .S PRCASIG=$P(^VA(200,ARDUZ,20),U,2)
+    .S ZTIO="",ZTRTN="^PRCAOFF4",ZTDESC="IRS Pre-Offset Code Sheets"
+    .S ZTDTH=$H,ZTSAVE("PRC(")=""
+    .S ZTSAVE("ARDUZ")="",ZTSAVE("PRCASIG")="" D ^%ZTLOAD
+ Q
+PARAM ;SETS PRC ARRAY
+ N Y
+ S Y=$E(DT,2,3),Y(1)=$E(DT,4,5)
+ S PRC("FY")=$S(+Y(1)<10:Y+1,1:Y)
+ S PRC("QTR")=$S(+Y(1)<4:2,+Y(1)<7:3,+Y(1)<10:4,1:1)
+ S Y=$P(^VA(200,ARDUZ,0),U),Y=$P(Y,",",2)_" "_$P(Y,",")
+ S PRC("PER")=ARDUZ_U_Y
+ S PRC("SITE")=$$SITE^RCMSITE
+ S PRC("PARAM")=$G(^PRC(411,PRC("SITE"),0))
+ Q

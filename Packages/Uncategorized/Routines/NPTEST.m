@@ -1,0 +1,3 @@
+NPTEST ;
+ F I=1:1:10000 S A=I H 1
+ Q

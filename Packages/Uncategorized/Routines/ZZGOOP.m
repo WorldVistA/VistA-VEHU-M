@@ -1,0 +1,4 @@
+ZZGOOP ;BHAM ISC
+ S DFN=0 F  S DFN=$O(^PS(55,DFN)),IFN=0 Q:'DFN  D  F  S IFN=$O(^PS(55,DFN,"P",IFN)) Q:'IFN  S RXN=+^PS(55,DFN,"P",IFN,0)  I $P($G(^PSRX(RXN,0)),"^",2)'=DFN K ^PS(55,DFN,"P",IFN,0) S $P(^PS(55,DFN,"P",0),"^",4)=$P(^PS(55,DFN,"P",0),"^",4)-1
+ .S (EXDT,RXN)=0 F  S EXDT=$O(^PS(55,DFN,"P","A",EXDT)) Q:'EXDT  F  S RXN=$O(^PS(55,DFN,"P","A",EXDT,RXN)) Q:'RXN  I $P($G(^PSRX(RXN,0)),"^",2)'=DFN K ^PS(55,DFN,"P","A",EXDT,RXN)
+ Q

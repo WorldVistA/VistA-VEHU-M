@@ -1,0 +1,35 @@
+PRCPEQTY ;WISC/RFJ-edit quantities and dueins ;11 Dec 91
+ ;;4.0;IFCAP;;9/23/93
+ Q
+ ;
+ ;
+QTY(V1,V2) ;     |-> adjust primary or secondary quantity
+ ;     |-> v1 = inventory point
+ ;     |-> v2 = itemda
+ N %,INVPT,ITEMDA,ITEMDATA,ORDERNO,PRCPEQTY,PRCPID,QTY,REASON,UNIT,VALUE,X,Y
+ S INVPT=+V1,ITEMDA=+V2,ITEMDATA=$G(^PRCP(445,INVPT,1,ITEMDA,0))  Q:ITEMDATA=""
+ S UNIT=$$UNITVAL^PRCPUX1($P(ITEMDATA,"^",14),$P(ITEMDATA,"^",5)," per ") W !!?3,"QTY ON-HAND (in ",UNIT,"): ",+$P(ITEMDATA,"^",7)
+ S:$P(ITEMDATA,"^",27)="" $P(ITEMDATA,"^",27)=$J($P(ITEMDATA,"^",7)*$P(ITEMDATA,"^",22),0,2) W !?13,"INVENTORY VALUE: ",$J($P(ITEMDATA,"^",27),0,2)
+ W ! D QTY^PRCPEAD2(-$P(ITEMDATA,"^",7),999999-$P(ITEMDATA,"^",7)) Q:QTY["^"
+ W ! D VALUE^PRCPEAD2(-9999999.99,9999999.99,"",0) Q:VALUE["^"
+ S QTY=+QTY,VALUE=+VALUE I QTY=0,VALUE=0 Q
+ W ! D REASON^PRCPEAD2("") Q:REASON["^"
+ S ORDERNO=$$ORDERNO^PRCPUTR(INVPT)
+ K PRCPEQTY S PRCPEQTY("QTY")=QTY,PRCPEQTY("INVVAL")=VALUE,PRCPEQTY("SELVAL")=0,PRCPEQTY("REASON")="0:"_REASON,PRCPEQTY("2237PO")="" D ITEM^PRCPUUIW(INVPT,ITEMDA,"A",ORDERNO,.PRCPEQTY)
+ Q
+ ;
+ ;
+DUEIN(V1,V2) ;     |-> change primary or secondary due-ins
+ ;     |-> v1=inventory point
+ ;     |-> v2=itemda
+ N %,%H,D,D0,D1,DA,DI,DQ,DR,INVPT,ITEMDA,ITEMDATA,PRCPTYPE,UNIT,X,Y
+ S INVPT=+V1,ITEMDA=+V2,ITEMDATA=$G(^PRCP(445,INVPT,1,ITEMDA,0))  Q:ITEMDATA=""
+ S PRCPTYPE=$P(^PRCP(445,INVPT,0),"^",3)
+ S UNIT=$$UNITVAL^PRCPUX1($P(ITEMDATA,"^",14),$P(ITEMDATA,"^",5)," per ") W !!?3,"QTY DUE-IN (in ",UNIT,"): ",+$P(ITEMDATA,"^",8),!
+ ;check outstanding transactions; reset total duein quantity
+ ;D LOOPOUT^PRCPUTRA(INVPT,ITEMDA)
+ S:'$D(^PRCP(445,V1,1,V2,7,0)) ^(0)="^445.09P^^" S (DIC,DIE)="^PRCP(445,"_V1_",1,",DA(1)=V1,DA=V2,DR=$S(PRCPTYPE="S":8,1:20) D ^DIE K DIE,DIC
+ I PRCPTYPE="S" Q
+ S (X,Y)=0 F  S X=$O(^PRCP(445,INVPT,1,ITEMDA,7,X)) Q:'X  S Y=Y+$P($G(^(X,0)),"^",2)
+ S X=Y-$P(^PRCP(445,INVPT,1,ITEMDA,0),"^",8) I X W !?5,"...total DUE-IN QUANTITY adjusted (by: ",X,") to: ",Y D DUEIN^PRCPUTRA(V1,V2,X)
+ Q

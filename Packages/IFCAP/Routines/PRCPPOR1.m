@@ -1,0 +1,46 @@
+PRCPPOR1 ;WISC/RFJ-check items before receiving ;31 July 91
+ ;;4.0;IFCAP;;9/23/93
+ N %,CONV,COSTCTR,COSTCNTR,DIST,ERRORNUM,ITEMDA,LINEDA,PARTDATE,PODATA,PRCPFLAG,PRCPUI,QTYRECVE,TOTCOST,TRANDA,TRANDATA,TRUI
+ W !,"Please wait while I check the packaging units on the items to receive..."
+ S COSTCTR=+$P(^PRC(442,PODA,0),"^",5)
+ K ^TMP($J) S PARTDATE=$P(PARTLDAT,"^"),ERRORNUM=0
+ S LINEDA=0 F  S LINEDA=$O(^PRC(442,PODA,2,LINEDA)) Q:'LINEDA!($G(PRCPFLAG))  S PODATA=$G(^PRC(442,PODA,2,LINEDA,0)) I PODATA'="" D
+ .   S %=$O(^PRC(442,PODA,2,"AB",PARTDATE,LINEDA,0)) Q:'%
+ .   S QTYRECVE=+$P($G(^PRC(442,PODA,2,LINEDA,3,%,0)),"^",2) I 'QTYRECVE Q
+ .   S ITEMDA=+$P(PODATA,"^",5) I 'ITEMDA,$P(PODATA,"^",13)'="" S ITEMDA=+$O(^PRC(441,"BB",$P(PODATA,"^",13),0))
+ .   S TOTCOST=$J(QTYRECVE*$P(PODATA,"^",9),0,2),TRANDA=""
+ .   S PRCPUI=$$UNITVAL^PRCPUX1($P(PODATA,"^",12),$P(PODATA,"^",3),"/")
+ .   S TRANDA=+$P(^PRC(442,PODA,0),"^",12) S:'TRANDA TRANDA=$P(PODATA,"^",10) S %=$S($D(^PRCS(410,TRANDA,0)):$P(^(0),"^",6),1:"")
+ .   I %'=PRCP("I") S ERRORNUM=ERRORNUM+1,^TMP($J,"PRCPPOR",LINEDA,ERRORNUM)="A INVENTORY POINT IS NOT ON THE 2237 REQUEST ("_$P($G(^PRCS(410,TRANDA,0)),"^")_")|THIS ITEM CANNOT BE RECEITED IN!" D STORE Q
+ .   ;
+ .   ;     |-> item not in inventory point, cost to distribution point
+ .   I '$D(^PRCP(445,PRCP("I"),1,ITEMDA,0)) D  Q
+ .   .   D STORE
+ .   .   W !!,"********** Item NOT stored in ",PRCP("IN")," inventory point **********",!,"Line Number: ",+$P(PODATA,"^"),?20,"Master Item Number: ",ITEMDA,!?2,"DESCRIPTION: "
+ .   .   K X S %=0 F I=1:1 S %=$O(^PRC(442,PODA,2,LINEDA,1,%)) Q:'%  S X(I)=^(%,0)
+ .   .   F %=1:1 Q:'$D(X(%))  D  W $E(X(%),1,65),!?14 S:$E(X(%),66)'="" X(%+1)=$E(X(%),66,99)_$G(X(%+1))
+ .   .   .   F I=1:1 Q:$E(X(%),I)'=" "
+ .   .   .   S X(%)=$E(X(%),I,255)
+ .   .   ;select distribution point
+ .   .   F  S DIST=$$DISTRPT^PRCPUINV(PRCP("I")) S:DIST["^" PRCPFLAG=1 Q:'DIST  D  Q:$G(DIST)!($G(PRCPFLAG))
+ .   .   .   S COSTCNTR=$P($G(^PRCP(445,DIST,0)),"^",7) S:'COSTCNTR COSTCNTR=COSTCTR I 'COSTCNTR W !?5,"INVENTORY POINT DOES NOT CONTAIN A COST CENTER." K DIST Q
+ .   .   .   W !?5,"COSTING TO COST CENTER: ",COSTCNTR
+ .   .   .   S XP="ARE YOU SURE you selected the correct DISTRIBUTION POINT",XH="Enter 'YES' to receive to this DISTRIBUTION POINT, 'NO' to reselect dist pt.",%=1 W ! D YN^PRCPU4 I %'=1 K DIST S:%<1 PRCPFLAG=1 Q
+ .   .   .   S ^TMP($J,"PRCPPORDIST",LINEDA)=DIST_"^"_COSTCNTR
+ .   ;
+ .   I '$D(^PRCP(445,PRCP("I"),1,ITEMDA,0)) D STORE Q
+ .   ;     |-> data for transaction under inventory point
+ .   S TRANDATA=$G(^PRCP(445,PRCP("I"),1,ITEMDA,7,TRANDA,0)),TRUI=$$UNITVAL^PRCPUX1($P(TRANDATA,"^",4),$P(TRANDATA,"^",3),"/"),CONV=$P(TRANDATA,"^",5) S:'CONV CONV=1 S QTYRECVE=QTYRECVE*CONV
+ .   I TRANDATA="" S ERRORNUM=ERRORNUM+1,^TMP($J,"PRCPPOR",LINEDA,ERRORNUM)="OUTSTANDING TRANSACTION "_$P(^PRCS(410,TRANDA,0),"^")_" NOT ESTABLISHED|AS A DUE-IN." D STORE Q
+ .   I TRUI'=PRCPUI S ERRORNUM=ERRORNUM+1,^TMP($J,"PRCPPOR",LINEDA,ERRORNUM)="UNIT OF ISSUE ON PURCHASE ORDER: "_PRCPUI_"|UNIT OF ISSUE ON DUE-IN/2237   : "_TRUI D STORE Q
+ .   I $P(QTYRECVE,".",2) S ERRORNUM=ERRORNUM+1,^TMP($J,"PRCPPOR",LINEDA,ERRORNUM)="RECEIVING QUANTITY CANNOT BE A FRACTION." D STORE Q
+ .   W !,"ITEM #: ",ITEMDA,?15,$E($$DESCR^PRCPUX1(PRCP("I"),ITEMDA),1,20),?37,"ON-HAND: ",+$P($G(^PRCP(445,PRCP("I"),1,ITEMDA,0)),"^",7),?55,"RECEIVE: ",+QTYRECVE,?70,"CONV: ",CONV
+ .   D STORE
+ I $G(PRCPFLAG) Q
+ I ERRORNUM D ^PRCPPORE Q
+ D ^PRCPPOR2 Q
+ ;
+ ;
+STORE ;     |-> store error in tmp for report
+ S ^TMP($J,"PRCPPOR",LINEDA)=+$P(PODATA,"^")_"^"_ITEMDA_"^"_QTYRECVE_"^"_PRCPUI_"^"_TOTCOST_"^"_TRANDA
+ Q

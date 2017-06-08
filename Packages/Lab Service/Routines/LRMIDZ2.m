@@ -1,0 +1,285 @@
+LRMIDZ2 ; ;12/15/15
+ D DE G BEGIN
+DE S DIE="^LR(D0,""MI"",D1,3,",DIC=DIE,DP=63.3,DL=3,DIEL=2,DU="" K DG,DE,DB Q:$O(^LR(D0,"MI",D1,3,DA,""))=""
+ I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,1) S:%]"" DE(1)=%
+ I $D(^(2.0001)) S %Z=^(2.0001) S %=$P(%Z,U,1) S:%]"" DE(4)=%
+ I $D(^(2.0002)) S %Z=^(2.0002) S %=$P(%Z,U,1) S:%]"" DE(5)=%
+ I $D(^(2.0003)) S %Z=^(2.0003) S %=$P(%Z,U,1) S:%]"" DE(9)=%
+ I $D(^(2.0004)) S %Z=^(2.0004) S %=$P(%Z,U,1) S:%]"" DE(14)=%
+ I $D(^(2.0005)) S %Z=^(2.0005) S %=$P(%Z,U,1) S:%]"" DE(8)=%
+ I $D(^(2.0006)) S %Z=^(2.0006) S %=$P(%Z,U,1) S:%]"" DE(18)=%
+ I $D(^(2.0007)) S %Z=^(2.0007) S %=$P(%Z,U,1) S:%]"" DE(13)=%,DE(30)=%
+ I $D(^(2.0008)) S %Z=^(2.0008) S %=$P(%Z,U,1) S:%]"" DE(17)=%,DE(32)=%
+ I $D(^(2.001)) S %Z=^(2.001) S %=$P(%Z,U,1) S:%]"" DE(11)=%,DE(25)=%
+ I $D(^(2.0011)) S %Z=^(2.0011) S %=$P(%Z,U,1) S:%]"" DE(16)=%,DE(34)=%
+ I $D(^(2.0012)) S %Z=^(2.0012) S %=$P(%Z,U,1) S:%]"" DE(10)=%,DE(23)=%
+ I $D(^(2.0013)) S %Z=^(2.0013) S %=$P(%Z,U,1) S:%]"" DE(22)=%
+ I $D(^(2.0014)) S %Z=^(2.0014) S %=$P(%Z,U,1) S:%]"" DE(31)=%
+ I $D(^(2.0015)) S %Z=^(2.0015) S %=$P(%Z,U,1) S:%]"" DE(19)=%,DE(33)=%
+ I $D(^(2.0016)) S %Z=^(2.0016) S %=$P(%Z,U,1) S:%]"" DE(12)=%,DE(29)=%
+ I $D(^(2.0017)) S %Z=^(2.0017) S %=$P(%Z,U,1) S:%]"" DE(26)=%
+ I $D(^(2.0018)) S %Z=^(2.0018) S %=$P(%Z,U,1) S:%]"" DE(27)=%
+ I $D(^(2.0019)) S %Z=^(2.0019) S %=$P(%Z,U,1) S:%]"" DE(15)=%
+ I $D(^(2.002)) S %Z=^(2.002) S %=$P(%Z,U,1) S:%]"" DE(24)=%
+ I $D(^(2.0021)) S %Z=^(2.0021) S %=$P(%Z,U,1) S:%]"" DE(28)=%
+ K %Z Q
+ ;
+W W !?DL+DL-2,DLB_": "
+ Q
+O D W W Y W:$X>45 !?9
+ I $L(Y)>19,'DV,DV'["I",(DV["F"!(DV["K")) G RW^DIR2
+ W:Y]"" "// " I 'DV,DV["I",$D(DE(DQ))#2 S X="" W "  (No Editing)" Q
+TR R X:DTIME E  S (DTOUT,X)=U W $C(7)
+ Q
+A K DQ(DQ) S DQ=DQ+1
+B G @DQ
+RE G PR:$D(DE(DQ)) D W,TR
+N I X="" G NKEY:$D(^DD("KEY","F",DP,DIFLD)),A:DV'["R",X:'DV,X:D'>0,A
+RD G QS:X?."?" I X["^" D D G ^DIE17
+ I X="@" D D G Z^DIE2
+ I X=" ",DV["d",DV'["P",$D(^DISV(DUZ,"DIE",DLB)) S X=^(DLB) I DV'["D",DV'["S" W "  "_X
+T G M^DIE17:DV,^DIE3:DV["V",P:DV'["S" X:$D(^DD(DP,DIFLD,12.1)) ^(12.1) I X?.ANP D SET I 'DDER X:$D(DIC("S")) DIC("S") I  W:'$D(DB(DQ)) "  "_% G V
+ K DDER G X
+P I DV["P" S DIC=U_DU,DIC(0)=$E("EN",$D(DB(DQ))+1)_"M"_$E("L",DV'["'") S:DIC(0)["L" DLAYGO=+$P(DV,"P",2) G:DV["*" AST^DIED D NOSCR^DIED S X=+Y,DIC=DIE G X:X<0
+ G V:DV'["N" D D I $L($P(X,"."))>24 K X G Z
+ I $P(DQ(DQ),U,5)'["$",X?.1"-".N.1".".N,$P(DQ(DQ),U,5,99)["+X'=X" S X=+X
+V D @("X"_DQ) K YS
+Z K DIC("S"),DLAYGO I $D(X),X'=U D:$G(DE(DW,"INDEX")) SAVEVALS G:'$$KEYCHK UNIQFERR^DIE17 S DG(DW)=X S:DV["d" ^DISV(DUZ,"DIE",DLB)=X G A
+X W:'$D(ZTQUEUED) $C(7),"??" I $D(DB(DQ)) G Z^DIE17
+ S X="?BAD"
+QS S DZ=X D D,QQ^DIEQ G B
+D S D=DIFLD,DQ(DQ)=DLB_U_DV_U_DU_U_DW_U_$P($T(@("X"_DQ))," ",2,99) Q
+Y I '$D(DE(DQ)) D O G RD:"@"'[X,A:DV'["R"&(X="@"),X:X="@" S X=Y G N
+PR S DG=DV,Y=DE(DQ),X=DU I $D(DQ(DQ,2)) X DQ(DQ,2) G RP
+R I DG["P",@("$D(^"_X_"0))") S X=+$P(^(0),U,2) G RP:'$D(^(Y,0)) S Y=$P(^(0),U),X=$P(^DD(X,.01,0),U,3),DG=$P(^(0),U,2) G R
+ I DG["V",+Y,$P(Y,";",2)["(",$D(@(U_$P(Y,";",2)_"0)")) S X=+$P(^(0),U,2) G RP:'$D(^(+Y,0)) S Y=$P(^(0),U) I $D(^DD(+X,.01,0)) S DG=$P(^(0),U,2),X=$P(^(0),U,3) G R
+ X:DG["D" ^DD("DD") I DG["S" S %=$P($P(";"_X,";"_Y_":",2),";") S:%]"" Y=%
+RP D O I X="" S X=DE(DQ) G A:'DV,A:DC<2,N^DIE17
+I I DV'["I",DV'["#" G RD
+ D E^DIE0 G RD:$D(X),PR
+ Q
+SET N DIR S DIR(0)="SV"_$E("o",$D(DB(DQ)))_U_DU,DIR("V")=1
+ I $D(DB(DQ)),'$D(DIQUIET) N DIQUIET S DIQUIET=1
+ D ^DIR I 'DDER S %=Y(0),X=Y
+ Q
+SAVEVALS S @DIEZTMP@("V",DP,DIIENS,DIFLD,"O")=$G(DE(DQ)) S:$D(^("F"))[0 ^("F")=$G(DE(DQ))
+ I $D(DE(DW,"4/")) S @DIEZTMP@("V",DP,DIIENS,DIFLD,"4/")=""
+ E  K @DIEZTMP@("V",DP,DIIENS,DIFLD,"4/")
+ Q
+NKEY W:'$D(ZTQUEUED) "??  Required key field" S X="?BAD" G QS
+KEYCHK() Q:$G(DE(DW,"KEY"))="" 1 Q @DE(DW,"KEY")
+BEGIN S DNM="LRMIDZ2",DQ=1+D G B
+1 S DW="0;1",DV="M*P61.2'Xa",DU="",DLB="ORGANISM",DIFLD=.01
+ S DE(DW)="C1^LRMIDZ2",DE(DW,"INDEX")=1
+ S DU="LAB(61.2,"
+ G RE:'D S DQ=2 G 2
+C1 G C1S:$D(DE(1))[0 K DB
+ S X=DE(1),DIC=DIE
+ I $P(^LAB(61.2,X,0),"^",9) K ^LR("AD",DT,X,$P(^LR(DA(2),"MI",DA(1),0),"^",6)_" ")
+ S X=DE(1),DIC=DIE
+ K ^LR(DA(2),"MI",DA(1),3,"B",$E(X,1,30),DA)
+ S X=DE(1),DIIX=2_U_DIFLD D AUDIT^DIET
+C1S S X="" G:DG(DQ)=X C1F1 K DB
+ S X=DG(DQ),DIC=DIE
+ I $P(^LAB(61.2,X,0),"^",9) S ^LR("AD",DT,X,$P(^LR(DA(2),"MI",DA(1),0),"^",6)_" ")=DA(2)
+ S X=DG(DQ),DIC=DIE
+ S ^LR(DA(2),"MI",DA(1),3,"B",$E(X,1,30),DA)=""
+ I $D(DE(1))'[0!(^DD(DP,DIFLD,"AUDIT")'="e") S X=DG(DQ),DIIX=3_U_DIFLD D AUDIT^DIET
+C1F1 N X,X1,X2 S DIXR=1057 D C1X1(U) K X2 M X2=X D C1X1("O") K X1 M X1=X
+ K X M X=X2 I $G(X(1))]"" D
+ . D SETISOID^LRXREF(3)
+ G C1F2
+C1X1(DION) K X
+ S X(1)=$G(@DIEZTMP@("V",63.3,DIIENS,.01,DION),$P($G(^LR(DA(2),"MI",DA(1),3,DA,0)),U,1))
+ S X=$G(X(1))
+ Q
+C1F2 Q
+X1 S DIC("S")="I ""PVRBFM""[$P(^(0),U,5)" D ^DIC S DIC=DIE,X=+Y K:Y<0 X
+ Q
+ ;
+2 D:$D(DG)>9 F^DIE17,DE S Y=U,DQ=2 D X2 D:$D(DIEFIRE)#2 FIREREC^DIE17 G A:$D(Y)[0,A:Y=U S X=Y,DIC(0)="F",DW=DQ G OUT^DIE17
+X2 S LRBUG=$P(^LAB(61.2,X,0),U,3)
+ Q
+3 D:$D(DG)>9 F^DIE17,DE S Y=U,DQ=3 D X3 D:$D(DIEFIRE)#2 FIREREC^DIE17 G A:$D(Y)[0,A:Y=U S X=Y,DIC(0)="F",DW=DQ G OUT^DIE17
+X3 I $D(LRSPEC),LRSPEC'=140 S Y="@1"
+ Q
+4 D:$D(DG)>9 F^DIE17,DE S DQ=4,DW="2.0001;1",DV="FX",DU="",DLB="NEOMYCIN",DIFLD=5
+ G RE
+X4 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+5 S DW="2.0002;1",DV="FX",DU="",DLB="BACITRACIN",DIFLD=10
+ G RE
+X5 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+6 S DQ=7 ;@1
+7 D:$D(DG)>9 F^DIE17,DE S Y=U,DQ=7 D X7 D:$D(DIEFIRE)#2 FIREREC^DIE17 G A:$D(Y)[0,A:Y=U S X=Y,DIC(0)="F",DW=DQ G OUT^DIE17
+X7 I $D(LRBUG),LRBUG="N" S Y="@2"
+ Q
+8 S DW="2.0005;1",DV="FX",DU="",DLB="METHICILLIN",DIFLD=25
+ G RE
+X8 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+9 S DW="2.0003;1",DV="F",DU="",DLB="PENICILLIN",DIFLD=15
+ G RE
+X9 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+10 S DW="2.0012;1",DV="F",DU="",DLB="AMPICILLIN",DIFLD=60
+ G RE
+X10 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+11 S DW="2.001;1",DV="F",DU="",DLB="CEFAZOLIN",DIFLD=50
+ G RE
+X11 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+12 S DW="2.0016;1",DV="F",DU="",DLB="AMIKACIN",DIFLD=80
+ G RE
+X12 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+13 S DW="2.0007;1",DV="F",DU="",DLB="GENTAMICIN",DIFLD=35
+ G RE
+X13 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+14 S DW="2.0004;1",DV="F",DU="",DLB="CLINDAMYCIN",DIFLD=20
+ G RE
+X14 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+15 S DW="2.0019;1",DV="F",DU="",DLB="ERYTHROMYCIN",DIFLD=110
+ G RE
+X15 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+16 S DW="2.0011;1",DV="F",DU="",DLB="TETRACYCLINE",DIFLD=55
+ G RE
+X16 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+17 S DW="2.0008;1",DV="F",DU="",DLB="CHLORAMPHENICOL",DIFLD=40
+ G RE
+X17 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+18 S DW="2.0006;1",DV="F",DU="",DLB="VANCOMYCIN",DIFLD=30
+ G RE
+X18 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+19 S DW="2.0015;1",DV="F",DU="",DLB="TRIMETHAPRIM/SULFAMETHOXAZOLE",DIFLD=75
+ G RE
+X19 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+20 D:$D(DG)>9 F^DIE17,DE S Y=U,DQ=20 D X20 D:$D(DIEFIRE)#2 FIREREC^DIE17 G A:$D(Y)[0,A:Y=U S X=Y,DIC(0)="F",DW=DQ G OUT^DIE17
+X20 S Y=2
+ Q
+21 S DQ=22 ;@2
+22 S DW="2.0013;1",DV="F",DU="",DLB="CARBENICILLIN",DIFLD=65
+ G RE
+X22 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+23 S DW="2.0012;1",DV="F",DU="",DLB="AMPICILLIN",DIFLD=60
+ G RE
+X23 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+24 S DW="2.002;1",DV="F",DU="",DLB="PIPERACILLIN",DIFLD=145
+ G RE
+X24 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+25 S DW="2.001;1",DV="F",DU="",DLB="CEFAZOLIN",DIFLD=50
+ G RE
+X25 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+26 S DW="2.0017;1",DV="F",DU="",DLB="CEFAMANDOLE",DIFLD=85
+ G RE
+X26 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+27 S DW="2.0018;1",DV="F",DU="",DLB="CEFOXITIN",DIFLD=90
+ G RE
+X27 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+28 S DW="2.0021;1",DV="F",DU="",DLB="CEFOTAXIME",DIFLD=95
+ G RE
+X28 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+29 S DW="2.0016;1",DV="F",DU="",DLB="AMIKACIN",DIFLD=80
+ G RE
+X29 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+30 S DW="2.0007;1",DV="F",DU="",DLB="GENTAMICIN",DIFLD=35
+ G RE
+X30 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+31 S DW="2.0014;1",DV="F",DU="",DLB="TOBRAMYCIN",DIFLD=70
+ G RE
+X31 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+32 S DW="2.0008;1",DV="F",DU="",DLB="CHLORAMPHENICOL",DIFLD=40
+ G RE
+X32 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+33 S DW="2.0015;1",DV="F",DU="",DLB="TRIMETHAPRIM/SULFAMETHOXAZOLE",DIFLD=75
+ G RE
+X33 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+34 S DW="2.0011;1",DV="F",DU="",DLB="TETRACYCLINE",DIFLD=55
+ G RE
+X34 D ^LRMISR
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+35 S D=0 K DE(1) ;2
+ S DIFLD=2,DGO="^LRMIDZ4",DC="1^63.31A^1^",DV="63.31MFX",DW="0;1",DOW="COMMENT",DLB=$P($$EZBLD^DIALOG(8042,DOW),": ") S:D DC=DC_D
+ G RE:D I $D(DSC(63.31))#2,$P(DSC(63.31),"I $D(^UTILITY(",1)="" X DSC(63.31) S D=$O(^(0)) S:D="" D=-1 G M35
+ S D=$S($D(^LR(D0,"MI",D1,3,DA,1,0)):$P(^(0),U,3,4),$O(^(0))'="":$O(^(0)),1:-1)
+M35 I D>0 S DC=DC_D I $D(^LR(D0,"MI",D1,3,DA,1,+D,0)) S DE(35)=$P(^(0),U,1)
+ G RE
+R35 D DE
+ S D=$S($D(^LR(D0,"MI",D1,3,DA,1,0)):$P(^(0),U,3,4),1:1) G 35+1
+ ;
+36 G 1^DIE17

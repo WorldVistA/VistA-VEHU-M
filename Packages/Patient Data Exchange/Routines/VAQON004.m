@@ -1,0 +1,116 @@
+VAQON004 ; ; 10-AUG-1994
+ ;;1.5;PATIENT DATA EXCHANGE;**7**;NOV 17, 1993
+ F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,"PRO",216,0)
+ ;;=VAQ DIS1 (MENU)^List Request Options^^M^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",216,1,0)
+ ;;=^^1^1^2940202^^^^
+ ;;^UTILITY(U,$J,"PRO",216,1,1,0)
+ ;;=display custom options to user for display screen DIS1
+ ;;^UTILITY(U,$J,"PRO",216,4)
+ ;;=26^4^^PDX DISPLAY MENU 1
+ ;;^UTILITY(U,$J,"PRO",216,10,0)
+ ;;=^101.01PA^0^0
+ ;;^UTILITY(U,$J,"PRO",216,26)
+ ;;=D SHOW^VALM
+ ;;^UTILITY(U,$J,"PRO",216,28)
+ ;;=Select Action:
+ ;;^UTILITY(U,$J,"PRO",216,99)
+ ;;=55782,41814
+ ;;^UTILITY(U,$J,"PRO",217,0)
+ ;;=VAQ PDX9 (MENU)^List Request Options^^M^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",217,1,0)
+ ;;=^^1^1^2930930^^^^
+ ;;^UTILITY(U,$J,"PRO",217,1,1,0)
+ ;;=display custom options to user for display screen PDX9
+ ;;^UTILITY(U,$J,"PRO",217,4)
+ ;;=26^4^^OPTIONS MENU FOR PDX DISPLAY
+ ;;^UTILITY(U,$J,"PRO",217,10,0)
+ ;;=^101.01PA^1^22
+ ;;^UTILITY(U,$J,"PRO",217,10,22,0)
+ ;;=218^SE^11
+ ;;^UTILITY(U,$J,"PRO",217,10,22,"^")
+ ;;=VAQ DISPLAY SELECT
+ ;;^UTILITY(U,$J,"PRO",217,26)
+ ;;=D SHOW^VALM
+ ;;^UTILITY(U,$J,"PRO",217,28)
+ ;;=Select Action:
+ ;;^UTILITY(U,$J,"PRO",217,99)
+ ;;=55782,41818
+ ;;^UTILITY(U,$J,"PRO",218,0)
+ ;;=VAQ DISPLAY SELECT^Select Entry^^A^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",218,4)
+ ;;=^^^SELECTS ENTRY FOR DISPLAY
+ ;;^UTILITY(U,$J,"PRO",218,20)
+ ;;=D SEL^VAQDIS11
+ ;;^UTILITY(U,$J,"PRO",218,99)
+ ;;=55782,41814
+ ;;^UTILITY(U,$J,"PRO",219,0)
+ ;;=VAQ PDX11 (MENU)^List Request Options^^M^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",219,1,0)
+ ;;=^^1^1^2930506^^^^
+ ;;^UTILITY(U,$J,"PRO",219,1,1,0)
+ ;;=display custom options to user for segment screen PDX11
+ ;;^UTILITY(U,$J,"PRO",219,4)
+ ;;=26^4^^MENU FOR DISPLAY SEGMENT
+ ;;^UTILITY(U,$J,"PRO",219,10,0)
+ ;;=^101.01PA^2^23
+ ;;^UTILITY(U,$J,"PRO",219,10,22,0)
+ ;;=220^DS^11
+ ;;^UTILITY(U,$J,"PRO",219,10,22,"^")
+ ;;=VAQ DIS SELECTED SEGMENT
+ ;;^UTILITY(U,$J,"PRO",219,10,23,0)
+ ;;=221^DA^12
+ ;;^UTILITY(U,$J,"PRO",219,10,23,"^")
+ ;;=VAQ DIS ALL SEGMENT
+ ;;^UTILITY(U,$J,"PRO",219,26)
+ ;;=D SHOW^VALM
+ ;;^UTILITY(U,$J,"PRO",219,28)
+ ;;=Select Action:
+ ;;^UTILITY(U,$J,"PRO",219,99)
+ ;;=55783,39210
+ ;;^UTILITY(U,$J,"PRO",220,0)
+ ;;=VAQ DIS SELECTED SEGMENT^Display Selected^^A^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",220,4)
+ ;;=^^^DISPLAY SELECTED SEGMENT(S)
+ ;;^UTILITY(U,$J,"PRO",220,20)
+ ;;=D SEL^VAQDIS15
+ ;;^UTILITY(U,$J,"PRO",220,99)
+ ;;=55782,41814
+ ;;^UTILITY(U,$J,"PRO",221,0)
+ ;;=VAQ DIS ALL SEGMENT^Display all^^A^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",221,4)
+ ;;=^^^DISPLAYS ALL SEGMENTS
+ ;;^UTILITY(U,$J,"PRO",221,20)
+ ;;=D ALL^VAQDIS15
+ ;;^UTILITY(U,$J,"PRO",221,99)
+ ;;=55782,41814
+ ;;^UTILITY(U,$J,"PRO",222,0)
+ ;;=VAQ PDX12 (MENU)^List Request Options^^M^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",222,1,0)
+ ;;=^^1^1^2930528^^^^
+ ;;^UTILITY(U,$J,"PRO",222,1,1,0)
+ ;;=display custom options to user for data display screen PDX12
+ ;;^UTILITY(U,$J,"PRO",222,4)
+ ;;=26^4^^MENU OPTIONS FOR PDX DISPLAY SCREEN
+ ;;^UTILITY(U,$J,"PRO",222,10,0)
+ ;;=^101.01PA^0^1
+ ;;^UTILITY(U,$J,"PRO",222,26)
+ ;;=D SHOW^VALM
+ ;;^UTILITY(U,$J,"PRO",222,28)
+ ;;=Select Action:
+ ;;^UTILITY(U,$J,"PRO",222,99)
+ ;;=55782,41816
+ ;;^UTILITY(U,$J,"PRO",474,0)
+ ;;=VALM EXPAND^Expand Entry^^A^^^^^^^^LIST MANAGER
+ ;;^UTILITY(U,$J,"PRO",474,15)
+ ;;=S:'VALMCC VALMBCK="R"
+ ;;^UTILITY(U,$J,"PRO",474,20)
+ ;;=I $D(^TMP("VALM DATA",$J,VALMEVL,"EXP")),^("EXP")]"" X ^("EXP")
+ ;;^UTILITY(U,$J,"PRO",474,99)
+ ;;=55949,53497
+ ;;^UTILITY(U,$J,"PRO",474,"MEN","VAQ PDX4 (MENU)")
+ ;;=474^EE^13^^^Expand Entry
+ ;;^UTILITY(U,$J,"PRO",474,"MEN","VAQ PDX5 (MENU)")
+ ;;=474^EE^12^^^Expand Entry

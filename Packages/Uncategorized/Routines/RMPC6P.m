@@ -1,0 +1,9 @@
+RMPC6P ;DDC/KAW-PRE-INIT FOR ROES PATCH RMPF*1.1*6 [ 06/24/93  1:45 PM ]
+ ;;1.1;RMPF;**6**;June 24, 1993
+ G END:'$D(^RMPF(791811,0)) S RMPFX=1
+ W !!,"Inactivating old models and deleting old components and batteries"
+A1 S RMPFX=$O(^RMPF(791811,RMPFX)) G END:'RMPFX
+ S ^RMPF(791811,RMPFX,"I")=1 W "."
+ K ^RMPF(791811,RMPFX,101),^RMPF(791811,RMPFX,102)
+ G A1
+END K RMPFX Q

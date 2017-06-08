@@ -1,0 +1,9 @@
+ZZACPS ; SEB - partially reindex meds file for US6096
+ ;;
+ ;
+PSRX S DIK="^PSRX("
+ F IEN=404230:1:404237 S DA=IEN D IX^DIK
+ ;
+OR S DIK="^OR(100,"
+ F IEN=38457:1:38460,38462 S DA=IEN D IX^DIK
+ Q

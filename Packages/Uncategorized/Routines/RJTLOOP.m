@@ -1,0 +1,3 @@
+RJTLOOP ;
+ F  S FF=$O(^TMP("VAS",$J,FF)) Q:FF']""
+ W !,"WENT BY THE QUIT"

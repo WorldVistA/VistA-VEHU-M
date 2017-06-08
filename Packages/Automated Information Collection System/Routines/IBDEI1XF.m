@@ -1,0 +1,132 @@
+IBDEI1XF ; ; 06-AUG-2015
+ ;;3.0;IB ENCOUNTER FORM IMP/EXP;;JUN 29, 2015
+ Q:'DIFQR(358.3)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,358.3,33849,0)
+ ;;=W55.03XD^^182^2011^98
+ ;;^UTILITY(U,$J,358.3,33849,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33849,1,3,0)
+ ;;=3^Scratched by Cat,Subs Encntr
+ ;;^UTILITY(U,$J,358.3,33849,1,4,0)
+ ;;=4^W55.03XD
+ ;;^UTILITY(U,$J,358.3,33849,2)
+ ;;=^5060269
+ ;;^UTILITY(U,$J,358.3,33850,0)
+ ;;=X00.8XXA^^182^2011^15
+ ;;^UTILITY(U,$J,358.3,33850,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33850,1,3,0)
+ ;;=3^Exp to Uncontrolled Bldg Fire,Init Encntr
+ ;;^UTILITY(U,$J,358.3,33850,1,4,0)
+ ;;=4^X00.8XXA
+ ;;^UTILITY(U,$J,358.3,33850,2)
+ ;;=^5060679
+ ;;^UTILITY(U,$J,358.3,33851,0)
+ ;;=X00.8XXD^^182^2011^16
+ ;;^UTILITY(U,$J,358.3,33851,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33851,1,3,0)
+ ;;=3^Exp to Uncontrolled Bldg Fire,Subs Encntr
+ ;;^UTILITY(U,$J,358.3,33851,1,4,0)
+ ;;=4^X00.8XXD
+ ;;^UTILITY(U,$J,358.3,33851,2)
+ ;;=^5060680
+ ;;^UTILITY(U,$J,358.3,33852,0)
+ ;;=X32.XXXA^^182^2011^13
+ ;;^UTILITY(U,$J,358.3,33852,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33852,1,3,0)
+ ;;=3^Exp to Sunlight,Init Encntr
+ ;;^UTILITY(U,$J,358.3,33852,1,4,0)
+ ;;=4^X32.XXXA
+ ;;^UTILITY(U,$J,358.3,33852,2)
+ ;;=^5060847
+ ;;^UTILITY(U,$J,358.3,33853,0)
+ ;;=X32.XXXD^^182^2011^14
+ ;;^UTILITY(U,$J,358.3,33853,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33853,1,3,0)
+ ;;=3^Exp to Sunlight,Subs Encntr
+ ;;^UTILITY(U,$J,358.3,33853,1,4,0)
+ ;;=4^X32.XXXD
+ ;;^UTILITY(U,$J,358.3,33853,2)
+ ;;=^5060848
+ ;;^UTILITY(U,$J,358.3,33854,0)
+ ;;=Y04.0XXA^^182^2011^7
+ ;;^UTILITY(U,$J,358.3,33854,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33854,1,3,0)
+ ;;=3^Assault by Unarmed Fight,Init Encntr
+ ;;^UTILITY(U,$J,358.3,33854,1,4,0)
+ ;;=4^Y04.0XXA
+ ;;^UTILITY(U,$J,358.3,33854,2)
+ ;;=^5061165
+ ;;^UTILITY(U,$J,358.3,33855,0)
+ ;;=Y04.0XXD^^182^2011^8
+ ;;^UTILITY(U,$J,358.3,33855,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33855,1,3,0)
+ ;;=3^Assault by Unarmed Fight,Subs Encntr
+ ;;^UTILITY(U,$J,358.3,33855,1,4,0)
+ ;;=4^Y04.0XXD
+ ;;^UTILITY(U,$J,358.3,33855,2)
+ ;;=^5061166
+ ;;^UTILITY(U,$J,358.3,33856,0)
+ ;;=Y04.1XXA^^182^2011^1
+ ;;^UTILITY(U,$J,358.3,33856,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33856,1,3,0)
+ ;;=3^Assault by Human Bite,Init Encntr
+ ;;^UTILITY(U,$J,358.3,33856,1,4,0)
+ ;;=4^Y04.1XXA
+ ;;^UTILITY(U,$J,358.3,33856,2)
+ ;;=^5061168
+ ;;^UTILITY(U,$J,358.3,33857,0)
+ ;;=Y04.1XXD^^182^2011^2
+ ;;^UTILITY(U,$J,358.3,33857,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33857,1,3,0)
+ ;;=3^Assault by Human Bite,Subs Encntr
+ ;;^UTILITY(U,$J,358.3,33857,1,4,0)
+ ;;=4^Y04.1XXD
+ ;;^UTILITY(U,$J,358.3,33857,2)
+ ;;=^5061169
+ ;;^UTILITY(U,$J,358.3,33858,0)
+ ;;=Y04.2XXA^^182^2011^5
+ ;;^UTILITY(U,$J,358.3,33858,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33858,1,3,0)
+ ;;=3^Assault by Strike/Bumped by Another Person,Init Encntr
+ ;;^UTILITY(U,$J,358.3,33858,1,4,0)
+ ;;=4^Y04.2XXA
+ ;;^UTILITY(U,$J,358.3,33858,2)
+ ;;=^5061171
+ ;;^UTILITY(U,$J,358.3,33859,0)
+ ;;=Y04.8XXA^^182^2011^3
+ ;;^UTILITY(U,$J,358.3,33859,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33859,1,3,0)
+ ;;=3^Assault by Oth Bodily Force,Init Encntr
+ ;;^UTILITY(U,$J,358.3,33859,1,4,0)
+ ;;=4^Y04.8XXA
+ ;;^UTILITY(U,$J,358.3,33859,2)
+ ;;=^5061174
+ ;;^UTILITY(U,$J,358.3,33860,0)
+ ;;=Y04.2XXD^^182^2011^6
+ ;;^UTILITY(U,$J,358.3,33860,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33860,1,3,0)
+ ;;=3^Assault by Strike/Bumped by Another Person,Subs Encntr
+ ;;^UTILITY(U,$J,358.3,33860,1,4,0)
+ ;;=4^Y04.2XXD
+ ;;^UTILITY(U,$J,358.3,33860,2)
+ ;;=^5061172
+ ;;^UTILITY(U,$J,358.3,33861,0)
+ ;;=Y04.8XXD^^182^2011^4
+ ;;^UTILITY(U,$J,358.3,33861,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33861,1,3,0)
+ ;;=3^Assault by Oth Bodily Force,Subs Encntr
+ ;;
+ ;;$END ROU IBDEI1XF

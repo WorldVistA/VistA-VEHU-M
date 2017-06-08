@@ -1,0 +1,35 @@
+A1CHOP1 ;ALB/ - OUTPUT TOT VISITS,CAT B&C, NON-VETS FROM OPC FILE ; 21 DEC 88@0900
+ ;;V 1.3
+ W !,"OUTPATIENT VISITS BY MEANS TEST CATEGORY AND ELIGIBILITY",!
+ S Z=$O(^DG(43,0)),Z=$P(^(Z,"SCLR"),U,2),Y=Z X ^DD("DD") W !,"OPC file was last generated on ",Y,!
+BG S U="^",POP=0,%DT="APE",%DT(0)="-0",%DT("A")="From DATE: " D ^%DT G:Y'>0 END
+ S DGBD=Y,%DT(0)="-TODAY",%DT("A")="To DATE: " D ^%DT G:Y'>0 END S DGND=Y W ! I DGND<DGBD W !,*7,"TO DATE IS LESS THAN FROM DATE, TRY AGAIN" G BG
+ W !,"REPORT REQUIRES 132 COLUMN OUTPUT",!
+ I DGND>Z W !,"Your TO DATE is past the last generation date.",!,"You may want to generate your OPC file accordingly.",!
+ S DGJB=1,DGPGM="EN^A1CHOP1",DGVAR="DGJB^DGBD^DGND" D ZIS^DGUTL G:POP END
+EN S ^UTILITY("A1CH","O")=0
+ S H1=$H,DGTN=3 D LO^DGUTL,G0^A1CHUTL,0
+ S DGTN=3 D T0^A1CHUTL,^A1CHOP2
+END X:'POP ^%ZIS("C") I IO'=IO(0) U IO(0)
+ S ^UTILITY("A1CH","O")=1 K A5,B1,B2,DGBD,DGDV,DGEL,DGJB,DGMT,DGND,DGNV,DGPGM,DGPT,DGRS,DGTN,DGV,DGVAR,DGX,H1,I,J,POP,X,Y
+ Q
+ ;
+0 ;count visits by means test and eligibility
+ S B1=(DGBD-1)+.9999 F I=1:1 S B1=$O(^SDASF("AVD",B1)) Q:(B1="")!(B1>(DGND+.9999))  S B2="" F J=1:1 S B2=$O(^SDASF("AVD",B1,B2)) Q:B2=""  S:$D(^SDASF(B2,1,B1,0))>0 DGDV=$P(^(0),U,2) D:$D(^(0))>0 1
+ Q
+ ;
+1 S DGX=$P(^SDASF(B2,1,B1,0),U,9),DGNV=$P(^(0),U,10),DGTN=$S($P(^(0),U,11)=2:2,1:1) D APT S:DGRS=1 DGTN=3
+ S DGV=$S(DGNV=" ":"V",DGX=" ":"N",1:0),DGEL=$S(DGV="V":DGX,DGV="N":DGNV,1:0) Q:DGV=0
+ I (B1<2881101)&($D(^SDASF(B2,1,B1,"MT"))=0) S A5=$P(^(0),U,14),DGMT=$S($E(A5,8,9)'[" ":$E(A5,8,9),1:"U0")
+ I (B1<2881101)&($D(^SDASF(B2,1,B1,"MT"))=0) D:"ASAN"'[DGMT MT S ^UTILITY("A1CH",DGJB,DGTN,DGDV,DGV,DGMT,DGEL)=^UTILITY("A1CH",DGJB,DGTN,DGDV,DGV,DGMT,DGEL)+1 D:(DGJB=1)&(DGV="V")&((DGEL>6)!(DGEL=0)) 2 Q
+ S DGMT=^SDASF(B2,1,B1,"MT"),DGMT=$S($P(DGMT,U,1)'="":$P(DGMT,U,1),1:"U") D:"ASAN"'[DGMT MT S ^UTILITY("A1CH",DGJB,DGTN,DGDV,DGV,DGMT,DGEL)=^UTILITY("A1CH",DGJB,DGTN,DGDV,DGV,DGMT,DGEL)+1 D:(DGJB=1)&(DGV="V")&((DGEL>6)!(DGEL=0)) 2 Q
+ ;
+2 ;if opc data, sum eligibility types 0,7,8,9 into 3 (SC<50%) 
+ S ^UTILITY("A1CH",DGJB,DGTN,DGDV,DGV,DGMT,3)=^UTILITY("A1CH",DGJB,DGTN,DGDV,DGV,DGMT,3)+1 Q
+ ;
+MT ;allows use of same array for inpatient/outpatient
+ S DGMT=$S(DGMT="N0":"N",DGMT="X0":"X",DGMT="B0":"B",DGMT="C0":"C",DGMT="U0":"U",1:"U") Q
+ ;
+APT ;use appointment typeto finde research (type=6)
+ S DGPT=$P(^SDASF(B2,0),U,1),X=B1,DGRS=0 F I1=0:0 S X=$O(^DPT(DGPT,"S",X)) Q:(X="")!(X'[B1)  S:$P(^DPT(DGPT,"S",X,0),U,16)=6 DGRS=1
+ Q

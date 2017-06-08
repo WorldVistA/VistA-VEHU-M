@@ -1,0 +1,7 @@
+ZISLSO1S ;WILM/RJ - Print Statistics for Selected Lines; 3-31-87
+ ;;7.1;KERNEL;;May 11, 1993
+ ;;Version 4.51
+ D ^%ZIS Q:POP
+1 S DIC(0)="QEAM",DIC="^%ZISL(107.2," W !! D ^DIC G:Y<0 X D INIT,1^ZISLSO1 U IO(0) G 1
+X X ^%ZIS("C") K DIC G Q^ZISLSO1
+INIT U IO S DA=+Y,J2=0 D H^ZISLSO1 S (T1,T2)="00:00:00",Z=DA,XX=0 Q

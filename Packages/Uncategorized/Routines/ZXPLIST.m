@@ -1,0 +1,38 @@
+ZXPLIST;BUSINTEL/WPB - LIST OF KIDS BUILD READY FOR INSTALL
+ ;;8.0;KERNEL;**;AUG 15, 2013
+ ; Utility to pull a list of KIDS files from a specific directory and then call the 
+ ; KIDS utility (modified) to load the KIDS build into VistA
+ ;
+EN  ; get the list
+ ;R !,"ENTER THE PATH: ",PATH:DTIME
+ ;R !,"ENTER BACKUP PATH: ",PATH1:DTIME
+ W !,"STARTING TO UPLOAD PATCHES"
+ S PATH="D:\PATCHES\",PATH1="D:\INSTALLED\",CNT=1,INFLAG=0
+ ;S PATH="C:\Vista\NDF\",PATH1="C:\Vista\INSTALLED\",CNT=80,INFLAG=0
+ Q:$G(PATH)=""
+ Q:$G(PATH)["^"
+ Q:$G(PATH1)=""
+ Q:$G(PATH1)["^"
+ K FILESPEC,KIDSFILES
+ S FILESPEC("*.KI*")=""
+ S Y=$$LIST^%ZISH(PATH,"FILESPEC","KIDSFILES")
+ W !,"Y= ",Y
+ I Y=1 S XX="" F  S XX=$O(KIDSFILES(XX)) Q:XX=""  D
+ .Q:$G(NEXT)="^"
+ .W !,XX
+ .S KIDFILE=PATH_XX
+ .S KFILE=XX
+ .W !,KIDFILE,"  GOING TO IMPORT"
+ .D EN1^ZXPDIL
+ .W !,"INFLAG= ",INFLAG
+ .I INFLAG=1 S Y=$$MV^%ZISH(PATH,KFILE,PATH1,KFILE),CNT=CNT+1
+ .W:Y=1 KFILE," FILE MOVED" W:Y=0 "FILE NOT MOVED"
+ .R !,"NEXT ",NEXT:DTIME Q:NEXT="^"
+ .;W !,$G(PATCHNUM)
+ .;I $G(PATCHNUM)'="" D EN^ZXPDIB
+ .;R !,"NEXT ",NEXT:DTIME Q:NEXT="^"
+ .G:$G(NEXT)="^" EXIT
+ K PATH
+ Q
+EXIT
+ 

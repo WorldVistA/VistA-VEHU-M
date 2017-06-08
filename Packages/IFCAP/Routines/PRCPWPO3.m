@@ -1,0 +1,57 @@
+PRCPWPO3 ;WISC/RFJ-post issue book items ;17 July 91
+ ;;4.0;IFCAP;;9/23/93
+ Q
+ ;
+ ;
+POST ;     |-> start posting the issue book items selected
+ ;     |-> prcpsrc1  = primary inv pt for distribution
+ ;     |-> prcpord   = reference voucher number
+ ;     |-> prcpda    = transaction 2237 da number
+ N %,CAPONHND,CONV,DATA2237,DATEREQ,DATEPOST,DELPT,DRUGACCT,INVCOST,INVPT,ISMSFLAG,ITEMDA,ITEMDATA,LINEDA,ORDERNO,PRCPID,PRCPWPO3,QTY,TRANID,TOTCOST,TOTITEMS,TRANNO,UNITCOST,USER,X
+ W !!,"***** STARTING TO POST ISSUE BOOK ITEMS ..."
+ I '$G(PRCPDT) D NOW^%DTC S PRCPDT=X
+ ;     |-> primary updated by warehouse
+ K PRIMORD S %=$P($G(^PRCP(445,+$G(PRCPSRC1),0)),"^",16) I %="N" W !?5,"Note: Primary set up so it will NOT be updated by the warehouse."
+ E  S PRIMORD=$$ORDERNO^PRCPUTR(PRCPSRC1)
+ ;     |-> special inventory point type
+ I $G(PRIMORD),$P($G(^PRCP(445,+$G(PRCPSRC1),0)),"^",20)="D" S X="PSAGIP" I $D(^%ZOSF("TEST")) X ^%ZOSF("TEST") I $T S DRUGACCT=1 W !?5,"Note: Primary is set up for drug accountability."
+ S ORDERNO=$$ORDERNO^PRCPUTR(PRCP("I")),TRANNO=$P(^PRCS(410,PRCPDA,0),"^")
+ I $D(^PRCS(410,PRCPDA,0)) S $P(^PRCS(410,PRCPDA,10),"^",4)=$O(^PRCD(442.3,"C",68,0))
+ S (LINEDA,CAPONHND,TOTITEMS)=0 F  S LINEDA=$O(^TMP($J,"POST",LINEDA)) Q:'LINEDA  S QTY=^(LINEDA) I QTY,'$D(^TMP($J,"NOPOST",LINEDA)),$D(^PRCS(410,PRCPDA,"IT",LINEDA,0)) S DATA2237=^(0) D
+ .   S TOTITEMS=TOTITEMS+1
+ .   S ITEMDA=+$P(DATA2237,"^",5),ITEMDATA=$G(^PRCP(445,PRCP("I"),1,ITEMDA,0))
+ .   S UNITCOST=$S($P(ITEMDATA,"^",22)>$P(ITEMDATA,"^",15):$P(ITEMDATA,"^",22),1:$P(ITEMDATA,"^",15)) I $P(DATA2237,"^",7)>UNITCOST S UNITCOST=$P(DATA2237,"^",7)
+ .   S TOTCOST=$J(QTY*UNITCOST,0,2),INVCOST=$J(QTY*$P(ITEMDATA,"^",22),0,2),CAPONHND=CAPONHND+INVCOST
+ .   S $P(DATA2237,"^",12)=$P(DATA2237,"^",12)+QTY S:$G(PRIMORD) $P(DATA2237,"^",13)=$P(DATA2237,"^",13)+QTY S $P(DATA2237,"^",7)=UNITCOST,^PRCS(410,PRCPDA,"IT",LINEDA,0)=DATA2237
+ .   ;
+ .   ;update warehouse
+ .   K PRCPWPO3 S PRCPWPO3("QTY")=-QTY,PRCPWPO3("INVVAL")=-INVCOST,PRCPWPO3("SELVAL")=-TOTCOST,PRCPWPO3("2237PO")=TRANNO,PRCPWPO3("REF")=PRCPORD,PRCPWPO3("OTHERPT")=PRCPSRC1
+ .   D ITEM^PRCPUUIW(PRCP("I"),ITEMDA,"R",ORDERNO,.PRCPWPO3)
+ .   ;
+ .   ;     |-> update primary
+ .   I '$G(PRIMORD) Q
+ .   K PRCPWPO3 S PRCPWPO3("QTY")=QTY*$P($$GETVEN^PRCPUVEN(PRCPSRC1,ITEMDA,+$O(^PRC(440,"AC","S",0))_";PRC(440,",1),"^",4)
+ .   S PRCPWPO3("INVVAL")=TOTCOST,PRCPWPO3("SELVAL")=TOTCOST,PRCPWPO3("2237PO")=TRANNO,PRCPWPO3("REF")=PRCPORD,PRCPWPO3("OTHERPT")=PRCP("I"),PRCPWPO3("TRANDA")=PRCPDA S:$G(DRUGACCT) PRCPWPO3("DRUGACCT")=1
+ .   D ITEM^PRCPUUIW(PRCPSRC1,ITEMDA,"RC",PRIMORD,.PRCPWPO3)
+ ;
+ W !,"***** FINISHED!" D FINALASK^PRCPWPO4,CHECKFIN^PRCPWPO4
+ ;     |-> no items to post
+ I TOTITEMS=0 Q
+ ;     |-> if drug accountability, tell pharmacy were done
+ I $G(DRUGACCT) D EX^PSAGIP
+ I CAPONHND D ADDCAP^PRCFWCAP(-CAPONHND) I $D(ERROR) W !,ERROR K ERROR ;subtract from cap inv value
+ ;     |-> print picking ticket
+ S Y=PRCPDT X ^DD("DD") S TRANID="R"_ORDERNO,INVPT=$P($$INVNAME^PRCPUX1(PRCPSRC1),"-",2,99),DATEPOST=Y,USER=$$USER^PRCPUREP(DUZ)
+ S DELPT=$P($G(^PRCS(410,PRCPDA,9)),"^"),Y=+$P($G(^PRCS(410,PRCPDA,1)),"^",4) X:Y ^DD("DD") S DATEREQ=$S(Y=0:"",1:Y)
+DEVICE W ! S %ZIS("A")="PRINT PICKING TICKET ON DEVICE: ",%ZIS("B")="",%ZIS="Q" D ^%ZIS K %ZIS G:POP CALM I $D(IO("Q")) D  D ^%ZTLOAD K IO("Q"),ZTSK G CALM
+ .   S ZTDESC="Picking Ticket (Whse to Primary)",ZTRTN="DQ^PRCPRPIT"
+ .   S ZTSAVE("PRCP*")="",ZTSAVE("T*")="",ZTSAVE("D*")="",ZTSAVE("INVPT")="",ZTSAVE("USER")="",ZTSAVE("ZTREQ")="@"
+ I IO=IO(0) W !,"YOU CANNOT PRINT THE PICKING TICKET ON YOUR TERMINAL.",!,"IF YOU DO NOT WANT TO PRINT THE PICKING TICKET, PRESS '^'." G DEVICE
+ D DQ^PRCPRPIT,^%ZISC
+ ;
+CALM ;     |-> create code sheets
+ W !!,"The program will automatically create and transmit the code sheets to Austin.",!,"Please verify the accuracy of the data and submit adjustment code sheets if",!,"necessary."
+ S PRCPFLAG=0 D DQ^PRCPSCLI
+ S ISMSFLAG=$$ISMSFLAG^PRCPUX2(PRC("SITE")) I ISMSFLAG'=2 D DQ^PRCPSLOI
+ I ISMSFLAG=2 D DQ^PRCPSMPI
+ Q

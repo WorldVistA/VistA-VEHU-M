@@ -1,0 +1,13 @@
+OSEHRA ZGO Export: AICS ERROR AND WARNING LOG
+08-JUN-2017 10:36:54 ZWR
+^IBD(359.3,0)="AICS ERROR AND WARNING LOG^359.3DIAO^1^1"
+^IBD(359.3,1,0)="2990310.152358^738^^20^35^^^1^106^^^^1999^^^3590000.1"
+^IBD(359.3,1,10,0)="^^3^3^2990310"
+^IBD(359.3,1,10,1,0)="Warning: During scanning of Form ID: 35 the recognition was canceled"
+^IBD(359.3,1,10,2,0)="in Paper Keyboard.  This form should be re-scanned or the data manually"
+^IBD(359.3,1,10,3,0)="entered.  No data was sent to PCE.  Error Code 3590000.1"
+^IBD(359.3,"AB",-2990310.152358,1)=""
+^IBD(359.3,"AC",1999,1)=""
+^IBD(359.3,"B",2990310.152358,1)=""
+^IBD(359.3,"C",738,1)=""
+^IBD(359.3,"D",35,1)=""

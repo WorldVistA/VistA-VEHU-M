@@ -1,0 +1,12 @@
+ADXTRPT ;523/KC print error report ; 8-JAN-1992
+ ;;1.1;;
+ ;
+ N L,DIC,FLDS,BY,FR,TO,DHD
+ W @IOF
+ W "Error list summary...",!
+ S L=0,DIC="^DIZ(523701,",FLDS="[ADXT ERRORS]",BY="[ADXT ERRORS]"
+ S FR="",TO="",DHD="ADXT ERROR LIST SUMMARY"
+ D EN1^DIP
+EXIT ;
+ K L,DIC,FLDS,BY,FR,TO,DHD
+ Q

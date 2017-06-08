@@ -1,0 +1,120 @@
+VAQON003 ; ; 10-AUG-1994
+ ;;1.5;PATIENT DATA EXCHANGE;**7**;NOV 17, 1993
+ F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,"PRO",207,20)
+ ;;=D LED^VAQLED01
+ ;;^UTILITY(U,$J,"PRO",207,99)
+ ;;=55782,41814
+ ;;^UTILITY(U,$J,"PRO",208,0)
+ ;;=VAQ PDX6 (MENU)^List Request Options^^M^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",208,1,0)
+ ;;=^^1^1^2940113^^^^
+ ;;^UTILITY(U,$J,"PRO",208,1,1,0)
+ ;;=display custom options to user for status screen PDX6
+ ;;^UTILITY(U,$J,"PRO",208,4)
+ ;;=26^4^^VAQ LED DIFFERENCES MENU
+ ;;^UTILITY(U,$J,"PRO",208,10,0)
+ ;;=^101.01PA^2^28
+ ;;^UTILITY(U,$J,"PRO",208,10,27,0)
+ ;;=210^LD^12
+ ;;^UTILITY(U,$J,"PRO",208,10,27,"^")
+ ;;=VAQ LOAD DATA
+ ;;^UTILITY(U,$J,"PRO",208,10,28,0)
+ ;;=211^LF^11
+ ;;^UTILITY(U,$J,"PRO",208,10,28,"^")
+ ;;=VAQ LOAD FIELD
+ ;;^UTILITY(U,$J,"PRO",208,26)
+ ;;=D SHOW^VALM
+ ;;^UTILITY(U,$J,"PRO",208,28)
+ ;;=Select Action:
+ ;;^UTILITY(U,$J,"PRO",208,99)
+ ;;=55782,41817
+ ;;^UTILITY(U,$J,"PRO",210,0)
+ ;;=VAQ LOAD DATA^Load Data (all)^^A^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",210,1,0)
+ ;;=^^1^1^2930422^^^^
+ ;;^UTILITY(U,$J,"PRO",210,1,1,0)
+ ;;=LOADS ALL FIELDS IN DATA SEGMENT TO THE LOCAL PATIENT FILE  
+ ;;^UTILITY(U,$J,"PRO",210,4)
+ ;;=^^^LOAD PDX DATA
+ ;;^UTILITY(U,$J,"PRO",210,20)
+ ;;=D LOAD^VAQLED02
+ ;;^UTILITY(U,$J,"PRO",210,99)
+ ;;=55782,41814
+ ;;^UTILITY(U,$J,"PRO",211,0)
+ ;;=VAQ LOAD FIELD^Load Field(s)^^A^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",211,1,0)
+ ;;=^^1^1^2930421^^^
+ ;;^UTILITY(U,$J,"PRO",211,1,1,0)
+ ;;=LOADS THE FIELD OR FIELDS SELECTED TO THE LOCAL DATA BASE
+ ;;^UTILITY(U,$J,"PRO",211,4)
+ ;;=^^^LOAD FIELD
+ ;;^UTILITY(U,$J,"PRO",211,20)
+ ;;=D FIELD^VAQLED02
+ ;;^UTILITY(U,$J,"PRO",211,99)
+ ;;=55782,41814
+ ;;^UTILITY(U,$J,"PRO",212,0)
+ ;;=VAQ PDX8 (MENU)^List Process Options^^M^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",212,1,0)
+ ;;=^^1^1^2930721^^^^
+ ;;^UTILITY(U,$J,"PRO",212,1,1,0)
+ ;;=display custom options to user for possiable matches screen
+ ;;^UTILITY(U,$J,"PRO",212,4)
+ ;;=26^4^^VAQ LED POSSIABLE MATCHES MENU
+ ;;^UTILITY(U,$J,"PRO",212,10,0)
+ ;;=^101.01PA^2^20
+ ;;^UTILITY(U,$J,"PRO",212,10,19,0)
+ ;;=213^UE^11^^^Update Entry
+ ;;^UTILITY(U,$J,"PRO",212,10,19,"^")
+ ;;=VAQ DUPLICATE
+ ;;^UTILITY(U,$J,"PRO",212,10,21,0)
+ ;;=507^NP^12^^^New Patient
+ ;;^UTILITY(U,$J,"PRO",212,10,21,"^")
+ ;;=VAQ NEW PATIENT
+ ;;^UTILITY(U,$J,"PRO",212,26)
+ ;;=D SHOW^VALM
+ ;;^UTILITY(U,$J,"PRO",212,28)
+ ;;=Select Action:
+ ;;^UTILITY(U,$J,"PRO",212,99)
+ ;;=56045,61507
+ ;;^UTILITY(U,$J,"PRO",213,0)
+ ;;=VAQ DUPLICATE^Select Entry^^A^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",213,4)
+ ;;=^^^VAQ DUPLICATE SELECTOR
+ ;;^UTILITY(U,$J,"PRO",213,20)
+ ;;=D SEL^VAQLED03
+ ;;^UTILITY(U,$J,"PRO",213,99)
+ ;;=55782,41814
+ ;;^UTILITY(U,$J,"PRO",214,0)
+ ;;=VAQ PDX7 (MENU)^List Request Options^^M^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",214,1,0)
+ ;;=^^1^1^2930721^^^^
+ ;;^UTILITY(U,$J,"PRO",214,1,1,0)
+ ;;=display custom options to user for update screen PDX7
+ ;;^UTILITY(U,$J,"PRO",214,4)
+ ;;=26^4^^VAQ LED ADD PT MENU
+ ;;^UTILITY(U,$J,"PRO",214,10,0)
+ ;;=^101.01PA^1^7
+ ;;^UTILITY(U,$J,"PRO",214,10,7,0)
+ ;;=215^AP^11
+ ;;^UTILITY(U,$J,"PRO",214,10,7,"^")
+ ;;=VAQ ADD PATIENT
+ ;;^UTILITY(U,$J,"PRO",214,26)
+ ;;=D SHOW^VALM
+ ;;^UTILITY(U,$J,"PRO",214,28)
+ ;;=Select Action:
+ ;;^UTILITY(U,$J,"PRO",214,99)
+ ;;=55782,41817
+ ;;^UTILITY(U,$J,"PRO",215,0)
+ ;;=VAQ ADD PATIENT^Add Patient^^A^^^^^^^^PATIENT DATA EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",215,1,0)
+ ;;=^^1^1^2940119^^^^
+ ;;^UTILITY(U,$J,"PRO",215,1,1,0)
+ ;;=ADDS PATIENT TO LOCAL DATA BASE
+ ;;^UTILITY(U,$J,"PRO",215,4)
+ ;;=^^^ADD PATIENT
+ ;;^UTILITY(U,$J,"PRO",215,20)
+ ;;=D ADD^VAQLED07
+ ;;^UTILITY(U,$J,"PRO",215,99)
+ ;;=55782,41814

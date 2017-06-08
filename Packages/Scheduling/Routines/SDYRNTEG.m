@@ -1,0 +1,34 @@
+SDYRNTEG ;ISC/XTSUMBLD KERNEL - Package checksum checker ;2951024.144421
+ ;;5.3;Scheduling;**32**;Aug 13, 1993
+ ;;7.3;2951024.144421
+ S XT4="I 1",X=$T(+3) W !!,"Checksum routine created on ",$P(X,";",4)," by KERNEL V",$P(X,";",3),!
+CONT F XT1=1:1 S XT2=$T(ROU+XT1) Q:XT2=""  S X=$P(XT2," ",1),XT3=$P(XT2,";",3) X XT4 I $T W !,X X ^%ZOSF("TEST") S:'$T XT3=0 X:XT3 ^%ZOSF("RSUM") W ?10,$S('XT3:"Routine not in UCI",XT3'=Y:"Calculated "_$C(7)_Y_", off by "_(Y-XT3),1:"ok")
+ ;
+ K %1,%2,%3,X,Y,XT1,XT2,XT3,XT4 Q
+ONE S XT4="I $D(^UTILITY($J,X))",X=$T(+3) W !!,"Checksum routine created on ",$P(X,";",4)," by KERNEL V",$P(X,";",3),!
+ W !,"Check a subset of routines:" K ^UTILITY($J) X ^%ZOSF("RSEL")
+ W ! G CONT
+ROU ;;
+SDAMBAE0 ;;10603457
+SDAMC ;;6019506
+SDAPP ;;6436917
+SDC ;;15258031
+SDCIAL ;;11252292
+SDCLAS0 ;;12590722
+SDCNP ;;13822352
+SDCO4 ;;5880601
+SDDSSA ;;4435584
+SDM ;;17314985
+SDM1 ;;18410541
+SDM2 ;;11302938
+SDM3 ;;10560605
+SDMM ;;18752312
+SDMULT1 ;;9844477
+SDN ;;13372662
+SDNOS ;;16996966
+SDPPMT1 ;;4665850
+SDPPSEL ;;2049838
+SDST ;;10745584
+SDSTP ;;8584292
+SDVADAT ;;9068029
+SDYRENR ;;3377976

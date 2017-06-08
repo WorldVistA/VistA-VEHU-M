@@ -1,0 +1,22 @@
+ICD142A2 ;ALB/EG/ABR - ADD NEW ICD DX/OPS/UPDATES ;DEC 15, 1993
+ ;;14.0;DRG Grouper;**2**;Apr 03, 1997
+ ;
+EN ;
+ N ICDX,ICDI,DIE,DA,DR
+ D REVD ;,REVO  ; no revised ops, 10/1/97
+ Q
+ ;
+REVD ;revised descriptions for diagnoses
+ S DIE="^ICD9("
+ F ICDX=1:1 S ICDI=$P($T(RDTEXT+ICDX),";;",2) Q:'ICDI  S DA=+ICDI,DR="10///"_$P(ICDI,U,2) D ^DIE
+ Q
+ ;
+REVO ;revised descriptions for operations
+ S DIE="^ICD0("
+ F ICDX=1:1 S ICDI=$P($T(ROTEXT+ICDX),";;",2) Q:'ICDI  S DA=+ICDI,DR="4///"_$P(ICDI,U,2)_";10///"_$P(ICDI,U,3) D ^DIE
+RDTEXT ;
+ ;;12686^STREPTOCOCCUS INFECTION IN CONDITIONS CLASSIFIED ELSEWHERE AND OF UNSPECIFIED SITE, GROUP D (ENTEROCOCCUS)
+ ;;$END
+ROTEXT ;
+ ;;
+ ;;$END

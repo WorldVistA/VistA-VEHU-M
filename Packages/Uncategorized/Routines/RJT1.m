@@ -1,0 +1,5 @@
+RJT1 ;
+ G QUIT^RJT1
+ Q
+QUIT ;
+ W !,"WONDERFUL"

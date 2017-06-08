@@ -1,0 +1,118 @@
+TIUZOBJ1 ;SFVAMC/APC - TIU RX OBJECTS ;7/8/97
+ ;;1
+CHK(IEN) ;
+ N II,XX,DA
+ S II=0
+ F  S II=$O(^TIU(8925.1,IEN,"DFLT",II)) Q:'II  W:^(II,0)["|" !,^(0),"<<<<<"
+ R !,"Press any key to continue...",XX:DTIME
+ Q
+RX(DFN,DISPLAY,TARGET,LINE) ;7/8/97 Current Rx
+ ; DFN     = patient dfn
+ ; DISPLAY = 1 if write to screen
+ ; TARGET  = array to store data
+ ; LINE    = number of lines in array
+ ;S LINE=LINE+1
+ ;S @TARGET@(LINE,0)="..Temporarily out of order.."
+ ;S @TARGET@(0)="^^"_LINE_U_LINE_U_DT_"^^"
+ ;Q "~@"_$NA(@TARGET)
+ N PSOBEGIN,DA
+ S PSOBEGIN=DT
+ K ^TMP("PSOO",$J)
+ D ^PSOHCSUM
+ I '$D(^TMP("PSOO",$J)) D NODATA("No current outpatient medications found in computer.")
+ I $D(^TMP("PSOO",$J)) D RXWRT
+ K ^TMP("PSOO",$J)
+ Q "~@"_$NA(@TARGET)
+RXWRT ;
+ N II,JJ,RESULT,NODE
+ ;SFVAMC/APC 12/17/97 Add computer source msg
+ S LINE=LINE+1,@TARGET@(LINE,0)="Computer is the source for the following medication list: ",LINE=LINE+1,@TARGET@(LINE,0)=" "
+ S II="" F  S II=$O(^TMP("PSOO",$J,II)) Q:'II  S NODE=^(II,0) D
+ .;skip canc, exp, del
+ .Q:"EXPIRE;CANCEL;DELETE"[$E($P($P(NODE,U,5),";",2),1,6)
+ .S RESULT=$P($P(NODE,U,3),";",2)_"   Sig:"
+ .;SFVAMC/APC 2/8/98 Use this line for PSO 6.0
+ .;S JJ=0 F  S JJ=$O(^TMP("PSOO",$J,II,JJ)) Q:'JJ  S RESULT=RESULT_" "_^TMP("PSOO",$J,II,JJ)
+ .;SFVAMC/APC 2/8/98 Use this line for PSO 7.0
+ .S JJ=0 F  S JJ=$O(^TMP("PSOO",$J,II,JJ)) Q:'JJ  S RESULT=RESULT_" "_^TMP("PSOO",$J,II,JJ,0)
+ .S LINE=LINE+1
+ .S @TARGET@(LINE,0)=RESULT
+ S @TARGET@(0)="^^"_LINE_U_LINE_U_DT_"^^"
+ Q
+ ;
+NODATA(MSG) ;
+ N II,JJ,RESULT,NODE
+ S LINE=LINE+1
+ S @TARGET@(LINE,0)=MSG
+ S LINE=LINE+1,@TARGET@(LINE,0)=" "
+ S @TARGET@(0)="^^"_LINE_U_LINE_U_DT_"^^"
+ Q
+ ;
+SUR(DFN,DISPLAY,TARGET,LINE,MAX,RANGE) ;10/21/97 Last surgery. Copied from GMTSRO 2.7
+ ;N MAX,GMCOUNT,GMIDT,GMW,GMN,SURG,GMDT,DA
+ N GMCOUNT,GMIDT,GMW,GMN,SURG,GMDT,DA,GMTS1,GMTS2,GMTSI
+ S:'$G(MAX) MAX=1
+ D HSINIT^TIUZOBJ3
+ S GMN=0 F  S GMN=$O(^SRF("B",DFN,GMN)) Q:GMN'>0  D
+ .S GMDT=$P(^SRF(GMN,0),U,9)
+ .;Q:'((GMDT>GMTS1)&(GMDT<GMTSEND))
+ .F  Q:'$D(SURG(9999999-GMDT))  S GMDT=GMDT+.0001
+ .S SURG(9999999-GMDT)=GMN
+ I '$D(SURG) D NODATA("No surgeries on file.") G SUREX
+ S (GMCOUNT,GMIDT)=0 F  S GMIDT=$O(SURG(GMIDT)) Q:GMIDT'>0!(GMCOUNT'<MAX)  S GMN=SURG(GMIDT) D SURWRT
+ ;S GMIDT=$O(SURG(0)),GMN=SURG(GMIDT)
+ ;I +GMN D SURWRT
+SUREX ;
+ Q "~@"_$NA(@TARGET)
+ ;
+SURWRT ; Write surgical case record
+ N DIC,DR,DA,X,GMI,GMW,GMDT,OPPRC,POSDX,PREDX,SPEC,STATUS,SURGEON,VER
+ S X=$P(^SRF(GMN,0),U,9) D REGDT^GMTSU S GMDT=X
+ I $D(^SRF(GMN,.1)) S X=$P(^SRF(GMN,.1),U,4) I X>0 S Y=X,C=$P(^DD(130,.14,0),U,2) D Y^DIQ S SURGEON=Y K Y
+ S OPPRC(0)=$P($G(^SRF(GMN,"OP")),U,1,2) S:$P(OPPRC(0),U,2)]"" $P(OPPRC(0),U,2)=$P($G(^ICPT($P($G(^SRF(GMN,"OP")),U,2),0)),U,2) D
+ . S GMI=0 F  S GMI=$O(^SRF(GMN,13,GMI)) Q:GMI'>0  S OPPRC(GMI)=$P($G(^SRF(GMN,13,GMI,0)),U)_U_$G(^SRF(GMN,13,GMI,2)) S:$P(OPPRC(GMI),U,2)]"" $P(OPPRC(GMI),U,2)=$P($G(^ICPT($P($G(^SRF(GMN,13,GMI,2)),U),0)),U,2)
+ S GMCOUNT=GMCOUNT+1
+ S LINE=LINE+1,@TARGET@(LINE,0)="Date of Surgery:   "_GMDT
+ ;SFVAMC/APC 12/11/97 Add CANCEL status
+ I +$P($G(^SRF(GMN,30)),U) S X=$P(^SRF(GMN,30),U) D REGDT^GMTSU S LINE=LINE+1,@TARGET@(LINE,0)="CANCELLED:         "_X
+ S LINE=LINE+1,@TARGET@(LINE,0)="Surgeon:           "_$G(SURGEON)
+ S LINE=LINE+1,@TARGET@(LINE,0)="Operative Proc(s):"
+ ;S GMI="" F  S GMI=$O(OPPRC(GMI)) Q:GMI=""  S OPPRC=$S($L($P(OPPRC(GMI),U))'>58:OPPRC(GMI),1:$$WRAP^GMTSORC($P(OPPRC(GMI),U),58)_U_$P(OPPRC(GMI),U,2)) F GMJ=1:1:$L($P(OPPRC,U),"|") D WRTPRC
+ S GMI="" F  S GMI=$O(OPPRC(GMI)) Q:GMI=""  S OPPRC=$S($L($P(OPPRC(GMI),U))'>75:OPPRC(GMI),1:$$WRAP^GMTSORC($P(OPPRC(GMI),U),75)_U_$P(OPPRC(GMI),U,2)) F GMJ=1:1:$L($P(OPPRC,U),"|") D
+ .S LINE=LINE+1,@TARGET@(LINE,0)="   "_$P($P(OPPRC,U),"|",GMJ)_" - "_$P(OPPRC,U,2)
+ S LINE=LINE+1,@TARGET@(LINE,0)=" "
+ S @TARGET@(0)="^^"_LINE_U_LINE_U_DT_"^^"
+ Q
+ ;
+SP(DFN,DISPLAY,TARGET,LINE) ;10/21/97 Surgical path. Copied from GMTSLRA v2.7
+ N GMI,MAX,LRDFN,IX,X,IX0,DA
+ K ^TMP("LRA",$J)
+ S LRDFN=+^DPT(DFN,"LR")
+ S MAX=1,GMTS1=9999999-DT,GMTS2=8000000
+ D:+LRDFN ^GMTSLRAE
+ I '$D(^TMP("LRA",$J)) D NODATA("No surgical pathologies available.") G SUREX
+ S IX=0 F GMI=1:1:MAX S IX=$O(^TMP("LRA",$J,IX)) Q:IX'>0  D
+ .S IX0="" F  S IX0=$O(^TMP("LRA",$J,IX,IX0)) Q:IX0=""!(IX0?1A)  S X=^TMP("LRA",$J,IX,IX0) D SPWRT
+ K ^TMP("LRA",$J)
+ Q "~@"_$NA(TARGET)
+ ;
+SPWRT ; Writes Surgical Pathology Record
+ N IX1,GMJ,GMS
+ I IX0=0 D  Q
+ .S LINE=LINE+1,@TARGET@(LINE,0)="Collected: "_$P(X,U)
+ .S LINE=LINE+1,@TARGET@(LINE,0)="Accession: "_$P(X,U,2)
+ I IX0=.1 D  Q
+ .S LINE=LINE+1,@TARGET@(LINE,0)="Specimen: "
+ .S GMS=0 F  S GMS=$O(^TMP("LRA",$J,IX,.1,GMS)) Q:GMS'>0  S LINE=LINE+1,@TARGET@(LINE,0)="   "_^TMP("LRA",$J,IX,.1,GMS)
+ ;I $S(IX0=.2:1,IX0=1:1,IX0=1.1:1,IX0=1.3:1,IX0=1.4:1,1:0) D TEXT Q
+ I $S(IX0=1.4:1,1:0) D SPTEXT Q
+ Q
+SPTEXT ; Handles GROSS DESCRIPTION & MICROSCOPIC EXAM/DX Print
+ N LN,GMTSLN,GMTSLNI
+ S LN=0
+ I IX0=1.4 S LINE=LINE+2,@TARGET@(LINE-1,0)=" ",@TARGET@(LINE,0)="Surgical Path DX:"
+ F  S LN=$O(^TMP("LRA",$J,IX,IX0,LN)) Q:LN'>0  S GMTSLN=^(LN) D
+ .I $L(GMTSLN)>78 S GMTSLN=$$WRAP^GMTSORC(GMTSLN,78)
+ .S LINE=LINE+1,@TARGET@(LINE,0)=$P(GMTSLN,"|")
+ .F GMTSLNI=2:1:$L(GMTSLN,"|") I $P(GMTSLN,"|",GMTSLNI)]"" S LINE=LINE+1,@TARGET@(LINE,0)=$P(GMTSLN,"|",GMTSLNI)
+ Q

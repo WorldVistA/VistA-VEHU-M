@@ -1,0 +1,7 @@
+ZZUS9184 ; SEB - Reindex new entries in TIU Notes file (8925)
+ ;;;;;;Build 1
+ Q
+KODAK S DIK="^TIU(8925," F DA=11597,11602,11604 D IX^DIK
+ Q
+PNRMA S DIK="^TIU(8925," F DA=11598,11603,11605 D IX^DIK
+ Q

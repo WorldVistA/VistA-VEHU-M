@@ -1,0 +1,3 @@
+IBXSC122 ; ;12/04/02
+ S X=DG(DQ),DIC=DIE
+ ;

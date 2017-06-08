@@ -1,0 +1,5 @@
+ZSIZE ;JDS
+ K ^UTILITY($J) D ^%RSEL Q:$N(^UTILITY($J,0))=-1
+EN S X=0,NR=0,TS=0,B="ZL @X X ^%ZOSF(""SIZE"")"
+A S X=$N(^UTILITY($J,X)) I X'=-1 X B S NR=NR+1 W !,X,?10,Y S TS=TS+Y G A
+ W !!,"# ",NR," SIZE ",TS

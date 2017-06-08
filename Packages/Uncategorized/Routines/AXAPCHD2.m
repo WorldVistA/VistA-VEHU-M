@@ -1,0 +1,138 @@
+AXAPCHD2 ;WPB/GBH - GET PATCHES, BY PROGRAMMER/STATUS/NAMESPACE/VERSION
+ ;;2.0;WPB Patch Tracking;10-SEP-1998;;Build 2
+ ;
+MAIN ;
+ K ^TMP($J)
+ D GETPRG ;  ......... Get list of Programmers and select one.
+ G:OK=0 EXIT
+ D GETSTAT ; ......... Get list of Status's and select one.
+ G:OK=0 EXIT
+ D GETPKG ;  ......... Get list of Packages for selected Programmer.
+ D GETREC ;  ......... Get list of Patches for each of the Packages
+ ;                           and set entries into TMP($J...)
+ ;
+ D HEADER1
+ D GETRECS ; ......... List the patches.
+ ;
+EXIT ;
+ K COUNT,DES,DESIG,GSTAT,HOLDNSP,INLIVE,INTEST,LINE
+ K MSGLIVE,MSGTEST,MSGTST,NAMSPAC,NSP,OK,OKFOR
+ K PACKAGE,PKG,PPROG,PROG,PSTAT,PTR,RECNR,RECORD
+ K SEQ,SUBJ,SPA,STAT,TAB,TITLE,VER,X,XPROG,XSPAC,XSTAT,Y,ZZ
+ Q
+ ;
+GETPRG S (RECNR,COUNT)=0
+ F  D  Q:+RECNR'>0
+ .S RECNR=$O(^AXA(548260,"D",RECNR)) Q:+RECNR'>0
+ .S COUNT=COUNT+1,PROG(COUNT)=$P($G(^VA(200,RECNR,0)),U)
+SHOWPRG ;
+ N DIC W @IOF,!! S PROG=DUZ,OK=1
+ F X=1:1:COUNT W !,$J(X,2),?10,PROG(X)
+ S XPROG=$P($G(^VA(200,DUZ,0)),U)
+ W !!,"Select Primary Programmer// "_XPROG R XPROG:DTIME
+ I XPROG["^" S OK=0 Q
+ I (+XPROG<1)!(+XPROG>COUNT) G SHOWPRG
+ S DIC="^VA(200,",DIC(0)="M",X=PROG(XPROG)
+ D ^DIC S XPROG=+Y,PPROG=$P(Y,U,2)
+ Q
+ ;
+GETSTAT ;
+ S (RECNR,COUNT)=0
+ F  D  Q:+RECNR'>0
+ .S RECNR=$O(^AXA(548260.1,RECNR)) Q:+RECNR'>0
+ .S COUNT=COUNT+1,STAT(COUNT)=$P($G(^AXA(548260.1,RECNR,0)),U)
+SHOSTAT ;
+ N DIC W @IOF,!!
+ F X=1:1:COUNT W !,$J(X,2),?10,STAT(X)
+ R !!,"Select Patch Status to Print// IN TEST ",XSTAT:DTIME
+ I XSTAT["^" S OK=0 Q
+ I (+XSTAT<1)!(+XSTAT>COUNT) G SHOSTAT
+ S DIC="^AXA(548260.1,",DIC(0)="M",X=STAT(XSTAT)
+ D ^DIC S XSTAT=+Y,PSTAT=$P(Y,U,2)
+ Q
+ ;
+GETPKG ;
+ S (RECNR,COUNT)=0
+ F  D  Q:+RECNR'>0
+ .S RECNR=$O(^AXA(548260,"D",XPROG,RECNR)) Q:+RECNR'>0
+ .S COUNT=COUNT+1,RECORD=$G(^AXA(548260,RECNR,0))
+ .S STAT=$P(RECORD,U,14)
+ .S PACKAGE=$P($G(RECORD),U),PKG(PACKAGE)=""
+ .S NAMSPAC=$P($G(RECORD),U,2),SPA(NAMSPAC)=""
+ Q
+ ;
+CLEAR ;
+ S (INTEST,OKFOR,INLIVE,MSGTST,MSGLIVE,SUBJ)=""
+ Q
+ ;
+GETREC ;
+ S RECNR=0
+ D CLEAR
+ F  D  Q:+RECNR'>0
+ .S RECNR=$O(^AXA(548261,"ASTAT",XSTAT,RECNR)) Q:+RECNR'>0
+ .S RECORD=$G(^AXA(548261,RECNR,0))
+ .S NSP=$P($G(RECORD),U,2)
+ .S DES=$P($G(RECORD),U,1)
+ .S VER=$P($G(DES),"*",2)
+ .S SEQ=$P($G(RECORD),U,18)
+ .I SEQ']"" S SEQ="T"_$P($G(RECORD),U,4)
+ .S XSPAC=+$P(RECORD,U,14)
+ .I $D(SPA(NSP)) D
+ ..D CLEAR
+ ..S INTEST=$P($G(RECORD),U,8),INLIVE=$P($G(RECORD),U,10)
+ ..S OKFOR=$P($G(RECORD),U,12),SUBJ=$P($G(RECORD),U,17)
+ ..S MSGTEST=$P($G(RECORD),U,19),MSGLIVE=$P($G(RECORD),U,20)
+ ..S ZZ=SUBJ_U_MSGTEST_U_MSGLIVE_U_INTEST_U_OKFOR_U_INLIVE_U_DES_U_XPROG
+ ..S ^TMP($J,NSP,VER,SEQ)=ZZ
+ Q
+ ;
+HEADER1 ;
+ W @IOF
+ S LINE="",$P(LINE,"-",81)=""
+ W !,?30,"P A T C H    L I S T",!
+ W !,"PROGRAMMER:",PPROG
+ S TAB=79-$L("PATCH STATUS:"_PSTAT) W ?TAB,"PATCH STATUS: ",PSTAT
+ W !,LINE,!
+ W "DESIGNATION",?16,"SEQ",?24,"IN TEST",?35,"ADPAC OK",?46,"IN LIVE"
+ W ?57,"MSG#(TEST)",?69,"MSG#(LIVE)"
+ W !,LINE,!
+ Q
+ ;
+ ;
+GETRECS ;
+ S (NSP,HOLDNSP)=""
+ F  D  Q:$G(NSP)']""
+ .S NSP=$O(^TMP($J,NSP)) Q:$G(NSP)']""
+ .S VER=""
+ .F  D  Q:$G(VER)']""
+ ..S VER=$O(^TMP($J,NSP,VER)) Q:$G(VER)']""
+ ..S SEQ=""
+ ..F  D  Q:$G(SEQ)']""
+ ...S SEQ=$O(^TMP($J,NSP,VER,SEQ)) Q:$G(SEQ)']""
+ ...S RECORD=^TMP($J,NSP,VER,SEQ)
+ ...D CLEAR
+ ...S SUBJ=$P($G(RECORD),U,1)
+ ...S MSGTST=$P($G(RECORD),U,2)
+ ...S MSGLIVE=$P($G(RECORD),U,3)
+ ...S X=$P($G(RECORD),U,4)
+ ...I $G(X)]"" S INTEST=$E(X,4,5)_"/"_$E(X,6,7)_"/"_$E(X,2,3)
+ ...S X=$P($G(RECORD),U,5)
+ ...I $G(X)]"" S OKFOR=$E(X,4,5)_"/"_$E(X,6,7)_"/"_$E(X,2,3)
+ ...S X=$P($G(RECORD),U,6)
+ ...I $G(X)]"" S INLIVE=$E(X,4,5)_"/"_$E(X,6,7)_"/"_$E(X,2,3)
+ ...S DESIG=$P($G(RECORD),U,7)
+ ...S XPROG=$P($G(RECORD),U,8)
+ ...I $P($G(DESIG),"*",1)'=HOLDNSP W !
+ ...S HOLDNSP=$P($G(DESIG),"*",1)
+ ...W !,DESIG,?16,SEQ,?24,INTEST,?35,OKFOR,?46,INLIVE
+ ...W ?57,$J(MSGTST,7),?70,$J(MSGLIVE,7)
+ W !!
+ Q
+ ;
+NEW ;
+ ;
+ Q
+ ;
+OKFOR ;
+ ;
+ Q

@@ -1,0 +1,4 @@
+ZZGREG ; [6/11/98 12:53pm]
+ ;
+ Q
+START S D=5 Q

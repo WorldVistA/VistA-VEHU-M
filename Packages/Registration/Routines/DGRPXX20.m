@@ -1,0 +1,13 @@
+DGRPXX20 ; COMPILED XREF FOR FILE #2.12 ; 06/24/93
+ ; 
+ S DA=0
+A1 ;
+ I $D(DISET) K DIKLM S:$D(DA(1)) DIKLM=1 G:$D(DA(1)) 1 S DA(1)=DA,DA=0 G @DIKM1
+0 ;
+A S DA=$O(^DPT(DA(1),"ARCH",DA)) I DA'>0 S DA=0 G END
+1 ;
+ S DIKZ(0)=$S($D(^DPT(DA(1),"ARCH",DA,0))#2:^(0),1:"")
+ S X=$P(DIKZ(0),U,1)
+ I X'="" S ^DPT(DA(1),"ARCH","AB",$E(X,1,30),DA)=""
+ G:'$D(DIKLM) A Q:$D(DISET)
+END G ^DGRPXX21

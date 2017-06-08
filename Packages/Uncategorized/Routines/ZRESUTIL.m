@@ -1,0 +1,105 @@
+ZRESUTIL ;UTILITIES FOR NLI ;2/9/94  16:40
+ ;
+ ;
+UPPER(X) ;
+ S UPPER="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ S LOWER="abcedfghijklmnopqrstuvwxyz"
+ S X=$TR(X,LOWER,UPPER)
+ Q X
+ ;
+AGE ;
+ I FILE'=2 W !,"DOB is unavailable in FILE "_$P(^DIC(FILE,0),"^",1) Q
+ I $D(TODAY)=0 S %DT="P",X="T" D ^%DT S TODAY=+Y
+ S DOB=$P($G(^DPT(DA,0)),"^",3) S X2=DOB,X1=TODAY D ^%DTC S AGE=X\365.25
+ S ANS=AGE
+ K AGE
+ Q  ;AGE
+ ;
+LABTST ;
+ S NORMSS=$P(KB,"^",7)_";"_$P(KB,"^",15)_";"_$P(KB,"^",16)
+ S LABNORM=$O(^LAB(60,"C",NORMSS,""))
+ S SUB2=SUB(2) S SUB2=$TR(SUB2,"""","") ;GET RID OF "'S
+ S SPECTYPE=$P($G(^LR(LRDFN,SUB2,SUB(3),0)),"^",5)
+ S PROVIDER=$P($G(^LR(LRDFN,SUB2,SUB(3),0)),"^",9)
+ S LABINFO=$G(^LAB(60,LABNORM,1,SPECTYPE,0))
+ I LABINFO="" W !," No reference information available..." D LABKILL Q
+ S UNITS=$P(LABINFO,"^",7),REFHIGH=$P(LABINFO,"^",3)
+ W " ",UNITS
+ S REFLOW=$P(LABINFO,"^",2)
+ W "  reference range:"_REFLOW_"-"_REFHIGH
+ S HL=$G(@GLB) I HL="" Q
+ S HL=$P(HL,"^",2)
+ I HL="H" W *7,*7,!,"This value is high!" Q
+ I HL="L" W *7,*7,!,"This value is low!" Q
+ Q
+LABKILL ;KILL VARIABLES
+ K LABINFO,REFLOW,REFHIGH,HL,UNITS,SPECTYPE,SUB2
+ Q
+MED ;MEDICATION ACTIVE PROFILE
+ I DRDA']"" D PAT^ZRESUTL1 Q
+ S MD=0,ANS="",MEDCNT=0
+ I $D(^PS(55,DA,"P","A"))=0 W !,"No medication indicated..." q
+ W # F  S MD=$O(^PS(55,DA,"P",MD)) Q:MD'>0  S RX=^(MD,0) D RXGET I $D(ANYFL) Q
+ I MEDCNT=0 W !,"No active medications!" H 1 Q
+ W !
+ Q
+RXGET ;
+STAT ;
+ S RX2=$G(^PSRX(RX,2)),RX0=$G(^PSRX(RX,0))
+ S ST0=$P(RX0,"^",15)
+ I ST0<12,$O(^PS(52.5,"B",RX,0)),$D(^PS(52.5,+$O(^(0)),0)),'$D(^("P")) S ST0=5
+ I ST0<12&(DT>$P(RX2,"^",6)) S ST0=11
+ S ST=$P("ERROR^ACTIVE^NON-VERIFIED^REFILL FILL^HOLD^^SUSPENDED^^^^^DONE^EXPIRED^CANCELLED","^",ST0+2) ;,$P(RX0,"^",15)=ST0
+ I ST'="ACTIVE" Q
+ S MEDCNT=MEDCNT+1
+ S RX0=$G(^PSRX(RX,0)),Y=$P(RX0,"^",13) X ^DD("DD")
+ S DRNUM=$P(RX0,"^",4),DRUGNUM=$P(RX0,"^",6),SIG=$P(RX0,"^",10)
+ S DRNAME="" I DRNUM'="" S DRNAME=$P($G(^DIC(16,DRNUM,0)),"^",1)
+ S DRUGNAME="" I DRUGNUM'="" S DRUGNAME=$P($G(^PSDRUG(DRUGNUM,0)),"^",1) D  Q:$D(ANYFL)
+ .W !!,"RX: ",$P(RX0,"^",1),?20,"DATE: ",Y
+ .W !,"DR:",DRNAME,?45," SIG:",SIG
+ .W !,"DRUG:",DRUGNAME,"    STATUS:",ST
+ .D:$Y>20 PAUSE Q:$D(ANYFL)
+ Q
+ADDR ;ADDRESS STUFF FOR PATIENT
+ ;
+ S ADR=$G(^DPT(DA,.11)) I ADR="" W !,"No address info available..." Q
+ S ADDR1=$P(ADR,"^",1),ADDR2=$P(ADR,"^",2),CITY=$P(ADR,"^",4)
+ S STATENUM=$P(ADR,"^",5),ZIP=$P(ADR,"^",6)
+ S STATENAME=$P($G(^DIC(5,STATENUM,0)),"^",2)
+ W !,ADDR1,", ",CITY,", ",STATENAME," ",ZIP
+ Q
+PAUSE ;WAIT A SECOND
+ R !,"     Hit any key to continue or ^ to exit...",ANYKEY W # I ANYKEY="^" S ANYFL=1
+ Q
+MINMAX ;CALCUALTE MIN & MAX
+ S D=0,MIN=999999999 F  S D=$O(CHOICES(D)) Q:D'>0  S:$P(CHOICES(D),"^",2)<MIN MIN=$P(CHOICES(D),"^",2)
+ S D=0,MAX=0 F  S D=$O(CHOICES(D)) Q:D'>0  S:$P(CHOICES(D),"^",2)>MAX MAX=$P(CHOICES(D),"^",2)
+ Q
+DATE ;SHOWS TODAYS DATE
+ S %DT="T",X="T" D ^%DT X ^DD("DD") W Y
+ Q
+ ;
+BADWORD(X) ;FIND BAD WORDS
+ S BADWORD=0
+ ;
+ I X="" Q X
+ I X[" BASTARD" D SAYIT Q X
+ I X["SHIT" D SAYIT Q X
+ I X[" FUCK" D SAYIT Q X
+ I X[" BITCH" D SAYIT Q X
+ I X[" ASS" D SAYIT Q X
+ Q X
+SAYIT ;
+ S BADWORD=1
+ S R=$R(2) W *7,*7
+ I R=0 W !,"Hey watch it!!" Q
+ I R=1 W !,"That's not nice!" Q
+ I R=2 W !,"Be nice!!" Q
+ Q
+RAD ;RADIOLOGY REPORT DISPLAY
+ I DRDA']"" D PAT^ZRESUTL1 Q
+ S RADFN=DA,RAHEAD="**** Patient's Exams ****",RAF1=1,RAREPORT=1,ORVP=1 D ^RAPTLU D:X'="^" OERR^RART
+ K RACN,RACN1,RADATE,RADFN,RADTE,RADTI,RAF1,RAHEAD,RAI,RANME,RAPRC
+ K RAREPORT,RARPT,RASSN,RAST,ORVP
+ Q

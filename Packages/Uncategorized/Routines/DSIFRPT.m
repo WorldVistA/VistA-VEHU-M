@@ -1,0 +1,59 @@
+DSIFRPT ;DSS/AMC - MODIFIED FOR RPC ORIGINAL FBCNHCEN CENSUS DATA ;03/01/2009
+ ;;3.2;FEE BASIS CLAIMS SYSTEM;;Jun 05, 2009;Build 38
+ ;Copyright 1995-2009, Document Storage Systems, Inc., All Rights Reserved
+ ; 
+ ; Integration Agreements
+ ;  5084  $$CKVEN^FBAADV
+ ;  5090  $$SSN^FBAAUTL
+ ;  5092  $$PSA^FBAAUTL5
+ ;  5097  $$NAME^FBCHREQ2
+ ; 10103  $$FMTE^XLFDT
+ ;
+ ;FBI is set in option entry action, 6=CH, 7=CNH
+CENSUS(AXY,FBDT) ;RPC - DSIF INP CENSUS REPORT
+ ;Input Parameters
+ ;    FBDT - Census Date (Required, FileMan Date) 
+ ;    
+ ;Return Array
+ ;    D ^ Veteran Name ^ DOB ^ Veteran ID ^ PSA ^ Authorization From
+ ;    V ^ Vendor Name ^ Vendor ID ^ Chain # ^ Part Code (External) ^ Street Address ^ 1 = Awaiting Austin Approval ^ 1 = Vendor in Delete Status ^ Street Address 2 ^ City ^ State (Abbr) ^ Zip Code ^ Phone Number
+ ;    -1 ^ Invalid Input!
+ ;    -1 ^ No Data Found!
+ ;    
+ ;    Cloned from FBCHACT0 and FBCHACT1 routines
+ S AXY=$NA(^TMP($J,"DSIFRPT")) K @AXY,^TMP($J,"FBCEN")
+ N XX,YY,JJ,FBAAOUT,FBI,FBJ,FBK,FBVNAME,FBNAME,FB7078,DFN,FBDOB,FBAFD,FBZ,FBPSA,FBOUT,FBL,FBAFDT,FBACT,FBCKDT,FBIEN,FBREC,FBTRAN,FBTRDT,FBTRTYP,FBOUT
+ I '$G(FBDT) S @AXY@(0)="-1^Invalid Input!" Q
+ S YY=0
+ S FBK=0,FBJ=(FBDT-.1) F  S FBJ=$O(^FB7078("AD",FBI,FBJ)) Q:FBJ'>0  F  S FBK=$O(^FB7078("AD",FBI,FBJ,FBK)) Q:FBK'>0  D
+ .S FBAFDT=$P(^FB7078(FBK,0),"^",4) I FBAFDT'>FBDT S FB7078=^(0) Q:$P(FB7078,U,9)="DC"  D GOT
+ S (FBL,FBK)=0 F  S FBL=$O(^FB7078("AC","I",FBL)) Q:FBL'>0  F  S FBK=$O(^FB7078("AC","I",FBL,FBK)) Q:FBK'>0  D
+ .S FBAFDT=$P(^FB7078(FBK,0),"^",4),FBJ=$P(^FB7078(FBK,0),"^",5) I FBAFDT'>FBDT,(FBJ'<FBDT),($P(^(0),"^",11)=FBI) S FB7078=^(0) Q:$P(FB7078,U,9)="DC"  D GOT
+ S FBVNAME="",FBVIEN=0
+ F  S FBVNAME=$O(^TMP($J,"FBCEN",FBVNAME)) Q:FBVNAME=""!(FBAAOUT)  F  S FBVIEN=$O(^TMP($J,"FBCEN",FBVNAME,FBVIEN)) Q:'FBVIEN  S FBNAME=0 D HED1 Q:FBAAOUT  F  S FBNAME=$O(^TMP($J,"FBCEN",FBVNAME,FBVIEN,FBNAME)) Q:FBNAME=""!(FBAAOUT)  D
+ .S DFN=0 F  S DFN=$O(^TMP($J,"FBCEN",FBVNAME,FBVIEN,FBNAME,DFN)) Q:'DFN  S FB7078=^TMP($J,"FBCEN",FBVNAME,FBVIEN,FBNAME,DFN),FBDOB=+FB7078,FBAFD=$P(FB7078,"^",2),FBPSA=$P(FB7078,"^",3) D PRINT
+ K ^TMP($J,"FBCEN")
+ I 'YY S @AXY@(0)="-1^No Data Found!"
+ Q
+GOT ;
+ S DFN=$P(FB7078,"^",3),FBZ=$P(FB7078,"^",2) Q:$P(FBZ,";",2)'="FBAAV("
+ S FBNAME=$$NAME^FBCHREQ2(DFN),FBDOB=$P(^DPT(DFN,0),"^",3),FBAFD=$P(FB7078,"^",4)
+ S FBVNAME=$P($G(^FBAAV(+FBZ,0)),"^") Q:FBVNAME=""  S FBVNAME=$E(FBVNAME,1,23)
+ S JJ=0,FBPSA="",JJ=$O(^FBAAA("AG",FBK_";FB7078(",DFN,JJ)) I JJ S FBPSA=$P($G(^FBAAA(DFN,1,JJ,0)),"^",5)
+ S ^TMP($J,"FBCEN",FBVNAME,+FBZ)="",^TMP($J,"FBCEN",FBVNAME,+FBZ,FBNAME,DFN)=FBDOB_"^"_FBAFD_"^"_FBPSA_"^"_FBK
+ Q
+PRINT ;
+ S XX="D^"_FBVNAME_U_FBVID_U_FBNAME_U_$$FMTE^XLFDT(FBDOB)_U_$$SSN^FBAAUTL(DFN)_U_$$PSA^FBAAUTL5(FBPSA)_U_$$FMTE^XLFDT(FBAFD)
+ S YY=YY+1,@AXY@(YY)=XX
+ Q
+HED1 ;
+ S Y=FBVIEN D VDISP Q
+VDISP ;
+ N FBT,FBVC,FBZ S FBT(0)=$G(^FBAAV(Y,0)) Q:FBT(0)']""  F FBT=2,3,4,5,6,9,10,14 S FBT(FBT)=$P(FBT(0),U,FBT)
+ S FBT(99)=$P($G(^FBAAV(Y,1)),U),FBT(98)=$P($G(^FBAAV(Y,"ADEL")),U)
+ S XX="V^"_FBVNAME_U_FBT(2)_U_FBT(10)_U_$E($P($G(^FBAA(161.81,+FBT(9),0)),U),1,15)_U_FBT(3)_"^^^"_FBT(14)_U_FBT(4)_U_$P($G(^DIC(5,+FBT(5),0)),U,2)_U_FBT(6)_U_FBT(99)
+ D
+ .S FBZ=$$CKVEN^FBAADV(+Y) I FBZ S:FBT(3)']"" $P(XX,U,7)=1 ;"(Awaiting Austin Approval)"
+ .I FBT(98)="Y" S:FBT(3)']""!(FBZ) $P(XX,U,8)=1 ;"(Vendor in Delete Status)"
+ S YY=YY+1,@AXY@(YY)=XX
+ Q

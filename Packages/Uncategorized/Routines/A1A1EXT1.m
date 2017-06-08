@@ -1,0 +1,102 @@
+A1A1EXT1 ;ALB/CAW,PKE - Prescription Practices Extract (IG) ;4/6/95 [ 05/29/96  8:14 AM ]
+ ;;1.2;Prescription Practices Extract;;MAY 1,1996
+ ;
+GETDATA(A1XREF,A1SDATE,A1EDATE) ;Find the data
+ ;
+ N A1IFN,A1PRES,A1RX,A1PAT,A1RACE,A1MARSTA,A1ELIG,A1CLINIC,A1DIV
+ N A1EDUCA,A1PROV,A1PINFO,A1REFDIV
+ ;
+ F  S A1SDATE=$O(^PSRX(A1XREF,A1SDATE)) Q:'A1SDATE!(A1SDATE>A1EDATE)  D
+ .S A1IFN=0 F  S A1IFN=$O(^PSRX(A1XREF,A1SDATE,A1IFN)) Q:'A1IFN  D
+ ..S A1PRES=$O(^PSRX(A1XREF,A1SDATE,A1IFN,""))
+ ..I A1PRES=0 D
+ ...S A1RX(0)=$G(^PSRX(A1IFN,0)),A1RX(2)=$G(^PSRX(A1IFN,2))
+ ...Q:A1RX(0)']""  Q:A1RX(2)']""
+ ...I '$G(A1FRST) S A1FRST=A1SDATE
+ ...;
+ ...S A1DRUG=$G(^PSDRUG(+$P(A1RX(0),U,6),0))
+ ...S A1DRUG("ND")=$G(^PSDRUG(+$P(A1RX(0),U,6),"ND"))
+ ...;
+ ...I '$$DRUGCHK(.A1DRUG) Q
+ ...
+ ...S A1PAT(0)=$G(^DPT(+$P(A1RX(0),U,2),0))
+ ...S D0=$P(A1RX(0),U,2) S A1AGE=$$AGE(D0)
+ ...Q:A1AGE'>64
+ ...;
+ ...S A1DRUG("ND")=$$POINTER($P(A1DRUG("ND"),"^",6),"^PS(50.605,",1)
+ ...;
+ ...S A1RACE=$$POINTER($P(A1PAT(0),U,6),"^DIC(10,",2)
+ ...S A1MARSTA=$$POINTER($P(A1PAT(0),U,5),"^DIC(11,",3)
+ ...S A1PAT(.35)=$G(^DPT(+$P(A1RX(0),U,2),.35))
+ ...S A1PAT(.36)=$G(^DPT(+$P(A1RX(0),U,2),.36))
+ ...S A1ELIG=$$POINTER($P(A1PAT(.36),U),"^DIC(8,",4)
+ ...S A1PAT(.3)=$G(^DPT(+$P(A1RX(0),U,2),.3))
+ ...S A1PAT(.31)=$G(^DPT(+$P(A1RX(0),U,2),.31))
+ ...S A1PAT(57)=$G(^DPT(+$P(A1RX(0),U,2),57))
+ ...S A1PAT("VET")=$G(^DPT(+$P(A1RX(0),U,2),"VET"))
+ ...S A1CLINIC=$G(^SC(+$P(A1RX(0),U,5),0))
+ ...S A1DIV=$$DIV($P(A1RX(2),U,13),$P(A1RX(2),U,9))
+ ...S A1EDUCA=$G(^SOWK(655.2,+$P(A1RX(0),U,2),0))
+ ...S (A1PROV,^TMP("A1PROV",$J,+$P(A1RX(0),U,4)))=$G(^VA(200,+$P(A1RX(0),U,4),0))
+ ...;
+ ...S A1PINFO(1)=$G(^VA(200,+$P(A1RX(0),U,4),1))
+ ...;
+ ...K A1REFDIV,A1REFILL S (A1REFCTR,A1CNT)=0
+ ...F  S A1CNT=$O(^PSRX(+A1IFN,1,A1CNT)) Q:'A1CNT  D
+ ....S A1REFILL(A1CNT)=$G(^PSRX(+A1IFN,1,A1CNT,0)),A1REFCTR=A1REFCTR+1
+ ....S A1REFDIV(A1CNT)=$$DIV($P(A1REFILL(A1CNT),U),$P(A1REFILL(A1CNT),U,9))
+ ...S A1REFILL(1)=$G(A1REFILL(1))
+ ...;
+ ...K A1PART S (A1PARCTR,A1CNT)=0
+ ...F  S A1CNT=$O(^PSRX(+A1IFN,"P",A1CNT)) Q:'A1CNT  D
+ ....S A1PART(A1CNT)=$G(^PSRX(+A1IFN,"P",A1CNT,0)),A1PARCTR=A1PARCTR+1
+ ...S A1PART(1)=$G(A1PART(1))
+ ...D ^A1A1FMT
+ ...K A1REFILL,A1PART
+ ;
+ I $L($G(A1DATA)),A1DATA'="#" D LAST^A1A1FMT1(A1DATA,"T")
+ Q
+ ;
+DIV(DATE,DIV) ;Figure out the division
+ ;  Input:  DATE - Date prescription released
+ ; Output: Station number of the division
+ ;
+ I DIV]"" S DIV=$P($G(^DIC(59,+DIV,0)),U,6)
+ I DIV']"" S DIV=$$PRIM^VASITE(DATE),DIV=$P($G(^DG(40.8,DIV,0)),U,2)
+ I DIV']"" S DIV=+$$SITE^VASITE()
+ Q DIV
+ ;
+POINTER(POINTER,FILE,PIECE) ;Send back code for file and piece passed in
+ ;  Input:  POINTER - pointer to file
+ ;             FILE - global
+ ;            PIECE - which piece to extract
+ ; Output: Code to be sent
+ N CODE,GLOBAL
+ I 'POINTER S CODE="" G POINTERQ
+ S GLOBAL=FILE_+POINTER_","_0_")"
+ S CODE=$P($G(@GLOBAL),U,PIECE)
+POINTERQ Q CODE
+ Q
+ ;
+ ;input dfn
+ ;output age
+AGE(D0) ;
+ S Y(.033,1)=$S($D(^DPT(D0,0)):^(0),1:"") S X=$S($G(^DPT(D0,.35)):+^(.35),1:DT),X1=X,X2=$P(Y(.033,1),U,3),X="" D:X2 ^%DTC:X1 S X=X\365.25
+ Q X
+ ;returns $t
+ ;
+DRUGCHK(A1DRUG) ;
+ I A1DRUG']"" Q 0
+ I A1DRUG["AMITRIPTYLINE" Q 1
+ I A1DRUG["ELAVIL" Q 1
+ I A1DRUG["ENDEP" Q 1
+ I A1DRUG["AMITRIL" Q 1
+ I A1DRUG["AMITID" Q 1
+ I A1DRUG["CHLORPROPAMIDE" Q 1
+ I A1DRUG["DIABINESE" Q 1
+ I A1DRUG["DIPYRIDAMOLE" Q 1
+ I A1DRUG["PERSANTIN" Q 1
+ I A1DRUG["PROPOXYPHENE" Q 1
+ I A1DRUG["DARVON" Q 1
+ I $D(A1DRUG("NDF",+A1DRUG("ND"))) Q 1
+ Q 0

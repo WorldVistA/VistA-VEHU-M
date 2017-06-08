@@ -1,0 +1,5 @@
+RJTWP ;
+ S DA=1
+ S DIE="^DIZ(500024,",DR=".01;3"
+ D ^DIE
+ Q

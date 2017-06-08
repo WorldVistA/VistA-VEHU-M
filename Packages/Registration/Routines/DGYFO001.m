@@ -1,0 +1,12 @@
+DGYFO001 ;
+ ;;5.2;REGISTRATION;**13**;JUL 29,1992
+ F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,"PRO",1253,0)
+ ;;=DG MEANS TEST DOM^Means Test Check for DOM Patients^^A^^^^^^^^
+ ;;^UTILITY(U,$J,"PRO",1253,20)
+ ;;=D EN^DGMTDOM
+ ;;^UTILITY(U,$J,"PRO",1253,99)
+ ;;=55362,62070
+ ;;^UTILITY(U,$J,"PRO",1253,"MEN","DGPM MOVEMENT EVENTS")
+ ;;=1253^^8

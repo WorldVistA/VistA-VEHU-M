@@ -1,0 +1,15 @@
+IBYHONIT ; ; 21-NOV-1995
+ ;;Version 2.0 ; INTEGRATED BILLING ;**43**; 21-MAR-94
+ ;
+ K DIF,DIK,DDF,DDT,DTO,D0,DLAYGO,DIC,DIR,DA,ORVROM,DFR,DTN,DIX,DZ
+ S DIFQ=0,ORVROM=22 W !!,"This version of 'IBYHONIT' was created on 21-NOV-1995"
+ W !?9,"(at Albany IRM Field Office, by OE/RR V.2.5)",!
+ G Q:DIFQ D ^IBYHONI1 G Q:'$D(DIFQ) S DIK(0)="B"
+ D ^IBYHONI2,^IBYHONI3
+ L  W !,*7,"OK, Protocol Installation is Complete.",!
+ K %ZW,%,%H,D0,DA,DIF,DIFQ,DIG,DIH,DIK,DIU,DIV,DSEC,I,J,KEY,DIY,N,NM,NO,ORVROM,R,X,X0
+ Q
+ ;
+Q W *7,!!,"NO UPDATING HAS OCCURRED!" Q
+ ;
+IXF ;;IBYH

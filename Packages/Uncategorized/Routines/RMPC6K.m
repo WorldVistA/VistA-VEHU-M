@@ -1,0 +1,40 @@
+RMPC6K ;DDC/KAW-RMPF*1.1*6 - UNITRON [ 06/24/93  1:44 PM ]
+ ;;1.1;RMPF;**6**;June 24, 1993
+ W !!,"UNITRON"
+ F IX=1:1:7 S MD=$P($T(MODEL+IX),";",3) D
+ .S MP=$O(^RMPF(791811,"B",MD,0))
+ .I 'MP W !!,MD," does not exist in file 791811.  Components not added." Q
+ .F IY=1:1 S ST=$T(COMP+IY) Q:ST=""  D
+ ..S CS=$P(ST,";",IX+4) Q:CS=""
+ ..S CP=$E($P(ST,";",3),1,30),CD=$P(ST,";",4),(CA,CX)=""
+ ..F  S CA=$O(^RMPF(791811.2,"B",CP,CA)) Q:'CA  I $P(^RMPF(791811.2,CA,0),"^",3)=CD S CX=CA Q
+ ..I 'CX W !!,CP," component not added." Q
+ ..D SET1^RMPC6 W "."
+ .F IZ=1:1:3 S ST=$T(BAT+IZ) D
+ ..S BT=$P(ST,";",3)
+ ..S BP=$O(^RMPF(791811.3,"B",BT,0)) I 'BP W !!,BT," battery not added." Q
+ ..D SET2^RMPC6 W "."
+ G ^RMPC6L
+MODEL ;;Unitron Models
+ ;;UI-1
+ ;;UI-3
+ ;;UL-21
+ ;;UL-23
+ ;;UI-K
+ ;;V-1
+ ;;V-1-HS
+BAT ;;Batteries
+ ;;ZA10
+ ;;ZA13
+ ;;ZA312
+COMP ;;Components
+ ;;ACCENT 2000+;2000+;20;20;20;20;;20;20
+ ;;HIGH FIDELITY;HI/FI;;;;;25.2
+ ;;HI CUT TONE;HC;15.12;15.12;15.12;15.12;15.12;15.12;15.12
+ ;;HYPOALLERGENIC SHELL;HYPO;16;16;16;16;16;16;16
+ ;;LOW CUT TONE CONTROL;LCTC;13.44;13.44
+ ;;NOISE SUPPRESSOR SWITCH;NSS;21;21;21;21;21;21;21
+ ;;OUTPUT CONTROL;MPO;13.44;13.44;13.44;13.44;13.44;13.44;13.44
+ ;;RESONANT PEAK CONTROL;RPC;15.12;15.12;15.12;15.12;15.12;15.12;15.12
+ ;;TELECOIL WITH SWITCH;TC/S;21;21;21;21;21;21;21
+ ;;THRESHOLD KNEE POINT;TK POT;;;;;15.12

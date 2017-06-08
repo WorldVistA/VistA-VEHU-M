@@ -1,0 +1,31 @@
+ICD183P3 ;;ALB/EG/JAT - INACTIVATE/REVISE DIAG & PROC CODES ; 11/15/01 9:33am
+ ;;18.0;DRG Grouper;**3**;Oct 13,2000
+ ;
+ Q
+ ;
+CHGDIAG ;
+ ; NOIS LEB-1001-21246
+ ;
+ N LINE,X,ENTRY,ICDDIAG,DA,DIE,DR
+ D BMES^XPDUTL(">>>Revising Diagnoses")
+ S LINE=1
+ F  S X=$T(REVD+LINE) S ICDDIAG=$P(X,";;",2) Q:ICDDIAG="EXIT"  D
+ .S ENTRY=+$O(^ICD9("BA",$P(ICDDIAG,U)_" ",0)) I ENTRY D
+ ..K ^ICD9(ENTRY,"DRG")
+ ..S DA=ENTRY,DIE="^ICD9("
+ ..S DR="2///U;60///271"
+ ..D ^DIE
+ ..S LINE=LINE+1
+ Q
+ ;
+REVD ; Revise diagnoses
+ ;;707.10
+ ;;707.11
+ ;;707.12
+ ;;707.13
+ ;;707.14
+ ;;707.15
+ ;;707.19
+ ;;EXIT
+ Q
+ ;

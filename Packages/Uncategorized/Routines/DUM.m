@@ -1,0 +1,4 @@
+DUM ;FIX FOR DUPS
+ S DIC="^DG(45.85",DIC(0)="QEZ",X=183
+ S DIC("S")="I $P(^(0),U,4=""2940930""
+ D ^DIC

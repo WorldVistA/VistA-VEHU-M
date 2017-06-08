@@ -1,0 +1,3 @@
+IBXSC721 ; ;09/29/03
+ S X=DG(DQ),DIC=DIE
+ S ^DGCR(399,DA(1),"RC","ACP",$E(X,1,30),DA)=""

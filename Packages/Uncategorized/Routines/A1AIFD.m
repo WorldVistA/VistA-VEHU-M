@@ -1,0 +1,15 @@
+A1AIFD ;test for reading of file descriptor nodes in ^DIZ(11200,
+ ;NOTE:  used for testing other routines and global...not for distribution!!! (ISC USE ONLY)
+ K ^UTILITY($J) S (A,B,C,MM,SITE,PROB)="",U="^"
+ S ^UTILITY($J,"NPTEST",0)=^DIZ(11200,0)
+ F A=0:0 S A=$O(^DIZ(11200,A)) Q:+A<1  S LASTA=A,MM=MM+1,^UTILITY($J,"NPTEST",A,1,0)=^DIZ(11200,A,1,0) D SITE
+ S $P(^UTILITY($J,"NPTEST",0),U,3,99)=LASTA_U_MM,$P(^DIZ(11200,0),U,3,99)=LASTA_U_MM G EXIT
+SITE ;
+ F B=0:0 S B=$O(^DIZ(11200,A,1,B)) Q:+B<1  S LASTB=B,SITE=SITE+1,^UTILITY($J,"NPTEST",A,1,B,1,0)=^DIZ(11200,A,1,B,1,0) D PROB
+ S $P(^UTILITY($J,"NPTEST",A,1,0),U,3,99)=LASTB_U_SITE,$P(^DIZ(11200,A,1,0),U,3,99)=LASTB_U_SITE,SITE="" W "." Q
+PROB ;
+ F C=0:0 S C=$O(^DIZ(11200,A,1,B,1,C)) Q:+C<1  S LASTC=C,PROB=PROB+1
+ S $P(^UTILITY($J,"NPTEST",A,1,B,1,0),U,3,99)=LASTC_U_PROB,$P(^DIZ(11200,A,1,B,1,0),U,3,99)=LASTC_U_PROB,PROB=""
+ Q
+EXIT ;
+ W !!,*7,"ALL DONE!" Q

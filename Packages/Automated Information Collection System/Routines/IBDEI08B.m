@@ -1,0 +1,134 @@
+IBDEI08B ; ; 06-AUG-2015
+ ;;3.0;IB ENCOUNTER FORM IMP/EXP;;JUN 29, 2015
+ Q:'DIFQR(358.3)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,358.3,3408,0)
+ ;;=99335^^10^140^2
+ ;;^UTILITY(U,$J,358.3,3408,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3408,1,1,0)
+ ;;=1^Exp Prob Focus Hx/Exam;Low Complex MDM
+ ;;^UTILITY(U,$J,358.3,3408,1,2,0)
+ ;;=2^99335
+ ;;^UTILITY(U,$J,358.3,3409,0)
+ ;;=99336^^10^140^3
+ ;;^UTILITY(U,$J,358.3,3409,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3409,1,1,0)
+ ;;=1^Detailed Hx/Exam;Mod Complex MDM
+ ;;^UTILITY(U,$J,358.3,3409,1,2,0)
+ ;;=2^99336
+ ;;^UTILITY(U,$J,358.3,3410,0)
+ ;;=99337^^10^140^4
+ ;;^UTILITY(U,$J,358.3,3410,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3410,1,1,0)
+ ;;=1^Comp Hx/Exam;Mod Complex MDM
+ ;;^UTILITY(U,$J,358.3,3410,1,2,0)
+ ;;=2^99337
+ ;;^UTILITY(U,$J,358.3,3411,0)
+ ;;=99324^^10^141^1
+ ;;^UTILITY(U,$J,358.3,3411,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3411,1,1,0)
+ ;;=1^Problem Focus Hx & Exam;SF MDM
+ ;;^UTILITY(U,$J,358.3,3411,1,2,0)
+ ;;=2^99324
+ ;;^UTILITY(U,$J,358.3,3412,0)
+ ;;=99325^^10^141^2
+ ;;^UTILITY(U,$J,358.3,3412,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3412,1,1,0)
+ ;;=1^Exp Prob Focus Hx/Exam;Low Complex MDM
+ ;;^UTILITY(U,$J,358.3,3412,1,2,0)
+ ;;=2^99325
+ ;;^UTILITY(U,$J,358.3,3413,0)
+ ;;=99326^^10^141^3
+ ;;^UTILITY(U,$J,358.3,3413,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3413,1,1,0)
+ ;;=1^Detailed Hx/Exam;Mod Complex MDM
+ ;;^UTILITY(U,$J,358.3,3413,1,2,0)
+ ;;=2^99326
+ ;;^UTILITY(U,$J,358.3,3414,0)
+ ;;=99327^^10^141^4
+ ;;^UTILITY(U,$J,358.3,3414,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3414,1,1,0)
+ ;;=1^Comp Hx/Exam;Mod Complex MDM
+ ;;^UTILITY(U,$J,358.3,3414,1,2,0)
+ ;;=2^99327
+ ;;^UTILITY(U,$J,358.3,3415,0)
+ ;;=99328^^10^141^5
+ ;;^UTILITY(U,$J,358.3,3415,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3415,1,1,0)
+ ;;=1^Comp Hx/Exam;High Complex MDM
+ ;;^UTILITY(U,$J,358.3,3415,1,2,0)
+ ;;=2^99328
+ ;;^UTILITY(U,$J,358.3,3416,0)
+ ;;=99347^^10^142^1
+ ;;^UTILITY(U,$J,358.3,3416,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3416,1,1,0)
+ ;;=1^Problem Focus Hx & Exam;SF MDM
+ ;;^UTILITY(U,$J,358.3,3416,1,2,0)
+ ;;=2^99347
+ ;;^UTILITY(U,$J,358.3,3417,0)
+ ;;=99348^^10^142^2
+ ;;^UTILITY(U,$J,358.3,3417,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3417,1,1,0)
+ ;;=1^Exp Prob Focus Hx/Exam;Low Complex MDM
+ ;;^UTILITY(U,$J,358.3,3417,1,2,0)
+ ;;=2^99348
+ ;;^UTILITY(U,$J,358.3,3418,0)
+ ;;=99349^^10^142^3
+ ;;^UTILITY(U,$J,358.3,3418,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3418,1,1,0)
+ ;;=1^Detailed Dx/Exam;Mod Complex MDM
+ ;;^UTILITY(U,$J,358.3,3418,1,2,0)
+ ;;=2^99349
+ ;;^UTILITY(U,$J,358.3,3419,0)
+ ;;=99350^^10^142^4
+ ;;^UTILITY(U,$J,358.3,3419,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3419,1,1,0)
+ ;;=1^Comp Hx/Exam;High Complex MDM
+ ;;^UTILITY(U,$J,358.3,3419,1,2,0)
+ ;;=2^99350
+ ;;^UTILITY(U,$J,358.3,3420,0)
+ ;;=99342^^10^143^2
+ ;;^UTILITY(U,$J,358.3,3420,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3420,1,1,0)
+ ;;=1^Exp Prob Focus Hx & Exam;Low MDM
+ ;;^UTILITY(U,$J,358.3,3420,1,2,0)
+ ;;=2^99342
+ ;;^UTILITY(U,$J,358.3,3421,0)
+ ;;=99343^^10^143^3
+ ;;^UTILITY(U,$J,358.3,3421,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3421,1,1,0)
+ ;;=1^Detailed Hx & Exam;Mod Complex MDM
+ ;;^UTILITY(U,$J,358.3,3421,1,2,0)
+ ;;=2^99343
+ ;;^UTILITY(U,$J,358.3,3422,0)
+ ;;=99344^^10^143^4
+ ;;^UTILITY(U,$J,358.3,3422,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3422,1,1,0)
+ ;;=1^Comp Hx & Exam;Mod Complex MDM
+ ;;^UTILITY(U,$J,358.3,3422,1,2,0)
+ ;;=2^99344
+ ;;^UTILITY(U,$J,358.3,3423,0)
+ ;;=99345^^10^143^5
+ ;;^UTILITY(U,$J,358.3,3423,1,0)
+ ;;=^358.31IA^2^2
+ ;;^UTILITY(U,$J,358.3,3423,1,1,0)
+ ;;=1^Comp Hx & Exam;High Complex MDM
+ ;;^UTILITY(U,$J,358.3,3423,1,2,0)
+ ;;=2^99345
+ ;;
+ ;;$END ROU IBDEI08B

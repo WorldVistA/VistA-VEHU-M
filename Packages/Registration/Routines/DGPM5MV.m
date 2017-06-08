@@ -1,0 +1,35 @@
+DGPM5MV ;ALB/MRL/MIR - MOVEMENT OF DATA OPTIONS ENTRY; 11 JAN 89
+ ;;MAS VERSION 5.0;
+INP ;Move current inpatients
+ D VAR^DGPM5MV0 G Q:ERR ;I '$O(^DGPM("C",+$O(^DGPM("C",0)))) D KILL^DGPM5MT
+ S DGPMTIME=1 F DGPMK=0:0 S (DGPM5W,W)=$O(^DPT("CN",W)),DFN=$S('DGPMTIME:0,1:DFN),DGPMTIME=0 Q:W=""  F DGPMK1=0:0 S DFN=$O(^DPT("CN",W,DFN)) Q:DFN'>0  I $O(^DPT(DFN,"DA",0))>0 D ^DGPM5M S W=DGPM5W
+ K DGPMTIME D DONE K DGPM5W Q
+ ;
+REC ;Move activity since Initialization
+ D VAR^DGPM5MV0 G Q:ERR S X1=$S($D(^DG5(1,"P")):+^("P"),1:"") I 'X1 W !!,"INITIALIZATION DATE NOT SPECIFIED!!",*7 H 3 W *7 G Q
+ S X2=-1 D C^%DTC S IDT=$P(X,".",1)_".999999"
+ F DGPMK=IDT:0 S DGPMK=$O(^DPT("AD",DGPMK)) Q:DGPMK'>0  F DFN=0:0 S DFN=$O(^DPT("AD",DGPMK,DFN)) Q:'DFN  D CKDATA Q:DGSTOP  I $O(^DPT(DFN,"DA",0)) D ^DGPM5M
+ D DONE Q
+ ;
+REST ;Move everything other than INP
+ D VAR^DGPM5MV0 G Q:ERR F DFN=DFN:0 S DFN=$O(^DPT(DFN)) Q:'DFN  D CKDATA Q:DGSTOP  I $O(^DPT(DFN,"DA",0)) D ^DGPM5M
+ ;D VAR^DGPM5MV0 G Q:ERR F DGPMK=0:0 S DFN=$O(^DPT(DFN)) Q:DFN'>0  I $O(^DPT(DFN,"DA",0)),$S('$D(^DPT(DFN,"C405")):1,'$P(^("C405"),"^",3):1,1:0) D ^DGPM5M
+ D DONE Q
+ ;
+SP ;Move data for one patient and compare
+ Q:'$D(DFN)#2  D ^DGPM5M G DONE
+ ;
+DONE I $D(^UTILITY("DGPMV",$J)) D ^DGPM5M1
+ D:DGPME=3 INP^DGPM5M1 I $S('$D(^DG5(1,"STOP")):1,'^("STOP"):1,1:0) S $P(^DG5(1,"LST"),"^",2)=$S($D(DGPME):DGPME,1:"")
+Q D DON1^DGPM5M0 K W,DGPMK,DGPMK1,DGPMP,^UTILITY("DGPMXF",$J)
+KG F I="DGPMA","DGPMAS","DGPMD","DGPMV","DGPMMV","DGPMNN","DGPMPT","DGPMPTC","DGPMDFN" K ^UTILITY(I,$J)
+ K I Q
+ ;
+CKDATA ;if $D(^DPT(DFN,"DA")), but no entries, kill
+ ;if STOP parameter set in 405.9, stop converting (for 17 and 19 only)
+ I $D(^DPT(DFN,"DA",0)),'$O(^DPT(DFN,"DA",0)) K ^DPT(DFN,"DA")
+ I $D(^DG5(1,"STOP")),+^("STOP") S DGSTOP=1
+ Q
+OTF ;Called from DGPMV - convert on the fly
+ I $D(^UTILITY("DGPMV",$J)) D ^DGPM5M1
+ D Q Q

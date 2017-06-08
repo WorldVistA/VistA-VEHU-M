@@ -1,0 +1,74 @@
+AKFRWLA1 ;KCMO/RGM - Laboratory API called routines ;03/30/99 08:30
+ ;;1.0T2;VA HEARTLAND WORKSTATION
+ ;
+LR(AKFRY,DFN) ;-- Dates of Last Lab Results for Lab, Micro, Cytology
+ ;and Surgical Pathology
+ K AKFRY
+ N N,I,L
+ S AKFRY="None^None^None^None^^^^"
+ I '$D(^DPT(DFN,"LR")) Q
+ S LRDFN=^DPT(DFN,"LR")
+ S N="CH^MI^CY^SP"
+ F I=1:1:4 D
+ .S LL=$P(N,"^",I),AKFRQ=0
+ .Q:'$D(^LR(LRDFN,LL))
+ .S AKFRDT=0 F  S AKFRDT=$O(^LR(LRDFN,LL,AKFRDT)) Q:(AKFRQ=1)!(AKFRDT<1)  D
+ ..Q:'$D(^LR(LRDFN,LL,AKFRDT,0))
+ ..Q:$P(^LR(LRDFN,LL,AKFRDT,0),"^",3)=""
+ ..S AKFRDT=$P(^LR(LRDFN,LL,AKFRDT,0),"^",1)
+ ..S PYR="" I $E(AKFRDT,2,3)>15 S PYR="19"
+ ..S $P(AKFRY,"^",I)=$E(AKFRDT,4,5)_"/"_$E(AKFRDT,6,7)_"/"_PYR_$E(AKFRDT,2,3)
+ ..S X1=$P(AKFRDT,".",1),X2=-7 D C^%DTC
+ ..S $P(AKFRY,"^",(I+4))=$E(X,4,5)_"/"_$E(X,6,7)_"/"_$E(X,2,3),AKFRQ=1
+ K LRDFN,AKFRDT,DFN,AKFRQ,LL
+ Q
+ ;
+PLIST(AKFRY,DFN,TYPE) ;-- get list of cytology or surgical path exams
+ ;-- TYPE = SP or CY
+ K AKFRY N N,I S I=0
+ Q:'$D(^DPT(DFN,"LR"))
+ S LRDFN=^DPT(DFN,"LR")
+ S AKFRDT=0 F  S AKFRDT=$O(^LR(LRDFN,TYPE,AKFRDT)) Q:AKFRDT<1  D
+ .S AKFRDT1=$P(^LR(LRDFN,TYPE,AKFRDT,0),"^",1),AKFRDT1=$E(AKFRDT1,4,5)_"/"_$E(AKFRDT1,6,7)_"/"_$E(AKFRDT1,2,3)
+ .S AKFRC=0,AKFRC1="Not released" I $P(^LR(LRDFN,TYPE,AKFRDT,0),"^",11)'="" S AKFRC=1,AKFRC1=""
+ . S N=0 F  S N=$O(^LR(LRDFN,TYPE,AKFRDT,.1,N)) Q:N<1  D
+ ..S AKFRY(I)=AKFRDT1_"^"_$P(^LR(LRDFN,TYPE,AKFRDT,0),"^",5)_"^"_$P(^LR(LRDFN,TYPE,AKFRDT,.1,N,0),"^",1)_"^"_AKFRDT_"^"_AKFRC1_"^"_AKFRC_"^"_N,I=I+1
+ K LRDFN,TYPE,AKFRDT,AKFRC,TYPE,AKFRDT1,AKFRC1
+ Q
+ ;
+PATH(AKFRY,DFN,PTYPE,PDATE) ;-- Retrieve pathology report
+ ;
+ ;-- PTYPE = SP or CY
+ ;-- PDATE = Date specimen submitted
+ ;
+ K AKFRY
+ N Y
+ D NOW^%DTC S DT=X
+ S LRDFN=^DPT(DFN,"LR")
+ S LRAA="",LRAA=$O(^LRO(68,"B",PTYPE,LRAA))
+ S DUZ("AG")=""
+ I PTYPE="SP" S LRAA(1)="SURGICAL PATHOLOGY"
+ I PTYPE="CY" S LRAA(1)="CYTOLOGY"
+ S X=PTYPE,LRAPX=3,LRSS=X D ^LRUTL
+ D EN2^LRUA
+ S LRS(99)=1,LRAPX(1)=""
+ S LRND=^LR(LRDFN,PTYPE,PDATE,0),LRI=PDATE
+ S LRIDT=LRI,LRAN=$P(LRND,"^",6),Y=$P(LRND,"^",1) D D^LRU
+ S LRAP=LRDFN_"^"_LRI,LREND=0,LRSAVE=1
+ S IOP="WORKSTATION",%ZIS=0 D ^%ZIS Q:POP
+ D QUE^LRSPRPT
+ I $D(^TMP("AKFRW-REPORT",$J)) S AKFRY="^TMP(""AKFRW-REPORT"","_$J_")"
+ K LRDFN,LRAA,LRAPX,LRS,LRI,LRND,PTYPE,PDATE,LRAP,LRAN,LREND,LRIDT,LRSS,LRSAV
+ Q
+ ;
+SAMP(AKFRY,TEST) ;-- Check if lab is for microbiology
+ ;-- send back list of collection samples
+ ;-- TEST = ien to file 60
+ ;
+ S I=0,AKFRY(I)="0-NOT MICRO"
+ Q:$P(^LAB(60,TEST,0),"^",4)'="MI"
+ Q:'$D(^LAB(60,TEST,3))
+ S N=0 F  S N=$O(^LAB(60,TEST,3,N)) Q:N<1  D
+ .S AKFRY(I)=$P(^LAB(62,$P(^LAB(60,TEST,3,N,0),"^",1),0),"^",1),I=I+1
+ K TEST,I
+ Q

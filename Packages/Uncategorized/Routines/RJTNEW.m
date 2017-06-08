@@ -1,0 +1,5 @@
+RJTNEW ;
+ N FF
+ W "GONNA DO IT"
+ H 5
+ Q

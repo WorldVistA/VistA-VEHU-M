@@ -1,0 +1,15 @@
+YSXRAU2 ; COMPILED XREF FOR FILE #620 ; 11/30/04
+ ; 
+ S DIKZK=1
+ S DIKZ(0)=$G(^DIC(620,DA,0))
+ S X=$P(DIKZ(0),U,1)
+ I X'="" S ^DIC(620,"B",$E(X,1,30),DA)=""
+ S X=$P(DIKZ(0),U,1)
+ I X'="" X ^DD(620,.01,1,2,1)
+ S X=$P(DIKZ(0),U,1)
+ I X'="",$D(DIK(0)),DIK(0)["B" S DIKZR=3,DIKZZ=.01 D BUL^YSXRAU
+ I X'="",'$D(DIKOZ) S Y(0)=X,D0=DA S X=Y(0) S Y(1)=$S($D(^DIC(620,D0,0)):^(0),1:"") S X=$P(Y(1),U,1) S XMB(1)=X S XMB="ZZPSYCH" D ^XMB:$D(^XMB(3.6,"B",XMB)) K Y,XMB
+ S DIKZ(1)=$G(^DIC(620,DA,1))
+ S X=$P(DIKZ(1),U,1)
+ I X'="" X ^DD(620,2,1,1,1)
+END Q

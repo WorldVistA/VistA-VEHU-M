@@ -1,0 +1,73 @@
+PRC5B8 ;WISC/PLT-COLLECT ACTIVE FCP TO FMS ; 10/14/94  12:30 PM
+V ;;5.0;IFCAP;;4/20/95
+ QUIT  ;invalid entry
+ ;
+EN ;START SENDING ACTIVE fund control points.
+ N A,PRCDUZ
+ D EN^DDIOL("This task is going to send all active Fund Control Points")
+ D EN^DDIOL("to FMS for comparison with the Cross-Walk Table.")
+ D EN^DDIOL(" ")
+ S PRCDUZ=DUZ
+ S A=$$TASK^PRC0B2("EN1^PRC5B8~IFCAP V5 sending ACTIVE fund control points to FMS","PRCDUZ","")
+ I A<1 D EN^DDIOL("Submit to the Task Manager fails, try later!") G EXIT
+ D EN^DDIOL("Task number "_$P(A,"^",1)_" assigned with schedule date/time: "_$P($$DT^PRC0B2($P(A,"^",2),"H"),"^",4))
+ G EXIT
+ ;
+EN1 ;entry from task manager
+ N PRCRI,PRCA,PRCB,PRCC,PRCD,PRCE,PRCRE,PRCSTN,PRCF,PRCPOD
+ N PRCST,PRCDT,PRCCT,PRCNT
+ N A,B,C
+ S:'$G(PRCDUZ) PRCDUZ=DUZ
+ D:'$D(ZTQUEUED) EN^DDIOL("START SENDING ACTIVE FCP TO FMS")
+ S PRCNT=0,PRCSTN=$O(^PRC(411,0)),PRCSTN=$E(PRCSTN+1000,2,999)
+ S A=$$DT^PRC0B2("N","E","S"),A=$P(A,"^"),B=$P(A,".",2)
+ S PRCDT=$P(A,".",1)+17000000_"^"_$E(B+1000000,2,999)
+ S PRCCT="CTL^IFC^FMS^"_PRCSTN_"^FCP^^^^^"_PRCDT_"^001^001^001^~"
+ S $P(PRCCT,"^",6)=$J("",2),$P(PRCCT,"^",7)=$J("",4)
+ S $P(PRCCT,"^",8)=$J("",6),$P(PRCCT,"^",9)=$J("",11)
+ S PRCRI(420)=0,PRCE=0
+ F  S PRCRI(420)=$O(^PRC(420,PRCRI(420))) Q:'PRCRI(420)  S PRCSTN=$P($G(^(PRCRI(420),0)),"^",1) D:PRCSTN
+ . S PRCRI(420.01)=0
+ . F  S PRCRI(420.01)=$O(^PRC(420,PRCRI(420),1,PRCRI(420.01))) Q:'PRCRI(420.01)  I PRCRI(420.01)'=9999 S A=$G(^(PRCRI(420.01),0)) D:A]""&'$P(A,"^",19)
+ .. S B=$P(A,"^"),C=$P(B," ",2,999),B=$P(B," "),A=$P(A,"^",2) I A S A=$G(^PRCD(420.3,A,0)),A=$P(A,"^")
+ .. S PRCF="FCP^"_$E(A,1,3)_"^"_PRCSTN_"^"_$E(B,1,4)_"^"_$E(C,1,15)_"^~{"
+ .. W:'$D(ZTQUEUED) !,PRCRI(420),"  ",PRCRI(420.01),"   ",PRCF
+ .. D MM S PRCNT=PRCNT+1
+ .. QUIT
+ . QUIT
+ D MMEND
+ D:'$D(ZTQUEUED)
+ . D EN^DDIOL("ACTIVE FUND CONTROL POINTS TOTAL RECORDS SENT: "_PRCNT)
+ . D EN^DDIOL("END SENDING ACTIVE FUND CONTROL POINTS TO FMS")
+ . QUIT
+ D
+ . N X,Y
+ . S X(1)="TOTAL IFCAP V5 FCP RECORDS SENT TO FMS: "_PRCNT
+ . S Y(.5)="",Y(PRCDUZ)=""
+ . D MM^PRC0B2("IFCAP V5 INSTALLATION FCP RECORD COUNT^USER","X(",.Y)
+ . QUIT
+EXIT K PRCDUZ QUIT
+ ;
+MM ;send to mailman
+ N A,B
+ I PRCE=0 D
+ . S XMSUB="IFCAP V5 FCP DOCUMENTS",XMDUZ="IFCAP V5 INSTALLATION"
+ . D XMZ^XMA2
+ . QUIT
+ S PRCE=PRCE+1
+ S ^XMB(3.9,XMZ,2,PRCE,0)=PRCCT
+ S PRCE=PRCE+1
+ S ^XMB(3.9,XMZ,2,PRCE,0)=PRCF
+ D MMEND:PRCE>250
+ QUIT
+ ;
+MMEND ;end of message
+ QUIT:'PRCE
+ S XMDUN="IFCAP V5 INSTALLATION"
+ S ^XMB(3.9,XMZ,2,0)="^3.92A^"_PRCE_"^"_PRCE_"^"_DT
+ S XMY("XXX@Q-FMZ.VA.GOV")=""
+ S XMY(.5)=""
+ D ENT1^XMD
+ S PRCE=0
+ QUIT
+ ;

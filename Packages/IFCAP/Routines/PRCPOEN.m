@@ -1,0 +1,68 @@
+PRCPOEN ;WISC/RFJ-enter, edit distribution order ;6 Nov 92
+ ;;4.0;IFCAP;**17**;9/23/93
+ D ^PRCPUSEL Q:'$G(PRCP("I"))
+ I "PS"'[PRCP("DPTYPE") W !,"THIS OPTION SHOULD ONLY BE USED BY A PRIMARY OR SECONDARY INVENTORY POINT." Q
+ N %,DISTRPT,ORDERDA,ORDERNO,PRCPPRIM,PRCPSECO,X,Y,Z
+ I PRCP("DPTYPE")="S" S PRCPPRIM=+$$FROMPT^PRCPUINV(PRCP("I")) Q:'PRCPPRIM  S PRCPSECO=PRCP("I")
+ I PRCP("DPTYPE")="P" S PRCPSECO=+$$DISTRPT^PRCPUINV(PRCP("I")) Q:'PRCPSECO  S PRCPPRIM=PRCP("I")
+ W !!,"** Distribution ",$S(PRCP("DPTYPE")="S":"from",1:"to")_" inventory point: ",$$INVNAME^PRCPUX1($S(PRCP("DPTYPE")="S":PRCPPRIM,1:PRCPSECO))," **"
+ F  D ORDERNO(PRCPPRIM,PRCPSECO) Q:'ORDERNO  I ORDERNO>0 D  D UNLOCK^PRCPOENU(ORDERNO,PRCPPRIM,PRCPSECO)
+ .   I PRCP("DPTYPE")="S",$P($G(^PRCP(445.3,ORDERNO,0)),"^",6)'="" W !!,"ORDER HAS BEEN RELEASED/PROCESSED BY THE PRIMARY AND CANNOT BE CHANGED." Q
+ .   D ITEMS^PRCPOEN1(ORDERNO)
+ .   S XP="Do you want a printout of this order",XH="Enter 'YES' to print the order, 'NO' to skip the printout, '^' to exit.",%=2 W !! D YN^PRCPU4 I %<1 Q
+ .   I %=1 K ^TMP($J,"O") S ^TMP($J,"O",ORDERNO)="" D DISTORD^PRCPRPID
+ .   I $P(^PRCP(445.3,ORDERNO,0),"^",6)="" D RELEASE^PRCPOREL(ORDERNO)
+ .   I PRCP("DPTYPE")="S" Q
+ .   I $P($G(^PRCP(445.3,ORDERNO,0)),"^",6)="" Q
+ .   S XP="Do you want to print the picking ticket",XH="Enter 'YES' to print the picking ticket, 'NO' to skip the printout, '^' to exit.",%=2 W !! D YN^PRCPU4 I %<1 Q
+ .   I %=1 S ORDERDA=ORDERNO D PICKTKT^PRCPRPIP
+ .   D TOP^PRCPOPO0(ORDERNO)
+ Q
+ ;
+ ;
+ORDERNO(V1,V2) ;     |-> select orderno or add new one
+ ;     |-> secondary invpt v2, primary invpt v1
+ ;     |-> returns orderno
+ I '$D(^PRCP(445,+V1,0))!('$D(^PRCP(445,+V2,0))) S ORDERNO=0 Q
+ N %,%H,%I,D,D0,DA,DG,DI,DIC,DIE,DLAYGO,DQ,DR,ORDDATA,PRCPFLAG,PRCPNEW,PRCPPRIM,PRCPSECO,X,Y
+ I '$G(DT) D NOW^%DTC S DT=X
+ S PRCPPRIM=+V1,PRCPSECO=+V2,DLAYGO=445.3,DIC(0)="AEQMLZ",DIC="^PRCP(445.3,",PRCPPRIV=1,DIC("DR")="1////"_PRCPPRIM_$S(PRCPSECO:";2////"_PRCPSECO,1:"")
+ S DIC("S")="I $P(^(0),U,2)=PRCPPRIM,$P(^(0),U,3)=PRCPSECO",DIC("A")="Select DISTRIBUTION ORDER: "
+ W !! D ^DIC K PRCPPRIV,DIC I Y<1 S ORDERNO=0 Q
+ S ORDERNO=+Y,PRCPNEW=+$P(Y,"^",3) I PRCPNEW S $P(^PRCP(445.3,+Y,0),"^",4,5)=DT_"^"_DUZ,$P(^(0),"^",8)="R"
+ L +^PRCP(445.3,ORDERNO):5 I '$T W !,"ANOTHER USER IS WORKING WITH THIS DISTRIBUTION ORDER." S ORDERNO=-1 Q
+ S ORDDATA=^PRCP(445.3,ORDERNO,0),%=$P(ORDDATA,"^",6) W !!?5,"ORDER STATUS: ",$S(%="R":"RELEASED",%="B":"BACK ORDERED",%="":"<<NOT RELEASED>>",1:"??")
+ I 'PRCPNEW D  Q:$G(ORDERNO)<1
+ .   S XP="  Do you want to DELETE the order",XH="  Enter 'YES' to delete the order, 'NO' to continue, '^' to exit.",%=2 W !! D YN^PRCPU4 I %=1 D DELETE(ORDERNO),UNLOCK^PRCPOENU(ORDERNO,PRCPPRIM,PRCPSECO) S ORDERNO=-1 Q
+ .   I %'=2 D UNLOCK^PRCPOENU(ORDERNO,PRCPPRIM,PRCPSECO) S ORDERNO=-1
+ S (DIE,DIC)="^PRCP(445.3,",DA=+Y,DR="3.5",PRCPPRIV=1 D ^DIE K DA,PRCPPRIV,DIC,DIE,DR I $D(Y) D UNLOCK^PRCPOENU(ORDERNO,PRCPPRIM,PRCPSECO) S ORDERNO=-1
+ Q
+ ;
+ ;
+DELETE(V1) ;     |-> control the deletion of orders, v1=orderno
+ I '$D(^PRCP(445.3,+V1,0)) Q
+ N %,DATA,ITEMDA,ORDDATA,ORDERNO,PRCPPRIM,PRCPSECO,PRIMARY,SECOND,VDA,VDATA
+ S ORDERNO=+V1,ORDDATA=^PRCP(445.3,ORDERNO,0),PRCPPRIM=+$P(ORDDATA,"^",2),PRCPSECO=+$P(ORDDATA,"^",3)
+ ;
+ ;     |-> if order is released or backordered, cancel dueins and dueouts
+ I $P(ORDDATA,"^",6)'="" D
+ .   S PRIMARY=$$INVNAME^PRCPUX1(PRCPPRIM),SECOND=$$INVNAME^PRCPUX1(PRCPSECO)
+ .   W !
+ .   I PRIMARY'="" W !,"<*> Cancelling DUE-OUTS in ",PRIMARY
+ .   I SECOND'="" W !,"<*> Cancelling DUE-INS  in ",SECOND
+ .   S ITEMDA=0 F  S ITEMDA=$O(^PRCP(445.3,ORDERNO,1,ITEMDA)) Q:'ITEMDA  S DATA=^(ITEMDA,0) D
+ .   .   I '$P(DATA,"^",2) Q
+ .   .   S VDATA=$$GETVEN^PRCPUVEN(PRCPSECO,ITEMDA,PRCPPRIM_";PRCP(445,",1)
+ .   .   I $D(^PRCP(445,PRCPPRIM,1,ITEMDA,0)) D LOCKINPT(PRCPPRIM,"P") S %=$P(^(0),"^",20)-$P(DATA,"^",2) S:%<0 %=0 S $P(^(0),"^",20)=% L -^PRCP(445,PRCPPRIM,1,ITEMDA)
+ .   .   I $D(^PRCP(445,PRCPSECO,1,ITEMDA,0)) D LOCKINPT(PRCPSECO,"S") S %=$P(^(0),"^",8)-($P(DATA,"^",2)*$P(VDATA,"^",4)) S:%<0 %=0 S $P(^(0),"^",8)=% L -^PRCP(445,PRCPSECO,1,ITEMDA)
+ W !!,"DELETING distribution order..." D DELORD^PRCPOPO1(ORDERNO)
+ Q
+ ;
+ ;
+LOCKINPT(INVPT,TYPE) ;  lock primary or secondary inventory point
+ L +^PRCP(445,INVPT,1,ITEMDA):1
+ I '$T D
+ .   W !,"WARNING --ANOTHER USER IS WORKING WITH ITEM #",ITEMDA," IN THE ",$S(TYPE="P":"PRIMARY",1:"SECONDARY"),"."
+ .   W !?10,"THE DUE-",$S(TYPE="P":"OUTS",1:"INS")," MAY NEED TO BE RECALCULATED !!"
+ .   W !?10,"RUN 'CALCULATED DUE-",$S(TYPE="P":"OUT",1:"IN")," QUANTITY REPORT' AT NIGHT."
+ Q

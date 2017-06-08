@@ -1,0 +1,119 @@
+LEX2038D ; ISL/KER - Post Install LEX*2.0*38 Cont - D ; 02/02/2006
+ ;;2.0;LEXICON UTILITY;**38**;Sep 23, 1996
+ ;                  
+ ; Global Variables 
+ ;    DBIA  4475  ^DD(757.02  
+ ;    DBIA  4475  ^DD(757.28  
+ ;    DBIA  4475  ^DD(80 
+ ;    DBIA  4475  ^DD(80.066 
+ ;    DBIA  4475  ^DD(81 
+ ;    DBIA  4475  ^DD(81.02
+ ;    DBIA  4475  ^DD(81.3 
+ ;    DBIA  4475  ^DD(81.33
+ ;    DBIA  N/A   ^LEX(757.02
+ ;                   
+ ; External References
+ ;    DBIA 10013  ^DIK 
+ ;    DBIA 10014  EN^DIU2  
+ ;                     
+EN ; Main Entry Point 
+ ; From the Report of Findings, Patch LEX*2.0*39
+ N DA,DIK,DIU,IEN D C24,C25,C26,C27,C28,C29
+ D REM^LEX2038P("  ",""),REM^LEX2038P("Report of Findings - Patch LEX*2.0*39",""),REM^LEX2038P("  ","")
+ D C30,C31,C32,C33,C34,C35,C36,C37,C38
+ Q
+C24 ; HD0000000 121505 - Duplicate of HD0000000 108402
+ D REM^LEX2038P("ICD Code 716.90 for Arthropathy","HD0000000 121505 DUPE")
+ Q
+C25 ; HD0000000 122717 - 'Atrial' and not 'Auricular'
+ D REM^LEX2038P("'Atrial' and not 'Auricular'","HD0000000 122717") S ^LEX(757.01,90473,0)="Paroxysmal auricular fibrillation",^LEX(757.01,90473,1)="18587^1^D^1"
+ K ^LEX(757.01,"AMC",18587,90473),^LEX(757.01,"AWRD","AURICULAR",90473,90473),^LEX(757.01,"AWRD","FIBRILLATION",90473,90473),^LEX(757.01,"AWRD","PAROXYSMAL",90473,90473)
+ K ^LEX(757.01,"B","PAROXYSMAL AURICULAR FIBRILLATION",90473) S ^LEX(757.01,304707,0)="Paroxysmal atrial fibrillation",^LEX(757.01,304707,1)="18587^2^D^1"
+ K ^LEX(757.01,"AMC",18587,304707),^LEX(757.01,"B","PAROXYSMAL ATRIAL FIBRILLATION",304707),^LEX(757.01,"AWRD","ATRIAL",90473,304707),^LEX(757.01,"AWRD","FIBRILLATION",90473,304707),^LEX(757.01,"AWRD","PAROXYSMAL",90473,304707)
+ S ^LEX(757.01,90473,0)="Paroxysmal atrial fibrillation",^LEX(757.01,304707,0)="Paroxysmal auricular fibrillation",DA=90473,DIK="^LEX(757.01," D IX1^DIK S DA=304707,DIK="^LEX(757.01," D IX1^DIK
+ S ^LEX(757.01,304710,0)="Permanent auricular fibrillation",^LEX(757.01,304710,1)="164307^1^D^1"
+ K ^LEX(757.01,"AMC",164307,304710),^LEX(757.01,"AWRD","ATRIAL",304710,304711),^LEX(757.01,"AWRD","AURICULAR",304710,304710),^LEX(757.01,"AWRD","FIBRILLATION",304710,304710)
+ K ^LEX(757.01,"AWRD","PERMANENT",304710,304710),^LEX(757.01,"B","PERMANENT AURICULAR FIBRILLATION",304710),^LEX(757.01,"AWRD","AURICULAR",304710,304710),^LEX(757.01,"AWRD","FIBRILLATION",304710,304710)
+ K ^LEX(757.01,"AWRD","PERMANENT",304710,304710) S ^LEX(757.01,304711,0)="Permanent atrial fibrillation",^LEX(757.01,304711,1)="164307^2^D^1"
+ K ^LEX(757.01,"AMC",164307,304711),^LEX(757.01,"B","PERMANENT ATRIAL FIBRILLATION",304711),^LEX(757.01,"AWRD","ATRIAL",304710,304711),^LEX(757.01,"AWRD","FIBRILLATION",304710,304711),^LEX(757.01,"AWRD","PERMANENT",304710,304711)
+ S ^LEX(757.01,304710,0)="Permanent atrial fibrillation",^LEX(757.01,304711,0)="Permanent auricular fibrillation"
+ S DA=304710,DIK="^LEX(757.01," D IX1^DIK S DA=304711,DIK="^LEX(757.01," D IX1^DIK
+ Q
+C26 ; HD0000000 123143 - Inapproptrate case for 'Stage i'
+ D REM^LEX2038P("'Inappropriate case for 'Stage i'","HD0000000 123143")
+ S ^LEX(757.01,332807,0)="Chronic Kidney Disease, Stage I",^LEX(757.01,332808,0)="Chronic Kidney Disease, Stage II (Mild)"
+ S ^LEX(757.01,332809,0)="Chronic Kidney Disease, Stage III (Moderate)",^LEX(757.01,332810,0)="Chronic Kidney Disease, Stage IV (Severe)"
+ S ^LEX(757.01,332811,0)="Chronic Kidney Disease, Stage V"
+ Q
+C27 ; HD0000000 124008 - Pyuria re-coded as 791.9
+ D REM^LEX2038P("Pyuria re-coded as 791.9","HD0000000 124008")
+ N IEN,FDA K FDA S IEN=107876,FDA(757.02,(IEN_","),1)="791.9"
+ D FILE^DIE("","FDA")
+ Q
+C28 ; HD0000000 125867 - ICD Code V70.5 Acceptable as Principal Dx
+ W !,?2,"ICD Code V70.5 Acceptable as Principal Dx",?50,"HD0000000 125867"
+ N IEN,FDA S IEN=+($$ICDDX^ICDCODE("V70.5"))
+ I IEN K FDA S FDA(80,IEN_",",101)="" D FILE^DIE("","FDA")
+ Q
+C29 ; HD0000000 125933 - Duplicate of HD0000000 111864
+ D REM^LEX2038P("ICD Code 238.7 for Myelodysplastic Syndrome","HD0000000 125933 DUPE")
+ Q
+C30 ; LEX*2.0*39 ROF   - 6 Node in CODE file 757.02 not in DD
+ ; LEX*2.0*39 ROF   - Data past 7th piece of ^LEX(757.02,D0,0)
+ D REM^LEX2038P("6 Node in file #757.02 not defined in DD","LEX*2.0*39 ROF")
+ N IEN S IEN=0 F  S IEN=$O(^LEX(757.02,IEN)) Q:+IEN'>0  D
+ . K ^LEX(757.02,IEN,6) S ^LEX(757.02,IEN,0)=$P($G(^LEX(757.02,IEN,0)),"^",1,7)
+ D REM^LEX2038P("Data beyond 7th piece of ^LEX(757.02,D0,0)","LEX*2.0*39 ROF") H 1
+ Q
+C31 ; LEX*2.0*39 ROF   - File #757.28, "ACT" has dupe fields
+ D REM^LEX2038P("File #757.28 Index ACT dupe fields .01 and 1","LEX*2.0*39 ROF")
+ S ^DD(757.02,1,1,2,0)="757.02^ACT1^MUMPS",^DD(757.28,.01,1,2,0)="757.02^ACT2^MUMPS",^DD(757.28,1,1,1,0)="757.02^ACT3^MUMPS"
+ K ^DD(757.02,0,"IX","ACT",757.02,1),^DD(757.02,0,"IX","ACT",757.28,.01),^DD(757.02,0,"IX","ACT",757.28,1)
+ S ^DD(757.02,0,"IX","ACT1",757.02,1)="",^DD(757.02,0,"IX","ACT2",757.28,.01)="",^DD(757.02,0,"IX","ACT3",757.28,1)=""
+ Q
+ ;
+C32 ; LEX*2.0*39 ROF   - File #757.02, "APCODE" has dupe fields
+ D REM^LEX2038P("File #757.02 Index APCODE dupe fields 1 and 4","LEX*2.0*39 ROF")
+ S ^DD(757.02,1,1,4,0)="757.02^APCODE1^MUMPS",^DD(757.02,4,1,1,0)="757.02^APCODE2^MUMPS"
+ K ^DD(757.02,0,"IX","APCODE",757.02,1),^DD(757.02,0,"IX","APCODE",757.02,4)
+ S ^DD(757.02,0,"IX","APCODE1",757.02,1)="",^DD(757.02,0,"IX","APCODE2",757.02,4)=""
+ Q
+ ;
+C33 ; LEX*2.0*39 ROF   - File #81.02, "ACT" has dupe fields
+ D REM^LEX2038P("File #81.02 Index ACT dupe fields .01 and .02","LEX*2.0*39 ROF")
+ S ^DD(81,.01,1,5,0)="81^ACT1^MUMPS",^DD(81.02,.01,1,2,0)="81^ACT2^MUMPS",^DD(81.02,.02,1,1,0)="81^ACT3^MUMPS"
+ K ^DD(81,0,"IX","ACT",81,.01),^DD(81,0,"IX","ACT",81.02,.01),^DD(81,0,"IX","ACT",81.02,.02)
+ S ^DD(81,0,"IX","ACT1",81,.01)="",^DD(81,0,"IX","ACT2",81.02,.01)="",^DD(81,0,"IX","ACT3",81.02,.02)=""
+ Q
+ ;
+C34 ; LEX*2.0*39 ROF   - File #81.33, "ACT" has dupe fields
+ D REM^LEX2038P("File #81.33 Index ACT dupe fields .01 and .02","LEX*2.0*39 ROF")
+ S ^DD(81.3,.01,1,3,0)="81.3^ACT1^MUMPS",^DD(81.33,.01,1,2,0)="81.3^ACT2^MUMPS",^DD(81.33,.02,1,1,0)="81.3^ACT3^MUMPS"
+ K ^DD(81.3,0,"IX","ACT",81.3,.01),^DD(81.3,0,"IX","ACT",81.33,.01),^DD(81.3,0,"IX","ACT",81.33,.02)
+ S ^DD(81.3,0,"IX","ACT1",81.3,.01)="",^DD(81.3,0,"IX","ACT2",81.33,.01)="",^DD(81.3,0,"IX","ACT3",81.33,.02)=""
+ Q
+ ;
+C35 ; LEX*2.0*39 ROF   - File #81.066, "ACT" has dupe fields
+ D REM^LEX2038P("File #81.066 Index ACT dupe fields .01 and .02","LEX*2.0*39 ROF")
+ S ^DD(80,.01,1,4,0)="80^ACT1^MUMPS",^DD(80.066,.01,1,2,0)="80^ACT2^MUMPS",^DD(80.066,.02,1,1,0)="80^ACT3^MUMPS"
+ K ^DD(80,0,"IX","ACT",80,.01),^DD(80,0,"IX","ACT",80.066,.01),^DD(80,0,"IX","ACT",80.066,.02)
+ S ^DD(80,0,"IX","ACT1",80,.01)="",^DD(80,0,"IX","ACT2",80.066,.01)="",^DD(80,0,"IX","ACT3",80.066,.02)=""
+ Q
+C36 ; LEX*2.0*39 ROF   - File #81.166, "ACT" has dupe fields
+ D REM^LEX2038P("File #81.166 Index ACT dupe fields .01 and .02","LEX*2.0*39 ROF")
+ S ^DD(80.1,0,"IX","ACT1",80.1,.01)="",^DD(80.1,0,"IX","ACT2",80.166,.01)="",^DD(80.1,0,"IX","ACT3",80.166,.02)=""
+ S ^DD(80.1,.01,1,4,0)="80.1^ACT1^MUMPS",^DD(80.166,.01,1,2,0)="80.1^ACT2^MUMPS",^DD(80.166,.02,1,1,0)="80.1^ACT3^MUMPS"
+ K ^DD(80.1,0,"IX","ACT",80.1,.01),^DD(80.1,0,"IX","ACT",80.166,.01),^DD(80.1,0,"IX","ACT",80.166,.02)
+ Q
+C37 ; LEX*2.0*39 ROF   - File #757.29 points to missing file
+ D REM^LEX2038P("File #757.29 points to missing file 757.09","LEX*2.0*39 ROF")
+ S U="^",DIK="^DD(757.02,",DA=10,DA(1)=757.02 D ^DIK
+ S DIU=757.29,DIU(0)="SD" D EN^DIU2 S DIU=757.211,DIU(0)="SD" D EN^DIU2
+ Q
+C38 ; LEX*2.0*39 Test   - Erectile Dysfunction Keywords
+ D REM^LEX2038P("Add Keywords Erectile Dysfunction","LEX*2.0*39 Test")
+ S ^LEX(757.01,270441,5,0)="^757.18^2^2",^LEX(757.01,270441,5,1,0)="ERECTILE"
+ S ^LEX(757.01,270441,5,2,0)="DYSFUNCTION",^LEX(757.01,270441,5,"B","DYSFUNCTION",2)=""
+ S ^LEX(757.01,270441,5,"B","ERECTILE",1)="",^LEX(757.01,"AWRD","DYSFUNCTION",270441,270441,2)=""
+ S ^LEX(757.01,"AWRD","ERECTILE",270441,270441,1)=""
+ Q

@@ -1,0 +1,61 @@
+DGV52PC1 ;ALB/MTC - CAT C/NULL DEDUCTIBLE PRINT ; 7/7/92
+ ;;5.2;REGISTRATION;;JUL 29,1992
+EN ;
+ D CATC
+ Q
+CATC ; loop through cat Cs for active ones
+ W !!?5,"Searching for Cat 'C' patients"
+ W !,?5,"Who have not answered 'AGREE TO PAY DEDUCTIBLE' question..."
+ F DFN=0:0 S DFN=$O(^DPT("ACS",6,DFN)) Q:DFN'>0  D CATCLST
+ D CATCOUT
+ K ^TMP("DGPOST",$J,"CNULL"),DFN
+ Q
+CATCLST N DGWHEN,DGDT,IEN,NODE0
+ S NODE0=$G(^DPT(DFN,0)) Q:(+$G(^(.35)))!($P(NODE0,U,14)'=6)
+ F DGDT=0:0 S DGDT=$O(^DGMT(408.31,"AD",DFN,DGDT)) Q:'DGDT  S IEN=$O(^DGMT(408.31,"AD",DFN,DGDT,0))
+ G:$P($G(^DGMT(408.31,+IEN,0)),U,11)]"" QTC
+ S DGWHEN=""
+ I $$ACTIVE(DT-20000,DT) S $P(DGWHEN,U,1)="X"  ;PAST YR
+ I +$G(^DPT(DFN,.105)) S $P(DGWHEN,U,2)="X"    ;INHOUSE
+ I $$ACTIVE(DT,9999999) S $P(DGWHEN,U,3)="X"   ;FUTURE
+ S:DGWHEN]"" ^TMP("DGPOST",$J,"CNULL",$P(NODE0,U,1),DFN)=DGWHEN_";;"_$P(NODE0,U,1)
+QTC Q
+ACTIVE(FROM,TO) ;
+ ;Y=0 IF NOT ACTIVE
+ ;1:DISPOSITION
+ ;2:CLINIC APPT
+ ;3:SCHEDULED ADMISSION
+ ;4:PATIENT MOVEMENT
+ ;
+ N A,X,Y
+ S Y=0
+ S X=$O(^DPT(DFN,"DIS",(9999999-TO))) S:X&(X<(9999999-FROM)) Y=1
+ I 'Y S X=$O(^DPT(DFN,"S",FROM)) S:(+X)&(+X<TO) Y=2
+ I 'Y F A=0:0 S A=$O(^DGS(41.1,"B",DFN,A)) Q:A'>0  S X=$P($G(^DGS(41.1,+A,0)),U,2) S:(X'<FROM)&(X'>TO) Y=3
+ I 'Y S X=$O(^DGPM("APRD",DFN,FROM)) S:(+X)&(+X<TO) Y=4
+ Q Y
+CATCOUT ;
+ S Y=DT
+ X ^DD("DD")
+ W @IOF,!!!,"Date: ",Y
+ N DGLINE,DFN,DGA,DGYRAGO,DGTODAY,DGX,VAERR,VA,Y
+ S Y=DT-20000 X ^DD("DD") S DGYRAGO=Y
+ S Y=DT X ^DD("DD") S DGTODAY=Y
+ W !!?5,"Listing Active Cat 'C' Patients"
+ W !?5,"Who have not answered 'AGREE TO PAY DEDUCTIBLE' question"
+ I $D(^TMP("DGPOST",$J,"CNULL")) D
+ .W !!,"ACTIVE= Sched. Admissions, Dispositions, Pt. Movements, or Clinic Appts."
+ .W !!,?10,"INHOUSE = Current Inpatient"
+ .W !,?10,"PAST    = ",DGYRAGO," to ",DGTODAY
+ .W !,?10,"FUTURE  = After ",DGTODAY," @12:01 a.m."
+ .W !!!,"PATIENT NAME",?35,"LAST-4 ID",?55,"PAST",?61,"INHOUSE",?70,"FUTURE"
+ .S DGLINE="",$P(DGLINE,"=",81)=""
+ .W !,DGLINE
+ .W:'$D(^TMP("DGPOST",$J,"CNULL")) !,?5,"NO ACTIVE CAT C PATIENTS WHO HAVE NOT ANSWERED 'AGREE TO PAY DEDUCTIBLE'",!?5,"   ------",!
+ .S DGNAME=""
+ .F  S DGNAME=$O(^TMP("DGPOST",$J,"CNULL",DGNAME)) Q:DGNAME']""  D
+ ..F DFN=0:0 S DFN=$O(^TMP("DGPOST",$J,"CNULL",DGNAME,DFN)) Q:DFN'>0  S DGX=^(DFN) D
+ ...D PID^VADPT6
+ ...W !,$P(DGX,";;",2),?35,VA("BID"),?56,$P($P(DGX,";;",1),U,1),?64,$P($P(DGX,";;",1),U,2),?72,$P($P(DGX,";;",1),U,3)
+ K VA,VAPTYP,DGNAME
+ Q

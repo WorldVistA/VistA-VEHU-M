@@ -1,0 +1,34 @@
+ZJASZ2 ; JERRY SICARD 9/19/90 ; ROUTINE TO MAIL ROUTINE NAMES AND VERSIONS;9/20/90  9:08 AM
+ ;
+ K ^UTILITY($J),XMTEXT,Z,JERRY
+ D ^%RSEL
+ Q:$O(^UTILITY($J,""))=""
+ S RTN="        ",RTN="",ZDUZ=DUZ
+ S Z=0,XMTEXT="JERRY(",XMSUB="Routines and Version Numbers"
+ S DIC="^DIC(3,",DIC(0)="AEQ" D ^DIC D ENDQ:X="" D MSG:X="" Q:X=""  W !,"Working..."
+ S XMDUZ=$P(Y,"^",1),DUZ=XMDUZ,XMY(DUZ)=""
+ F I=1:1 S RTN=$O(^UTILITY($J,RTN)) Q:RTN=""  D LOAD,ARRAY
+ D ^XMD
+ENDQ K ^UTILITY($J),XMTEXT,Z,I,RTN,NAME,VERSION,XMSUB,JERRY,DIF,DIC
+ S DUZ=ZDUZ K ZDUZ,Y,X
+ Q
+LOAD ; LOAD THE PARSING UTILITY GOLBAL
+ S XCNP=0,X=RTN,DIF="^UTILITY("_$J_",1,RTN,0" X ^%ZOSF("LOAD")
+ S NAME=$P(^UTILITY($J,1,X,1,0),";",1)
+ S VERSION=$P(^UTILITY($J,1,X,2,0),";",2)
+ Q
+ARRAY ;
+ K ^UTILITY($J,1,X)
+ S:$L(NAME)=2 NAME=NAME_"       "
+ S:$L(NAME)=3 NAME=NAME_"      "
+ S:$L(NAME)=4 NAME=NAME_"     "
+ S:$L(NAME)=5 NAME=NAME_"    "
+ S:$L(NAME)=6 NAME=NAME_"   "
+ S:$L(NAME)=7 NAME=NAME_"  "
+ S:$L(NAME)=8 NAME=NAME_" "
+ S Z=Z+1
+ S JERRY(Z,0)=NAME_"     "_VERSION
+ Q
+MSG ;
+ W !,"No user selected, routine aborts...please try again"
+ Q

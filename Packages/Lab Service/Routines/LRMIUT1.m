@@ -1,0 +1,54 @@
+LRMIUT1 ;DALOI/STAFF - INPUT TRANSFORMS FOR MICRO ;02/21/13  10:28
+ ;;5.2;LAB SERVICE;**100,121,323,350,427**;Sep 27, 1994;Build 33
+ ;
+RPT ; from input transform on RPT DATE APPROVED
+ N %DT,Y
+ I $G(DIUTIL)'="VERIFY FIELDS" D  ;
+ . I '$D(^XUSEC("LRVERIFY",DUZ)) K X D EN^DDIOL("*** You do not have the proper access to approve these results ***","","!,$C(7)")
+ Q:'$D(X)
+ S %DT="EXR"
+ I $G(DIUTIL)="VERIFY FIELDS" S %DT="EXT" ;old rptdt only has date
+ D ^%DT S X=Y I Y<1 K X Q
+ I $G(DIUTIL)="VERIFY FIELDS" Q
+ N X,DA,DIERR,DIE,DIC,DR ;protect FM vars from subsequent calls
+ D VT1
+ Q
+ ;
+ ;
+VT ; from LRMINEW1, LRMIVER1
+ D VT1
+ K ^TMP("LA7HDR",$J)
+ Q
+ ;
+ ;
+VT1 ; from above
+ I $G(LRLLOC)'="",$G(PNM)'="",$G(LRDFN),$G(LRIDT) S LRVTP=$P(^LAB(64.5,1,0),U,10),LRVT=$G(LRVT) D APP
+ ;
+ ; Set reporting facility
+ I $G(LRDFN),$G(LRIDT) D SETRL^LRVERA(LRDFN,"MI",LRIDT,DUZ(2))
+ Q
+ ;
+ ;
+APP ;
+ N Q9,X,I
+ S DT=$$DT^XLFDT
+ S ^LRO(69,"AN",$E(LRLLOC,1,20),LRDFN,LRIDT)="",^LRO(69,LRCDT\1,1,"AL",$E(LRLLOC,1,20),$E(PNM,1,30),LRDFN)=""
+ S ^LRO(69,DT,1,"AN",$E(LRLLOC,1,20),LRDFN,LRIDT)=""
+ ;
+ I LRVT["RE"!(LRVT["VT") S:LRVT=LRVTP ^LRO(69,DT,1,"AR",$E(LRLLOC,1,20),$E(PNM,1,30),LRDFN)="",^LRO(68,"MI",LRDFN,LRIDT,LRSB)=""
+ ;
+ I LRVT["VS",LRVT=LRVTP D
+ . S ^LRO(69,DT,1,"AR",$E(LRLLOC,1,20),$E(PNM,1,30),LRDFN)=""
+ . F LRSB=1,5,8,11,16 I $P($G(^LR(LRDFN,"MI",LRIDT,LRSB)),U,1) S ^LRO(68,"MI",LRDFN,LRIDT,LRSB)=""
+ ;
+ S Q9=+$P(^LR(LRDFN,"MI",LRIDT,0),U,7),^LRO(69,LRCDT\1,1,"AP",$S($D(^VA(200,Q9,0)):$E($P(^VA(200,Q9,0),U),1,20),1:"UNK"),$E(PNM,1,30),LRDFN)=""
+ K ^LAC("LRKILL",LRDFN,"MI",LRIDT)
+ ;
+ I $D(^LRO(69,LRODT,1,LRSN,3)),'$P(^(3),U,2) S $P(^LRO(69,LRODT,1,LRSN,3),U,2)=$$NOW^XLFDT
+ ;
+ I $D(^LRO(69,LRODT,1,LRSN,3)) D
+ . N X,Y,CORRECT
+ . S:$G(LRCORECT) CORRECT=1
+ . D NEW^LR7OB1(LRODT,LRSN,"RE")
+ K LRVTP
+ Q

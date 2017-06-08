@@ -1,0 +1,134 @@
+IBDEI1VC ; ; 06-AUG-2015
+ ;;3.0;IB ENCOUNTER FORM IMP/EXP;;JUN 29, 2015
+ Q:'DIFQR(358.3)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,358.3,32883,0)
+ ;;=Z82.1^^182^1993^18
+ ;;^UTILITY(U,$J,358.3,32883,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32883,1,3,0)
+ ;;=3^Family Hx of Blindness/Visual Loss
+ ;;^UTILITY(U,$J,358.3,32883,1,4,0)
+ ;;=4^Z82.1
+ ;;^UTILITY(U,$J,358.3,32883,2)
+ ;;=^5063365
+ ;;^UTILITY(U,$J,358.3,32884,0)
+ ;;=Z82.2^^182^1993^22
+ ;;^UTILITY(U,$J,358.3,32884,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32884,1,3,0)
+ ;;=3^Family Hx of Deafness/Hearing Loss
+ ;;^UTILITY(U,$J,358.3,32884,1,4,0)
+ ;;=4^Z82.2
+ ;;^UTILITY(U,$J,358.3,32884,2)
+ ;;=^5063366
+ ;;^UTILITY(U,$J,358.3,32885,0)
+ ;;=Z84.0^^182^1993^39
+ ;;^UTILITY(U,$J,358.3,32885,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32885,1,3,0)
+ ;;=3^Family Hx of Skin Diseases
+ ;;^UTILITY(U,$J,358.3,32885,1,4,0)
+ ;;=4^Z84.0
+ ;;^UTILITY(U,$J,358.3,32885,2)
+ ;;=^5063388
+ ;;^UTILITY(U,$J,358.3,32886,0)
+ ;;=Z82.79^^182^1993^21
+ ;;^UTILITY(U,$J,358.3,32886,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32886,1,3,0)
+ ;;=3^Family Hx of Congen Malform,Deformations & Chromsoml Abnlt
+ ;;^UTILITY(U,$J,358.3,32886,1,4,0)
+ ;;=4^Z82.79
+ ;;^UTILITY(U,$J,358.3,32886,2)
+ ;;=^5063374
+ ;;^UTILITY(U,$J,358.3,32887,0)
+ ;;=Z84.89^^182^1993^37
+ ;;^UTILITY(U,$J,358.3,32887,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32887,1,3,0)
+ ;;=3^Family Hx of Other Spec Conditions
+ ;;^UTILITY(U,$J,358.3,32887,1,4,0)
+ ;;=4^Z84.89
+ ;;^UTILITY(U,$J,358.3,32887,2)
+ ;;=^5063393
+ ;;^UTILITY(U,$J,358.3,32888,0)
+ ;;=Z81.1^^182^1993^15
+ ;;^UTILITY(U,$J,358.3,32888,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32888,1,3,0)
+ ;;=3^Family Hx of Alcohol Abuse/Dependence
+ ;;^UTILITY(U,$J,358.3,32888,1,4,0)
+ ;;=4^Z81.1
+ ;;^UTILITY(U,$J,358.3,32888,2)
+ ;;=^5063359
+ ;;^UTILITY(U,$J,358.3,32889,0)
+ ;;=Z82.62^^182^1993^36
+ ;;^UTILITY(U,$J,358.3,32889,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32889,1,3,0)
+ ;;=3^Family Hx of Osteoporosis
+ ;;^UTILITY(U,$J,358.3,32889,1,4,0)
+ ;;=4^Z82.62
+ ;;^UTILITY(U,$J,358.3,32889,2)
+ ;;=^5063372
+ ;;^UTILITY(U,$J,358.3,32890,0)
+ ;;=Z83.71^^182^1993^20
+ ;;^UTILITY(U,$J,358.3,32890,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32890,1,3,0)
+ ;;=3^Family Hx of Colonic Polyps
+ ;;^UTILITY(U,$J,358.3,32890,1,4,0)
+ ;;=4^Z83.71
+ ;;^UTILITY(U,$J,358.3,32890,2)
+ ;;=^5063386
+ ;;^UTILITY(U,$J,358.3,32891,0)
+ ;;=Z84.81^^182^1993^24
+ ;;^UTILITY(U,$J,358.3,32891,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32891,1,3,0)
+ ;;=3^Family Hx of Genetic Disease
+ ;;^UTILITY(U,$J,358.3,32891,1,4,0)
+ ;;=4^Z84.81
+ ;;^UTILITY(U,$J,358.3,32891,2)
+ ;;=^5063392
+ ;;^UTILITY(U,$J,358.3,32892,0)
+ ;;=Z86.010^^182^1993^61
+ ;;^UTILITY(U,$J,358.3,32892,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32892,1,3,0)
+ ;;=3^Personal Hx of Colonic Polyps
+ ;;^UTILITY(U,$J,358.3,32892,1,4,0)
+ ;;=4^Z86.010
+ ;;^UTILITY(U,$J,358.3,32892,2)
+ ;;=^5063456
+ ;;^UTILITY(U,$J,358.3,32893,0)
+ ;;=Z86.14^^182^1993^86
+ ;;^UTILITY(U,$J,358.3,32893,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32893,1,3,0)
+ ;;=3^Personal Hx of Methicillin Resis Staph Infection
+ ;;^UTILITY(U,$J,358.3,32893,1,4,0)
+ ;;=4^Z86.14
+ ;;^UTILITY(U,$J,358.3,32893,2)
+ ;;=^5063464
+ ;;^UTILITY(U,$J,358.3,32894,0)
+ ;;=Z86.31^^182^1993^62
+ ;;^UTILITY(U,$J,358.3,32894,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32894,1,3,0)
+ ;;=3^Personal Hx of Diabetic Foot Ulcer
+ ;;^UTILITY(U,$J,358.3,32894,1,4,0)
+ ;;=4^Z86.31
+ ;;^UTILITY(U,$J,358.3,32894,2)
+ ;;=^5063467
+ ;;^UTILITY(U,$J,358.3,32895,0)
+ ;;=Z86.711^^182^1993^94
+ ;;^UTILITY(U,$J,358.3,32895,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,32895,1,3,0)
+ ;;=3^Personal Hx of Pulmonary Embolism
+ ;;^UTILITY(U,$J,358.3,32895,1,4,0)
+ ;;=4^Z86.711
+ ;;
+ ;;$END ROU IBDEI1VC

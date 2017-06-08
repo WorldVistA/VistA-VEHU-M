@@ -1,0 +1,23 @@
+ADXTADI4 ;523/KC stuff diagnosis fields into 160 ; 22-OCT-1992
+ ;;1.1;;
+EN ;
+ ; INPUT VARIABLES:
+ ; ADXT array, MRS field values at different subscripts
+ ; OUTPUT VARIABLES: NONE
+ ;
+ N ADXTDA,ADXTFLD,ADXTFNUM,ADXTLINE,ADXTI
+ U IO
+ S ADXTDA=$$GTPP^ADXTUT(ADXT("PID"))
+ I +ADXTDA<1 D  Q
+ .U IO(0) W !,"Error processing Cause of Death: could not match to PID",ADXT("PID")," to a patient."
+ .U IO
+ S ADXTFNUM="160"
+ F ADXTI=1:1 S ADXTLINE=$P($TEXT(FIELDS+ADXTI),";;",2) Q:ADXTLINE=""  D
+ .S ADXTFLD=$P(ADXTLINE,"^",2)
+ .K ADXTSBF,ADXTSBDA
+ .D ^ADXTEDIT
+EXIT ;
+ K ADXTFLD,ADXTFNUM,ADXTLINE,ADXTI
+ Q
+FIELDS ;
+ ;;160^19^DICD^4^S X=$$GTICD^ADXTUT(X) K:'+X X

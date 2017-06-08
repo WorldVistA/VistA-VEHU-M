@@ -1,0 +1,51 @@
+ADXTMDI ;523/KC diagnosis file pre-processor;4-AUG-1992
+ ;;1.1;;
+ ;
+ ; move MRS records (diagnosis file) from Kermit holding area
+ ; to ^TMP("ADXT","DI"). Stored as ^TMP("ADXT","DI",record#,1 or 2),
+ ; where 1 is chars 1-221 in MRS record, 2 is chars 222-439.
+EN ;
+ N ADXTFN,ADXTPOS,ADXTMTCH,ADXTRN,ADXTLEN,ADXTDIFF,ADXTST,DIC,X,Y
+ K DIC,DA
+ S DIC="^DIZ(8980,",X="DAGFILE.T01",DIC(0)="QZ" D ^DIC
+ I +Y<1 S ADXTSTAT=0
+ I  W !!,"LOOKUP OF DAGFILE.T01 (DIAGNOSIS FILE) IN KERMIT HOLDING AREA"
+ I  W " FAILED. ",!,"ABORTING...",! G EXIT
+ S ADXTFN=$P(Y,"^")
+ ;
+ W !,"Copying Diagnosis file records from Kermit Holding area to ^TMP"
+ K ^TMP("ADXT","DI")
+ S ADXTMTCH="2ANP1""/""37ANP1""/""2ANP1""/""4ANP1""/""2N1""/""4N1""/"".E"
+ S (ADXTLEN,ADXTPOS,ADXTST,ADXTRN)=0
+ ;
+PROCESS ;
+ F  S ADXTPOS=$O(^DIZ(8980,ADXTFN,2,ADXTPOS)) Q:+ADXTPOS=0  D
+ .I ADXTST=0&(^DIZ(8980,ADXTFN,2,ADXTPOS,0)?@ADXTMTCH) S X=^(0),ADXTST=1 D NODE1 Q
+ .I ADXTST=1&(^DIZ(8980,ADXTFN,2,ADXTPOS,0)'?@ADXTMTCH) S X=^(0) D NODE2 Q
+ .I ADXTST=1&(^DIZ(8980,ADXTFN,2,ADXTPOS,0)?@ADXTMTCH) D  S ADXTPOS=ADXTPOS-1,ADXTST=0,ADXTLEN=0  Q
+ W !,ADXTRN," MRS records were copied."
+ ;
+EXIT ;
+ K ADXTFN,ADXTPOS,ADXTMTCH,ADXTRN,ADXTLEN,ADXTDIFF,ADXTST,DIC,X,Y
+ Q
+ ;
+NODE1 ; fill out first node up to character 221 in the MRS record
+ I $E(ADXTRN,$L(ADXTRN))="0" W "."
+ S ADXTRN=ADXTRN+1
+ S ADXTLEN=ADXTLEN+$L(X)
+ S ^TMP("ADXT","DI",ADXTRN,2)=""
+ S ^TMP("ADXT","DI",ADXTRN,1)=$E(X,1,221)
+ I ADXTLEN>221 S ^TMP("ADXT","DI",ADXTRN,2)=$E(X,222,500)
+ Q
+ ;
+NODE2 ; fill out second node up to end of MRS record
+ I ADXTLEN<222 D
+ .S ADXTDIFF=221-ADXTLEN
+ .S Y=^TMP("ADXT","DI",ADXTRN,1)
+ .S ^TMP("ADXT","DI",ADXTRN,1)=Y_$E(X,1,ADXTDIFF)
+ .S ^TMP("ADXT","DI",ADXTRN,2)=$E(X,ADXTDIFF+1,500)
+ I ADXTLEN>221 D
+ .S Y=^TMP("ADXT","DI",ADXTRN,2)
+ .S ^TMP("ADXT","DI",ADXTRN,2)=Y_X
+ S ADXTLEN=ADXTLEN+$L(X)
+ Q

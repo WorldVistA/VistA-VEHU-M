@@ -1,0 +1,85 @@
+A4A7KILL ;SFISC/RWF - KILL FILES 3-6-16-20 and clean-up file 200. ;02/10/98  12:27
+ ;;1.01;NEW PERSON;**11**;2/9/96
+ W !,"You must use the doc to see how to call.",!! Q
+ ;
+K ;
+ S DIR(0)="Y",DIR("A")="Are you sure you want to kill off files 3, 6, 16, 20:",DIR("B")="NO"
+ D ^DIR G EXIT:Y'=1
+ D FIELD,FILES,IX
+EXIT K DIR
+ Q
+ ;
+FILES ;Lets do the Files first
+ F DIU=20,6,16,3 S DIU(0)="DT" W !,"Deleting file ",DIU D EN^DIU2
+ Q
+ ;
+IX ;Now to remove the File 200 X-ref's.
+ N A4A7,X,A4A7SP
+ S A4A7SP=";"
+ F A4A7=1:1 S X=$T(ZZ+A4A7) Q:X=""  D
+ . K DA
+ . S DIK=$P(X,A4A7SP,3),DA=$P(X,A4A7SP,4)
+ . F %=1:1 S Y=$P(X,A4A7SP,%+4) Q:Y=""  S DA(%)=Y
+ . W !,"Deleting X-ref ",$P(X,A4A7SP)," field: ",DIK," ENTRY: ",DA
+ . D ^DIK
+ . Q
+ W !!,"DONE",!!
+ Q
+ ;
+FIELD ;Kill off some old fields.
+ N DIU S DIU=49.01,DIU(0)="SD" D EN^DIU2
+ S DIU=49.02,DIU(0)="SD" D EN^DIU2
+ Q
+BUILD ;BUILD THE IX LIST
+ S U="^"
+ F DD=200:0 D B1 S DD=$O(^DD(DD)) Q:(DD'>0)!(DD>200.99)
+ Q
+B1 S A4="ACX"
+ F  S A4=$O(^DD(DD,0,"IX",A4)),A4FI=0 Q:A4'["ACX"  D B2
+ Q
+B2 F  S A4FI=$O(^DD(DD,0,"IX",A4,A4FI)),A4FE=0 Q:A4FI'>0  D B4
+ Q
+B4 F  S A4FE=$O(^DD(DD,0,"IX",A4,A4FI,A4FE)) Q:A4FE'>0  D B6
+ Q
+B6 F %=0:0 S %=$O(^DD(A4FI,A4FE,1,%)) Q:%'>0  I $G(^(%,0))[A4 D
+ . W !,A4_" ;;^DD("_A4FI_","_A4FE_",1,;"_%_";"_A4FE_";"_A4FI_";"
+ Q
+ZZ ;
+TRIGGER ;;^DD(200,.01,1,;7;.01;200;
+AH ;;^DD(200,.01,1,;10;.01;200;
+ACX1 ;;^DD(200,.111,1,;1;.111;200;
+ACX10 ;;^DD(200,.1214,1,;1;.1214;200;
+ACX11 ;;^DD(200,.1215,1,;1;.1215;200;
+ACX12 ;;^DD(200,.1216,1,;1;.1216;200;
+ACX13 ;;^DD(200,.131,1,;1;.131;200;
+ACX14 ;;^DD(200,.132,1,;1;.132;200;
+ACX15 ;;^DD(200,.133,1,;1;.133;200;
+ACX16 ;;^DD(200,.134,1,;1;.134;200;
+ACX17 ;;^DD(200,.1217,1,;1;.1217;200;
+ACX18 ;;^DD(200,.1218,1,;1;.1218;200;
+ACX2 ;;^DD(200,.112,1,;1;.112;200;
+ACX20 ;;^DD(200,20.2,1,;1;20.2;200;
+ACX21 ;;^DD(200,20.3,1,;1;20.3;200;
+ACX22 ;;^DD(200,5,1,;1;5;200;
+ACX23 ;;^DD(200,20.4,1,;1;20.4;200;
+ACX25 ;;^DD(200,3,1,;1;3;200;
+ACX26 ;;^DD(200,28,1,;1;28;200;
+ACX27 ;;^DD(200,13,1,;2;13;200;
+ACX28 ;;^DD(200,29,1,;1;29;200;
+ACX29 ;;^DD(200,9.2,1,;1;9.2;200;
+ACX3 ;;^DD(200,.113,1,;1;.113;200;
+ACX30 ;;^DD(200,8,1,;1;8;200;
+ACX31 ;;^DD(200,1,1,;2;1;200;
+ACX32 ;;^DD(200,4,1,;1;4;200;
+ACX33 ;;^DD(200,9,1,;3;9;200;
+ACX35 ;;^DD(200,53.4,1,;1;53.4;200;
+ACX36 ;;^DD(200,53.5,1,;1;53.5;200;
+ACX37 ;;^DD(200,53.6,1,;1;53.6;200;
+ACX38 ;;^DD(200,53.2,1,;2;53.2;200;
+ACX39 ;;^DD(200,53.3,1,;2;53.3;200;
+ACX4 ;;^DD(200,.114,1,;1;.114;200;
+ACX5 ;;^DD(200,.115,1,;1;.115;200;
+ACX6 ;;^DD(200,.116,1,;1;.116;200;
+ACX7 ;;^DD(200,.1211,1,;1;.1211;200;
+ACX8 ;;^DD(200,.1212,1,;1;.1212;200;
+ACX9 ;;^DD(200,.1213,1,;1;.1213;200;

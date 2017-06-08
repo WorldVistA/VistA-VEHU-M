@@ -1,0 +1,66 @@
+DVBAO002 ; ; 10-APR-1995
+ ;;2.7;AMIE;;Apr 10, 1995
+ F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,"PRO",1156,10,2,0)
+ ;;=1155^AD^2
+ ;;^UTILITY(U,$J,"PRO",1156,10,2,"^")
+ ;;=DVBA ADD DISCHARGE TYPE
+ ;;^UTILITY(U,$J,"PRO",1156,10,3,0)
+ ;;=1157^DT^3
+ ;;^UTILITY(U,$J,"PRO",1156,10,3,"^")
+ ;;=DVBA DELETE DISCHARGE TYPES
+ ;;^UTILITY(U,$J,"PRO",1156,10,4,0)
+ ;;=1158^CL^4
+ ;;^UTILITY(U,$J,"PRO",1156,10,4,"^")
+ ;;=DVBA CREATE DISCHARGE TYPE LIST
+ ;;^UTILITY(U,$J,"PRO",1156,20)
+ ;;=S XQORM("B")="AL"
+ ;;^UTILITY(U,$J,"PRO",1156,26)
+ ;;=DO SHOW^VALM
+ ;;^UTILITY(U,$J,"PRO",1156,99)
+ ;;=56328,39808
+ ;;^UTILITY(U,$J,"PRO",1157,0)
+ ;;=DVBA DELETE DISCHARGE TYPES^DELETE TYPES^^A^^^^^^^^AUTOMATED MED INFO EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",1157,20)
+ ;;=D DELETE^DVBALD
+ ;;^UTILITY(U,$J,"PRO",1157,99)
+ ;;=56328,39807
+ ;;^UTILITY(U,$J,"PRO",1158,0)
+ ;;=DVBA CREATE DISCHARGE TYPE LIST^CREATE NEW LIST^^A^^^^^^^^AUTOMATED MED INFO EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",1158,20)
+ ;;=D CREATE^DVBALD
+ ;;^UTILITY(U,$J,"PRO",1158,99)
+ ;;=56328,39807
+ ;;^UTILITY(U,$J,"PRO",1159,0)
+ ;;=DVBA ACCEPT DISCHARGE TYPES^ACCEPT TYPES^^A^^^^^^^^AUTOMATED MED INFO EXCHANGE
+ ;;^UTILITY(U,$J,"PRO",1159,1,0)
+ ;;=^^1^1^2941209^
+ ;;^UTILITY(U,$J,"PRO",1159,1,1,0)
+ ;;=///
+ ;;^UTILITY(U,$J,"PRO",1159,20)
+ ;;=D ACCEPT^DVBALD
+ ;;^UTILITY(U,$J,"PRO",1159,99)
+ ;;=56328,39806
+ ;;^UTILITY(U,$J,"PRO",1195,0)
+ ;;=DVBA C&P SCHD EVENT^AMIE 2507 Exam to C&P Appointment Link Processing^AMIE LINK OUT OF ORDER^A^^^^^^^^
+ ;;^UTILITY(U,$J,"PRO",1195,1,0)
+ ;;=^^4^4^2950224^^^^
+ ;;^UTILITY(U,$J,"PRO",1195,1,1,0)
+ ;;=AMIE C&P appointment processing protocol.  This protocol is executed from
+ ;;^UTILITY(U,$J,"PRO",1195,1,2,0)
+ ;;=the SDAM APPOINTMENT EVENTS protocol as an Item.  It asks a series of
+ ;;^UTILITY(U,$J,"PRO",1195,1,3,0)
+ ;;=questions to any user making a C&P appointment.  It's purpose is to provide
+ ;;^UTILITY(U,$J,"PRO",1195,1,4,0)
+ ;;=a tracking mechanism between AMIE 2507 exams and C&P appointments.
+ ;;^UTILITY(U,$J,"PRO",1195,20)
+ ;;=D ^DVBCSDEV
+ ;;^UTILITY(U,$J,"PRO",1195,99)
+ ;;=56328,39807
+ ;;^UTILITY(U,$J,"PRO",1195,101.0431,0)
+ ;;=^^1^1^2941205^^^^
+ ;;^UTILITY(U,$J,"PRO",1195,101.0431,1,0)
+ ;;= 
+ ;;^UTILITY(U,$J,"PRO",1195,"MEN","SDAM APPOINTMENT EVENTS")
+ ;;=1195^^8

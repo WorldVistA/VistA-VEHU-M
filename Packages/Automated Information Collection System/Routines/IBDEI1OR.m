@@ -1,0 +1,136 @@
+IBDEI1OR ; ; 06-AUG-2015
+ ;;3.0;IB ENCOUNTER FORM IMP/EXP;;JUN 29, 2015
+ Q:'DIFQR(358.3)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,358.3,29920,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29920,1,3,0)
+ ;;=3^Nicotine Dependence,Unspec
+ ;;^UTILITY(U,$J,358.3,29920,1,4,0)
+ ;;=4^F17.200
+ ;;^UTILITY(U,$J,358.3,29920,2)
+ ;;=^5003360
+ ;;^UTILITY(U,$J,358.3,29921,0)
+ ;;=F45.41^^177^1908^8
+ ;;^UTILITY(U,$J,358.3,29921,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29921,1,3,0)
+ ;;=3^Pain Disorder d/t Psychological Factors
+ ;;^UTILITY(U,$J,358.3,29921,1,4,0)
+ ;;=4^F45.41
+ ;;^UTILITY(U,$J,358.3,29921,2)
+ ;;=^5003590
+ ;;^UTILITY(U,$J,358.3,29922,0)
+ ;;=F43.10^^177^1908^7
+ ;;^UTILITY(U,$J,358.3,29922,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29922,1,3,0)
+ ;;=3^PTSD,Unspec
+ ;;^UTILITY(U,$J,358.3,29922,1,4,0)
+ ;;=4^F43.10
+ ;;^UTILITY(U,$J,358.3,29922,2)
+ ;;=^5003570
+ ;;^UTILITY(U,$J,358.3,29923,0)
+ ;;=F43.12^^177^1908^6
+ ;;^UTILITY(U,$J,358.3,29923,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29923,1,3,0)
+ ;;=3^PTSD,Chronic
+ ;;^UTILITY(U,$J,358.3,29923,1,4,0)
+ ;;=4^F43.12
+ ;;^UTILITY(U,$J,358.3,29923,2)
+ ;;=^5003572
+ ;;^UTILITY(U,$J,358.3,29924,0)
+ ;;=F32.9^^177^1908^4
+ ;;^UTILITY(U,$J,358.3,29924,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29924,1,3,0)
+ ;;=3^MDD,Single Episode,Unspec
+ ;;^UTILITY(U,$J,358.3,29924,1,4,0)
+ ;;=4^F32.9
+ ;;^UTILITY(U,$J,358.3,29924,2)
+ ;;=^5003528
+ ;;^UTILITY(U,$J,358.3,29925,0)
+ ;;=O01.9^^178^1909^16
+ ;;^UTILITY(U,$J,358.3,29925,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29925,1,3,0)
+ ;;=3^Hydatidiform mole, unspecified
+ ;;^UTILITY(U,$J,358.3,29925,1,4,0)
+ ;;=4^O01.9
+ ;;^UTILITY(U,$J,358.3,29925,2)
+ ;;=^5015977
+ ;;^UTILITY(U,$J,358.3,29926,0)
+ ;;=O02.81^^178^1909^17
+ ;;^UTILITY(U,$J,358.3,29926,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29926,1,3,0)
+ ;;=3^Inapprop chg quantitav hCG in early pregnancy
+ ;;^UTILITY(U,$J,358.3,29926,1,4,0)
+ ;;=4^O02.81
+ ;;^UTILITY(U,$J,358.3,29926,2)
+ ;;=^340611
+ ;;^UTILITY(U,$J,358.3,29927,0)
+ ;;=O02.1^^178^1909^18
+ ;;^UTILITY(U,$J,358.3,29927,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29927,1,3,0)
+ ;;=3^Missed abortion
+ ;;^UTILITY(U,$J,358.3,29927,1,4,0)
+ ;;=4^O02.1
+ ;;^UTILITY(U,$J,358.3,29927,2)
+ ;;=^1259
+ ;;^UTILITY(U,$J,358.3,29928,0)
+ ;;=O00.8^^178^1909^15
+ ;;^UTILITY(U,$J,358.3,29928,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29928,1,3,0)
+ ;;=3^Ectopic Pregnancy NEC
+ ;;^UTILITY(U,$J,358.3,29928,1,4,0)
+ ;;=4^O00.8
+ ;;^UTILITY(U,$J,358.3,29928,2)
+ ;;=^5015974
+ ;;^UTILITY(U,$J,358.3,29929,0)
+ ;;=O08.7^^178^1909^45
+ ;;^UTILITY(U,$J,358.3,29929,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29929,1,3,0)
+ ;;=3^Venous comp following an ectopic and molar pregnancy NEC
+ ;;^UTILITY(U,$J,358.3,29929,1,4,0)
+ ;;=4^O08.7
+ ;;^UTILITY(U,$J,358.3,29929,2)
+ ;;=^5016042
+ ;;^UTILITY(U,$J,358.3,29930,0)
+ ;;=O08.81^^178^1909^13
+ ;;^UTILITY(U,$J,358.3,29930,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29930,1,3,0)
+ ;;=3^Cardiac arrest following an ectopic and molar pregnancy
+ ;;^UTILITY(U,$J,358.3,29930,1,4,0)
+ ;;=4^O08.81
+ ;;^UTILITY(U,$J,358.3,29930,2)
+ ;;=^5016043
+ ;;^UTILITY(U,$J,358.3,29931,0)
+ ;;=O08.83^^178^1909^44
+ ;;^UTILITY(U,$J,358.3,29931,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29931,1,3,0)
+ ;;=3^Urinary tract infection fol an ectopic and molar pregnancy
+ ;;^UTILITY(U,$J,358.3,29931,1,4,0)
+ ;;=4^O08.83
+ ;;^UTILITY(U,$J,358.3,29931,2)
+ ;;=^5016045
+ ;;^UTILITY(U,$J,358.3,29932,0)
+ ;;=O08.89^^178^1909^14
+ ;;^UTILITY(U,$J,358.3,29932,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,29932,1,3,0)
+ ;;=3^Complications following an ectopic and molar pregnancy NEC
+ ;;^UTILITY(U,$J,358.3,29932,1,4,0)
+ ;;=4^O08.89
+ ;;^UTILITY(U,$J,358.3,29932,2)
+ ;;=^5016046
+ ;;^UTILITY(U,$J,358.3,29933,0)
+ ;;=O20.0^^178^1909^43
+ ;;
+ ;;$END ROU IBDEI1OR

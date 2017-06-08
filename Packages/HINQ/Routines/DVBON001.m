@@ -1,0 +1,14 @@
+DVBON001 ; ; 01-JUL-1993
+ ;;V4.0;HINQ;**12**;03/25/92
+ F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,"PRO",835,0)
+ ;;=DVB ADMISSION HINQ^HINQ on Admission^^A^^^^^^^^HINQ
+ ;;^UTILITY(U,$J,"PRO",835,15)
+ ;;=Q
+ ;;^UTILITY(U,$J,"PRO",835,20)
+ ;;=D EVENT^DVBHT2
+ ;;^UTILITY(U,$J,"PRO",835,99)
+ ;;=55697,51029
+ ;;^UTILITY(U,$J,"PRO",835,"MEN","DGPM MOVEMENT EVENTS")
+ ;;=835

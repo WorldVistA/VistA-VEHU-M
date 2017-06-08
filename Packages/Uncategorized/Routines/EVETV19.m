@@ -1,0 +1,46 @@
+EVETV19 ;BP/GPM - Extraction procedures for COPAY data to be stored on eVault ; 12/3/02 10:01am
+ ;;1.0;HEALTH EVET;**1**;Nov 05, 2002
+ ;
+ Q
+ ; usage of PRCAHV supported by subscription to IA# ???
+ ; 
+ ; EVETDFN       = DFN (ien of PATIENT file (#2)
+ ; EVBDATE       = FileMan date at which to begin data extraction
+ ; EVREQID       = REQUEST ID REPRESENTING MESSAGE IDENTIFIER RECEIVED
+ ;                 FROM HEALTH EVET
+ ;
+GET(EVETDFN,EVBDATE,EVREQID) ;
+ S X="ETRAP^EVETU1",@^%ZOSF("TRAP")
+ Q:EVREQID=""!'EVETDFN
+ N EVCNT
+ S EVSITEN=$G(EVSITEN)
+ ;
+ S EVCNT=$O(^TMP("EVETLIS",$J,EVREQID,""),-1)+1
+ S ^TMP("EVETLIS",$J,EVREQID,EVCNT,"START_Copay")=""
+ S EVCNT=EVCNT+1
+ D DETAIL
+ S ^TMP("EVETLIS",$J,EVREQID,EVCNT,"END_Copay")=""
+ Q
+ ;
+DETAIL ;Balance and Bill detail
+ N EVSTAT,EVBAL,EVDTL,I,EVACTY
+ S EVACTY=102
+ ;
+ ; Balance
+ S EVSTAT=$$INTBAL^PRCAHV(.EVBAL,EVETDFN,EVACTY)
+ I EVSTAT<1 Q
+ S ^TMP("EVETLIS",$J,EVREQID,EVCNT,"ien")=EVSITEN
+ S ^TMP("EVETLIS",$J,EVREQID,EVCNT,"balance")=EVBAL
+ S EVCNT=EVCNT+1
+ ;
+ ; Bill Detail
+ S EVSTAT=$$INTDTL^PRCAHV(.EVDTL,EVETDFN,EVACTY)
+ I EVSTAT<1 Q
+ F I=1:1 Q:'$D(EVDTL(I))  D
+ .S ^TMP("EVETLIS",$J,EVREQID,EVCNT,"ien")=$P(EVDTL(I),"^")
+ .S ^TMP("EVETLIS",$J,EVREQID,EVCNT,"bill_date")=$$XMLDATE^EVETU1($P(EVDTL(I),"^",2))
+ .S ^TMP("EVETLIS",$J,EVREQID,EVCNT,"description")=$P(EVDTL(I),"^",3)
+ .S ^TMP("EVETLIS",$J,EVREQID,EVCNT,"total")=$P(EVDTL(I),"^",4)
+ .S EVCNT=EVCNT+1
+ Q
+ ;

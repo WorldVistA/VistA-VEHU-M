@@ -1,0 +1,108 @@
+IVMON003 ; ; 21-OCT-1994
+ ;;Version 2.0 ; INCOME VERIFICATION MATCH ;; 21-OCT-94
+ F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,"PRO",1121,1,7,0)
+ ;;= 
+ ;;^UTILITY(U,$J,"PRO",1121,1,8,0)
+ ;;=  2)  If the patient is Category C, has no active case record, and
+ ;;^UTILITY(U,$J,"PRO",1121,1,9,0)
+ ;;=      does not have active insurance, a case record is added and
+ ;;^UTILITY(U,$J,"PRO",1121,1,10,0)
+ ;;=      that patient's Means Test data is queued for transmission.
+ ;;^UTILITY(U,$J,"PRO",1121,20)
+ ;;=D ^IVMPINS
+ ;;^UTILITY(U,$J,"PRO",1121,99)
+ ;;=56056,53764
+ ;;^UTILITY(U,$J,"PRO",1121,"MEN","IBCN NEW INSURANCE EVENTS")
+ ;;=1121^^2
+ ;;^UTILITY(U,$J,"PRO",1122,0)
+ ;;=IVMLD DELETE FIELDS^Delete Demographic Fields^^A^^^^^^^^INCOME VERIFICATION MATCH
+ ;;^UTILITY(U,$J,"PRO",1122,4)
+ ;;=^2^^DF
+ ;;^UTILITY(U,$J,"PRO",1122,20)
+ ;;=D DF^IVMLDEM4
+ ;;^UTILITY(U,$J,"PRO",1122,28)
+ ;;=Select Action:
+ ;;^UTILITY(U,$J,"PRO",1122,99)
+ ;;=56056,53765
+ ;;^UTILITY(U,$J,"PRO",1123,0)
+ ;;=IVMLD SELECT HELP^Extended Help^^A^^^^^^^^INCOME VERIFICATION MATCH
+ ;;^UTILITY(U,$J,"PRO",1123,4)
+ ;;=^3
+ ;;^UTILITY(U,$J,"PRO",1123,20)
+ ;;=D EN^IVMLDEM5
+ ;;^UTILITY(U,$J,"PRO",1123,99)
+ ;;=56056,53766
+ ;;^UTILITY(U,$J,"PRO",1124,0)
+ ;;=IVMLD NON-UPLOADABLE FIELDS^Non-uploadable Demographic Fields^^M^^^^^^^^INCOME VERIFICATION MATCH
+ ;;^UTILITY(U,$J,"PRO",1124,4)
+ ;;=30^4
+ ;;^UTILITY(U,$J,"PRO",1124,10,0)
+ ;;=^101.01PA^1^1
+ ;;^UTILITY(U,$J,"PRO",1124,10,1,0)
+ ;;=1122^DF^1
+ ;;^UTILITY(U,$J,"PRO",1124,10,1,"^")
+ ;;=IVMLD DELETE FIELDS
+ ;;^UTILITY(U,$J,"PRO",1124,26)
+ ;;=D SHOW^VALM
+ ;;^UTILITY(U,$J,"PRO",1124,28)
+ ;;=Select Action: 
+ ;;^UTILITY(U,$J,"PRO",1124,99)
+ ;;=56056,53766
+ ;;^UTILITY(U,$J,"PRO",1125,0)
+ ;;=IBAMTV REV PATIENT^Review Patients^^M^^^^^^^^INTEGRATED BILLING
+ ;;^UTILITY(U,$J,"PRO",1125,4)
+ ;;=26^4
+ ;;^UTILITY(U,$J,"PRO",1125,10,0)
+ ;;=^101.01PA^0^1
+ ;;^UTILITY(U,$J,"PRO",1125,26)
+ ;;=D SHOW^VALM
+ ;;^UTILITY(U,$J,"PRO",1125,28)
+ ;;=Select Action: 
+ ;;^UTILITY(U,$J,"PRO",1125,99)
+ ;;=56081,37922
+ ;;^UTILITY(U,$J,"PRO",1126,0)
+ ;;=IBAMTV SEL PATIENT^Select Patient^^A^^^^^^^^INTEGRATED BILLING
+ ;;^UTILITY(U,$J,"PRO",1126,20)
+ ;;=D SP^IBAMTV31
+ ;;^UTILITY(U,$J,"PRO",1126,99)
+ ;;=56056,53764
+ ;;^UTILITY(U,$J,"PRO",1126,"MEN","IBAMTV REV PATIENT")
+ ;;=1126^SP
+ ;;^UTILITY(U,$J,"PRO",1127,0)
+ ;;=IBAMTV REV IND CHARGES^Review Charges^^M^^^^^^^^INTEGRATED BILLING
+ ;;^UTILITY(U,$J,"PRO",1127,4)
+ ;;=26^4
+ ;;^UTILITY(U,$J,"PRO",1127,10,0)
+ ;;=^101.01PA^0^2
+ ;;^UTILITY(U,$J,"PRO",1127,26)
+ ;;=D SHOW^VALM
+ ;;^UTILITY(U,$J,"PRO",1127,28)
+ ;;=Select Action: 
+ ;;^UTILITY(U,$J,"PRO",1127,99)
+ ;;=56081,37922
+ ;;^UTILITY(U,$J,"PRO",1128,0)
+ ;;=IBAMTV REV PASS CHARGE^Pass Charge^^A^^^^^^^^INTEGRATED BILLING
+ ;;^UTILITY(U,$J,"PRO",1128,20)
+ ;;=D PC^IBAMTV32
+ ;;^UTILITY(U,$J,"PRO",1128,99)
+ ;;=56056,53764
+ ;;^UTILITY(U,$J,"PRO",1128,"MEN","IBAMTV REV IND CHARGES")
+ ;;=1128^PC^1
+ ;;^UTILITY(U,$J,"PRO",1129,0)
+ ;;=IBAMTV REV CANC CHARGE^Cancel Charge^^A^^^^^^^^INTEGRATED BILLING
+ ;;^UTILITY(U,$J,"PRO",1129,20)
+ ;;=D CC^IBAMTV32
+ ;;^UTILITY(U,$J,"PRO",1129,99)
+ ;;=56056,53764
+ ;;^UTILITY(U,$J,"PRO",1129,"MEN","IBAMTV REV IND CHARGES")
+ ;;=1129^CC^2
+ ;;^UTILITY(U,$J,"PRO",1130,0)
+ ;;=IVMLI SELECT HELP^Extended Help^^A^^^^^^^^INCOME VERIFICATION MATCH
+ ;;^UTILITY(U,$J,"PRO",1130,4)
+ ;;=^3
+ ;;^UTILITY(U,$J,"PRO",1130,20)
+ ;;=D EXHLP^IVMLINS5
+ ;;^UTILITY(U,$J,"PRO",1130,99)
+ ;;=56056,53766

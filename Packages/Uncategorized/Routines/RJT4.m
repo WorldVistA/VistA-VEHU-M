@@ -1,0 +1,12 @@
+RJT4 ;
+ S F=0
+ ;COUNT NUMBER OF USERS IN FILE 200
+ F I=0:0 S D=$O(^VA(200,"B",D)) Q:D=""  S F=F+1
+ Q
+USER ;COUNT USERS IN 3
+ F I=0:0 S D=$O(^DIC(3,"B",D)) Q:D=""  S G=G+1
+ Q
+PT ;COUNT PTS IN 2
+ F I=0:0 S D=$O(^DPT("B",D)) Q:D=""  S G=G+1
+ Q
+ Q

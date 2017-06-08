@@ -1,0 +1,136 @@
+IBDEI0VD ; ; 06-AUG-2015
+ ;;3.0;IB ENCOUNTER FORM IMP/EXP;;JUN 29, 2015
+ Q:'DIFQR(358.3)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,358.3,15239,2)
+ ;;=Peripheral Neuropathy, Idio^268525
+ ;;^UTILITY(U,$J,358.3,15240,0)
+ ;;=337.20^^81^941^100
+ ;;^UTILITY(U,$J,358.3,15240,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15240,1,4,0)
+ ;;=4^337.20
+ ;;^UTILITY(U,$J,358.3,15240,1,5,0)
+ ;;=5^Reflexive Sympathetic Dystrophy
+ ;;^UTILITY(U,$J,358.3,15240,2)
+ ;;=Reflexive Sympathetic Dystrophy^295799
+ ;;^UTILITY(U,$J,358.3,15241,0)
+ ;;=294.8^^81^941^33
+ ;;^UTILITY(U,$J,358.3,15241,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15241,1,4,0)
+ ;;=4^294.8
+ ;;^UTILITY(U,$J,358.3,15241,1,5,0)
+ ;;=5^Dementia, Other
+ ;;^UTILITY(U,$J,358.3,15241,2)
+ ;;=^268044
+ ;;^UTILITY(U,$J,358.3,15242,0)
+ ;;=438.6^^81^941^7
+ ;;^UTILITY(U,$J,358.3,15242,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15242,1,4,0)
+ ;;=4^438.6
+ ;;^UTILITY(U,$J,358.3,15242,1,5,0)
+ ;;=5^CVA w/Dysesthesia (late effect)
+ ;;^UTILITY(U,$J,358.3,15242,2)
+ ;;=CVA w/Dysesthesia (late effect)^328503
+ ;;^UTILITY(U,$J,358.3,15243,0)
+ ;;=438.7^^81^941^26
+ ;;^UTILITY(U,$J,358.3,15243,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15243,1,4,0)
+ ;;=4^438.7
+ ;;^UTILITY(U,$J,358.3,15243,1,5,0)
+ ;;=5^CVA w/Vision Changes (late effect)
+ ;;^UTILITY(U,$J,358.3,15243,2)
+ ;;=CVA w/Vision Changes (late effect)^328504
+ ;;^UTILITY(U,$J,358.3,15244,0)
+ ;;=438.84^^81^941^5
+ ;;^UTILITY(U,$J,358.3,15244,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15244,1,4,0)
+ ;;=4^438.84
+ ;;^UTILITY(U,$J,358.3,15244,1,5,0)
+ ;;=5^CVA w/Ataxia (late effect)
+ ;;^UTILITY(U,$J,358.3,15244,2)
+ ;;=CVA w/Ataxia (late effect)^328507
+ ;;^UTILITY(U,$J,358.3,15245,0)
+ ;;=434.91^^81^941^27
+ ;;^UTILITY(U,$J,358.3,15245,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15245,1,4,0)
+ ;;=4^434.91
+ ;;^UTILITY(U,$J,358.3,15245,1,5,0)
+ ;;=5^CVA, Acute Onset
+ ;;^UTILITY(U,$J,358.3,15245,2)
+ ;;=^295738
+ ;;^UTILITY(U,$J,358.3,15246,0)
+ ;;=333.94^^81^941^101
+ ;;^UTILITY(U,$J,358.3,15246,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15246,1,4,0)
+ ;;=4^333.94
+ ;;^UTILITY(U,$J,358.3,15246,1,5,0)
+ ;;=5^Restless Leg Syndrome
+ ;;^UTILITY(U,$J,358.3,15246,2)
+ ;;=^105368
+ ;;^UTILITY(U,$J,358.3,15247,0)
+ ;;=345.90^^81^941^104
+ ;;^UTILITY(U,$J,358.3,15247,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15247,1,4,0)
+ ;;=4^345.90
+ ;;^UTILITY(U,$J,358.3,15247,1,5,0)
+ ;;=5^Seizure Disorder
+ ;;^UTILITY(U,$J,358.3,15247,2)
+ ;;=^268477
+ ;;^UTILITY(U,$J,358.3,15248,0)
+ ;;=907.0^^81^941^73
+ ;;^UTILITY(U,$J,358.3,15248,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15248,1,4,0)
+ ;;=4^907.0
+ ;;^UTILITY(U,$J,358.3,15248,1,5,0)
+ ;;=5^Late Effect Intracranial Injury
+ ;;^UTILITY(U,$J,358.3,15248,2)
+ ;;=^68489
+ ;;^UTILITY(U,$J,358.3,15249,0)
+ ;;=339.00^^81^941^43
+ ;;^UTILITY(U,$J,358.3,15249,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15249,1,4,0)
+ ;;=4^339.00
+ ;;^UTILITY(U,$J,358.3,15249,1,5,0)
+ ;;=5^Headache,Cluster NOS
+ ;;^UTILITY(U,$J,358.3,15249,2)
+ ;;=^336741
+ ;;^UTILITY(U,$J,358.3,15250,0)
+ ;;=339.01^^81^941^42
+ ;;^UTILITY(U,$J,358.3,15250,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15250,1,4,0)
+ ;;=4^339.01
+ ;;^UTILITY(U,$J,358.3,15250,1,5,0)
+ ;;=5^Headache,Cluster Episodic
+ ;;^UTILITY(U,$J,358.3,15250,2)
+ ;;=^336545
+ ;;^UTILITY(U,$J,358.3,15251,0)
+ ;;=339.02^^81^941^41
+ ;;^UTILITY(U,$J,358.3,15251,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15251,1,4,0)
+ ;;=4^339.02
+ ;;^UTILITY(U,$J,358.3,15251,1,5,0)
+ ;;=5^Headache,Cluster Chronic
+ ;;^UTILITY(U,$J,358.3,15251,2)
+ ;;=^336546
+ ;;^UTILITY(U,$J,358.3,15252,0)
+ ;;=339.03^^81^941^65
+ ;;^UTILITY(U,$J,358.3,15252,1,0)
+ ;;=^358.31IA^5^2
+ ;;^UTILITY(U,$J,358.3,15252,1,4,0)
+ ;;=4^339.03
+ ;;^UTILITY(U,$J,358.3,15252,1,5,0)
+ ;;=5^Hemicrania,Paroxysmal,Episodic
+ ;;
+ ;;$END ROU IBDEI0VD

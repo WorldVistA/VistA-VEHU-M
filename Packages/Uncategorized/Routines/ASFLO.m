@@ -1,0 +1,79 @@
+ASFLO ;ROUTINE TO GATHER INFORMATION FOR LOCALLY CREATED OBJECTS - LOCAL COUNTERPART TO TIULO
+ ;;V1.0 GDM/SYR 1/29/98
+RELIG(DFN) ;get the patients religion
+ I '$D(VADM(9)) D DEM^TIULO(DFN,.VADM)
+ Q $S(VADM(9)]"":$P(VADM(9),"^",2),1:"Religious Preferences UNKNOWN")
+ ;
+HCT(DFN) ;GETS HCT
+ S LRDFN=$P(^DPT(DFN,"LR"),"^"),X="Not Found"
+ S HCT="" S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE=""  S CHK=$P(NODE,",",4),CHK=$E(CHK,1,($L(CHK)-1)) I CHK=387 I $P(@NODE,"^",1)'?.A S X=$P(@NODE,"^",1) Q
+ Q $S(X]"":X,1:"Not Listed")
+ ;
+WBC(DFN) ;GETS LAST WBC DONE
+ S LRDFN=$P(^DPT(DFN,"LR"),"^"),X="Not Found"
+ S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE=""  S CHK=$P(NODE,",",4),CHK=$E(CHK,1,($L(CHK)-1)) I CHK=384 I $P(@NODE,"^",1)'?.A S X=$P(@NODE,"^",1) Q
+ Q $S(X]"":X,1:"Not Listed")
+ ;
+PLT(DFN) ;GETS LAST PLATLET MEASUREMENT
+ S LRDFN=$P(^DPT(DFN,"LR"),"^"),X="Not Found"
+ S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE=""  S CHK=$P(NODE,",",4),CHK=$E(CHK,1,($L(CHK)-1)) I CHK=392 I $P(@NODE,"^",1)'?.A S X=$P(@NODE,"^",1) Q
+ Q $S(X]"":X,1:"Not Listed")
+ ;
+CREAT(DFN) ;GETS LAST CREATININE LEVEL
+ S LRDFN=$P(^DPT(DFN,"LR"),"^")
+ S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE=""  S CHK=$P(NODE,",",4),CHK=$E(CHK,1,($L(CHK)-1)) I CHK=4 I $P(@NODE,"^",1)'?.A S X=$P(@NODE,"^",1) Q
+ Q $S(X]"":X,1:"Not Listed")
+ ;
+SODIUM(DFN) ;GETS LAST SODIUM
+ S LRDFN=$P(^DPT(DFN,"LR"),"^")
+ S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE=""  S CHK=$P(NODE,",",4),CHK=$E(CHK,1,($L(CHK)-1)) I CHK=5 I $P(@NODE,"^",1)'?.A S X=$P(@NODE,"^",1) Q
+ Q $S(X]"":X,1:"Not Listed")
+ ;
+POT(DFN) ;GETS LAST POTASSIUM
+ S LRDFN=$P(^DPT(DFN,"LR"),"^")
+ S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE=""  S CHK=$P(NODE,",",4),CHK=$E(CHK,1,($L(CHK)-1)) I CHK=6 I $P(@NODE,"^",1)'?.A S X=$P(@NODE,"^",1) Q
+ Q $S(X]"":X,1:"Not Listed")
+ ;
+CO2(DFN) ;GETS LAST CO2 MEASURMENT
+ S LRDFN=$P(^DPT(DFN,"LR"),"^")
+ S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE=""  S CHK=$P(NODE,",",4),CHK=$E(CHK,1,($L(CHK)-1)) I CHK=8 I $P(@NODE,"^",1)'?.A S X=$P(@NODE,"^",1) Q
+ Q $S(X]"":X,1:"Not Listed")
+ ;
+CHL(DFN) ;GETS LAST CHLORIDE - GETS DFN FROM APPLICATION
+ S LRDFN=$P(^DPT(DFN,"LR"),"^")
+ S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE=""  S CHK=$P(NODE,",",4),CHK=$E(CHK,1,($L(CHK)-1)) I CHK=7 I $P(@NODE,"^",1)'?.A S X=$P(@NODE,"^",1) Q
+ Q $S(X]"":X,1:"Not Listed")
+ ;
+TPROT(DFN) ;GETS THE LAST TOTAL PROTEIN
+ S LRDFN=$P(^DPT(DFN,"LR"),"^")
+ S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE'[LRDFN  S CHK=$P(NODE,",",4),CHK=$E(CHK,1,($L(CHK)-1)) I CHK=13 I $P(@NODE,"^",1)'?.A S X=$P(@NODE,"^",1) Q
+ Q $S(X]"":X,1:"Not Listed")
+ ;
+ALB(DFN) ;GETS THE LAST ALBUMIN MEASUREMENT
+ S LRDFN=$P(^DPT(DFN,"LR"),"^")
+ S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE'[LRDFN  S CHK=$P(NODE,",",4),CHK=$E(CHK,1,($L(CHK)-1))  I CHK=14 I $P(@NODE,"^",1)'?.A S X=$P(@NODE,"^",1) Q
+ Q $S(X]"":X,1:"Not Listed")
+ ;
+POLY(DFN) ;GETS WBC AND NEUTROPHILS AND CALCULATES POLYS
+ S LRDFN=$P(^DPT(DFN,"LR"),"^")
+ S WBC="" S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE'[LRDFN!(WBC]"")  S CHK=$P(NODE,",",4),CHK=$E(CHK,1,($L(CHK)-1)) I CHK=394 S SEQ=$P(@NODE,"^",1) I $E(SEQ,1,1)'?.A S SEQ1=SEQ D  I WBC]"" Q
+ .S INTDT=$P(NODE,",",3) I $D(^LR(LRDFN,"CH",INTDT,384)) S WBC=$P(^LR(LRDFN,"CH",INTDT,384),"^")
+ .I $D(^LR(LRDFN,"CH",INTDT,395)) S BANDS=$P(^LR(LRDFN,"CH",INTDT,395),"^")
+ S X="" I $D(SEQ1)&($D(WBC)) I '$D(BANDS) S X=(SEQ1*WBC*10),X=$J(X,4,1)_" Cells/ml"
+ I $D(SEQ1)&$D(BANDS)&$D(WBC) S X=((SEQ1+BANDS)*WBC*10),X=$J(X,4,1)_" Cells/ml"
+ K SEQ,SEQ1,WBC,BANDS,INTDT
+ Q $S(X]"":X,1:"Not Available")
+PROB(DFN,TARGET,LINE) ;GET PATIENTS PROBLEMS
+ S LINE=0 S (XREF,PROB)="" F  S XREF=$O(^AUPNPROB("AC",DFN,XREF)) Q:XREF=""  D
+ .S PROB=$P(^AUPNPROB(XREF,0),"^",5) S STAT=$P(^AUPNPROB(XREF,0),"^",12) I STAT="A" S PROB=$P(^AUTNPOV(PROB,0),"^") S LINE=LINE+1 S @TARGET@(LINE,0)=PROB I LINE>1 S @TARGET@(LINE,0)="               "_PROB
+ Q "~@"_$NA(@TARGET)
+ ;
+PNOK(DFN) ;GET PRIMARY NEXT OF KIN
+ S PNOK="None Listed" I $P(^DPT(DFN,.21),"^",1)'="" S PNOK=$P(^(.21),"^")
+ Q $S(PNOK]"":PNOK,1:"None Listed")
+ ;
+HBA1C(DFN,TARGET,LINE) ;GETS LAST 3 HEMOGLOBIN A1C VALUES
+ S CNT=0 S LRDFN=$P(^DPT(DFN,"LR"),"^") S NODE="^LR(LRDFN,""CH"")" F  S NODE=$Q(@NODE) Q:NODE'[LRDFN!(CNT=3)  S CHK=$P(NODE,",",4) S CHK=$E(CHK,1,($L(CHK)-1)) I CHK=462 I $P(@NODE,"^",1)'?.A S LINE=LINE+1 D
+ .S DATE=$P(^LR(LRDFN,"CH",$P(NODE,",",3),0),"^"),DATE=$P(DATE,".",1) S Y=DATE X ^DD("DD") S DATE=Y S @TARGET@(LINE,0)=DATE_"  -  "_$P(@NODE,"^",1) S CNT=CNT+1 I CNT>1 S @TARGET@(LINE,0)="                 "_DATE_"  -  "_$P(@NODE,"^",1)
+ Q "~@"_$NA(@TARGET)
+ 

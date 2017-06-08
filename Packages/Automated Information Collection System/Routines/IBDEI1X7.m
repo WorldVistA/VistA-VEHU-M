@@ -1,0 +1,130 @@
+IBDEI1X7 ; ; 06-AUG-2015
+ ;;3.0;IB ENCOUNTER FORM IMP/EXP;;JUN 29, 2015
+ Q:'DIFQR(358.3)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,358.3,33749,2)
+ ;;=^5019405
+ ;;^UTILITY(U,$J,358.3,33750,0)
+ ;;=R40.2314^^182^2010^11
+ ;;^UTILITY(U,$J,358.3,33750,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33750,1,3,0)
+ ;;=3^Coma Scale,Best Motor Resp,None,24+ Hrs
+ ;;^UTILITY(U,$J,358.3,33750,1,4,0)
+ ;;=4^R40.2314
+ ;;^UTILITY(U,$J,358.3,33750,2)
+ ;;=^5019404
+ ;;^UTILITY(U,$J,358.3,33751,0)
+ ;;=R40.2313^^182^2010^14
+ ;;^UTILITY(U,$J,358.3,33751,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33751,1,3,0)
+ ;;=3^Coma Scale,Best Motor Resp,None,at Hospital Admission
+ ;;^UTILITY(U,$J,358.3,33751,1,4,0)
+ ;;=4^R40.2313
+ ;;^UTILITY(U,$J,358.3,33751,2)
+ ;;=^5019403
+ ;;^UTILITY(U,$J,358.3,33752,0)
+ ;;=R40.2312^^182^2010^12
+ ;;^UTILITY(U,$J,358.3,33752,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33752,1,3,0)
+ ;;=3^Coma Scale,Best Motor Resp,None,Emerg Dept
+ ;;^UTILITY(U,$J,358.3,33752,1,4,0)
+ ;;=4^R40.2312
+ ;;^UTILITY(U,$J,358.3,33752,2)
+ ;;=^5019402
+ ;;^UTILITY(U,$J,358.3,33753,0)
+ ;;=R40.2311^^182^2010^15
+ ;;^UTILITY(U,$J,358.3,33753,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33753,1,3,0)
+ ;;=3^Coma Scale,Best Motor Resp,None,in the Field
+ ;;^UTILITY(U,$J,358.3,33753,1,4,0)
+ ;;=4^R40.2311
+ ;;^UTILITY(U,$J,358.3,33753,2)
+ ;;=^5019401
+ ;;^UTILITY(U,$J,358.3,33754,0)
+ ;;=R40.2310^^182^2010^13
+ ;;^UTILITY(U,$J,358.3,33754,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33754,1,3,0)
+ ;;=3^Coma Scale,Best Motor Resp,None,Unspec Time
+ ;;^UTILITY(U,$J,358.3,33754,1,4,0)
+ ;;=4^R40.2310
+ ;;^UTILITY(U,$J,358.3,33754,2)
+ ;;=^5019400
+ ;;^UTILITY(U,$J,358.3,33755,0)
+ ;;=R40.4^^182^2010^38
+ ;;^UTILITY(U,$J,358.3,33755,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33755,1,3,0)
+ ;;=3^Transient Alteration of Awareness
+ ;;^UTILITY(U,$J,358.3,33755,1,4,0)
+ ;;=4^R40.4
+ ;;^UTILITY(U,$J,358.3,33755,2)
+ ;;=^5019435
+ ;;^UTILITY(U,$J,358.3,33756,0)
+ ;;=V00.811A^^182^2011^43
+ ;;^UTILITY(U,$J,358.3,33756,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33756,1,3,0)
+ ;;=3^Fall from Moving Wheelchair,Init Encntr
+ ;;^UTILITY(U,$J,358.3,33756,1,4,0)
+ ;;=4^V00.811A
+ ;;^UTILITY(U,$J,358.3,33756,2)
+ ;;=^5055937
+ ;;^UTILITY(U,$J,358.3,33757,0)
+ ;;=V00.811D^^182^2011^44
+ ;;^UTILITY(U,$J,358.3,33757,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33757,1,3,0)
+ ;;=3^Fall from Moving Wheelchair,Subs Encntr
+ ;;^UTILITY(U,$J,358.3,33757,1,4,0)
+ ;;=4^V00.811D
+ ;;^UTILITY(U,$J,358.3,33757,2)
+ ;;=^5055938
+ ;;^UTILITY(U,$J,358.3,33758,0)
+ ;;=V00.812A^^182^2011^121
+ ;;^UTILITY(U,$J,358.3,33758,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33758,1,3,0)
+ ;;=3^Wheelchair Colliding w/ Stationary Obj,Init Encntr
+ ;;^UTILITY(U,$J,358.3,33758,1,4,0)
+ ;;=4^V00.812A
+ ;;^UTILITY(U,$J,358.3,33758,2)
+ ;;=^5055940
+ ;;^UTILITY(U,$J,358.3,33759,0)
+ ;;=V00.812D^^182^2011^122
+ ;;^UTILITY(U,$J,358.3,33759,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33759,1,3,0)
+ ;;=3^Wheelchair Colliding w/ Stationary Obj,Subs Encntr
+ ;;^UTILITY(U,$J,358.3,33759,1,4,0)
+ ;;=4^V00.812D
+ ;;^UTILITY(U,$J,358.3,33759,2)
+ ;;=^5055941
+ ;;^UTILITY(U,$J,358.3,33760,0)
+ ;;=V00.818A^^182^2011^119
+ ;;^UTILITY(U,$J,358.3,33760,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33760,1,3,0)
+ ;;=3^Wheelchair Accident NEC,Init Encntr
+ ;;^UTILITY(U,$J,358.3,33760,1,4,0)
+ ;;=4^V00.818A
+ ;;^UTILITY(U,$J,358.3,33760,2)
+ ;;=^5055943
+ ;;^UTILITY(U,$J,358.3,33761,0)
+ ;;=V00.818D^^182^2011^120
+ ;;^UTILITY(U,$J,358.3,33761,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33761,1,3,0)
+ ;;=3^Wheelchair Accident NEC,Subs Encntr
+ ;;^UTILITY(U,$J,358.3,33761,1,4,0)
+ ;;=4^V00.818D
+ ;;^UTILITY(U,$J,358.3,33761,2)
+ ;;=^5055944
+ ;;^UTILITY(U,$J,358.3,33762,0)
+ ;;=V00.831A^^182^2011^41
+ ;;
+ ;;$END ROU IBDEI1X7

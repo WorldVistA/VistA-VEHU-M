@@ -1,0 +1,37 @@
+RMPC8D ;DDC/MAB-RMPF*1.1*8 - GN DANAVOX [ 09/27/93  9:14 AM ]
+ ;;1.1;RMPF;**8**;Sept 21, 1993
+ W !!,"GN DANAVOX"
+ F IX=1:1:4 S MD=$P($T(MODEL+IX),";",3) D
+ .S MP=$O(^RMPF(791811,"B",MD,0))
+ .I 'MP W !!,MD," does not exist in file 791811.  Components not added." Q
+ .F IY=1:1 S ST=$T(COMP+IY) Q:ST=""  D
+ ..S CS=$P(ST,";",IX+4) Q:CS=""
+ ..S CP=$E($P(ST,";",3),1,30),CD=$P(ST,";",4),(CA,CX)=""
+ ..F  S CA=$O(^RMPF(791811.2,"B",CP,CA)) Q:'CA  I $P(^RMPF(791811.2,CA,0),"^",3)=CD S CX=CA Q
+ ..I 'CX W !!,CP," component not added." Q
+ ..D SET1^RMPC8 W "."
+ .S CNT=$S(IX<3:3,1:4) F IZ=1:1:CNT S ST=$T(BAT+IZ) D
+ ..S BT=$P(ST,";",3)
+ ..S BP=$O(^RMPF(791811.3,"B",BT,0)) I 'BP W !!,BT," battery not added." Q
+ ..D SET2^RMPC8 W "."
+ G ^RMPC8L
+MODEL ;;GN Danavox Models
+ ;;DCE-DA-AGCI
+ ;;LITE-DA-AGCI
+ ;;CONCHA-DA-AGCI
+ ;;DISCRETION-DA-AGCI
+BAT ;;Batteries
+ ;;ZA13
+ ;;ZA312
+ ;;ZA675
+ ;;ZA10
+COMP ;;Components
+ ;;BICROS;BICROS;52;52;52;52
+ ;;CERUMENFILTER SYSTEM;CFS;13.6;13.6;13.6;13.6
+ ;;CROS;CROS;52;52;52;52
+ ;;FEEDBACK CONTROL;FEED;20;20;20;20
+ ;;GAIN CONTROL;GAIN;12;12;12;12
+ ;;NOISE SUPPRESSION SWITCH;NSS;13.6;13.6;13.6;13.6
+ ;;TELEPHONE COIL WITH SWITCH;TC/S;20;20;20;20
+ ;;TELEPHONE COIL W/PREAMP;TC/P;28;28;28;28
+ ;;TONE CONTROL;TONE;12;12;12;12

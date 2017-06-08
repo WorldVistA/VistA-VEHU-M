@@ -1,0 +1,109 @@
+NURCCGEX ;HISC/RM-DATA ROUTINE FOR DATA TRANSFER UTILITY ;12/12/91
+ ;;3.0;Nursing Clinical;;Jan 24, 1996
+ ;;
+ F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO I  S @X=Y
+Q Q
+ ;;^UTILITY("^GMRD(124.2,",$J,13970,1,1,0)
+ ;;=13972^[etiology]^3^NURSC^56
+ ;;^UTILITY("^GMRD(124.2,",$J,13970,1,2,0)
+ ;;=13973^[etiology]^3^NURSC^57
+ ;;^UTILITY("^GMRD(124.2,",$J,13970,1,3,0)
+ ;;=13981^[etiology]^3^NURSC^147
+ ;;^UTILITY("^GMRD(124.2,",$J,13970,7)
+ ;;=D EN4^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,13971,0)
+ ;;=[etiology]^3^NURSC^^55^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13972,0)
+ ;;=[etiology]^3^NURSC^^56^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13973,0)
+ ;;=[etiology]^3^NURSC^^57^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13974,0)
+ ;;=Goals/Expected Outcomes^2^NURSC^5^295^1^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13974,1,0)
+ ;;=^124.21PI^3^3
+ ;;^UTILITY("^GMRD(124.2,",$J,13974,1,1,0)
+ ;;=13975^[Extra Goal]^3^NURSC^383
+ ;;^UTILITY("^GMRD(124.2,",$J,13974,1,2,0)
+ ;;=13976^[Extra Goal]^3^NURSC^384
+ ;;^UTILITY("^GMRD(124.2,",$J,13974,1,3,0)
+ ;;=13977^[Extra Goal]^3^NURSC^385
+ ;;^UTILITY("^GMRD(124.2,",$J,13974,7)
+ ;;=D EN4^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,13975,0)
+ ;;=[Extra Goal]^3^NURSC^9^383^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13975,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,13975,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,13976,0)
+ ;;=[Extra Goal]^3^NURSC^9^384^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13976,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,13976,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,13977,0)
+ ;;=[Extra Goal]^3^NURSC^9^385^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13977,9)
+ ;;=D EN5^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,13977,10)
+ ;;=D EN2^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,13978,0)
+ ;;=[Extra Problem]^2^NURSC^2^36^1^^T^0
+ ;;^UTILITY("^GMRD(124.2,",$J,13978,1,0)
+ ;;=^124.21PI^3^3
+ ;;^UTILITY("^GMRD(124.2,",$J,13978,1,1,0)
+ ;;=13979^Etiology/Related and/or Risk Factors^2^NURSC^284
+ ;;^UTILITY("^GMRD(124.2,",$J,13978,1,2,0)
+ ;;=13985^Goals/Expected Outcomes^2^NURSC^296
+ ;;^UTILITY("^GMRD(124.2,",$J,13978,1,3,0)
+ ;;=13991^Nursing Intervention/Orders^2^NURSC^300
+ ;;^UTILITY("^GMRD(124.2,",$J,13978,7)
+ ;;=D EN3^NURCCPU0
+ ;;^UTILITY("^GMRD(124.2,",$J,13978,9)
+ ;;=D EN2^NURCCPU3
+ ;;^UTILITY("^GMRD(124.2,",$J,13978,10)
+ ;;=D EN3^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,13979,0)
+ ;;=Etiology/Related and/or Risk Factors^2^NURSC^4^284^1^^T^1
+ ;;^UTILITY("^GMRD(124.2,",$J,13979,1,0)
+ ;;=^124.21PI^3^3
+ ;;^UTILITY("^GMRD(124.2,",$J,13979,1,1,0)
+ ;;=13982^[etiology]^3^NURSC^145
+ ;;^UTILITY("^GMRD(124.2,",$J,13979,1,2,0)
+ ;;=13983^[etiology]^3^NURSC^146
+ ;;^UTILITY("^GMRD(124.2,",$J,13979,1,3,0)
+ ;;=14180^[etiology]^3^NURSC^61
+ ;;^UTILITY("^GMRD(124.2,",$J,13979,7)
+ ;;=D EN4^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,13980,0)
+ ;;=Nursing Intervention/Orders^2^NURSC^6^299^1^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13980,1,0)
+ ;;=^124.21PI^3^3
+ ;;^UTILITY("^GMRD(124.2,",$J,13980,1,1,0)
+ ;;=13984^[Extra Order]^3^NURSC^390
+ ;;^UTILITY("^GMRD(124.2,",$J,13980,1,2,0)
+ ;;=13986^[Extra Order]^3^NURSC^391
+ ;;^UTILITY("^GMRD(124.2,",$J,13980,1,3,0)
+ ;;=13988^[Extra Order]^3^NURSC^392
+ ;;^UTILITY("^GMRD(124.2,",$J,13980,7)
+ ;;=D EN4^NURCCPU1
+ ;;^UTILITY("^GMRD(124.2,",$J,13980,9)
+ ;;=D EN1^NURCCPU2
+ ;;^UTILITY("^GMRD(124.2,",$J,13981,0)
+ ;;=[etiology]^3^NURSC^^147^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13982,0)
+ ;;=[etiology]^3^NURSC^^145^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13983,0)
+ ;;=[etiology]^3^NURSC^^146^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13984,0)
+ ;;=[Extra Order]^3^NURSC^11^390^^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13984,9)
+ ;;=D EN2^NURCCPU2
+ ;;^UTILITY("^GMRD(124.2,",$J,13984,10)
+ ;;=D EN1^NURCCPU3
+ ;;^UTILITY("^GMRD(124.2,",$J,13985,0)
+ ;;=Goals/Expected Outcomes^2^NURSC^5^296^1^^T
+ ;;^UTILITY("^GMRD(124.2,",$J,13985,1,0)
+ ;;=^124.21PI^3^3
+ ;;^UTILITY("^GMRD(124.2,",$J,13985,1,1,0)
+ ;;=13987^[Extra Goal]^3^NURSC^386

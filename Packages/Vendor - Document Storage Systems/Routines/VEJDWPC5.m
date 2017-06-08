@@ -1,0 +1,141 @@
+VEJDWPC5 ;wpb/gbh - routine modified for dental GUI;8/2/98
+ ;;3.5;VEJD DSS CORE RPCS;;Jan 03, 2006
+ ;Copyright 1995-2006, Document Storage Systems, Inc., All Rights Reserved
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7**;Dec 17, 1997
+ ;ORQ11 ;slc/dcm-Get patient orders in context ;11/18/96  17:45
+ALL1 ;Secondary pass for all
+ D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+CUR ;Get current context
+ N X,X1,X2,X3,%H,YD,%,TM,IFN,X0,X5,ACTOR
+ I $G(GROUP)=$O(^ORD(100.98,"B","ALL SERVICES",0)),$G(ORWARD) S X=$O(^ORD(100.98,"B","O RX",0)) K:X ORGRP(X) ; screen out Outpt Meds if inpt
+ S X2=24,X=$H,X=+X*24+($P(X,",",2)/3600),X1=X-X2,X3=X1#24,X1=X1\24,X2=$J(X3*3600,0,0),%H=X1_","_X2 D YMD^%DTC S YD=+(X_%)
+ S TM=SDATE
+ F  S TM=$O(^OR(100,"AC",PAT,TM)) Q:TM<1!(TM>EDATE)  S IFN=0 F  S IFN=$O(^OR(100,"AC",PAT,TM,IFN)) Q:IFN<1  I $D(^OR(100,IFN,0)),$D(^(3)) S X0=^(0),X3=^(3),X5=$P(^(0),"^",5) D
+ .I $D(ORGRP($P(X0,"^",11))),'$L($P(X0,U,17)) D
+ .. S ACTOR=0 F  S ACTOR=$O(^OR(100,"AC",PAT,TM,IFN,ACTOR)) Q:ACTOR<1  D
+ ... Q:'$D(^OR(100,IFN,8,ACTOR,0))  S X=^(0) I $P(X,"^",15)=13,$P(X,"^")<YD K ^OR(100,"AC",PAT,TM,IFN,ACTOR) Q
+ ... I $P(X,"^",15)="",ACTOR'=$P(X3,"^",7) K ^OR(100,"AC",PAT,TM,IFN,ACTOR) Q
+ ... D LP1
+ S ^TMP("ORR",$J,ORLIST,"TOT")=ORLST
+ Q
+CUR1 ;Secondary current loop
+ N STOP S STOP=$P(X0,"^",9)
+ I $D(YD),(STS=1!(STS=2)!(STS=7)!(STS=10)!(STS=12)!(STS=13)!(STS=14)),STOP<YD K ^OR(100,"AC",PAT,TM,IFN) Q
+ I '$D(YD),(STS=1!(STS=2)!(STS=7)!(STS=10)!(STS=12)!(STS=13)!(STS=14)) K ^OR(100,"AC",PAT,TM,IFN) Q
+ D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+DC1 ;Secondary DC loop
+ I STS=1!(STS=13)!(STS=12) D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+COM1 ;Secondary Completed loop
+ N STOP S STOP=$P(X0,"^",9)
+ I STS=2!(STS=7)!($L(STOP)&(STOP<NOW)&(STS'=1)&(STS'=13)&(STS'=12)) D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+EXG ;Get Expiring context
+ N TMW,%DT,X,Y
+ S %DT="",X="T+1" D ^%DT S TMW=Y_".9999"
+ D LOOP
+ Q
+EXG1 ;Secondary Expiring loop
+ N STOP S STOP=$P(X0,"^",9)
+ I STS'=1,STS'=2,STS'=7,STOP>NOW,STOP'>TMW D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+FLG1 ;Secondary Flagged loop
+ I +$G(^OR(100,IFN,8,ACTOR,3)) D GET^VEJDWPC6(IFN,ORLIST,DETAIL,ACTOR)
+ Q
+PEN1 ;Secondary Pending loop
+ I STS=5 D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+HLD1 ;Secondary Hold loop
+ I STS=3 D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+ACT ;Get New Activity Context
+ N ORLSIGN ;S ORLSIGN=$$GET^XPAR("ALL","OR ORDER REVIEW DT","`"_+PAT,"Q")
+ S ORLSIGN=$$NOW^XLFDT-1 D LOOP
+ ;D EN^XPAR("USR","OR ORDER REVIEW DT","`"_+PAT,$$NOW^XLFDT) ; reset
+ Q
+ACT1 ;Secondary Activity loop
+ I $P(X3,"^")>ORLSIGN,STS'=10,STS'=12 D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+VP1 ;Secondary V/P
+ N ORNATR Q:'$D(^OR(100,IFN,8,ACTOR,0))  S ORNATR=$P(^(0),"^",12)
+ I ORNATR,"PV"[$P($G(^ORD(100.02,+ORNATR,0)),U,2),STS'=12 D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+VPU1 ;Secondary V/P Unsigned
+ N ORNATR,OR0 Q:'$D(^OR(100,IFN,8,ACTOR,0))  S OR0=^(0)
+ S ORNATR=$P(OR0,"^",12) I ORNATR,"PV"[$P($G(^ORD(100.02,+ORNATR,0)),U,2),'$P(OR0,"^",5),$P(OR0,"^",4)=2,STS'=12 D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+UVR1 ;Secondary unverified loop
+ I $D(^OR(100,IFN,8,$G(ACTOR),0)),'$P(^(0),U,8),'$P(^(0),U,10),$P(X0,U,12)'="O",STS'=1,STS'=2,STS'=7,STS'=11,STS'=12,STS'=13,'$L($P(X0,U,17)) D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+UVN1 ;Secondary unverified/nurse loop
+ I $D(^OR(100,IFN,8,$G(ACTOR),0)),'$P(^(0),U,8),$P(X0,U,12)'="O",STS'=1,STS'=2,STS'=7,STS'=11,STS'=12,STS'=13,'$L($P(X0,U,17)) D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+UVC1 ;Secondary unverified/clerk loop
+ I $D(^OR(100,IFN,8,$G(ACTOR),0)),'$P(^(0),U,10),$P(X0,U,12)'="O",STS'=1,STS'=2,STS'=7,STS'=11,STS'=12,STS'=13,'$L($P(X0,U,17)) D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q
+SIG ;Get Unsigned context
+ N TM,IFN,X0,X3,ACTOR
+ S TM=SDATE F  S TM=$O(^OR(100,"AS",PAT,TM)) Q:TM<1!(TM>EDATE)  S IFN=0 F  S IFN=$O(^OR(100,"AS",PAT,TM,IFN)) Q:IFN<1  I $D(^OR(100,IFN,0)),$D(^(3)) S X0=^(0),X3=^(3) D
+ .I $D(ORGRP(+$P(X0,"^",11))),$P(X3,U,3)'=12 D
+ .. S ACTOR=0 F  S ACTOR=$O(^OR(100,"AS",PAT,TM,IFN,ACTOR)) Q:ACTOR<1  D LP1
+ S ^TMP("ORR",$J,ORLIST,"TOT")=ORLST
+ Q
+ADM ;Get admission orders
+ N EVENT S EVENT="A" G EVNT
+DIS ;Get discharge orders
+ N EVENT S EVENT="D" G EVNT
+XFR ;Get transfer orders
+ N EVENT S EVENT="T" G EVNT
+EVNT ;Get time-delayed orders
+ N IFN,X0,TM
+ S IFN=0 F  S IFN=$O(^OR(100,"AEVNT",PAT,EVENT,IFN)) Q:IFN'>0  D
+ . S X0=$G(^OR(100,IFN,0)),TM=$P(X0,U,7)
+ . Q:TM<SDATE  Q:TM>EDATE  Q:'$D(ORGRP(+$P(X0,U,11)))
+ . D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ S ^TMP("ORR",$J,ORLIST,"TOT")=ORLST
+ Q
+NEW ;New Orders placed in current session, plus any other unsigned orders
+ N IFN,ACTOR,TM,USR
+ S USR=$S($D(^XUSEC("ORES",DUZ)):2,$D(^XUSEC("ORELSE",DUZ)):1,1:0)
+ S IFN=0 F  S IFN=$O(^TMP("ORNEW",$J,IFN)) Q:IFN'>0  D  ; New orders
+ . S ACTOR=0 F  S ACTOR=$O(^TMP("ORNEW",$J,IFN,ACTOR)) Q:ACTOR'>0  D
+ . . Q:'$D(^OR(100,IFN,0))  Q:'$D(^(8,ACTOR,0))  ;deleted
+ . . D GET^VEJDWPC6(IFN,ORLIST,DETAIL,ACTOR)
+ S TM=SDATE F  S TM=$O(^OR(100,"AS",PAT,TM)) Q:TM<1!(TM>EDATE)  D
+ . S IFN=0 F  S IFN=$O(^OR(100,"AS",PAT,TM,IFN)) Q:IFN<1  D
+ . . S ACTOR=0 F  S ACTOR=$O(^OR(100,"AS",PAT,TM,IFN,ACTOR)) Q:ACTOR<1  D
+ . . . Q:$D(^TMP("ORNEW",$J,IFN,ACTOR))  I $P($G(^OR(100,IFN,8,ACTOR,0)),U,15)'=11,$P($G(^OR(100,IFN,0)),U,16)>USR Q  ;already in list, or user can't act on it
+ . . . D GET^VEJDWPC6(IFN,ORLIST,DETAIL,ACTOR)
+ S ^TMP("ORR",$J,ORLIST,"TOT")=ORLST
+ Q
+QUIT ;Stop
+ Q
+LOOP ;Main loop through "ACT" x-ref
+ N TM,TO,IFN,X0,X3,STS,USTS,NOW,ACTOR
+ K ^TMP("ORGOTIT",$J) S NOW=+$E($$NOW^XLFDT,1,12)
+ S TM=SDATE F  S TM=$O(^OR(100,"ACT",PAT,TM)) Q:'TM!(TM>EDATE)  S TO=0 F  S TO=$O(^OR(100,"ACT",PAT,TM,TO)) Q:'TO  I $D(ORGRP(TO)) D
+ . S IFN=0 F  S IFN=$O(^OR(100,"ACT",PAT,TM,TO,IFN)) Q:'IFN  I ('$D(^TMP("ORGOTIT",$J,IFN))!MULT),$D(^OR(100,IFN,0)),$D(^(3)) S X0=^(0),X3=^(3) D
+ .. S ACTOR=0 F  S ACTOR=$O(^OR(100,"ACT",PAT,TM,TO,IFN,ACTOR)) Q:ACTOR<1  I $D(^OR(100,IFN,8,ACTOR,0)) S X=$P(^(0),"^",15) Q:X'=13
+ .. Q:'ACTOR  D LP1
+ S ^TMP("ORR",$J,ORLIST,"TOT")=ORLST
+ K ^TMP("ORGOTIT",$J)
+ Q
+LP1 Q:$P(X3,"^",8)  Q:$P(X3,"^",9)&(FLG'=11)
+ Q:$P(X3,"^",3)=99  S STS=$P(X3,"^",3)
+ ;I $O(^OR(100,IFN,2,0)) S USTS=$S(FLG=1!(FLG=6)!(FLG=12)!(FLG=13)!(FLG=14):"1^2^3^4^5^6^7^8^9^11^12^13,14,15",FLG=3:"1^13",FLG=4:"2^7",FLG=5:"3^4^5^6^8^9",FLG=7:5,FLG=9!(FLG=10):"1^2^3^4^5^6^7^8^9^13^14^15",1:"3^4^5^6^8^9^11^15") D CHILD Q
+ D @($S(FLG=2:"CUR1",FLG=3:"DC1",FLG=4:"COM1",FLG=5:"EXG1",FLG=6:"ACT1",FLG=7:"PEN1",FLG=8:"UVR1",FLG=9:"UVN1",FLG=10:"UVC1",FLG=12:"FLG1",FLG=13:"VP1",FLG=14:"VPU1",FLG=18:"HLD1",1:"ALL1"))
+ Q
+CHILD ;Process child orders (Currently disabled)
+ N OX1,OX3,STOP,YES
+ S (ORI,YES)=0 F I=0:0 S ORI=$O(^OR(100,IFN,2,ORI)) Q:ORI<1  I $D(^OR(100,ORI)) S OX1=^(ORI,0),OX3=^(3) D  Q:YES
+ . F J=1:1:$L(USTS,"^") S X=$P(USTS,"^",J) I $P(OX3,"^",3)=X S YES=1 D  I YES Q
+ .. I FLG=5 S STOP=$P(OX1,"^",9),YES=0 I STOP>NOW,STOP'>TMW S YES=1 Q
+ .. I FLG=4 S STOP=$P(OX1,"^",9),YES=0 I $L(STOP),STOP<NOW,$P(OX3,"^",3)'=1 S YES=1 Q
+ .. I FLG=6 S:$P(OX3,"^")'>$G(ORLSIGN) YES=0 Q
+ .. I FLG=9 S:$P(OX3,"^",12) YES=0 Q
+ .. I FLG=10 S:$P(OX3,"^",14) YES=0 Q
+ .. I FLG=12,'$P($G(^OR(100,IFN,6)),"^") S YES=0 Q
+ I YES D GET^VEJDWPC6(IFN,ORLIST,DETAIL,$G(ACTOR))
+ Q

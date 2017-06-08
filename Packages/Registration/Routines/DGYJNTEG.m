@@ -1,0 +1,25 @@
+DGYJNTEG ;ISC/XTSUMBLD KERNEL - Package checksum checker ;MAR 18, 1993@12:02:23
+ ;;5.2;REGISTRATION;**24**;JUL 29,1992
+ ;;6.5;MAR 18, 1993@12:02:23
+ S XT4="I 1",X=$T(+3) W !!,"Checksum routine created on ",$P(X,";",4)," by KERNEL V",$P(X,";",3),!
+CONT F XT1=1:1 S XT2=$T(ROU+XT1) Q:XT2=""  S X=$P(XT2," ",1),XT3=$P(XT2,";",3) X XT4 I $T W !,X X ^%ZOSF("TEST") S:'$T XT3=0 X:XT3 ^%ZOSF("RSUM") W ?10,$S('XT3:"Routine not in UCI",XT3'=Y:"Calculated "_Y_", off by "_(Y-XT3),1:"ok")
+ ;
+ K %1,%2,%3,X,Y,XT1,XT2,XT3,XT4 Q
+ONE S XT4="I $D(^UTILITY($J,X))",X=$T(+3) W !!,"Checksum routine created on ",$P(X,";",4)," by KERNEL V",$P(X,";",3),!
+ W !,"Check a subset of routines:" K ^UTILITY($J) X ^%ZOSF("RSEL")
+ W ! G CONT
+ROU ;;
+DGYJI001 ;;5905468
+DGYJI002 ;;3952999
+DGYJI003 ;;3993452
+DGYJI004 ;;3995133
+DGYJI005 ;;4002075
+DGYJI006 ;;4002217
+DGYJI007 ;;1622564
+DGYJI008 ;;1774140
+DGYJINI0 ;;254364
+DGYJINI1 ;;5287853
+DGYJINI2 ;;4339858
+DGYJINI3 ;;10016155
+DGYJINIT ;;8714872
+DGYJPR ;;285951

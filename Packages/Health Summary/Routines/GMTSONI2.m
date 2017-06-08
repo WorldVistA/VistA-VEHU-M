@@ -1,0 +1,11 @@
+GMTSONI2 ; ; 19-OCT-1995
+ ;;2.7;Health Summary;;Oct 20, 1995
+ ;
+ ;
+ K ^UTILITY("ORVROM",$J),DIC
+ Q
+DT W !
+ I '$D(DTIME) S DTIME=999
+ K %DT D NOW^%DTC S DT=X
+ K DIK,DIC,%I,DICS Q
+ ;

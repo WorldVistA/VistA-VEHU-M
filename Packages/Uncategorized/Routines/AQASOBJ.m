@@ -1,0 +1,66 @@
+AQASOBJ ;GCD/PROV - local embedded objects for TIU ;5/6/99
+ ;part of TIU
+DEM(DFN,VADM) ;
+ ; calls DEM^VADPT
+ D DEM^VADPT
+ Q
+NOK(DFN) ;
+ ;primary next of kin
+ D OAD^VADPT
+ Q $S(VAOA(9)]"":VAOA(9),1:"UNKNOWN")
+BIRTH(DFN) ;
+ ; place of birth
+ D OPD^VADPT
+ S CITY="",ST=""
+ I $D(VAPD(1)),VAPD(1)]"" S CITY=VAPD(1)_", "
+ I $D(VAPD(2)) S ST=$P(^DIC(5,$P(VAPD(2),U),0),U,2)
+ Q $S(CITY]""!(ST]""):CITY_" "_ST,1:"UNKNOWN")
+PPD(TARGET,DFN) ;
+ ;Skin Tests- Immunizations
+ N X,LINE
+ D NOW^%DTC S X1=X,X2=-365 D C^%DTC S BDT=X
+ ;S LINE=1,@TARGET@(LINE,0)=" PPD Immunizations:"
+ S LINE=1,@TARGET@(LINE,0)="Skin Tests/Immunizations:"
+ I '$D(^AUPNVIMM("C",DFN))&('$D(^AUPNVSK("C",DFN))) Q "~@"_$NA(@TARGET)
+ S IEN=0 F  S IEN=$O(^AUPNVIMM("C",DFN,IEN)) Q:IEN'>0  D
+ .S REC=$G(^AUPNVIMM(IEN,0))
+ .S VDT=$P(^AUPNVSIT($P(REC,U,3),0),U)
+ .I VDT>BDT S Y=$P(VDT,".") X ^DD("DD") S VDT=Y S LINE=LINE+1,@TARGET@(LINE,0)="  "_$P(^AUTTIMM($P(REC,U),0),U)_" "_VDT
+ S IEN=0 F  S IEN=$O(^AUPNVSK("C",DFN,IEN)) Q:IEN'>0  D
+ .S REC=$G(^AUPNVSK(IEN,0))
+ .S VDT=$P(^AUPNVSIT($P(REC,U,3),0),U)
+ .I VDT>BDT S Y=$P(VDT,".") X ^DD("DD") S VDT=Y S LINE=LINE+1,@TARGET@(LINE,0)=" "_$P(^AUTTSK($P(REC,U),0),U)_" "_VDT
+ S @TARGET@(0)="^^"_LINE_"^"_LINE_"^"_DT_"^^"
+ Q "~@"_$NA(@TARGET)
+OCC(DFN) ;  occupation and employment status
+ D OPD^VADPT
+ S REC=""
+ I VAPD(6)]"" S REC=VAPD(6)
+ I VAPD(7)]"" S $P(REC,U,2)=$P(VAPD(7),U,2)
+ Q $S(REC]"":$P(REC,U)_" - "_$P(REC,U,2),1:"UNKNOWN")
+PROB(DFN,TARGET) ; active problem list
+ ;
+ N STATUS,LINE S STATUS="A",LINE=0
+ D GETLIST^GMPLHS(DFN,STATUS)
+ I '$D(^TMP("GMPLHS",$J)) S @TARGET@(1,0)="None" Q "~@"_$NA(@TARGET)
+ S LINE=LINE+1,@TARGET@(LINE,0)="Active Problem"
+ N GMREC,GMTSICL,GMTAB,LINE1
+ S GMTSICL=30
+ S GMTAB=0
+ S GMREC=0
+ F  S GMREC=$O(^TMP("GMPLHS",$J,GMREC)) Q:GMREC'>0  D
+ .N GMNODE,DIAG,LASTMDT,STAT,ONSETDT,PROV,SERV,RESDT,NARR,GMICD
+ .N ADDINFO,GMTSX,X
+ .S GMNODE=$G(^TMP("GMPLHS",$J,GMREC,0))
+ .Q:GMNODE']""
+ .S DIAG=$P(GMNODE,U)
+ .I $D(^ICD9(DIAG)) S DIAG=$P(^ICD9(DIAG,0),U)
+ .S ONSETDT=$P(GMNODE,U,6),PROV=$P(GMNODE,U,7)
+ .S LASTMDT=$P(GMNODE,U,2)
+ .S X=LASTMDT D REGDT4^GMTSU S LASTMDT=X
+ .I +ONSETDT S X=ONSETDT D REGDT4^GMTSU S ADDINFO="Onset "_X
+ .S NARR=$G(^TMP("GMPLHS",$J,GMREC,"N"))
+ .I $G(NARR)]"" S NARR=NARR_" "_DIAG_$S($G(ADDINFO)]"":", "_ADDINFO,1:"")
+ .E  S NARR=DIAG_":, "_$G(ADDINFO)
+ .S LINE=LINE+1,@TARGET@(LINE,0)=$E(NARR,1,35)_" "_LASTMDT_" "_PROV
+ Q "~@"_$NA(@TARGET)

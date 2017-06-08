@@ -1,0 +1,109 @@
+VEJDWPBK ;WPB/CAM routine modified for dental GUI;8/1/98
+ ;;3.5;VEJD DSS CORE RPCS;;Jan 03, 2006
+ ;Copyright 1995-2006, Document Storage Systems, Inc., All Rights Reserved
+ ;;SLC/DCM - TIU utilities for exchanging info with Consults ;7/16/98  02:11
+ ;GMRCTIUP;3.0;CONSULT/REQUEST TRACKING;**4**;DEC 27, 1997
+HDR(GMRCTUPR,GMRCGLB,COUNT,FROM) ;Get Source info for header of display
+ ;and place data in ^TMP( global. Do Not Show Any Results
+ ;GMRCTUPR=TIU record being sought
+ ;GMRCGLOB=Global where data goes - i.e., ^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,LINECT,0)
+ ;COUNT=Count of where current line is to go in ^TMP( global
+ ;FROM=flag to tell whether to add Addendum TIU # or not 0=NO, Otherwise addendum number
+ N DR,GMRCTMP
+ S:'$D(FROM) FROM=""
+ S DR=".01;.05;.09;1201;1202;1204;1208;1302",GMRCERR=""
+ D EXTRACT^TIULQ(GMRCPTR,"LOCAL",.GMRCERR,DR)
+ S @GMRCGLB@(COUNT,0)="",COUNT=COUNT+1
+ S @GMRCGLB@(COUNT,0)="Source Information",COUNT=COUNT+1,@GMRCGLB@(COUNT,0)=""
+ S @GMRCGLB@(COUNT,0)="  Document Status: "_LOCAL(GMRCPTR,.05,"E"),COUNT=COUNT+1
+ S @GMRCGLB@(COUNT,0)="       Entry Date: "_$E($P($G(LOCAL(GMRCPTR,1201,"E")),":",1,2)_TAB,1,30)_"        Author: "_$E(LOCAL(GMRCPTR,1202,"E"),1,30),COUNT=COUNT+1
+ S @GMRCGLB@(COUNT,0)="  Expected Signer: "_$E(LOCAL(GMRCPTR,1204,"E")_TAB,1,22)_$E(TAB,1,5)_"Expected Cosigner: "_$S($L($G(LOCAL(GMRCPTR,1208,"E"))):LOCAL(GMRCPTR,1208,"E"),1:"None"),COUNT=COUNT+1
+ S @GMRCGLB@(COUNT,0)="       Entered By: "_$E(LOCAL(GMRCPTR,1302,"E")_TAB,1,30)_"TIU Document #: "_GMRCTUPR,COUNT=COUNT+1
+ S @GMRCGLB@(COUNT,0)=$S(+FROM:"  TIU Addendum Document #: "_FROM,1:"")_$S(+FROM:$E(TAB,1,10),1:"     ")_"     Urgency: "_$S($L($G(LOCAL(GMRCPTR,.09,"E"))):LOCAL(GMRCPTR,.09,"E"),1:"None"),COUNT=COUNT+1
+ S @GMRCGLB@(COUNT,0)="",COUNT=COUNT+1
+ ;S GMRCTMP=$G(LOCAL(GMRCPTR,.05,"E")) S GMRCTMP=$S($L(GMRCTMP)&(GMRCTMP'="COMPLETED"):GMRCTMP,GMRCTMP="COMPLETED":"UNVERIFIED",1:"UNSIGNED")
+ ;S @GMRCGLB@(COUNT,0)="You may not VIEW this "_GMRCTMP_" "_$G(LOCAL(GMRCPTR,.01,"E"))_" consult"_$S(+FROM:" Addendum",1:"")_".",COUNT=COUNT+1
+ ;S @GMRCGLB@(COUNT,0)="",COUNT=COUNT+1
+ K LOCAL
+ Q
+PRINT(GMRCO,LINECT,GMRCRT) ;get TIU results and prepare them for printing on the 513
+ ;GMRCRT=Flag from RT^GMRCA1 indicating that result request is from there: GMRCRT=0 means 'NO', GRMRCRT=1 means 'YES" (and ES is appended to TIU main result); also, 
+ ;    No result is passed back to print on the 513 if GMRCRT=0.
+ ;GMRCTUFN=IEN of the TIU result from file 8925
+ ;GMRCSIG=signature block name of signer : GMRCSDT=date result was signed
+ ;GMRCSIGT=signers block title : GMRCTUFN=TIU IEN of the result record
+ ;GMRCCSIG=cosigners block name : GMRCCSDT=date cosigner signed
+ ;GMRCCTIT=cosigners block title : GMRCSIGM=Signature mode (E:ELECTRONIC/C:CHART)
+ N GMRCTUFN,TAB
+ S:'$D(GMRCRT) GMRCRT=0
+ D GETRSLTS(GMRCO,.GMRCAR) ;I $D(GMRCQUT) D:$D(GMRCMSG) EXAC^GMRCADC(GMRCMSG) K GMRCMSG,GMRCRT Q
+ S GLOBAL="^TMP(""GMRCR"",$J,""GMRCTIU"")",TAB="",$P(TAB," ",31)=""
+ K ^TMP("GMRCR",$J,"RES"),^TMP("GMRCR",$J,"MCAR")
+ S (GMRCND,GMRCPTR)="" F  K @GLOBAL S GMRCND=$O(GMRCAR(GMRCND)) Q:GMRCND=""  S GMRCPKG=$P(GMRCND,";",2),GMRCPTR=$P(GMRCND,";",1) D
+ .S DR=".01;1204;1501;1502;1503;1504;1505;1506;1507;1508;1509;1510;1511;1601;1602;1603;1604;1605"
+ .I $E(GMRCPKG,1,3)="TIU" D EXTRACT^TIULQ(GMRCPTR,GLOBAL,.GMRCERR,DR,"",1,"") D
+ ..I '$O(@GLOBAL@(GMRCPTR,"TEXT",0)) S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT",LINECT,0)="No Results Exist For TIU Record # "_GMRCPTR_"." Q
+ ..;I +$G(GMRCRT) D HDR(GMRCPTR,"^TMP(""GMRCR"",$J,""RES"",GMRCPTR,""TEXT"")",.LINECT,0)
+ ..S GMRCSIG=$G(@GLOBAL@(GMRCPTR,1503)),GMRCCSIG=$G(@GLOBAL@(GMRCPTR,1509))
+ ..S:$L(GMRCCSIG)&(GMRCRT) GMRCCSIG=$S($G(@GLOBAL@(GMRCPTR,1511))="electronic":"Signature: /es/",1:"")_GMRCCSIG
+ ..S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT","GMRCSIG")=$S($L(GMRCSIG):GMRCSIG,1:$G(@GLOBAL@(GMRCPTR,1204)))
+ ..S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT","GMRCSDT")=$G(@GLOBAL@(GMRCPTR,1501))
+ ..S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT","GMRCSIGT")=$G(@GLOBAL@(GMRCPTR,1504))
+ ..S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT","GMRCSIGM")=$G(@GLOBAL@(GMRCPTR,1505))
+ ..S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT","GMRCCSIG")=GMRCCSIG
+ ..S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT","GMRCCSDT")=$G(@GLOBAL@(GMRCPTR,1507))
+ ..S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT","GMRCCTIT")=$G(@GLOBAL@(GMRCPTR,1510))
+ ..S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT","GMRCCSGM")=$G(@GLOBAL@(GMRCPTR,1511))
+ ..S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT","GMRCRPT")=$G(@GLOBAL@(GMRCPTR,.01))
+ ..I $O(@GLOBAL@(GMRCPTR,"TEXT",0)) D
+ ...S ND=0 F  S ND=$O(@GLOBAL@(GMRCPTR,"TEXT",ND)) Q:ND=""  S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT",LINECT,0)=@GLOBAL@(GMRCPTR,"TEXT",ND,0),LINECT=LINECT+1 ;S:'$D(NDS) NDS=ND
+ ...I GMRCRT S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT",LINECT,0)="",LINECT=LINECT+1,^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT",LINECT,0)="Signature: /es/"_GMRCSIG_"         Date: "_$G(@GLOBAL@(GMRCPTR,1501)),LINECT=LINECT+1 K NDS
+ ...I GMRCRT,$D(@GLOBAL@(GMRCPTR,1509)),$L(^(1509)) S ^TMP("GMRCR",$J,"RES",GMRCPTR,"TEXT",LINECT,0)="Co-signature: /es/ "_@GLOBAL@(GMRCPTR,1509)_"    Date:  "_$G(@GLOBAL@(GMRCPTR,1507))
+ ...Q
+ ..I $O(@GLOBAL@(GMRCPTR,"ZADD",0)) S GMRCADD=0 F  S GMRCADD=$O(@GLOBAL@(GMRCPTR,"ZADD",GMRCADD)) Q:GMRCADD=""  D
+ ...S ND1=1
+ ...I '$L(@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,1502,"E")) ;D UNSIGN(GMRCADD,"^TMP(""GMRCR"",$J,""RES"",GMRCPTR,""ADD"",GMRCADD)",ND1,GMRCPTR) K GMRCTXT Q
+ ...S ND=0 F  S ND=$O(@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,"TEXT",ND)) Q:ND=""  S ND1=ND1+1,^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,ND1,0)=@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,"TEXT",ND,0)
+ ...S ND1=ND1+1,^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,ND1,0)=""
+ ...I +GMRCRT D
+ ....S ND1=ND1+1,^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,ND1,0)="Signature: "_$S(@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,1505,"E")="electronic":"/es/",1:"")_@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,1503,"E")
+ ....S ^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,ND1,0)=^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,ND1,0)_$S(GMRCRT=1:"      "_$G(@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,1501,"E")),1:"")
+ ....Q
+ ...S ^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,"GMRCSGNM")=$S(GMRCRT=1:"/es/",1:"")_$G(@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,1502,"E"))
+ ...S ^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,"GMRCTIT")=$G(@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,1504,"E"))
+ ...S ^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,"GMRCNMDT")=$G(@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,1501,"E"))
+ ...S ^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,"GMRCTIT")=$G(@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,1504,"E"))
+ ...S ^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,"GMRCTIT")=$G(@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,1504,"E"))
+ ...S ^TMP("GMRCR",$J,"RES",GMRCPTR,"ADD",GMRCADD,"GMRCMODE")=$G(@GLOBAL@(GMRCPTR,"ZADD",GMRCADD,1505,"E"))
+ ...Q
+ ..I +$G(GMRCRT) D HDR(GMRCPTR,"^TMP(""GMRCR"",$J,""RES"",GMRCPTR,""TEXT"")",.LINECT,0)
+ ..Q
+ .I $E(GMRCPKG,1,4)="MCAR" S GMRCSR=GMRCND,MCFILE=$P(GMRCSR,";",2),MCFILE=$P(MCFILE,","),MCPROC=$O(^MCAR(697.2,"C",MCFILE,"")) Q:'MCPROC  D
+ ..S GMRCPRNM=$P(^MCAR(697.2,MCPROC,0),"^",8),ORIFN=$P(^GMR(123,GMRCO,0),"^",3),ORACTION=8,MCGLOBAL="^TMP(""GMRCR"",$J,""MCAR"","_GMRCPTR_")"
+ ..; blj/dss 14/6/2000  Routine ^VEGMRCTIU3 doesn't exist.
+ ..; D EN^VEGMRCTIU3(GMRCO,ORIFN,MCGLOBAL,LINECT) K ^TMP("MC",$J)
+ ..Q
+ .Q
+ K DR,GLOGAL,GMRCSR,GMRCAR,GMRCPKG,GMRCPRNM,MCFILE,MCPROC,ORACTION,ORIFN,MCGLOBAL,ND,ND1
+ Q
+GETNOTE(GMRCO,FILE) ;Get the last result added to the record - this is found in $P(^(0),"^",20)
+ ;Function returns last note added to record.
+ ;If it does not contain the file pointer, it is assumed that
+ ;it pointed to the TIU file 8925
+ ;GMRCO=file 123 IEN
+ ;FILE='MCAR' to get last medicine result pointer
+ ;FILE='TIU' to get last TIU result pointer
+ N X
+ I FILE="TIU" S X=$P(^GMR(123,GMRCO,0),"^",20) I $L(X),'$L($P(X,";",2)) S X=X_";TIU(8925,"
+ I FILE="MCAR" S X=$P(^GMR(123,GMRCO,0),"^",15)
+ Q X
+GETRSLTS(GMRCO,ARRAY) ;Get the results from record and return it in array 'ARRAY')
+ ;Looks for results in $P(^(0),"^",20),$P(^(0),"^",15) and Field 50 multiple
+ ;GMRCO=File 123 IEN
+ ;ARRAY=array to return results pointers in
+ ;ARRAY will be returned as ARRAY("IEN;FILE"), as e.g., "1289;^TIU(8925,"
+ N X
+ S X=$$GETNOTE(GMRCO,"TIU") I $L(X) S:$P(X,";",2)="" X=X_";TIU(8925," S ARRAY(X)=""
+ S X=$$GETNOTE(GMRCO,"MCAR") I $L(X) S ARRAY(X)=""
+ S X="" F  S X=$O(^GMR(123,GMRCO,50,"B",X)) Q:X?1A.E!(X="")  S ARRAY(X)=""
+ Q

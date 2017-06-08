@@ -1,0 +1,171 @@
+EVETLI2 ;HINES/DS - Evet Listener utilities ; 1/20/03 12:18pm
+ ;;1.0;HEALTH EVET;**1**;Nov 05, 2002
+ ; added AUTOSS entry point for auto start;****;2/6/02-lel
+ ;
+ Q
+ ;
+READT(EVTYPE,EVLAST,EVREG) ;
+ ; Reads EVPORT 255 chars at a time
+ ; EVTYPE - Type of message
+ ; EVLAST - The end string of the message
+ ;debug code only
+ N EVDEBUG,X
+ S EVDEBUG=0
+ I EVDEBUG=1 S ^TMP("EVET_DEBUG_PR",$O(^TMP("EVET_DEBUG_PR",""),-1)+1)="ENTERING READT"
+ ;S X="ERR^EVETLI2",@^%ZOSF("TRAP")
+ N EVCNT,EVEND,EVX2,EVX3,EVT,EVREQID,EVTOCNT,EVUCTR,LSTEVTAG,EVENDM
+ S (EVT,EVX,EVX2,EVX3,EVREQID,EVLEFT)=""
+ K ^TMP("EVET_XML_PARSE",$J,EVREG)
+ S EVCNT=1
+ S EVENDM=0
+ S EVTOCNT=0
+ S EVUCTR=0
+ I $G(EVREG,0) S EVREQID=$J
+ ;
+RDLOOP S EVTO=0
+ R EVCHAR#255:60 I '$T S EVTO=1,EVTOCNT=EVTOCNT+1 S:EVTOCNT>2 EVENDM=1
+ F  Q:$L(EVCHAR)>254!EVTO!(EVCHAR[$C(13))  D
+ .R X#(255-$L(EVCHAR)):5 I '$T S EVTO=1
+ .S EVCHAR=EVCHAR_X
+RETER I (EVCHAR[$C(10))!(EVCHAR[$C(13)) D
+ .S EVTO=1
+ .I EVCHAR[($C(13)_$C(10)_$C(13)_$C(10)) D  Q
+ ..S EVCHAR=$E(EVCHAR,1,$L(EVCHAR)-4)
+ ..S EVENDM=1
+ .I $L(EVCHAR=255),$C(10)_$C(13)[$E(EVCHAR,255) D
+ ..R EVX#255:1
+ ..S EVCHAR=$E(EVCHAR,1,251+$L(EVX))
+ ..S EVENDM=1
+ I EVCHAR[$C(3) D
+ .S EVTO=1
+ .S EVENDM=1
+ .S EVCHAR=$E(EVCHAR,1,$L(EVCHAR)-1)
+ S EVX=EVCHAR
+ I EVDEBUG=1 S ^TMP("EVET_DEBUG_PR",$O(^TMP("EVET_DEBUG_PR",""),-1)+1)=EVX
+ I $L(EVX)=255!((EVTO=1)&(EVX'="")) D
+ . I EVNOENC=0 S EVX=$$DECRYP^EVETENC(EVX)
+ . I EVDEBUG=1 S ^TMP("EVET_DEBUG_PR",$O(^TMP("EVET_DEBUG_PR",""),-1)+1)=EVX
+ . I EVDEBUG=1 S ^TMP("EVET_DEBUG_PR",$O(^TMP("EVET_DEBUG_PR",""),-1)+1)=EVLEFT
+ . I EVDEBUG=1 S ^TMP("EVET_DEBUG_PR",$O(^TMP("EVET_DEBUG_PR",""),-1)+1)="$L(EVX)="_$L(EVX)_" $L(EVLEFT)="_$L(EVLEFT)
+ . I EVREG'=1&((EVLEFT["Error")!(EVX["Error")) D
+ . . S EVENDM=1
+ . . S:$L(EVLEFT_EVX)<240 ^TMP("EVET_XML_PARSE",$J,EVREG,"ERROR","result")=EVLEFT_EVX
+ . . Q
+ . I (($F(EVLEFT,"^")>0)!($F(EVX,"^")>0))&($L(EVLEFT)+$L(EVX)>240) D  Q
+ .. D REDUCE(.EVLEFT)
+ .. S EVLEFT=EVLEFT_EVX
+ .. D REDUCE(.EVLEFT)
+ .. I $E(EVLEFT,1,37)="<update_requested></update_requested>" S EVLEFT=$E(EVLEFT,38,$L(EVLEFT))
+ .. I $L(EVLEFT)>255 S EVLEFT=$$STRING(EVLEFT,EVTYPE)
+ .. Q
+ . I $L(EVLEFT_EVX)>255 S EVLEFT=$$STRING(EVLEFT_EVX,EVTYPE)
+ . S EVX=EVLEFT_EVX
+ . I EVX[("<"_EVTYPE_">")&(EVX[("<"_$E(EVLAST,3,$L(EVLAST)-1))) S EVX=$P(EVX,("<"_EVTYPE_">"),2)
+ . I (EVX[EVLAST)!(EVX=EVLAST) S EVENDM=1
+ . S EVLEFT=$$STRING(EVX,EVTYPE)
+ . S EVX=""
+ . Q
+ G:'EVENDM RDLOOP
+RETER1 ;reset error trap
+ Q
+STRING(EVX,EVTYPE) ;
+ I EVDEBUG=1 S ^TMP("EVET_DEBUG_PR",$O(^TMP("EVET_DEBUG_PR",""),-1)+1)="IN STRING, EVTYPE="_EVTYPE
+ ; looks through string and removes XML tags
+ N EVEND,EVA,EVTAG,EVDATA,EVT
+ S EVEND=""
+ F EVA=1:1:$L(EVX) D
+ . I $E(EVX,EVA)="<" D
+ . . S EVEND=$$FEND(EVX,EVA)
+ . . I EVEND="" S EVEND=EVA,EVA=$L(EVX) Q
+ . . S EVTAG=$E(EVX,EVA+1,EVEND-1)
+ . . I EVTAG="extract_request" S EVA=EVEND Q
+ . . I EVTAG=("</"_EVTYPE_">") S EVA=$L(EVX) Q
+ . . I EVTAG=""!(EVTAG["/") Q
+ . . S EVT=$$GETD(EVX,.EVEND,EVTAG)
+ . . S EVDATA=$P(EVT,"~",1)
+ . . S EVEND=$P(EVT,"~",2)
+ . . I EVTAG="sequence_id" D  Q
+ . . . S EVREQID=EVDATA
+ . . . S EVA=EVEND
+ . . . Q
+ . . I EVTAG="request_id" D
+ . . . S EVREQID=EVDATA
+ . . . S EVA=EVEND
+ . . . Q
+ . . E  D
+ . . . Q:EVREQID=""
+ . . . I EVDEBUG=1 S ^TMP("EVET_DEBUG_PR",$O(^TMP("EVET_DEBUG_PR",""),-1)+1)="IN STRING, EVTAG="_EVTAG
+ . . . I EVDEBUG=1 S ^TMP("EVET_DEBUG_PR",$O(^TMP("EVET_DEBUG_PR",""),-1)+1)="IN STRING, EVDATA="_EVDATA
+ . . . I EVTAG'="update_requested" S ^TMP("EVET_XML_PARSE",$J,EVREG,EVREQID,EVTAG)=EVDATA
+ . . . I EVTAG="update_requested" D
+ . . . . I $F(EVDATA,"^")<1 S EVUCTR=EVUCTR+1,^TMP("EVET_XML_PARSE",$J,EVREG,EVREQID,EVTAG,EVUCTR)=EVDATA
+ . . . . F  Q:$F(EVDATA,"^")<1  D
+ . . . . . S EVUCTR=EVUCTR+1,^TMP("EVET_XML_PARSE",$J,EVREG,EVREQID,EVTAG,EVUCTR)=$P(EVDATA,"^",1),EVDATA=$P(EVDATA,"^",2,100)
+ . . . . . Q
+ . . . . Q
+ . . . S EVA=EVEND
+ . . Q
+ . Q
+ I EVEND<$L(EVX) Q $E(EVX,EVEND,$L(EVX))
+ Q ""
+GETD(EVX,EVEND,EVTAG) ;
+ ; Get XML data between tags
+ N EVA,EVF,EVDAT
+ S EVF=0,EVDAT=""
+ F EVA=EVEND+1:1:$L(EVX) Q:EVF=1  D
+ . I $E(EVX,EVA)="<" D
+ . . S EVF=1
+ . . Q
+ . Q:EVF=1
+ . S EVDAT=EVDAT_$E(EVX,EVA)
+ . Q
+ Q EVDAT_"~"_(EVA-1)
+FEND(EVX,EVA) ;
+ N EVF,EVEND
+ S EVF=0,EVEND=""
+ F EVT=EVA:1:$L(EVX) Q:EVF=1  D
+ . ; Now look for end of tag
+ . I $E(EVX,EVT)=">" D
+ . . S EVEND=EVT,EVF=1
+ . . Q
+ . Q
+ Q EVEND
+CHA(EVSTR) ;
+ ; Removes all bad XMl chars from XML data and replaces with %_$A(CHAR)
+ I EVSTR["&" D 
+ . S EVSTR=$$REM(EVSTR,"&","&amp;")
+ I EVSTR["<" D
+ . S EVSTR=$$REM(EVSTR,"<","&lt;")
+ I EVSTR[">" D
+ . S EVSTR=$$REM(EVSTR,">","&gt;")
+ . Q
+ Q EVSTR
+REM(EVSTR,EVCHAR,EVTO) ;
+ N EVA,EVQ
+ S EVQ=$P(EVSTR,EVCHAR,1)
+ F EVA=1:1:$L(EVSTR,EVCHAR) D
+ . S EVQ=EVQ_EVTO_$P(EVSTR,EVCHAR,2)
+ . Q
+ Q EVQ
+REDUCE(EVLEFT) ;reduce the size of the EVLEFT buffer so that that the total
+ ;length of EVLEFT and EVX does not cause a failure
+ I EVDEBUG=1 S ^TMP("EVET_DEBUG_PR",$O(^TMP("EVET_DEBUG_PR",""),-1)+1)=$H_"*ENTERING REDUCE, $L(EVLEFT)="_$L(EVLEFT)
+ N BLK,EVB,EVFLAG,EVI,NOPIECE
+ I $F(EVLEFT,">")<1 S BLK=EVLEFT,NOPIECE=1
+ I $F(EVLEFT,">")>0 S BLK=$P(EVLEFT,">",2),NOPIECE=0
+ F  Q:$F(BLK,"^")<1  D
+ . S EVB=$P(BLK,"^",1),BLK=$P(BLK,"^",2,100),EVFLAG=0,EVI=""
+ . F  S EVI=$O(^TMP("EVET_XML_PARSE",$J,EVREG,EVREQID,"update_requested",EVI)) Q:EVI=""  Q:EVFLAG=1  D
+ . . I EVB=^TMP("EVET_XML_PARSE",$J,EVREG,EVREQID,"update_requested",EVI) S EVFLAG=1
+ . . Q
+ . I EVFLAG=0 S EVUCTR=EVUCTR+1,^TMP("EVET_XML_PARSE",$J,EVREG,EVREQID,"update_requested",EVUCTR)=EVB
+ . Q
+ I NOPIECE=0 S $P(EVLEFT,">",2)=BLK
+ I NOPIECE=1 S EVLEFT=BLK
+ I EVDEBUG=1 S ^TMP("EVET_DEBUG_PR",$O(^TMP("EVET_DEBUG_PR",""),-1)+1)=$H_"*LEAVING REDUCE, $L(EVLEFT)="_$L(EVLEFT)
+ Q
+ERR ;error trap to allow disconnect message 
+ ;D ^%ZTER
+ ;S X="ERR^EVETLI2",@^%ZOSF("TRAP")
+ ;I $ZE["LINKDISCON" S EVENDM=1,EVTO=1 G RETER
+ Q

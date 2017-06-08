@@ -1,0 +1,10 @@
+ZISLST ;WILM/RJ - Auto Load Micom at Startup; 10-21-86
+ ;;7.1;KERNEL;;May 11, 1993
+ ;;Version 4.51
+ D ^%ZISLSIT Q:$P(ZISLSITE,"^",7)'["Y"  Q:'$O(^%ZIS("Z",108,"B",ZISLCPU,0))
+ S ZISLSTY=0,ZISLCPU1=$O(^%ZIS("Z",108,"B",ZISLCPU,0)) S IOP=1 D ^%ZIS D:POP RETRY H 20 F Z=1:1 S ZISLSTY=$O(^%ZIS("Z",108,ZISLCPU1,1,ZISLSTY)) Q:ZISLSTY=""  D 1
+ K ZISLSTY,ZISLCPU1 Q
+1 Q:'$D(^%ZIS("Z",108,ZISLCPU1,1,ZISLSTY,0))  S W=0,DA=$P(^(0),"^",1) W !!,"Trying to load Configuration: " W:$D(^%ZIS("Z",105,DA,0)) ^(0) D ST^ZISLAUTO
+ Q
+RETRY S IOP=1 D ^%ZIS I POP G RETRY
+ Q

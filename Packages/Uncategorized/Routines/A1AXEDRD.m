@@ -1,0 +1,45 @@
+A1AXEDRD ;SLL/ALB ISC; RD/CO Edit Routine; 5/15/88
+ ;;VERSION 1.0
+ D DICW^A1AXUTL
+ S DIC="^DIZ(11830,",DIC(0)="AEQMNZ" D ^DIC G:Y=-1 EXIT K DIC S DA(3)=+Y,A1AXDT=$P(Y,"^",2),A1AXF=+^DIZ(11830,DA(3),"F"),A1AXO=$P(^DIZ(11831,+^DIZ(11830,DA(3),"O"),0),"^",1)
+ S D0=DA(3)
+ I $D(^DIZ(11830,DA(3),"P"))=0 W !,"NO TYPE OF PROGRAM DATA ENTERED" G EXIT
+ S DIC="^DIZ(11830,DA(3),""P"",",DIC(0)="AEQNZ" D ^DIC G:Y=-1 EXIT S DA(2)=+Y
+ S D1=DA(2)
+ I $D(^DIZ(11830,DA(3),"P",DA(2),"S"))=0 W !,"NO SERVICE DATA ENTERED" G EXIT
+ S DIC="^DIZ(11830,DA(3),""P"",DA(2),""S"",",DIC(0)="AEQNZ" D ^DIC G:Y=-1 EXIT S DA(1)=+Y
+ S D2=DA(1)
+ I $D(^DIZ(11830,DA(3),"P",DA(2),"S",DA(1),"R"))=0 W !,"NO RECOMMENDATION DATA ENTERED" G EXIT
+ S DIC="^DIZ(11830,DA(3),""P"",DA(2),""S"",DA(1),""R"",",DIC(0)="AEQNZ",DIC("W")="W """"" D ^DIC G:Y=-1 EXIT S DA=+Y
+ S D3=DA
+ L ^DIZ(11830,DA(3)):1 I '$T W !,"This entry is being edited by someone else." L  G EXIT
+ S A1AXX="Data entered by the facility, press 'RETURN' to skip through the fields"
+ S A1AXL="------------------------------------------"
+ S A1AXY="Enter/Edit data in the following RD/CO fields:"
+ S ^DIZ(11830,DA(3),"US")=$S($D(DUZ):$P(^DIC(3,DUZ,0),"^",1),1:"")
+ S DIE="^DIZ(11830,DA(3),""P"",DA(2),""S"",DA(1),""R"","
+ D @A1AXO
+ D ^DIE
+EXIT ;
+ K A1AXDT,A1AXF,A1AXN,A1AXO,POP,A1AXX,A1AXY,A1AXL,X,Y
+ K DA(3),DA(2),DA(1),DA
+ K %,%X,%Y,C,D,D0,D1,D2,D3,DI,DIC,DIE,DIYS,DQ,DR
+ Q
+JCAHO ;
+ S DR="W !,A1AXX,!,A1AXL;.01;1;1.5;2;3;3.7;4;5;S:X[""N"" Y=100;6;7;8;100;100.5;101;102;103;104;W !,A1AXL,!,A1AXY,!;21//NO;23;22;24;11//NO;16;12;14"
+ Q
+CAP ;
+ S DR="W !,A1AXX,!,A1AXL;.01;1;2;3.7;4;5;S:X[""N"" Y=100;6;7;8;100;100.5;101;102;103;104;W !,A1AXL,!,A1AXY,!;21//NO;23;22;24;11//NO;16;12;14"
+ Q
+SERP ;
+ S DR="W !,A1AXX,!,A1AXL;.01;1;2;3.7;4;5;S:X[""N"" Y=100;6;7;8;100;100.5;101;102;103;104;W !,A1AXL,!,A1AXY,!;21//NO;23;22;24;11//NO;16;12;14"
+ Q
+ACS ;
+GAO ;
+IG ;
+MEDIPRO ;
+OSHA ;
+OTHER ;
+SPG ;
+ S DR="W !,A1AXX,!,A1AXL;.01;2;3.7;4;5;S:X[""N"" Y=100;6;7;8;100;100.5;101;102;103;104;W !,A1AXL,!,A1AXY,!;21//NO;23;22;24;11//NO;16;12;14"
+ Q

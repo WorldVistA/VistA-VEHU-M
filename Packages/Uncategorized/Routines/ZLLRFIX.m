@@ -1,0 +1,42 @@
+ZLLRFIX ;ALB/LLR;Fix for Duplicates in 45.85;11/07/94
+EN W ! D DATE
+DATE ; -- calculate default census date
+ S Y=$S($D(^DG(45.86,+$O(^DG(45.86,"AC",1,0)),0)):+^(0),1:"")
+ X:Y]"" ^DD("DD")
+ Q
+DUP S (OUT,CNT)=0
+ D NOW^%DT S DGPAIDT=Y
+ ;CHECK FOR DUPLICATE ENTIRES IN THE CENSUS WORKFILE 45.85.
+ W @IOF,!!"Duplicate Entries in Census Workfile (45.85),!,for the Following Patients:",!!
+ F DGLLR=0:0 S DGLLR=$O(^DG(45.85,DGLLR)) Q:'DGLLR!(OUT)  D
+ .F DGPAIPT=0:0 S DGPAIPT=$O(DG(45.85,DGLLR,"PTF",DGPAIPT)) Q:'DGPAIPT!(OUT) S DGNMN=$O(^DG(45.85,DGLLR,"PTF",DGPAIPT)) I $O(^DG(45.85,DGLLR,"PTF",DGPAIPT,DGNMN)) S ACNT=0 D
+ ..S DGNMN=DGNMNN,IDT=$P($G(^DG(45.85,DGLLR,1,DGNMN,0)),"^",12) S:IDT=""!(IDT>DGPAIDT)) S ACNT=1 F S DGNMN=$O(^DG(45.85,DGLLR,"PTF",DGPAIPT,DGNMN)) Q:'DGNMN
+ ..Q:ACNT<2
+ ..S CNT=CNT+1
+ ..W !,?5,_".",$P($G(^DG(45.85(DGPAIPT)0)),"^"0," ",?50,"AOU:",$P($G(^DG(45.85,DGLLR,0)),"^")
+ ..S ^TMP("DGZLLR",$J,CNT,1)=DGLLR_"^"_DGPAIPT
+ ..I $Y+5>IOSL W !!,"Press RETURN to continue or ""^"" to exit:"R CONT:DTIME S CONT["^" OUT=1 Q:OUT W @IOF,"Duplicate Entries (continued)",!!
+ ..S CNT2=2 F  S DGNMN=$O(^DG(45.85,DGLLR,"PTF",DGPAIPT,DGNMN) Q:'DGNMN S ^TMP("DGZLLR",$J,CNT,CNT2)=DGLLR_"^"_DGNMN_"^"_DGPAIPT,CNT2=CNT2+1
+ I CNT=0 W !!,?10,"No duplicate entries exits." R !!,"Press RETURN to coninue:"
+ K IO("Q"),%ZIS,IOP S %ZIS="MQ" S %ZIS("PTF")="" D ^%ZIS K %ZIS I OPO W !,"NO DEVICE SELECTED OR REPORT PRINTED." Q
+ I $D(IO("Q")) S ZTRTN="ENTRY^ZLLRFIX1",ZTDESC="DUPLICATE REORT",ZTSAVE("^TMP(""DGZLLR"",$J,")=""ZTSAVE("DGZCAT")="" D ^%ZTLOAD,HOME^%ZIS G END
+ U IO
+ENTRY ;**ENTRY POINT WHEN QUEUED**
+ S (PAGE,OUT)=0
+ S CONT="********** CONTINUED **********",CONTLTH=(132-$L(CONT))/2
+ S CNT=1 F  Q:'$P(DGZCAT,",",CNT) ! (OUT)  S DGZPAT=$P(DGZCAT,",",CNT),CNT=CNT+1 D ONE
+END W !,@IOF
+ K CNT,CNT3,CONT,CONTLTH,I,OUT,PAGE,DGLLR,DGPAIPT,DGNMN,Y,X
+ Q
+ONE ; ** DISPLAY INFORMATION FOR PATIENTS **
+ F DGZNXT=0:0  S DGZNXT=$O(^TMP("DGZLLR",$J,DGZCAT,DGZNXT)) Q:'DGZNXT!(OUT)  S DGZND=^(DGZNXT) D
+ .S DGLLR=$P(DGZND,"^",12),DGPAIPT=$P(DGZND,"^",1)
+ .D PAGE
+ .D INV,RET: 'OUT,OD: 'OUT
+ Q
+PAGE ;** header for one page **
+I PAGE>0,($E(IOST)'="P") W !!,"Press RETURN to continue or ""^"" to quit: " R CONT:DTIME S:CONT["^" OUT=1 Q:'$T!(OUT)
+ S PAGE=PAGE+1
+ W:$Y @IOF S X="*** DUPLICATE ENTRY REPORT ***" W !!,?(132-$L(X))/2,X,!!,"PATIENT:  ",$P($G(DG(45.85(DGPAIPT,0)),"^"),?115,"PAGE ",PAGE
+ W !!!,"PTF:  ",$P(DG(45.85,DGLLR,0)),"^"),!,"Internal Entry #: ",DGNMN,!
+ F I=1:1:132 W "-"

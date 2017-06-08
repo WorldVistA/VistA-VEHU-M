@@ -1,0 +1,11 @@
+ZZTEST ;TEST
+ ;ZW
+ S DIK="^(RT"
+ S RECMAX=$P(^RT(0),"^",3)
+ S USR="//"
+ S REC="//"
+ F I=0:1:+RECMAX I $D(^RT(I,"CL")) D INITCHK
+FINISH K RECMAX,USR,REC,DIK,Y,I
+ Q
+USRCHK I $P(^RT(I,"CL"),"^",7)=USR W !,I
+ Q

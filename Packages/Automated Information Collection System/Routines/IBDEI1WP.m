@@ -1,0 +1,136 @@
+IBDEI1WP ; ; 06-AUG-2015
+ ;;3.0;IB ENCOUNTER FORM IMP/EXP;;JUN 29, 2015
+ Q:'DIFQR(358.3)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,358.3,33524,1,4,0)
+ ;;=4^R93.0
+ ;;^UTILITY(U,$J,358.3,33524,2)
+ ;;=^5019713
+ ;;^UTILITY(U,$J,358.3,33525,0)
+ ;;=R93.2^^182^2004^9
+ ;;^UTILITY(U,$J,358.3,33525,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33525,1,3,0)
+ ;;=3^Abnormal Finding on Dx Image of Liver/Biliary Tract
+ ;;^UTILITY(U,$J,358.3,33525,1,4,0)
+ ;;=4^R93.2
+ ;;^UTILITY(U,$J,358.3,33525,2)
+ ;;=^5019715
+ ;;^UTILITY(U,$J,358.3,33526,0)
+ ;;=R93.3^^182^2004^7
+ ;;^UTILITY(U,$J,358.3,33526,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33526,1,3,0)
+ ;;=3^Abnormal Finding on Dx Image of Digestive Tract Part
+ ;;^UTILITY(U,$J,358.3,33526,1,4,0)
+ ;;=4^R93.3
+ ;;^UTILITY(U,$J,358.3,33526,2)
+ ;;=^5019716
+ ;;^UTILITY(U,$J,358.3,33527,0)
+ ;;=R93.4^^182^2004^11
+ ;;^UTILITY(U,$J,358.3,33527,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33527,1,3,0)
+ ;;=3^Abnormal Finding on Dx Image of Urinary Organs
+ ;;^UTILITY(U,$J,358.3,33527,1,4,0)
+ ;;=4^R93.4
+ ;;^UTILITY(U,$J,358.3,33527,2)
+ ;;=^5019717
+ ;;^UTILITY(U,$J,358.3,33528,0)
+ ;;=R93.5^^182^2004^6
+ ;;^UTILITY(U,$J,358.3,33528,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33528,1,3,0)
+ ;;=3^Abnormal Finding on Dx Image of Abdominal Regions
+ ;;^UTILITY(U,$J,358.3,33528,1,4,0)
+ ;;=4^R93.5
+ ;;^UTILITY(U,$J,358.3,33528,2)
+ ;;=^5019718
+ ;;^UTILITY(U,$J,358.3,33529,0)
+ ;;=R93.6^^182^2004^8
+ ;;^UTILITY(U,$J,358.3,33529,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33529,1,3,0)
+ ;;=3^Abnormal Finding on Dx Image of Limbs
+ ;;^UTILITY(U,$J,358.3,33529,1,4,0)
+ ;;=4^R93.6
+ ;;^UTILITY(U,$J,358.3,33529,2)
+ ;;=^5019719
+ ;;^UTILITY(U,$J,358.3,33530,0)
+ ;;=R94.4^^182^2004^14
+ ;;^UTILITY(U,$J,358.3,33530,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33530,1,3,0)
+ ;;=3^Abnormal Kidney Function Studies
+ ;;^UTILITY(U,$J,358.3,33530,1,4,0)
+ ;;=4^R94.4
+ ;;^UTILITY(U,$J,358.3,33530,2)
+ ;;=^5019741
+ ;;^UTILITY(U,$J,358.3,33531,0)
+ ;;=R94.5^^182^2004^15
+ ;;^UTILITY(U,$J,358.3,33531,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33531,1,3,0)
+ ;;=3^Abnormal Liver Function Studies
+ ;;^UTILITY(U,$J,358.3,33531,1,4,0)
+ ;;=4^R94.5
+ ;;^UTILITY(U,$J,358.3,33531,2)
+ ;;=^5019742
+ ;;^UTILITY(U,$J,358.3,33532,0)
+ ;;=R94.6^^182^2004^19
+ ;;^UTILITY(U,$J,358.3,33532,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33532,1,3,0)
+ ;;=3^Abnormal Thyroid Function Studies
+ ;;^UTILITY(U,$J,358.3,33532,1,4,0)
+ ;;=4^R94.6
+ ;;^UTILITY(U,$J,358.3,33532,2)
+ ;;=^5019743
+ ;;^UTILITY(U,$J,358.3,33533,0)
+ ;;=R94.7^^182^2004^5
+ ;;^UTILITY(U,$J,358.3,33533,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33533,1,3,0)
+ ;;=3^Abnormal Endocrine Function Sutdies NEC
+ ;;^UTILITY(U,$J,358.3,33533,1,4,0)
+ ;;=4^R94.7
+ ;;^UTILITY(U,$J,358.3,33533,2)
+ ;;=^5019744
+ ;;^UTILITY(U,$J,358.3,33534,0)
+ ;;=R94.31^^182^2004^4
+ ;;^UTILITY(U,$J,358.3,33534,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33534,1,3,0)
+ ;;=3^Abnormal EKG
+ ;;^UTILITY(U,$J,358.3,33534,1,4,0)
+ ;;=4^R94.31
+ ;;^UTILITY(U,$J,358.3,33534,2)
+ ;;=^5019739
+ ;;^UTILITY(U,$J,358.3,33535,0)
+ ;;=R97.0^^182^2004^63
+ ;;^UTILITY(U,$J,358.3,33535,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33535,1,3,0)
+ ;;=3^Elevated Carcinoembryonic Antigen 
+ ;;^UTILITY(U,$J,358.3,33535,1,4,0)
+ ;;=4^R97.0
+ ;;^UTILITY(U,$J,358.3,33535,2)
+ ;;=^5019746
+ ;;^UTILITY(U,$J,358.3,33536,0)
+ ;;=R97.1^^182^2004^62
+ ;;^UTILITY(U,$J,358.3,33536,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33536,1,3,0)
+ ;;=3^Elevated Cancer Antigen 125
+ ;;^UTILITY(U,$J,358.3,33536,1,4,0)
+ ;;=4^R97.1
+ ;;^UTILITY(U,$J,358.3,33536,2)
+ ;;=^5019747
+ ;;^UTILITY(U,$J,358.3,33537,0)
+ ;;=R97.2^^182^2004^64
+ ;;^UTILITY(U,$J,358.3,33537,1,0)
+ ;;=^358.31IA^4^2
+ ;;^UTILITY(U,$J,358.3,33537,1,3,0)
+ ;;=3^Elevated PSA
+ ;;
+ ;;$END ROU IBDEI1WP

@@ -1,0 +1,76 @@
+A4AA350 ;ISC4/JJM - PROGRAM TO CHECK FILE 350 ; 7/15/99 13:35
+V ;;0.0;**** CLASS III ****;;JUNE 16, 1995
+HSK S ERRCNT=0
+ S CNT=0
+ S IEN=0
+ W !,?30,"   REPORT 10"
+ W !,?30,"AUDIT FILE 350"
+ D NOW^%DTC
+ W !,"JOB STARTED: ",%
+START W !,"START -",^IB(0)
+ F  S IEN=$O(^IB(IEN)) Q:'IEN  S CNT=CNT+1 W:(CNT#1000)=0 "." D
+ .  S IB350N0=$G(^IB(IEN,0))
+ .  S IBAT=$P(IB350N0,"^",3)
+ .  S:IBAT'="" IBAT=$P($G(^IBE(350.1,IBAT,0)),"^",1)
+ .  S IBST=$P(IB350N0,"^",5)
+ .  S IBPAT=+$P(IB350N0,"^",2)
+ .  S IBBILL=$P(IB350N0,"^",11)
+ .  S IBTN=+$P(IB350N0,"^",12)
+ .  S AR433N0=$G(^PRCA(433,IBTN,0))
+ .  D:AR433N0'=""
+    ..  S ARTN=+$P(AR433N0,"^",1)
+    ..  S ARIEN=+$P(AR433N0,"^",2)
+    ..  S AR430N0=$G(^PRCA(430,ARIEN,0))
+    ..  S ARBILL=$P(AR430N0,"^",1)
+    ..  S ARPAT=$P(AR430N0,"^",7)
+    ..  S ARDEB=+$P(AR430N0,"^",9)
+    ..  S:((ARPAT="")&(ARDEB'=0)) ARPAT=+$P($G(^RCD(340,ARDEB,0)),"^",1)
+ .  D:IBPAT'="" CHKPAT
+ .  IF (IBPAT="")&(IBST=3) D
+ ..  S ERRCNT=ERRCNT+1
+ ..  W !,$J(ERRCNT,8),"  *****",$J(IEN,8)," IB MISSING PATIENT *****","(",CNT,")"
+ ..  QUIT
+ .  D:IBBILL'="" CHKIEN
+ .  IF (IBBILL="")&(IBST=3) D
+ ..  S ERRCNT=ERRCNT+1
+ ..  W !,$J(ERRCNT,8),"  *****",$J(IEN,8)," IB MISSING AR BILL # *****","(",CNT,")"
+ ..  QUIT
+ .  D:IBTN'=0 CHKTN
+ .  IF (IBTN=0)&(IBAT'["CANCEL")&(IBST=3) D
+ ..  S ERRCNT=ERRCNT+1
+ ..  W !,$J(ERRCNT,8),"  *****",$J(IEN,8)," IB MISSING AR TRANSACTION # *****","(",CNT,")"
+ .  QUIT:AR433N0=""
+ .  IF (IBPAT'=ARPAT)!(IBBILL'=ARBILL)!(IBTN'=ARTN) D
+ ..  S ERRCNT=ERRCNT+1
+ ..  W !,$J(ERRCNT,8),?15,"****    INCORRECT AR DATA    ****"
+ ..  W !,"IB DATA (",IEN,"):",?25,IBTN,?35,IBBILL,?50,IBPAT
+ ..  W !,"AR DATA (",ARIEN,"):",?25,ARTN,?35,ARBILL,?50,ARPAT
+EOJ ;
+ D NOW^%DTC
+ W !,"EOJ-",CNT,"  ",%
+ K IB350N0,IBBILL,IBTN,IBPAT,IEN,CNT,ERRCNT,IBAT,IBST,TN,%
+ K AR433N0,AR430N0,ARBILL,ARTN,ARPAT,ARDEB,ARIEN
+ QUIT
+CHKPAT IF ($P($G(^DPT(IBPAT,0)),"^",1))="" D
+ .  S ERRCNT=ERRCNT+1
+ .  W !,$J(ERRCNT,8)," **** ",IEN," PATIENT ",IBPAT," NOT IN PATIENT FILE **** (",CNT,")"
+ QUIT
+CHKIEN S ARIEN=$O(^PRCA(430,"B",IBBILL,0))
+ S:ARIEN="" ARIEN=$O(^PRCA(430,"D",$P(IBBILL,"-",2),0))
+ IF ARIEN="" D  Q
+ .  S ERRCNT=ERRCNT+1
+ .  W !,$J(ERRCNT,8)," **** ",IEN," AR BILL ",ARIEN," NOT IN AR FILE **** (",CNT,")"
+ IF ('+$P($G(^PRCA(430,ARIEN,0)),"^",1))&(IBST=3) D
+ .  S ERRCNT=ERRCNT+1
+ .  W !,$J(ERRCNT,8)," **** ",IEN," AR BILL ",ARIEN," NOT IN AR FILE **** (",CNT,")"
+ QUIT
+CHKTN  IF ('+$P($G(^PRCA(433,IBTN,0)),"^",1))&(IBST=3) D
+ .  S ERRCNT=ERRCNT+1
+ .  W !,$J(ERRCNT,8)," **** ",IEN," TRANSACTION ",IBTN," NOT IN FILE 433 **** (",CNT,")"
+ QUIT
+RESTART S CNT=16078
+ S ERRCNT=36
+ S TN=16078
+ D START
+EXIT ;;
+ QUIT

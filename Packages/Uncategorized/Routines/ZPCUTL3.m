@@ -1,0 +1,90 @@
+ZPCUTL3 ;GETS CURRENT HOST DATA ;2/25/95  09:28
+ ;COPYRIGHT VETERANS RESEARCH FOUNDATION OF PITTSBURGH 1995
+ ;COPYRIGHT ASPIRE TECHNOLOGIES 1995
+WARDS ;GET ALL ACTIVE WARDS
+ I $D(DT)=0 S %DT="P",X="T" D ^%DT S DT=Y
+ I $D(U)=0 S U="^"
+ S DGPMOS=DT,D0=0 S NM=""
+ F  S NM=$O(^DIC(42,"B",NM)) Q:NM=""  D  ;
+  .S D0=$O(^DIC(42,"B",NM,"")) D WIN^DGPMDDCF
+  .W:X=0 NM,!
+ .Q
+ W "**ENDTX**",! Q
+CLINIC ;GETS ALL ACTIVE CLINICS
+ S CL=0 F  S CL=$O(^SC(CL)) Q:+CL=0  I $P(^SC(CL,0),U,3)="C" D  ;
+ .I $D(^SC(CL,"I")),$P(^SC(CL,"I"),U,2)="" Q  ;If node is defined its inactive - $P2=has been reactivated
+ .W $P(^SC(CL,0),U,1),!
+ W "**ENDTX**",!
+ Q
+DPT I $D(DUZ)=0 S DUZ=1
+ S X=$P(X,"|",3)
+ K Y,DIC,XQY S DIC(0)="YIM",DIC="^DPT(" D ^DIC I +Y<0 W "**NOT LOCATED**",! Q
+ I $D(Y)'=11 W $P($G(^DPT(+Y,0)),"^",1)_"|"_$P(^(0),"^",9)_"|"_+Y,"|",! Q
+ S K=0 F  S K=$O(Y(K)) Q:K'>0  W $P($G(^DPT(K,0)),"^",1)_"|"_$P(^(0),"^",9)_"|"_K,"|",!
+ K DIC,Y Q
+DOC K Y,DIC S X=$P(X,"|",3) ;X=DR NAME OR FRAGMENT
+ S DIC="^VA(200,",DIC(0)="YI",DIC("S")="I $D(^VA(200,+Y,51,299,0))" D ^DIC I +Y<0 W "*NOT FOUND*",! Q
+ I $D(Y)'=11 W $P($G(^VA(200,+Y,0)),"^",1),! Q
+ S K=0 F  S K=$O(Y(K)) Q:K'>0  W $P($G(^VA(200,K,0)),"^",1),!
+ K DIC,Y Q
+DOCS ;GET ALL ACTIVE PROVIDERS
+ S CNTDOC=0
+ S I=0 F  S I=$O(^VA(200,I)) Q:(+I=0)+(CNTDOC>300)  D  ;
+ .S Y=$G(^VA(200,I,"PS")) I Y="" Q
+ .S INACT=$P(Y,"^",4) Q:INACT'=""
+ .S DR=$G(^VA(200,I,0)) Q:DR=""  S DR=$P(DR,"^",1) W DR,! S CNTDOC=CNTDOC+1
+ W "**ENDTX**",!
+ Q
+FILE ;
+ S FILE=$G(^DIZ(646072,0)),ENT=$P(FILE,"^",4)
+ S ENT=ENT+1
+BEG I $D(^DIZ(646072,ENT,0)) S ENT=ENT+1 G BEG
+ S $P(FILE,"^",3)=ENT,$P(FILE,"^",4)=ENT,^DIZ(646072,0)=FILE
+ S NAME=$P(X,"|",3),IND=$P(X,"|",4),DOC=$P(X,"|",5),TEST=$P(X,"|",6)
+ S TRANS=$P(X,"|",7),EMER=$P(X,"|",8),LOC=$P(X,"|",9),DATE=$P(X,"|",10)
+ S TIME=$P(X,"|",11),DFN=$P(X,"|",12),TESTLOC=$P(X,"|",13),UNSCHED=+$P(X,"|",14),PREDATE=$P(X,"|",15)
+ S AUTH=$P(X,"|",16)
+ S X=DATE D ^%DT S DATE=Y,U="^"
+ S ^DIZ(646072,ENT,0)=NAME_U_IND_U_DOC_U_TEST_U_TRANS_U_EMER_U_LOC_U_DATE
+ S ^DIZ(646072,ENT,1)=TESTLOC_"^"_UNSCHED_"^"_PREDATE_"^"_AUTH
+ S ^DIZ(646072,"B",NAME,ENT)="",^DIZ(646072,"C",DFN,ENT)=""
+ I AUTH]"" S ^DIZ(646072,"D",AUTH,ENT)="" ;AUTH NUMBER
+ ;S $P(FILE,"^",3)=ENT,$P(FILE,"^",4)=ENT,^DIZ(646072,0)=FILE
+ K NAME,TEST,TESTLOC,SELFSCH,TIME,SD,DFN,ENT,EMER,PREDATE
+ K DOC,IND,TRANS,LOC,DATE,%DT
+ Q
+HOSTCHK ;check to see if host is there
+ W "**HELLO**",! Q
+TEXTIN ;GET TEXT
+ S ^ZZXYZ($H,"TEXT")="TEXT SENT:"+X
+ S TRANSACT=$P(X,"|",3)
+ I TRANSACT="" U $I:ECHO W "*NOTRANSACT*",! Q
+ ;
+ I $D(DUZ)=0 S DUZ=1
+ K ^XTEMP(DUZ,TRANSACT) S I=0 ;WIPE THE SLATE
+LPTEXT R X:30 I '$T U $I:ECHO W "*TIMEOUT*",! S I=I+1,^XTEMP(DUZ,TRANSACT,I)="*TIMEOUT*" Q
+ I X["*EOF*" Q
+ S I=I+1,^XTEMP(DUZ,TRANSACT,I)=X
+ G LPTEXT
+WPINP ;GET TEXT INPUT
+ K ^TMP($J) S I=0
+LPTXT R X:30 I '$T U $I:ECHO W "*TIMEOUT*",! Q
+ S I=I+1
+ S ^TMP($J,I)=X
+ I X="*EOF*" Q  ;END OF FILE
+ G LPTXT
+TASK ;QUEUE THE OUTPUT TO THE PRINTER
+ S ZTRTN=$P(X,"|",4)
+ S ZTDESC=$P(X,"|",5)
+ S IOP=$P(X,"|",3),%ZIS="Q",ZTDTH=$H D ^%ZIS
+ I POP=1 W "**DEVICE UNAVAILABLE**",!
+ S ZTSAVE("*")="" D ^%ZTLOAD
+ I IO'=IO(0) D ^%ZISC
+ Q
+PRTFB ;PRINT FB Patient report
+ U $I:ECHO S I=""
+ F  S I=$O(^XTEMP(DUZ,TRANSACT,I)) Q:I=""  D OUTX
+ Q
+OUTX ;
+ S Y=^(I) W Y,!
+ Q

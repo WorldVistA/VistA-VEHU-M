@@ -1,0 +1,12 @@
+ZZSAVE ;JAS/ISA; ROUTINE TO STRIP OUT COMMENTS
+ D ^%ZIS X ^%ZOSF("RSEL") S T=0,DIF=""
+ S N=$P(^UTILITY($J,0),"^",1)
+ S X=$N(^UTILITY($J,0)) D PROCESS
+ F J=1:1:N-1 S X=$N(^UTILITY($J,X)) D PROCESS
+ D ^%ZISC
+ Q
+PROCESS ;
+ U IO W @IOF
+ S %N=0 X "ZL @X F T=T+1:1 S %N=%N+1,%=$T(+%N) Q:$L(%)=0  I $E(%,1,10)["";"" U IO W !,%"
+ Q
+  
