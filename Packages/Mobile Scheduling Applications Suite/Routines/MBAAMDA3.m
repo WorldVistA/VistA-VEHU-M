@@ -1,10 +1,10 @@
-MBAAMDA3 ;OIT-PD/CBR - APPOINTMENT API;08/27/2014
- ;;1.0;Scheduling Calendar View;;Aug 27, 2014;Build 52
+MBAAMDA3 ;OIT-PD/CBR - APPOINTMENT API ;02/10/2016
+ ;;1.0;Scheduling Calendar View;**1**;Feb 13, 2015;Build 85
+ ;
  ;Associated ICRs
  ;  ICR#
  ;  6053 DPT
  ;  10076 XUSEC
- ;  6063 MBAA RPC REGISTRATION
  ;
  ;code below is not being used in the initial release of MBAA. It will be released at a later date in a future release of MBAA
  ;GETPATS(RETURN,SEARCH,START,NUMBER) ; Get patients
@@ -24,6 +24,7 @@ GETPAT(RETURN,PAT,INT,EXT,REZ) ; Get patient detail Called by RPC MBAA APPOINTME
  S SFILES(".3721")="",SFILES(".3721","N")="RATED DISABILITIES",SFILES(".3721","F")="2.04"
  S SFILES("2")="",SFILES("2","N")="RACE INFORMATION",SFILES("2","F")="2.02"
  S SFILES("6")="",SFILES("6","N")="ETHNICITY INFORMATION",SFILES("6","F")="2.06"
+ S ROUT=2
  D GETREC^MBAAMDAL(.RETURN,PAT,FILE,.FLDS,.SFILES,$G(INT),$G(EXT),$G(REZ))
  Q
  ;code below is not being used in the initial release of MBAA. It will be released at a later date in a future release of MBAA
@@ -77,6 +78,7 @@ MAKE(DFN,SD,SC,TYPE,STYP,STAT,RSN,USR,DT,SRT,NAAI,LAB,XRAY,EKG,DESDT) ; Make pat
  . S FDA(2.98,IENS,"9.5")=$G(TYPE)
  . S FDA(2.98,IENS,"17")="@"
  . S FDA(2.98,IENS,"20")=DT
+ . S FDA(2.98,IENS,"27")=$G(DESDT)
  . D FILE^DIE("","FDA","ERR")
  E  D
  . S IENS="?+2,"_DFN_","

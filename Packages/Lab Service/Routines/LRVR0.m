@@ -1,5 +1,5 @@
-LRVR0 ;DALOI/STAFF - LEDI MI/AP Data Verification ;08/12/13  11:08
- ;;5.2;LAB SERVICE;**350,427**;Sep 27, 1994;Build 33
+LRVR0 ;DALOI/STAFF - LEDI MI/AP Data Verification ;01/18/17  09:31
+ ;;5.2;LAB SERVICE;**350,427,474,480**;Sep 27, 1994;Build 7
  ;
  ; LEDI MI/AP Auto-instrument verification
  ; Called from LRVR
@@ -8,10 +8,13 @@ LRVR0 ;DALOI/STAFF - LEDI MI/AP Data Verification ;08/12/13  11:08
  ;
 EN ;
  N EAMODE,LA7X,LRANYAA,LRAO,LRBG0,LRCFL,LRCMNT,LRDINST,LREND,LRFIFO,LRFLAG,LRINTYPE,LRLEDI,LRLLT,LRMIDEF,LRMIOTH
- N LRNOP,LRONESPC,LRONETST,LRPG,LRPTP,LRSAME,LRSB,LRSS,LRTM60,LRTX,LRUID,LRWRDVEW,LRX,X,Y
+ N LRNOP,LRONESPC,LRONETST,LRPG,LRPTP,LRSAME,LRSB,LRSS,LRTM60,LRTX,LRUID,LRVT,LRWRDVEW,LRX,X,Y
  ;
  S LRSS=$P($G(^LRO(68,+$G(LRAA),0)),U,2) Q:LRSS=""
  I LRSS'?1(1"MI",1"SP",1"CY",1"EM") Q
+ ;
+ ; If micro accession then set flag to indicate "result entry (RE)".
+ I LRSS="MI" S LRVT="RE"
  ;
  S LRDINST=+$$KSP^XUPARAM("INST")
  S LRLEDI=1,LRCFL="",EAMODE=1,LRWRDVEW=1
@@ -224,25 +227,58 @@ UNLOCK ; Unlock accession and ^LR( global
  ;
  ;
 ACCEPT ;Display results and accept data
- N LRBATCH,LRMODE,LRNPTP
+ N LRBATCH,LREDITTYPE,LRMODE,LRNPTP
  I $G(LREND) S LREND=0 Q
  ;
- S LRMODE="LDSI",LRBATCH=1
+ S LRMODE="LDSI",LRBATCH=1,LREDITTYPE=1
  D DQ^LRMIPSZ1
  ;
- D EC^LRMIEDZ4
- S LRTS=LRTS(LRI)
  ;
- K DIR
- S DIR(0)="Y",DIR("A")="Do you want to APPROVE these results",DIR("B")="NO"
- S DIR("?")="Enter Y if you want to approve these results"
- S DIR("?",1)="Entering Y will store the results in the Lab System"
+ N DIR,DIROUT,DIRUT,DUOUT
+ I LRINTYPE=1 D
+ . S DIR(0)="SAO^0:Quit;1:Release;2:Comments/Release;3:Edit (full)"
+ . S DIR("A")="Select RELEASE action: "
+ . S DIR("B")=$$GET^XPAR("USR^PKG","LR MI UI RELEASE DEFAULT","`"_+LRLL,"E")
+ . I DIR("B")="" S DIR("B")="Edit (full)"
+ . S DIR("?")="Selections 1-3 will allow editing of status and approved date/time."
+ . S DIR("?",1)="Entering 0 will abort review/release."
+ . S DIR("?",2)="Entering 1 will allow release 'as is' with no editing."
+ . S DIR("?",3)="Entering 2 will allow you to enter/edit comments then release."
+ . S DIR("?",4)="Entering 3 will allow you to enter full edit, similar to 'Results entry' option."
+ ;
+ E  D
+ . S DIR(0)="Y"
+ . S DIR("A")="Do you want to APPROVE these results",DIR("B")="NO"
+ . S DIR("?")="Enter Y if you want to approve these results"
+ . S DIR("?",1)="Entering Y will store the results in the Lab System"
+ ;
  D ^DIR
+ S LREDITTYPE=+Y
  I $D(DIRUT) S LRNOP=1 Q
  I Y=0 D PURG Q
  I Y<1 S LRNOP=1 Q
  ;
+ ; If user just accepting or doing comments then ask for tests.
+ I LREDITTYPE<3 D
+ . D EC^LRMIEDZ4
+ . S LRTS=LRTS(LRI)
+ ;
  D EN^LRVRMI4
+ ;
+ ; If Lab UI interface then allow editing remarks (#13), status (#11.5) and approved date/time (#11)
+ I LRINTYPE=1,LREDITTYPE<3 D
+ . N DA,DIE,DR,LRANOK,LRLEDI,LRCAPO,LRUNDO
+ . S (LRCAPOK,LRANOK)=1,LRUNDO=0
+ . S DA=LRIDT,DA(1)=LRDFN,DIE="^LR(LRDFN,""MI"","
+ . S DR=$S(LREDITTYPE=2:"13;",1:"")_"11.5;11"
+ . D ^DIE
+ . D VT^LRMIUT1
+ ;
+ ; If Lab UI interface and user wants to do full editing
+ I LRINTYPE=1,LREDITTYPE=3 D
+ . N LRANOK,LRLEDI,LRCAPO,LRUNDO
+ . S (LRCAPOK,LRANOK)=1,LRUNDO=0
+ . D AUDRTN^LRMIEDZ2
  ;
  ; Store performing lab info
  I $D(^TMP("LRPL",$J)) D ROLLUPPL^LRRPLUA(LRDFN,LRSS,LRIDT)
@@ -259,6 +295,9 @@ ACCEPT ;Display results and accept data
  ; Ask to send CPRS alert
  D ASKXQA^LRMIEDZ2
  ;
+ ; If Lab UI interface then prompt user for accession test complete date/time in EC3^LRMIEDZ2 call.
+ I LRINTYPE=1 S LRFIFO=0
+ ;
  ; Update accession and order
  D EC3^LRMIEDZ2
  ;
@@ -271,7 +310,7 @@ ACCEPT ;Display results and accept data
  ;
 PURG ; Ask if the entry should be purged from ^LAH(
  W !
- N DIR
+ N DIR,DIROUT,DIRUT,DUOUT
  S DIR(0)="Y",DIR("A")="Do you want to PURGE these results",DIR("B")="NO"
  S DIR("?",1)="Enter NO if you want to process these results at a later time"
  S DIR("?")="Enter YES to remove these results from the list"

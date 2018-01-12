@@ -1,10 +1,10 @@
-MBAAMDA2 ;OIT-PD/VSL - APPOINTMENT API;08/27/2014
- ;;1.0;Scheduling Calendar View;;Aug 27, 2014;Build 52
+MBAAMDA2 ;OIT-PD/VSL - APPOINTMENT API ;02/10/2016
+ ;;1.0;Scheduling Calendar View;**1**;Feb 13, 2015;Build 85
+ ;
  ;Associated ICRs
  ;  ICR#
- ;  6044 SC(
  ;  6053 DPT
- ;  6063 MBAA RPC REGISTRATION
+ ;  6044 SC(
  ;
  ;code below is not being used in the initial release of MBAA. It will be released at a later date in a future release of MBAA
  ;FRSTAVBL(RETURN,SC) ; Get first available date
@@ -13,7 +13,12 @@ MBAAMDA2 ;OIT-PD/VSL - APPOINTMENT API;08/27/2014
  ; Q
  ; ;
 SLOTS(RETURN,SC) ; Get available slots MBAA RPC: MBAA GET CLINIC AVAILABILITY
- M RETURN=^SC(+SC,"ST")  ;ICR#: 6044 SC(
+ ;T13 Change to use FM to get the data
+ S SD=0 F  S SD=$O(^SC(SC,"ST",SD)) Q:SD'>0  D    ;ICR#: 6044 SC(
+ .N IENS,ARRAY,ERR S IENS=$G(SD)_","_SC_"," D GETS^DIQ(44.005,IENS,".01;1","I","ARRAY","ERR")
+ .S RETURN(SD,0)=$G(ARRAY(44.005,IENS,.01,"I")),RETURN(SD,1)=$G(ARRAY(44.005,IENS,1,"I"))
+ K SD
+ ;M RETURN=^SC(+SC,"ST")  ;ICR#: 6044 SC(
  Q
  ;code below is not being used in the initial release of MBAA. It will be released at a later date in a future release of MBAA
  ;SCEXST(RETURN,CSC) ; Returns Outpatient Classification Stop Code Exception status
@@ -43,10 +48,10 @@ LSTAPPT(RETURN,SEARCH,START,NUMBER) ; Lists appointment types MBAA RPC: MBAA APP
  ; Q
  ;
  ;GETELIG(RETURN,ELIG,INT,EXT,REZ) ; Get eligibility code
- ; N FILE,FLDS
- ; S FILE=8,FLDS("*")=""
- ; D GETREC^MBAAMDAL(.RETURN,ELIG,FILE,.FLDS,,$G(INT),$G(EXT),$G(REZ))
- ; Q
+ ;N FILE,FLDS
+ ;S FILE=8,FLDS("*")=""
+ ;D GETREC^MBAAMDAL(.RETURN,ELIG,FILE,.FLDS,,$G(INT),$G(EXT),$G(REZ))
+ ;Q
  ; ;
  ;HASPEND(RETURN,PAT,DT) ; Return 1 if patient has pending appointment
  ; S RETURN=0
@@ -73,7 +78,8 @@ APTYNAME(TYPE) ; Get appointment type name MBAA RPC: MBAA PATIENT PENDING APPT
 GETAPTS(RETURN,DFN,SD) ; Get patient appointments Called by RPC MBAA APPOINTMENT MAKE, MBAA RPC: MBAA CANCEL APPOINTMENT
  N FILE,SFILES,APTS,DT
  S FILE=2
- S SFILES("1900")="",SFILES("1900","N")="APT",SFILES("1900","F")="2.98"
+ S SFILES("1900")="",SFILES("1900","N")="APT",SFILES("1900","F")="2.98",ROUT=3
+ S:$G(ROUTC)=1 ROUT=4
  D GETREC^MBAAMDAL(.APTS,DFN,FILE,,.SFILES,1,1,1)
  I '$D(SD) M RETURN=APTS Q
  I $G(SD)>0&'$D(SD(0)) D  Q
@@ -88,9 +94,13 @@ GETDAPTS(RETURN,DFN,SD) ; Get all appointments in the day Called by RPC MBAA APP
  S RETURN=0
  S IND=$P(SD,".")
  F  S IND=$O(^DPT(DFN,"S",IND)) Q:IND=""!($P(IND,".")>$P(SD,"."))  D  ;ICR#: 6053 DPT
- . S NOD=^DPT(DFN,"S",IND,0)
- . S RETURN(IND,1)=$P(NOD,U,1)
- . S RETURN(IND,2)=$P(NOD,U,2)
+ . ;T13 Change to use FM to get these fields
+ . N ARRAY S IENS=$G(SD)_","_$G(DFN)_"," D GETS^DIQ(2.98,IENS,".01;3","I","ARRAY")
+ . S RETURN(IND,1)=$G(ARRAY(2.98,IENS,.01,"I"))
+ . S RETURN(IND,2)=$G(ARRAY(2.98,IENS,3,"I"))
+ . ;S NOD=^DPT(DFN,"S",IND,0)
+ . ;S RETURN(IND,1)=$P(NOD,U,1)
+ . ;S RETURN(IND,2)=$P(NOD,U,2)
  S RETURN=1
  Q
  ;
@@ -98,7 +108,10 @@ LSTCRSNS(RETURN,SEARCH,START,NUMBER) ; MBAA RPC: MBAA LIST CANCELLATION REASONS
  N FILE,FIELDS,RET,SCR,TYP
  S FILE="409.2",FIELDS="@;.01"
  S:$D(START)=0 START="" S:$D(SEARCH)=0 SEARCH=""
- I $D(RETURN("TYPE")) S TYP=RETURN("TYPE"),SCR="I '$P(^(0),U,4),(TYP_""B""[$P(^(0),U,2))"
+ ;T16 Change to return only cancel reasons that a patient can select
+ ;I $D(RETURN("TYPE")) S TYP=RETURN("TYPE"),SCR="I $P(^(0),U,2)[""PB""&'$P(^(0),U,4),(TYP_""B""[$P(^(0),U,2))"
+ I $D(RETURN("TYPE")) S TYP=RETURN("TYPE")
+ S SCR="I ""BP""[$P(^(0),U,2)"
  K RETURN
  D LIST^DIC(FILE,"",FIELDS,"",$G(NUMBER),.START,SEARCH,"B",.SCR,"","RETURN","ERR")
  Q
@@ -130,14 +143,14 @@ LSTCIST1(RETURN,SEARCH,START,NUMBER) ; Returns the list of states that allow che
  ; D LIST^DIC(FILE,"",FIELDS,"",$G(NUMBER),.START,SEARCH,"ACO",.SCR,"","RETURN","ERR")
  ; Q
  ;
-LSTNSTA1(RETURN,SEARCH,START,NUMBER) ; Returns the list of states that allow no-show. 
- N FILE,FIELDS,RET,SCR
- S FILE="409.63",FIELDS="@;.01"
- S:$D(START)=0 START="" S:$D(SEARCH)=0 SEARCH=""
- S START(1)=1
- S START(2)=0
- D LIST^DIC(FILE,"",FIELDS,"",$G(NUMBER),.START,SEARCH,"ANS",,"","RETURN","ERR")
- Q
+ ;LSTNSTA1(RETURN,SEARCH,START,NUMBER) ; Returns the list of states that allow no-show. 
+ ;N FILE,FIELDS,RET,SCR
+ ;S FILE="409.63",FIELDS="@;.01"
+ ;S:$D(START)=0 START="" S:$D(SEARCH)=0 SEARCH=""
+ ;S START(1)=1
+ ;S START(2)=0
+ ;D LIST^DIC(FILE,"",FIELDS,"",$G(NUMBER),.START,SEARCH,"ANS",,"","RETURN","ERR")
+ ;Q
  ;
 GETAPT0(DFN,SD) ; Get appointment 0 node MBAA RPC: MBAA CANCEL APPOINTMENT
  Q $G(^DPT(DFN,"S",SD,0))  ;ICR#: 6053 DPT

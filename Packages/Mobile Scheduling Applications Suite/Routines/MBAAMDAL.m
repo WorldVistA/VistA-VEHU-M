@@ -1,8 +1,5 @@
-MBAAMDAL ;OIT-PD/VSL - FILE ACCESS DAL;08/27/2014
- ;;1.0;Scheduling Calendar View;;Aug 27, 2014;Build 52
- ;Associated ICRs
- ;  ICR#
- ;  6063 MBAA RPC REGISTRATION
+MBAAMDAL ;OIT-PD/VSL - FILE ACCESS DAL ;02/10/2016
+ ;;1.0;Scheduling Calendar View;**1**;Feb 13, 2015;Build 85
  ;
 GETREC(RETURN,IFN,FILE,FLDS,SFILES,INT,EXT,REZ) ; Get one record and specified subfiles from a file Called by RPC MBAA APPOINTMENT MAKE, MBAA RPC: MBAA CANCEL APPOINTMENT, MBAA PATIENT PENDING APPT
  N STRF,FLD,FLAG,C,SFILE,IFLD,REC,SFLDN
@@ -15,7 +12,9 @@ GETREC(RETURN,IFN,FILE,FLDS,SFILES,INT,EXT,REZ) ; Get one record and specified s
  S:$G(INT) FLAG=FLAG_"I" ;Returns Internal values
  S:$G(EXT) FLAG=FLAG_"E" ;Returns External values
  S:$G(REZ) FLAG=FLAG_"R" ;Resolves field numbers to field names
- D GETS^DIQ(FILE,IFN,STRF,FLAG,"REC")
+ ;Change below to add a filter to the results so that the REC array doesn't get so large that it takes all the memory in the partition
+ D:$G(ROUT)'=3 GETS^DIQ(FILE,IFN,STRF,FLAG,"REC")
+ D:$G(ROUT)>2 GETRECA
  F  S FLD=$O(REC(FILE,""_IFN_",",FLD)) Q:FLD=""  D
  . S:FLAG=""!(FLAG="R") RETURN(FLD)=REC(FILE,""_IFN_",",FLD)
  . S:FLAG["I" RETURN(FLD)=REC(FILE,""_IFN_",",FLD,"I")
@@ -24,6 +23,7 @@ GETREC(RETURN,IFN,FILE,FLDS,SFILES,INT,EXT,REZ) ; Get one record and specified s
  F  S SFILE=$O(SFILES(SFILE)) Q:SFILE=""  D
  . S SFLDN=$S(FLAG["R":SFILES(SFILE,"N"),1:SFILE)
  . D GETSREC(.RETURN,.REC,SFILES(SFILE,"F"),SFLDN,FLAG)
+ K ROUT,ROUTC,FLAG,FILE,STRF
  Q
  ;
 GETSREC(RETURN,REC,SFILE,SFLD,FLAG) ; Get record subfile data Called by RPC MBAA APPOINTMENT MAKE, MBAA RPC: MBAA CANCEL APPOINTMENT, MBAA PATIENT PENDING APPT
@@ -57,3 +57,13 @@ GETSREC(RETURN,REC,SFILE,SFLD,FLAG) ; Get record subfile data Called by RPC MBAA
  ; S LIST(0)=COUNT-1
  ; Q
  ;
+GETRECA ; run a diq call to get data and put it into a tmp global, then only get out the data that is needed based on the current date
+ K ^TMP($J,"REC"),REC
+ S:$G(ROUT)>2 FILE1="2.98"
+ ;S:$G(ROUT)=4 FILE1=FILE
+ D GETS^DIQ(FILE,IFN,STRF,FLAG,"^TMP($J,""REC""")
+ S STRT=$$FMADD^XLFDT(DT,-1,0,0,0)_".2359" F  S STRT=$O(^TMP($J,"REC",FILE1,STRT)) Q:STRT'>0  S FLD="" F  S FLD=$O(^TMP($J,"REC",FILE1,STRT,FLD)) Q:FLD=""  S IDX="" F  S IDX=$O(^TMP($J,"REC",FILE1,STRT,FLD,IDX)) Q:IDX=""  D
+ .Q:$G(STRT)<$$FMADD^XLFDT(DT,-1,0,0,0)
+ .S REC(FILE1,STRT,FLD,IDX)=$G(^TMP($J,"REC",FILE1,STRT,FLD,IDX))
+ K ^TMP($J,"REC"),IDX,STRT,FILE1
+ Q

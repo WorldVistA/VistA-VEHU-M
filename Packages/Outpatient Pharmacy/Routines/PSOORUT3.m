@@ -1,7 +1,5 @@
-PSOORUT3 ;ISC-BHAM/SAB-build listman screen continued ; 3/6/17 11:41am
- ;;7.0;OUTPATIENT PHARMACY;**5,25,243**;DEC 1997;Build 12
- ; Original Routine authored by US Dept of Veteran Affairs
- ; Tag A modified by DSS in 2016
+PSOORUT3 ;ISC-BHAM/SAB-build listman screen continued ;12/07/95 18:12
+ ;;7.0;OUTPATIENT PHARMACY;**5,25,243**;DEC 1997;Build 22
  ;
  ;Reference to MAIN^TIUEDIT supported by IA# 2410
  ;Reference to RESET^VALM4 supported by IA# 2334
@@ -37,9 +35,6 @@ DPLYOR ;displays status of patient's orders
  K DIR,DIRUT,DTOUT,DUOUT
  Q
 A ;resizes list area
- ; DSS/SMH - BEGIN MODS - Don't do this.
- QUIT
- ; DSS/SMH - END MODS
  S PSOBM=$S(VALMMENU:19,1:21) I VALM("BM")'=PSOBM S VALMBCK="R" D
  .S VALM("BM")=PSOBM,VALM("LINES")=(PSOBM-VALM("TM"))+1 I +$G(VALMCC) D RESET^VALM4
  Q

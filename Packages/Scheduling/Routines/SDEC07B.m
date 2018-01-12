@@ -1,5 +1,5 @@
-SDEC07B ;ALB/SAT - VISTA SCHEDULING RPCS ;JAN 15, 2016
- ;;5.3;Scheduling;**627**;Aug 13, 1993;Build 249
+SDEC07B ;ALB/SAT - VISTA SCHEDULING RPCS ;MAY 15, 2017
+ ;;5.3;Scheduling;**627,658,665,669**;Aug 13, 1993;Build 16
  ;
  Q
  ;
@@ -26,7 +26,8 @@ MAKE(BSDR) ;PEP; call to store appt made
  ; BSDR("XRA") = XRAY date/time in fm format
  ; BSDR("CON") = Consult link - pointer to file 123
  ; BSDR("OVB") = overbook flag - 1=yes, this is an overbook
- ;
+ ; BSDR("ELG") = Patient Eligibilty
+ ; 
  ;Output: error status and message
  ;   = 0 or null:  everything okay
  ;   = 1^message:  error and reason
@@ -75,6 +76,7 @@ MAKE(BSDR) ;PEP; call to store appt made
  . S SDECFDA(2.98,SDECIENS,"14")=""
  . S SDECFDA(2.98,SDECIENS,"15")=""
  . S SDECFDA(2.98,SDECIENS,"16")=""
+ . S SDECFDA(2.98,SDECIENS,"17")=""   ;alb/sat 658
  . S SDECFDA(2.98,SDECIENS,"19")=DUZ           ;data entry clerk
  . S SDECFDA(2.98,SDECIENS,"20")=$$NOW^XLFDT
  . S SDECFDA(2.98,SDECIENS,"25")=SDSRT         ;scheduling request type
@@ -91,12 +93,15 @@ MAKE(BSDR) ;PEP; call to store appt made
  . S SDECFDA(2.98,SDECIENS,.01)=BSDR("CLN")
  . S SDECFDA(2.98,SDECIENS,"3")=$S($G(^DPT(+$G(BSDR("PAT")),.1))'="":"I",1:"")
  . S SDECFDA(2.98,SDECIENS,"5")=BSDR("LAB")    ;lab date/time
+ . S SDECFDA(2.98,SDECIENS,"6")=BSDR("XRA")    ;xray date/time
+ . S SDECFDA(2.98,SDECIENS,"7")=BSDR("EKG")    ;ekg date/time
  . S SDECFDA(2.98,SDECIENS,"9")=BSDR("TYP")
  . S:+BSDR("APT") SDECFDA(2.98,SDECIENS,"9.5")=BSDR("APT")
  . S:+BSDR("COL") SDECFDA(2.98,SDECIENS,"13")=BSDR("COL")
  . S SDECFDA(2.98,SDECIENS,"14")=""
  . S SDECFDA(2.98,SDECIENS,"15")=""
  . S SDECFDA(2.98,SDECIENS,"16")=""
+ . S SDECFDA(2.98,SDECIENS,"17")=""   ;alb/sat 658
  . S SDECFDA(2.98,SDECIENS,"19")=DUZ           ;data entry clerk
  . S SDECFDA(2.98,SDECIENS,"20")=$$NOW^XLFDT
  . S SDECFDA(2.98,SDECIENS,"25")=SDSRT         ;scheduling request type
@@ -116,7 +121,7 @@ MAKE(BSDR) ;PEP; call to store appt made
  K DIC,DA,X,Y,DLAYGO,DD,DO,DINUM
  S DIC="^SC("_BSDR("CLN")_",""S"","_BSDR("ADT")_",1,"
  S DA(2)=BSDR("CLN"),DA(1)=BSDR("ADT"),X=BSDR("PAT")
- S DIC("DR")="1////"_BSDR("LEN")_";3///"_$E($G(BSDR("OI")),1,150)_";7////"_BSDR("USR")_";8////"_$$NOW^XLFDT_$S(+$G(BSDR("OVB")):";9////O",1:"")
+ S DIC("DR")="1////"_BSDR("LEN")_";3///"_$E($G(BSDR("OI")),1,150)_";7////"_BSDR("USR")_";8////"_$$NOW^XLFDT_";30////"_BSDR("ELG")_$S(+$G(BSDR("OVB")):";9////O",1:"")
  S DIC("P")="44.003PA",DIC(0)="L",DLAYGO=44.003
  D FILE^DICN
  ;add consult link
@@ -183,3 +188,28 @@ SDSRT(TYP,MTR,DDT,REQ) ;get SCHEDULING REQUEST TYPE and NEXT AVA.APPT. INDICATOR
  ; then C:OTHER THAN 'NEXT AVA.' (CLINICIAN REQ.); 0:NOT INDICATED TO BE A 'NEXT AVA.' APPT.
  I $P($$NOW^XLFDT(),".",1)'=DDT,REQ=1 Q "C^0"
  Q RET
+ ;
+ ;Create Appointment  ;alb/sat 665 moved from SDEC07
+APPVISTA(SDECLEN,SDECNOTE,DFN,SDECRESD,SDECSTART,SDECWKIN,SDCL,SDECI) ;
+ N SDECC,SDECERR,SDECRNOD
+ S SDECRNOD=$G(^SDEC(409.831,SDECRESD,0))
+ I SDECRNOD="" D ERR^SDEC07(SDECI+1,"SDEC07 Error: Unable to add appointment -- invalid Resource entry.") Q 1
+ S SDECERR=""
+ I +SDCL,$D(^SC(SDCL,0)) D  I +SDECERR D ERR^SDEC07(SDECI+1,SDECERR) Q SDECERR
+ . S SDECC("PAT")=DFN
+ . S SDECC("CLN")=SDCL
+ . S SDECC("TYP")=3 ;3 for scheduled appts, 4 for walkins
+ . S:SDECWKIN SDECC("TYP")=4
+ . S SDECC("ADT")=SDECSTART
+ . S SDECC("LEN")=SDECLEN
+ . S SDECC("OI")=$E($G(SDECNOTE),1,150) ;File 44 has 150 character limit on OTHER field
+ . S SDECC("OI")=$TR(SDECC("OI"),";"," ") ;No semicolons allowed
+ . S SDECC("OI")=$$STRIP^SDEC07(SDECC("OI")) ;Strip control characters from note
+ . S SDECC("RES")=SDECRESD
+ . S SDECC("USR")=DUZ
+ . S SDECERR=$$MAKE^SDEC07B(.SDECC)
+ . Q:SDECERR
+ . D AVUPDT^SDEC07(SDCL,SDECSTART,SDECLEN)
+ . ;L
+ . Q
+ Q +SDECERR

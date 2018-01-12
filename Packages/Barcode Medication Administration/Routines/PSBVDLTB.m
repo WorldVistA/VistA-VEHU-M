@@ -1,6 +1,6 @@
-PSBVDLTB ;BIRMINGHAM/EFC-BCMA VIRTUAL DUE LIST FUNCTIONS (CONT) ;3/19/13 19:13pm
- ;;3.0;BAR CODE MED ADMIN;**3,4,16,68,70,78**;Mar 2004;Build 9
- ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified.
+PSBVDLTB ;BIRMINGHAM/EFC-BCMA VIRTUAL DUE LIST FUNCTIONS (CONT) ;03/06/16 3:06pm
+ ;;3.0;BAR CODE MED ADMIN;**3,4,16,68,70,78,83,92**;Mar 2004;Build 9
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference/IA
  ; EN^PSJBCMA/2828
@@ -15,12 +15,14 @@ PSBVDLTB ;BIRMINGHAM/EFC-BCMA VIRTUAL DUE LIST FUNCTIONS (CONT) ;3/19/13 19:13pm
  ;      also add to return array(1) 6th, 7th piece = IM & CO ord count
  ;      also add to return array order line 32 piece, Clinic name for 
  ;      CO orders.
+ ;*83 - cleanup variables here instead of in each tab rtn
  ;
  ; ** Warning: PSBSIOPI & PSBCLINORD will be used as global variables
  ;             for all down stream calls from this RPC tag.
  ;
 RPC(RESULTS,DFN,PSBTAB,PSBDT,PSBSIOPI,PSBCLINORD,PSBSRCHDIR) ;
  N PSBCNT,PSBORDCNT,PSBPATCH,PSBINFUS,PSBIVSTP,PSBA               ;*70
+ N PSBNOW                                                         ;*83
  K RESULTS,^TMP("PSB",$J),^TMP("PSJ",$J)
  S PSBSIOPI=+$G(PSBSIOPI)   ;*68 init to 0 if not present or 1 if sent
  S PSBCLINORD=+$G(PSBCLINORD)                   ;*70 set to 0 if NULL
@@ -99,8 +101,8 @@ RPC(RESULTS,DFN,PSBTAB,PSBDT,PSBSIOPI,PSBCLINORD,PSBSRCHDIR) ;
  .. S NODE=^TMP("PSB",$J,"UDTAB",QQ)
  .. I $L(NODE,U)>27,$P(NODE,U,2)?.N1A D
  ... ;  first order found Activ per correct mode, then quit with cnt=1
- ... I PSBCLINORD,$P(NODE,U,33),$P(NODE,U,22)="A" S CNT=1 Q
- ... I 'PSBCLINORD,'$P(NODE,U,33),$P(NODE,U,22)="A" S CNT=1 Q
+ ... I PSBCLINORD,$P(NODE,U,33),($P(NODE,U,22)="A"!($P(NODE,U,22)="H")!($P(NODE,U,22)="R")) S CNT=1 Q
+ ... I 'PSBCLINORD,'$P(NODE,U,33),($P(NODE,U,22)="A"!($P(NODE,U,22)="H")!($P(NODE,U,22)="R")) S CNT=1 Q
  ... Q:'$P(NODE,U,28)  ;not a given patch
  ... I PSBCLINORD,$P($P(NODE,U,26),".")'>DT,'$P(NODE,U,33) Q
  ... I 'PSBCLINORD,$P($P(NODE,U,26),".")'>DT,$P(NODE,U,33) Q
@@ -129,7 +131,8 @@ RPC(RESULTS,DFN,PSBTAB,PSBDT,PSBSIOPI,PSBCLINORD,PSBSRCHDIR) ;
  .S $P(^TMP("PSB",$J,PSBTAB,1),U,10)=PSBPATCH     ;*70 patch light
  ;
  F X="UDTAB","PBTAB","IVTAB" I X'=PSBTAB K ^TMP("PSB",$J,X)
- D CLEAN^PSBVT K ^TMP("PSJ",$J),PSBATAB,PSBWADM,PSBWBEG,PSBWEND,PSBNOW,PSBTRDT,PSBPTTR,PSBTRFL,PSBNTDT,PSBTRTYP,PSBMVTYP
+ D CLEAN^PSBVT
+ K ^TMP("PSJ",$J),PSBATAB,PSBWADM,PSBWBEG,PSBWEND,PSBNOW,PSBTRDT,PSBPTTR,PSBTRFL,PSBNTDT,PSBTRTYP,PSBMVTYP  ;*83
  Q
  ;
 TABINIT ;

@@ -1,5 +1,5 @@
 VBECVLC ;HOIFO/BNT-VBECS VistALink Client ;07/27/2002
- ;;1.0;VBECS;**3**;Apr 14, 2005;Build 21
+ ;;2.0;VBEC;;Jun 05, 2015;Build 4
  ;
  ; Note: This routine supports data exchange with an FDA registered
  ; medical device. As such, it may not be changed in any way without
@@ -96,7 +96,7 @@ BUILD(VBECY,VBECDAT) ;  -- store built xml in passed store reference (VBECY)
  ;
  DO ADD($$XMLHDR^XOBVLIB())
  DO ADD("<VistaLink messageType="""_$G(VBECDAT("MESSAGE TYPE"))_""" version=""1.0"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:noNamespaceSchemaLocation=""rpcFault.xsd"" >")
- DO ADD("xmlns=""http://med.va.gov/Foundations"">")
+ DO ADD("xmlns=""http://domain.ext/Foundations"">")
  DO ADD("<Fault>")
  DO ADD("<FaultString>Internal Application Error</FaultString>")
  DO ADD("<FaultActor>VBECS VistaLink Client</FaultActor>")

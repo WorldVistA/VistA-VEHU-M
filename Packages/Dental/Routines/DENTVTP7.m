@@ -1,6 +1,6 @@
 DENTVTP7 ;DSS/KC - RPCS FOR RESERVED TXNS ;05/11/2004 13:35
- ;;1.2;DENTAL;**39,47,50,57,59**;Aug 10, 2001;Build 19
- ;Copyright 1995-2011, Document Storage Systems, Inc., All Rights Reserved
+ ;;1.2;DENTAL;**39,47,50,57,59,63,66**;Aug 10, 2001;Build 36
+ ;Copyright 1995-2013, Document Storage Systems, Inc., All Rights Reserved
  ;
  ;  this routine contains all the RPCs needed for reserved txns
  ;  DBIA#  Supported  Description
@@ -24,7 +24,7 @@ SAVE(DENT,DATA) ;  RPC: DENTV TP FILE RESERVED TXNS
  ;            
  ;  DATA(n) = reserved txn data   where n =2,3,4,5,6,...
  ;  Return(n) = 1^message if action successful, else return -1^message
- N X,Y,Z,DEN,DENER,DENIEN,DENX,DFN,DI,FLG,DENTI,PROV,DIERR
+ N X,Y,Z,DEN,DENER,DENIEN,DENX,DFN,DI,FLG,DENTI,PROV,DIERR,SAVE
  S DENTI=$O(DATA("")) I 'DENTI D MSG(1) Q
  S Z="FLG^PROV^DFN"
  F Y=1:1:3 S @$P(Z,U,Y)=$P(DATA(DENTI),U,Y)
@@ -54,6 +54,7 @@ SAVE(DENT,DATA) ;  RPC: DENTV TP FILE RESERVED TXNS
  .S DENX(228.7,"+1,",.03)=DFN
  .S DENX(228.7,"+1,",.04)=$$NOW^XLFDT
  .S DENX(228.7,"+1,",.05)="" ;New inactive flag reset on new save.
+ .S DENX(228.7,"+1,",.06)=DUZ
  .S DENX(228.7,"+1,",1)="DEN"
  .S DENIEN(1)=""
  .D UPDATE^DIE(,"DENX","DENIEN","DENER")
@@ -68,6 +69,7 @@ SAVE(DENT,DATA) ;  RPC: DENTV TP FILE RESERVED TXNS
  I $D(^DENT(228.7,DENIEN)),FLG="U" N DNTAR S DNTAR(228.7,DENIEN_",",.05)="",DNTAR(228.7,DENIEN_",",.04)=$$NOW^XLFDT D FILE^DIE(,"DNTAR") K DNTAR
  L +^DENT(228.7,DENIEN):2 E  D MSG(9) Q
  D WP^DIE(228.7,DENIEN_",",1,,"DEN","DENER")
+ L -^DENT(228.7,DENIEN)
  I '$D(DIERR) S DENT="1^Reserved transactions updated"
  E  S DENT="-1^"_$$MSG^DSICFM01("VE","","","","DENER")
  Q
@@ -81,12 +83,20 @@ GET(DENT,PROV,DFN) ;  RPC: DENTV TP GET RESERVED TXNS
  ;    format of return of individual records:
  ;    ^TMP("DENT",$J,n) = 1st txn line
  ;                 n+m) = last txn line
- N DENIEN,CNT,DENTAR,I,DENER,ZNODE,ZN,X0,INAC
+ ;
+ ; !DO NOT UNCOMMENT UNLESS SIDELOADING SITE DATA!
+ ; Debugging code to sideload broker history data
+ ;
+ ;S X=$$FTG^%ZISH("C:\HFS\","Reserved.txt","^TMP(""DENTVAU"",0)",2,"OVF")
+ ;S DENT=$NA(^TMP("DENTVAU")) Q
+ ;
+ N DENIEN,CNT,DENTAR,I,DENER,ZNODE,ZN,X0,INAC,SAVE,TXNTC,TXNOTC
  S DENT=$NA(^TMP("DENT",$J)) K @DENT
  I '$G(PROV) S @DENT@(1)="-1^No provider received" Q
  I '$G(DFN) S @DENT@(1)="-1^No patient received" Q
  S DENIEN=$O(^DENT(228.7,"AC",PROV,DFN,0))
  I 'DENIEN S @DENT@(1)="-1^No transactions found" Q
+ S SAVE=$P($G(^DENT(228.7,DENIEN,0)),U,6)
  K ^TMP("DENTV",$J,"TC") ;P57 for timecounter
  ;Inactive check P59
  D CHKINA(,DENIEN) ;Check whether unfiled data is >8 days, inactivate
@@ -105,11 +115,14 @@ GET(DENT,PROV,DFN) ;  RPC: DENTV TP GET RESERVED TXNS
  ..S ZN="0",ZN=$TR($J(ZN,200)," ","0") ;force 200 char perionullhex value
  ..S CNT=CNT+1,@DENT@(CNT)="$$PEN$$^"_ZN
  ..Q
- .I $E(ZNODE,1,6)="$$TX$$" D VALTC ;P57
+ .S TXNOTC(+$G(I))=$P(ZNODE,U,22)
+ .I $E(ZNODE,1,6)="$$TX$$" S $P(ZNODE,U,21)=$$CNVT^DSICDT(,DT,"F","E",5,,1) D VALTC ;P57
+ .S TXNTC(+$G(I))=$P(ZNODE,U,22)
  .S CNT=CNT+1,@DENT@(CNT)=ZNODE
  .Q
  ;Patch 59 additions : Exam template
  S CNT=CNT+1,@DENT@(CNT)="$$IEN$$^"_$P(DENIEN,",") ;CNT=CNT+1
+ S CNT=CNT+1,@DENT@(CNT)="$$SAVE$$^"_$$EXTERNAL^DILFD(228.7,.06,"",SAVE) ;CNT=CNT+1 Return Entered By field
  I '$D(@DENT) S @DENT@(1)="-1^No records found"
  K ^TMP("DENTV",$J,"TC")
  Q
@@ -117,14 +130,21 @@ VALTC ;validate the timecounter going back to the GUI P57
  ;This value must be unique for a txn or ranged txn 'set' for the day
  ;another user may have filed data to the patient, so the TC must be reset
  N X,Y S Y=$P(ZNODE,U,22),X=$$CNVT^DSICDT(,$P(ZNODE,U,21),"E","F",,,1) Q:'X  ;not valid dt?
- I $O(^DENT(228.2,"AE",DFN,+X,+Y,0)) D RESET(X) ;P57
+ ;P57
+ I $O(^DENT(228.2,"AE",DFN,+X,+Y,0)) D RESET(X) Q
+ ;P66 Check unfiled data to maintain sequence and prevent duplicates
+ I $P(ZNODE,U,22)<+$G(TXNTC($G(I)-1)) D RESET(X,TXNOTC(I-1)=$P(ZNODE,U,22)) Q
+ S ^TMP("DENTV",$J,"TC","LAST")=$P(ZNODE,U,22)
+ S ^TMP("DENTV",$J,"TC",+$P(ZNODE,U,22))=$P(ZNODE,U,22)
  Q
-RESET(CDAT) ;reset the timecounter/slightly different than code in DENTVTPC P57
+RESET(CDAT,GRP) ;reset the timecounter/slightly different than code in DENTVTPC P57
  ;txns may file in any order - grouped txns need the same timecounter, even if reset
  ;because we don't file here and update the "AE" x-ref for each xref,
  ; we update "LAST" node each time we use a new number
  N LAST
- S LAST=$G(^TMP("DENTV",$J,"TC",+$P(ZNODE,U,22))) I LAST S $P(ZNODE,U,22)=LAST Q
+ S:$G(GRP)="" GRP=1
+ ;P66 Added GRP flag to denote if the timecounter in question is part of a group of transactions
+ I +$G(GRP) S LAST=$G(^TMP("DENTV",$J,"TC",+$P(ZNODE,U,22))) I LAST S $P(ZNODE,U,22)=LAST Q
  S LAST=$G(^TMP("DENTV",$J,"TC","LAST")) ;we don't "file", need to update something temporarily
  S:'LAST LAST=$O(^DENT(228.2,"AE",DFN,CDAT,9999),-1) ;get last tc from txn file
  S LAST=LAST+10,^TMP("DENTV",$J,"TC","LAST")=LAST ;add 10 to become "new" last
@@ -283,10 +303,11 @@ MSG(X) ;
  S DENT="-1^"_X
  Q
 CHKINA(RET,DENTIEN) ; RPC: DENTV TP RESERVED INACT CHECK
- N DENT,RESDAT,DENTERR,FLAG S FLAG=0
+ N DENT,RESDAT,DENTERR,FLAG,DFN,TIEN,PERDAT S FLAG=0,TIEN=""
  I '$D(^DENT(228.7,DENTIEN)) S RET="-1^The IEN "_DENTIEN_" was not found." Q
  S RESDAT=$$GET1^DIQ(228.7,DENTIEN_",",.04,"I")
  I $$FMDIFF^XLFDT(DT,RESDAT,1)>8 S DENT(228.7,DENTIEN_",",.05)=1,FLAG=1 D FILE^DIE(,"DENT","DENTERR")
  I '$D(DENTER),FLAG S RET="1^Reserve Transaction "_DENTIEN_" exceeds the 8 days alotted and has been inactivated."
+ S DFN=$P($G(^DENT(228.7,DENTIEN,0)),U,3)
  I 'FLAG S RET="0^Reserve Transaction "_DENTIEN_" does not exceed the alotted 8 days."
  Q

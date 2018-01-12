@@ -1,6 +1,6 @@
 DENTVTPA ;DSS/SGM - FILE TP TRANSACTION DATA ;11/26/2003 16:25
- ;;1.2;DENTAL;**39,42,43,45,47,53,57,59**;Aug 10, 2001;Build 19
- ;Copyright 1995-2011, Document Storage Systems, Inc., All Rights Reserved
+ ;;1.2;DENTAL;**39,42,43,45,47,53,57,59,63,66**;Aug 10, 2001;Build 36
+ ;Copyright 1995-2013, Document Storage Systems, Inc., All Rights Reserved
  ;
  ;  this routine will be used to file transaction data types for
  ;  treatment planning as well as DRM
@@ -114,11 +114,11 @@ FILEX(DENT,DATA) ; RPC - DENTV TP FILE EXAM TRANSACTION
  .I DATA("IEN")="" S DENT(1)="-1^A record IEN must be passed to modify a record." Q
  .S II=DATA("IEN")
  .D GETS^DIQ(FIL,II_",",".03;.13;1.05","I","TMP","DENTER")
- .I TMP(FIL,II_",",.03,"I")=DATA("PROV") S FLG=1 E  S FLG=0
- .I TMP(FIL,II_",",.13,"I")=DATA("DATE") S FLG=1 E  S FLG=0
- .I TMP(FIL,II_",",1.05,"I")=$$VISDT^DENTVTPC(DATA("DES")) S FLG=1 E  S FLG=0
+ .I TMP(FIL,II_",",.03,"I")=DATA("PROV") S FLG=1
+ .I TMP(FIL,II_",",.13,"I")=DATA("DATE") S FLG=1
+ .I TMP(FIL,II_",",1.05,"I")=$$VISDT^DENTVTPC(DATA("DES")) S FLG=1
  .I FLG S IENS=II
- I 'IENS S DENT(1)="-1^IEN data does not match" Q
+ I $G(IENS)="" S DENT(1)="-1^Provider, Date, and Visit Date do not match data from transaction #"_DATA("IEN") Q
  ;S DA=IENS,DIK="^DENT(228.2," D ^DIK
  I '$D(DATA("DES")) D ERR(1) Q
  S IENS=IENS_",",VISDT=$$VISDT^DENTVTPC(DATA("DES"))
@@ -208,7 +208,7 @@ ICD(X) ;  validate ICD9 codes in Tn
  N I,Y,Z,ACT,CODE
  I X="" Q -1
  I $D(DENICD("B",X)) Q DENICD("B",X)
- S Z=$$ICD9^DSICDRG("",X,"",DT,"",1),ACT=$P(Z,U,10),CODE=$P(Z,U,2)
+ S Z=$$ICD^DENTVICD(,X,DT,1),ACT=$P(Z,U,10),CODE=$P(Z,U,2)
  I Z>0,ACT S DENICD(+Z)=CODE_U_$P(Z,U,4) Q +Z
  I Z<1 S Y=Z
  E  S Y=CODE_" inactive as of "_$P($P(Z,U,12),";",2)

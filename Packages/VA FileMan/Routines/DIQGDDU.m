@@ -1,6 +1,10 @@
-DIQGDDU ;SFISC/DCL-DATA DICTIONARY UTILITIES ;1:16 PM  26 Sep 1996
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DIQGDDU ;SFISC/DCL - DATA DICTIONARY UTILITIES ;13AUG2015
+ ;;22.2;VA FileMan;**2**;Jan 05, 2016;Build 139
+ ;;Per VA Directive 6402, this routine should not be modified.
+ ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
+ ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
+ ;;Licensed under the terms of the Apache License, Version 2.0.
+ ;
  Q
 FL(DIQGFILE,DIQGFLD) ;Return field length
  ;Short version of DIOS1
@@ -18,6 +22,7 @@ FL(DIQGFILE,DIQGFLD) ;Return field length
  S W=0,DN=$P(DD,"^",2),DIIT=$P(DD,"^",5,999)
  ;
  I DN S W=$$FL(+DN,.01)
+ E  I DN["t",$$GETPROP^DIETLIBF(DIQGFILE,DIQGFLD,"FIELD LENGTH")]"" S W=$$GETPROP^DIETLIBF(DIQGFILE,DIQGFLD,"FIELD LENGTH")
  E  I DN["W" S W=""
  E  I DN["P" S W=$$FL(+$P(DN,"P",2),.01)
  E  I DN["J" S W=+$P(DN,"J",2)

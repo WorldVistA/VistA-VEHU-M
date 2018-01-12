@@ -1,9 +1,8 @@
-MBAAMAP4 ;OIT-PD/VSL - APPOINTMENT API;08/27/2014
- ;;1.0;Scheduling Calendar View;;Aug 27, 2014;Build 52
+MBAAMAP4 ;OIT-PD/VSL - APPOINTMENT API ;02/10/2016
+ ;;1.0;Scheduling Calendar View;**1**;Feb 13, 2015;Build 85
+ ;
  ;Associated ICRs
  ; ICR#
- ; 2851 SDAM1
- ; 6063 MBAA RPC REGISTRATION
  ; 
  ;code below is not being used in the initial release of MBAA. It will be released at a later date in a future release of MBAA
  ;CHECKO(RETURN,DFN,SD,SC) ; Check out

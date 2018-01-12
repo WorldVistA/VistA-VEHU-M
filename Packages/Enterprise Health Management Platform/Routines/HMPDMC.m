@@ -1,31 +1,30 @@
-HMPDMC ;SLC/MKB,ASMR/RRB - Clinical Procedures (Medicine);Nov 05, 2015 19:31:41
- ;;2.0;ENTERPRISE HEALTH MANAGEMENT PLATFORM;**;Sep 01, 2011;Build 63
+HMPDMC ;SLC/MKB,ASMR/RRB,BL,CPC - Clinical Procedures (Medicine);Aug 29, 2016 20:06:27
+ ;;2.0;ENTERPRISE HEALTH MANAGEMENT PLATFORM;**2,3**;Sep 01, 2011;Build 15
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; DE2818, ^SC and ^VA(200) references supprted
- ; External References          DBIA#
- ; -------------------          -----
- ; ^SC                          10040
- ; ^TIU(8925.1                   5677
- ; ^VA(200                      10060
- ; %DT                          10003
- ; DILFD                         2055
- ; DIQ                           2056
- ; GMRCGUIB                      2980
- ; ICPTCOD                       1995
- ; MCARUTL2                      3279
- ; MCARUTL3                      3280
- ; MDPS1,^TMP("MDHSP"/"MDPTXT"   4230
- ; TIULQ                         2693
- ; TIUSRVLO                      2834
- ; XUAF4                         2171
+ ; External Reference ~ DBIA#
+ ; ^SC ~ 10040
+ ; ^TIU(8925.1 ~ 5677
+ ; ^VA(200 ~ 10060
+ ; %DT ~ 10003
+ ; DILFD ~ 2055
+ ; DIQ ~ 2056
+ ; GMRCGUIB ~ 2980
+ ; ICPTCOD ~ 1995
+ ; MCARUTL2 ~ 3279
+ ; MCARUTL3 ~ 3280
+ ; MDPS1,^TMP("MDHSP"/"MDPTXT" ~ 4230
+ ; TIULQ ~ 2693
+ ; TIUSRVLO ~ 2834
+ ; XUAF4 ~ 2171
  Q
  ; ------------ Get procedures from VistA ------------
  ;
 EN(DFN,BEG,END,MAX,ID) ; -- find patient's procedures
  N HMPITM,RES,HMPN,HMPX,RTN,DATE,CONS,TIUN,X0,DA,GBL,X,Y,%DT,HMPT,LT,NT,LOC
  S BEG=$G(BEG,1410101),END=$G(END,4141015),MAX=$G(MAX,9999)
- S DFN=+$G(DFN) Q:DFN<1
+ S DFN=+$G(DFN) I '(DFN>0) D LOGDPT^HMPLOG(DFN) Q  ;DE4496 19 August 2016
  ;
  ; get one procedure
  I $G(ID) D  ;reset dates for MDPS1
@@ -132,7 +131,8 @@ RPTS(DFN,BEG,END,MAX) ; -- find patient's medicine reports
  Q
  ;
 RPT1(DFN,ID,RPT) ; -- return report as a TIU document
- S DFN=+$G(DFN),ID=$G(ID) Q:DFN<1  Q:'$L(ID)
+ S DFN=+$G(DFN),ID=$G(ID) I '(DFN>0) D LOGDPT^HMPLOG(DFN) Q  ;DE4496 19 August 2016
+ Q:'$L(ID)
  N HMPY,HMPFN,X
  S HMPFN=+$P(ID,"(",2)
  D MEDLKUP^MCARUTL3(.HMPY,HMPFN,+ID)
@@ -155,7 +155,7 @@ RPT1(DFN,ID,RPT) ; -- return report as a TIU document
  Q
  ;
 TEXT(DFN,ID,NAME) ; -- Get report text, return temp array name
- N MCARGDA,MCPRO,MDALL,I,X
+ N MCARGDA,MCPRO,MDALL,I,X,Y ;de3944
  S MCARGDA=+$G(ID),MCPRO=NAME,MDALL=1 D PR690^MDPS1
  K ^TMP("HMPTEXT",$J,ID)
  S I=0 F  S I=$O(^TMP("MDPTXT",$J,MCARGDA,MCPRO,I)) Q:I<1  S X=$G(^(I,0)),^TMP("HMPTEXT",$J,ID,I)=X

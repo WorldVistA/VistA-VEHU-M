@@ -1,5 +1,5 @@
-HMPDJ ;SLC/MKB,ASMR/RRB,CK -- Serve VistA data as JSON via RPC;May 15, 2016 14:15
- ;;2.0;ENTERPRISE HEALTH MANAGEMENT PLATFORM;**1**;May 15, 2016;Build 3
+HMPDJ ;SLC/MKB,ASMR/RRB,CK -- Serve VistA data as JSON via RPC;Aug 29, 2016 20:06:27
+ ;;2.0;ENTERPRISE HEALTH MANAGEMENT PLATFORM;**1,2,3**;May 15, 2016;Build 15
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -13,6 +13,7 @@ HMPDJ ;SLC/MKB,ASMR/RRB,CK -- Serve VistA data as JSON via RPC;May 15, 2016 14:1
  ; DE2818/RRB - SQA findings 1st 3 lines of code.
  ;
  Q
+ ;
 GET(HMP,FILTER) ; -- Return search results as JSON in @HMP@(n)
  ; RPC = HMP GET PATIENT DATA JSON
  ; where FILTER("patientId") = DFN or DFN;ICN
@@ -28,7 +29,7 @@ GET(HMP,FILTER) ; -- Return search results as JSON in @HMP@(n)
  N ICN,DFN,HMPI,HMPSYS,HMPTYPE,HMPSTART,HMPSTOP,HMPMAX,HMPID,HMPTEXT,HMPP,TYPE,HMPTN,HMPERR
  S HMP=$NA(^TMP("HMP",$J)),HMPI=0 K @HMP
  S HMPSYS=$$SYS^HMPUTILS
- S DT=$$DT^XLFDT             ;for crossing midnight boundary
+ S DT=$$DT^XLFDT  ;for crossing midnight
  ;
  ; parse & validate input parameters
  I $G(FILTER("uid"))'="" D SEPUID(.FILTER)
@@ -36,11 +37,12 @@ GET(HMP,FILTER) ; -- Return search results as JSON in @HMP@(n)
  S DFN=$G(FILTER("patientId"))
  ;
  S ICN=+$P($G(DFN),";",2),DFN=+$G(DFN)
- I DFN<1,ICN S DFN=+$$GETDFN^MPIF001(ICN)
+ I '(DFN>0),ICN S DFN=+$$GETDFN^MPIF001(ICN)  ;DE4496
  ;
  S HMPTYPE=$G(FILTER("domain")) S:HMPTYPE="" HMPTYPE=$$ALL
  I $D(ZTQUEUED) S HMP=$NA(^XTMP(HMPBATCH,HMPFZTSK,HMPTYPE)) K @HMP
- I HMPTYPE'="new",DFN<1!'$D(^DPT(DFN)) S HMPERR=$$ERR(1,DFN) G GTQ ;ICR 10035 DE2818 ASF 11/2/15
+ ;ICR 10035 DE2818 ASF 11/2/15, DE4496 August 19, 2016
+ I HMPTYPE'="new",'(DFN>0)!'$D(^DPT(DFN)) D LOGDPT^HMPLOG(DFN) S HMPERR=$$ERR(1,DFN) G GTQ
  ;
  ; -- initialize chunking if from DOMPT^HMPDJFSP ; i.e. HMPCHNK defined *S68-JCH*
  D CHNKINIT^HMPDJFSP(.HMP,.HMPI) ; *S68-JCH*
@@ -124,7 +126,7 @@ ERR(X,VAL) ; -- return error message
  Q MSG
  ;
 HL7NOW() ; -- Return current time in HL7 format
- Q $P($$FMTHL7^XLFDT($$NOW^XLFDT),"-")
+ Q $$FMTHL7^HMPSTMP($$NOW^XLFDT)  ; DE5016
  ;
 ADD(ITEM,COLL) ; -- add ITEM to results
  I $D(HMPCRC),$D(COLL) D ONE^HMPDCRC(ITEM,COLL) Q  ;checksum

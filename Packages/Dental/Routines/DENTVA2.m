@@ -1,6 +1,6 @@
-DENTVA2 ;DSS/KC - DRM REPORTS;11/20/2003 13:26
- ;;1.2;DENTAL;**38,39,42,43,45,47,50,53**;Aug 10, 2001;Build 10
- ;Copyright 1995-2007, Document Storage Systems, Inc., All Rights Reserved
+DENTVA2 ;DSS/KC - DRM SITTINGS REPORTS USING RVU, DISTPROV;11/18/2003 13:26
+ ;;1.2;DENTAL;**38,39,42,43,45,47,50,53,63,66**;Aug 10, 2001;Build 36
+ ;Copyright 1995-2013, Document Storage Systems, Inc., All Rights Reserved
  ;
  ; DBIA#  SUPPORTED
  ; -----  ---------  ----------------------------------
@@ -78,7 +78,7 @@ PLAN(RET) ; Provider Planning Report called by DENTVAU
  Q
  ;
 TXN ; get the transactions, don't process if no ADA code, not a txn, or deleted
- N X0,X1,TXN,CAT,PIN,STA,COST,ADA,PNAM S TXN=0 K DENT
+ N X0,X1,TXN,CAT,PIN,STA,COST,ADA,PNAM,DFLAG S TXN=0 K DENT
  F  S TXN=$O(^DENT(228.2,"AP",DENTDFN,TXN)) Q:'TXN  D
  .S X0=$G(^DENT(228.2,TXN,0)),X1=$G(^(1)) S TR=0,TOOTH="",SURF=""
  .Q:X0=""!($P(X0,U,4)="")!($P(X0,U,29)'=1)!($P(X1,U,3))
@@ -127,7 +127,7 @@ FAP() ;get the next dental appt
  S SC(1)="S^180",SC(2)="S^181",QUIT=0,APDT=U
  D VSIT^DSICVST2(.AP,DENTDFN_U_DT_U_$$FMADD^XLFDT(DT,365)_"^^1",.SC)
  I +$G(@AP@(1))'=-1 D
- .F I=0:0 S I=$O(@AP@(I)) Q:'I!QUIT  S X=$G(@AP@(I)) I $P(X,U)="S" S APDT=$P(X,U,3,4),QUIT=1
+ .F I=9999999999:0 S I=$O(@AP@(I),-1) Q:'I!QUIT  S X=$G(@AP@(I)) I $P(X,U)="S" S APDT=$P(X,U,3,4),QUIT=1
  .Q
  Q APDT
 SET ;set provider iens to 220.5 vs 200

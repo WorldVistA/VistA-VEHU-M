@@ -1,9 +1,13 @@
-HMPTFU2 ;ASMR/JCH,CK - Utilities for the Treating Facility file 391.91 ;May 15, 2016 14:15
- ;;2.0;ENTERPRISE HEALTH MANAGEMENT PLATFORM;**1**;May 15, 2016;Build 3
+HMPTFU2 ;ASMR/JCH,CK,DKK - Utilities for the Treating Facility file 391.91 ;Apr 27, 2016 10:35:07
+ ;;2.0;ENTERPRISE HEALTH MANAGEMENT PLATFORM;**1,2,3**;May 15, 2016;Build 15
  ;Per VA Directive 6402, this routine should not be modified.
  ;
+ ; External References          DBIA#
+ ; -------------------          -----
+ ; DIQ                          2056  ;DE6363 - JD - 8/23/16
+ ;
  ; Reference to ^DGCN(391.91 is NOT currently supported; see ICR #2911 for an existing Private ICR between 
- ;  Registration and CIRN that would meet the needs of this routine, or provide an example for a new ICR.
+ ; Registration and CIRN that would meet the needs of this routine, or provide an example for a new ICR.
  ;
  Q
  ;
@@ -60,9 +64,8 @@ TFL(LIST,PT) ;for this PT [patient] (either DFN, ICN or EDIPI) return the list o
  I ASSIGN'="USVHA",ASSIGN'="USDOD" S LIST(1)="-1^Invalid Assigning Authority." Q
  I SITE']"" S LIST(1)="-1^Missing Assigning Facility." Q
  ; find the ien for the station number
- S SITEIEN=$O(^DIC(4,"D",SITE,0))
+ S SITEIEN=$$FIND1^DIC(4,"","X",SITE,"D")
  I 'SITEIEN S LIST(1)="-1^Assigning Facility is not defined in database." Q
- ;
  I TYPE="PI",ASSIGN="USVHA" S DFN=ID
  I TYPE="NI",ASSIGN="USVHA",SITE="200M" S ICN=ID
  I TYPE="NI",ASSIGN="USDOD",SITE="200DOD" S EDIPI=ID
@@ -134,12 +137,13 @@ QUERYTFQ Q HMPER
  ;
 SET(TFIEN,ARY,CTR) ;This sets the array with the treating facility list.
  ;  Ex  ARY(1)=<ID> ^ <ID TYPE> ^ <Assigning Facility> ^ <Assigning Authority> ^ <ID Status>
- N DGCN,INSTIEN,SOURCE,EN,SDFN,STATUS,SITEN,ID,IDTYPE,SITE,ASSAUTH,FOUND,NODE,NODE0,NODE2
+ N DGCN,INSTIEN,SOURCE,EN,SDFN,STATUS,SITEN,ID,IDTYPE,SITE,ASSAUTH,FOUND,NODE,NODE0,NODE2,STNNUM
  S DGCN(0)=$G(^DGCN(391.91,TFIEN,0)),SITEN=""
  ;
  S INSTIEN=$P($G(DGCN(0)),"^",2) ;            TREATING FACILITY LIST (#391.91) INSTITUTION field (#.02)
  I INSTIEN'="" S SITEN=$$STA^XUAF4(INSTIEN) ; STATION from Institution IEN
  S ID=$P(DGCN(0),"^") ;                       ID=Patient DFN field (#.01)
+ S STNNUM=SITEN
  ;
  S NODE2=$G(^DGCN(391.91,TFIEN,2))
  S SDFN=$P(NODE2,"^",2) ; SDFN="SOURCE ID"
@@ -154,7 +158,7 @@ SET(TFIEN,ARY,CTR) ;This sets the array with the treating facility list.
  I IDTYPE="" S IDTYPE="PI"
  I ASSAUTH="" S ASSAUTH="USVHA"
  I SITEN["200N"&(IDTYPE="NI")&(ASSAUTH="USVHA") S ASSAUTH=""
- I IDTYPE="PI" S SITEN=$$TF2SITEN(TFIEN) Q:SITEN=""
+ I IDTYPE="PI" S SITEN=$$TF2SITEN(TFIEN) Q:(SITEN=""&(STNNUM'="742V1"))
  ;
  ; If VA Internal Patient ID, get site hash from domain associated with Treating Facility
  S NODE0=$G(^DGCN(391.91,TFIEN,0))
@@ -168,7 +172,7 @@ SET(TFIEN,ARY,CTR) ;This sets the array with the treating facility list.
  I IDTYPE="" S IDTYPE="PI"
  I ASSAUTH="" S ASSAUTH="USVHA"
  I SITEN["200N"&(IDTYPE="NI")&(ASSAUTH="USVHA") S ASSAUTH=""
- I SDFN'="" S CTR=CTR+1,@ARY@(CTR)=SDFN_"^"_IDTYPE_"^"_SITEN_"^"_ASSAUTH_"^"_STATUS,FOUND=1
+ I SDFN'="" S CTR=CTR+1,@ARY@(CTR)=SDFN_"^"_IDTYPE_"^"_SITEN_"^"_ASSAUTH_"^"_STATUS_"^"_STNNUM,FOUND=1
  Q
 TF2SITEN(TFIEN) ;Find the DOMAIN associated with the TREATING FACILITY and return the station number.
  ;Currently, our test systems' station numbers are not set up for local DOMAINs. This would result in these
@@ -182,7 +186,8 @@ TF2SITEN(TFIEN) ;Find the DOMAIN associated with the TREATING FACILITY and retur
  ;Get station number from Institution file (pointed to from Treating Facility List)
  N INSTNUM,STNNUM,DONE,I
  S INSTNUM=$P($G(^DGCN(391.91,TFIEN,0)),U,2) Q:'+INSTNUM SITEN
- S STNNUM=$P($G(^DIC(4,INSTNUM,99)),U) Q:'+STNNUM SITEN
+ S STNNUM=$$GET1^DIQ(4,INSTNUM_",",99) ;ICR 2056
+ Q:'+STNNUM SITEN
  ;DE2345 - MBS 9/15/2015; Do not return entries with station numbers=+200
  I STNNUM?1"200".A Q ""
  ;Domain file doesn't have an x-ref on station number, so we have to brute-force it

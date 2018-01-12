@@ -1,6 +1,6 @@
 DENTVUTL ;DSS/SGM - COMMON CALLS FOR GUI ;07/22/2003 15:25
- ;;1.2;DENTAL;**30,33,34,36,31,43,45,47,53,55,59**;Aug 10, 2001;Build 19
- ;Copyright 1995-2011, Document Storage Systems, Inc., All Rights Reserved
+ ;;1.2;DENTAL;**30,33,34,36,31,43,45,47,53,55,59,63,66**;Aug 10, 2001;Build 36
+ ;Copyright 1995-2013, Document Storage Systems, Inc., All Rights Reserved
  ;  this routine contains common subroutines called by more that one
  ;  DENTV* routine
  ;
@@ -10,7 +10,7 @@ DENTVUTL ;DSS/SGM - COMMON CALLS FOR GUI ;07/22/2003 15:25
  ;  2056       x      GETS^DIQ and $$GET1^DIQ
  ;  2053       x      FILE^DIE
  ;  2343       x      XUSER
- ;  1625       x      $$GET^XUA4A72
+ ;  1625       x      $$GET^XUA4A72 and $$IEN2DATA^XUA4A72
  ;  
  ;
 DPRV(P) Q +$O(^DENT(220.5,"B",+$G(P),0))
@@ -18,16 +18,18 @@ DPRV(P) Q +$O(^DENT(220.5,"B",+$G(P),0))
 PKG() N DIERR,DENERR Q +$$FIND1^DIC(9.4,,"MOQ","DENT","B^C",,"DENERR")
  ;
  ;
-GS(RET,DFN,PSPROV) ;RPC: DENTV PRIMARY PROVIDER
+GS(RET,DFN,PSPROV,OMIT) ;RPC: DENTV PRIMARY PROVIDER
  ; input:  DFN    = patient pointer to DENTAL PATIENT (#220) file
  ;         PSPROV = p1^p2+p3  Primary prov ien^sec prov ien (optional)^enc provider
+ ;         OMIT   = flag which when passed will allow omissions of either primary
+ ;                  or secondary providers
  ;get/set the primary^secondary provider for a dental patient
  ;P53 set encounter provider (p3) if user is provider - this goes in banner too
  S DFN=$G(DFN),RET=U I 'DFN S RET="-1^Invalid Patient" Q
  S PSPROV=$G(PSPROV) I PSPROV]"" D SET Q
  N PID S PID=$$PROV1^DENTVA2(DUZ) I PID?1"X"8N D
  .S PID=+$E(PID,2,3)
- .I $S(PID<5:1,PID=7:1,PID>13:1,1:0) S $P(RET,U,3)=DUZ
+ .I $S(PID<5:1,PID=6:1,PID=7:1,PID>13:1,1:0) S $P(RET,U,3)=DUZ
  .Q
  N DEND,DENER D GETS^DIQ(220,DFN_",",".09;.1;.11;.12","IE","DEND","DENER") ;P55 3.5.08
  I $D(DENER) Q
@@ -40,14 +42,15 @@ GS(RET,DFN,PSPROV) ;RPC: DENTV PRIMARY PROVIDER
 SET ;set the primary/secondary provider in the DENTAL PATIENT file (#220)
  N DENT,IENS,DENER,PPROV,SPROV S IENS=DFN_","
  S PPROV=$P(PSPROV,U)
- I PPROV'=+PPROV S DENT(220,IENS,.11)=PPROV,PPROV="" ;P55 3.5.08 set Pri Prov='Fee Basis'
- E  S DENT(220,IENS,.11)=""
+ I PPROV]"",PPROV'=+PPROV S DENT(220,IENS,.11)=PPROV,PPROV="" ;P55 3.5.08 set Pri Prov='Fee Basis'
+ E  S:PPROV]"" DENT(220,IENS,.11)=""
  I PPROV S PPROV=$$DPRV(PPROV) ;PPROV is a number (real provider in VistA db)
  S SPROV=$P(PSPROV,U,2)
- I SPROV'=+SPROV S DENT(220,IENS,.12)=SPROV,SPROV="" ;P55 3.5.08 set Sec Prov='Fee Basis'
- E  S DENT(220,IENS,.12)=""
+ I SPROV]"",SPROV'=+SPROV S DENT(220,IENS,.12)=SPROV,SPROV="" ;P55 3.5.08 set Sec Prov='Fee Basis'
+ E  S:SPROV]"" DENT(220,IENS,.12)=""
  I SPROV S SPROV=$$DPRV(SPROV)
- S DENT(220,IENS,.09)=PPROV,DENT(220,IENS,.1)=SPROV
+ I (PPROV]"")!((PPROV="")&'$G(OMIT)) S DENT(220,IENS,.09)=PPROV
+ I (SPROV]"")!((SPROV="")&'$G(OMIT)) S DENT(220,IENS,.1)=SPROV
  L +^DENT(220,DFN):1 E  S RET="-1^Couldn't lock patient record" Q
  D FILE^DIE(,"DENT","DENER") L -^DENT(220,DFN)
  I $D(DENER) S RET="-1^Could not file providers" Q
@@ -136,6 +139,24 @@ LIST(DENT,VAL) ;  RPC: DENTV ACTIVE USER PROVIDER
  .Q
  I '$D(@DENT) S @DENT@(1)="-1^No matches found"
  Q
+PNL(RET,PROV) ;RPC: DENTVUTL PNL PANEL CHG
+ ;  INPUT   PROV   = provider^type (P or S)
+ ;  OUTPUT  RET(n) = patient IEN^patient NAME
+ N TYPE,DPAT,DXREF,DFN,CNT,DFLD
+ S TYPE=$P($G(PROV),U,2),PROV=$P($G(PROV),U),DFN="",CNT=1
+ ; Seris of error checks
+ I PROV="" S RET(1)="-1^Provider IEN required" Q
+ I TYPE="" S RET(1)="-1^Provider type required" Q
+ I TYPE'="P",TYPE'="S" S RET(1)="-1^Invalid provider type" Q
+ ; Set variables based on provider type
+ S PROV=$$DPRV(PROV)
+ S:TYPE="P" DXREF="^DENT(220,""AP"",PROV)"
+ S:TYPE="S" DXREF="^DENT(220,""AS"",PROV)"
+ F  S DFN=$O(@DXREF@(DFN)) Q:DFN=""  S RET(CNT)=DFN_U_$$EXTERNAL^DILFD(220,.01,"",DFN),CNT=CNT+1
+ ; No patients were found with a primary/secondary provider that matches
+ ;  the input
+ I '$D(RET) S RET(1)="-1^Provider is not assigned to any patients" Q
+ Q
 ACT(RET,XDUZ) ; 
  ;  validate that DUZ is an active user
  ;  XDUZ - required - pointer to the new person file
@@ -162,5 +183,21 @@ PROVINQ(RET,PROV,DENTDAT) ; RPC: DENTV PERSON CLASS INQUIRY
  ;Wrapper for $$GET^XUA4A72 to return person class information
  S PROV=$G(PROV) I 'PROV S RET="-1^No Provider DUZ sent." Q
  S RET=$$GET^XUA4A72(PROV,DENTDAT)
- I RET=-1,'$P(RET,U,2) S $P(RET,U,2)="Provider not found"
+ I RET=-1,'$P(RET,U,2) S $P(RET,U,2)="No person class found"
+ I RET=-2,'$P(RET,U,2) S RET="-1^Inactive person class"
+ S RET=RET_U_$P($$IEN2DATA^XUA4A72(+RET),U,7)
+ Q
+ICN(RET,PAT,ISSSN) ; RPC: DENTV DPT GET ICN
+ ; return ICN information for a patient DFN
+ ; return p1^p2 or -1^message where
+ ;   p1 = ICN - national, if no national, then local icn
+ ;              icn will include checksum
+ ;   p2 = flag indicating whether ICN is national or local
+ ;        N:national; L:local
+ N X,Y,Z,ICN,LOCAL
+ S X=$$GET^DSICDPT1($G(PAT),+$G(ISSSN))
+ I +X=-1 S RET=X Q
+ S PAT=+X,ICN=$$GETICN^MPIF001(PAT) I +ICN=-1 S RET=ICN Q
+ S LOCAL=$$IFLOCAL^MPIF001(PAT)
+ S RET=ICN_U_$E("NL",1+LOCAL)
  Q

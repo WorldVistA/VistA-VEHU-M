@@ -1,6 +1,6 @@
 DENTVTP4 ;DSS/KC - RPCS TO FILE TREATMENT PLAN DATA;11/04/2003 15:27
- ;;1.2;DENTAL;**39,43,45,47,59**;Aug 10, 2001;Build 19
- ;Copyright 1995-2011, Document Storage Systems, Inc., All Rights Reserved
+ ;;1.2;DENTAL;**39,43,45,47,59,63**;Aug 10, 2001;Build 19
+ ;Copyright 1995-2013, Document Storage Systems, Inc., All Rights Reserved
  ;  this routine RPCs for filing transaction data type in the Dental
  ;  treatment plan software, Perio, PSR and H&N
  ; DBIA#  SUPPORTED
@@ -76,6 +76,14 @@ PER(RET,DATA) ; RPC: DENTV TP FILE PERIO
  .K DENT F I=1:1:8 S:$G(DATA(I))]"" DENT(I)=$G(DATA(I))
  .S WPRET=$$FILEWP(2.1)
  .Q
+ N TIEN,ORDER,PDATE,SEQ,PIEN S TIEN="",SEQ=1,PIEN=+IENS
+ S DFN=$P(^DENT(228.2,PIEN,0),U,2)
+ F  S TIEN=$O(^DENT(228.2,"AD",DFN,2,TIEN)) Q:TIEN=""  D
+ .S PDATE=$P(^DENT(228.2,TIEN,0),U,13),(ORDER(PDATE),ORDER(PDATE,TIEN))=""
+ S (PDATE,TIEN)=""
+ F  S PDATE=$O(ORDER(PDATE)) Q:PDATE=""  D
+ .F  S TIEN=$O(ORDER(PDATE,TIEN)) Q:TIEN=""  D
+ ..S ^DENT(228.2,TIEN,2)=SEQ,SEQ=SEQ+1
  I +WPRET<0 S RET=WPRET
  Q
  ; 

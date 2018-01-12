@@ -1,5 +1,5 @@
 DENTVRP9 ;DSS/SGM - RETURN DATA FROM HISTORY FILE ;08/12/2003 19:37
- ;;1.2;DENTAL;**30,32,34,31,38,39,43,45,47,55**;Aug 10, 2001;Build 5
+ ;;1.2;DENTAL;**30,32,34,31,38,39,43,45,47,55,66**;Aug 10, 2001;Build 36
  ;Copyright 1995-2006, Document Storage Systems, Inc., All Rights Reserved
  ;
  ;
@@ -148,8 +148,8 @@ GET ;  get data for 228.1 and all associated transactions
  ..Q
  .;
  .;  get icd9 codes
- .F Z=1.06,1.07,1.08,1.09,1.1 S X=DENZ(Z,"I") I X D
- ..S Y=$$ICD9^DSICDRG(,X,,DATE,,1)
+ .F Z=1.06,1.07,1.08,1.09,1.1 S X=DENZ(Z,"E") I X D
+ ..S Y=$$ICD^DENTVICD(,X,DATE,1)
  ..S DENZ(Z,"E")=$S(Y>0:$P(Y,U,2),1:"")
  ..Q
  .;

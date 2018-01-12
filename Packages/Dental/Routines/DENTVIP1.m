@@ -1,5 +1,5 @@
 DENTVIP1 ;DSS/SGM - PRE/POST FILE 228 ;02/10/2004 18:09
- ;;1.2;DENTAL;**33,34,35,36,39,45,53,56,57**;Aug 10, 2001;Build 8
+ ;;1.2;DENTAL;**33,34,35,36,39,45,53,56,57,66**;Aug 10, 2001;Build 36
  ;Copyright 1995-2009, Document Storage Systems, Inc., All Rights Reserved
  ;  DBIA#  SUPPORTED
  ;  -----  ---------  --------------------------------------
@@ -16,7 +16,7 @@ DENTVIP1 ;DSS/SGM - PRE/POST FILE 228 ;02/10/2004 18:09
  ;  local variables expect to exist
  ;  XPDNM - from KIDS install process
  ;
-SAVE ;  save local changes made to national mapping of icd9 to cpt
+SAVE ;  save local changes made to national mapping of ICD to cpt
  ;  delete the old ADA mapping table
  ;     NODE = DENT228*<patch number>
  ;  ^xtmp(node,0) = p1^p2^p3^p4^p5^p6^p7  where
@@ -25,7 +25,7 @@ SAVE ;  save local changes made to national mapping of icd9 to cpt
  ;     p3 = duz of installer         p7 = 1 if restore completed
  ;     p4 = 1 if save started        p8 = total count of nodes saved
  ;                          C = VACO   L = local code
- ;  ^xtmp(node,cpt_ien)   = C/L^icd9-1^icd9-2^icd9-3^icd9-4^icd9-5^VA cost^Private cost^RVU^VA-DSS Group
+ ;  ^xtmp(node,cpt_ien)   = C/L^ICD-1^ICD-2^ICD-3^ICD-4^ICD-5^VA cost^Private cost^RVU^VA-DSS Group
  ;  ^xtmp(node,cpt_ien,3) = ADMIN GUIDELINE
  ;   
  N I,X,Y,Z,CNT,CPT,NODE,TYPE,DATA,NEWDD,TOTMAP
@@ -38,40 +38,46 @@ SAVE ;  save local changes made to national mapping of icd9 to cpt
  ;
  I X'="",'$P(X,U,5) K ^XTMP(NODE)
  I $P(X,U,5)!$P(X,U,6) Q
- I $$VFIELD^DSICFM06(,228,1.02,1)<0 S NEWDD=1
- E  S NEWDD=0
+ S NEWDD=1
  S X=$$FMADD^XLFDT(DT,7)_U_$$NOW^XLFDT_U_DUZ_U_1
  S ^XTMP(NODE,0)=X,I=0
- F  S I=$O(^DENT(228,I)) Q:'I  S X=^(I,0),Y=$G(^(1)) D
+ F  S I=$O(^DENT(228,I)) Q:'I  S X=^(I,0),Y=$G(^(1)),Y10=$G(^DENT(228,I,7)) D
+ .I I=81400 D
+ ..Q
  .S CPT=$P(X,U),TYPE=$S($P(X,U,7)="NATIONAL CODES":"C",1:$P(X,U,15)) Q:'CPT
  .S DATA=TYPE_U_$P(Y,U,1,5),$P(DATA,U,7)=$P(Y,U,14),$P(DATA,U,8)=$P(Y,U,15)
  .S $P(DATA,U,9)=$P(X,U,18),$P(DATA,U,10)=$P(X,U,16),$P(DATA,U,11)=NEWDD
  .S ^XTMP(NODE,CPT)=DATA
  .S ^XTMP(NODE,CPT,3)=$P($G(^DENT(228,I,3)),U)
  .I TYPE="L",$D(^DENT(228,I,5)) M ^XTMP(NODE,CPT,5)=^DENT(228,I,5)
+ .I TYPE="L",$D(^DENT(228,I,6)) M ^XTMP(NODE,CPT,6)=^DENT(228,I,6)
  .I 'NEWDD Q
- .S TOTMAP=+Y Q:'TOTMAP  F  S TOTMAP=$O(^DENT(228,I,5,TOTMAP)) Q:'TOTMAP  D
+ .S TOTMAP=+Y I TOTMAP  F  S TOTMAP=$O(^DENT(228,I,5,TOTMAP)) Q:'TOTMAP  D
  ..S ^XTMP(NODE,CPT,5,TOTMAP,0)=$G(^DENT(228,I,5,TOTMAP,0)) ;save site added Dxs
  ..Q
+ .S TOTMAP=+Y10 I TOTMAP  F  S TOTMAP=$O(^DENT(228,I,6,TOTMAP)) Q:'TOTMAP  D
+ ..S ^XTMP(NODE,CPT,6,TOTMAP,0)=$G(^DENT(228,I,6,TOTMAP,0)) ;save site added Dxs
+ ..Q 
  .Q
  ;  Mark save completed, kill off the old table
  D SET(5),MES(3)
+ Q
  S X=$P(^DENT(228,0),U,1,2) K ^DENT(228) S ^DENT(228,0)=X
  Q
  ;
-RESTORE ;  restore locally added cpt codes and icd9 changes
+RESTORE ;  restore locally added cpt codes and ICD changes
  ;  Definition of codes not added back
  ;  ------------------------------------------------------------
  ;  ^tmp("dent",$j,cpt_code) = 1 if non-ADA code is inactive
- ;  ^tmp("dent",$j,cpt_code,icd9_code) = "" if the CPT code was
- ;                  active but the prior ICD9 code was inactive
+ ;  ^tmp("dent",$j,cpt_code,ICD_code) = "" if the CPT code was
+ ;                  active but the prior ICD code was inactive
  ;  $D(^tmp("dent",$j,cpt_code)) = 10 if the active cpt code had
  ;                         inactive diagnosis codes mapped to it
  ;
  ;  Definition of some key local variables  where n = 1,2,3,4,5
  ;  -----------------------------------------------------------
  ;  n=1,2,3,4,5   DENT() redefined per cpt code
- ;  DENT("LICD",icdien)=locally mapped (added) icd9
+ ;  DENT("LICD",icdien)=locally mapped (added) ICD
  ;
  N I,X,X1,Y,ACT,CNT,CPT,CPTN,DATA,IEN,NODE,DENT,DENTX,DATA3,NEWDD,NI,NX,IC,SP
  D NODE Q:'$D(^XTMP(NODE))  D MES(5)
@@ -80,6 +86,8 @@ RESTORE ;  restore locally added cpt codes and icd9 changes
  D SET(6) K ^TMP("DENT",$J)
  S (CNT,CPT)=0
  F  S CPT=$O(^XTMP(NODE,CPT)) Q:'CPT  S DATA=^(CPT),DATA3=$G(^(CPT,3)) D
+ .I CPT=81400 D
+ ..Q
  .K DENT S CNT=CNT+1,NEWDD=$P(DATA,U,11)
  .S X=$$CPT^DSICCPT(,CPT,,,,1),CPTN=$P(X,U,2),ACT=$P(X,U,7)
  .;
@@ -96,18 +104,25 @@ RESTORE ;  restore locally added cpt codes and icd9 changes
  ..S:DATA3]"" DENTX(228,IEN_",",3)=DATA3 ; ADMIN GUIDELINE
  ..D FILE^DIE(,"DENTX")
  ..Q
- .;  setup local icd9 array with codes we want to add back
+ .;  setup local ICD array with codes we want to add back
  .I 'NEWDD,$P(DATA,U)="L" F I=2:1:6 S NX=$P(DATA,U,I) I NX D
- ..S Y=$$ICD9^DSICDRG(,NX,,DT,,1)
+ ..S Y=$$ICD^DENTVICD(,$$EXTERNAL^DILFD(228.06,.01,,NX),DT,1)
  ..I '$P(Y,U,10) S ^TMP("DENT",$J,CPTN,$P(Y,U,2))="" Q
  ..I IEN,$D(^DENT(228,IEN,5,"B",NX)) Q  ;already in the multiple
  ..S DENT("LICD",NX)=""
  ..Q
  .I NEWDD S NI=0 F  S NI=$O(^XTMP(NODE,CPT,5,NI)) Q:'NI  D
  ..S NX=+$G(^XTMP(NODE,CPT,5,NI,0)) Q:'NX
- ..S Y=$$ICD9^DSICDRG(,NX,,DT,,1)
+ ..S Y=$$ICD^DENTVICD(,$$EXTERNAL^DILFD(228.06,.01,,NX),DT,1)
  ..I '$P(Y,U,10) S ^TMP("DENT",$J,CPTN,$P(Y,U,2))="" Q
  ..I IEN,$D(^DENT(228,IEN,5,"B",NX)) Q  ;already in the multiple
+ ..S DENT("LICD",NX)=""
+ ..Q
+ .I NEWDD S NI=0 F  S NI=$O(^XTMP(NODE,CPT,6,NI)) Q:'NI  D
+ ..S NX=+$G(^XTMP(NODE,CPT,6,NI,0)) Q:'NX
+ ..S Y=$$ICD^DENTVICD(,$$EXTERNAL^DILFD(228.06,.01,,NX),DT,1)
+ ..I '$P(Y,U,10) S ^TMP("DENT",$J,CPTN,$P(Y,U,2))="" Q
+ ..I IEN,$D(^DENT(228,IEN,6,"B",NX)) Q  ;already in the multiple
  ..S DENT("LICD",NX)=""
  ..Q
  .;  if cpt is not in file 228, then add only if a local code and has ICD codes
@@ -124,7 +139,7 @@ RESTORE ;  restore locally added cpt codes and icd9 changes
  ..Q
  .Q:'IEN  Q:'$O(DENT("LICD",0))
  .;
- .;site added to natl icd9 mapping, put back local icd9(s) OR add local icd for new codes
+ .;site added to natl ICD mapping, put back local ICD(s) OR add local icd for new codes
  .S IC=0 F  S IC=$O(DENT("LICD",IC)) Q:'IC  D ICD(IEN,IC)
  .Q
  L -^DENT(228)

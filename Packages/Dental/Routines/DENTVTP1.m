@@ -1,5 +1,5 @@
 DENTVTP1 ;DSS/SGM - TP GET ADA TABLE, PROVIDERS ;11/10/2003 09:37
- ;;1.2;DENTAL;**39,45**;Aug 10, 2001
+ ;;1.2;DENTAL;**39,45,66**;Aug 10, 2001;Build 36
  ;Copyright 1995-2005, Document Storage Systems, Inc., All Rights Reserved
  ;
  ;  For Dental Treatment Planning software only
@@ -48,7 +48,7 @@ ADA(DENT) ; RPC: DENTV TP GET ADA TABLE
  F I=1:1 S X=$P($T(ADAH+I),";",3) Q:X=""  S @DENT@($P(X,U))=X
  F IEN=0:0 S IEN=$O(^DENT(228,IEN)) Q:'IEN  S DEN0=$G(^(IEN,0)),DEN1=$G(^(1)) D:DEN0]""
  .K CPT,VAL D CPT Q:'$D(CPT)
- .S Y=$$ICD9^DSICDRG(,+DEN1,,DT,,1)
+ .S Y=$$ICD^DENTVICD(,+DEN1,DT,1)
  .;  get diagnosis code and description only if active
  .I Y>0 S $P(VAL,U,6)=$P(Y,U,2),$P(VAL,U,7)=$P(Y,U,4)
  .;  get condition, area, material

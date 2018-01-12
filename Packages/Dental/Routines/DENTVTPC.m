@@ -1,6 +1,6 @@
 DENTVTPC ;DSS/SGM - FILE TP TRANSACTIONS ;11/23/2003 22:29
- ;;1.2;DENTAL;**39,42,43,45,47,53,57**;Aug 10, 2001;Build 8
- ;Copyright 1995-2009, Document Storage Systems, Inc., All Rights Reserved
+ ;;1.2;DENTAL;**39,42,43,45,47,53,57,63,66**;Aug 10, 2001;Build 36
+ ;Copyright 1995-2013, Document Storage Systems, Inc., All Rights Reserved
  ;
  ; DBIA#  SUPPORTED
  ; -----  ---------  ----------------------------------
@@ -33,6 +33,7 @@ FILE(DENA) ;  called from ^DENTVTPA
  .I FLG?1L S FLG=$$UP^XLFSTR(FLG)
  .I TRANID>0,FLG="A" D ERR(2) Q
  .I TRANID<1,"UD"[FLG D ERR(3) Q
+ .I $P(DENX,U,12)=1,$P(DENX,U,23) S FLG="D"
  .S IENS="" I TRANID>0 D  Q:IENS=-1
  ..S IENS=$O(^DENT(228.2,"B",TRANID,0))
  ..I IENS>0 S IENS=IENS_","
@@ -181,7 +182,7 @@ D ;  delete a txn
  .S X=$$DIK^DENTVTPA(.DA,228.2),DEN(SUB)=+IENS_U_$S(+X=-1:-1,1:"D") ;really delete if same day
  .D DH^DENTVTPA
  .Q
- I $P(DENX,U,12)=2 D  Q  ;if "completed", set Date Deleted (1.03)
+ I ($P(DENX,U,12)=2)!($P(DENX,U,12)=1) D  Q  ;if "completed", set Date Deleted (1.03)
  .S DENF(228.2,DA_",",1.03)=$$NOW^XLFDT D DELF
  .I $$GET1^DIQ(228.2,DA_",",1.19)="YES" S DENTPCE=1,DELD(DA)="" ;update PCE message to user (see DENTVTPA) DELD=P47
  .Q

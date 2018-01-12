@@ -1,6 +1,6 @@
 DENTVHLB ;DSS/LM - Dental Transaction Extract HL7 Messaging ;5/29/2003 16:40
- ;;1.2;DENTAL;**40,53,55**;Aug 10, 2001;Build 5
- ;Copyright 1995-2007, Document Storage Systems, Inc., All Rights Reserved
+ ;;1.2;DENTAL;**40,53,55,63**;Aug 10, 2001;Build 19
+ ;Copyright 1995-2013, Document Storage Systems, Inc., All Rights Reserved
  ; Batch process messages
  ; 
  ; Integration Agreements
@@ -61,7 +61,7 @@ HST ;;Adapted from EN (above) for one-time historical batch
 BAT ;;From DENTVHLB BATCH option.
  ; HL7 Batch message
  ; Code limits: 1000 messages/batch, 2KB / message.
- N DENTVCNT,DENTVMAX S DENTVMAX=1000 ;Maximum messages per batch
+ N DENTVCNT,DENTVMAX S DENTVMAX=$$GET1^DSICXPR(,"SYS~DENTV HL7 BATCH LIMIT~~~",1) ;Maximum messages per batch
  F  S DENTVCNT=0 D B1 Q:$G(DENTVCNT)<DENTVMAX  ;Encounter
  ;F  S DENTVCNT=0 D B2 Q:$G(DENTVCNT)<DENTVMAX  ;Fee Basis P55 don't see fee anymore
  D TASK^DENTVHL3 ;P53 queue job for T+3 days, check to see if acks recvd

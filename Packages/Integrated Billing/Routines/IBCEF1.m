@@ -1,6 +1,6 @@
 IBCEF1 ;ALB/TMP - FORMATTER SPECIFIC BILL FUNCTIONS - CONT ;30-JAN-96
- ;;2.0;INTEGRATED BILLING;**52,124,51,137,210,155,349,371,447**;21-MAR-94;Build 80
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**52,124,51,137,210,155,349,371,447,547,574**;21-MAR-94;Build 12
+ ;;Per VA Directive 6402, this routine should not be modified.
  ;
 OCC(IBIFN,REL,TEXT) ;Sets up an arrays of occurrence codes for various cks
  ;RETURNS 1^additional data for entry IBXSAVE("OCC",n) if REL or TEXT
@@ -47,12 +47,18 @@ RXQ Q CT
  ;
 OTHPAY(IBIFN,SEQ) ; Return the other insurance payment amount for bill
  ;  IBIFN and payer sequence SEQ (1-3)
- N AMT,IBIFN1
- S IBIFN1=$P($G(^DGCR(399,IBIFN,"M1")),U,SEQ+4)
+ N AMT,IBIFN1,PRP
+ S IBIFN1=$P($G(^DGCR(399,IBIFN,"M1")),U,SEQ+4),PRP=0
  I IBIFN1 D
- . I $$MCRWNR^IBEFUNC(+$G(^DGCR(399,IBIFN,"I"_SEQ))) S AMT=$$MCRPAY^IBCEU0(IBIFN) Q
- . S AMT=+$$TPR^PRCAFN(IBIFN1) Q:AMT  ; A/R amount
- . S AMT=+$P($G(^DGCR(399,IBIFN,"U2")),U,SEQ+3) ; amount on bill
+ . ; IB*2.0*547 if Medicare on bill, make sure you are pulling amt paid from correct sequence
+ . ; code was leaving out MRA amt on tertiary bills and cloned secondary where MRA claim# does NOT match current claim#
+ . ;I $$MCRWNR^IBEFUNC(+$G(^DGCR(399,IBIFN,"I"_SEQ))) S AMT=$$MCRPAY^IBCEU0(IBIFN) Q
+ . I $$MCRWNR^IBEFUNC(+$G(^DGCR(399,IBIFN,"I"_SEQ))) S AMT=$$MCRPAY^IBCEU0(IBIFN1),PRP=1 Q
+ . S AMT=+$$TPR^PRCAFN(IBIFN1) I AMT S PRP=1 Q  ; A/R amount
+ . ; IB*2.0*547 - moved this line because it was not getting executed if IBIFN1 was not defined, which it won't be for 
+ . ; manually created secondary and tertiary claims.  Using new flag PRP to indicate if prior payment already found.
+ . ; S AMT=+$P($G(^DGCR(399,IBIFN,"U2")),U,SEQ+3) ; amount on bill
+ S:PRP=0 AMT=+$P($G(^DGCR(399,IBIFN,"U2")),U,SEQ+3) ; amount on bill
  Q $G(AMT)
  ;
 OUTPT(IBIFN,IBPRINT) ; Moved for space
@@ -222,3 +228,28 @@ CIADDR(IBXDATA,IBXSAVE,LINE,FORM) ; Format current ins co address line LINE for 
  ;
  Q
  ;
+HHLTH(IBIFN,OUT) ; determine if claim is hospice/home health and needs episode of care date  **574**
+ ; per NUBC, date the episode of care began is needed for all outpatient CMS-1500 Home Health and Hospice claims and
+ ; UB-04: 012x,022x,032x,034x,081x & 082x claims
+ ; this string is zero + the Bill Type field from screens 6&7 of enter/edit Bill: 0_field#.24(LOC OF CARE)_.25(BILL CLASS)_.26(TIMEFRAME)
+ ; required - IBIFN = internal claim#
+ ; optional - OUT = optional flag to pass to INPAT^IBCEF
+ ; returns a 1 if date should be included on bill and a 0 if it should NOT be included on bill
+ ;
+ N IB0,IBL,IBC,IBT
+ Q:$G(IBIFN)="" 0
+ ; all inpatient claims include date
+ I $$INPAT^IBCEF(IBIFN,+$G(OUT))'=0 Q 1
+ S IB0=$G(^DGCR(399,IBIFN,0)),IBL=$P(IB0,U,24)
+ ; Per Lisa Duncan, all Home health must have date, not just 032x & 034x
+ Q:IBL=3 1
+ ; not home health or hospice if LOC OF CARE = 7
+ Q:IBL=7 0
+ S IBC=$P($G(^DGCR(399.1,+$P(IB0,U,25),0)),U,2)
+ ; not home health or hospice if BILL CLASS is 3 or a number greater than 4
+ Q:IBC>4 0
+ Q:IBC=3 0
+ S IBT=IBL_IBC
+ ; any claim where the location of care_bill classification combo is 12,22,32,34,81 or 82 must have date
+ Q:"^12^22^32^34^81^82^"[IBT 1
+ Q 0

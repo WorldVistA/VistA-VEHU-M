@@ -1,5 +1,5 @@
-SDECIDX ;ALB/SAT - VISTA SCHEDULING RPCS ;APR 08, 2016
- ;;5.3;Scheduling;**627,642**;Aug 13, 1993;Build 23
+SDECIDX ;ALB/SAT - VISTA SCHEDULING RPCS ;JUN 21, 2017
+ ;;5.3;Scheduling;**627,642,658,665**;Aug 13, 1993;Build 14
  ;
  ; The following entry point causes the ^XTMP("SDEC","IDX" global
  ; to be rebuilt based on the scheduling of the SDEC BUILD IDX option.
@@ -21,6 +21,7 @@ PURGE ;EP- Delete the content of the global and set zero node
 BUILD ;EP- Generate content
  ;
  N FILE,CNT,DLM
+ S CNT=0  ;alb/sat 658
  S DLM="|"
  F LP=123,403.5,409.3,409.85 D
  .D BLD(LP)
@@ -218,6 +219,8 @@ GETREC(DATA,LASTREC,MAXREC,STYLE) ;EP-
  .S LP=LASTREC F  S LP=$O(^XTMP("SDEC","IDX","XREF2",LP)) Q:LP=""  D  Q:(CNT=MAXREC)
  ..I $$PC(LP,8,DLM)="R",'$D(^SD(403.5,$$PC(LP,7,DLM),0)) Q    ;record has been moved to RECALL REMINDERS REMOVED
  ..I $$PC(LP,8,DLM)="C",$$REQCHK^SDEC51("",$$PC(LP,7,DLM)) Q    ;record has an activity scheduled or has been cancelled
+ ..I $$PC(LP,8,DLM)="E",$$GET1^DIQ(409.3,$$PC(LP,7,DLM),23,"I")="C" Q  ;alb/sat 665 - record is closed
+ ..I $$PC(LP,8,DLM)="A",$$GET1^DIQ(409.85,$$PC(LP,7,DLM),23,"I")="C" Q  ;alb/sat 665 - record is closed
  ..S CNT=CNT+1
  ..S @DATA@(CNT)=$$PC(LP,8,DLM)_U_$$PC(LP,7,DLM)_U_LP_$C(30)
  S @DATA@(CNT)=$P(@DATA@(CNT),$C(30))_$C(30,31)

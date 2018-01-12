@@ -1,16 +1,11 @@
-PXRMSEL2 ; SLC/PJH - PXRM Selection ; 3/6/17 11:42am
- ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005;Build 12
- ; Original Routine authored by US Dept of Veteran Affairs
- ; Tag START modified by DSS 2017
+PXRMSEL2 ; SLC/PJH - PXRM Selection ;04/16/2000
+ ;;2.0;CLINICAL REMINDERS;;Feb 04, 2005
  ;
  ; Called from PXRMSEL
  ;
  ;Select Health factors requiring resolutions
  ;-------------------------------------------
 START W IORESET
- ; DSS/SMH - BEGIN MOD - Tiny bug fix - Undo reset to 80x24
- D FULL^VALM1
- ; DSS/SMH - END MODS
  ;Select to edit individual or reminder's Health Factors
  D OPT(.ANS) Q:$D(DTOUT)!$D(DUOUT)  Q:ANS="I"
  ;Select Reminder
@@ -91,9 +86,6 @@ REM(ARRAY) ;
  ;---------------------
 SEL(TYPE) ;
  W IORESET
- ; DSS/SMH - BEGIN MOD - Tiny bug fix - Undo reset to 80x24
- D FULL^VALM1
- ; DSS/SMH - END MODS
  N X,Y,DIR
  K DIROUT,DIRUT,DTOUT,DUOUT
  S DIR(0)="S"_U_"D:Reminder Dialogs;"

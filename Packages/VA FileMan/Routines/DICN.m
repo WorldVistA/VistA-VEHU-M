@@ -1,7 +1,11 @@
-DICN ;SFISC/GFT,XAK,TKW,SEA/TOAD-ADD NEW ENTRY ;16NOV2012
- ;;22.0;VA FileMan;**4,31,169**;Mar 30, 1999;Build 26
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DICN ;SFISC/GFT,XAK,TKW,SEA/TOAD - ADD NEW ENTRY ;2NOV2015
+ ;;22.2;VA FileMan;**2**;Jan 05, 2016;Build 139
+ ;;Per VA Directive 6402, this routine should not be modified.
+ ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
+ ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
+ ;;Licensed under the terms of the Apache License, Version 2.0.
  ;
+ ;COME HERE FROM L^DICM
  N DIENTRY,DIFILE,DIAC D:'$D(DO(2)) GETFA^DIC1(.DIC,.DO) S DO(1)=1
  I '$D(DINDEX) N DINDEX S DINDEX("#")=1,DINDEX("START")="B"
  N DISUBVAL,V
@@ -18,7 +22,11 @@ B1 Q:'DO(2)  Q:$D(^DD(+DO(2),0,"UP"))!(DO(2)=".12P")
  S DIFILE=+DO(2),DIAC="LAYGO" D ^DIAC K DIAC,DIFILE
  Q
  ;
-1 I '$D(DIC("S")) S DST=$G(DST)_$$EZBLD^DIALOG(8058,$$OUT^DIALOGU(Y,"ORD")) S:$D(^DD(+DO(2),0,"UP")) DST=DST_$$EZBLD^DIALOG(8059,$O(^DD(^("UP"),0,"NM",0))) S DST=DST_")"
+1 I '$D(DIC("S")) D  ;CALLED FROM I+2. 'ARE YOU ADDING'? THRU NEXT 4 LINES
+ .N M
+ .S M=$$EZBLD^DIALOG(8058,$$OUT^DIALOGU(Y,"ORD")) ;" (the 14th" or whatever
+ .S:$D(^DD(+DO(2),0,"UP")) M=M_$$EZBLD^DIALOG(8059,$$FILENAME^DIALOGZ(^("UP"))) S M=M_")"
+ .I $L(M)+$L(DST)'>$S($G(IOM):IOM,1:80) S DST=DST_M
 Y I $D(DDS) S A1="Q",DST=%_U_DST D H^DDSU Q
  W !,DST K DST
 YN ;
@@ -34,16 +42,21 @@ VAL I X'?.ANP K X Q
  I X[""""!(X["^") K X Q
  I $P(DS,U,2)'["N",$A(X)=45 K X Q
  I $P(DS,U,2)["*" S:DS["DINUM" DINUM=X Q
- N %T,%DT,C,DIG,DIH,DIU,DIV,DICR ;PRESERVE VARIABLES WHILE WE XECUTE INPUT TRANSFORM ON THE .01 FIELD
- S %=$F(DS,"%DT=""E"),DS=$E(DS,1,%-2)_$E(DS,%,999) N DICTST S DICTST=DS["+X=X"&(X?16.N) K:DICTST X X:'DICTST $P(DS,U,5,99) Q
+ S %=$$VALEXTS^DIETLIBF(+DO(2),.01) D  ;FOR VERSION 23
+ .N DS,%T,%DT,C,DIG,DIH,DIU,DIV,DICR ;PRESERVE VARIABLES WHILE WE XECUTE INPUT TRANSFORM ON THE .01 FIELD
+ .X %
+ ;S %=$F(DS,"%DT=""E"),DS=$E(DS,1,%-2)_$E(DS,%,999) N DICTST S DICTST=DS["+X=X"&(X?16.N) K:DICTST X X:'DICTST $P(DS,U,5,99)
+UNIQ I $P(DS,U,2)["U",$D(X),$D(@(DIC_"""B"",X)")) K X
+ Q
  ;
 I1 S DST=$C(7)_$$EZBLD^DIALOG(8060)
  I '$D(DIENTRY),Y]"" S DST=DST_$$EZBLD^DIALOG(8061,Y)
- S %=$P(DO,U,1) I $L(DST)+$L(%)'>55 S DST=DST_$$EZBLD^DIALOG(8062,%) Q
+ S %=$$FILENAME^DIALOGZ(+DO(2)) I $L(DST)+$L(%)'>55 S DST=DST_$$EZBLD^DIALOG(8062,%) Q  ;**CCO/NI FILE NAME
  W:'$D(DDS) !,DST K A1 D:$D(DDS) H^DIC2 S DST="    "_$$EZBLD^DIALOG(8062,%) Q
  ;
-I I DIC(0)["E",DO(2)'["A",DIC(0)'["W" K DTOUT,DUOUT D  G OUT^DICN0:$G(DTOUT)!($G(DUOUT)) I %'=1 S Y=-1 D BAD^DIC1 Q
- . S (Y,DIX)=X I Y]"" N C S C=$P(^DD(+DO(2),.01,0),U,2) D Y^DIQ
+I ;COME HERE FROM USR+2, ABOVE
+ I DIC(0)["E",DO(2)'["A",DIC(0)'["W" K DTOUT,DUOUT D  G OUT^DICN0:$G(DTOUT)!($G(DUOUT)) I %'=1 S Y=-1 D BAD^DIC1 Q
+ . S (Y,DIX)=X I Y]"" N C S C=$P(^DD(+DO(2),.01,0),U,2) D Y^DIQ ;TRANSFORM INTERNAL TO EXTERNAL IN ORDER TO DISPLAY IT
  . D I1 S %=2,Y=$P(DO,U,4)+1,X=DIX D 1
 I2 . Q:%>0!($G(DTOUT))  I %=-1 S DUOUT=1 Q
  . W:'$D(DDS) $C(7)_"??",!?4,$$EZBLD^DIALOG(8040) D YN G I2
@@ -54,7 +67,9 @@ R D DS S DST="   "_$P(DS,U,1)_": "
  I X[U D BAD^DIC1 Q
  I X="" G R
  D VAL
- I '$D(X) W $C(7) W:'$D(DDS) "??" G:'$D(^DD(+DO(2),.01,3)) R S DST="    "_^(3) W:'$D(DDS) !,DST D:$D(DDS) H^DDSU G R
+HELP I '$D(X) D  G R ;INPUT NOT VALID.  SHOW HELP MESSAGE FOR .01 FIELD, WHEN TELLING USER HOW TO LAYGO A NEW ONE
+ .W $C(7) W:'$D(DDS) "??" S DST=$$HELP^DIALOGZ(+DO(2),.01) Q:DST=""
+ .S DST="    "_DST W:'$D(DDS) !,DST D:$D(DDS) H^DDSU
  ;
 NEW ; try to add a new record to the file
  G NEW^DICN0

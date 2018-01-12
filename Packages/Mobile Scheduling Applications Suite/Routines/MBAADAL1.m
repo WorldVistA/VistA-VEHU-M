@@ -1,9 +1,8 @@
-MBAADAL1 ;OIT-PD/CBR - CONSULT DAL;08/27/2014
- ;;1.0;Scheduling Calendar View;;Aug 27, 2014;Build 52
+MBAADAL1 ;OIT-PD/CBR - CONSULT DAL ;02/10/2016
+ ;;1.0;Scheduling Calendar View;**1**;Aug 27, 2014;Build 85
  ;Associated ICRs
  ;  ICR#
  ;  6052 GMR(123
- ;  6063 MBAA RPC REGISTRATION
  ;
  ;code below is not being used in the initial release of MBAA. It will be released at a later date in a future release of MBAA
  ;GETCONSR(RETURN,DFN,FLDS) ; Get consult requests

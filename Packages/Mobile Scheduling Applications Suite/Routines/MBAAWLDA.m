@@ -1,10 +1,10 @@
-MBAAWLDA ;OIT-PD/CBR - WAIT LIST API;08/27/2014
- ;;1.0;Scheduling Calendar View;;Aug 27, 2014;Build 52
+MBAAWLDA ;OIT-PD/CBR - WAIT LIST API ;02/13/2015
+ ;;1.0;Scheduling Calendar View;**1**;Aug 27, 2014;Build 85
+ ;
  ;Associated ICRs:
  ;  ICR#
  ;  6046 SDWL(409.3
  ;  10103 XLFDT
- ;  6063 MBAA RPC REGISTRATION
  ;
  ;Code below is scheduled for a future release of MBAA
 LOCK(IEN,TIMEOUT) ;LOCK ^SDWL MBAA RPC: MBAA REMOVE FROM EWL

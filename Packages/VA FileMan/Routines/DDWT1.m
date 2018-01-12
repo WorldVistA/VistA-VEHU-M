@@ -1,7 +1,14 @@
-DDWT1 ;SFISC/PD KELTZ,MKO-READ AND PROCESS ;11:35 AM  25 Aug 2000
- ;;22.0;VA FileMan;**18**;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
- D LOAD^DDW1 K DUOUT ;GFT
+DDWT1 ;SFISC/PD KELTZ,MKO - READ AND PROCESS ;9NOV2016
+ ;;22.2;VA FileMan;**4,7**;Jan 05, 2016;Build 4
+ ;;Per VA Directive 6402, this routine should not be modified.
+ ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
+ ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
+ ;;Licensed under the terms of the Apache License, Version 2.0.
+ ;;GFT;**18,1000,1004,1005,1045,1049,1053,1056**;Mar 30, 1999
+ ;
+ ;Called from DDW ROUTINE
+ D LOAD^DDW1 K DUOUT
+ ;I '$G(DDWRWSET) D BOT^DDW3 I $L(DDWN) D BREAK^DDW5() ;GFT -- GO TO BOTTOM OF TEXT ;P7
  F  D GETIN Q:$D(DDWFIN)
  Q
  ;
@@ -40,13 +47,15 @@ DISPL ;Display char
  ;
  I DDWREP W DDWQ
  E  D
- . I $P(DDGLED,DDGLDEL,5)]"" W $P(DDGLED,DDGLDEL,5)_DDWQ
+IC . I 0  ;$P(DDGLED,DDGLDEL,5)]"" W $P(DDGLED,DDGLDEL,5)_DDWQ   GFT --  DON'T USE "INSERT CHARACTER"  IT SEEMS NOT TO WORK
  . E  W DDWQ_$E(DDWN,DDWC,IOM+DDWOFS)
  D POS(DDWRW,DDWC,"R")
  D:$L(DDWN)>DDWRMAR WRAP^DDW5
  Q
  ;
-RUB N DDWX
+RUB ;COME HERE ON BACKSPACE
+ N DDWX
+ I DDWN="" S DDWCNT=DDWCNT-1  ;if current line is null  --Bill Eash
  S DDWED=1
  I $D(DDWMARK) D CHKDEL^DDW9(.DDWX) Q:DDWX
  ;
@@ -109,7 +118,7 @@ UP I DDWRW>1 D
  E  W $C(7)
  I DDWC>246,$L(DDWN)<246 D POS(DDWRW,246,"R")
  Q
-DN I DDWA+DDWRW'<DDWCNT W $C(7) Q
+DN I DDWN="",DDWA+DDWRW>DDWCNT W $C(7) Q  ;**GFT  DOWN-ARROW: ALLOW GOING TO ENDING BLANK LINE
  I DDWRW<DDWMR D
  . D POS(DDWRW+1,DDWC,"RN")
  E  I DDWSTB D
@@ -157,7 +166,8 @@ WLT G WORDL^DDW4
 DLW S DDWED=1 G DELW^DDW4
 DEOL S DDWED=1 G DEOL^DDW4
  ;
-BRK S DDWED=1 D BREAK^DDW5() Q
+BRK ;I 'DDWREP,$G(DDWCNT)>1,$G(DDWN)="",$G(DDWL(DDWRW-1))="",DDWA+DDWRW'<DDWCNT D SAVE^DDW1 S DDWFIN="",DDWCNT=DDWCNT-1 Q  ;**GFT  GET OUT WITH TWO RETURNS AT BOTTOM
+ S DDWED=1 D BREAK^DDW5() Q
 XLN S DDWED=1 D XLINE^DDW5() D:DDWC'=1 POS(DDWRW,1,"R") Q
  ;
 JN S DDWED=1 G JOIN^DDW6
@@ -209,7 +219,7 @@ MNE(Y) ;In:  Y = Ascii value of first character
  I Y=13 S DDWHLOG=$P($H,",",2)
  E  I Y=10,$D(DDWHLOG)#2,$P($H,",",2)-DDWHLOG<1 K DDWHLOG S Y=-1 Q
  E  K DDWHLOG
- S S="",F=0,T="DDW(""IN"")"
+ S S="",F=0,T="DDW(""IN"")" ;We are looking in DDW("IN") for a string of characters, which we translate to something in DDW("OT")
  F  D MNELOOP(.S,.Y,.T,.F) Q:F
  Q
  ;
@@ -226,7 +236,7 @@ MNELOOP(S,Y,T,F) ;Read more
  S S=S_$C(Y)
  I @T'[(U_S) D
  . I $C(Y)?1L D
- .. S $E(S,$L(S))=$C(Y-32)
+ .. S $E(S,$L(S))=$$UP^DILIBF($C(Y)) ;GEKY --INTERNATIONALIZATION  artf16804
  .. S:@T'[(U_S_U) E=1
  . E  S E=1
  I $T,$G(E) D  Q
@@ -235,7 +245,7 @@ MNELOOP(S,Y,T,F) ;Read more
  . E  D FLUSH S F=1,Y=-1
  ;
  I @T[(U_S_U),S'=$C(27) D  Q
- . S Y=$P(@$TR(T,"IN","OT"),U,$L($P(@T,U_S_U),U)),F=1
+ . S Y=$P(@$TR(T,"IN","OT"),U,$L($P(@T,U_S_U),U)),F=1 ;We"ve got Y as the place to go to
  ;
  R *Y:5 I Y=-1 D FLUSH S F=1
  Q

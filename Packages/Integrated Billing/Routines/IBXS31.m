@@ -1,7 +1,5 @@
-IBXS31 ; ;09/25/15
- S X=DE(33),DIC=DIE
- K DIV S DIV=X,D0=DA,DIV(0)=D0 S Y(1)=$S($D(^DGCR(399,D0,"M")):^("M"),1:"") S X=$P(Y(1),U,3),X=X S DIU=X K Y S X="" X ^DD(399,114,1,1,2.4)
- S X=DE(33),DIC=DIE
- D KIX^IBCNS2(DA,"I3")
- S X=DE(33),DIC=DIE
- X ^DD(399,114,1,3,2.3) I X S X=DIV S Y(1)=$S($D(^DGCR(399,D0,"MP")):^("MP"),1:"") S X=$P(Y(1),U,2),X=X S DIU=X K Y S X="" X ^DD(399,114,1,3,2.4)
+IBXS31 ; ;09/15/16
+ S X=DE(27),DIC=DIE
+ ;
+ S X=DE(27),DIC=DIE
+ ;

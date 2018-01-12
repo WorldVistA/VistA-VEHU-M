@@ -1,21 +1,21 @@
-HMPDJ04 ;SLC/MKB,ASMR/RRB - Appointments,Visits;Nov 12, 2015 15:21:17
- ;;2.0;ENTERPRISE HEALTH MANAGEMENT PLATFORM;**;Sep 01, 2011;Build 63
+HMPDJ04 ;SLC/MKB,ASMR/RRB,ASF,PB - Appointments,Visits;May 24, 2016 15:21:17
+ ;;2.0;ENTERPRISE HEALTH MANAGEMENT PLATFORM;**2,3**;Sep 01, 2011;Build 15
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
  ; -------------------          -----
- ; ^AUPNVSIT                     2028
  ; ^DGS(41.1                     3796
  ; ^DIC(42                      10039
  ; ^SC                          10040
  ; ^VA(200                      10060
  ; DIQ                           2056
  ; ICPTCOD                       1995
- ; PXAPI,^TMP("PXKENC"           1894
+ ; ENCEVENT^PXKENC               1894  ;DE6363 - JD - 8/23/16
  ; SDAMA301                      4433
  ; XLFDT                        10103
  ; XUAF4                         2171
  ; EDP(230                       6275
+ ; SC(                             93
  ;
  ; All tags expect DFN, ID, [HMPSTART, HMPSTOP, HMPMAX, HMPTEXT]
  Q
@@ -32,7 +32,7 @@ SDAM1 ; -- appointment ^TMP($J,"SDAMA301",DFN,HMPDT)
  S APPT("localId")=X,APPT("uid")=$$SETUID^HMPUTILS("appointment",DFN,X)
  S X=$P(NODE,U,10),APPT("typeCode")=$P(X,";"),APPT("typeName")=$P(X,";",2)
  S STS=$P(NODE,U,3),CLS=$S($E(STS)="I":"I",1:"O")
- S STS=$P($$STATUS^SDAMA308(DFN,HMPDT,+HLOC),";",1,2) ;DE2552 ASF 2015/11/16 handles "scheduled/kept" issue; ICR in-progress
+ S STS=$P($P(NODE,U,22),";",1,2)  ;DE4469 - PB - APR 26, 2016 changed from using the SDAMA308 API to using the SDAMA301 Supported API to get appointment status ICR 4433
  S APPT("dateTime")=$$JSONDT^HMPUTILS(HMPDT)
  S:$L($P(NODE,U,6)) APPT("comment")=$P(NODE,U,6)
  S:$P(NODE,U,9) APPT("checkIn")=$$JSONDT^HMPUTILS($P(NODE,U,9))
@@ -111,6 +111,7 @@ VSIT1(ID) ; -- visit
  ;DE2818, ICR 6275
  I $D(^EDP(230,"V",ID)),$L($T(EDP1^HMPDJ04E)) D EDP1^HMPDJ04E(ID) Q
  ; ENCEVENT^PXAPI(ID)
+ ;
  ; DE2818, ^AUPNVSIT - ICR 2028
  S X0=$G(^AUPNVSIT(ID,0)),X15=$G(^(150)) Q:X0=""  ;pjh - quit if visit already deleted
  ; X0=$G(^TMP("PXKENC",$J,ID,"VST",ID,0)),X15=$G(^(150))
@@ -133,10 +134,12 @@ VSIT1(ID) ; -- visit
  I 'X S VST("typeName")=$S('INPT&LOC:$$GET1^DIQ(44,LOC_",",.01)_" VISIT",1:$$CATG^HMPDVSIT(CATG))  ;DE2818
  S VST("patientClassCode")="urn:va:patient-class:"_$S(INPT:"IMP",1:"AMB")
  S VST("patientClassName")=$S(INPT:"Inpatient",1:"Ambulatory")
+ ; US12589 - add createdByName field to extract
+ S X=$$GET1^DIQ(200,$P(X0,U,23)_",",".01") S:$G(X)="" X="UNKNOWN"
+ S VST("createdByName")=X
  ;(#.08) DSS ID
  S X=$P(X0,U,8) S:X AMIS=$$AMIS^HMPDVSIT(X) I LOC D
- . ;DE2818, calls changed $$GET1^DIQ
- . I 'X S AMIS=$$GET1^DIQ(44,LOC_",",8)  ;DE2818, (#8) STOP CODE NUMBER
+ . I 'X N AMISARR D GETS^DIQ(44,LOC_",",8,"I","AMISARR","ERR") I $G(AMISARR(44,LOC_",",8,"I"))'="" S X=$G(AMISARR(44,LOC_",",8,"I")),AMIS=$$AMIS^HMPDVSIT(X)  ;DE5300 - PB - Jun 30 2015 changed call to get stop code name and number
  . S VST("locationUid")=$$SETUID^HMPUTILS("location",,+LOC)
  . S X=$$GET1^DIQ(44,LOC_",",1) S:X]"" VST("shortLocationName")=X  ;DE2818, (#1) ABBREVIATION
  . S VST("locationName")=$$GET1^DIQ(44,LOC_",",.01)  ;DE2818, (#.01) NAME
@@ -161,9 +164,9 @@ VSIT1(ID) ; -- visit
 CPT(VISIT) ; -- Return CPT code of encounter type
  ;DE2818 - Change to use API and not directly access the global
  N DA,Y S Y=""
- ;DE2818, ICR 2048 for ^AUPNVCPT references
- S DA=0 F  S DA=$O(^AUPNVCPT("AD",VISIT,DA)) Q:DA<1  D  Q:$L(Y)
- . D ENCEVENT^PXAPI(VISIT,1)
+ ;DE4198 - remove use of ^AUPNVCPT
+ D ENCEVENT^PXKENC(VISIT,1)  ;ICR 1894
+ S DA=0 F  S DA=$O(^TMP("PXKENC",$J,VISIT,"CPT",DA)) Q:DA<1  D  Q:$L(Y)
  . I +$G(^TMP("PXKENC",$J,VISIT,"CPT",DA,0))?1"992"2N S Y=+$G(^TMP("PXKENC",$J,VISIT,"CPT",DA,0))
  Q Y
  ;

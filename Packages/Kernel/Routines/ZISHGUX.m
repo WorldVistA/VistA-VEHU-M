@@ -1,5 +1,5 @@
 %ZISH ;ISF/AC,RWF,VEN/SMH - GT.M for Unix Host file Control ;2017-01-09  3:23 PM
- ;;8.0;KERNEL;**275,306,385,524,10001**;Jul 10, 1995;Build 11
+ ;;8.0;KERNEL;**275,306,385,524,10001**;Jul 10, 1995;Build 18
  ; Submitted to OSEHRA in 2017 by Sam Habiel for OSEHRA
  ; Original Routine authored by Department of Veterans Affairs
  ; EPs OPEN,DEL1,CD,PWD,MAXREC authored by Sam Habiel 2016.

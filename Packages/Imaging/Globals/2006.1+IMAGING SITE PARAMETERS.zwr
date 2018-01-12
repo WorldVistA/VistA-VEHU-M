@@ -1,8 +1,8 @@
 OSEHRA ZGO Export: IMAGING SITE PARAMETERS
-08-JUN-2017 10:37:30 ZWR
+24-JAN-2018 16:38:12 ZWR
 ^MAG(2006.1,0)="IMAGING SITE PARAMETERS^2006.1P^1^1"
 ^MAG(2006.1,1,0)="500^CPM^2^^^^^^CPM^4"
-^MAG(2006.1,1,1)="^45^^^45^^6915954^5^5^1"
+^MAG(2006.1,1,1)="^45^^^45^^6974053^5^5^1"
 ^MAG(2006.1,1,2,0)="^2006.112^1^1"
 ^MAG(2006.1,1,2,1,0)="TXT"
 ^MAG(2006.1,1,2,"B","TXT",1)=""
@@ -114,6 +114,8 @@ OSEHRA ZGO Export: IMAGING SITE PARAMETERS
 ^MAG(2006.1,1,"BPVERIFIER")="1^^1^3110608^2355"
 ^MAG(2006.1,1,"CT2")="Abdomen|350|40~Bone|2000|500~Disk|900|250~Head|80|40~Lung|1500|-700~Mediastinum|500|40~~~"
 ^MAG(2006.1,1,"GW")=".vr[|y(pZ,^2S!$ceRkF80"
+^MAG(2006.1,1,"HELPC")="http://vaww.oed.portal.domain.ext/applications/VistAImaging/VistA%20Enterprise%20Documents/User%20Manuals/MAG_Capture_User_Manual.pdf"
+^MAG(2006.1,1,"HELPD")="http://vaww.oed.portal.domain.ext/applications/VistAImaging/VistA%20Enterprise%20Documents/User%20Manuals/MAG_Display_User_Manual.pdf"
 ^MAG(2006.1,1,"KEYS")="0^600^600^600^1^600^^^30"
 ^MAG(2006.1,1,"NET")="Administrator^*` G)nWgAA0^^^3"
 ^MAG(2006.1,1,"PACS")="0^^2"

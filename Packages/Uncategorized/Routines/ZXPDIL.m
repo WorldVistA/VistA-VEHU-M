@@ -1,12 +1,10 @@
-ZXPDIL ;SFISC/RSD - load Distribution Global ;05/05/2008
- ;;8.0;KERNEL;**15,44,58,68,108,422,525**;Jul 10, 1995;Build 10
+ZXPDIL ;BIZ/WPB - load Distribution Global ;05/05/2008
+ ;;1.0;Patch Installs;**1**;Mar 23, 2015;Build 17
  ;
- ; modified to automatically load a kids build from the file system
+ ; The majority of this code is copied from the Kernel KIDS code that loads a KIDS file into the transport global
+ ; Modified to automatically load a kids build from the file system
  ;
- ; need to get a list of files in the folder. as the user for the folder name
- ; then loop through the list of files and then pass the path and filename to
- ; the routine
- ;
+ Q
 EN1 N POP,XPDA,XPDST,XPDIT,XPDT,XPDGP,XPDQUIT,XPDREQAB,XPDSKPE
  S:'$D(DT) DT=$$DT^XLFDT S:'$D(U) U="^"
  S XPDST=0

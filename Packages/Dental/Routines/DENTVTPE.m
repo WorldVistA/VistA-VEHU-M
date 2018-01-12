@@ -1,5 +1,5 @@
 DENTVTPE ;DSS/KC - UPDATE PCE DATA FOR TP ;04/11/2007 9:05
- ;;1.2;DENTAL;**53**;Aug 10, 2001;Build 10
+ ;;1.2;DENTAL;**53,66**;Aug 10, 2001;Build 36
  ;Copyright 1995-2007, Document Storage Systems, Inc., All Rights Reserved
  ;
  ; DBIA#  SUPPORTED
@@ -22,13 +22,14 @@ UPD(DENTRET,DATA) ;rpc DENTV UPDATE PCE
  ;  If the user deletes the PCE Primary Dx, we have to prompt for a new one
  ;  and then refile (see the PDX linetag) with another rpc call
  ;
- N PKG,SOURCE,I,N0,N1,H0,VIEN,VIEDT,DENICD,DENVIEN
+ N PKG,SOURCE,I,N0,N1,H0,VIEN,VIEDT,DENICD,DENVIEN,DX,ENC,EXIST,X,Z,PRIDX,PRIPRV,VAR,ENCDATA
  S DENTRET=$NA(^TMP("DENTRET",$J)) K @DENTRET
  S PKG=0 D PKG I PKG<0 S @DENTRET@(1)="-1^No Dental package file entry found" Q
  K ^TMP("DENTVD",$J)
  I $D(DATA("ENC")) D  Q:$D(@DENTRET)  ;deleting entire encounter
- .S ENC=$O(DATA(0)) K DATA D ENC^DENTVTPF
- .I 'ENC S @DENTRET@(1)="-1^Encounter not sent"
+ .S ENC=0 M ENCDATA=DATA K DATA
+ .I '$O(ENCDATA(0)) S @DENTRET@(1)="-1^Encounter not sent"
+ .F  S ENC=$O(ENCDATA(ENC)) Q:ENC=""  D ENC^DENTVTPF
  .Q
  S I=0 F  S I=$O(DATA(I)) Q:'I  D
  .S N0=$G(^DENT(228.2,I,0)),N1=$G(^(1))
@@ -51,7 +52,7 @@ UPD(DENTRET,DATA) ;rpc DENTV UPDATE PCE
  ;loop for EACH visit we have deletions to perform'
  I '$D(^TMP("DENTVD",$J)) S @DENTRET@(1)="-1^No data to delete" Q
  S DENVIEN=0 F  S DENVIEN=$O(^TMP("DENTVD",$J,DENVIEN)) Q:'DENVIEN  D DEL(DENVIEN)
- K ^TMP("DENTVD",$J)
+ K ^TMP("DENTVD",$J),^TMP("PXKENC",$J)
  Q
  ;
 DEL(DENVIEN) ;entry for each visit to perform deletes/adds as necessary
@@ -173,7 +174,7 @@ FIN ;final check - if no primary dx or provider, prompt user for one
  .S Z=0,PRIDX=0,CNT=0
  .F  S Z=$O(^TMP("PXKENC",$J,DENVIEN,"POV",Z)) Q:'Z!PRIDX  D
  ..S N0=$G(^(Z,0)) I $P(N0,U,12)="P" S PRIDX=+N0 Q
- ..S DX=$P($$ICD9^DSICDRG(,+N0,,,,1),U,1,4)
+ ..S DX=$P($$ICD^DENTVICD(,$$EXTERNAL^DILFD(228.2,1.06,,+N0),,1),U,1,4)
  ..S CNT=CNT+1,@DENTRET@(DENVIEN,"POV",CNT)="1^POV^"_DX
  ..Q
  .I PRIDX K @DENTRET@(DENVIEN,"POV") ;PCE has a primary dx, user doesn't need to pick one

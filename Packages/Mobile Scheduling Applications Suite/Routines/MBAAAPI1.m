@@ -1,11 +1,8 @@
-MBAAAPI1 ;OIT-PD/VSL - SCHEDULING CONSULT API;08/27/2014
- ;;1.0;Scheduling Calendar View;;Aug 27, 2014;Build 52
+MBAAAPI1 ;OIT-PD/VSL - SCHEDULING CONSULT API ;02/10/2016
+ ;;1.0;Scheduling Calendar View;**1**;Feb 10, 2016;Build 85
+ ;
  ;Associated ICRs
  ;  ICR#
- ;  4854 STATUS^GMRCGUIS
- ;  6052 GMR(123
- ;  6050 MBAA SDQQCN2 API
- ;  6063 MBAA RPC REGISTRATION
  ;
  ;code below is not being used in the initial release of MBAA. It will be released at a later date in a future release of MBAA
  ;GETAPCNS(RETURN,DFN,STPCOD) ; Get active/pending consult requests
@@ -62,7 +59,7 @@ MBAAAPI1 ;OIT-PD/VSL - SCHEDULING CONSULT API;08/27/2014
  ;Q
  ;
 CANCEL(RETURN,CONS,SC,SD,IFN,RMK,WHO,ADM,AUTO,CNDIE,CNDA) ; appt was cancelled then mark consult as edit/resubmit, add comment. Called by RPC MBAA APPOINTMENT MAKE, MBAA RPC: MBAA CANCEL APPOINTMENT
- N CAPT,CNS,CLN,BY,CONSULT,SDPATNT
+ N CAPT,CNS,CLN,BY,CONSULT,SDPATNT,COMMENT,USER
  S:$D(CONS) CONSULT=CONS
  S RETURN=0
  D GETCAPT^MBAAMDA1(.CAPT,SC,SD,IFN,"I")
@@ -78,13 +75,15 @@ CANCEL(RETURN,CONS,SC,SD,IFN,RMK,WHO,ADM,AUTO,CNDIE,CNDA) ; appt was cancelled t
  S BY=$S($D(WHO):$S(WHO["P":" by the Patient.",WHO["C":" by the Clinic.",1:"."),$D(ADM):" for administrative purposes.",1:", whole clinic.")
  S COMMENT(1)=$P(CLN(.01),U)_" Appt. on "_APPT_" was cancelled"_BY
  S:$D(RMK) COMMENT(2)="Remarks: "_RMK
+ ;Code removed from initial release of SCV. will be included in next release of SCV.
  N SDERR S SDERR=$$STATUS^GMRCGUIS(CONSULT,6,3,SNDPRV,"","",.COMMENT)  ;ICR#: 4854 updates the status of a consult
- S CNDIE="^GMR(123,"_CONS_",40,",CNDA=+$G(COMMENT(0))  ;ICR#: 6052 GMR(123
+ S CNDIE="^GMR(123,"_CONS_",40,",CNDA=+$G(COMMENT(0))
  S AUTO(SC,SD,SDPATNT)=CONS
  N FLDS S FLDS(688)="@"
- ;ICR#: 4854 updates the status of a consult
- D STATUS^GMRCGUIS(.FLDS,SC,SD,IFN)
- K APPT,CPRSSTAT
+ D UPDCAPT^MBAAMDA4(.FLDS,SC,SD,IFN)
+ ;Code removed from initial release of SCV. will be included in next release of SCV.
+ ;D STATUS^GMRCGUIS(.FLDS,SC,SD,IFN)  ;ICR#: 4854 updates the status of a consult
+ K APPT,CPRSSTAT,SNDPRV,COMMENT,Y,USER
  S RETURN=1
  Q 1
  ;

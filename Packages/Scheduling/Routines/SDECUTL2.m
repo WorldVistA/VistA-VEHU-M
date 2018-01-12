@@ -1,5 +1,5 @@
-SDECUTL2 ;ALB/SAT - VISTA SCHEDULING RPCS ;APR 08, 2016
- ;;5.3;Scheduling;**627,642**;Aug 13, 1993;Build 23
+SDECUTL2 ;ALB/SAT - VISTA SCHEDULING RPCS ;JUN 21, 2017
+ ;;5.3;Scheduling;**627,642,658,665**;Aug 13, 1993;Build 14
  ;
  Q
  ;
@@ -81,7 +81,7 @@ TDAY1 ;
  S SDPAT1=$E($P($T(DAY),U,$E(SDT,2)+2),1,2)
  S SDAY=$S(SDAY1'="":$$FMADD^XLFDT(SDAY1,-1),1:$P($$NOW^XLFDT,".",1))   ;$$FMADD^XLFDT(SDE,-1)
  S SDE1=$$FMADD^XLFDT(SDAY,1)   ;$S(SDEND'="":SDEND,1:$$FMADD^XLFDT(SDAY,365))   ;$S(SDAY1'="":SDAY1,1:$$FMADD^XLFDT(SDAY,365))
- F  S SDAY=$$FMADD^XLFDT($P($$SCH^XLFDT($E("UMTWRFS",$E(SDT,2)+1),SDAY),".",1),1) Q:SDAY'>0  Q:SDAY>SDE1  D
+ F  S SDAY=$$FMADD^XLFDT($P($$SCH^XLFDT($E("UMTWRFS",$E(SDT,2)+1),SDAY),".",1),1) Q:SDAY'>0  Q:SDAY>SDE1  D   ;alb/sat 665
  .I $$GET1^DIQ(44,SDCL_",",1918.5,"I")'="Y",$D(^HOLIDAY("B",SDAY)) Q   ;do not schedule on holidays
  .Q:$D(^SC(SDCL,"T",SDAY,2,1))  ;if AVAILABILITY defined, this day is already built
  .S SDSIM=$S(SDSI="":4,SDSI<3:4,SDSI:SDSI,1:4)
@@ -110,7 +110,7 @@ FDT(SDCL,Y)  ;find day template pattern
  Q:'SDE ""
  S SDTP=$G(^SC(SDCL,"T"_Y,SDE,1))
  Q:SDTP="" ""
- F  S SDE=$O(^SC(SDCL,"T"_Y,SDE),-1) Q:SDE'>0  Q:$P(SDBEG,".",1)'<SDE  S SDTP=$G(^SC(SDCL,"T"_Y,SDE,1))
+ F  S SDE=$O(^SC(SDCL,"T"_Y,SDE),-1) Q:SDE'>0  Q:$P(SDBEG,".",1)'<SDE  S SDTP=$G(^SC(SDCL,"T"_Y,SDE,1))   ;alb/sat 665
  Q SDTP
 H ;update ST as holiday
  S ^SC(+SC,"ST",X,1)="   "_$E(X,6,7)_"    "_$P(^HOLIDAY(X,0),U,2),^SC(+SC,"ST",X,0)=X
@@ -163,7 +163,7 @@ SDAY(SDBLKS,SDCL,SDAY,SDLEN,SDCLS)   ;build blocks for the day
  D SDAV(.SDAV,SDCL,SDAY,SDLEN,SDCLS,SDSI)
  S SDNOD2=$G(SDAV(2,SDTIME,0)) I $$COMPARE(SDCLS4,$P(SDNOD2,U,1))=2 D
  .S SDBI=SDBI+1 S SDBLKS(SDBI)=$$FM(SDAY_"."_SDCLS4)_U_$$FM(SDAY_"."_$P(SDNOD2,U,1))_U_U_SDATUN
- S SDTIME=0 F  S SDTIME=$O(SDAV(2,SDTIME)) Q:SDTIME'>0  D
+ S SDTIME=0 F  S SDTIME=$O(SDAV(2,SDTIME)) Q:SDTIME'>0  D   ;alb/sat 665
  .S SDNOD2=$G(SDAV(2,SDTIME,0))
  .S:SDB1="" SDB1=$P(SDNOD2,U,1)
  .I PTIME'="" D
@@ -233,21 +233,22 @@ SDB(SDEC)  ;add/update access blocks after clinic modifications using SDBUILD in
  Q
  ;
 SDRES(SDCL)  ;add clinic resource
- N SDDATA,SDDI,SDFDA,SDFOUND,SDI,SDNOD,SDRT
+ N ABBR,SDDATA,SDDI,SDFDA,SDFOUND,SDI,SDNOD,SDRT
  S SDFOUND=0
  S SDI="" F  S SDI=$O(^SDEC(409.831,"ALOC",SDCL,SDI)) Q:SDI=""  D  Q:SDFOUND=1
  .S SDNOD=$G(^SDEC(409.831,SDI,0))
  .S SDRT=$P(SDNOD,U,11)
  .I $P(SDRT,";",2)="SC(",$P(SDRT,";",1)=SDCL S SDFOUND=1
- Q:SDFOUND=1
- S SDFIELDS=".01;1917"
+ S SDI=$S(SDFOUND=1:SDI,1:"+1")
+ S SDFIELDS=".01;1;1917"   ;alb/sat 658 - add field 1
  D GETS^DIQ(44,SDCL_",",SDFIELDS,"IE","SDDATA")
- S SDFDA(409.831,"+1,",.01)=SDDATA(44,SDCL_",",.01,"E")
- S SDDI=SDDATA(44,SDCL_",",1917,"E") S SDFDA(409.831,"+1,",.03)=$E(SDDI,1,2)
- S SDFDA(409.831,"+1,",.04)=SDCL
- S SDFDA(409.831,"+1,",.012)=SDCL_";SC("
- S SDFDA(409.831,"+1,",.015)=$E($$NOW^XLFDT,1,12)
- S SDFDA(409.831,"+1,",.016)=DUZ
+ S SDFDA(409.831,SDI_",",.01)=SDDATA(44,SDCL_",",.01,"E")
+ S SDDI=SDDATA(44,SDCL_",",1917,"E") S SDFDA(409.831,SDI_",",.03)=$E(SDDI,1,2)
+ S ABBR=SDDATA(44,SDCL_",",1,"E") S:ABBR'="" SDFDA(409.831,SDI_",",.011)=ABBR   ;alb/sat 658 - add abbreviation
+ S SDFDA(409.831,SDI_",",.04)=SDCL
+ S SDFDA(409.831,SDI_",",.012)=SDCL_";SC("
+ S SDFDA(409.831,SDI_",",.015)=$E($$NOW^XLFDT,1,12)
+ S SDFDA(409.831,SDI_",",.016)=DUZ
  D UPDATE^DIE("","SDFDA")
  Q
  ;
@@ -266,12 +267,12 @@ INACTIVE(SDCL,SDBEG,SDEND,IDATE,RDATE)  ;
  ;  active but inactivated in future
  I IDATE>SDBEG S SDEND=IDATE Q 0
  ; inactive 1 0
- I IDATE<=SDBEG,RDATE="" Q 1
+ I IDATE'>SDBEG,RDATE="" Q 1    ;alb/sat 665
  ; inactive 1 1 inactive but reactivated
  ;  inactive now reactive now
- I IDATE<=SDBEG,RDATE<=SDBEG Q 0
+ I IDATE'>SDBEG,RDATE'>SDBEG Q 0   ;alb/sat 665
  ;  inactive now reactive future
- I IDATE<=SDBEG,RDATE>IDATE S SDBEG=RDATE Q 0
+ I IDATE'>SDBEG,RDATE>IDATE S SDBEG=RDATE Q 0   ;alb/sat 665
  Q 1
  ;
 DEL ;
@@ -299,7 +300,7 @@ ARRAY(DTARRAY,SDPAT,SDAY,SDLEN,SDCLS,SDSI,SDF)  ;build date/time array from patt
  S SDF=$G(SDF,0)  ;cancelled flag
  S SDA=$S(SDSI=3:6,SDSI=6:12,1:8)
  S SDSIM=$S(SDSI="":4,SDSI<3:4,SDSI:SDSI,1:4)
- S:$E(SDPAT)?1A SDPAT=$E(SDPAT,SDA,$L(SDPAT))
+ ;S:$E(SDPAT)?1A SDPAT=$E(SDPAT,SDA,$L(SDPAT))
  ;1 2 3 4 OR 6
  D @SDSI
  Q

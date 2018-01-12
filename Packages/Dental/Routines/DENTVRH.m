@@ -1,5 +1,5 @@
 DENTVRH ;DSS/SGM - RPCs To Return Dental History ;01/21/2004 21:43
- ;;1.2;DENTAL;**31,37,38,39,45,47**;Aug 10, 2001
+ ;;1.2;DENTAL;**31,37,38,39,45,47,66**;Aug 10, 2001;Build 36
  ;Copyright 1995-2006, Document Storage Systems, Inc., All Rights Reserved
  ;  this routine contains those RPCs that return data to the GUI
  ;  from files 228.1, 228.2
@@ -134,7 +134,7 @@ FIRST() ; get the first date which has a status of completed or terminated befor
  I 'X S X=$O(^DENT(228.1,"C",DFN,0))
  Q $P($G(^DENT(228.1,X,0)),U,3)
  ;
-ICD(X,DATE) N Z S Z=$$ICD9^DSICDRG(,X,,DATE,,1)
+ICD(X,DATE) N Z S Z=$$ICD^DENTVICD(,X,DATE,1)
  Q $S(Z<1:"",1:$P(Z,U,4)_U_$P(Z,U,2))
  ;
 GET ;  get data from file 228.2

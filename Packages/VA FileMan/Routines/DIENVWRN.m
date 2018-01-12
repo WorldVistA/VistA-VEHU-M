@@ -1,9 +1,31 @@
-DIENVWRN ;IRMFO-SF/FM STAFF-ENVIRONMENT CHECK ROUTINE ;6:50 AM  24 Mar 2000
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIENVWRN ;IRMFO-SF/FM STAFF-ENVIRONMENT CHECK ROUTINE ;10:10 AM  28 Apr 2006
+ ;;22.2;VA FileMan;;Jan 05, 2016;Build 42
+ ;;Per VA Directive 6402, this routine should not be modified.
+ ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
+ ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
+ ;;Licensed under the terms of the Apache License, Version 2.0.
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; Check XPDENV 0 = Loading; 1 = Installing
- I 'XPDENV Q  ; Loading Distribution - No Check
+ I 'XPDENV D  Q  ; Loading Distribution - No Check
+ . ; Make sure exported routines are registered in ROUTINE(#9.8) file
+ . ; Edit FOR loop
+ . N ROU,ZDATE,%,%H,%I,X
+ . D NOW^%DTC
+ . S ZDATE=%
+ . F ROU="DDS10","DIA2","DICA3","DICN0","DIEF1","DIEFW","DIET","DILF" D
+ .. N IEN S IEN=$O(^DIC(9.8,"B",ROU,0))
+ .. I 'IEN D
+ ... N FDA,DIERR,ZERR,IEN
+ ... S IEN="+1,"
+ ... S FDA(9.8,IEN,.01)=ROU
+ ... S FDA(9.8,IEN,1)="R"
+ ... S FDA(9.8,IEN,7.4)=ZDATE
+ ... D UPDATE^DIE("","FDA","IEN")
+ ... Q
+ .. Q
+ . D CLEAN^DILF
+ . Q
  ;
 INSCHK ; Do Checks During Install Only
  W $C(7)

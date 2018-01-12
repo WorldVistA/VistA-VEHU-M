@@ -2,7 +2,26 @@ ZZCPDAT0 ; SEB - Copy clinical data from one IEN to another - prompts for ZZCPDA
  ;;1.0;VistA Data Support;;JUL 15 2016;Build 1
  Q
  ;
-GETDFN() S DIC="^DPT(",DIC(0)="QEAMZ",DIC("A")="Select a patient to clone: " D ^DIC
+CLONE ; Entry point for "RISA CLONE A PATIENT" menu option
+ S MYDFN=$$GETDFN^ZZCPDAT0()
+ I MYDFN="-1" Q
+ S NAME=$$GETNAME^ZZCPDAT0()
+ I NAME="" Q
+ S DEBUG=$$GETDEBUG^ZZCPDAT0()
+ D ALLDATA^ZZCPDATA(MYDFN)
+ D CLONE^ZZCPDAT1(MYDFN,NAME)
+ Q
+ ;
+GETINFO ; Entry point for "RISA GET PATIENT INFO" menu option
+ S MYDFN=$$GETDFN^ZZCPDAT0()
+ I MYDFN="-1" Q
+ D ALLDATA^ZZCPDATA(MYDFN)
+ S FILENUM=0 F  S FILENUM=$O(CLONE(FILENUM)) Q:FILENUM=""  D
+ . S DFN=0 F  S DFN=$O(CLONE(FILENUM,DFN)) Q:DFN=""  W !,FILENUM,"^",DFN
+ . Q
+ Q
+ ;
+GETDFN() S DIC="^DPT(",DIC(0)="QEAMZ",DIC("A")="Select a patient: " D ^DIC
  Q +Y
  ;
 GETNAME() S NAME=""

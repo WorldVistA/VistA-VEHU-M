@@ -1,6 +1,10 @@
-DICATT2 ;SFISC/GFT,XAK-DEFINING MULTIPLES ;9APR2007
- ;;22.0;VA FileMan;**89,152**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DICATT2 ;SFISC/GFT,XAK - DEFINING MULTIPLES ;12NOV2015
+ ;;22.2;VA FileMan;**2**;Jan 05, 2016;Build 139
+ ;;Per VA Directive 6402, this routine should not be modified.
+ ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
+ ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
+ ;;Licensed under the terms of the Apache License, Version 2.0.
+ ;
  S T=$E(Z) G CHECK^DICATT:$D(DTOUT)
  F P="I","O","L","x" S:$P(O,U,2)[P Z=$P(Z,U)_P_U_$P(Z,U,2)
 1 K DS S:$P(Z,U)'["K" V=W[";0"
@@ -37,16 +41,37 @@ WINDOW S %=2-(Z["x"!'O) W !,"SHALL ""|"" CHARACTERS IN THIS TEXT BE TREATED LIKE
  ;
  ;
 X ;
- W "   (FIELD DEFINITION IS NOT EDITABLE)" S T=$E(^(0)),Z=$P(Y,U,2),Z=$P(Z,"M")_$P(Z,"M",2),Z=$P(Z,"R")_$P(Z,"R",2)_U_$P(Y,U,3),W=$P(Y,U,4),C=$P(Y,U,5,99) S:Z["K" V=0 G N^DICATT:N=6,1
+ W "   (FIELD DEFINITION IS NOT EDITABLE)"
+ I N=4 K DIRUT D LENGTH(A,DA) I $D(DIRUT) K DIRUT G N^DICATT
+ S T=$E(^DOPT("DICATT",N,0)),Y=^DD(A,DA,0),Z=$TR($P(Y,U,2),"MR")_U_$P(Y,U,3),W=$P(Y,U,4),C=$P(Y,U,5,99) S:Z["K" V=0
+ G N^DICATT:N=6,1
+ ;
+LENGTH(DI,DIFIELD) ;
+ N DIR,DICY,Y,X,A0,B0,A1,A2
+ S DICY=$G(^DD(DI,DIFIELD,0)) I $P(DICY,U,2)'["F" Q
+ S A0=250,A1=$P($P($P(DICY,U,4),";",2),"E",2) I A1 S A2=$P(A1,",",2) I A2 S A0=A2-A1+1,DIR("?",1)="Data is stored by '$E"_A1_"'"
+ S DIR("A")="MAXIMUM LENGTH OF '"_$P(DICY,U)_"'",DIR(0)="N^1:"_A0,DIR("B")=$$FL^DIQGDDU(DI,DIFIELD)
+ S DIR("?")="THIS MAXIMUM WILL BE USED FOR OUTPUT PURPOSES, BUT WILL NOT BE PART OF THE INPUT CHECK FOR THE FIELD"
+ D ^DIR Q:'Y
+ N F S X=$P(DICY,U,2),F=$F(X,"J") I F Q:+$E(X,F,99)=Y  F  Q:$E(X,F)'?1N  S X=$E(X,1,F-1)_$E(X,F+1,99)
+ S X=$TR(X,"J")_"J"_Y,$P(^DD(DI,DIFIELD,0),U,2)=X
+ I $D(DDA) S DDA="E",A0="LENGTH^.23",A1=DIR("B"),A2=Y D IT^DICATTA
+ Q
  ;
 NO ;
  W !,$C(7),"  <DATA DEFINITION UNCHANGED>" I $P(Z,U)["K"&(DUZ(0)'="@") G N^DICATT
-TYPE K Y,M,DE,DIE,DQ,DG G Q^DIB:$D(DTOUT) S N=0,DQI=DICL+9,Y=^DD(A,DA,0),F=$P(Y,U),Z="" W !!,"DATA TYPE OF ",F,": " I 'O R X:DTIME S:'$T DTOUT=1 G X^DICATT:X[U!'$T S:DUZ(0)'="@" DIC("S")="I Y-9" S:DA=.001 DIC("S")="I Y<4!(Y=7)" G NEW
- F N=9:-1:5,1:1:4 Q:$P(Y,U,2)[$E("DNSFWCPVK",N)
- W $P(^DOPT("DICATT",N,0),U) G X:$P(Y,U,2)["K"&(DUZ(0)'="@")
- G X:$P(Y,U,2)["X",6^DICATT:N=6 R "// ",X:DTIME S:'$T DTOUT=1 G N^DICATT:X[U!'$T,0^DICATT:X="" S DIC("S")="I Y-6,Y-9"_$P(",Y-5",U,N\2-2!(A=B)!(DA-.01)!$O(^DD(A,DA))>0),DIC("S")=DIC("S")_$S(N=7:",Y-8",N=8:",Y-7",1:"")
-NEW I 'O,X=" ",E,$P(^DD(A,E,0),U,2)'["P",$P(^(0),U,2)'["V" W " <",$C(7) D E^DICATT W " DUPLICATED>" S DIZ=$S($D(DIZ):DIZ,1:DIZZ) G E^DICATT1
- S DIC(0)="QEI",DIC="^DOPT(""DICATT""," D ^DIC I Y>0 S:N-Y&O M="",O=$P(O,U,1,2)_U_U_$P(O,U,4) S N=+Y G 0^DICATT
+TYPE K Y,M,DE,DIE,DQ,DG G Q^DIB:$D(DTOUT) S N=0,DQI=DICL+9,Y=^DD(A,DA,0),F=$P(Y,U),Z="" W !!,"DATA TYPE OF ",F,": "
+ I 'O R X:DTIME S:'$T DTOUT=1 G X^DICATT:X[U!'$T S DIC("S")="I Y-99,Y-10,Y<10!$O(^(201,0))!$O(^DI(.81,Y,101,0))" S:DUZ(0)'="@" DIC("S")="I Y-9,Y-99,Y<10!$O(^(201,0))" S:DA=.001 DIC("S")="I Y<4!(Y=7)" G NEW
+ I $P(Y,U,2)["t" S N=+$P($P(Y,U,2),"t",2)
+ E  F N=9:-1:5,1:1:4 Q:$P(Y,U,2)[$E("DNSFWCPVK",N)
+ W $P(^DI(.81,N,0),U) ;Data type
+ G X:$P(Y,U,2)["K"&(DUZ(0)'="@") ;non-programmer can't edit MUMPS type
+ G X:$P(Y,U,2)["X",6^DICATT:N=6 R "// ",X:DTIME S:'$T DTOUT=1 G N^DICATT:X[U!'$T,0^DICATT:X=""
+ S DIC("S")="I Y-6,Y-10,Y<10!$O(^(201,0))!$O(^DI(.81,Y,101,0)),Y-9"_$P(",Y-5",U,N\2-2!(A=B)!(DA-.01)!$O(^DD(A,DA))>0),DIC("S")=DIC("S")_$S(N=7:",Y-8",N=8:",Y-7",1:"")
+NEW I 'O,X=" ",E,$P(^DD(A,E,0),U,2)'["P",$P(^(0),U,2)'["V" D  G E^DICATT1
+ .W " <",$C(7) D E^DICATT W " DUPLICATED>" S $P(DE,U,2)=$TR($P(DE,U,2),"a"),DIZ=$G(DIZ,DIZZ) ;DO NOT DUPLICATE AUDITING
+ S DIC(0)="QEI",DIC="^DI(.81," D ^DIC K DIC ;Look up X in Data Type file
+ I Y>0 S:N-Y&O M="",O=$P(O,U,1,2)_U_U_$P(O,U,4) S N=+Y G 0^DICATT
  I 'O,X["?",E,$P(^DD(A,E,0),U,2)'["P",$P(^(0),U,2)'["V" D DICATT^DIQQQ,E^DICATT W ", JUST HIT THE SPACE KEY"
  G TYPE
  ;

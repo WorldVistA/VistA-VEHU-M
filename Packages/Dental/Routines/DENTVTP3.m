@@ -1,6 +1,6 @@
 DENTVTP3 ;DSS/KC - TREATMENT PLAN DATA RETRIEVAL ;11/03/2003 16:54
- ;;1.2;DENTAL;**39,45,57,59**;Aug 10, 2001;Build 19
- ;Copyright 1995-2011, Document Storage Systems, Inc., All Rights Reserved
+ ;;1.2;DENTAL;**39,45,57,59,63**;Aug 10, 2001;Build 19
+ ;Copyright 1995-2013, Document Storage Systems, Inc., All Rights Reserved
  ;  this routine contains subroutines to retrieve DSS Dental Treatment 
  ;  plan data for PSR, Perio and Head&Neck 
  ;  see DENTVTP4 to add/update these records
@@ -41,6 +41,7 @@ PERIO(RET,DATA,NUM) ; RPC: DENTV TP GET PERIO
  ;       ^TMP("DENT",$J,#)=$END_ien
  ; DATA = DFN (patient ien)
  ; Errors returned as -1^error message
+ ;S RET=$NA(^TMP("DENT",$J)),@RET@(1)="-1^No PERIO data found for the patient" Q
  N X,TIEN,IEN,NODE,PIEN,P0,DFN,FLDS,TMP,DENT,DENTERR,I,FROM,PNUL
  S RET=$NA(^TMP("DENT",$J)),NODE=+$G(NUM),DFN=$G(DATA) K ^TMP("DENT",$J)
  S X=$$DFN^DENTVRF0(DFN) I X<0 S ^TMP("DENT",$J,1)=X Q
@@ -79,7 +80,7 @@ HNC(RET,DATA,NUM)        ; RPC: DENTV TP GET HNC
  F TIEN=0:0 S TIEN=$O(^DENT(228.2,"AD",DFN,4,TIEN)) Q:'TIEN  D
  .S IEN=TIEN_"," D GETS^DIQ(228.2,IEN,FLDS,"IE","DENT","DENTERR")
  .K TMP M TMP=DENT(228.2,IEN) K DENT
- .F I=1:1:15 S FROM=$P(FLDS,";",I),$P(X,U,I)=$S(",2,5,8,12,"[(","_I_","):$G(TMP(FROM,"I")),1:$G(TMP(FROM,"E")))
+ .F I=1:1:15 S FROM=$P(FLDS,";",I),$P(X,U,I)=$S(",2,5,8,12,15,"[(","_I_","):$G(TMP(FROM,"I")),1:$G(TMP(FROM,"E")))
  .;convert to Constants VALUE
  .S $P(X,U,8)=$P($G(^DENT(228.3,+$P(X,U,8),0)),U,3)
  .;convert TRUE/FALSE to -1/0
@@ -90,7 +91,7 @@ HNC(RET,DATA,NUM)        ; RPC: DENTV TP GET HNC
  .I +$P(X,U,12) S $P(X,U,12)=+$G(^DENT(228.2,$P(X,U,12),0))
  .E  S $P(X,U,12)=0
  .I $P(X,U,11)=0,$P(X,U,12)=0 Q  ;P57 not master or detail Quit
- .I $P(X,U,15)="TRUE" S $P(X,U,15)=-1
+ .I $P(X,U,15) S $P(X,U,15)=-1
  .E  S $P(X,U,15)=0
  .S NODE=NODE+1,^TMP("DENT",$J,NODE)=X
  .F PIEN=0:0 S PIEN=$O(^DENT(228.2,TIEN,4.1,PIEN)) Q:'PIEN  S P0=^(PIEN,0) D

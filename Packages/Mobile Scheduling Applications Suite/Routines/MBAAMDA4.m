@@ -1,10 +1,10 @@
-MBAAMDA4 ;OIT-PD/VSL - APPOINTMENT AP;08/27/2014
- ;;1.0;Scheduling Calendar View;;Aug 27, 2014;Build 52
+MBAAMDA4 ;OIT-PD/VSL - APPOINTMENT AP ;02/10/2016
+ ;;1.0;Scheduling Calendar View;**1**;Aug 27, 2014;Build 85
+ ;
  ;Associated ICRs
  ;  ICR#
  ;  6053 DPT
  ;  6044 SC(
- ;  6063 MBAA RPC REGISTRATION
  ;
  ;code below is not being used in the initial release of MBAA. It will be released at a later date in a future release of MBAA
  ;GETOE(RETURN,SDOE) ; Get outpatient encounter

@@ -1,7 +1,10 @@
 DENTVCK ;DSS/KC - CODING CHECKS ;2/21/2007 14:21
- ;;1.2;DENTAL;**53,59**;Aug 10, 2001;Build 19
- ;Copyright 1995-2007, Document Storage Systems, Inc., All Rights Reserved
+ ;;1.2;DENTAL;**53,59,63**;Aug 10, 2001;Build 19
+ ;Copyright 1995-2013, Document Storage Systems, Inc., All Rights Reserved
  ;
+ ;  ICR#  SUPPORTED  Description
+ ;  -----  ---------  --------------------------------------
+ ; 10000      x       ^%DTC
  ;
  Q
 CK(RET,DFN,ECODE,VISDT,PROV,DATA) ;rpc DENTV TP CODING CHECKS
@@ -22,7 +25,7 @@ CK(RET,DFN,ECODE,VISDT,PROV,DATA) ;rpc DENTV TP CODING CHECKS
  I VISDT'=DT D V9110 Q:RET
  I $G(ECODE)="" D VIS Q  ;checking entire completed entry (not code by code)
  ;check each entry (ECODE) as it's entered
- N ECI,ECIEN,E0,E1,N0,N1,ECAREA,WARN,TEETH,TOOTH,TOI,NDATA,WARNC,X,I,D9110
+ N ECI,ECIEN,E0,E1,N0,N1,ECAREA,WARN,TEETH,TOOTH,TOI,NDATA,WARNC,X,I,D9110,CNT
  S X=+$O(DATA(0)) S X=$G(DATA(X)) I X="D9430:" S RET=$$ONLY(0) Q
  S TEETH=$P(ECODE,":",2),ECODE=$P(ECODE,":"),WARN=RET,WARNC=""
  S ECI=+$$CPT^DSICCPT(,ECODE,,,,1) I ECI<1 S RET="0^Code not valid, checks not performed" Q
@@ -33,11 +36,11 @@ CK(RET,DFN,ECODE,VISDT,PROV,DATA) ;rpc DENTV TP CODING CHECKS
  I $P(E0,U,6)="W" S WARN="-1^"_$P(E0,U,6)_"::"_E1,WARNC=$P(E0,U,2)
  I '$O(^DENT(228.8,"C",ECI,0)) S RET=WARN Q  ;warning only
  I TEETH="" D SES(0) Q:RET  D  Q
- .K DATA S DATA(1)=ECODE D VIS  Q:RET
+ .K DATA S DATA(1)=ECODE D VIS Q:RET
  .I WARN,'WARNC S RET=WARN
  .Q
  S TOI=1 F  S TOOTH=$P(TEETH,";",TOI),NDATA(TOI)=ECODE_":"_TOOTH Q:(TOOTH="")!RET  D SES(TOOTH) S TOI=TOI+1
- Q:RET  K DATA M DATA=NDATA D VIS  Q:RET
+ Q:RET  K DATA M DATA=NDATA D VIS Q:RET
  I WARN,'WARNC S RET=WARN
  Q
 SES(ECAREA) ;session check: entered code (EACH tooth separately!) against unfiled codes
@@ -45,11 +48,12 @@ SES(ECAREA) ;session check: entered code (EACH tooth separately!) against unfile
  S I=0 F  S I=$O(DATA(I)) Q:'I!RET  S CCODE=$G(DATA(I)) I CCODE]"" D
  .S CCAREA=$P(CCODE,":",2),CCODE=$P(CCODE,":")
  .S CCI=+$$CPT^DSICCPT(,CCODE,,,,1) I CCI<1 Q
- .S ECIEN=0 F  S ECIEN=$O(^DENT(228.8,"C",ECI,CCI,ECIEN)) Q:'ECIEN!RET  D
+ .S ECIEN=0 F  S ECIEN=$O(^DENT(228.8,"C",ECI,CCI,ECIEN)) Q:'ECIEN!($P(RET,U,2)="E")  D
  ..S N0=$G(^DENT(228.8,ECIEN,0)),N1=$G(^(1))
- ..I $$PSCAL(ECODE,CCODE) S RET="-1^"_$P(N0,U,6)_":"_CCODE_":"_N1 Q
+ ..I $$PSCAL(ECODE,CCODE) S RET="-1^"_$P(N0,U,6)_":"_ECODE_":"_N1 Q
  ..I $P(N0,U,5)]"",ECAREA'=CCAREA Q  ;validate area
- ..S RET="-1^"_$P(N0,U,6)_":"_CCODE_":"_N1
+ ..I $$MULT(ECODE,CCODE) S RET="-1^"_$P(N0,U,6)_":"_ECODE_":"_N1 Q
+ ..S RET="-1^"_$P(N0,U,6)_":"_ECODE_":"_N1
  ..Q
  .Q
  Q
@@ -60,6 +64,12 @@ PSCAL(E,C) ;perio scaling special checks
  I E="D4341",C="D4342" Q 1
  I E="D4342",C="D4341" Q 1
  Q 0
+MULT(E,C,DATE) ;checks for multiple exams
+ N MULT S MULT=0
+ I $P($G(DATE),".")'=$P($G(VISDT),".") Q MULT
+ I (E="D0120")!(E="D0140")!(E="D0150")!(E="D0160")!(E="D0170")!(E="D0180") D
+ .I (C="D0120")!(C="D0140")!(C="D0150")!(C="D0160")!(C="D0170")!(C="D0180") S MULT=1
+ Q MULT
 RF() ;get required fields to compare for D9110
  N X,IEN,N0,N1 S X=+$$CPT^DSICCPT(,"D9110",,,,1) I X<1 Q "0"
  S IEN=$O(^DENT(228.8,"B",X,0)) I IEN="" Q "0"
@@ -105,30 +115,42 @@ VIS ;check ALL codes in DATA array against data in VistA for visit date
  .S ECAREA=$P(ECODE,":",2),ECODE=$P(ECODE,":")
  .S ECI=+$$CPT^DSICCPT(,ECODE,,,,1) I ECI<1 Q
  .I ECODE="D0140"!(ECODE="D0170") S RET=$$SPEC(ECI) Q:RET  ;DENT*1.2*59
- .S CCI=0 F  S CCI=$O(^DENT(228.8,"C",ECI,CCI)) Q:'CCI!RET  D
+ .S CCI=0 F  S CCI=$O(^DENT(228.8,"C",ECI,CCI)) Q:'CCI!($P(RET,U,2)="E")  D
  ..S ECIEN=0 F  S ECIEN=$O(^DENT(228.8,"C",ECI,CCI,ECIEN)) Q:'ECIEN  D
  ...S N0=$G(^DENT(228.8,ECIEN,0)),N1=$G(^(1))
- ...I $P(N0,U,3)'=DAYSB S DAYSB=$P(N0,U,3),X1=(VISDT\1),X2=-DAYSB D C^%DTC S CKDT=X
  ...D DDATA
  ...Q
  ..Q
  .Q
  Q
- ;
 DDATA ;loop through 228.2, find CCI entries
  N LV,QUIT,IEN,NODE,CCAREA,CCODE S LV="",QUIT=0
- F  S LV=$O(^DENT(228.2,"AC",DFN,CCI,LV),-1) Q:'LV!QUIT!(LV<CKDT)  D
+ F  S LV=$O(^DENT(228.2,"AC",DFN,CCI,LV),-1) Q:'LV!QUIT  D
  .S IEN="" F  S IEN=$O(^DENT(228.2,"AC",DFN,CCI,LV,IEN),-1) Q:'IEN!QUIT  D
  ..S NODE=$G(^DENT(228.2,IEN,0)) Q:NODE=""!+$P($G(^DENT(228.2,IEN,1)),U,3)
  ..S CCAREA=$P(NODE,U,15)
  ..S CCODE=$P($$CPT^DSICCPT(,CCI,,,,1),U,2)
  ..I $P(N0,U,4),PROV'=$P(NODE,U,3) Q  ;validate provider
- ..I $$PSCAL(ECODE,CCODE) S RET="-1^"_$P(N0,U,6)_":"_ECODE_":"_N1 Q
+ ..I $$PSCAL(ECODE,CCODE) S RET="-1^"_$P(N0,U,6)_":"_ECODE_":"_N1,QUIT=1 Q
  ..I $P(N0,U,5)]"",ECAREA'=CCAREA Q  ;validate area
+ ..I $$EXAM(ECODE,CCODE,LV) Q  ;validate exam dates
  ..S RET="-1^"_$P(N0,U,6)_":"_ECODE_":"_N1,QUIT=1,MSGFLG=$P(N0,U,6)
  ..Q
  .Q
  Q
+EXAM(E,C,X) ;checks exam dates
+ N DTDIF,HI,LO,%H,RSLT S RSLT=0
+ D H^%DTC S HI=%H,X=VISDT D H^%DTC S LO=%H,DTDIF=HI-LO
+ I $$MULT(ECODE,CCODE,LV) Q 0 ;validate exams/day
+ I C="D0150",DTDIF<305,DTDIF>(-305) D  Q RSLT
+ .I E="D0150" Q
+ .I E="D0120",DTDIF<90,DTDIF>(-90) Q
+ .S RSLT=1
+ I C="D0120",DTDIF<90,DTDIF>(-90) D  Q RSLT
+ .I E="D0120" Q
+ .I E="D0150",DTDIF<305,DTDIF>(-305) Q
+ .S RSLT=1
+ Q 1
 ONLY(CIEN) ;this code only allowed by itself
  I +$G(CIEN)=0 S CIEN=+$$CPT^DSICCPT(,"D9430",,,,1)
  S ECIEN=$O(^DENT(228.8,"B",CIEN,0)) Q:'ECIEN
@@ -142,7 +164,7 @@ SPEC(CIEN) ;D0140 and D0170 - no more than 3 per year - special check
  I ECODE="D0140" S OCIEN=+$$CPT^DSICCPT(,"D0170",,,,1)
  I ECODE="D0170" S OCIEN=+$$CPT^DSICCPT(,"D0140",,,,1)
  S CNT=1 F CCI=CIEN,OCIEN D SDATA
- I CNT>3 S RET="-1^"_$P(N0,U,6)_":"_ECODE_":"_N1
+ I CNT>3 S RET="-1^E:"_ECODE_":"_N1
  Q RET
  ;
 SDATA ;loop through 228.2, find CCI entries and COUNT them

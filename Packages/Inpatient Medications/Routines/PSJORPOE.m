@@ -1,5 +1,5 @@
-PSJORPOE ;BIR/MLM,LDT-MISC. PROCEDURE CALLS FOR OE/RR 3.0 ; 6/14/10 12:22pm
- ;;5.0; INPATIENT MEDICATIONS ;**50,56,92,80,110,127,133,134,113,235**;16 DEC 97;Build 4
+PSJORPOE ;BIR/MLM,LDT - MISC. PROCEDURE CALLS FOR OE/RR 3.0 ; 4/16/12 11:25am
+ ;;5.0;INPATIENT MEDICATIONS;**50,56,92,80,110,127,133,134,113,277,330**;16 DEC 97;Build 10
  ;
  ; Reference to ^PS(50.7 is supported by DBIA# 2180.
  ; Reference to ^PS(51.2 is supported by DBIA# 2178.
@@ -9,13 +9,12 @@ PSJORPOE ;BIR/MLM,LDT-MISC. PROCEDURE CALLS FOR OE/RR 3.0 ; 6/14/10 12:22pm
  ; Reference to ^PS(52.7 is supported by DBIA# 2173.
  ; Reference to ^PSDRUG is supported by DBIA# 2192.
  ;
-STARTSTP(PSGP,SCH,OI,PSJPWD,PSGORD,PSJADM,STARTDT) ;*235 add STARTDT
+STARTSTP(PSGP,SCH,OI,PSJPWD,PSGORD,PSJADM) ;
  ; PSGP=Patient IEN
  ; SCH=Schedule
  ; OI=Orderable Item        
  ; PSJPWD=Ward Location (Optional)
  ; PSGORD=Pharmacy Order Number if the order being placed is a Renewal (Optional)
- ; STARTDT=Calculate based on this date (instead of always using now) (Optional)
  ;
  Q:+PSGP'>0 ""
  Q:SCH']"" ""
@@ -27,15 +26,14 @@ STARTSTP(PSGP,SCH,OI,PSJPWD,PSGORD,PSJADM,STARTDT) ;*235 add STARTDT
  S PSJSYSW0="",PSJSYSW=0 I $G(PSJPWD)]"" S PSJSYSW=+$O(^PS(59.6,"B",PSJPWD,0)) I PSJSYSW S PSJSYSW0=$G(^PS(59.6,PSJSYSW,0))
  S RESULT=$S($P(PSJSYSW0,"^",5)=0:"CLOSEST",$P(PSJSYSW0,"^",5)=1:"NEXT",1:"NOW")
  I OI]"" S PSGST=$S($P($G(^PS(50.7,OI,0)),"^",7)]"":$P($G(^PS(50.7,OI,0)),"^",7),1:"C")
- ;*235 Use STARTDT if it is sent in, Otherwise default to now.
- N %,PSGXSCH D NOW^%DTC S PSGDT=$S($G(STARTDT):STARTDT,1:%),DFN=PSGP,(PSGSCH,PSGXSCH)=SCH
+ N %,PSGXSCH D NOW^%DTC S PSGDT=%,DFN=PSGP,(PSGSCH,PSGXSCH)=SCH
  S X=PSGSCH,PSGS0Y="" D ADMIN
  I $G(PSGORD)]"" D
  .S PSGNESD=$$DSTART^PSJDCU(PSGP,PSGORD) I PSGNESD]"" S $P(RESULT,"^",2)=PSGNESD Q
  .S ND=$S(PSGORD["U":$G(^PS(55,PSGP,5,+PSGORD,2)),1:$G(^PS(55,PSGP,"IV",+PSGORD,0)))
  .N PSJADM,PSJSTRT S PSJADM=$S(PSGORD["U":$P(ND,"^",5),1:$P(ND,"^",11)),PSJSTRT=$P(ND,"^",2),PSJREN=1
  S SCH=PSGXSCH
- ;*235 Remove foced use of NEXT ward param
+ ;*277 Remove forced use of NEXT ward param.
  ;N PSJTMPW0 S PSJTMPW0=PSJSYSW0 S $P(PSJSYSW0,"^",5)=1
  I $G(PSGNESD)="" S RESULT=RESULT_"^"_$$ENSD^PSGNE3(PSGSCH,$S($G(PSJADM)]"":$G(PSJADM),1:PSGS0Y),PSGDT,$S($G(PSJSTRT)]"":$G(PSJSTRT),1:PSGDT))
  ;S PSJSYSW0=PSJTMPW0
@@ -95,7 +93,7 @@ SCHREQ(MR,OI,DD)  ;
  Q REQ
  ;
 ADMIN ; Get admin times associated with schedule
- S PSGS0Y="",ZZ=0
+ S PSGS0Y="",ZZ=0 N PSGCHG S PSGCHG=""
  I $$DOW^PSIVUTL($P(X,"@")),'$D(^PS(51.1,"AC","PSJ",X)) S PSGST="C" D  Q:$G(PSGS0Y)
  .I $P(X,"@",2) N PSJADBAD D  Q
  ..S PSGS0Y=$S($G(PSJADBAD):"",1:$P(X,"@",2))
@@ -106,6 +104,9 @@ ADMIN ; Get admin times associated with schedule
  . N ZZNDW S ZZNDW=$G(^PS(51.1,ZZ,1,PSJPWD,0)) I $P(ZZNDW,"^",2)]"" S PSGS0Y=$P(ZZNDW,"^",2),$P(ZZND,"^",2)=PSGS0Y I $G(PSGSFLG) S PSGSCIEN=$G(LYN("DILIST",2,ZZ))
  S ZZ=0 F  S ZZ=$O(LYN("DILIST",1,ZZ)) Q:'ZZ  I $G(LYN("DILIST",1,ZZ))'=X K LYN("DILIST",1,ZZ),LYN("DILIST",2,ZZ),LYN("DILIST","ID",ZZ,1)
  I $D(PSJPWD) S ZZ=0 F  S ZZ=$O(LYN("DILIST",2,ZZ)) Q:'ZZ!$G(PSGS0Y)  I $P($G(^PS(51.1,+LYN("DILIST",2,ZZ),1,+PSJPWD,0)),U,2)]"" S PSGS0Y=$P($G(^(0)),U,2) I $G(PSGSFLG) S PSGSCIEN=$G(LYN("DILIST",2,ZZ))
+ I $G(PSJOCFG)="COPY UD" D
+ .S:$P((ZZND),U,5)'="" PSGCHG=$P($G(ZZND),U,5)
+ .S:(PSGCHG'="O")!((PSGCHG'="P")!(PSGCHG'="OC")) PSGS0Y=$G(PSGAT)
  Q:PSGS0Y]""  S ZZ=0 F  S ZZ=$O(LYN("DILIST",2,ZZ)) Q:'ZZ!$G(PSGS0Y)  I $G(LYN("DILIST","ID",ZZ,1))]"" S PSGS0Y=$G(LYN("DILIST","ID",ZZ,1))
  Q
  ;

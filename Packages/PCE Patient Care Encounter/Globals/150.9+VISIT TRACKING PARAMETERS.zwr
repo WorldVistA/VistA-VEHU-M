@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: VISIT TRACKING PARAMETERS
-08-JUN-2017 10:36:47 ZWR
+24-JAN-2018 16:38:23 ZWR
 ^DIC(150.9,0)="VISIT TRACKING PARAMETERS^150.9^1^1"
 ^DIC(150.9,0,"DD")="@"
 ^DIC(150.9,0,"DEL")="@"
@@ -19,7 +19,7 @@ OSEHRA ZGO Export: VISIT TRACKING PARAMETERS
 ^DIC(150.9,1,3,"B",114,3)=""
 ^DIC(150.9,1,3,"B",170,4)=""
 ^DIC(150.9,1,3,"B",507,1)=""
-^DIC(150.9,1,4)="1JTG^1"
+^DIC(150.9,1,4)="1KDV^1"
 ^DIC(150.9,"%D",0)="^^2^2^2960809^^^^"
 ^DIC(150.9,"%D",1,0)="This file contains a single entry, the number '1', which contains the"
 ^DIC(150.9,"%D",2,0)="site configurable parameters for the visit tracking package."

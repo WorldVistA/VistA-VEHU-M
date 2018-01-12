@@ -1,5 +1,5 @@
-MAGJTU4V ;WOIFO/MAT - VERSION CONTROL (VISTARAD) ; 10 Sep 2014  10:35 AM
- ;;3.0;IMAGING;**90,115,120,133,152**;Mar 19, 2002;Build 6;May 05, 2014
+MAGJTU4V ;WOIFO/MAT,DAC - VERSION CONTROL (VISTARAD) ; 06 Jun 2017  8:54 AM
+ ;;3.0;IMAGING;**90,115,120,133,152,153,184**;Mar 19, 2002;Build 22
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -23,7 +23,9 @@ CLVERCT ;***** VERSION CONTROL TABLE FOR THE VistARad CLIENTS
  ;;==================================================================
  ;;| Version |Build|Seq #|                Comment                   |
  ;;|---------+-----+------------------------------------------------|
- ;;| 3.0.152 |   3 |  ?? | Oct 2014  <*> Projected Seq # & Release  |
+ ;;| 3.0.184 |   2 | 115 | Jun 2017  <*> Projected Seq # & Release  |
+ ;;| 3.0.153 |   3 | 122 | Aug 2016                                 |
+ ;;| 3.0.152 |   3 | 113 | May 2015                                 |
  ;;| 3.0.133 |   3 |  93 | Sep 2013                                 |
  ;;| 3.0.120 |   8 |  81 | Jul 2012                                 |
  ;;==================================================================

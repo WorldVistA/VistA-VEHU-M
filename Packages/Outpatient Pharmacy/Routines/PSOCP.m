@@ -1,7 +1,10 @@
 PSOCP ;BIR/BAB - Pharmacy CO-PAY Application Utilities for IB ;02/06/92
- ;;7.0;OUTPATIENT PHARMACY;**20,46,71,85,137,157,143,219,239,201,225,303**;DEC 1997;Build 19
+ ;;7.0;OUTPATIENT PHARMACY;**20,46,71,85,137,157,143,219,239,201,225,303,460,480,485**;DEC 1997;Build 37
  ;
- ;REF/IA - IBARX/125, SDCO22/1579, PS(55/2228, PSDRUG(/221, DGMSTAPI/2716, $$GETSHAD^DGUTL3/4462 
+ ;REF/IA - IBARX/125, SDCO22/1579, PS(55/2228, PSDRUG(/221, DGMSTAPI/2716, $$GETSHAD^DGUTL3/4462
+ ;Reference to $$CPTIER^PSNAPIS(P1,P3) supported by DBIA #2531
+ ;Reference to $$GETSTAT^DGMSTAPI supported by DBIA 3457
+ ; 
 CP ;Check if COPAY-Requires RXP,PSOSITE7
  I '$D(PSOPAR) D ^PSOLSET G CP
  K PSOCP
@@ -13,7 +16,7 @@ CP ;Check if COPAY-Requires RXP,PSOSITE7
  S X=PSOSITE7_"^"_PSOCPN_"^"_PSOCP_"^"_$P(^PSRX(RXP,0),"^",16)
  ;
 RX ;Determine Orig or Refill for RX
- N PSOIB,PSOPFS S (PSOIB,PSOREF)=0
+ N PSOIB,PSOPFS,PSOCPT S (PSOIB,PSOREF)=0
  I $G(^PSRX(RXP,1,+$G(YY),0))]"" S PSOREF=YY
  D PFSA^PSOPFSU1(RXP,PSOREF,2) G PFS:+PSOPFS
  ; Check if bill exists
@@ -110,14 +113,14 @@ COPAYREL ; Recheck copay status at release
  ; check Rx patient status
  I $P(^PSRX(RXP,0),"^",3)'="",$P($G(^PS(53,$P(^PSRX(RXP,0),"^",3),0)),"^",7)=1 S PSOCHG=0,PSOCOMM="Rx Patient Status Change",PSOOLD="Copay",PSONW="No Copay" Q
  ; see if drug is nutritional supplement, investigational or supply
- N DRG,DRGTYP,X
+ N DRG,DRGTYP,X,PSOEXMPT
  S DRG=+$P(^PSRX(RXP,0),"^",6),DRGTYP=$P($G(^PSDRUG(DRG,0)),"^",3)
- I DRGTYP["I" S PSOCOMM="Investigational Drug",PSOCHG=0,PSOOLD="Copay",PSONW="No Copay",PSOCHG=0
- I DRGTYP["S" S PSOCOMM="Supply Item",PSOCHG=0,PSOOLD="Copay",PSONW="No Copay",PSOCHG=0
- I DRGTYP["N" S PSOCOMM="Nutritional Supplement",PSOCHG=0,PSOOLD="Copay",PSONW="No Copay",PSOCHG=0
+ I DRGTYP["I" S PSOCOMM="Investigational Drug",PSOOLD="Copay",PSONW="No Copay",PSOCHG=0,PSOEXMPT=1
+ I DRGTYP["S" S PSOCOMM="Supply Item",PSOOLD="Copay",PSONW="No Copay",PSOCHG=0,PSOEXMPT=1
+ I DRGTYP["N" S PSOCOMM="Nutritional Supplement",PSOOLD="Copay",PSONW="No Copay",PSOCHG=0,PSOEXMPT=1
  K PSOTG,CHKXTYPE
  I +$G(^PSRX(RXP,"IBQ")) D XTYPE1^PSOCP1
- I $G(^PSRX(RXP,"IBQ"))["1" D  S PSOCHG=0,PSOOLD="Copay",PSONW="No Copay" Q  ; COPAY EXEMPT
+ I $G(^PSRX(RXP,"IBQ"))["1" D  S PSOCHG=0,PSOOLD="Copay",PSONW="No Copay",PSOEXMPT=1 Q  ; COPAY EXEMPT
  . N EXMT,II,PSOCIBQ
  . S PSOCIBQ=$G(^PSRX(RXP,"IBQ"))
  . F II=1,7,3,4,5,6,2,8 I $P(PSOCIBQ,"^",II)=1 S EXMT=$S(II=1:"SC",II=7:"CV",II=3:"AO",II=4:"IR",II=5:"EC",II=8:"SHAD",II=2:"MST",II=6:"HNC",1:"") D:EXMT'="" SETCOMM Q
@@ -126,11 +129,12 @@ COPAYREL ; Recheck copay status at release
  I '$D(CHKXTYPE) D XTYPE
  F EXMT="SC","CV","AO","IR","EC","SHAD","MST","HNC" I $D(PSOTG(EXMT)) D  I 'PSOCHG Q
  . I PSOTG(EXMT)=1 S PSOCHG=0 D SETCOMM
- I 'PSOCHG S PSOOLD="Copay",PSONW="No Copay" Q
- ;
- ; If any of the applicable exemption quest have never been answered, send a mail msg with all of the quest
+ ;Check copay tier. Tier zero does not have copay charges. Tier billing will be effective 2/27/17 and IB rate table decides what amount to bill based on rate effective date
+ N CPDATE,X D NOW^%DTC S CPDATE=X,PSOCPT=$$CPTIER^PSNAPIS("",CPDATE,DRG) K CPDATE,X
+ I $P(PSOCPT,"^")=0 S PSOCHG=0 Q  ;Tier zero do not send to IB for copay charge
  S EXMT="",MAILMSG=0 F  S EXMT=$O(PSOTG(EXMT)) Q:EXMT=""  I PSOTG(EXMT)="" S MAILMSG=1 Q
  I MAILMSG,$D(PSOTG("SC")) I $G(PSOTG("SC"))="" S PSOCHG=2 ; 'SC' quest not answered, don't reset copay status to 'copay'
+ I '$G(PSOEXMPT),$P(PSOCPT,"^")=""!($P(PSOCPT,"^")>0) S PSOCOMM="Copay Tier "_$S(PSOCPT="":"Null",1:+PSOCPT),PSOOLD="No Copay",PSONW="Copay",PSODA=RXP,PREA="R",PSOCHG=1 D ACTLOG^PSOCPA Q
  Q
  ;
 SCNEW(PSOTG,PSOPT,PSODR,PSORN) ;CPRS supported ref
@@ -176,7 +180,7 @@ XTYPE ;
  S X=X_"^"_PSOCPN D XTYPE^IBARX
  I $G(Y)'=1 Q
  S J="" F  S J=$O(Y(J)) Q:'J  S I="" F  S SAVY=I,I=$O(Y(J,I)) Q:I=""  S:I>0 PSOSCMX=I
- I PSOSCMX="",SAVY=0 S PSOCHG=0 S PSOCOMM="Exempt from copayment" Q  ; INCOME EXEMPT OR SC
+ I PSOSCMX="",SAVY=0 S PSOCHG=0,PSOEXMPT=1 S PSOCOMM="Exempt from copayment" Q  ; INCOME EXEMPT OR SC
  I PSOSCMX=2,'$D(PSOTG("SC")) S PSOTG("SC")=$S(($G(RXP)&($P($G(^PSRX(+$G(RXP),"IB")),"^")))!($P(PSOCIBQ,"^")=0):0,$P(PSOCIBQ,"^")=1:1,1:"") Q
  Q
  ;

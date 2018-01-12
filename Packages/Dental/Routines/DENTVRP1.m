@@ -1,5 +1,5 @@
 DENTVRP1 ;DSS/SGM - RPC CALLS FOR DSS DENTAL CPRS ;07/30/2003 22:21
- ;;1.2;DENTAL;**30,34,36,31,37,39,43,45,57,60**;Aug 10, 2001;Build 3
+ ;;1.2;DENTAL;**30,34,36,31,37,39,43,45,57,60,66**;Aug 10, 2001;Build 36
  ;Copyright 1995-2010, Document Storage Systems, Inc., All Rights Reserved
  ;
  ;  DBIA#  SUPPORTED
@@ -72,22 +72,22 @@ INP(RET,DFN,FUN) ; RPC: DENTV INPATIENT BEDSECTION
  .Q
  G OUT
  ;
-LIST(RET,VAL) ;  RPC: DENTV GET CODE LIST
+LIST(RET,VAL,DATE) ;  RPC: DENTV GET CODE LIST
  ;  return ada codes for Fileman lookup value (VAL)
  ;  See GETADA for description of each array element
  ;  on error, RET(1) = -1^message
  N I,J,X,Y,Z,DEN,DENTER,DENTL,DIERR,ROOT
- D GLBINT S RET=ROOT
+ D GLBINT S RET=ROOT,DATE=$G(DATE)
  I $G(VAL)="" S @ROOT@(1)="-1^No lookup value sent" Q
  D FIND^DIC(228,,,"M",VAL,,,,,"DENTL","DENTER")
  S J=+$G(DENTL("DILIST",0))
  I 'J S @ROOT@(1)="-1^No entries found matching '"_VAL_"'" Q
  K DEN M DEN=DENTL("DILIST",1) K DENTL S DEN=0
  I $L(VAL)=5,VAL=+VAL D  Q  ;p43 97810 brings back all 9781* codes, messes up Progress Note
- .F  S DEN=$O(DEN(DEN)) Q:'DEN  I DEN(DEN)=VAL D C(DEN(DEN))
+ .F  S DEN=$O(DEN(DEN)) Q:'DEN  I DEN(DEN)=VAL D C(DEN(DEN),DATE)
  .D GLBERR S RET=ROOT
  .Q
- F  S DEN=$O(DEN(DEN)) Q:'DEN  D C(DEN(DEN))
+ F  S DEN=$O(DEN(DEN)) Q:'DEN  D C(DEN(DEN),DATE)
  D GLBERR S RET=ROOT
  Q
  ;
@@ -114,7 +114,7 @@ PROV(RET,IEN,FUN) ;  RPC: DENTV DENTAL PROVIDER
 OUT Q:$G(FUN) RET Q
  ;
  ; -------------------  subroutines  --------------------
-C(CPT) N X,CPTNM,DATA S X=$$GETADA(.DATA,CPT)
+C(CPT,DATE) N X,CPTNM,DATA S DATE=$G(DATE),X=$$GETADA(.DATA,CPT,DATE)
  I X>0 S CPTNM=$P(X,U,2) D GLBADD
  Q
  ;
@@ -139,9 +139,10 @@ GETADA(RETC,CPT,DATE) ;  set up sorted CPT data based upon cpt name
  ;  Extrinsic function return 1^cpt code name if successful
  ;  On error, or problems return -1^error message
  ;
- N I,J,X,Y,Z,ADA,CPTNM,CPTSTR,FROM,ICD,SAVE,X0,X1,X2,IC,CNT
+ N I,J,X,Y,Z,ADA,CPTNM,CPTSTR,FROM,ICD,SAVE,SYS,X0,X1,X2,IC,CNT
  I '$G(CPT) Q "-1^no cpt received"
  S DATE=$G(DATE) S:DATE="" DATE=DT
+ S SYS=$S($$IMPDATE^LEXU(30)>DATE:5,1:6)
  S CPTSTR=$$CPT^DSICCPT(,CPT,DATE,,,1)
  I CPTSTR<0 Q "-1^invalid cpt "_CPT
  ;  check for inactive code
@@ -157,10 +158,12 @@ GETADA(RETC,CPT,DATE) ;  set up sorted CPT data based upon cpt name
  F I=1:1:12 S J=$P(FROM,U,I) S:J $P(SAVE,U,I+2)=$P(X0,U,J)
  ;  if tooth related place tooth# string
  I $P(X0,U,10)="y",X2'="" S $P(SAVE,U,5)=X2
- K SAVEIC S IC=0,CNT=1 F  S IC=$O(^DENT(228,CPT,5,IC)) Q:'IC  D
- .S ICD=+$G(^DENT(228,CPT,5,IC,0)) Q:'ICD
+ K SAVEIC S IC=0,CNT=1 F  S IC=$O(^DENT(228,CPT,SYS,IC)) Q:'IC  D
+ .S ICD=+$G(^DENT(228,CPT,SYS,IC,0)) Q:'ICD
+ .S ICD=$$EXTERNAL^DILFD("228.0"_SYS,.01,,ICD,"DENTERR")
+ .I $D(DENTERR) D GLBERR S RET=ROOT G OUT
  .N I,X0,X1,X2
- .S X=$$ICD9^DSICDRG(,ICD,,DATE,,1) Q:X'>0
+ .S X=$$ICD^DENTVICD(,ICD,DATE,1) Q:X'>0
  .I IC=1 S $P(SAVE,U,8)=$P(X,U)_"~"_$P(X,U,2)_"~"_$P(X,U,4) Q
  .S SAVEIC(CNT)=$G(SAVEIC(CNT))_$P(X,U)_"~"_$P(X,U,2)_"~"_$P(X,U,4)_U
  .I IC#5=0 S CNT=CNT+1

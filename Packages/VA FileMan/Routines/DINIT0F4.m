@@ -1,6 +1,10 @@
-DINIT0F4 ;SFISC/MKO-DATA FOR FORM AND BLOCK FILES ;12:26 PM  14 Aug 2000
- ;;22.0;VA FileMan;**8,42**;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DINIT0F4 ;SFISC/MKO - DATA FOR FORM AND BLOCK FILES ;29AUG2015
+ ;;22.2;VA FileMan;**2**;Jan 05, 2016;Build 139
+ ;;Per VA Directive 6402, this routine should not be modified.
+ ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
+ ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
+ ;;Licensed under the terms of the Apache License, Version 2.0.
+ ;
  F I=1:2 S X=$T(ENTRY+I) G:X="" ^DINIT0F5 S Y=$E($T(ENTRY+I+1),5,999),X=$E(X,4,999),@X=Y
  Q
 ENTRY ;
@@ -38,6 +42,10 @@ ENTRY ;
  ;;=11^DESCRIPTION...^2^^DESCRIPTION
  ;;^DIST(.404,.00101,40,3,2)
  ;;=11,17^1^11,2^1
+ ;;^DIST(.404,.00101,40,3,3)
+ ;;=!M
+ ;;^DIST(.404,.00101,40,3,3.1)
+ ;;=S Y=$$WPLUS^DICATTD0(21)
  ;;^DIST(.404,.00101,40,3,10)
  ;;=S DDSSTACK=1.1
  ;;^DIST(.404,.00101,40,3,20)
@@ -96,6 +104,10 @@ ENTRY ;
  ;;=12^TECHNICAL DESCRIPTION...^2
  ;;^DIST(.404,.00101,40,9,2)
  ;;=11,49^1^11,24^1
+ ;;^DIST(.404,.00101,40,9,3)
+ ;;=!M
+ ;;^DIST(.404,.00101,40,9,3.1)
+ ;;=S Y=$$WPLUS^DICATTD0(23)
  ;;^DIST(.404,.00101,40,9,10)
  ;;=S DDSSTACK=1.2
  ;;^DIST(.404,.00101,40,9,20)
@@ -147,7 +159,7 @@ ENTRY ;
  ;;^DIST(.404,.00101,40,14,11)
  ;;=I $G(DICATTDK) S DDACT="EX"
  ;;^DIST(.404,.00101,40,14,20)
- ;;=S^M^1:DATE;2:NUMERIC;3:SET;4:FREE TEXT;5:WORD-PROCESSING;6:COMPUTED;7:POINTER;8:VARIABLE-POINTER;9:MUMPS
+ ;;=P^M^.81:EOFIZ
  ;;^DIST(.404,.00101,40,14,24)
  ;;=D SCREEN^DICATTD
  ;;^DIST(.404,.00101,40,15,0)

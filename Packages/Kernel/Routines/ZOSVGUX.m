@@ -1,5 +1,5 @@
 %ZOSV ;VEN/SMH,KRM/CJE,FIS/KSB - View commands & special functions. ;2017-01-09  3:39 PM
- ;;8.0;KERNEL;**275,425,499,10001**;Jul 10, 1995;Build 11
+ ;;8.0;KERNEL;**275,425,499,10001**;Jul 10, 1995;Build 18
  ; Submitted to OSEHRA in 2017 by Sam Habiel for OSEHRA
  ; Original Routine authored by Department of Veterans Affairs
  ; Almost the entire routine was rewritten by Sam Habiel, Christopher Edwards, KS Bhaskar

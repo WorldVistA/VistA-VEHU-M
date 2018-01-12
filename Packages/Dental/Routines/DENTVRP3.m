@@ -1,5 +1,5 @@
 DENTVRP3 ;DSS/SGM - DSS DENTAL EDIT FILE 228 ;06/26/2003 15:35
- ;;1.2;DENTAL;**30,32,35,31,39,43,45,53,57**;Aug 10, 2001;Build 8
+ ;;1.2;DENTAL;**30,32,35,31,39,43,45,53,57,66**;Aug 10, 2001;Build 36
  ;Copyright 1995-2009, Document Storage Systems, Inc., All Rights Reserved
  ;  This routine contains various rpcs for doing fileman enter/edits
  ;  into file 228
@@ -42,7 +42,7 @@ ADD(RET,DATA) ; RPC: DENTV DD GET/ADD RECORD
  ;
 FILE(DENTX,DATA) ; RPC: DENTV DD FIELD UPDATE
  ;  rpc to edit entries to file 228, only these field in file 228 are allowed 
- ;  to be edited: ^.01^.18^.16^1.14^1.15^3^5^
+ ;  to be edited: ^.01^.18^.16^1.14^1.15^3^5^6
  ;  DATA(1)     = ien to file 228
  ;  DATA(2...n) = field# in 228 ^ value
  ;   Example: DATA(1)=100268
@@ -60,21 +60,27 @@ FILE(DENTX,DATA) ; RPC: DENTV DD FIELD UPDATE
  N LOCAL,VAL,X0,X1
  S IENS=$G(DATA(1)),X0=$G(^DENT(228,+IENS,0)),X1=$G(^(1))
  S LOCAL=$P(X0,U,15)="L"
- S ALLOW="^.01^.18^.16^1.14^1.15^3^5^" ;allow filing of RVU data P39 ;P57 added/removed fields
+ S ALLOW="^.01^.18^.16^1.14^1.15^3^5^6^" ;allow filing of RVU data P39 ;P57 added/removed fields
  I X0=""!'IENS S DENTX="-1^Invalid file 228 entry number: "_IENS Q
  ;  must own key to use this rpc
  I '$$KEY(,1) S DENTX=$$ERR(1) Q
  I $O(DATA(1))="" S DENTX="-1^No data sent to be filed" Q
  ;  validate all inputs
  S DENL=1,IENS=IENS_",",DA=+IENS,TOT=0
- F I=2:1 Q:'$D(DATA(I))  S X=$P(DATA(I),U),Y=$P(DATA(I),U,2) S:X<5 FLDS(X)=Y I X=5 S TOT=TOT+1,FLDS(X,TOT)=Y
+ F I=2:1 Q:'$D(DATA(I))  S X=$P(DATA(I),U),Y=$P(DATA(I),U,2) S:X<5 FLDS(X)=Y I (X=5)!(X=6) S TOT=TOT+1,FLDS(X,TOT)=Y
  S Z="" F I=0:0 S I=$O(FLDS(I)) Q:'I  S:ALLOW'[(U_I_U) Z=Z_I_";"
  I Z'="" S DENTX="-1^You are not allowed to edit these fields: "_Z Q
  K Z S DENL=0 F  S DENL=$O(FLDS(5,DENL)) Q:'DENL  S X=FLDS(5,DENL) D
- .S Y=$$ICD9^DSICDRG(,X,"100;101;102",,,1)
+ .S Y=$$ICD^DENTVICD(,X,,1)
  .I Y<1 S I=1+$O(Z("A"),-1),Z(I)=$P(Y,U,2) Q
  .I '$P(Y,U,10) S Z=$G(Z)_$P(Y,U,2)_" as of "_$P($P(Y,U,12),";",2)_"; "
  .E  S FLDS(5,DENL)=+Y
+ .Q
+ K Z S DENL=0 F  S DENL=$O(FLDS(6,DENL)) Q:'DENL  S X=FLDS(6,DENL) D
+ .S Y=$$ICD^DENTVICD(,X,,1)
+ .I Y<1 S I=1+$O(Z("A"),-1),Z(I)=$P(Y,U,2) Q
+ .I '$P(Y,U,10) S Z=$G(Z)_$P(Y,U,2)_" as of "_$P($P(Y,U,12),";",2)_"; "
+ .E  S FLDS(6,DENL)=+Y
  .Q
  I $D(Z) S DENTX="" D  S DENTX="-1^"_DENTX Q
  .I $G(Z)'="" S DENTX="These diagnosis codes are inactive: "_Z
@@ -95,8 +101,12 @@ FILE(DENTX,DATA) ; RPC: DENTV DD FIELD UPDATE
  D FILE^DIE(,"DENT","DENTER")
  I $D(DENTER) S DENTX="-1^"_$$ERM Q
  K DENT S I=0
- F  S I=$O(FLDS(5,I)) Q:'I  S DENT(228.05,"+"_I_","_+IENS_",",.01)=$G(FLDS(5,I)) I '$D(DIERR) S DENTX="1^Entry successfully updated"
- I $D(DENT(228.05)) K ^DENT(228,+IENS,5) D UPDATE^DIE(,"DENT","DENTX","DENTER") K DENT
+ F  S I=$O(FLDS(5,I)) Q:'I  S DENT(228.05,"+"_I_","_+IENS_",",.01)=$G(FLDS(5,I))
+ I $D(DENT(228.05)) K ^DENT(228,+IENS,5) D UPDATE^DIE(,"DENT","DENTX","DENTER")
+ K DENT S I=0
+ F  S I=$O(FLDS(6,I)) Q:'I  S DENT(228.06,"+"_I_","_+IENS_",",.01)=$G(FLDS(6,I))
+ I $D(DENT(228.06)) K ^DENT(228,+IENS,6) D UPDATE^DIE(,"DENT","DENTX","DENTER")
+ K DENT  I '$D(DIERR) S DENTX="1^Entry successfully updated"
  L -^DENT(228,+IENS)
  Q
  ;
@@ -111,12 +121,15 @@ GTD(RET,CPT) ; RPC: DENTV DD GET DATA
  ; RET(4)=".16^VA-DSS GROUP^8^DES008"
  ; RET(5)=".17^FLAGS^^"
  ; RET(6)=".18^RVU^15^15"
- ; RET(7)="1.01^TOTAL MAPPED DIAGNOSES^6^6"
- ; RET(8)="1.14^VA COST TO PERFORM^^"
- ; RET(9)="1.15^EQUIVALENT PRIVATE COST^^"
- ; RET(10)="3^ADMIN GUIDELINE^^"
- ; RET(11)="5^DEFAULT DIAGNOSES^2875^528.3^CELLULITIS/ABSCESS MOUTH"
- ; RET(12)="5^DEFAULT DIAGNOSES^2877^528.5^DISEASES OF LIPS"
+ ; RET(7)="1.01^TOTAL MAPPED ICD9 DIAGNOSES^6^6"
+ ; RET(8)="1.02^TOTAL MAPPED ICD10 DIAGNOSES^4^4"
+ ; RET(9)="1.14^VA COST TO PERFORM^^"
+ ; RET(10)="1.15^EQUIVALENT PRIVATE COST^^"
+ ; RET(11)="3^ADMIN GUIDELINE^^"
+ ; RET(12)="5^DEFAULT ICD9 DIAGNOSES^2875^528.3^CELLULITIS/ABSCESS MOUTH"
+ ; RET(13)="5^DEFAULT ICD9 DIAGNOSES^2877^528.5^DISEASES OF LIPS"
+ ; RET(14)="6^DEFAULT ICD10 DIAGNOSES^509720^K12.2^Cellulitis and abscess of mouth"
+ ; RET(14)="6^DEFAULT ICD10 DIAGNOSES^509726^K13.0^Diseases of lips"
  N I,X,Y,DENTER,DIERR,FLD,IC,ICD,CNT,DENTV,DENV,DESC
  ;  must be administrator to use this rpc
  I '$$KEY(,1) D SET($$ERR(1)) Q
@@ -125,15 +138,25 @@ GTD(RET,CPT) ; RPC: DENTV DD GET DATA
  S X=$$CPT^DSICCPT(,CPT,,,,1) I X<1 S RET(1)=X Q
  I '$D(^DENT(228,+X,0)) D SET("CPT"_$P(X,U,2)_" not found in ADA table") Q
  S CPT=+X,DESC=$P(X,U,3)
- D GETS^DIQ(228,CPT,".01;.07;.15;.18;.16;.17;1.01;1.14;1.15;3","IE","DENTV")
+ D GETS^DIQ(228,CPT,".01;.07;.15;.18;.16;.17;1.01;1.02;1.14;1.15;3","IE","DENTV")
  S DENV="DENTV(228,"""_CPT_","")"
  S FLD=0,CNT=0 F  S FLD=$O(@DENV@(FLD)) Q:'FLD  D
  .S CNT=CNT+1,RET(CNT)=FLD_"^^"_$G(@DENV@(FLD,"I"))_U_$G(@DENV@(FLD,"E"))
  .I FLD=.01 S $P(RET(CNT),U,5)=DESC
  .Q
  S IC=0 F  S IC=$O(^DENT(228,CPT,5,IC)) Q:'IC  D
- .S ICD=+$G(^DENT(228,CPT,5,IC,0)),X=$$ICD9^DSICDRG(,ICD,,,,1)
+ .S ICD=+$G(^DENT(228,CPT,5,IC,0))
+ .S ICD=$$GET1^DIQ(228.05,IC_","_CPT_",",.01,,,"DENTERR")
+ .I $D(DENTERR) S CNT=CNT+1,RET(CNT)=5_U_U_DENTERR("DIERR",1,"TEXT",1)
+ .S X=$$ICD^DENTVICD(,ICD,,1)
  .I X>0 S CNT=CNT+1,RET(CNT)=5_U_U_$P(X,U,1,2)_U_$P(X,U,4)
+ .Q
+ S IC=0 F  S IC=$O(^DENT(228,CPT,6,IC)) Q:'IC  D
+ .S ICD=+$G(^DENT(228,CPT,6,IC,0))
+ .S ICD=$$GET1^DIQ(228.06,IC_","_CPT_",",.01,,,"DENTERR")
+ .I $D(DENTERR) S CNT=CNT+1,RET(CNT)=6_U_U_DENTERR("DIERR",1,"TEXT",1)
+ .S X=$$ICD^DENTVICD(,ICD,,1)
+ .I X>0 S CNT=CNT+1,RET(CNT)=6_U_U_$P(X,U,1,2)_U_$P(X,U,4)
  .Q
  S FLD=0 F  S FLD=$O(RET(FLD)) Q:'FLD  S X=+RET(FLD) D
  .K DENTER,DIERR S Y=$$GET1^DID(228,X,"","LABEL",,"DENTER")

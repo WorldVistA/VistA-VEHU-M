@@ -1,6 +1,6 @@
 DENTVTP0 ;DSS/SGM - COMMON UTILITIES FOR TP ;11/23/2003 22:29
- ;;1.2;DENTAL;**39,47,53,55**;Aug 10, 2001;Build 5
- ;Copyright 1995-2007, Document Storage Systems, Inc., All Rights Reserved
+ ;;1.2;DENTAL;**39,47,53,55,63,66**;Aug 10, 2001;Build 36
+ ;Copyright 1995-2013, Document Storage Systems, Inc., All Rights Reserved
  ;
  ;this contains various utilities for use in treatment planning software
  ;
@@ -160,17 +160,38 @@ CP(RET,DFN) ;RPC DENTV GET COVER PAGE INFO
  ;
  K TXND D TXN Q:'$D(TXND)
  S CNT=CNT+1,@RET@(CNT)="$START^PLAN"
- S CNT=CNT+1,@RET@(CNT)="^Treatment Plan:",J=0,JS=0,K="@",KS="@"
- S SEED=$NA(TXND(0)) F  S SEED=$Q(@SEED) Q:$G(SEED)=""  D
- .S J=$QS(SEED,1) I J'=JS S CNT=CNT+1,@RET@(CNT)="^Phase "_J,JS=J
+ S CNT=CNT+1,@RET@(CNT)="^Treatment Plan:",J=-2,JS=-2,K="@",KS="@"
+ S SEED=$NA(TXND(0)) F  S SEED=$Q(@SEED) Q:$G(SEED)=""  Q:$QS(SEED,1)'=0  D
+ .S J=$QS(SEED,1)
+ .I J'=JS S CNT=CNT+1,@RET@(CNT)="^ Unsequenced ",JS=J
  .S K=$QS(SEED,2) I K'=KS,K'="@" S CNT=CNT+1,@RET@(CNT)=U_K,KS=K
  .S CNT=CNT+1,@RET@(CNT)=@SEED
  .Q
+ S SEED=$NA(TXND(-1)) F  S SEED=$Q(@SEED) Q:$G(SEED)=""  Q:$QS(SEED,1)'=-1  D
+ .S J=$QS(SEED,1)
+ .I J'=JS S CNT=CNT+1,@RET@(CNT)="^ Non-VA Care ",JS=J
+ .S K=$QS(SEED,2) I K'=KS,K'="@" S CNT=CNT+1,@RET@(CNT)=U_K,KS=K
+ .S CNT=CNT+1,@RET@(CNT)=@SEED
+ .Q
+ S SEED=$NA(TXND(1)) F  S SEED=$Q(@SEED) Q:$G(SEED)=""  D
+ .S J=$QS(SEED,1)
+ .I J'=JS S CNT=CNT+1,@RET@(CNT)="^ Phase "_J,JS=J
+ .S K=$QS(SEED,2) I K'=KS,K'="@" S CNT=CNT+1,@RET@(CNT)=U_K,KS=K
+ .S CNT=CNT+1,@RET@(CNT)=@SEED
+ .Q
+ N Z,DATE,TYP,IEN
+ S CNT=CNT+1,@RET@(CNT)=""
+ S CNT=CNT+1,@RET@(CNT)="^Sequencing Notes:"
+ I '$O(^DENT(228.6,"C",DFN,0)) Q
+ S Z=$NA(^DENT(228.6,"C",DFN)),STOP=$P(Z,")")_","
+ F  S Z=$Q(@Z) Q:Z=""  Q:Z'[STOP  D
+ .S DATE=-$QS(Z,4),TOOTH=$QS(Z,5),TYP=$QS(Z,6),IEN=$QS(Z,7) Q:TYP'=4
+ .S Y=0 F  S Y=$O(^DENT(228.6,IEN,1,Y)) Q:'Y  S CNT=CNT+1,@RET@(CNT)="^ "_^DENT(228.6,IEN,1,Y,0)
  ;
  Q
  ;
 TXN ; get the transactions, don't process if no ADA code, not a txn, or deleted
- N X0,X1,TXN,TR,TOOTH,SURF,XA,QUAD,Z,TEXT S TXN=0
+ N X0,X1,TXN,TR,TOOTH,SURF,XA,QUAD,Z,TEXT,DFLAG S TXN=0
  F  S TXN=$O(^DENT(228.2,"AP",DFN,TXN)) Q:'TXN  D
  .S X0=$G(^DENT(228.2,TXN,0)),X1=$G(^(1))
  .Q:X0=""!($P(X0,U,4)="")!($P(X0,U,29)'=1)!($P(X1,U,3))
@@ -188,7 +209,9 @@ TXN ; get the transactions, don't process if no ADA code, not a txn, or deleted
  ..I $P(X0,U,16)]"" S TOOTH=TOOTH_" ("_$P(X0,U,16)_")"
  ..Q
  .S TEXT="("_$P(XA,U,2)_") "_$P(XA,U,3)_$S(TOOTH]"":": "_TOOTH,1:"")
- .S TXND(+$P(X0,U,17),$P(X0,U,25),+$P(X0,U,26),TXN)=TXN_U_"   "_TEXT
+ .S DXCODE="  DX: ("_$$EXTERNAL^DILFD(228.2,1.06,"",$P(X1,U,6))_")"
+ .S NAPPT=$S($P(X0,U,21):"  (Next-Appt)",1:"")
+ .S TXND(+$P(X0,U,17),$P(X0,U,25),+$P(X0,U,26),TXN)=TXN_U_"   "_TEXT_DXCODE_NAPPT
  .Q
  Q
 ADA(ADA) ;get these ada codes
@@ -205,12 +228,13 @@ ADA(ADA) ;get these ada codes
  ;;10^D0210
  ;;11^D0270
  ;;11^D0272
+ ;;11^D0273
  ;;11^D0274
  ;;11^D0277
  ;;12^D1110
- ;;12^D1205
  ;;12^D4341
  ;;12^D4342
+ ;;12^D4355
  ;;12^D4910
  ;;16^D0120
  ;;16^D0150

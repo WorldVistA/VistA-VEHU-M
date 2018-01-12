@@ -1,7 +1,6 @@
-VALM1 ;ALB/MJK - Screen Manipulation Utilities ; 3/6/17 11:44am
- ;;1.0;List Manager;**5,6,8,9**;Aug 13, 1993;Build 12
- ; Original Routine authored by US Dept of Veteran Affairs
- ; Tag INSTR modified by DSS 2016
+VALM1 ;ALB/MJK - Screen Manipulation Utilities ;06/27/2006
+ ;;1.0;List Manager;**5,6,8,9**;Aug 13, 1993;Build 2
+ ;Per VHA Directive 2004-038, this routine should not be modified.
 INSTR(STR,X,Y,LENGTH,ERASE) ; -- insert text
  ;    STR := string to insert
  ;      X := X coordinate
@@ -9,9 +8,6 @@ INSTR(STR,X,Y,LENGTH,ERASE) ; -- insert text
  ; LENGTH := clear # of characters
  ;  ERASE := erase chars first
  W IOSC
- ; DSS/SMH - BEGIN MODS - MUST round down X and Y, in case they are decimals
- S X=X\1,Y=Y\1
- ; DSS/SMH - END MODS
  I $G(ERASE) S DY=Y-1,DX=X-1 X IOXY W $J("",LENGTH)
  S DY=Y-1,DX=X-1 X IOXY W STR
  W IORC

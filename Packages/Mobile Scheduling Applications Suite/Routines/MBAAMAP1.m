@@ -1,10 +1,10 @@
-MBAAMAP1 ;OIT-PD/VSL - APPOINTMENT API;08/27/2014
- ;;1.0;Scheduling Calendar View;;Aug 27, 2014;Build 52
+MBAAMAP1 ;OIT-PD/VSL - APPOINTMENT API ;02/10/2016
+ ;;1.0;Scheduling Calendar View;**1**;Aug 27, 2014;Build 85
+ ;
  ;Associated ICRs
  ;  ICR#
  ;  10104 XLFSTR
  ;  10103 XLFDT
- ;  6063 MBAA RPC REGISTRATION
  ;
  ;code removed below is scheduled for a future release of MBAA
 CLNCK(RETURN,CLN) ;Check clinic for valid stop code restriction. Called by RPC MBAA APPOINTMENT MAKE
@@ -102,7 +102,7 @@ GETSCAP(RETURN,SC,DFN,SD) ; Get clinic appointment Called by RPC MBAA APPOINTMEN
  . S RETURN("CHECKOUT")=$P(CO,U,3)
  . S RETURN("CHECKIN")=$P(CO,U,1)
  . S RETURN("LENGTH")=$P(NOD0,U,2)
- . S RETURN("CONSULT")=$P($G(RETURN("CONS")),U)
+ . S RETURN("CONSULT")=$P(NOD0,U,11)
  Q 1
  ;
 SLOTS(RETURN,SC) ; Get available slots MBAA RPC: MBAA GET CLINIC AVAILABILITY

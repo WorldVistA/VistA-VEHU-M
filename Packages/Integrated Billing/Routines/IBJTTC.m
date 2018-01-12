@@ -1,6 +1,6 @@
-IBJTTC ;ALB/ARH/PJH - TPI AR COMMENT HISTORY ; 4/25/11 5:22pm
- ;;2.0;INTEGRATED BILLING;**39,377,431**;21-MAR-94;Build 106
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBJTTC ;ALB/ARH/PJH - TPI AR COMMENT HISTORY ; 3/18/11 2:15pm
+ ;;2.0;INTEGRATED BILLING;**39,377,431,432,447,547**;21-MAR-94;Build 119
+ ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; AR Profile of Comments:  This screen prints the following Comments:
  ;    Bill Comments (430,98)  - entered during auditing
@@ -42,6 +42,7 @@ BLD ;
  ; Bill Comments (430,98)
  K COM,^UTILITY($J,"W") D BCOM^RCJIBFN2(IBIFN) I $D(COM)>10 D
  . S IBSTR="",IBD="AR BILL COMMENTS:" S IBSTR=$$SETLN(IBD,IBSTR,25,54),IBLN=$$SET(IBSTR,IBLN)
+ . S IBSTR="",IBSTR=$$SETLN("--------------------------",IBSTR,25,54),IBLN=$$SET(IBSTR,IBLN)
  . ;
  . S IBJ="" F  S IBJ=$O(COM(IBJ)) Q:'IBJ  S X=$G(COM(IBJ)) I X'="" S DIWL=1,DIWR=54,DIWF=""  D ^DIWP
  . ;
@@ -50,6 +51,7 @@ BLD ;
  . K ^UTILITY($J,"W")
  ; AR profile of comment transactions  (433: 5.02, 41, 86)
  K ^TMP("RCJIB",$J),^UTILITY($J,"W") D TRN^RCJIBFN2(IBIFN)
+ ;
  ;HIPAA 5010 - check if contact data has been added as a comment 
  I '$$CONTACT D
  .;Check for payer contact data in all entries associated with the bill # (IBIFN)
@@ -134,7 +136,7 @@ BLD ;
  .; loop through all available comments
  .S IBDATE="" F  S IBDATE=$O(^DGCR(399,IBIFN,"TXC","B",IBDATE),-1) Q:IBDATE=""  D
  ..S IBZ=$O(^DGCR(399,IBIFN,"TXC","B",IBDATE,"")),IB0=^DGCR(399,IBIFN,"TXC",IBZ,0),IBDUZ=$P(IB0,U,2)
- ..S IBLN=$$SET("",IBLN)
+ ..;S IBLN=$$SET("",IBLN)
  ..S IBSTR=""
  ..S IBSTR=$$SETLN($$FMTE^XLFDT(IBDATE,"2Z"),IBSTR,14,8)
  ..S IBSTR=$$SETLN($J("Entered by "_$$GET1^DIQ(200,IBDUZ,.01),54),IBSTR,25,54)
@@ -148,11 +150,41 @@ BLD ;
  ...Q
  ..K ^UTILITY($J,"W")
  ..Q
- .D CLEAN^DILF
+ .;D CLEAN^DILF
  .Q
+ ; display RFAI Claim Comments right after MRA REQUEST CLAIM COMMENTS *IB*2.0*547
+ D RFAIC
+ D EOBC ; IB*2.0*432
+ D MDACMTS ; IB*2.0*447 BI
+ D CLEAN^DILF
  ;
  I IBLN=0 S IBLN=$$SET("",IBLN),IBLN=$$SET("No Comment Transactions Exist For This Account.",IBLN)
  S VALMCNT=IBLN
+ Q
+ ;
+EOBC ; check for new EOB comments IB*2.0*432
+ I $D(^DGCR(399,IBIFN,"TXC2","B")) D
+ .S IBLN=$$SET("",IBLN)
+ .S IBSTR="",IBSTR=$$SETLN("COB MANAGMENT CLAIM COMMENTS",IBSTR,25,54),IBLN=$$SET(IBSTR,IBLN)
+ .S IBSTR="",IBSTR=$$SETLN("----------------------------",IBSTR,25,54),IBLN=$$SET(IBSTR,IBLN)
+ .; loop through all available comments
+ .S IBDATE="" F  S IBDATE=$O(^DGCR(399,IBIFN,"TXC2","B",IBDATE),-1) Q:IBDATE=""  D
+ ..S IBZ=$O(^DGCR(399,IBIFN,"TXC2","B",IBDATE,"")),IB0=^DGCR(399,IBIFN,"TXC2",IBZ,0),IBDUZ=$P(IB0,U,2)
+ ..;S IBLN=$$SET("",IBLN)
+ ..S IBSTR=""
+ ..S IBSTR=$$SETLN($$FMTE^XLFDT(IBDATE,"2Z"),IBSTR,14,8)
+ ..S IBSTR=$$SETLN($J("Entered by "_$$GET1^DIQ(200,IBDUZ,.01),54),IBSTR,25,54)
+ ..S IBLN=$$SET(IBSTR,IBLN),IBSTR=""
+ ..; loop through comment lines
+ ..S CMLN=0 F  S CMLN=$O(^DGCR(399,IBIFN,"TXC2",IBZ,1,CMLN)) Q:CMLN=""  D
+ ...S X=^DGCR(399,IBIFN,"TXC2",IBZ,1,CMLN,0) I X'="" S DIWL=1,DIWR=54,DIWF=""  D ^DIWP
+ ...Q
+ ..I $D(^UTILITY($J,"W")) S IBK=0 F  S IBK=$O(^UTILITY($J,"W",1,IBK)) Q:'IBK  D
+ ...S CMSTR=$G(^UTILITY($J,"W",1,IBK,0)) S IBSTR=$$SETLN(CMSTR,IBSTR,25,54),IBLN=$$SET(IBSTR,IBLN),IBSTR=""
+ ...Q
+ ..K ^UTILITY($J,"W")
+ ..Q
+ .Q
  Q
  ;
 CONTACT() ;HIPAA 5010 check for contact data in comments
@@ -174,3 +206,36 @@ SETLN(STR,IBX,COL,WD) ;
 SET(STR,LN) ; set up TMP array with screen data
  S LN=LN+1 D SET^VALM10(LN,STR)
 SETQ Q LN
+ ;
+MDACMTS ; Check for MDA comments, Load for List Manager Screen IB*2.0*447 BI
+ ; INTEGRATION CONTROL REGISTRATION is contained in DBIA #5696.
+ D MCOM^PRCAMDA2(IBIFN,.IBLN)
+ Q
+ ;
+RFAIC ; check for new RFAI comments IB*2.0*547 (modeled after EOBC)
+ ; uses ^IBA(368,"D",$E(X,1,30),DA) PATIENT CONTROL NUMBER [D] cross-reference 
+ ;
+ Q:'$D(^IBA(368,"D",IBIFN))
+ N IBTNI,IBC,IBCLM,IBDUZ,IBDT,IBK,CMSTR,IBSTR,IBZ
+ ; loop through all available comments
+ S IBC=0,IBTNI="" F  S IBTNI=$O(^IBA(368,"D",IBIFN,IBTNI)) Q:IBTNI=""  D
+ .; not all transactions associated with a claim have comments
+ .Q:'$D(^IBA(368,IBTNI,201))
+ .; loop through all available comments
+ .S IBDT="" F  S IBDT=$O(^IBA(368,IBTNI,201,"B",IBDT),-1) Q:IBDT=""  D
+ ..S IBZ=$O(^IBA(368,IBTNI,201,"B",IBDT,"")),IBDUZ=$P($G(^IBA(368,IBTNI,201,IBZ,0)),U,2),IBC=IBC+1
+ ..; display header and underline prior to 1st transaction with comment only
+ ..D:IBC=1
+ ...S IBLN=$$SET("",IBLN)
+ ...S IBSTR="",IBSTR=$$SETLN("RFAI CLAIM COMMENTS",IBSTR,25,54),IBLN=$$SET(IBSTR,IBLN)
+ ...S IBSTR="",IBSTR=$$SETLN("----------------------------",IBSTR,25,54),IBLN=$$SET(IBSTR,IBLN)
+ ..S IBSTR="",IBSTR=$$SETLN($$FMTE^XLFDT(IBDT,"2Z"),IBSTR,14,8),IBSTR=$$SETLN($J("Entered by "_$$GET1^DIQ(200,IBDUZ,.01),54),IBSTR,25,54)
+ ..S IBLN=$$SET(IBSTR,IBLN),IBSTR=""
+ ..; loop through comment lines
+ ..S IBCLM=0 F  S IBCLM=$O(^IBA(368,IBTNI,201,IBZ,1,IBCLM)) Q:IBCLM=""  D
+ ...S X=$G(^IBA(368,IBTNI,201,IBZ,1,IBCLM,0)) I X'="" S DIWL=1,DIWR=54,DIWF=""  D ^DIWP
+ ..I $D(^UTILITY($J,"W")) S IBK=0 F  S IBK=$O(^UTILITY($J,"W",1,IBK)) Q:'IBK  D
+ ...S CMSTR=$G(^UTILITY($J,"W",1,IBK,0)) S IBSTR=$$SETLN(CMSTR,IBSTR,25,54),IBLN=$$SET(IBSTR,IBLN),IBSTR=""
+ ..K ^UTILITY($J,"W")
+ Q
+ ;

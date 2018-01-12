@@ -1,5 +1,5 @@
 PRCH410 ;WISC/KMB/DXH/DGL - CREATE 2237 FROM PURCHASE CARD ORDER ; 4/4/00 7:56am
- ;;5.1;IFCAP;**123,171,181,186**;Oct 20, 2000;Build 10
+ ;;5.1;IFCAP;**123,171,181,186,192,199**;Oct 20, 2000;Build 3
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; prcsip is package-wide variable for inv pt that may or may not be
@@ -22,6 +22,13 @@ PRCH410 ;WISC/KMB/DXH/DGL - CREATE 2237 FROM PURCHASE CARD ORDER ; 4/4/00 7:56am
  ;                      report when auto obligated. Also, modified the
  ;                      EDI check in same area for logic clarity.
  ;
+ ;PRC*5.1*192 RGB 12/16/15 Modify Delivery Order auto obligation file
+ ;            410 set for net to field #92 to ensure Running Balance
+ ;            reflects the net amount for order.
+ ;PRC*5.1*199 Check PRCRMPR switch on GUI Prosthetics order filing to
+ ;            skip inventory point selection query for FCPs linked to
+ ;            multiple inventories. 
+ ;
 START ;
  N VV,ST,Y,Z,Z0,Z1,Z2,I,J,CCEN,ESTS,NET,SERV,EMER,COUNT,COUNT1,L,PDUZ,FY,QTR,CP,LOC,ADATE,TDATE,SDATE,LL,PC,PCREF,XDA
  N SCP,SGRP,COR,VEN,VEND
@@ -35,8 +42,8 @@ START ;
  S PRC("CP")=+SCP
  I $G(PRCSIP) I '$O(^PRC(420,PRC("SITE"),1,PRC("CP"),7,"B",PRCSIP,0)) K PRCSIP ; Kill inventory point if not match FCP
  I '$G(PRCSIP) S J=0 F  S J=$O(^PRC(442,XDA,2,J)) Q:'J!($G(PRCSIP))  S K=0 F  S K=$O(^PRC(442,XDA,2,J,5,0)) Q:'K!($G(PRCSIP))  S PRCSIP=$P($G(^PRC(442,XDA,2,J,5,K,0)),U)
-IP D:'$G(PRCSIP) IP^PRCSUT
- I '$G(PRCSIP),$O(^PRC(420,PRC("SITE"),1,PRC("CP"),7,0)) D  I Y=0 G IP
+IP D:'$G(PRCSIP)&'$G(PRCRMPR) IP^PRCSUT     ;PRC*5.1*199
+ I '$G(PRCSIP),'$G(PRCRMPR),$O(^PRC(420,PRC("SITE"),1,PRC("CP"),7,0)) D  I Y=0 G IP     ;PRC*5.1*199
  . K DIR S DIR("A")="** WARNING ** No inventory point selected - Continue anyway",DIR("B")="NO",DIR(0)="Y"
  . S DIR("?",1)="The FCP you entered has Inventory points associated with it, but none have been selected."
  . S DIR("?")="Press 'Y' to return to the inventory point prompt or 'N' to continue the order without one."
@@ -93,7 +100,7 @@ REC ;create skeleton 410 record
  K X,T(2) QUIT
 ESIG ;put ESIG on record, update due-ins
  N PRCHOBL     ;PRC*171 D.O. auto obligate flags
- S NET=$P($G(^PRC(442,PODA,0)),"^",15) L +^PRCS(410,DA):15 Q:'$T  F I=1,8 S $P(^PRCS(410,DA,4),"^",I)=NET
+ S NET=$P($G(^PRC(442,PODA,0)),"^",16) L +^PRCS(410,DA):15 Q:'$T  F I=1,8 S $P(^PRCS(410,DA,4),"^",I)=NET  ;PRC*5.1*192
  I $D(PRCHDELV) D SWCHK   ;PRC*171 D.O. auto obligate check for EDI and All/Delivery flags on
  I $D(PRCHDELV),PRCHOBL=1 S $P(^PRCS(410,DA,4),"^",3)=NET,$P(^PRCS(410,DA,4),"^",4)=$P(^PRCS(410,DA,1),"^")   ;PRC*171 auto obligate sets for D.O. flag sets
  S:'$D(PRC("CP")) ZIP=$P(^PRC(442,PODA,0),"^",3),PRC("CP")=$P(ZIP," ") Q:PRC("CP")=""

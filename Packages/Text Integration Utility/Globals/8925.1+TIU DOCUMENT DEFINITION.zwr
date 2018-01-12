@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: TIU DOCUMENT DEFINITION
-08-JUN-2017 10:38:21 ZWR
+24-JAN-2018 16:38:38 ZWR
 ^TIU(8925.1,-1,0)="^^^O^^55^13"
 ^TIU(8925.1,-1,9)="S X=$$NAME^TIULO(DFN)"
 ^TIU(8925.1,0)="TIU DOCUMENT DEFINITION^8925.1I^376^1007"
@@ -3082,6 +3082,7 @@ OSEHRA ZGO Export: TIU DOCUMENT DEFINITION
 ^TIU(8925.1,361,3)="^^0"
 ^TIU(8925.1,361,15)="1559^3151106.14451^1"
 ^TIU(8925.1,361,99)="63862,52384"
+^TIU(8925.1,361,"DFLT")=" "
 ^TIU(8925.1,361,"DFLT",0)="^^23^23^3151106^"
 ^TIU(8925.1,361,"DFLT",1,0)="Diagnosis:                  Objective/Aims of Orthotics:"
 ^TIU(8925.1,361,"DFLT",2,0)=" "
@@ -3096,7 +3097,7 @@ OSEHRA ZGO Export: TIU DOCUMENT DEFINITION
 ^TIU(8925.1,361,"DFLT",11,0)="Stock Footwear                 [ ]"
 ^TIU(8925.1,361,"DFLT",12,0)="Heel Pads                      [ ]"
 ^TIU(8925.1,361,"DFLT",13,0)="Soft Collars                   [ ]"
-^TIU(8925.1,361,"DFLT",14,0)="Simple Knee Braces ? Elastic   [ ]"
+^TIU(8925.1,361,"DFLT",14,0)=" "
 ^TIU(8925.1,361,"DFLT",15,0)="Hallux Valgus Supports         [ ]"
 ^TIU(8925.1,361,"DFLT",16,0)="Hernia Supports                [ ]"
 ^TIU(8925.1,361,"DFLT",17,0)="Protective Helmets             [ ]"

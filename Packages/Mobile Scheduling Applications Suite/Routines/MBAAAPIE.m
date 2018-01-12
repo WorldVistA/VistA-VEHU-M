@@ -1,6 +1,5 @@
-MBAAAPIE ;OIT-PD/CBR - Scheduling Error provider;08/27/2014
- ;;1.0;Scheduling Calendar View;;Aug 27, 2014;Build 52
- ;  6063 MBAA RPC REGISTRATION
+MBAAAPIE ;OIT-PD/CBR - Scheduling Error provider ;02/10/2016
+ ;;1.0;Scheduling Calendar View;**1**;Aug 27, 2014;Build 85
  ;
 ERRX(RETURN,ERRNO,TEXT,LVL) ; adds error to RETURN Called by RPC MBAA APPOINTMENT MAKE, MBAA RPC: MBAA CANCEL APPOINTMENT
  N ERRTXT,IND,ST,STR,TXT,I

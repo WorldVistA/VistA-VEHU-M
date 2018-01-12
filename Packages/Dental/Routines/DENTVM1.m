@@ -1,6 +1,6 @@
 DENTVM1 ;DSS/KC - QUEUE AND POLL MONITORS;02/12/2009 09:46
- ;;1.2;DENTAL;**57,64**;Aug 10, 2001;Build 3
- ;Copyright 1995-2009, Document Storage Systems, Inc., All Rights Reserved
+ ;;1.2;DENTAL;**57,64,63**;Aug 10, 2001;Build 19
+ ;Copyright 1995-2013, Document Storage Systems, Inc., All Rights Reserved
  ;
  ;  ICR#   SUPPORTED
  ;  -----  --------- 
@@ -31,7 +31,7 @@ QUE(RET,DFN) ;RPC: DENTV MONITOR QUEUE
  ..Q
  .Q
  I 'CLAS S RET="-1^Unknown Patient/Dental class" Q
- I ",9,13,15,"'[(","_CLAS_",") S RET="-1^Monitor not applicable for Class "_CLAS Q
+ I ",9,11,13,15,"'[(","_CLAS_",") S RET="-1^Monitor not applicable for Class "_CLAS Q
  ;I '$$TM^%ZTLOAD S RET="-1^TaskMan not running" Q
  N DENTV,DENTERR S DENTV(220,DFN_",",5)=DT
  D FILE^DIE("K","DENTV","DENTERR")

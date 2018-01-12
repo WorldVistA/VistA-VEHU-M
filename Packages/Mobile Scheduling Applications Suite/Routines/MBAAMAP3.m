@@ -1,9 +1,8 @@
-MBAAMAP3 ;OIT-PD/VSL - APPOINTMENT API;08/27/2014
- ;;1.0;Scheduling Calendar View;;Aug 27, 2014;Build 52
+MBAAMAP3 ;OIT-PD/VSL - APPOINTMENT API ;02/10/2016
+ ;;1.0;Scheduling Calendar View;**1**;Feb 13, 2015;Build 85
+ ;
  ;Associated ICRs
  ; ICR#
- ; 2851 SDAM1
- ; 6063 MBAA RPC REGISTRATION
  ;
  ;code below is not being used in the initial release of MBAA. It will be released at a later date in a future release of MBAA
  ;LSTPATS(RETURN,SEARCH,START,NUMBER) ; Get patients by name
@@ -189,7 +188,9 @@ CHKSPC(RETURN,DFN,SD) ; Check if status permit cancelation Called by RPC MBAA AP
  N APT0,STATUS,IND,STAT,STATS
  S RETURN=0
  S APT0=$$GETAPT0^MBAAMDA2(DFN,SD)
- S STATUS=+$$STATUS^SDAM1(DFN,SD,+$G(APT0),$G(APT0)) ;ICR#: 2851 MBAA ACCESS TO SDAM1 API get appointment status
+ ;T13 Change to use SDAMA301 API
+ D STATUS^MBAARPC1(.RESULTS,DFN,SD,+APT0) S STATUS=+$G(RESULTS) ;K RESULTS 
+ ;S STATUS=+$$STATUS^SDAM1(DFN,SD,+$G(APT0),$G(APT0)) ;ICR#: 2851 MBAA ACCESS TO SDAM1 API get appointment status
  D LSTCSTA1^MBAAMDA2(.STAT)
  D BLDLST^MBAAMAPI(.STATS,.STAT)
  S IND=0
