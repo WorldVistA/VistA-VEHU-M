@@ -6,7 +6,6 @@ OSEHRA ZGO Export: ^%ZIS
 ^%ZIS("8994.171","RPCB Listener","ROU","VAH","ROU",9200)="302"
 ^%ZIS("C")="G ^%ZISC"
 ^%ZIS("CVT","3.52",0)="PRINT QUEUE JOB"
-^%ZIS("H")="D ^%ZISLDIS"
 ^%ZIS("JULIE")="DD"
 ^%ZIS("TEST")="123"
 ^%ZIS("TEST2")="234"
