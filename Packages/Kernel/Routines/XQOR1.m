@@ -24,7 +24,7 @@ EXAT I $P(^TMP("XQORS",$J,XQORS,"FLG"),"^",6) G EX^XQOR
  I $D(@(^TMP("XQORS",$J,XQORS,"REF")_"15)"))'[0 S X=^(15) I $L(X) D  X X
  .; resource usage monitor
  .D:$D(XQXFLG)[0 ABT^XQ12
- .I $P(XQXFLG,U,2) I $D(^TMP("XQORS",$J,XQORS,"REF")) N ORX S ORX=$P(@(^("REF")_"0)"),"^") D RP^%ZOSVKR($S($D(XQY0):$P(XQY0,U),1:"")_"^"_ORX)
+ .I $P(XQXFLG,U,2) I $D(^TMP("XQORS",$J,XQORS,"REF")) N ORX S ORX=$P(@(^("REF")_"0)"),"^") ; D RP^%ZOSVKR($S($D(XQY0):$P(XQY0,U),1:"")_"^"_ORX)
 EXCT I $D(^TMP("XQORS",$J,XQORS,"CTX","AD")) D EXIT^XQORO
  G EX^XQOR
 EACH I $P(^TMP("XQORS",$J,XQORS,"FLG"),"^",3),"AXLOD"[$P(^TMP("XQORS",$J,XQORS,"FLG"),"^") D SHDR^XQOR4
