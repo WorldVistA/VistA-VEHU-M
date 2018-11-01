@@ -1,7 +1,7 @@
 LRBLPUS ;AVAMC/REG/CYM - PATIENT UNIT SELECTION ;08/15/01 1:15 pm
- ;;5.2;LAB SERVICE;**72,247,267,275**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,247,267,275,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D END,CK G:Y=-1 END
+ Q  D END,CK G:Y=-1 END
  S LRB=$O(^LAB(61.3,"C",50710,0))
  I 'LRB D EN1^LRBLU
  W !!,?24,"Selection of units for a patient",!!?28,LRAA(4),!?12,"Accession Area: ",LRO(68)

@@ -1,5 +1,5 @@
 LRCAPBV1 ;DALOI/FHS - PROCESS VBEC PCE WORKLOAD API ; 4/3/07 3:31am
- ;;5.2;LAB SERVICE;**325**;Sep 27,1994;Build 34
+ ;;5.2;LAB SERVICE;**325,401**;Sep 27,1994;Build 7
  ;Reference to $$FIND1^DIC supported by IA #2051
  ;Reference to FILE^DID supported by IA #2052
  ;Reference to FILE^DIE supported by IA #2053
@@ -46,6 +46,7 @@ NLT(LRP,LRSUF) ;Lookup or create new NLT code
  I '$D(^LAM(+$G(LRP),0))#2 S ERR="No NLT Code" Q 0
  I '$G(LRSUF) Q +$G(LRP)
  D GETS^DIQ(64,LRP_",",".01:16","IEN","ANS","ERR")
+ S LRSUF=$$FIND1^DIC(64.2,"","O","."_LRSUF_" ","C","","ERR") ;RLM 11-20-09
  D GETS^DIQ(64.2,LRSUF_",",".01;1","IEN","ANS","ERR")
  S LRLRT=$G(ANS(64,LRP_",",.01,"I"))_"~"_$G(ANS(64.2,LRSUF_",",.01,"I"))
  S LRLRTN=$P($G(ANS(64,LRP_",",1,"I")),".")_$G(ANS(64.2,LRSUF_",",1,"I"))

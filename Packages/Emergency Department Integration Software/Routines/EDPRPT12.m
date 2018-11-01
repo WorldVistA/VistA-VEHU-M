@@ -1,7 +1,7 @@
-EDPRPT12 ;SLC/MKB - Orders by Acuity Report ;4/25/13 3:15pm
- ;;2.0;EMERGENCY DEPARTMENT;**6**;May 2, 2012;Build 200
+EDPRPT12 ;SLC/MKB - Orders by Acuity Report
+ ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
  ;
-ORD(BEG,END,CSV) ; Get Acuity Report for EDPSITE by date range
+ORD(BEG,END) ; Get Acuity Report for EDPSITE by date range
  ;   CNT = counters by acuity
  N IN,OUT,X,X0,I,SERV,ACU,CNT,ROW,EDLOC
  D INIT ;set counters, sums to 0
@@ -16,10 +16,7 @@ ORD(BEG,END,CSV) ; Get Acuity Report for EDPSITE by date range
 OR1 ; return counts
  I $G(CSV) D  Q  ;as CSV
  . N TAB S TAB=$C(9)
- . ;S X="Acuity"_TAB_"Labs"_TAB_"Images"_TAB_"Consults"_TAB_"Meds"_TAB_"Other"
- . ;***pij 4/19/2013 changed acuity
- . S X="Acuity/Display Group_>"_TAB_"Labs"_TAB_"Images"_TAB_"Consults"_TAB_"Meds"_TAB_"Other"
- . ;***
+ . S X="Acuity"_TAB_"Labs"_TAB_"Images"_TAB_"Consults"_TAB_"Meds"_TAB_"Other"
  . D ADD^EDPCSV(X)
  . F ACU=0,1,2,3,4,5 D
  .. K ROW S ROW("acuity")=ACU M ROW=CNT(ACU)

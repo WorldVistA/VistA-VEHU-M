@@ -1,5 +1,5 @@
 PSXRPPL ;BIR/WPB,BAB-Gathers data for the CMOP Transmission ;13 Mar 2002  10:31 AM
- ;;2.0;CMOP;**3,23,33,28,40,42,41,48,62,58,66,65,69,70**;11 Apr 97;Build 9
+ ;;2.0;CMOP;**3,23,33,28,40,42,41,48,62,58,66,65,69,70,81,83**;11 Apr 97;Build 2
  ;Reference to ^PS(52.5,  supported by DBIA #1978
  ;Reference to ^PSRX(     supported by DBIA #1977
  ;Reference to ^PSOHLSN1  supported by DBIA #2385
@@ -12,9 +12,13 @@ PSXRPPL ;BIR/WPB,BAB-Gathers data for the CMOP Transmission ;13 Mar 2002  10:31 
  ;Reference to ^BPSUTIL   supported by DBIA #4410
  ;Reference to ^PS(59     supported by DBIA #1976
  ;Reference to $$SELPRT^PSOFDAUT supported by DBIA #5740
+ ;
  ;Called from PSXRSUS -Builds ^PSX(550.2,,15,"C" , and returns to PSXRSUS or PSXRTRAN
  ;
-SDT K ^TMP($J,"PSX"),^TMP($J,"PSXDFN"),^TMP("PSXEPHNB",$J),ZCNT,PSXBAT D:$D(XRTL) T0^%ZOSV
+SDT ;
+ K ^TMP($J,"PSX"),^TMP($J,"PSXDFN"),^TMP("PSXEPHNB",$J)
+ K PSXBAT,ZCNT
+ I $D(XRTL) D T0^%ZOSV
  S PSXTDIV=PSOSITE,PSXTYP=$S(+$G(PSXCS):"C",1:"N")
  ;
  ; - Submitting prescriptions to ECME (Electronic Claims Mgmt Engine) - 3rd pary

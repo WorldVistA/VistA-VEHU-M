@@ -1,5 +1,5 @@
 PSORX1 ;BIR/SAB-medication processing driver ;8/17/16 5:10pm
- ;;7.0;OUTPATIENT PHARMACY;**7,22,23,57,62,46,74,71,90,95,115,117,146,139,135,182,195,233,268,300,170,320,326,324,334,251,454**;DEC 1997;Build 349
+ ;;7.0;OUTPATIENT PHARMACY;**7,22,23,57,62,46,74,71,90,95,115,117,146,139,135,182,195,233,268,300,170,320,326,324,334,251,454,488,497,519**;DEC 1997;Build 5
  ;
  ;External reference ^PS(55 supported by DBIA 2228
  ;External reference ^DIC(31 supported by DBIA 658
@@ -22,7 +22,7 @@ START K PSOQFLG,PSOID,PSOFIN,PSOQUIT,PSODRUG,^TMP($J,"PSOTDD"),^TMP("PSORXPO",$J
  K TM,TM1 I $G(PSORX("PSOL",1))]""!($D(RXRS)) D ^PSORXL K PSORX
  G:$G(NOBG) NX
  S TM=$P(^TMP("PSOBB",$J),"^"),TM1=$P(^TMP("PSOBB",$J),"^",2) K ^TMP("PSOBB",$J)
- I $G(PSOFROM)="NEW"!($G(PSOFROM)="REFILL")!($G(PSOFROM)="PARTIAL") D:$D(BINGCRT)&($D(BINGRTE)&($D(DISGROUP))) ^PSOBING1 K BINGCRT,BINGRTE,BBRX,BBFLG
+ I $G(PSOFROM)="NEW"!($G(PSOFROM)="REFILL")!($G(PSOFROM)="PARTIAL")!($G(PSOFROM)="UNHOLD") D:$D(BINGCRT)&($D(BINGRTE)&($D(DISGROUP))) ^PSOBING1 K BINGCRT,BINGRTE,BBRX,BBFLG
 NX I $G(POERR("DEAD"))!$G(PSOQFLG) D EOJ G START
  D EOJ G START
 END Q
@@ -62,10 +62,10 @@ OERR N:$G(MEDP) PAT,POERR K PSOXFLG S (DFN,PSODFN)=+Y,PSORX("NAME")=$P(Y,"^",2)
  ..Q:TFILIST'[(U_$P(TFL(TFLP),U,5)_U)
  ..S TFLCNT=$G(TFLCNT)+1
  .I $G(TFLCNT)<2 Q
- .I '$$GET1^DIQ(59,PSOSITE,3001,"I") D  Q
+ .I '$$GET1^DIQ(59.7,1,101,"I") D  Q
  ..W !!,"The OneVA Pharmacy flag is turned off. Queries will NOT"
  ..W !,"be made to other VA Pharmacy locations.",!
- .K DIR S DIR(0)="Y",DIR("B")="YES",DIR("A")="locations",DIR("A",1)="Would you like to query prescriptions from other OneVA Pharmacy" D ^DIR
+ .K DIR S DIR(0)="Y",DIR("B")="NO",DIR("A")="locations",DIR("A",1)="Would you like to query prescriptions from other OneVA Pharmacy" D ^DIR ;CHANGE PROMPT DEFAULT FROM YES TO NO ;*519
  .K DIR
  .Q:'Y
  .W !!,"Please wait. Checking for prescriptions at other VA Pharmacy locations. This may take a moment...",!

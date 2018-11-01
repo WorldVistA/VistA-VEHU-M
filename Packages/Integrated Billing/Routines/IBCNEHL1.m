@@ -1,5 +1,5 @@
 IBCNEHL1 ;DAOU/ALA - HL7 Process Incoming RPI Messages ;26-JUN-2002
- ;;2.0;INTEGRATED BILLING;**300,345,416,444,438,497,506,549**;21-MAR-94;Build 54
+ ;;2.0;INTEGRATED BILLING;**300,345,416,444,438,497,506,549,593,601,595**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -20,6 +20,8 @@ IBCNEHL1 ;DAOU/ALA - HL7 Process Incoming RPI Messages ;26-JUN-2002
  ;                 1 = + (auto-update requirement)
  ;                 6 = -
  ;                 V = #
+ ;                 MBI% = %   ; will not receive from FSC, derived in FIL^IBCNEHL6
+ ;                 MBI# = #   ; will not receive from FSC, derived in FIL^IBCNEHL6
  ;    MAP       - Array that maps EC's IIV status flag to IIV STATUS TABLE (#365.15)   IEN
  ;    MSGID     - Original Message Control ID
  ;    RIEN      - Response Record IEN
@@ -34,7 +36,8 @@ EN ; Entry Point
  S HLSCMP=$E(HL("ECH"),4) ; HL7 subcomponent separator
  S HLREP=$E(HL("ECH"),2) ; HL7 repetition separator
  ; Create map from EC to VistA
- S MAP(1)=8,MAP(6)=9,MAP("V")=21
+ S MAP(1)=8,MAP(6)=9,MAP("V")=21   ; These are X12 codes mapped from EC to VistA
+ S MAP("MBI%")=26,MAP("MBI#")=27   ; These are NOT X12 codes from FSC - we derive them only for MBI responses
  ;
  ;  Loop through the message and find each segment for processing
  F  S HCT=$O(^TMP($J,"IBCNEHLI",HCT)) Q:HCT=""  D  Q:ERFLG
@@ -146,11 +149,18 @@ AUTOFIL(DFN,IEN312,ISSUB) ; Finish processing the response message - file direct
  I ISSUB,XX="",PREL'="" D
  . S DATA(2.312,IENS,4.03)=$$PREL^IBCNEHLU(2.312,4.03,PREL)
  ;\End of IB*2.0*549 changes.
- S DATA(2.312,IENS,1.03)=TSTAMP                         ; Date last verified
- S DATA(2.312,IENS,1.04)=""                             ; Last verified by
- S DATA(2.312,IENS,1.05)=TSTAMP                         ; Date last edited
- S DATA(2.312,IENS,1.06)=""                             ; Last edited by
- S DATA(2.312,IENS,1.09)=5                              ; Source of info = eIV
+ ; IB*2*595/DM moved the following 4 lines below 
+ ;S DATA(2.312,IENS,1.03)=TSTAMP                         ; Date last verified
+ ;S DATA(2.312,IENS,1.04)=""                            ; Last verified by
+ ;S DATA(2.312,IENS,1.05)=TSTAMP                         ; Date last edited
+ ;S DATA(2.312,IENS,1.06)=""                            ; Last edited by
+ ;S DATA(2.312,IENS,1.09)=5 ; Source of info = eIV
+ ;IB*2.0*595/DM persist the original Source of Information
+ ;note: external values are used to populate DATA
+ I $$GET1^DIQ(2.312,IENS,1.09,"I")="" D
+ . S XX=$$GET1^DIQ(365.1,TQN_",1,",3.02)
+ . I XX="" S XX="eIV"
+ . S DATA(2.312,IENS,1.09)=XX
  ;
  ; Set Subscriber address Fields if none of the fields are currently defined
  ;\Beginning IB*2.0*549 - Modified the following lines
@@ -178,14 +188,27 @@ AUTOFIL(DFN,IEN312,ISSUB) ; Finish processing the response message - file direct
  ;\End of IB*2.0*549 changes.
  ;
  L +^DPT(DFN,.312,IEN312):15 I '$T D LCKERR^IBCNEHL3 D FIL Q
- D FILE^DIE("ET","DATA","ERROR")
+ I $D(DATA) D FILE^DIE("ET","DATA","ERROR") ;IB*2*595/DM make sure DATA has data  
  I $D(ERROR) D WARN^IBCNEHL3 K ERROR D FIL G AUTOFILX
- ;
- ; set eIV auto-update field separately because of the trigger on field 1.05
+ ; IB*2*595/DM set auto-update fields
+ ; the EIV AUTO-UPDATE flag is now located in the IIV Response file
+ ;set eIV auto-update field separately because of the trigger on field 1.05
+ ;S DATA(2.312,IENS,4.04)="YES"
  K DATA
- S DATA(2.312,IENS,4.04)="YES"
+ S DATA(2.312,IENS,1.03)=TSTAMP                        ; Date last verified
+ S DATA(2.312,IENS,1.04)="AUTOUPDATE,IBEIV"            ; Last verified by ; Edit with 595 was null
+ S DATA(2.312,IENS,1.05)=TSTAMP                        ; Date last edited
+ S DATA(2.312,IENS,1.06)="AUTOUPDATE,IBEIV"            ; Last edited by ; Edit with 595 was null
  D FILE^DIE("ET","DATA","ERROR")
  I $D(ERROR) D WARN^IBCNEHL3 G AUTOFILX
+ ; IB*2*595/DM set the insurance record IEN in the IIV Response file
+ ; to track which policy was updated based on the response
+ D UPDIREC^IBCNEHL3(RIEN,IEN312)
+ ; IB*2*595/DM set the EIV AUTO-UPDATE in the response file to signal auto-update
+ K DATA
+ S DATA(365,RIEN_",",.13)="YES"
+ D FILE^DIE("ET","DATA")
+ ;
  S ERFLG=$$GRPFILE(DFN,IEN312,RIEN,1)
  I $G(ERFLG) G AUTOFILX  ;IB*2*497  file data at 2.312, 9, 10 and 11 subfiles; if error is produced update buffer entry and then quit processing
  ; file new EB data
@@ -246,81 +269,8 @@ GRPFILEX ;
  Q $G(ERFLG)
  ;
 FIL ; Finish processing the response message - file into insurance buffer
- ;
- ; Input Variables
- ; ERACT, ERFLG, ERROR, IIVSTAT, MAP, RIEN, TRACE
- ;
- ; If no record IEN, quit
- I $G(RIEN)="" Q
- ;
- N BUFF,DFN,FILEIT,IBFDA,IBIEN,IBQFL,RDAT0,RSRVDT,RSTYPE,SYMBOL,TQDATA,TQN,TQSRVDT
- ; Initialize variables from the Response File
- S RDAT0=$G(^IBCN(365,RIEN,0)),TQN=$P(RDAT0,U,5)
- S TQDATA=$G(^IBCN(365.1,TQN,0))
- S IBQFL=$P(TQDATA,U,11)
- S DFN=$P(RDAT0,U,2),BUFF=$P(RDAT0,U,4)
- S IBIEN=$P(TQDATA,U,5),RSTYPE=$P(RDAT0,U,10)
- S RSRVDT=$P($G(^IBCN(365,RIEN,1)),U,10)
- ;
- ; If an unknown error action or an error filing the response message,
- ; send a warning email message
- ; Note - A call to UEACT will always set ERFLAG=1
- ;
- ; IB*2.0*506 Removed the following line of code to Treat all AAA Action Codes
- ; as though the Payer/FSC Responded.
- ;I ",W,X,R,P,C,N,Y,S,"'[(","_$G(ERACT)_",")&($G(ERACT)'="")!$D(ERROR) D UEACT^IBCNEHL3
- ;
- ; If an error occurred, processing complete
- I $G(ERFLG)=1 Q
- ;
- ;  For an original response, set the Transmission Queue Status to 'Response Received' &
- ;  update remaining retries to comm failure (5)
- I $G(RSTYPE)="O" D SST^IBCNEUT2(TQN,3),RSTA^IBCNEUT7(TQN)
- ;
- ; Update the TQ service date to the date in the response file
- ; if they are different AND the Error Action <>
- ; 'P' for 'Please submit original transaction'
- ;
- ; *** Temporary change to suppress update of service & freshness dates.
- ; *** To reinstate, remove comment (;) from next line.
- ;I TQN'="",$G(RSTYPE)="O" D
- ;. S TQSRVDT=$P($G(^IBCN(365.1,TQN,0)),U,12)
- ;. I RSRVDT'="",TQSRVDT'=RSRVDT,$G(ERACT)'="P" D SAVETQ^IBCNEUT2(TQN,RSRVDT)
- ;. ; update freshness date by same delta
- ;. D SAVFRSH^IBCNEUT5(TQN,+$$FMDIFF^XLFDT(RSRVDT,TQSRVDT,1))
- ;
- ;  Check for error action
- I $G(ERACT)'=""!($G(ERTXT)'="") S ERACT=$$ERRACT^IBCNEHLU(RIEN),ERCON=$P(ERACT,U,2),ERACT=$P(ERACT,U) D ERROR^IBCNEHL3(TQN,ERACT,ERCON,TRACE) G FILX
- ;
- ; Stop processing if identification response and not an active policy
- S FILEIT=1
- I $G(IIVSTAT)=6,TQN]"" D
- . I TQDATA="" Q
- . I IBQFL'="I" Q
- . S FILEIT=0
- I 'FILEIT G FILX
- ;
- ;  If there is an associated buffer entry & one or both of the following
- ;  is true, stop filing (don't update buffer entry)
- ;  1) buffer status is not 'Entered'
- ;  2) the buffer entry is verified (* symbol)
- I BUFF'="",($P($G(^IBA(355.33,BUFF,0)),U,4)'="E")!($$SYMBOL^IBCNBLL(BUFF)="*") G FILX
- ;
- ;  Set buffer symbol based on value returned from EC
- S SYMBOL=MAP(IIVSTAT)
- ;
- ;  If there is an associated buffer entry, update the buffer entry w/
- ;  response data
- I BUFF'="" D RP^IBCNEBF(RIEN,"",BUFF)
- ;
- ;  If no associated buffer entry, create one & populate w/ response
- ;  data (routine call sets IBFDA)
- I BUFF="" D RP^IBCNEBF(RIEN,1) S BUFF=+IBFDA,UP(365,RIEN_",",.04)=BUFF
- ;
- ;  Set eIV Processed Date to now
- S UP(355.33,BUFF_",",.15)=$$NOW^XLFDT()
- D FILE^DIE("I","UP","ERROR")
-FILX ;
+ ; IB*2*601/DM FIL()routine moved to IBCNEHL6 to meet SAC guidelines due to size
+ D FIL^IBCNEHL6
  Q
  ;
 AUTOUPD(RIEN) ;
@@ -340,6 +290,8 @@ AUTOUPD(RIEN) ;
  N ONEPOL,PIEN,RDATA0,RDATA1,RES,TQIEN,IDATA7,RDATA13,RDATA14   ; IB*2.0*497
  S RES=0
  I +$G(RIEN)'>0 Q RES                       ; Invalid ien for file 365
+ ; IB*2.0*595/DM if entry is missing from #200, file in buffer
+ I '$$FIND1^DIC(200,,"M","AUTOUPDATE,IBEIV") Q RES
  ;
  ; IB*2.0*549 - Moved up the next 5 lines.  Originally, these lines were
  ;              directly after line 'I $G(IIVSTAT)'=1 Q RES'
@@ -358,6 +310,10 @@ AUTOUPD(RIEN) ;
  I $G(IIVSTAT)'=1,'MWNRTYP Q RES            ; Only auto-update 'active policy' responses
  I +PIEN>0 S APPIEN=$$PYRAPP^IBCNEUT5("IIV",PIEN)
  I +$G(APPIEN)'>0 Q RES  ; couldn't find eIV application entry
+ ;
+ ;IB*2.0*601/HN Don't allow any entry with HMS SOI to auto-update
+ ;IB*2.0*595/HN Don't allow any entry with Contract Services SOI to auto-update
+ I "^HMS^CONTRACT SERVICES^"[("^"_$$GET1^DIQ(355.33,+$$GET1^DIQ(365,RIEN_",","BUFFER ENTRY","I")_",","SOURCE OF INFORMATION")_"^") Q RES
  ;
  ; Check dictionary 365.1 MANUAL REQUEST DATE/TIME Flag, Quit if Set.
  I $P(RDATA0,U,5)'="",$P($G(^IBCN(365.1,$P(RDATA0,U,5),3)),U,1)'="" Q RES

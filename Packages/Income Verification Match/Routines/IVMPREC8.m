@@ -1,6 +1,6 @@
-IVMPREC8 ;ALB/KCL/BRM/PJR/CKN,TDM,PWC,LBD - PROCESS INCOMING (Z05 EVENT TYPE) HL7 MESSAGES (CON'T) ; 10/16/12 4:14pm
- ;;2.0;INCOME VERIFICATION MATCH;**5,6,12,58,73,79,102,115,121,148,151,152**;21-OCT-94;Build 4
- ;;Per VHA Directive 10-93-142, this routine should not be modified.
+IVMPREC8 ;ALB/KCL,BRM,PJR,CKN,TDM,PWC,LBD,DPR,KUM - PROCESS INCOMING (Z05 EVENT TYPE) HL7 MESSAGES (CON'T) ;04 April 2017  8:56 AM
+ ;;2.0;INCOME VERIFICATION MATCH;**5,6,12,58,73,79,102,115,121,148,151,152,168,167,171**;21-OCT-94;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; This routine is called from IVMPREC6.
  ; This routine will process batch ORU demographic (event type Z05) HL7
@@ -344,8 +344,10 @@ RF1 ; - compare RF1 segment fields with DHCP fields
  . ;Set the NOPHUP flag = 1 if Home Phone Change Dt/Tm not more recent, or
  . ;if Home Phone Change Dt/Tm more recent, but phone # the same
  . ;Added for IVM*2*152
- . I 'UPDEPC("PHH") S NOPHUP=1
- . I UPDEPC("PHH"),'$G(UPPHN) S NOPHUP=1
+ . ; IVM*2.0*167 - Make Home phone records auto-upload to Patient File
+ . ; Always keep NOPHUP = 0 so Home phone number data is not handled here    
+ . ;I 'UPDEPC("PHH") S NOPHUP=1
+ . ;I UPDEPC("PHH"),'$G(UPPHN) S NOPHUP=1
  . K UPPHN
  . I $$AUTOADDR^IVMLDEM6(DFN,1,NOUPDT,NOPHUP)
  Q
@@ -369,6 +371,14 @@ RF1PROC ;
  ..;get address/telecomm change date/tm field
  ..S IVMFLD=$$FMDATE^HLFNC($P(IVMSEG,HLFS,7))
  ..Q:IVMFLD=""
+ ..;
+ ..; IVM*2*171 - If RF1 type is PHH,home phone is null in PID (IVMPHDFG)
+ ..; and RESIDENCE NUMBER CHANGE DT/TM in Patient record exists then SET EPCDEL(PHH) for phone number 
+ ..; deletion IF incoming number change dt/tm is greater than the change dt/tm in Patient record
+ ..; Check if PID13 home phone number is null
+ ..S:$P($G(TELECOM("PRN")),"~",1)="" IVMPHDFG=1
+ ..I RF1TYPE="PHH",+IVMPHDFG,+$$GET1^DIQ(2,DFN_",",.1321,"I") D
+ ...S:+$$GET1^DIQ(2,DFN_",",.1321,"I")<IVMFLD EPCDEL("PHH")=".131^.1321^.1322^.1323"
  ..D STORE^IVMPREC9
  ..;
  ..;I RF1TYPE="CAD",$P($G(ADDRESS("CA")),HLFS)]"" D  Q
@@ -382,7 +392,9 @@ RF1PROC ;
  ..I IVMFLD]"",(IVMFLD>IVMDHCP) D
  ...S UPDEPC(RF1TYPE)=$G(EPCFARY(RF1TYPE))
  ...I RF1TYPE="SAD" S UPDEPC("SAD")=1
- ...I RF1TYPE="PHH" S UPDEPC("PHH")=1   ;Added for IVM*2*152
+ ...; IVM*2.0*167 - Make Home phone records auto-upload to Patient File
+ ...; Keep UPDEPC("PHH") value as Home phone record IENs of #301.92 file
+ ...;I RF1TYPE="PHH" S UPDEPC("PHH")=1   ; Added for IVM*2*152
  Q
 ADDRCNV(ADDRSRC) ;convert Address Source from HL7 to DHCP format
  ;
@@ -412,7 +424,13 @@ BAICONV(BAISRC) ;Convert Bad address source from HL7 to DHCP format
  Q:BAISRC="VAB4" 4
  Q ""
 CONVPH(PH) ;remove special chars/spaces from Phone number
- Q $TR(PH," )(/#\-","")
+ ;*168 Check format, quit if OK else strip and return if not 10 numeric
+ ;Format if 10 numeric.
+ Q:PH?1"(".3N.1")".3N.1"-".4N PH
+ S PH=$TR(PH," )(/#\-","")
+ Q:PH'?10N PH
+ Q "("_$E(PH,1,3)_")"_$E(PH,4,6)_"-"_$E(PH,7,10)
+ ;
 CNTRCONV(COUNTRY) ;Check if valid country
  I COUNTRY="" Q 0
  Q $O(^HL(779.004,"B",COUNTRY,""))

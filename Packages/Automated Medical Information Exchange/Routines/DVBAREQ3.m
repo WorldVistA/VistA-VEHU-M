@@ -1,5 +1,5 @@
 DVBAREQ3 ;ALB/GTS-557/THM-PRINT ROUTINE NEW REQUEST RPT ;21 JUL 89
- ;;2.7;AMIE;**17**;Apr 10, 1995
+ ;;2.7;AMIE;**17,160**;Apr 10, 1995;Build 1
  ;
 PRINT S:$D(DVBATASK) ^TMP($J,LPDIV,DA)="" ;**Only 1 7131 printed per division
  S:'$D(DVBATASK) ^TMP($J,DA)="" ;**Only 1 7131 printed.
@@ -15,7 +15,7 @@ ITEMS F Q=5,6,7,8,16,18,20,22,24,27 I $P(^DVB(396,DA,0),U,Q)'="NO" D PRINT1
  I $P(^DVB(396,DA,0),U,25)'="" S Q=25 D GETDIV S MC=$T(@Q),MD=$P(MC,";;",2) S GDIV=" ("_$E(GDIVNAM,1,(20+(23-$L(MC))))_")" W !,?8,MD,GDIV,": ",$P(^DVB(396,DA,0),U,25)
  S DVBAWO="N"
  K ^UTILITY($J,"W") W !!,"Remarks: " S DIWL=5,DIWR=65,DIWF="WB5I9"
- F LPCNT=1:1 S X=($S($D(^DVB(396,DA,5,LPCNT,0)):^(0),1:"")) Q:X=""  D ^DIWP S DVBAWO="Y"
+ F LPCNT=1:1 Q:'$D(^DVB(396,DA,5,LPCNT,0))  S X=$G(^DVB(396,DA,5,LPCNT,0)) D ^DIWP S DVBAWO="Y"
  K LPCNT,DIWL,DIWR,DIWF
  I DVBAWO="Y" D ^DIWW
  K DVBAWO W !! W:$D(^DVB(396,DA,2)) "Requested by: ",$S($P(^DVB(396,DA,2),U,8)]"":$P(^(2),U,8),1:" (Not specified)")," AT ",$S($P(^(2),U,7)]"":$P(^(2),U,7),1:" (Not specified) "),!

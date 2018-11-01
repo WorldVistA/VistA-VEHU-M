@@ -1,5 +1,5 @@
-PXRMEXLM ;SLC/PKR/PJH - Clinical Reminder Exchange List Manager routines. ;12/20/2013
- ;;2.0;CLINICAL REMINDERS;**6,12,17,24,26**;Feb 04, 2005;Build 404
+PXRMEXLM ;SLC/PKR/PJH - Clinical Reminder Exchange List Manager routines. ;03/30/2018
+ ;;2.0;CLINICAL REMINDERS;**6,12,17,24,26,47,42**;Feb 04, 2005;Build 80
  ;
  ;=====================================================
 CRE ;Create a packed reminder and store it in the repository.
@@ -49,10 +49,7 @@ HDR ; Header code
  ;
  ;=====================================================
 HELP ;Help code
- ;The following variables have to be newed so that when we return
- ;from the help display they will be defined.
- N ORU,ORUPRMT,XQORM
- D EN^VALM("PXRM EX MAIN HELP")
+ D HELP^PXRMEXMH
  Q
  ;
  ;=====================================================
@@ -81,10 +78,11 @@ INITMPG ;Initialized all the ^TMP globals.
  K ^TMP("PXRMEXRI",$J)
  K ^TMP("PXRMEXTMP",$J)
  K ^TMP("PXRMEXTXT",$J)
- K ^TMP($J,"HS TYPE")
  K ^TMP($J,"HS OBJECT")
  K ^TMP($J,"TIU OBJECT")
  K ^TMP($J,"ORDER DIALOG")
+ K ^TMP($J,"PXRMEX DIALOG")
+ K ^TMP($J,"PXRM FINDING REPLACE")
  Q
  ;
  ;=====================================================
@@ -100,6 +98,7 @@ LDHF ;Load a host file into the repository.
  S RBL=SUCCESS
  I SUCCESS D
  . S VALMHDR(1)="Host file "_PATH_FILE_" successfully loaded."
+ . K VALMHDR(2)
  E  D
  . S VALMHDR(1)="There were problems loading host file "_PATH_FILE_"."
  . S TEMP=""
@@ -205,7 +204,7 @@ XQORM ;Set the range for selection.
  ;
  ;=====================================================
 XSEL ;PXRM EXCH SELECT COMPONENT validation
- N SEL,PXRMRIEN
+ N SEL,PXRMNAT,PXRMRIEN
  S SEL=$P(XQORNOD(0),"=",2)
  ;Remove trailing ,
  I $E(SEL,$L(SEL))="," S SEL=$E(SEL,1,$L(SEL)-1)
@@ -219,6 +218,8 @@ XSEL ;PXRM EXCH SELECT COMPONENT validation
  ;
  ;Get the repository ien.
  S PXRMRIEN=^TMP("PXRMEXLR",$J,"SEL",SEL)
+ ;Get the Exchange entry's class.
+ S PXRMNAT=$$EXCLASS^PXRMEXU2(PXRMRIEN)
  ;
  ;Full screen mode
  D FULL^VALM1
@@ -243,9 +244,8 @@ XSEL ;PXRM EXCH SELECT COMPONENT validation
  .K ^TMP("PXRMEXLC",$J)
  ;
  I OPTION="DFE" D
- .N COUNT,DELLIST,IEN,IND,RELIST,VALMY
- .S DELLIST(PXRMRIEN)=""
- .D DELETE^PXRMEXU1(.DELLIST)
+ .N COUNT,IEN,IND,RELIST,VALMY
+ .D DELETE^PXRMEXU1(SEL_",")
  .;Rebuild the list for List Manager to display.
  .K ^TMP("PXRMEXLR",$J)
  .D REXL^PXRMLIST("PXRMEXLR")

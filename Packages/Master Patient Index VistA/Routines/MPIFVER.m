@@ -1,5 +1,5 @@
-MPIFVER ;ALB/CKN,VISTA ENTERPRISE REGISTRATION ; 1/22/16 1:45pm
- ;;1.0;MASTER PATIENT INDEX VISTA;**61,62**;30 Apr 99;Build 3
+MPIFVER ;ALB/CKN,VISTA ENTERPRISE REGISTRATION ; 7/26/17 2:18pm
+ ;;1.0;MASTER PATIENT INDEX VISTA;**61,62,65,66**;30 Apr 99;Build 2
  Q
 ENP(RESULTS,ALTRSHLD,TKTRSHLD) ;
  N XCNT,XCNTR,DFN,TMPRESLT
@@ -87,7 +87,9 @@ HDR(HDL) ;Header
  W !,"--- Records meet the"_HDL_" MATCH criteria ---"
  Q
 HDR1 ;Repeating header
- W !,?3,$S(EFLG=1:"EDIPI",1:"ICN"),?21,"NAME",?53,"SSN",?64,"DOB",?76,"SEX"
+ ; Story 503957 (elz) Added 'Birth' above 'Sex'
+ W:$X>50 ! W ?74,"BIRTH"
+ W !,?3,$S(EFLG=1:"EDIPI",1:"ICN"),?21,"NAME",?53,"SSN",?64,"DOB",?75,"SEX"
  Q
 ASK ;
  N COUNT,DIR,DA,DR,ND,SC,CNTR,BC,QFLG
@@ -110,7 +112,11 @@ ASK2 ;
  N X,Y,DIR,DA,DR,BC,COUNT
  S BC=1
  S COUNT=$G(XMPIVER("COUNT"))
- K DIR,X,Y S DIR(0)="Y",DIR("B")="YES",DIR("A")="Would you like to select a patient from above Enterprise Search" D ^DIR
+ ;**65 - Story 557826 (ckn)
+ ;For below prompt - set default value to YES only if any query result
+ ;have at least one Exact match returned. set to NO if only Potential
+ ;matches are returned.
+ K DIR,X,Y S DIR(0)="Y",DIR("B")=$S($D(XMPIVER("MPIVER","E")):"YES",1:"NO"),DIR("A")="Would you like to select a patient from above Enterprise Search" D ^DIR
  I $D(DTOUT)!($D(DUOUT)) S ENOUGH=1 G EXIT
  I Y D
  .K DIR,X,Y S DIR(0)="NA^"_BC_":"_COUNT,DIR("A")="Enter the Number to select the patient: ",DIR("?")="Enter the number from range of "_BC_" to "_COUNT D ^DIR
@@ -141,7 +147,8 @@ EXDISP(XCNT) ;Extended display for selected patient
  W !,?5,"Name",?17,": "_LNAME_","_FNAME_" "_MNAME
  W !,?5,"SSN",?17,": "_SSN
  W !,?5,"DOB",?17,": "_$$FMTE^XLFDT(DOB)
- W !,?5,"Gender",?17,": "_GENDER
+ ; Story 603957 (elz) changed Gender to Birth Sex
+ W !,?5,"Birth Sex",?17,": "_GENDER
  W !,?5,"MMN",?17,": "_MMN
  I POBCTY'="" W !,?5,"POB City",?17,": "_POBCTY
  I POBST'="" W !,?5,"POB State",?17,": "_POBST

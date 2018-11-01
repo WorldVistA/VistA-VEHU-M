@@ -1,16 +1,10 @@
-EDPLPCE ;SLC/KCM - Create a Visit ;2/28/12 08:33am
- ;;2.0;EMERGENCY DEPARTMENT;**2**;Feb 24, 2012;Build 23
- ;
-  ; ; DBIA#  SUPPORTED
- ; -----  ---------  ------------------------------------
- ;  1894  Cont Sub   ENCEVENT^PXAPI
- ;  1889  Cont Sub   DATA2PCE^PXAPI
-  ; $$CODEC^ICDEX  Sup   ICR   5747
+EDPLPCE ;SLC/KCM - Create a Visit
+ ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
  ;
 UPDVISIT(LOG,PCE) ; Get / Create a Visit
  ; PCE is list of potential updates to the visit
  ; PCE(TYP,n)=type^ien^code^label^add^del^upd^prim^qty
- N DFN,TS,LOC,X0,I,X
+ N DFN,TS,LOC,X0
  S X0=^EDP(230,LOG,0),DFN=$P(X0,U,6),TS=$P(X0,U,8),LOC=$P(X0,U,14)
  I 'LOC S LOC=$$DFLTLOC(DFN)
  I 'DFN!('TS)!('LOC) Q 0  ; not enough info
@@ -25,7 +19,7 @@ UPDVISIT(LOG,PCE) ; Get / Create a Visit
  I 'EDPVISIT D XFERDIAG(LOG,.PCE)
  ; remove current primary provider(s) if there is a new one
  I EDPVISIT,$G(PCE("PRI")) D
- . N IPRV,XPRV,OLDPRI,EDPLCSYS,EDPLCIEN ; Begin EDP*2.0*2 changes
+ . N IPRV,XPRV,OLDPRI
  . K ^TMP("PXKENC",$J)
  . D ENCEVENT^PXAPI(EDPVISIT)
  . S IPRV=0 F  S IPRV=$O(^TMP("PXKENC",$J,EDPVISIT,"PRV",IPRV)) Q:'IPRV  D
@@ -37,23 +31,15 @@ UPDVISIT(LOG,PCE) ; Get / Create a Visit
  . S EDPDATA("PROVIDER",I,"NAME")=+PCE("PRV",I)
  . I +PCE("PRV",I)=$G(PCE("PRI")) S EDPDATA("PROVIDER",I,"PRIMARY")=1,EDPPCHG=1
  ; update diagnoses
- ; DRP 04062012 Begin EDP*2.0*2 Changes  
  S I=0 F  S I=$O(PCE("POV",I)) Q:'I  D
  . S X=PCE("POV",I)
  . Q:'($P(X,U,5)!$P(X,U,6)!$P(X,U,7))  ; no updates for this diagnosis
  . I $P(X,U,2) D
- .. S EDPLCSYS=$$CSYS^EDPLEX(TS)
- .. I EDPLCSYS="ICD" D
- ... N EDPLCIEN S EDPLCIEN=$$ONE^LEXU($P(X,U,2),TS,EDPLCSYS)
- ... Q:'$L(EDPLCIEN)
- ... S:$L(EDPLCIEN) $P(X,U,2)=$P($$ICDDATA^EDPLEX(EDPLCSYS,EDPLCIEN,TS,"E"),U,1) ;drp patch 2
- ...Q
- .. N CODE S CODE=$$CODEC^ICDEX(80,$P(X,U,2))
+ .. N CODE S CODE=$$ICDONE^LEXU($P(X,U,2),TS)
  .. S $P(X,U,3)=CODE
  . Q:'$L($P(X,U,3))                   ; not coded
- . S EDPLCIEN=$P($$ICDDATA^EDPLEX("DIAG",$P(X,U,3),TS,"E"),U,1) Q:'EDPLCIEN
- . S EDPDATA("DX/PL",I,"DIAGNOSIS")=EDPLCIEN
- . ;DRP end EDP*2.0*2 changes
+ . S IEN=+$O(^ICD9("BA",$P(X,U,3)_" ",0)) Q:'IEN
+ . S EDPDATA("DX/PL",I,"DIAGNOSIS")=IEN
  . S EDPDATA("DX/PL",I,"NARRATIVE")=$P(X,U,4)
  . I $P(X,U,8) S EDPDATA("DX/PL",I,"PRIMARY")=1
  . I $P(X,U,6) S EDPDATA("DX/PL",I,"DELETE")=1
@@ -96,14 +82,12 @@ UPDVISIT(LOG,PCE) ; Get / Create a Visit
  . D FILE^DIE("","FDA","ERR")
  Q
 XFERDIAG(LOG,PCE) ; Setup diagnosis list based on entries in 230
- ;DRP 04062012 Begin EDP*2.0*2 ICD10 CHANGES
- N IEN,X0,CODE,EDPDOI,EDPLCIEN
+ N IEN,X0,CODE
  K PCE("POV")  ; not worried about adds & subtracts, so start over
  S IEN=0 F  S IEN=$O(^EDP(230,LOG,4,IEN)) Q:'IEN  D
- . S X0=$G(^EDP(230,LOG,4,IEN,0)),EDPDOI=$P(^EDP(230,LOG,0),U,8) ; GET DATE OF INTEREST
- . S PCE("POV",IEN)="POV^^^^1",EDPLCIEN=$P(X0,U,2)
- . S CODE=$P($$ICDDATA^EDPLEX("DIAG",EDPLCIEN,EDPDOI),U,2)
- . ;DRP End EDP*2.0*2 Changes
+ . S X0=$G(^EDP(230,LOG,4,IEN,0))
+ . S PCE("POV",IEN)="POV^^^^1"
+ . S CODE=$P(X0,U,2) S:CODE CODE=$P(^ICD9(CODE,0),U)
  . S $P(PCE("POV",IEN),U,3)=CODE        ; code
  . S $P(PCE("POV",IEN),U,4)=$P(X0,U)    ; text
  . S $P(PCE("POV",IEN),U,8)=$P(X0,U,3)  ; primary

@@ -1,7 +1,7 @@
 LRBLDT ;AVAMC/REG/CYM - DONOR UNIT TESTING ;7/5/96  08:35 ;
- ;;5.2;LAB SERVICE;**72,97,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,97,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D V^LRU S X="BLOOD BANK" D ^LRUTL G:Y=-1 END D D^LRBLU G:'$D(X) END
+ Q  D V^LRU S X="BLOOD BANK" D ^LRUTL G:Y=-1 END D D^LRBLU G:'$D(X) END
  I LRCAPA S X="DONOR ANTIBODY SCREEN" D X^LRUWK G:'$D(X) END S Y="DT" D S^LRBLWD D EN^LRBLW G:%<1 END W:%=2 ! I $D(LRK("LRK")) D DT^LRBLU S LRK("LRK")=LRK
  F A=12:1:20 D SC
 SEL W !!,"Select test(s) by number: " R X:DTIME G:X=""!(X[U) END I X["?" W !,"Enter one or more of the above numbers",!,"For 2 or more selections separate each with a ',' (ex. 12,13,15)",!,"Enter 'ALL' for all tests." G SEL

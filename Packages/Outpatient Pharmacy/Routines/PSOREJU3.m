@@ -1,7 +1,9 @@
 PSOREJU3 ;BIRM/LJE - BPS (ECME) - Clinical Rejects Utilities (3) ;04/25/08
- ;;7.0;OUTPATIENT PHARMACY;**287,290,358,359,385,421,427,448**;DEC 1997;Build 25
+ ;;7.0;OUTPATIENT PHARMACY;**287,290,358,359,385,421,427,448,478,513**;DEC 1997;Build 2
  ;References to 9002313.99 supported by IA 4305
  ;Reference to $$CLAIM^BPSBUTL supported by IA 4719
+ ;Reference to LOG^BPSOSL supported by ICR# 6764
+ ;Reference to IEN59^BPSOSRX supported by ICR# 4412
  ;
  Q
  ;
@@ -13,10 +15,17 @@ TRICCHK(RX,RFL,RESP,FROM,RVTX) ;check to see if Rx is non-billable or in an "In 
  ;
  ;  - \Need to be mindful of foreground and background processing.
  ;
- N ETOUT,ESTAT,PSOBEI
- S:'$D(FROM) FROM="" S ESTAT="",ESTAT=$P(RESP,"^",4),NFROM=0 I FROM="PL"!(FROM="PC") S NFROM=1
+ N ESTAT,ETOUT,NFROM,PSOBEI
+ I '$D(FROM) S FROM=""
+ S ESTAT=$P(RESP,"^",4)
+ S NFROM=0
+ I FROM="PL"!(FROM="PC") S NFROM=1
  Q:ESTAT["PAYABLE"!(ESTAT["REJECTED")
  S PSOBEI=$$ELIGDISP^PSOREJP1(RX,RFL)
+ ;
+ D LOG^BPSOSL($$IEN59^BPSOSRX(RX,RFL),$T(+0)_"-TRICCHK, RESP="_RESP)  ; ICR#s 4412,6764
+ I ESTAT["IN PROGRESS",FROM="PC" D LOG^BPSOSL($$IEN59^BPSOSRX(RX,RFL),$T(+0)_"-Would have noted in Activity Log that Rx was left in CMOP suspense") Q  ; ICR#s 4412,6764
+ ;
  I ESTAT["IN PROGRESS",FROM="RRL"!($G(RVTX)="RX RELEASE-NDC CHANGE") D  Q
  . I 'NFROM D
  . . W !!,PSOBEI_" Prescription "_$$GET1^DIQ(52,RX,".01")_" cannot be released until ECME 'IN PROGRESS'"
@@ -96,7 +105,7 @@ DISPLAY(RX,REJ,KEY,RRR) ; - Displays REJECT information
  ;
  D HDR
  S $P(LINE,"-",74)="" W !?3,LINE
- W !?3,$$DVINFO^PSOREJU2(RX,RFL)
+ W !?3,$$DVINFO(RX,RFL)
  W !?3,$$PTINFO^PSOREJU2(RX)
  W !?3,"Rx/Drug  : ",$$GET1^DIQ(52,RX,.01),"/",RFL," - ",$E($$GET1^DIQ(52,RX,6),1,20),?54
  W:'$G(PSONBILL)&('$G(PSONPROG)) "ECME#: ",$P($$CLAIM^BPSBUTL(RX,RFL),U,6)
@@ -170,16 +179,21 @@ TRISTA(RX,RFL,RESP,FROM,RVTX) ;called from suspense
  Q:'PSOTRIC 0
  S TRESP=RESP,ESTAT=$P(TRESP,"^",4) S:ESTAT="" ESTAT=$$STATUS^PSOBPSUT(RX,RFL)
  Q:ESTAT["E PAYABLE" 0
- I $$TRIAUD(RX,RFL) Q 0  ;if TRICARE or CHAMPVA Rx is in audit due to override or bypass, allow to print from suspense, cnf
- I +RESP=2,$$BYPASS^PSOBPSU1($P(RESP,"^",3),$P(RESP,"^",2)) Q 0   ;if 'Bypass' RX, allow to print from suspense, cnf 
+ I $$TRIAUD(RX,RFL) D  Q 0  ;if TRICARE or CHAMPVA Rx is in audit due to override or bypass, allow to print from suspense, cnf
+ . D LOG^BPSOSL($$IEN59^BPSOSRX(RX,RFL),$T(+0)_"-TRISTA, $$TRIAUD returned 1, $$TRISTA is Quitting with 0")  ; ICR#s 4412,6764
+ I +RESP=2,$$BYPASS^PSOBPSU1($P(RESP,"^",3),$P(RESP,"^",2)) D  Q 0   ;if 'Bypass' RX, allow to print from suspense, cnf
+ . D LOG^BPSOSL($$IEN59^BPSOSRX(RX,RFL),$T(+0)_"-TRISTA, $$BYPASS returned 1, $$TRISTA is Quitting with 0")  ; ICR#s 4412,6764
  Q:ESTAT["E REJECTED" 1  ;rejected TRICARE or CHAMPVA is not allowed to print from suspense
  ;if 'in progress' (4) or not billable (2,3) don't allow to print from suspense (IA 4415 Values)
  I '$D(RESP)!($P(RESP,"^",1)="")!($G(RESP)="") D
  . S TSTAT=$$STATUS^PSOBPSUT(RX,RFL) S TRESP=$S(TSTAT["IN PROGRESS":4,TSTAT["NOT BILLABLE":2,1:0)
  . S $P(TRESP,"^",4)=TSTAT
  ;
- I +TRESP=2!(+TRESP=3) D WRKLST^PSOREJU4(RX,RFL,"",DUZ,DT,1,"",RESP) Q 1  ;send TRICARE or CHAMPVA non billable to worklist (pseudo reject), cnf
- I +TRESP=4!(ESTAT["IN PROGRESS") Q 1
+ I +TRESP=2!(+TRESP=3) D  Q 1
+ . D WRKLST^PSOREJU4(RX,RFL,"",DUZ,DT,1,"",RESP)  ;send TRICARE or CHAMPVA non billable to worklist (pseudo reject), cnf
+ . D LOG^BPSOSL($$IEN59^BPSOSRX(RX,RFL),$T(+0)_"-TRISTA, calling WRKLST~PSOREJU4, $$TRISTA is Quitting with 1")  ; ICR#s 4412,6764
+ I +TRESP=4!(ESTAT["IN PROGRESS") D  Q 1
+ . D LOG^BPSOSL($$IEN59^BPSOSRX(RX,RFL),$T(+0)_"-TRISTA, TRESP="_TRESP_", ESTAT="_ESTAT_", $$TRISTA is Quitting with 1")  ; ICR#s 4412,6764
  Q 0
  ;
 TRIAUD(RXIEN,RXFILL) ;is RXIEN in the TRICARE/CHAMPVA audit and no open rejects  ;cnf
@@ -237,3 +251,16 @@ ECMECHK(RX,FILL) ;
  ;No label for TRICARE/CHAMPVA claims that are IN PROGRESS
  I $P($$STATUS^PSOBPSUT(RX,FILL),U)="IN PROGRESS" Q 1
  Q 0
+ ;
+DVINFO(RX,RFL,LM) ; Returns header displayable Division Information
+ ;Input: (r) RX   - Rx IEN (#52)
+ ;       (o) RFL  - Refill # (Default: most recent)
+ ;       (o) LM   - ListManager format? (1 - Yes / 0 - No) - Default: 0
+ N TXT,DVINFO,NCPNPI,DVIEN
+ S DVIEN=+$$RXSITE^PSOBPSUT(RX,RFL)
+ S DVINFO="Division : "_$$GET1^DIQ(59,DVIEN,.01)
+ ;Display both NPI and NCPDP numbers - PSO*7.0*421
+ S NCPNPI=$$DIVNCPDP^BPSBUTL(DVIEN)
+ S $E(DVINFO,33)="NPI: "_$P(NCPNPI,U,2)
+ S $E(DVINFO,$S($G(LM):59,1:52))="NCPDP: "_$P(NCPNPI,U)
+ Q DVINFO

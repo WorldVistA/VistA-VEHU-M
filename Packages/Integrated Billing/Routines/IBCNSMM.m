@@ -1,5 +1,5 @@
 IBCNSMM ;ALB/CMS -MEDICARE INSURANCE INTAKE ; 18-OCT-98
- ;;2.0;INTEGRATED BILLING;**103,133,184,516**;21-MAR-94;Build 123
+ ;;2.0;INTEGRATED BILLING;**103,133,184,516,601,595**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -31,7 +31,7 @@ ENQ Q
  ;
 ENR(DFN,IBSOUR,IBOPT) ; -- Entry point from IBCNBME Patient Registration or Pre-Registration
  ;    Input Variable DFN Required and IBSOUR =Source of Information
- ;                   IBOPT =1 if comming from MII Standalone Option
+ ;                   IBOPT =1 if coming from MII Standalone Option
  ;
  N D,DIE,DA,DIR,DIC,E,IBCPOL,IBCNSP,IBCDFN,IBQUIT,IBOK,IBC0,IBAD,IBGRP,IBADPOL
  N IBNAME,IBHICN,IBAEFF,IBBEFF,IBCOVP,IBGNA,IBGNU,IBBUF,IBNEW,IBP,X,Y
@@ -82,20 +82,25 @@ ENR(DFN,IBSOUR,IBOPT) ; -- Entry point from IBCNBME Patient Registration or Pre-
  I $G(IBHITA),'$G(IBBEFF) G ENRQ
  I $G(IBHITB),'$G(IBAEFF) G ENRQ
  ;
+ ;IB*595 Removed ability to file directly into Insurance Type File
+ I IBAEFF,'$G(IBHITA) D BUFF^IBCNSMM1("A")
+ I IBBEFF,'$G(IBHITB) D BUFF^IBCNSMM1("B")
+ ;
  ; -- If user not holding key set data in Buffer File
- I '$D(^XUSEC("IB INSURANCE SUPERVISOR",DUZ)) D  G ENRQ
- .I IBAEFF,'$G(IBHITA) D BUFF^IBCNSMM1("A")
- .I IBBEFF,'$G(IBHITB) D BUFF^IBCNSMM1("B")
+ ;I '$D(^XUSEC("IB INSURANCE SUPERVISOR",DUZ)) D G ENRQ
+ ;.I IBAEFF,'$G(IBHITA) D BUFF^IBCNSMM1("A")
+ ;.I IBBEFF,'$G(IBHITB) D BUFF^IBCNSMM1("B")
  ;
  ; -- Otherwise, set data into permanent files
- I IBAEFF,'$G(IBHITA) D
- .I IBPOLA,'$D(IBARR("A")) Q  ; can't update Part A policy
- .I '$D(IBARR("A",1)) D ADDP("A") Q
- .S IBCDFN=+IBARR("A",1) D SETP^IBCNSMM1("A")
- I IBBEFF,'$G(IBHITB) D
- .I IBPOLB,'$D(IBARR("B")) Q  ; can't update Part B policy
- .I '$D(IBARR("B",1)) D ADDP("B") Q
- .S IBCDFN=+IBARR("B",1) D SETP^IBCNSMM1("B")
+ ;I IBAEFF,'$G(IBHITA) D
+ ;.I IBPOLA,'$D(IBARR("A")) Q ; can't update Part A policy
+ ;.I '$D(IBARR("A",1)) D ADDP("A") Q
+ ;.S IBCDFN=+IBARR("A",1) D SETP^IBCNSMM1("A")
+ ;I IBBEFF,'$G(IBHITB) D
+ ;.I IBPOLB,'$D(IBARR("B")) Q ; can't update Part B policy
+ ;.I '$D(IBARR("B",1)) D ADDP("B") Q
+ ;.S IBCDFN=+IBARR("B",1) D SETP^IBCNSMM1("B")
+ ;IB*595 END
  ;
 ENRQ W ! Q
  ;
@@ -143,6 +148,12 @@ GETWNR ;
  ;
 VALHIC(X) ; Edits for validating HIC #
  ; X = the HIC # to be validated
+ ;IB*2.0*601 JRA Remove special HIC # validation - use existing error messages IB356/IB357/IB358 when the
+ ; Primary/Secondary/Tertiary insurance subscriber's ID number is missing (as with other insurances).
+ ; 
+ ;IB*2.0*601 JRA QUIT '1' to remove special validation for HIC #, which will prevent the display of IB Error
+ ; message IB215 and the HIC # help text at HLP^IBCNSM32.
+ Q 1  ;IB*2.0*601 JRA
  N VAL
  S VAL=1
  I X'?9N1A.1AN,X'?1.3A6N,X'?1.3A9N S VAL=0

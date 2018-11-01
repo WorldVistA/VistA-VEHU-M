@@ -1,5 +1,5 @@
 A1BFLOG ;ALBANY ISC;ECF;17MAR92;13:10pm [ 03/19/93  1:49 PM ]
- ;;	V1.0
+ ;;     V1.0
 EN ;Logon routine
  K A1BFOUCH
  D SETUP

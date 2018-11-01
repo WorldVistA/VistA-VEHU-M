@@ -1,7 +1,7 @@
 LRBLJW ;AVAMC/REG/CYM - INVENTORY ABO/RH WORKSHEET ;6/14/96  20:40 ;
- ;;5.2;LAB SERVICE;**72,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D END S LR("M")=1,X="BLOOD BANK" D ^LRUTL G:Y=-1 END S:'$D(^LRO(69.2,LRAA,6,0)) ^(0)="^69.26A^^"
+ Q  D END S LR("M")=1,X="BLOOD BANK" D ^LRUTL G:Y=-1 END S:'$D(^LRO(69.2,LRAA,6,0)) ^(0)="^69.26A^^"
  W !?24,"PRINT ABO/RH INVENTORY WORKSHEET",!!
  I $O(^LRO(69.2,LRAA,6,0)) W !,"List ABO/Rh worksheet entries " S %=2 D YN^LRU Q:%<1  I %=1 S LR("Q")=0 D L K ^TMP($J)
  W !,"Add/delete ABO/Rh worksheet entries " S %=2 D YN^LRU Q:%<1  D:%=1 C

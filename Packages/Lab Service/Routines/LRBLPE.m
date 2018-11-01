@@ -1,7 +1,7 @@
 LRBLPE ;AVAMC/REG - BB DATA ENTRY BY ACC # ;8/11/97
- ;;5.2;LAB SERVICE;**35,72,100,121,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**35,72,100,121,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D EN^LRBLPE1 G:'$D(LRAA) END
+ Q  D EN^LRBLPE1 G:'$D(LRAA) END
 L R !!,"Select Accession Number: ",LRAN:DTIME G:LRAN=""!(LRAN[U) END I LRAN'?1N.N W $C(7),"  Enter numbers only." G L
  S (LR(1),LR(2))="" D REST G L
 REST W "  for ",LRH(0) I '$D(^LRO(68,LRAA,1,LRAD,1,LRAN,0)) W $C(7),!!,"Accession # ",LRAN," for ",LRH(0)," not in ACCESSION file",!! Q

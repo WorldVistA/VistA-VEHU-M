@@ -1,7 +1,7 @@
 LRBLDPH ;AVAMC/REG - DONOR PHENOTYPING ;3/9/94  12:51
- ;;5.2;LAB SERVICE;**247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D END S X="BLOOD BANK" D ^LRUTL G:Y=-1 END S IOP="HOME" D ^%ZIS,L^LRU I LRCAPA S X="DONOR PHENOTYPING",X("NOCODES")=1 D X^LRUWK G:'$D(X) END
+ Q  D END S X="BLOOD BANK" D ^LRUTL G:Y=-1 END S IOP="HOME" D ^%ZIS,L^LRU I LRCAPA S X="DONOR PHENOTYPING",X("NOCODES")=1 D X^LRUWK G:'$D(X) END
 D S (DIC,DIE)="^LRE(",DIC(0)="AEQM",D="B^C^"_$S("NAFARMY"[DUZ("AG")&(DUZ("AG")]""):"G4^G",1:"D") W ! D MIX^DIC1 K DIC G:Y<1 END D REST K LR("CK") G D
 REST S (DA,LRQ)=+Y D CK^LRU Q:$D(LR("CK"))  S Y=$O(^LRE(DA,5,0)) I 'Y W $C(7),!,"Must have donation date to enter phenotyping." Q
  W ! S DIC="^LRE(LRQ,5,",DIC(0)="AEQM",DIC("A")="Select donation date phenotyping specimen taken: ",DIC("B")=+^LRE(DA,5,Y,0) D ^DIC K DIC Q:Y<1  S LRI=+Y

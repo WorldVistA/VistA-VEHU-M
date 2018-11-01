@@ -1,7 +1,7 @@
 LRBLJM ;AVAMC/REG/CYM - EDIT POOLED UNIT ;9/26/97  13:01 ;
- ;;5.2;LAB SERVICE;**90,247,267**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**90,247,267,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D END S X="BLOOD BANK" D ^LRUTL G:Y=-1 END D BAR^LRBLB
+ Q  D END S X="BLOOD BANK" D ^LRUTL G:Y=-1 END D BAR^LRBLB
 ASK W !! S X=$$READ^LRBLB("Select POOLED UNIT: ") G:X=""!(X[U) END
  I X'["?",LR,$E(X,1,$L(LR(2)))=LR(2) D ^LRBLBU G:'$D(X) ASK
  W:'LR $$STRIP^LRBLB(.X)  ; Strip off the data identifiers just in case

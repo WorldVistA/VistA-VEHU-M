@@ -1,5 +1,5 @@
 IB499PO ;BL/BL - PRE-INSTALL ROUTINE FOR IB*2.0*499 ;01-APR-13
- ;;2.0;INTEGRATED BILLING;**499**;01-APR-13;Build 41
+ ;;2.0;INTEGRATED BILLING;**499**;01-APR-13;Build 44
  ;
  ;Purpose of this routine is to modify the help text of the .03 field of the 355.81 file
  ;DBIA 2037 data in this file is used by Registration is registering patients

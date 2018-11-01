@@ -1,5 +1,5 @@
-PSULRHL2 ;HCIOFO/BH - File real time HL7 messages ; 3/4/10 11:32am
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**3,17**;MARCH, 2005;Build 3
+PSULRHL2 ;HCIOFO/BH - File real time HL7 messages ; 3/30/11 10:14am
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;**3,17,18**;MARCH, 2005;Build 7
  ;
 FILE Q  ;  quit for HLO - ALA
  ;
@@ -168,9 +168,9 @@ PARAMS() ; Get HL7 Parameters and facility # from the MSH segment
 DEMO() ; Get the demographic data and file a zero node entry in the 
  ; message global
  ;
- N CNT,DFN,END,FDA,I,ICN,IDSTR,J3,MSG,OUT,QUIT,REC,SUB,SSN
- S (ICN,SSN,DFN)=""
- S (QUIT,CNT)=0
+ N CNT,DFN,END,FDA,I,ICN,IDSTR,J3,MSG,OUT,QPID,QORC,QUIT,REC,SUB,SSN,STA5A
+ S (ICN,SSN,DFN,STA5A)=""
+ S (QPID,QORC,QUIT,CNT)=0
  F  S CNT=$O(@HLFILE@(CNT)) Q:'CNT!(QUIT)  D
  . S REC=@HLFILE@(CNT)
  . S J3=""
@@ -191,7 +191,11 @@ DEMO() ; Get the demographic data and file a zero node entry in the
  . . . . ;
  . . . I $P(SUB,HLCS,5)="PI" D
  . . . . S DFN=$P(SUB,HLCS,1)
- . . S QUIT=1
+ . . S QPID=1
+ . ;*18 Get Station#
+ . I $E(REC,1,3)="ORC" D
+ . . S STA5A=$P(REC,HLFS,11),STA5A=$P(STA5A,HLCS,14),QORC=1
+ . I QPID,QORC S QUIT=1
  ;
  I DFN="" D ERROR(1,FAC,ID) Q 0
  ;
@@ -200,6 +204,7 @@ DEMO() ; Get the demographic data and file a zero node entry in the
  S FDA(99999,"+1,",.02)=DFN
  S FDA(99999,"+1,",.04)=ICN
  S FDA(99999,"+1,",.05)=SSN
+ S FDA(99999,"+1,",.06)=STA5A
  S FDA(99999,"+1,",.01)=FAC
  D UPDATE^DIE("","FDA","OUT","MSG")
  ;

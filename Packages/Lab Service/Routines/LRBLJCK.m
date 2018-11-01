@@ -1,5 +1,5 @@
 LRBLJCK ;AVAMC/REG - INVENTORY ABO/RH CK ;7/30/95  15:38 ; 12/18/00 2:03pm
- ;;5.2;LAB SERVICE;**72,247,267**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,247,267,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
  ; 
  ; References to ^DD(65, supported by DBIA3261
@@ -22,7 +22,7 @@ ABO K LRT S LRT=LRW("ABO") Q:$D(^LRD(65,LRX,99,LRT))  F A=0:0 S A=$O(LRW("ABO",A
 RH K LRT S LRT=LRW("RH") Q:$D(^LRD(65,LRX,99,LRT))  F A=0:0 S A=$O(LRW("RH",A)) Q:'A  S LRT(A)=""
  D:LRCAPA ^LRBLW Q
 EN ;
- D V^LRU,S^LRBLW S LR("M")=1,X="BLOOD BANK" D ^LRUTL G:Y=-1 END W !!?28,"Inventory ABO/Rh check",!!?15,"Division: ",LRAA(4) K LRE Q:'$D(DUZ)#2
+ Q  D V^LRU,S^LRBLW S LR("M")=1,X="BLOOD BANK" D ^LRUTL G:Y=-1 END W !!?28,"Inventory ABO/Rh check",!!?15,"Division: ",LRAA(4) K LRE Q:'$D(DUZ)#2
  I LRCAPA F Y="ABO","RH" K LRT S X="UNIT "_Y_" RECHECK" D X^LRUWK G:'$D(X) END S LRW(Y)=LRT F A=0:0 S A=$O(LRT(A)) Q:'A  S LRW(Y,A)=""
  K LRT D BAR^LRBLB W !!,"Enter TEST COMMENT(s) " S %=2 D YN^LRU G:%<1 END S:%=1 LRQ=1
 ASK W !!?14,"1) Enter by invoice# (batch)",!?14,"2) Entry by unit ID",!,"Select 1 or 2:" R X:DTIME G:X=""!(X[U) END

@@ -1,7 +1,7 @@
 LRBLDRR ;AVAMC/REG/CYM - REVIEW/RELEASE COMPONENTS ;1/24/97  11:04 ;
- ;;5.2;LAB SERVICE;**72,90,97,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,90,97,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D E S LR("M")=1,X="BLOOD BANK" D ^LRUTL G:Y=-1 E D D^LRBLU G:'$D(X) E
+ Q  D E S LR("M")=1,X="BLOOD BANK" D ^LRUTL G:Y=-1 E D D^LRBLU G:'$D(X) E
  I LRCAPA S X="DONOR UNIT LABELING" D X^LRUWK G:'$D(X) E S Y="RR" D S^LRBLWD K LRT S X="UNIT LOG-IN/SEND-OUT" D X^LRUWK G:'$D(X) E
  S LRA=$S($D(^LAB(69.9,1,8,1,0)):$P(^(0),"^",2),1:0),Y="LG" D:LRCAPA S^LRBLWD
  W !!?20,"Review-label-release components",!!?20,LRAA(4),! D BAR^LRBLB I LR W !!?15,"STANDARD UNIT ID LABELING " S %=1 D YN^LRU G:%<1 E S LR(3)=$S(%=1:"",1:1)

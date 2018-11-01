@@ -78,12 +78,12 @@ REMREC(RESULTS,DFN,CLINIC,PROVIDER,RECALLDT,PTRECDT)  ; Remove a patient from th
  ; Input Parameters:
  ;   DFN = Patient ID
  ;   Clinic = Clinic ID - IEN from the Hospital Location file (#44)
- ;	 PROVIDER = Provider IEN (optional)
- ;	 RECALLDT = The recall date requested by the provider (optional)
- ;	 PTRECDT = The recall date requested by the patient (optional)
- ;	 Either the RECALLDT or the PTRECDT is required.
+ ;       PROVIDER = Provider IEN (optional)
+ ;       RECALLDT = The recall date requested by the provider (optional)
+ ;       PTRECDT = The recall date requested by the patient (optional)
+ ;       Either the RECALLDT or the PTRECDT is required.
  ;
- ;	 Checks for multiple entries on the recall list that are for the same patient, provider, clinic and recall dates and deletes all
+ ;       Checks for multiple entries on the recall list that are for the same patient, provider, clinic and recall dates and deletes all
  ; Output:
  ;   If successful:
  ;      RESULTS="1^DELETED" the patient was removed from the recall list for the clinic
@@ -121,18 +121,18 @@ REMREC(RESULTS,DFN,CLINIC,PROVIDER,RECALLDT,PTRECDT)  ; Remove a patient from th
  Q
 UPDTEWL(RESULTS,DFN,SDWLIEN,SDWLDISP,SDWLDATA) ; Update or remove a patient on the EWL
  ;Input paramters:
- ;	DFN - Patient DFN
+ ;      DFN - Patient DFN
  ;  EWLIEN - for EWL Record to be updated
- ;	DISP - The disposition code of the EWL entry:
- ;		D:DEATH;NC:REMOVED/NON-VA CARE;SA:REMOVED/SCHEDULED-ASSIGNED;CC:REMOVED/VA CONTRACT CARE;NN:REMOVED/NO LONGER NECESSARY;ER:ENTERED IN ERROR;CL:CLINIC CHANGE
+ ;      DISP - The disposition code of the EWL entry:
+ ;              D:DEATH;NC:REMOVED/NON-VA CARE;SA:REMOVED/SCHEDULED-ASSIGNED;CC:REMOVED/VA CONTRACT CARE;NN:REMOVED/NO LONGER NECESSARY;ER:ENTERED IN ERROR;CL:CLINIC CHANGE
  ;  SDWLDATA array:
- ;		$P(1) = SDWLAPPT(1)=SCHEDULED DATE OF APPT
- ;		$P(2) = SDWLAPPT(2)=PTR TO APPT CLINIC (CLINIC WHERE APPT MADE)
- ;		$P(4) = SDWLAPPT(15)=APPOINTMENT INSTITUTION (PTR to Institution File)
- ;		$P(5) = SDWLAPPT(13)=APPT STOP CODE (PTR to file 40.7)
- ;		$P(6) = SDWLAPPT(14)=APPT CREDIT STOP CODE (PTR to file 40.7)
- ;		$P(7) = SDWLAPPT(16)=APPT STATION NUMBER (Free Text) MUST BE AN IEN FROM DIC(4 but is not a ptr field)
- ;		$P(3) = SDWLAPPT(3)=APPT STATUS (Set of codes: 'R' FOR Scheduled/Kept; 
+ ;              $P(1) = SDWLAPPT(1)=SCHEDULED DATE OF APPT
+ ;              $P(2) = SDWLAPPT(2)=PTR TO APPT CLINIC (CLINIC WHERE APPT MADE)
+ ;              $P(4) = SDWLAPPT(15)=APPOINTMENT INSTITUTION (PTR to Institution File)
+ ;              $P(5) = SDWLAPPT(13)=APPT STOP CODE (PTR to file 40.7)
+ ;              $P(6) = SDWLAPPT(14)=APPT CREDIT STOP CODE (PTR to file 40.7)
+ ;              $P(7) = SDWLAPPT(16)=APPT STATION NUMBER (Free Text) MUST BE AN IEN FROM DIC(4 but is not a ptr field)
+ ;              $P(3) = SDWLAPPT(3)=APPT STATUS (Set of codes: 'R' FOR Scheduled/Kept; 
  ;                               'I' FOR Inpatient; 
  ;                               'NS' FOR No-Show; 
  ;                               'NSR' FOR No_Show, Rescheduled; 
@@ -142,10 +142,10 @@ UPDTEWL(RESULTS,DFN,SDWLIEN,SDWLDISP,SDWLDATA) ; Update or remove a patient on t
  ;                               'CCR' FOR Canceled by Clinic, Rescheduled; 
  ;                               'NT' FOR No Action Taken; )
  ;Output:
- ;	RESULTS(0)=1 - Successful
- ;	RESULTS(0)="0^DFN is required" - DFN parameter missing
- ;	RESULTS(0)="0^SDWLIEN is required" - SDWLIEN parameter is missing
- ;	RESULTS(0)="0^Patient not on EWL" - Patient is not on the EWL
+ ;      RESULTS(0)=1 - Successful
+ ;      RESULTS(0)="0^DFN is required" - DFN parameter missing
+ ;      RESULTS(0)="0^SDWLIEN is required" - SDWLIEN parameter is missing
+ ;      RESULTS(0)="0^Patient not on EWL" - Patient is not on the EWL
  ;  RESULTS(0)="0^Disposition is missing."
  ;  RESULTS(0)="0^Disposition is SA but missing Appointment data."
  ;

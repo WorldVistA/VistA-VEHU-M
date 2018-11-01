@@ -1,11 +1,9 @@
-FBCH78 ;AISC/DMK - SETS UP 7078/AUTHORIZATION FOR CONTRACT HOSPITAL ;9/18/2014
- ;;3.5;FEE BASIS;**43,103,108,146,139,154**;JAN 30, 1995;Build 12
- ;;Per VA Directive 6402, this routine should not be modified.
+FBCH78 ;AISC/DMK-SETS UP 7078/AUTHORIZATION FOR CONTRACT HOSPITAL ;08/07/02
+ ;;3.5;FEE BASIS;**43,103,108,146**;JAN 30, 1995;Build 57
+ ;;Per VHA Directive 2004-038, this routine should not be modified.
  S DIC("S")="I $P(^(0),U,15)=3&($P(^(0),U,12)=""Y"")" D ASKV^FBCHREQ G END:$E(X)="^"!($E(X)="")!('$D(FBDA))
  I $P(^FBAA(162.2,FBDA,0),"^",17)]"" W !!,*7,"There already is a 7078 set up for this request.",!,"The number is ",$P(^FB7078($P(^FBAA(162.2,FBDA,0),"^",17),0),"^")," .",! G END
-EN ;DEM;139 ICD=10 Project - Replaced original line with next two to add condition FBFRDT<$$IMPDATE^FBCSV1("10D")
- S FBVEN=$P(^FBAA(162.2,FBDA,0),"^",2)_";FBAAV(",FBVET=$P(^(0),"^",4),FBFRDT=$P(^(0),"^",5),FBFRDT=FBFRDT\1,FBDOA=$S($P(^(0),"^",19):$P(^(0),"^",19)\1,1:"")
- S FBDXS="" S:FBFRDT<$$IMPDATE^FBCSV1("10D") FBDXS=$P(^FBAA(162.2,FBDA,0),"^",6)
+EN S FBVEN=$P(^FBAA(162.2,FBDA,0),"^",2)_";FBAAV(",FBVET=$P(^(0),"^",4),FBFRDT=$P(^(0),"^",5),FBFRDT=FBFRDT\1,FBDOA=$S($P(^(0),"^",19):$P(^(0),"^",19)\1,1:""),FBDXS=$P(^(0),"^",6)
  ;FB*3.5*103 ;added FBRP
  S FBRP=$P($G(^FBAA(162.2,FBDA,2)),"^") K DA
  D NBCHK
@@ -29,10 +27,6 @@ SET78 S DIE="^FB7078(",DA=FBAA78,DR="[FBCH ENTER 7078]" D ^DIE K DIC,DIE,DR,DA
  D ^FBCH780 I $G(FBOUT) W !!,*7,"...deleting 7078." D DEL G END
  I +Y=0 W !!,*7,Y,!,"...deleting 7078.  Use 'Set-up a 7078' after adjusting 1358.",! D DEL G END
  K DIE,DIC,DA
- D
- . N FBX
- . S FBX=$$ADDUA^FBUTL9(162.4,FBAA78_",","Set-up 7078 authorization.")
- . I 'FBX W !,"Error adding record in User Audit. Please contact IRM."
  I $G(FBVET) S:'$G(DFN) DFN=FBVET D PTF^FBCH780
  G SHOW:FBTODT=""
 AUTH D HOME^%ZIS
@@ -69,11 +63,8 @@ FBPSA S DIR(0)="161.01,101" D ^DIR K DIR G END:$D(DTOUT),END:$D(DUOUT) D NULL1^F
  S DIE=DIC,DR=".02////^S X=FBTODT;.03////^S X=6;100////^S X=DUZ;1////^S X=""YES"";.055////^S X=FB78;.06////^S X=FBDCHG;S FBTYPE=6;.04////^S X=FBVEN;.065////^S X=FBPT;101////^S X=FBPSA"
  S:$G(FBRP)]"" DR=DR_";104////^S X=FBRP"
  S DR=DR_";.095////^S X=1"
- ; DEM/JAS;139 ICD-10 Project - Modified for ICD-10 to add FBFRDT'<$$IMPDATE^FBCSV1(""10D"") condition
- S DR(1,161.01,1)="I $D(^FB7078(FBAA78,1,0)) S ^FBAAA(DA(1),1,DA,2,0)=^(0) F FBI=1:1 Q:'$D(^FB7078(FBAA78,1,FBI,0))  I $D(^(0)) S ^FBAAA(DA(1),1,DA,2,FBI,0)=^(0);.07////^S X=FBPUR"
- S DR(1,161.01,2)="I FBFRDT'<$$IMPDATE^FBCSV1(""10D"") S Y=""@10"";@9;.08///^S X=$G(FBDXS);@10;.096;.097//^S X=""N"""
- I $G(FBCNTRA)]"" S DR(1,161.01,3)="105////^S X=FBCNTRA"
- ; End 139
+ S DR(1,161.01,1)="I $D(^FB7078(FBAA78,1,0)) S ^FBAAA(DA(1),1,DA,2,0)=^(0) F FBI=1:1 Q:'$D(^FB7078(FBAA78,1,FBI,0))  I $D(^(0)) S ^FBAAA(DA(1),1,DA,2,FBI,0)=^(0);.07////^S X=FBPUR;.08///^S X=FBDXS;.096;.097//^S X=""N"""
+ I $G(FBCNTRA)]"" S DR(1,161.01,2)="105////^S X=FBCNTRA"
  D ^DIE K DIE,DR
  S (DIC,DIE)="^FB7078(",DA=FBAA78,DR="9///^S X=""C"";12///^S X=""@""" D ^DIE K DR,DIE,DA,X
 SHOW W !! S DA=FBAA78,DR="0;1",DIC="^FB7078(" D EN^DIQ

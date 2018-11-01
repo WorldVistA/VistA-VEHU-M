@@ -1,7 +1,6 @@
-DIETLIBF ;SFISC/MKO,GFT - LIBRARY FOR FIELD ATTRIBUTES ;25OCT2016
- ;;22.2;VA FileMan;**2**;Jan 05, 2016;Build 139
+DIETLIBF ;SFISC/MKO,GFT - LIBRARY FOR FIELD ATTRIBUTES ;23JUN2017
+ ;;22.2;VA FileMan;**2,5,13**;Jan 05, 2016;Build 4
  ;;Per VA Directive 6402, this routine should not be modified.
- ;;Licensed under the terms of the Apache License, Version 2.0.
  ;
  ;The following functions return, for a given file and field,
  ;code to do something, such as validate user input, or validate
@@ -94,7 +93,7 @@ GETMETH(DDTFILE,DDTFIELD,DDTMETL) ;Look for methods in the ;-delimited string
  ;
 DIC ;SET THE DIC VARIABLE FROM PARAMETERS
  I $G(DIPA("POINTER"))'["(" S Y=-1 Q
- N DIS,DIC,DIFILE ;DIFILE SHOULD REALLY BE NEWED BY ^DIC ITSELF
+ N DIS,DIC,DIFILE,DIBTDH ;DIFILE SHOULD REALLY BE NEWED BY ^DIC ITSELF
  X $G(DIPA("CODE TO SET POINTER SCREEN")) ;S DIC("S")
  S DIC="^"_DIPA("POINTER"),DIC(0)="M"_$E("L",$G(DIPA("LAYGO"))) I '$D(DIQUIET) S DIC(0)=DIC(0)_"EQ"
  D ^DIC

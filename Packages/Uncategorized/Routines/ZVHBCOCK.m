@@ -218,7 +218,7 @@ SKIPDAY(ZVHPT,ZVHMED,GVNDTTM,ZVHFREQ,ZVHSKIP,SILENT) ; skip this med? - DAILY PR
  QUIT  ; label SKIPDAY
  ;
  ;
-LASTGVN(PATIENT,MED,SDATE,EDATE,LASTGIVEN)	; find last date/time given in a date range
+LASTGVN(PATIENT,MED,SDATE,EDATE,LASTGIVEN)      ; find last date/time given in a date range
  ; pass by value: PATIENT (IEN) and MED (number of med in the ^TMP("PSJ",$J) array)
  ;   SDATE (start date) and EDATE (end date) in fileman date/time format
  ; pass by ref: LASTGIVEN (will return date/time in this var in fileman format)

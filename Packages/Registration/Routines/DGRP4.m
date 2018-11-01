@@ -1,5 +1,5 @@
 DGRP4 ;ALB/MRL - REGISTRATION SCREEN 4/EMPLOYMENT INFORMATION ;06 JUN 88@2300
- ;;5.3;Registration;**624,867**;Aug 13, 1993;Build 56
+ ;;5.3;Registration;**624,867**;Aug 13, 1993;Build 59
  ;
  N DGMRD
  D NEWB ;determine newborn status before building local array

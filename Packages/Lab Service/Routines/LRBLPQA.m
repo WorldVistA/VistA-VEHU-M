@@ -1,5 +1,5 @@
 LRBLPQA ;AVAMC/REG - TRANSFUSION REQUEST DATA ;2/18/93  09:45 ;
- ;;5.2;LAB SERVICE;**247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
  W !!?20 D END,I,Z G:Y=-1 END
 A R !!?3,"(A)ll components or (S)ingle component: ",X:DTIME Q:X["^"!(X="")  I $A(X)'=65,$A(X)'=83 W $C(7),!,"Enter 'A' for all blood components or 'S' for a single component" G A
@@ -17,7 +17,7 @@ W1 W !!,Y," ",$P(LRB,"^",2),"  SSN:",SSN
  F A=0:0 S A=$O(^LRO(69.2,LRAA,8,66,1,LRC,1,LRD,1,A)) Q:'A!(LR("Q"))  S LR=^(A,0) D:$Y>(IOSL-10) H2 Q:LR("Q")  W !,LR
  Q
 EN ;
- D Z G:Y=-1 END W !!,"This option deletes inappropriate transfusion requests",!,"that have been previously printed.  OK " S %=2 D YN^LRU G:%'=1 END
+ Q  D Z G:Y=-1 END W !!,"This option deletes inappropriate transfusion requests",!,"that have been previously printed.  OK " S %=2 D YN^LRU G:%'=1 END
  W ! F A=0:0 S A=$O(^LRO(69.2,LRAA,8,66,1,A)) Q:'A  S C=0 D K
  W !,"DONE",! G END
 K F B=0:0 S B=$O(^LRO(69.2,LRAA,8,66,1,A,1,B)) Q:'B  I $P(^(B,0),"^",4) K ^LRO(69.2,LRAA,8,66,1,A,1,B) S C=C+1 W "."

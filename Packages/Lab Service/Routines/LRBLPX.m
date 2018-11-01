@@ -1,7 +1,7 @@
 LRBLPX ;AVAMC/REG/CYM - XMATCH RESULTS ;08/20/2001 3:45 PM
- ;;5.2;LAB SERVICE;**72,77,247,275**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,77,247,275,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D V^LRU,CK^LRBLPUS G:Y=-1 END
+ Q  D V^LRU,CK^LRBLPUS G:Y=-1 END
  S LRB=$O(^LAB(61.3,"C",50710,0)) I 'LRB D EN1^LRBLU
  W !!?28,"Enter crossmatch results",!!?28,LRAA(4) K LRDPAF S LRW=$P(^VA(200,DUZ,0),"^",2)
  I LRCAPA D CK^LRBLPX1 I '$D(LRT) D END Q

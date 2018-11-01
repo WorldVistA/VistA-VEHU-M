@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: DENTAL CLASSIFICATION
-24-JAN-2018 16:38:23 ZWR
+31-OCT-2018 09:24:57 ZWR
 ^DIC(220.2,0)="DENTAL CLASSIFICATION^220.2^22^22"
 ^DIC(220.2,0,"GL")="^DIC(220.2,"
 ^DIC(220.2,1,0)="INP, Emergency"
@@ -28,7 +28,7 @@ OSEHRA ZGO Export: DENTAL CLASSIFICATION
 ^DIC(220.2,"%D",0)="^^2^2^2881028^^^^"
 ^DIC(220.2,"%D",1,0)="This file is a table of Dental treatment classifications (inpatient and"
 ^DIC(220.2,"%D",2,0)="outpatient) used to classify each Dental patient."
-^DIC(220.2,"%MSC")="3170123.120235"
+^DIC(220.2,"%MSC")=3170123.120235
 ^DIC(220.2,"B","Community Living Center",4)=""
 ^DIC(220.2,"B","Domiciliary or Residential Rehabilitation",5)=""
 ^DIC(220.2,"B","INP, Compelling Medical Need",2)=""

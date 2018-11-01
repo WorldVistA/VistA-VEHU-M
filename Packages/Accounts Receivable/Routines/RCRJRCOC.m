@@ -1,6 +1,6 @@
 RCRJRCOC ;WISC/RFJ/BGJ-count current receivables ; 11/2/10 10:53am
- ;;4.5;Accounts Receivable;**156,170,182,203,220,138,239,272,273**;Mar 20, 1995;Build 3
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.5;Accounts Receivable;**156,170,182,203,220,138,239,272,273,334,335**;Mar 20, 1995;Build 8
+ ;;Per VA Directive 6402, this routine should not be modified.
  ; IA 4385 for call to $$MRATYPE^IBCEMU2
  Q
  ;
@@ -51,6 +51,8 @@ CURRENT(RCBILLDA,RCVALUE) ;  count current bills balance
  .   ;  ----- this code is used to build the user report
  .   S %=+$P($P($G(^PRCA(430,RCBILLDA,6)),"^",21),".")
  .   S ^TMP($J,"RCRJRCOLREPORT",%,RCBILLDA)=$P(RCVALUE,"^")_"^"_($P(RCVALUE,"^",2)+$P(RCVALUE,"^",3)+$P(RCVALUE,"^",4)+$P(RCVALUE,"^",5))_"^SV"_TYPE
+ .   I RCTOMCCF D STORE^RCRJRCOU(BILLDA,DATEBEG,DATEEND,ARACTDT,CATEGORY,"SV"_TYPE,RCFUND,RCRSC,RCVALUE)
+ .   I RCTOHSIF D STORE^RCRJRCOU(BILLDA,DATEBEG,DATEEND,ARACTDT,CATEGORY,"SV21","5358.1",$S(RCRSC="8BZZ":"8B1Z",1:"8C1Z"),RCVALUE)
  .   ;
  .   ;  ----- this code is used to build the OIG extract, piece 3 = GL acct
  .   S ^TMP($J,"RCRJROIG",RCBILLDA)=$P(RCVALUE,"^")_"^"_($P(RCVALUE,"^",2)+$P(RCVALUE,"^",3)+$P(RCVALUE,"^",4)+$P(RCVALUE,"^",5))_"^"_$S(TYPE="2A":1333,TYPE="2F":"13H1",TYPE="2L":"13N1",1:1311)
@@ -115,9 +117,9 @@ WRITEOFF(RCBILLDA,RCVALUE,RCRITER2) ;  count write offs
  .   S ARACTDT=+$P($P($G(^PRCA(430,RCBILLDA,6)),"^",21),".")
  .   ;  DBIA #4385 activated on 31-Mar-2004
  .   S MRATYPE=$$MRATYPE^IBCEMU2(RCBILLDA,ARACTDT)
- .   ;  for contract adjustments (criter2=20), the type is 38 for pre-
+ .   ;  for contract adjustments (criter2=22), the type is 38 for pre-
  .   ;  MRA, 4N for post-MRA non-Medicare and 08 for post-MRA Medicare
- .   I RCRITER2=20 S TYPE=$S(MRATYPE=1:38,MRATYPE=2:"08",1:"4N")
+ .   I RCRITER2=22 S TYPE=$S(MRATYPE=1:38,MRATYPE=2:"08",1:"4N")   ;Aging bucket increase modified in PRCA*4.5*334
  .   ;  store dollars to mccf and hsif
  .   I RCTOMCCF S ^TMP($J,"RCRJRCOLWR",TYPE,RCFUND,RCRSC)=$G(^TMP($J,"RCRJRCOLWR",TYPE,RCFUND,RCRSC))+RCTOMCCF
  .   I RCTOHSIF S ^TMP($J,"RCRJRCOLWR",TYPE,5358.1,$S(RCRSC="8BZZ":"8B1Z",1:"8C1Z"))=$G(^TMP($J,"RCRJRCOLWR",TYPE,5358.1,$S(RCRSC="8BZZ":"8B1Z",1:"8C1Z")))+RCTOHSIF
@@ -140,7 +142,7 @@ NDBSTORE(RCBILLDA,RCVALUE,RCRITER2) ;  store the data for the NDB
  ;
  ;  this line of code will prevent duplicate counts if a sites cross
  ;  references in file 430 (actdt and asdt) are duplicated (incorrect)
- I RCRITER2<13,$D(^TMP($J,"RCRJRCOL","COUNT",RCBILLDA,RCRITER2)) Q 0
+ I RCRITER2<15,$D(^TMP($J,"RCRJRCOL","COUNT",RCBILLDA,RCRITER2)) Q 0  ; Aging bucket increase modified in PRCA*4.5*334
  ;
  ;  get a bills criteria 1,3,4,5
  S CRITERIA=$G(^TMP($J,"RCRJRCOL","CRITERIA",RCBILLDA))

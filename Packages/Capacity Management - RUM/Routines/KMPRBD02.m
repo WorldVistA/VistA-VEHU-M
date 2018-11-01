@@ -1,5 +1,5 @@
-KMPRBD02 ;SF/RAK - RUM Data Compression ;1/20/00  07:36
- ;;1.0;CAPACITY MANAGEMENT - RUM;**1**;Dec 09, 1998
+KMPRBD02 ;OAK/RAK - RUM Data Compression ;1/30/13  08:29
+ ;;2.0;CAPACITY MANAGEMENT - RUM;**2**;May 28, 2003;Build 12
  ;
  ; Background Driver (cont.)
  ;
@@ -15,188 +15,131 @@ DAILY(KMPRTDAY) ;-- daily data compression and storage
  ;
  Q:'$G(KMPRTDAY)
  ;
- N ARRAY,COUNT,DATA,DOW,HDATE,HTIME,I,JOB,MESSAGE,NODE,OKAY,OPTION
- N NP,PT,PTM,X,VAR
+ ; if test lab
+ I $$TESTLAB^KMPDUT1 D DAILY^KMPRBD05(KMPRTDAY) Q
+ ;
+ N COUNT,CNT,CNT1,CNT2,DATA,FMHDATE,HDATE,HTIME,I,JOB,MESSAGE
+ N NODE,NW,OKAY,OPTION,NP,PT,PTM,X,VAR,USERS,USRDATA,WD,WORKDAY,YSTRDAY
+ ;
+ K ^TMP($J)
  ;
  ; make sure DT is defined.
  S:'$G(DT) DT=$$DT^XLFDT
- ; where daily data is located.
- S ARRAY=$NA(^XTMP("KMPR","DLY"))
+ ;
+ ; yesterday - this will be the data that is compiled and stored
+ S YSTRDAY=$$HADD^XLFDT(KMPRTDAY,-1)
+ ;
  S NODE=""
- F  S NODE=$O(@ARRAY@(NODE)) Q:NODE=""  D
+ F  S NODE=$O(^KMPTMP("KMPR","DLY",NODE)) Q:NODE=""  D
  .S HDATE=""
- .F  S HDATE=$O(@ARRAY@(NODE,HDATE)) Q:HDATE=""!(HDATE'<KMPRTDAY)  D 
+ .F  S HDATE=$O(^KMPTMP("KMPR","DLY",NODE,HDATE)) Q:HDATE=""!(HDATE'<KMPRTDAY)  D 
+ ..; if less than 'yesterday' kill - old data
+ ..I HDATE<YSTRDAY K ^KMPTMP("KMPR","DLY",NODE,HDATE) Q
+ ..;
+ ..S FMHDATE=+$$HTFM^XLFDT(HDATE,1)
+ ..;
+ ..; WORKDAY = 0 : weekend or holiday (non-workday)
+ ..;         = 1 : workday
+ ..;
+ ..S WORKDAY=$$WORKDAY^XUWORKDY(FMHDATE)
+ ..;
  ..S OPTION=""
- ..F  S OPTION=$O(@ARRAY@(NODE,HDATE,OPTION)) Q:OPTION=""  D 
- ...S JOB=0,(COUNT,NP,PT)=""
- ...F  S JOB=$O(@ARRAY@(NODE,HDATE,OPTION,JOB)) Q:'JOB  D 
+ ..F  S OPTION=$O(^KMPTMP("KMPR","DLY",NODE,HDATE,OPTION)) Q:OPTION=""  D 
+ ...K NP,PT
+ ...S JOB=0,COUNT=""
+ ...F  S JOB=$O(^KMPTMP("KMPR","DLY",NODE,HDATE,OPTION,JOB)) Q:'JOB  D 
  ....S PTM=""
- ....F  S PTM=$O(@ARRAY@(NODE,HDATE,OPTION,JOB,PTM)) Q:PTM=""  D 
+ ....F  S PTM=$O(^KMPTMP("KMPR","DLY",NODE,HDATE,OPTION,JOB,PTM)) Q:PTM=""  D 
  .....; PTM:  non-prime time = 0   prime time = 1
- .....S DATA=@ARRAY@(NODE,HDATE,OPTION,JOB,PTM)
- .....; prime time or non-prime time.
- .....S VAR=$S(PTM:"PT",1:"NP") Q:VAR=""
- .....; accumulate totals.
- .....F I=1:1:8 S $P(@VAR,U,I)=$P(@VAR,U,I)+$P(DATA,U,I)
+ .....S DATA=^KMPTMP("KMPR","DLY",NODE,HDATE,OPTION,JOB,PTM)
+ .....;
+ .....; prime time or non-prime time
+ .....S VAR=$S((WORKDAY&PTM):"PT",1:"NP") Q:VAR=""
+ .....;
+ .....; if current data is negative
+ .....I $P($G(@VAR@(0)),U,5)<0 D 
+ ......S $P(^KMPTMP("KMPR","NEG","DLY",OPTION,"C"),U,5)=$P(@VAR,U,5)
+ .....;
+ .....; if new data is negative
+ .....I ($P(DATA,U,5)<0) D 
+ ......S $P(^KMPTMP("KMPR","NEG","DLY",OPTION,"N"),U,5)=$P(DATA,U,5)
+ .....;
+ .....; if sum of pieces are negative
+ .....I ($P($G(@VAR@(0)),U,5)+$P(DATA,U,5))<0 D 
+ ......S $P(^KMPTMP("KMPR","NEG","DLY",OPTION,"T"),U,5)=($P(@VAR,U,5))_"+"_($P(DATA,U,5))_"="_($P(@VAR,U,5)+$P(DATA,U,5))
+ .....;
+ .....; accumulate totals
+ .....; data elements - pieces 1 - 8
+ .....F I=1:1:8 S $P(@VAR@(1),U,I)=$P($G(@VAR@(1)),U,I)+$P(DATA,U,I)
+ .....;
+ .....S USERS=$G(^TMP($J,HDATE,NODE,JOB)),USRDATA=0
+ .....;
+ .....; hour counts - pieces 10 - 33 - offset by -9
+ .....; hour 0 = piece 10
+ .....; hour 1 = piece 11
+ .....; hour 2 = piece 12 ...
+ .....F I=10:1:33 S CNT=$P(DATA,U,I) I +CNT D
+ ......S CNT1=$P(CNT,"~"),CNT2=$P(CNT,"~",2)
+ ......;
+ ......; set for every hour that this particular $job ran
+ ......I +CNT2 S $P(USERS,U,(I-9))=$P(USERS,U,(I-9))+1,USRDATA=1
+ ......;
+ ......; if workday capture workday counts
+ ......I WORKDAY D
+ .......; number of occurrences per hour
+ .......S $P(PT(1.1),U,(I-9))=$P($G(PT(1.1)),U,(I-9))+CNT1
+ .......; number of users for this particular option/protocol/rpc
+ .......S $P(PT(1.2),U,(I-9))=$P($G(PT(1.2)),U,(I-9))+1
+ ......;
+ ......; else capture non-workday (weekend/holiday) counts
+ ......E  D
+ .......; number of occurrences per hour
+ .......S $P(NP(1.1),U,(I-9))=$P($G(NP(1.1)),U,(I-9))+CNT1
+ .......; number of users for this particular option/protocol/rpc
+ .......S $P(NP(1.2),U,(I-9))=$P($G(NP(1.2)),U,(I-9))+1
+ .....;
+ .....; will have every hour that this particular $job ran
+ .....I USRDATA S ^TMP($J,HDATE,NODE,JOB)=USERS
+ .....;
  .....; piece 1 non-prime time - piece 2 prime time
  .....S $P(COUNT,U,(PTM+1))=$P(COUNT,U,(PTM+1))+1
- .....; remove data from array.
- .....K @ARRAY@(NODE,HDATE,OPTION,JOB,PTM)
+ .....;
+ .....; remove data from array
+ .....K ^KMPTMP("KMPR","DLY",NODE,HDATE,OPTION,JOB,PTM)
  ...;
- ...; back to OPTION level.
+ ...; back to OPTION level
  ...; file data into file #8971.1
- ...D FILE^KMPRBD03(HDATE,NODE,OPTION,PT,NP,$P(COUNT,U,2),$P(COUNT,U),.OKAY,.MESSAGE)
+ ...D FILE^KMPRBD03(HDATE,NODE,OPTION,.PT,.NP,$P(COUNT,U,2),$P(COUNT,U),.OKAY,.MESSAGE)
+ ...;
  ...; if not filed successfully set into 'ERR' node.
  ...I 'OKAY D 
- ....S ^XTMP("KMPR","ERR",HDATE,NODE,OPTION,0)=NP_$P(COUNT,U)
- ....S ^XTMP("KMPR","ERR",HDATE,NODE,OPTION,1)=PT_$P(COUNT,U,2)
+ ....S ^KMPTMP("KMPR","ERR",HDATE,NODE,OPTION,0)=NP_$P(COUNT,U)
+ ....S ^KMPTMP("KMPR","ERR",HDATE,NODE,OPTION,1)=PT_$P(COUNT,U,2)
  ....F I=0:0 S I=$O(MESSAGE(I)) Q:'I  D 
- .....S ^XTMP("KMPR","ERR",HDATE,NODE,OPTION,"MSG",I)=MESSAGE(I)
+ .....S ^KMPTMP("KMPR","ERR",HDATE,NODE,OPTION,"MSG",I)=MESSAGE(I)
  ;
- Q
- ;
-WEEKLY(KMPRDT) ;-- compress daily stats to weekly
- ;-----------------------------------------------------------------------
- ; KMPRDT... Compression date in internal fileman formt.  This date
- ;           must be a Sunday.  It represents the date from which the
- ;           previous weeks data should be compressed. 
- ;           Example: if KMPRDT = 2981011  then compression will begin
- ;                    on 2981010 (KMPRDT-1)
- ;
- ; Every Sunday compress the daily stats in file #8971.1 into weekly
- ; and upload the data to the CM RUM National Database
- ;-----------------------------------------------------------------------
- ;
- Q:'$G(KMPRDT)
- ;
- N DATA,DATE,DELDATE,END,HOURS,I,IEN,J,SITE,START,TMPARRY,TMPARRY1
- ;
- ; quit if not sunday.
- Q:$$DOW^XLFDT(KMPRDT,1)
- ; storage array.
- S TMPARRY=$NA(^TMP($J))
- ; processed entries.
- S TMPARRY1=$NA(^TMP("KMPR PROC",$J))
- K @TMPARRY,@TMPARRY1
- ; site info.
- S SITE=$$SITE^VASITE Q:SITE=""
- S DATE=KMPRDT
- S (START,END)=""
- ; Date to begin deletion.
- S DELDATE=$$FMADD^XLFDT(KMPRDT,-14)
- ;
- W:'$D(ZTQUEUED) !,"Compressing data into weekly format..."
- ; Reverse $order to get previous dates.
- F  S DATE=$O(^KMPR(8971.1,"B",DATE),-1) Q:'DATE  D 
- .; If DATE is saturday set START and END dates and kill TMPARRY.
- .I $$DOW^XLFDT(DATE,1)=6 D 
- ..S END=DATE,START=$$FMADD^XLFDT(DATE,-6)
- ..K @TMPARRY
- .Q:'START
- .S IEN=0
- .F  S IEN=$O(^KMPR(8971.1,"B",DATE,IEN)) Q:'IEN  D 
- ..Q:'$D(^KMPR(8971.1,IEN,0))
- ..; data nodes into DATA() array.
- ..S DATA(0)=^KMPR(8971.1,IEN,0),DATA(1)=$G(^(1)),DATA(2)=$G(^(2))
- ..; Quit if data has already been sent to national database.
- ..Q:$P(DATA(0),U,2)
- ..; Cpu node.
- ..S NODE=$P(DATA(0),U,3) Q:NODE=""
- ..; OPTION = OptionName^ProtocolName.
- ..; option.
- ..S OPTION=$P(DATA(0),U,4)
- ..; rpc.
- ..S:OPTION="" OPTION=$P(DATA(0),U,7)
- ..; hl7.
- ..S:OPTION="" OPTION=$P(DATA(0),U,9)
- ..Q:OPTION=""
- ..S $P(OPTION,U,2)=$P(DATA(0),U,5)
- ..S @TMPARRY@(START,NODE,OPTION,0)=DATA(0)
- ..; change first piece to starting date (START)
- ..S $P(@TMPARRY@(START,NODE,OPTION,0),U)=START
- ..; second piece not applicable to national database
- ..S $P(@TMPARRY@(START,NODE,OPTION,0),U,2)=""
- ..; EndingDate^SiteName^SiteNumber.
- ..S @TMPARRY@(START,NODE,OPTION,99)=END_U_$P(SITE,U,2)_U_$P(SITE,U,3)
- ..; Nodes 1 and 2.
- ..F I=1,2 I DATA(I)]"" D 
- ...; Add data to get weekly totals.
- ...F J=1:1:8 S $P(@TMPARRY@(START,NODE,OPTION,I),U,J)=$P($G(@TMPARRY@(START,NODE,OPTION,I)),U,J)+$P(DATA(I),U,J)
- ..;
- ..; Back to IEN level.
- ..; Add to processed array.
- ..S @TMPARRY1@(IEN)=""
+ ; find the total number of jobs that ran first minute of every hour
+ S HDATE=""
+ F  S HDATE=$O(^TMP($J,HDATE)) Q:HDATE=""!(HDATE'<KMPRTDAY)  D
  .;
- .; Back to DATE level.
- .; If START then transmit data.
- .I DATE=START I $D(@TMPARRY) D TRANSMIT K @TMPARRY
+ .S FMHDATE=+$$HTFM^XLFDT(HDATE,1)
+ .S WORKDAY=$$WORKDAY^XUWORKDY(FMHDATE)
+ .;
+ .;        WD: workday     NW: non-workday
+ .S VAR=$S(WORKDAY:"WD",1:"NW")
+ .S NODE=""
+ .F  S NODE=$O(^TMP($J,HDATE,NODE)) Q:NODE=""  D
+ ..K NW,WD
+ ..S JOB=""
+ ..F  S JOB=$O(^TMP($J,HDATE,NODE,JOB)) Q:'JOB  D
+ ...S DATA=^TMP($J,HDATE,NODE,JOB)
+ ...F I=1:1:24 S CNT=$P(DATA,U,I) I +CNT D
+ ....S $P(@VAR@(1.1),U,I)=$P($G(@VAR@(1.1)),U,I)+CNT
+ ....S $P(@VAR@(1.2),U,I)=$P($G(@VAR@(1.2)),U,I)+1
+ ..;
+ ..; file number of users information
+ ..D FILE^KMPRBD03(HDATE,NODE,"#USERS#",.WD,.NW)
  ;
- ; Transmit data to national database.
- W:'$D(ZTQUEUED) !,"Transmitting data to national database..."
- D:$D(@TMPARRY) TRANSMIT
- K @TMPARRY
- ;
- ; update field .02 (SENT TO CM NATIONAL DATABASE) to 'YES' for all
- ; processed entries.
- W:'$D(ZTQUEUED) !,"Updating records to reflect transmission..."
- S IEN=0
- F  S IEN=$O(@TMPARRY1@(IEN)) Q:'IEN  D 
- .K FDA,ERROR
- .S FDA($J,8971.1,IEN_",",.02)=1
- .D FILE^DIE("","FDA($J)","ERROR")
- K @TMPARRY1
- ;
- ; leave two complete weeks of data in file #8971.1
- D PURGE^KMPRUTL3(DELDATE,1)
- ;
- Q
- ;
-TRANSMIT ;-- format TMPARRY data, put into e-mail and send to cm.
- ;
- Q:$G(TMPARRY)=""
- ;
- N HRSDAYS,I,IEN,LN,N,O,S,UPLDARRY,XMSUB,X,XMTEXT,XMY,XMZ,Y,Z
- ;
- S UPLDARRY=$NA(^TMP("KMPR UPLOAD",$J))
- K @UPLDARRY
- ;
- S LN=0
- ; version and patch info.
- S LN=LN+1,@UPLDARRY@(LN)="VERSION="_$$VERSION^KMPRUTL
- ;
- ; get hours/days data
- D HRSDAYS^KMPRUTL3(START,END,1,.HRSDAYS)
- ; if ^XTMP("KMPR","HOURS","START") exists then this is the first time
- ; the "HOURS" subscript is being accessed.  chances are this is only
- ; partial data, so it should be ignored.
- I $G(^XTMP("KMPR","HOURS","START"))&($D(HRSDAYS)) D 
- .K HRSDAYS,^XTMP("KMPR","HOURS","START")
- ;
- I $D(HRSDAYS) S S=0 D 
- .F  S S=$O(HRSDAYS(S)) Q:'S  S N="" D 
- ..F  S N=$O(HRSDAYS(S,N)) Q:N=""  D 
- ...S LN=LN+1
- ...; StartDate^Node^EndDate^PTDays^PTHours^NPTDays^NPTHours
- ...S @UPLDARRY@(LN)="HRSDAYS="_START_"^"_N_"^"_END_"^"_HRSDAYS(S,N)
- ;
- ; reformat so that data is in ^TMP("KMPR UPLOAD",$J,LN)= format.
- S IEN=0,S=""
- F  S S=$O(@TMPARRY@(S)) Q:S=""  S N="" D 
- .F  S N=$O(@TMPARRY@(S,N)) Q:N=""  S O="" D 
- ..F  S O=$O(@TMPARRY@(S,N,O)) Q:O=""  S I="",IEN=IEN+1 D 
- ...F  S I=$O(@TMPARRY@(S,N,O,I)) Q:I=""  D 
- ....S LN=LN+1
- ....S @UPLDARRY@(LN)=IEN_","_I_")="_@TMPARRY@(S,N,O,I)
- ;
- ; quit if no data to transmit.
- Q:'$D(@UPLDARRY)
- ; send packman message.
- S XMTEXT="^TMP(""KMPR UPLOAD"","_$J_","
- S XMSUB="RUM DATA - "_$P(SITE,U,2)_" ("_$P(SITE,U,3)_") - "_$$FMTE^XLFDT(START)
- S XMY("S.KMP2-RUM-SERVER@ISC-ALBANY.VA.GOV")=""
- S XMY("CAPACITY,MANAGEMENT@ISC-ALBANY.VA.GOV")=""
- D ^XMD
- W:'$D(ZTQUEUED) !,"Message #",$G(XMZ)," sent..."
- K @UPLDARRY
+ K ^TMP($J)
  ;
  Q

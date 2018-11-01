@@ -1,6 +1,6 @@
 LRUWG ;AVAMC/REG - SINGLE TEST WORKLIST ;2/22/94  09:45 ;
- ;;5.2;LAB SERVICE;;Sep 27, 1994
- D END W !!?20,"Single test worklist"
+ ;;5.2;LAB SERVICE;**408**;Sep 27, 1994;Build 8
+ Q  D END W !!?20,"Single test worklist"
 T S DIC=60,DIC(0)="AEMOQZ" D ^DIC K DIC G:Y<1 END S W(1)=$P(Y,U,2),F=+Y
  S X=$O(^LAB(60,F,8,0)) I 'X W $C(7),!,"No INSTITUTION designated in LAB TEST FILE (#60, field 6)",! G T
  S X(1)=+^LAB(60,F,8,X,0),X(1)=$P(^DIC(4,X(1),0),U)

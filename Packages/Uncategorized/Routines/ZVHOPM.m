@@ -30,7 +30,7 @@ ZVHOPM ; OIA/AJC - modify Outpatient Meds ;3/12/15
  DO EN  ; redirect if called directly
  QUIT  ; routine ZVHOPM
  ;
-EN	; enter here!
+EN      ; enter here!
  ; this will be a menu of options
  ;
  ; Check for Production environment, quit if true
@@ -51,7 +51,7 @@ EN	; enter here!
  QUIT  ; label EN
  ;
  ;
-GETPT()	; select a patient
+GETPT() ; select a patient
  ;Ext Ouput: -1 for error, 0 for failure, patient DFN if successful
  ;
  NEW OUT SET OUT=$$GETPAT3^ZVHPAT
@@ -71,7 +71,7 @@ GETPT()	; select a patient
  QUIT $GET(OUT) ; label GETPT
  ;
  ;
-SETRXRA	; set up the Rx array
+SETRXRA ; set up the Rx array
  ;REQUIRED: new RXARRAY before calling
  ;EXT OUTPUT: -1 error, 0 fail, 1 successful
  ;use dic to select prescription(s) from ^psrx(
@@ -95,10 +95,10 @@ SETRXRA	; set up the Rx array
  . IF $DATA(Y) SET RXARRAY(+Y)="" ; 
  If $Data(RXARRAY)>9 Set OUT=1
  ;
- Quit $Get(OUT)	; label SETRXRA
+ Quit $Get(OUT) ; label SETRXRA
  ;
  ;
-RELEASE(DFN)	; Release medication Rx by Patient and Rx #
+RELEASE(DFN)    ; Release medication Rx by Patient and Rx #
  ;
  WRITE @IOF,!
  ; loop thru the RXARRAY
@@ -170,7 +170,7 @@ RELEASE(DFN)	; Release medication Rx by Patient and Rx #
  QUIT  ; label RELEASE
  ;
  ;
-SHOWRX(IEN52)	; show info for the Rx
+SHOWRX(IEN52)   ; show info for the Rx
  ;REQUIRED: pass by value IEN52 (ien in file 52)
  QUIT:'$DATA(IEN52)
  ;
@@ -195,7 +195,7 @@ SHOWRX(IEN52)	; show info for the Rx
  QUIT  ; label SHOWRX
  ;
  ;
-CKFINDT(IEN,FINISH)	; check the finish date/time for an Rx
+CKFINDT(IEN,FINISH)     ; check the finish date/time for an Rx
  ;REQUIRED: pass IEN by value the IEN in Rx file 52
  ;OPTIONAL: pass by reference FINISH to return the finish date/time
  ;OUTPUT: 0 if not finished, 1 if finished, -1 if error
@@ -211,7 +211,7 @@ CKFINDT(IEN,FINISH)	; check the finish date/time for an Rx
  QUIT  ; label CKFINDT
  ;
  ;
-ISSUEDT(IEN52,FINDATE)	; edit Issue Date/time?
+ISSUEDT(IEN52,FINDATE)  ; edit Issue Date/time?
  ;REQUIRED: pass by value IEN52 (ien of the Rx in file 52)
  ;OPTIONAL: pass by value FINDATE.  will default to finish date if not passed
  ;Extrinsic Output: -1 for error, 0 for fail, fileman date time for success
@@ -228,10 +228,10 @@ ISSUEDT(IEN52,FINDATE)	; edit Issue Date/time?
  . Set CHANGED=$$CHGDATE(IEN52,ISSUE2,1,"ISSUE",0)
  . If CHANGED Set OUT=$$GET1^DIQ(52,IEN52,1) ; date/time for ext output
  ;
- Quit $Get(OUT)	; label ISSUEDT
+ Quit $Get(OUT) ; label ISSUEDT
  ;
  ;
-LOGINDT(IEN52,DEFAULT)	; edit the login date/time?
+LOGINDT(IEN52,DEFAULT)  ; edit the login date/time?
  ;REQUIRED: pass by value IEN52 (ien of the Rx in file 52)
  ;OPTIONAL: pass by value DEFAULT.  will default to issue date if not passed
  ;Extrinsic Output: -1 for error, 0 for fail, fileman date time for success
@@ -247,10 +247,10 @@ LOGINDT(IEN52,DEFAULT)	; edit the login date/time?
  . Set CHANGED=$$CHGDATE(IEN52,LOGIN2,21,"LOGIN",0)
  . If CHANGED Set OUT=$$GET1^DIQ(52,IEN52,21) ; date/time for ext output
  ;
- Quit $Get(OUT)	; label LOGINDT
+ Quit $Get(OUT) ; label LOGINDT
  ;
  ;
-DISPENSE(IEN52,DEFAULT)	; edit the dispense date? 25
+DISPENSE(IEN52,DEFAULT) ; edit the dispense date? 25
  ;REQUIRED: pass by value IEN52 (ien of the Rx in file 52)
  ;OPTIONAL: pass by value DEFAULT.  will default to finish date if not passed
  ;Extrinsic Output: -1 for error, 0 for fail, fileman date time for success
@@ -267,10 +267,10 @@ DISPENSE(IEN52,DEFAULT)	; edit the dispense date? 25
  . Set CHANGED=$$CHGDATE(IEN52,DISPENSE2,25,"DISPENSE",0)
  . If CHANGED Set OUT=$$GET1^DIQ(52,IEN52,25) ; date/time for ext output
  ;
- Quit $Get(OUT)	; label DISPENSE
+ Quit $Get(OUT) ; label DISPENSE
  ;
  ;
-CHRELDT1(RELDATE,DEFDATE,DISPLAY)	; change the release date/time
+CHRELDT1(RELDATE,DEFDATE,DISPLAY)       ; change the release date/time
  ;REQUIRED: pass the Default date by value DEFDATE, pass the release date/time 
  ;   by ref (RELDATE)
  ;OUTPUT: 0 for failed, 1 for success
@@ -292,7 +292,7 @@ CHRELDT1(RELDATE,DEFDATE,DISPLAY)	; change the release date/time
  QUIT OUT ; label CHRELDT1
  ;
  ;
-CHRELDT2(RELDATE,DEFDATE,DISPLAY)	; choose the date/time for release, refill 
+CHRELDT2(RELDATE,DEFDATE,DISPLAY)       ; choose the date/time for release, refill 
  ;   or finish
  ;REQUIRED: All dates in FM format?
  ;   pass RELDATE by REFERENCE for return of the Release, refill or finish 
@@ -344,7 +344,7 @@ CHGDATE(IEN52,DATE,FIELD,TEXT,SILENT) ; edit a date of the Rx [4/10/15 ajc]
  QUIT $GET(OUT) ; label CHGDATE
  ;
  ;
-CKRELRX(IEN,RELEASE)	; check if the rx has already been released
+CKRELRX(IEN,RELEASE)    ; check if the rx has already been released
  ;REQUIRED: Pass by value the IEN in file 52.  not the RX #!
  ;OPTIONAL: pass by ref the var RELEASE to get back the release date/time in
  ;  standard fileman format
@@ -363,7 +363,7 @@ CKRELRX(IEN,RELEASE)	; check if the rx has already been released
  QUIT  ; label CKRELRX
  ;
  ;
-CHFINDT1(FINDATE,DEFDATE)	; change the FINISH date/time
+CHFINDT1(FINDATE,DEFDATE)       ; change the FINISH date/time
  ;REQUIRED: pass the Default date by value DEFDATE, pass the release date/time 
  ;   by ref (RELDATE)
  ;OUTPUT: 0 for failed, 1 for success
@@ -384,7 +384,7 @@ CHFINDT1(FINDATE,DEFDATE)	; change the FINISH date/time
  QUIT OUT ; label CHFINDT1
  ;
  ;
-FILEFIN(IEN52,FINDATE,SILENT)	; edit the finish date/time
+FILEFIN(IEN52,FINDATE,SILENT)   ; edit the finish date/time
  ;REQUIRED: pass by value IEN52 (ien of the Rx in file 52)
  ;  pass by value FINDATE the new finish date/time in fileman format
  ;  new ERROR before calling to save error trap
@@ -409,7 +409,7 @@ FILEFIN(IEN52,FINDATE,SILENT)	; edit the finish date/time
  QUIT $GET(OUT) ; label EDITFIN
  ;
  ;
-RELMED(IEN,DATE,SILENT,ERROR)	; release a medication
+RELMED(IEN,DATE,SILENT,ERROR)   ; release a medication
  ;REQUIRED: pass by value IEN - the prescription IEN from file 52.  NOT THE 
  ;  PRESCRIPTION NUMBER!  new ERROR before calling - will return the array of
  ;  error data
@@ -450,7 +450,7 @@ RELMED(IEN,DATE,SILENT,ERROR)	; release a medication
  QUIT SUCCESS ; label RELMED
  ;
  ;
-CHEXPDT(IEN52,FILLDATE)	; change the expiration date , 2015mar12 ajc
+CHEXPDT(IEN52,FILLDATE) ; change the expiration date , 2015mar12 ajc
  ;REQUIRED: pass by value IEN52 (ien of the Rx in file 52) 
  ;
  ;EXT OUTPUT: -1 error, 0 not changed, 1 changed
@@ -476,6 +476,6 @@ CHEXPDT(IEN52,FILLDATE)	; change the expiration date , 2015mar12 ajc
  . Set CHANGED=$$CHGDATE(IEN52,EXPIRE2,26,"EXPIRATION",0)
  . If CHANGED Set OUT=$$GET1^DIQ(52,IEN52,26) ; date/time for ext output
  ;
- Quit $Get(OUT)	; label CHEXPDT
+ Quit $Get(OUT) ; label CHEXPDT
  ;
  ;

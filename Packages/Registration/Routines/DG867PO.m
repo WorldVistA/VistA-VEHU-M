@@ -1,5 +1,5 @@
 DG867PO ;BL/BL - PRE-INSTALL ROUTINE FOR DG*5.3*867 ;01-APR-13
- ;;5.3;REGISTRATION;**867**;01-APR-13;Build 56
+ ;;5.3;REGISTRATION;**867**;01-APR-13;Build 59
  ;
  ;Purpose of this routine is to provide a filter for the data entries in file #391 and 
  ;file #43.4

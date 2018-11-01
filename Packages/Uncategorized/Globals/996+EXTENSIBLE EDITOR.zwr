@@ -1,10 +1,10 @@
 OSEHRA ZGO Export: EXTENSIBLE EDITOR
-24-JAN-2018 16:38:22 ZWR
+31-OCT-2018 09:30:22 ZWR
 ^RGED1(0)="EXTENSIBLE EDITOR^996^13^8"
 ^RGED1(1,0)="DEFAULT^RGED-HELP^RGED-PROG-CSH^1.5^^^1^3000509"
 ^RGED1(1,.25)="Default text editor"
 ^RGED1(1,1,0)="^996.01^5^5"
-^RGED1(1,1,1,0)="1"
+^RGED1(1,1,1,0)=1
 ^RGED1(1,1,1,1,0)="^996.11^44^36"
 ^RGED1(1,1,1,1,1,0)="PF1"
 ^RGED1(1,1,1,1,1,1)="D CMD^RGED0(2)"
@@ -115,7 +115,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(1,1,1,1,"B","SELECT",41)=""
 ^RGED1(1,1,1,1,"B","UP",11)=""
 ^RGED1(1,1,1,2)="D INSERT^RGED0(RGCH1,RGITER)"
-^RGED1(1,1,2,0)="2"
+^RGED1(1,1,2,0)=2
 ^RGED1(1,1,2,1,0)="^996.11^41^20"
 ^RGED1(1,1,2,1,1,0)="""H"""
 ^RGED1(1,1,2,1,1,1)="D ^RGEDH"
@@ -178,7 +178,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(1,1,2,1,"B","RIGHT",13)=""
 ^RGED1(1,1,2,1,"B","UP",17)=""
 ^RGED1(1,1,2,2)="W $$PRMPT^RGED2(""Unknown command"",-1)"
-^RGED1(1,1,3,0)="4"
+^RGED1(1,1,3,0)=4
 ^RGED1(1,1,3,1,0)="^996.11^22^21"
 ^RGED1(1,1,3,1,1,0)="""A"""
 ^RGED1(1,1,3,1,1,1)="S %=+$$PRMPT^RGED2(19) D:(%>0)&(%<256) POS^RGED2,INSERT^RGED0($C(%),RGITER)"
@@ -244,7 +244,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(1,1,3,1,"B","RIGHT",17)=""
 ^RGED1(1,1,3,1,"B","UP",19)=""
 ^RGED1(1,1,3,2)="W $$PRMPT^RGED2(""Unknown command"",-1)"
-^RGED1(1,1,4,0)="3"
+^RGED1(1,1,4,0)=3
 ^RGED1(1,1,4,1,0)="^996.11^18^18"
 ^RGED1(1,1,4,1,1,0)="""P"""
 ^RGED1(1,1,4,1,1,1)="D SHST^RGEDS(5,-1)"
@@ -301,7 +301,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(1,1,4,1,"B","""X""",14)=""
 ^RGED1(1,1,4,1,"B","$C(9)",10)=""
 ^RGED1(1,1,4,2)="W $$PRMPT^RGED2(""Unknown command"",-1)"
-^RGED1(1,1,5,0)="5"
+^RGED1(1,1,5,0)=5
 ^RGED1(1,1,5,1,0)="^996.11^9^8"
 ^RGED1(1,1,5,1,1,0)="""E"""
 ^RGED1(1,1,5,1,1,1)="D MEXE^RGED3("""",RGITER)"
@@ -489,7 +489,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(2,0)="HELP^^^1.5^^^^3000509"
 ^RGED1(2,.25)="Help frame viewer"
 ^RGED1(2,1,0)="^996.01^1^1"
-^RGED1(2,1,1,0)="1"
+^RGED1(2,1,1,0)=1
 ^RGED1(2,1,1,1,0)="^996.11^28^20"
 ^RGED1(2,1,1,1,1,0)="$C(6)"
 ^RGED1(2,1,1,1,1,1)="D SEARCH^RGEDF()"
@@ -648,7 +648,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(5,0)="BROWSE^^^1.5^^^^3000509"
 ^RGED1(5,.25)="Text browser"
 ^RGED1(5,1,0)="^996.01^2^2"
-^RGED1(5,1,1,0)="1"
+^RGED1(5,1,1,0)=1
 ^RGED1(5,1,1,1,0)="^996.11^31^19"
 ^RGED1(5,1,1,1,1,0)="$C(6)"
 ^RGED1(5,1,1,1,1,1)="D SEARCH^RGEDF()"
@@ -708,7 +708,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(5,1,1,1,"B","RIGHT",9)=""
 ^RGED1(5,1,1,1,"B","UP",7)=""
 ^RGED1(5,1,1,2)="W $$PRMPT^RGED2(""This document cannot be modified"",-1)"
-^RGED1(5,1,2,0)="2"
+^RGED1(5,1,2,0)=2
 ^RGED1(5,1,2,1,0)="^996.11^2^2"
 ^RGED1(5,1,2,1,1,0)="""T"""
 ^RGED1(5,1,2,1,1,1)="D TOP^RGED2"
@@ -753,7 +753,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(5,2,10,5,2,0)="1 = help mode (text enclosed in brackets displayed in reverse video)"
 ^RGED1(5,2,10,5,3,0)="2 = nonprintable characters displayed in native form (allows imbedded "
 ^RGED1(5,2,10,5,4,0)="    formatting)"
-^RGED1(5,2,11,0)="1"
+^RGED1(5,2,11,0)=1
 ^RGED1(5,2,"B",1,11)=""
 ^RGED1(5,2,"B",2,2)=""
 ^RGED1(5,2,"B",3,3)=""
@@ -816,7 +816,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(7,0)="PROG^RGED-PROGRAMMER HELP^RGED-PROG-CSH^1.5^^1^^3000509"
 ^RGED1(7,.25)="Programmer editor"
 ^RGED1(7,1,0)="^996.01^5^5"
-^RGED1(7,1,1,0)="1"
+^RGED1(7,1,1,0)=1
 ^RGED1(7,1,1,1,0)="^996.11^47^39"
 ^RGED1(7,1,1,1,1,0)="PF1"
 ^RGED1(7,1,1,1,1,1)="D CMD^RGED0(2)"
@@ -936,7 +936,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(7,1,1,1,"B","SELECT",42)=""
 ^RGED1(7,1,1,1,"B","UP",11)=""
 ^RGED1(7,1,1,2)="D INSERT^RGED0(RGCH1,RGITER)"
-^RGED1(7,1,2,0)="2"
+^RGED1(7,1,2,0)=2
 ^RGED1(7,1,2,1,0)="^996.11^40^19"
 ^RGED1(7,1,2,1,1,0)="""H"""
 ^RGED1(7,1,2,1,1,1)="D ^RGEDH"
@@ -996,7 +996,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(7,1,2,1,"B","RIGHT",13)=""
 ^RGED1(7,1,2,1,"B","UP",17)=""
 ^RGED1(7,1,2,2)="W $$PRMPT^RGED2(""Unknown command"",-1) D FLUSH^RGEDH"
-^RGED1(7,1,3,0)="4"
+^RGED1(7,1,3,0)=4
 ^RGED1(7,1,3,1,0)="^996.11^22^20"
 ^RGED1(7,1,3,1,1,0)="""A"""
 ^RGED1(7,1,3,1,1,1)="S %=+$$PRMPT^RGED2(19) D:(%>0)&(%<256) POS^RGED2,INSERT^RGED0($C(%),RGITER)"
@@ -1059,7 +1059,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(7,1,3,1,"B","RIGHT",17)=""
 ^RGED1(7,1,3,1,"B","UP",19)=""
 ^RGED1(7,1,3,2)="W $$PRMPT^RGED2(""Unknown command"",-1)"
-^RGED1(7,1,4,0)="3"
+^RGED1(7,1,4,0)=3
 ^RGED1(7,1,4,1,0)="^996.11^18^18"
 ^RGED1(7,1,4,1,1,0)="""P"""
 ^RGED1(7,1,4,1,1,1)="D SHST^RGEDS(5,-1)"
@@ -1116,7 +1116,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(7,1,4,1,"B","""X""",14)=""
 ^RGED1(7,1,4,1,"B","$C(9)",10)=""
 ^RGED1(7,1,4,2)="W $$PRMPT^RGED2(""Unknown command"",-1)"
-^RGED1(7,1,5,0)="5"
+^RGED1(7,1,5,0)=5
 ^RGED1(7,1,5,1,0)="^996.11^11^11"
 ^RGED1(7,1,5,1,1,0)="""E"""
 ^RGED1(7,1,5,1,1,1)="D MEXE^RGED3("""",RGITER)"
@@ -1301,12 +1301,12 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(7,5)="(Press PF1 then H for help)"
 ^RGED1(7,6)="=========T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T===T==="
 ^RGED1(7,8,0)="^996.04P^8^1"
-^RGED1(7,8,8,0)="8"
+^RGED1(7,8,8,0)=8
 ^RGED1(7,8,"B",8,8)=""
 ^RGED1(9,0)="HFEDIT^RGED-HELP^RGED-PROG-CSH^1.5^^^^3000509"
 ^RGED1(9,.25)="Help frame editor"
 ^RGED1(9,1,0)="^996.01^5^5"
-^RGED1(9,1,1,0)="1"
+^RGED1(9,1,1,0)=1
 ^RGED1(9,1,1,1,0)="^996.11^44^36"
 ^RGED1(9,1,1,1,1,0)="PF1"
 ^RGED1(9,1,1,1,1,1)="D CMD^RGED0(2)"
@@ -1417,7 +1417,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(9,1,1,1,"B","SELECT",41)=""
 ^RGED1(9,1,1,1,"B","UP",11)=""
 ^RGED1(9,1,1,2)="D INSERT^RGED0(RGCH1,RGITER)"
-^RGED1(9,1,2,0)="2"
+^RGED1(9,1,2,0)=2
 ^RGED1(9,1,2,1,0)="^996.11^40^19"
 ^RGED1(9,1,2,1,1,0)="""H"""
 ^RGED1(9,1,2,1,1,1)="D ^RGEDH"
@@ -1477,7 +1477,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(9,1,2,1,"B","RIGHT",13)=""
 ^RGED1(9,1,2,1,"B","UP",17)=""
 ^RGED1(9,1,2,2)="W $$PRMPT^RGED2(""Unknown command"",-1)"
-^RGED1(9,1,3,0)="4"
+^RGED1(9,1,3,0)=4
 ^RGED1(9,1,3,1,0)="^996.11^22^21"
 ^RGED1(9,1,3,1,1,0)="""A"""
 ^RGED1(9,1,3,1,1,1)="S %=+$$PRMPT^RGED2(19) D:(%>0)&(%<256) POS^RGED2,INSERT^RGED0($C(%),RGITER)"
@@ -1543,7 +1543,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(9,1,3,1,"B","RIGHT",17)=""
 ^RGED1(9,1,3,1,"B","UP",19)=""
 ^RGED1(9,1,3,2)="W $$PRMPT^RGED2(""Unknown command"",-1)"
-^RGED1(9,1,4,0)="3"
+^RGED1(9,1,4,0)=3
 ^RGED1(9,1,4,1,0)="^996.11^18^18"
 ^RGED1(9,1,4,1,1,0)="""P"""
 ^RGED1(9,1,4,1,1,1)="D SHST^RGEDS(5,-1)"
@@ -1600,7 +1600,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(9,1,4,1,"B","""X""",14)=""
 ^RGED1(9,1,4,1,"B","$C(9)",10)=""
 ^RGED1(9,1,4,2)="W $$PRMPT^RGED2(""Unknown command"",-1)"
-^RGED1(9,1,5,0)="5"
+^RGED1(9,1,5,0)=5
 ^RGED1(9,1,5,1,0)="^996.11^21^21"
 ^RGED1(9,1,5,1,1,0)="""E"""
 ^RGED1(9,1,5,1,1,1)="D MEXE^RGED3("""",RGITER)"
@@ -1824,7 +1824,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(10,0)="INQUIRY^^^1.5^^^^3000509"
 ^RGED1(10,.25)="Displays imbedded format controls"
 ^RGED1(10,1,0)="^996.01^2^2"
-^RGED1(10,1,1,0)="1"
+^RGED1(10,1,1,0)=1
 ^RGED1(10,1,1,1,0)="^996.11^31^19"
 ^RGED1(10,1,1,1,1,0)="$C(6)"
 ^RGED1(10,1,1,1,1,1)="D SEARCH^RGEDF()"
@@ -1884,7 +1884,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(10,1,1,1,"B","RIGHT",9)=""
 ^RGED1(10,1,1,1,"B","UP",7)=""
 ^RGED1(10,1,1,2)="W $$PRMPT^RGED2(""This document cannot be modified"",-1)"
-^RGED1(10,1,2,0)="2"
+^RGED1(10,1,2,0)=2
 ^RGED1(10,1,2,1,0)="^996.11^2^2"
 ^RGED1(10,1,2,1,1,0)="""T"""
 ^RGED1(10,1,2,1,1,1)="D TOP^RGED2"
@@ -1985,7 +1985,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(12,0)="HL7EXC^RGED-HL7^^1.0^^1^0^3000509^5"
 ^RGED1(12,.25)="HL7 Exception Processing Utilities"
 ^RGED1(12,1,0)="^996.01^3^2"
-^RGED1(12,1,2,0)="1"
+^RGED1(12,1,2,0)=1
 ^RGED1(12,1,2,1,0)="^996.11^14^12"
 ^RGED1(12,1,2,1,2,0)=""" """
 ^RGED1(12,1,2,1,2,1)="D MARK^RGHLEXC"
@@ -2023,7 +2023,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(12,1,2,1,"B","""T""",7)=""
 ^RGED1(12,1,2,1,"B","""U""",13)=""
 ^RGED1(12,1,2,1,"B","""V""",8)=""
-^RGED1(12,1,3,0)="2"
+^RGED1(12,1,3,0)=2
 ^RGED1(12,1,3,1,0)="^996.11^1^1"
 ^RGED1(12,1,3,1,1,0)="""H"""
 ^RGED1(12,1,3,1,1,1)="D GEN^RGEDH"
@@ -2044,7 +2044,7 @@ OSEHRA ZGO Export: EXTENSIBLE EDITOR
 ^RGED1(13,0)="HL7VIEW^^^1.0^^^^3000509^5"
 ^RGED1(13,.25)="HL7 Message Browser"
 ^RGED1(13,1,0)="^996.01^1^1"
-^RGED1(13,1,1,0)="1"
+^RGED1(13,1,1,0)=1
 ^RGED1(13,1,1,1,0)="^996.11^1^1"
 ^RGED1(13,1,1,1,1,0)="""V"""
 ^RGED1(13,1,1,1,1,1)="D NXTEXC^RGHLEXC"

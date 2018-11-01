@@ -1,9 +1,9 @@
-PXRMEXFI ;SLC/PKR/PJH - Exchange utilities for file entries. ;08/02/2013
- ;;2.0;CLINICAL REMINDERS;**6,12,18,24,26**;Feb 04, 2005;Build 404
+PXRMEXFI ;SLC/PKR/PJH - Exchange utilities for file entries. ;07/21/2017
+ ;;2.0;CLINICAL REMINDERS;**6,12,18,24,26,47,42**;Feb 04, 2005;Build 80
  ;==============================================
 DELALL(FILENUM,NAME) ;Delete all file entries named NAME.
  N IEN,IND,LIST,MSG
- D FIND^DIC(FILENUM,"","@","KU",NAME,"*","","","","LIST","MSG")
+ D FIND^DIC(FILENUM,"","@","MU",NAME,"*","","","","LIST","MSG")
  I $P(LIST("DILIST",0),U,1)=0 Q
  S IND=0
  F  S IND=$O(LIST("DILIST",2,IND)) Q:IND=""  D
@@ -23,11 +23,12 @@ FEIMSG(SAME,ATTR) ;Output the general file exists install message.
  N IND,NOUT,TEXT,TEXTO
  S TEXT(1)=ATTR("FILE NAME")_" entry named "_ATTR("NAME")_" already exists"
  I SAME D
- . S TEXT(2)="and the packed component is identical, skipping."
- . S TEXT(3)=" "
- . D FORMAT^PXRMTEXT(1,70,3,.TEXT,.NOUT,.TEXTO)
- . F IND=1:1:NOUT W !,TEXTO(IND)
- . H 1
+ . W "."
+ . ;S TEXT(2)="and the packed component is identical, skipping."
+ . ;S TEXT(3)=" "
+ . ;D FORMAT^PXRMTEXT(1,70,3,.TEXT,.NOUT,.TEXTO)
+ . ;F IND=1:1:NOUT W !,TEXTO(IND)
+ . ;H 1
  I 'SAME D
  . S TEXT(2)="but the packed component is different, what do you want to do?"
  . D FORMAT^PXRMTEXT(1,70,2,.TEXT,.NOUT,.TEXTO)
@@ -36,11 +37,6 @@ FEIMSG(SAME,ATTR) ;Output the general file exists install message.
  ;
  ;==============================================
 FOKTT(FILENUM) ;Check if it is ok to transport items from this file.
- ;
- I $G(PXRMIGDS) Q 1
- ;If a file has been standardized do not transport it.
- ;DBIA #4640
- I $P($$GETSTAT^HDISVF01(FILENUM),U,1)>0 Q 0
  ;
  ;Drugs not allowed.
  I FILENUM=50 Q 0
@@ -51,11 +47,17 @@ FOKTT(FILENUM) ;Check if it is ok to transport items from this file.
  ;VA Drug Class not allowed.
  I FILENUM=50.605 Q 0
  ;
+ ;VA Product not allowed.
+ I FILENUM=50.68 Q 0
+ ;
  ;Lab tests not allowed.
  I FILENUM=60 Q 0
  ;
  ;Radiology procedures not allowed.
  I FILENUM=71 Q 0
+ ;
+ ;Imaging type not allowed.
+ ;I FILENUM=79.2 Q 0
  ;
  ;ICD9 (used in Dialogs) not allowed.
  I FILENUM=80 Q 0
@@ -94,7 +96,18 @@ FOKTT(FILENUM) ;Check if it is ok to transport items from this file.
  ;TIU Document Definition allowed in certain cases.
  I FILENUM=8925.1 Q 1
  ;
+ ;Immunizations not allowed.
+ I FILENUM=9999999.14 Q 0
+ ;
+ ;Make sure the file exists.
+ I $$ROOT^DILFD(FILENUM)="" Q 0
+ ;
+ I $G(PXRMIGDS) Q 1
+ ;If a file has been standardized do not transport it.
+ ;DBIA #4640
+ I $P($$GETSTAT^HDISVF01(FILENUM),U,1)>0 Q 0
  ;If control gets to here then it is an allowed file type.
+ ;
  Q 1
  ;
  ;==============================================

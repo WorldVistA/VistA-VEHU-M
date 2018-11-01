@@ -1,5 +1,5 @@
 DGENA2 ;ALB/CJM,RTK,TDM - Enrollment API - Automatic Update; 9/19/2002 ; 1/31/03 11:54am
- ;;5.3;Registration;**121,122,147,232,327,469,491,779,788**;Aug 13,1993;Build 18
+ ;;5.3;Registration;**121,122,147,232,327,469,491,779,788,824**;Aug 13,1993;Build 2
  ;
 AUTOUPD(DFN,EVENT) ;
  ;Description: If the patient meets the criteria for transmission to HEC,
@@ -171,6 +171,8 @@ REQUST(SDAMEVT,SDATA) ;
  . . D FILE^DIE("","FDATA","DPTERR")
  . ;if appointment made, appt. request="yes", request status'="filled"
  . ;- set request status='filled' w comment
+ . ; also, if non count clinic, do not file data.
+ . I ($$GET1^DIQ(44,DGCLN,2502,"I")="Y") Q
  . I ($$GET1^DIQ(2,DFN,1010.159,"I")),($$GET1^DIQ(2,DFN,1010.161,"I")'="F") D
  . . ;set fields
  . . N FDATA

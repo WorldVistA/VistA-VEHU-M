@@ -1,4 +1,4 @@
-ZVHOPM2	;OIA/AJC - modify Outpatient Med orders & refills ;4/10/15
+ZVHOPM2 ;OIA/AJC - modify Outpatient Med orders & refills ;4/10/15
  ;;0.1;NO PKG;**NO PATCHES**;Apr 10, 2015; no build
  ;
  ; test accounts only!
@@ -14,7 +14,7 @@ ZVHOPM2	;OIA/AJC - modify Outpatient Med orders & refills ;4/10/15
  Write !!,"Enter at a label!",!! Quit
  ;
  ;
-REFILLS(IEN52,SILENT)	; release the existing refills
+REFILLS(IEN52,SILENT)   ; release the existing refills
  ;REQUIRED: pass IEN52 by value - the Rx IEN in file 52
  ;OUTPUT: 1 successful, 0 not successful, -1 error
  ;
@@ -60,7 +60,7 @@ REFILLS(IEN52,SILENT)	; release the existing refills
  ; 
  QUIT  ; label REFILLS
  ;
-REFSHOW(IEN52)	; show refills and their release dates
+REFSHOW(IEN52)  ; show refills and their release dates
  ;REQUIRED: pass IEN52 by value
  ;OUTPUT: -1 if error, number of refills if not an error
  QUIT:'$DATA(IEN52) -1
@@ -81,7 +81,7 @@ REFSHOW(IEN52)	; show refills and their release dates
  QUIT NUM ; label REFSHOW
  ;
  ;
-REFSHOW2(IEN52)	; show refills WITHOUT their release dates
+REFSHOW2(IEN52) ; show refills WITHOUT their release dates
  ;REQUIRED: pass IEN52 by value
  ;OUTPUT: -1 if error, number of refills if not an error
  QUIT:'$DATA(IEN52) -1
@@ -98,7 +98,7 @@ REFSHOW2(IEN52)	; show refills WITHOUT their release dates
  QUIT NUM ; label REFSHOW2
  ;
  ;
-REFADD(IEN52)	; add/edit the refills [change display text 1/8/15]
+REFADD(IEN52)   ; add/edit the refills [change display text 1/8/15]
  ;REQUIRED: pass by value IEN52 (ien in file 52)
  ;EXTRINSIC OUTPUT: -1 for error, 0 for no change, 1 for successful change
  QUIT:'$DATA(IEN52) -1
@@ -130,7 +130,7 @@ REFADD(IEN52)	; add/edit the refills [change display text 1/8/15]
  QUIT $GET(OUT) ; label REFADD
  ;
  ;
-REFADD2(IEN52)	; add/edit refill date/time
+REFADD2(IEN52)  ; add/edit refill date/time
  ;REQUIRED: pass by value IEN52 (ien in file 52) and I (refill #)
  ;  pass by ref: DONE and OUT to return signal for finished and output
  ;EXT OUTPUT: 0 for fail, 1 for success, -1 for error
@@ -158,7 +158,7 @@ REFADD2(IEN52)	; add/edit refill date/time
  QUIT $GET(OUT) ; label REFADD2
  ;
  ;
-REFADD3(IEN52,IEN521,REFILLDT,SILENT)	; add a new refill
+REFADD3(IEN52,IEN521,REFILLDT,SILENT)   ; add a new refill
  ;REQUIRED: IEN52 by value (ien from file52) and IEN521 by value (ien of the 
  ;   refill from 52.1)
  ;OUTPUT: 1 for success, 0 for fail, -1 for error
@@ -195,7 +195,7 @@ REFADD3(IEN52,IEN521,REFILLDT,SILENT)	; add a new refill
  QUIT $GET(OUT) ; label REFADD3
  ;
  ;
-CKRELRF(IEN52,REFIEN,DATE)	; check if the refill has been released
+CKRELRF(IEN52,REFIEN,DATE)      ; check if the refill has been released
  ;REQUIRED: Pass by value IEN52 (the ien in file 52)
  ;          Pass by value REFIEN (the ien of the refill sub of file 52.1)
  ;OPTIONAL: Pass by reference DATE to return the date/time
@@ -212,7 +212,7 @@ CKRELRF(IEN52,REFIEN,DATE)	; check if the refill has been released
  QUIT  ; label CKRELRF
  ;
  ;
-RELREF(IEN52,IENREFILL,DATE,SILENT,ERROR)	; release a refill
+RELREF(IEN52,IENREFILL,DATE,SILENT,ERROR)       ; release a refill
  ;REQUIRED: pass by value: IEN52 (ien of the Rx in file 52); IENREFILL (refill
  ;  IEN from 52.1); DATE release date/time
  ;  New ERROR before calling to allow return of ERROR array
@@ -250,7 +250,7 @@ RELREF(IEN52,IENREFILL,DATE,SILENT,ERROR)	; release a refill
  QUIT -1 ; label RELREF
  ;
  ;
-EDITREF(IEN52,IENREFILL,SILENT)	; edit existing refill
+EDITREF(IEN52,IENREFILL,SILENT) ; edit existing refill
  ;REQUIRED: pass by ref: IEN52 (ien of the Rx in file 52) and IENREFILL (ien 
  ;    of the refill in file 52.1) 
  ;OUTPUT: 1 for successful, 0 for fail, -1 for error
@@ -299,7 +299,7 @@ EDITREF(IEN52,IENREFILL,SILENT)	; edit existing refill
  ;
  ;==================================ORDERS===================================
  ;
-CHORDT(IEN52)	; Charge order dates? [1/8/15]
+CHORDT(IEN52)   ; Charge order dates? [1/8/15]
  ;REQUIRED: pass by value IEN52 (ien of the Rx in file 52)
  ;
  QUIT:'$DATA(IEN52) -1
@@ -333,7 +333,7 @@ CHORDT(IEN52)	; Charge order dates? [1/8/15]
  QUIT $GET(OUT) ; label CHORDT
  ;
  ;
-SHOWOR(IEN52)	; show the order dates
+SHOWOR(IEN52)   ; show the order dates
  ;REQUIRED: pass by value IEN52 (ien of the Rx in file 52)
  ;OUTPUT: start date, end date, when entered, order date
  ;  ext out: 1 successful, 0 fail, -1 error
@@ -355,7 +355,7 @@ SHOWOR(IEN52)	; show the order dates
  QUIT $GET(OUT) ; label SHOWOR
  ;
  ;
-CHORDT1(IEN100)	; change the order date(s)
+CHORDT1(IEN100) ; change the order date(s)
  ;REQUIRED: pass by value IEN100 (ien of the order in file 100)
  ;OUTPUT: start date, end date, when entered, order date
  ;  ext out: 1 successful, 0 fail, -1 error
@@ -378,7 +378,7 @@ CHORDT1(IEN100)	; change the order date(s)
  QUIT $GET(OUT) ; label CHORDT1
  ;
  ;
-CHORDT11(IEN100,NUM,LABEL)	; prompt to change the date
+CHORDT11(IEN100,NUM,LABEL)      ; prompt to change the date
  ;REQUIRED: pass by value IEN100 (ien of the order in file 100), NUM is the ien
  ;  of the date in 100.008, LABEL is the ACTION field from 100.008
  ;OUTPUT: dates to the screen
@@ -412,7 +412,7 @@ CHORDT11(IEN100,NUM,LABEL)	; prompt to change the date
  QUIT $GET(OUT) ; label CHORDT11
  ;
  ;
-CHORDT2(IEN100)	; change the order START date
+CHORDT2(IEN100) ; change the order START date
  ;REQUIRED: pass by value IEN100 (ien of the order in file 100)
  ;OUTPUT: start date, end date, when entered, order date
  ;  ext out: 1 successful, 0 fail, -1 error
@@ -428,7 +428,7 @@ CHORDT2(IEN100)	; change the order START date
  QUIT $GET(OUT) ; label CHORDT2
  ;
  ;
-CHORDT3(IEN100)	; change the order STOP date
+CHORDT3(IEN100) ; change the order STOP date
  ;REQUIRED: pass by value IEN100 (ien of the order in file 100)
  ;OUTPUT: start date, end date, when entered, order date
  ;  ext out: 1 successful, 0 fail, -1 error
@@ -445,7 +445,7 @@ CHORDT3(IEN100)	; change the order STOP date
  QUIT $GET(OUT) ; label CHORDT3
  ;
  ;
-FILEOR1(IEN100,ORDATE,NUM,FIELD,LABEL,SILENT)	; file the new order date/time
+FILEOR1(IEN100,ORDATE,NUM,FIELD,LABEL,SILENT)   ; file the new order date/time
  ; 6/15/2015 AJC - adding field to make this useful for multiple date/times
  ;REQUIRED: pass by value IEN100 (order number) NUM is the ien from 100.008
  ;  FIELD is the field # in the fileman Data Dictionary
@@ -479,7 +479,7 @@ FILEOR1(IEN100,ORDATE,NUM,FIELD,LABEL,SILENT)	; file the new order date/time
  QUIT $GET(OUT) ; label FILEOR1
  ;
  ;
-FILEOR2(IEN100,DATE,LABEL,FIELD,SILENT)	; file the new START date/time
+FILEOR2(IEN100,DATE,LABEL,FIELD,SILENT) ; file the new START date/time
  ; make generic to any field in the file (not subfiles)
  ;REQUIRED: pass these by value - IEN100 (order number); DATE in fileman 
  ;  date/time; LABEL is the name of the field and FIELD is the field # from 
@@ -510,7 +510,7 @@ FILEOR2(IEN100,DATE,LABEL,FIELD,SILENT)	; file the new START date/time
  ;
  ;===========================NOT CALLED========================
  ;
-CKREFDT(IEN52,REFIEN)	; get the refill date/time
+CKREFDT(IEN52,REFIEN)   ; get the refill date/time
  ;REQUIRED: Pass by value IEN52 (the ien in file 52)
  ;          Pass by value REFIEN (the ien of the refill sub of file 52.1)
  ;OUTPUT: -1 for error or date/time in fileman format if successful
@@ -528,7 +528,7 @@ CKREFDT(IEN52,REFIEN)	; get the refill date/time
  QUIT  ; label CKREFDT
  ;
  ;
-GETIEN(RXNUM)	; get the IEN from the RX number
+GETIEN(RXNUM)   ; get the IEN from the RX number
  ;REQUIRED: pass by value the Prescription number
  ;OUTPUT: The IEN in file 52, or -1 for error
  ;
@@ -544,7 +544,7 @@ GETIEN(RXNUM)	; get the IEN from the RX number
  QUIT  ; label GETIEN
  ;
  ;
-FILEOR3(IEN100,STOPDATE,SILENT)	; file the new STOP date/time
+FILEOR3(IEN100,STOPDATE,SILENT) ; file the new STOP date/time
  ;REQUIRED: pass by value IEN100 (order number)
  ;Ext Output: 1 = successful, 0 failed, -1 error
  Q

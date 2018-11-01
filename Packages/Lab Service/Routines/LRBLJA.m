@@ -1,11 +1,11 @@
 LRBLJA ;AVAMC/REG/CYM - BB INVENTORY DATA ENTRY ;10/24/96  19:20 ;
- ;;5.2;LAB SERVICE;**72,90,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,90,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
 SET K DR,DA,LR("CK") D:'$D(LRAA) Z W ! S (DIC,DIE)="^LRD(65,",DIC(0)="AEFQMZ",DIC("S")="I $P(^(0),U,16)=DUZ(2)" D ^DIC K DIC Q:Y<1  S DA=+Y Q
-S W ! S DIC=66,X="TYPING CHARGE",DIC(0)="X" D ^DIC I Y<1 W !," 'TYPING CHARGE' entry not in BLOOD PRODUCT File",!!,"Inform Blood Bank Supervisor",! Q
+S Q  W ! S DIC=66,X="TYPING CHARGE",DIC(0)="X" D ^DIC I Y<1 W !," 'TYPING CHARGE' entry not in BLOOD PRODUCT File",!!,"Inform Blood Bank Supervisor",! Q
  S W=$S($D(^LAB(66,+Y,"SU",1,0)):$P(^(0),"^",2),1:"")
  D SET G:Y<1 END D CK^LRU G:$D(LR("CK")) S S DR=".12//"_W D ^DIE D FRE^LRU K DIC,DIE,DR G S
-A D Z G:Y=-1 END S LRF=0
+A Q  D Z G:Y=-1 END S LRF=0
  I LRCAPA W !!,"Enter 'YES' to record results and workload or 'NO' to record only results:",!,"Was testing performed at this facility " S %="" D YN^LRU G:%<1 END S:%=1 LRF=1 S X="UNIT PHENOTYPING",X("NOCODES")=1 D X^LRUWK G:'$D(X) END
 B S LR("SLAM")=0 D L^LRU,SET G:Y<1 END D CK^LRU G:$D(LR("CK")) B D P^LRBLJA1 S (LR,LRD)=0,DR="[LRBLIAG]" W ! D ^DIE D FRE^LRU D:LRF ^LRBLJA1 I $D(^LRD(65,LR,0)),$P(^(0),"^",2)="SELF" S LRB=$P(^(0),"^"),LRD=$O(^LRE("C",LRB,0))
 F Q:LR("SLAM")=1  F LRW=0:0 S LRW=$O(LRW(LRW)) Q:'LRW  F M=0:0 S M=$O(LRW(LRW,M)) Q:'M  D ST,CLNP
@@ -35,7 +35,7 @@ CMV S M=$P(^LRD(65,LR,0),"^",15) Q:M=""  F M(2)=0:0 S M(2)=$O(^LRD(65,"B",LRB,M(
  W $C(7),!!,"Inventory unit:",$P(^LRD(65,LR,0),"^"),?38,"CMV ANTIBODY ",$S(M:"PRESENT",1:"ABSENT"),!,"Donor ",$P(^LRE(LRD,0),"^"),?38,"CMV ANTIBODY ",$S(M(1):"PRESENT",1:"ABSENT")
  W !!,"Recheck donor and inventory unit CMV ANTIBODY testing." Q
 T ;transfer unit to another division
- D SET G:Y<1 END D CK^LRU G:$D(LR("CK")) T S LRO=$P(^LRD(65,DA,0),U,16),DR=".16" D ^DIE,FRE^LRU K DIC,DIE,DR S LRN=$P(^LRD(65,DA,0),U,16) D:LRO'=LRN AD G T
+ Q  D SET G:Y<1 END D CK^LRU G:$D(LR("CK")) T S LRO=$P(^LRD(65,DA,0),U,16),DR=".16" D ^DIE,FRE^LRU K DIC,DIE,DR S LRN=$P(^LRD(65,DA,0),U,16) D:LRO'=LRN AD G T
 AD S LRO=$P($G(^DIC(4,+LRO,0)),U),LRN=$P($G(^DIC(4,LRN,0)),U),LRW=$P($G(^VA(200,+DUZ,0)),U)
  S %DT="ETX",X="N" D ^%DT K %DT S A=$P($H,",")_$P($H,",",2)
  S:'$D(^LRD(65,DA,999,0)) ^(0)="^65.099DA^^" S X=^(0),^(0)=$P(X,"^",1,2)_"^"_A_"^"_($P(X,"^",4)+1),^(A,0)=Y_"^"_LRW_"^DIVISION^"_LRO_"^"_LRN Q

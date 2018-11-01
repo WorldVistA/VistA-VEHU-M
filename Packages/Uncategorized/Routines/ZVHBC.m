@@ -45,7 +45,7 @@ EN ; Entry point
  QUIT  ; Routine ZVHBC
  ;
  ;
-CKGBL	; Check the ^PSB(53.79 global for errors
+CKGBL   ; Check the ^PSB(53.79 global for errors
  ; get the start and end date from the date array
  ;FUTURE: add error handling
  NEW START,END

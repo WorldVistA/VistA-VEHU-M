@@ -142,7 +142,7 @@ ONETM(PATIENT,ROOMBED,ERROR1TM,ZVHFILE,END,SILENT) ; give one time and on call m
  QUIT  ; label ONETM
  ;
  ;
-EXPIRE(ORDER,STOPDATE,MED,ERROR,SILENT)	; expire an order
+EXPIRE(ORDER,STOPDATE,MED,ERROR,SILENT) ; expire an order
  ; internal use only - does not check if it's been given!
  ;pass by value:
  ;  ORDER (IEN of the order in the Order file 100), 
@@ -332,7 +332,7 @@ AUDIT(PSBREC,PSBDD,PSBFLD,PSBDATA,PSBSK,AADT,ZVHDUZ) ; Med Log Audit - AJC this 
  Q
  ;
  ;
-PATCH(PATIENT,AADT,IEN,MED,ERROR,ZVHDUZ,ZVHFILE,SILENT)	; administer and remove patches
+PATCH(PATIENT,AADT,IEN,MED,ERROR,ZVHDUZ,ZVHFILE,SILENT) ; administer and remove patches
  ; pass by ref: ERROR, 
  ; pass by value: PATIENT (IEN), AADT (Action date/time in fileman format),
  ;  IEN (the IEN of the new entry in the BCMA MEd file) MED (medication # in ^TMP("PSJ",$J))

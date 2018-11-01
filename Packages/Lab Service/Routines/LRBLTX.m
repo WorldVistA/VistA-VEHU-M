@@ -1,7 +1,7 @@
 LRBLTX ;AVAMC/REG - TESTS FOR TX RELATED DISORDERS ; 2/17/88  20:59 ;
- ;;5.2;LAB SERVICE;**247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D OUT S X="BLOOD BANK" D ^LRUTL G:Y=-1 OUT
+ Q  D OUT S X="BLOOD BANK" D ^LRUTL G:Y=-1 OUT
  I '$D(^LRO(69.2,LRAA,0)) L +^LRO(69.2) S ^LRO(69.2,LRAA,0)=LRAA_"^"_LRAA(2),X=^LRO(69.2,0),^(0)=$P(X,"^",1,2)_"^"_LRAA_"^"_($P(X,"^",4)+1),^LRO(69.2,"B",LRAA,LRAA)="",^LRO(69.2,"C",LRAA(2),LRAA)="" L -^LRO(69.2)
  I '$D(^LRO(69.2,LRAA,60,0)) S ^(0)="^69.33A^^"
  D F G:'C T D Z

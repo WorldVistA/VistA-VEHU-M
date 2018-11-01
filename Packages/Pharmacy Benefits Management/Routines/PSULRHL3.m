@@ -1,5 +1,5 @@
-PSULRHL3 ;HCIOFO/BH - Daily file procesing ; 4/28/04 3:10pm
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**3**;MARCH, 2005
+PSULRHL3 ;HCIOFO/BH - Daily file procesing ; 1/20/11 3:03pm
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;**3,18**;MARCH, 2005;Build 7
  ;
  ; ** THIS ROUTINE SHOULD NEVER BE INSTALLED AT A SITE ***
  ; ** THIS ROUTINE IS ONLY TO BE RUN ON THE CMOP-NAT SERVER ***
@@ -77,15 +77,18 @@ CLOSE ; Set Cross ref indicating that facilities data for the day got
  ;
 FILE ; File the lab data to the output file in the following single string format.
  ;
- ;  PAT|Facility|ICN|SSN|DFN|Date/Time Specimen Collected|Site/Specimen|Local Lab Number^Local Lab Name|
+ ;  PSU*4*18 Add use of STA5A
+ ;  PAT|Facility|ICN|SSN|DFN|Date/Time Specimen Collected|STA5A|Site/Specimen|Local Lab Number^Local Lab Name|
  ;  NLT Code^NLT Name|LOINC Code^LOINC Name|Result|Units|Low Range|High Range|
  ;
  ;
- N CNT,CR,DFN,FAC,HRANGE,ICN,LABA,LABB,LABC,LNCODE,LNNAME,LOCALLAB,LRANGE,NLTCODE,NLTNAME,RANGE,REC,RESIEN,RESREC,RESREC1,RESULT,SPEC,SPECDATE,SPECREC,SPECIEN,SSN,STR,STR1,TEST,UNITS
+ N CNT,CR,DFN,FAC,HRANGE,ICN,LABA,LABB,LABC,LNCODE,LNNAME,LOCALLAB
+ N LRANGE,NLTCODE,NLTNAME,RANGE,REC,RESIEN,RESREC,RESREC1,RESULT,SPEC
+ N SPECDATE,SPECREC,SPECIEN,SSN,STR,STR1,TEST,UNITS,STA5A
  ;
  U IO
  S REC=^DIZ(99999,IEN,0)
- S SSN=$P(REC,U,5),ICN=$P(REC,U,4),FAC=$P(REC,U,1),DFN=$P(REC,U,2)
+ S SSN=$P(REC,U,5),ICN=$P(REC,U,4),FAC=$P(REC,U,1),DFN=$P(REC,U,2),STA5A=$P(REC,U,6)
  ;
  S SPECIEN=0
  F  S SPECIEN=$O(^DIZ(99999,IEN,1,SPECIEN)) Q:'SPECIEN  D
@@ -94,7 +97,7 @@ FILE ; File the lab data to the output file in the following single string forma
  . S TEST=$O(^DIZ(99999,IEN,1,SPECIEN,1,TEST)) Q:'TEST
  . S SPECREC=^DIZ(99999,IEN,1,SPECIEN,0)
  . S SPEC=$P(SPECREC,U,1),SPECDATE=$P(SPECREC,U,2)
- . S STR="PAT|"_FAC_"|"_ICN_"|"_SSN_"|"_DFN_"|"_SPECDATE_"|"_SPEC
+ . S STR="PAT|"_FAC_"|"_ICN_"|"_SSN_"|"_DFN_"|"_SPECDATE_"|"_STA5A_"|"_SPEC
  . ;W STR
  . S RESIEN=0
  . ;S CNT=0

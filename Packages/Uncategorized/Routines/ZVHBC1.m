@@ -70,7 +70,7 @@ PSJI ;copied from option PSJI LBLI
  QUIT  ; label PSJI
  ;
  ;
-PRN(PATIENT,ZVHROOM,SDATE,EDATE,ZVHFILE,ERROR,SILENT)	; get admin date times for PRN meds
+PRN(PATIENT,ZVHROOM,SDATE,EDATE,ZVHFILE,ERROR,SILENT)   ; get admin date times for PRN meds
  ; pass by value: PATIENT, ZVHROOM (room/bed) MED,SDATE (Start date) EDATE (end date/time) ZVHFILE (0 to view, 1 to save)
  ; pass by ref: ERROR, ZVHFDA
  If '$Data(PATIENT)!'$Data(ZVHROOM) Do  Quit  ; [3/4/15 ajc - handle input errors]
@@ -219,7 +219,7 @@ PRN(PATIENT,ZVHROOM,SDATE,EDATE,ZVHFILE,ERROR,SILENT)	; get admin date times for
  QUIT  ; label PRN
  ;
  ;
-START(PATIENT,MED,LASTGIVEN,SDATE,EDATE,ZVHFILE,ERROR,SILENT)	; give a starting DATE/TIME
+START(PATIENT,MED,LASTGIVEN,SDATE,EDATE,ZVHFILE,ERROR,SILENT)   ; give a starting DATE/TIME
  ; pass by ref: LASTGIVEN (will return value of date/time given) ERROR (returns if error)
  ; pass by value: PATIENT,MED,SDATE,EDATE and ZVHFILE (save=1)
  NEW DATE
@@ -257,7 +257,7 @@ START(PATIENT,MED,LASTGIVEN,SDATE,EDATE,ZVHFILE,ERROR,SILENT)	; give a starting 
  QUIT  ; label start
  ;
  ;
-PRNFDA(PATIENT,MED,GVNDTTM,ZVHFDA,ERROR)	; set the fileman Data Array for PRN meds
+PRNFDA(PATIENT,MED,GVNDTTM,ZVHFDA,ERROR)        ; set the fileman Data Array for PRN meds
  ; pass by value: PATIENT (IEN), MED (IEN from ^TMP("PSJ",$J,IEN)), GVNDTTM (given date/time) 
  ; pass by ref: ZVHFDA (fileman Data Array), ERROR
  ; get an active nurse for that date
@@ -310,7 +310,7 @@ PRNFDA(PATIENT,MED,GVNDTTM,ZVHFDA,ERROR)	; set the fileman Data Array for PRN me
  QUIT  ; label PRNFDA
  ;
  ;
-CKDATES(DATE,SDATE,EDATE,OK)	; make sure a given date/time is between 2 other dates
+CKDATES(DATE,SDATE,EDATE,OK)    ; make sure a given date/time is between 2 other dates
  ; REQUIRED: all dates in fileman format
  ; pass by ref: DATE (date to check) SDATE (start of date range) EDATE (end of date range)
  ; pass by value: OK - will return 1 or 0 or error.  1 is true, it is in the range.  
@@ -327,7 +327,7 @@ CKDATES(DATE,SDATE,EDATE,OK)	; make sure a given date/time is between 2 other da
  QUIT  ; label CKDATES
  ;
  ;
-QDAY(PATIENT,MED,FREQ,ZVHFILE,ERROR,SILENT)	; give the QAM, daily, and QDAY meds at a random morning time
+QDAY(PATIENT,MED,FREQ,ZVHFILE,ERROR,SILENT)     ; give the QAM, daily, and QDAY meds at a random morning time
  ; give QPM meds at a random evening time
  ; pass by ref PATIENT,MED,FREQ,ZVHFILE,SILENT
  ; pass by value: ERROR
@@ -375,7 +375,7 @@ QDAY(PATIENT,MED,FREQ,ZVHFILE,ERROR,SILENT)	; give the QAM, daily, and QDAY meds
  QUIT  ; label QDAY
  ;
  ;
-QAC(PATIENT,MED,FREQ,ZVHFILE,ERROR,SILENT)	; give QAC (QM) meds at slightly random meal times
+QAC(PATIENT,MED,FREQ,ZVHFILE,ERROR,SILENT)      ; give QAC (QM) meds at slightly random meal times
  ; breakfast = 0701-0959 (times to give) 178 minute range
  ; lunch = 1101-1259
  ; dinner = 1701-1959
@@ -403,7 +403,7 @@ QAC(PATIENT,MED,FREQ,ZVHFILE,ERROR,SILENT)	; give QAC (QM) meds at slightly rand
  QUIT  ; label QAC
  ;
  ;
-REASON	; list of PRN reasons
+REASON  ; list of PRN reasons
  ;;patient request;;
  ;;as directed;;
  ;;MD orders;;

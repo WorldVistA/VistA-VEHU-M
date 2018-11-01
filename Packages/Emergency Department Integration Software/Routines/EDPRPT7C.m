@@ -1,5 +1,5 @@
-EDPRPT7C ;SLC/MKB - Exposure Report (CSV format) ;4/25/13 3:15pm
- ;;2.0;EMERGENCY DEPARTMENT;**6,2**;Feb 24, 2012;Build 23
+EDPRPT7C ;SLC/MKB - Exposure Report (CSV format)
+ ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
  ;
 EXP(IEN) ; Get Exposure Report for IEN at EDPSITE
  S IEN=+$G(IEN)  Q:IEN<1  Q:'$D(^EDP(230,IEN,0))
@@ -10,12 +10,7 @@ EXP(IEN) ; Get Exposure Report for IEN at EDPSITE
  S:'BEG BEG=$P(X0,U) S:'END END=$$NOW^EDPRPT
  D ROOMS(IEN,END)
  ; put IEN info into CSV
- ;***pij 4/19/2013 changed ED to IEN
- ;S X="ED"_TAB_"Room"_TAB_"Shift - Time In"_TAB_"Shift - Time Out"_TAB_"Diagnosis"_TAB_"Dispo"_TAB_"Arr Mode"_TAB_"Notes"
- ;Begin EDP*2.0*2 changes drp
- S X="IEN"_TAB_"Room"_TAB_"Shift - Time In"_TAB_"Shift - Time Out"_TAB_"Diagnosis"_TAB_"ICD"_TAB_"ICD Type"_TAB_"Dispo"_TAB_"Arr Mode"_TAB_"Notes"
- ;End EDP*2.0*2 Changes
- ;***
+ S X="ED"_TAB_"Room"_TAB_"Shift - Time In"_TAB_"Shift - Time Out"_TAB_"Diagnosis"_TAB_"Dispo"_TAB_"Arr Mode"_TAB_"Notes"
  D ADD^EDPCSV(X),BLANK^EDPCSV ;headers
  S X=TAB_TAB_"Contagious Patient Information"
  D ADD^EDPCSV(X),BLANK^EDPCSV
@@ -37,10 +32,7 @@ E1 ; look for patients also in ED between BEG and END
  ... S TREAT(LOG)=""
  . I '$D(TREAT(LOG)) S OTHER(LOG)=""
 E2 ; return treatment room patients
- ;***pij 4/19/2013
- ;D ADD^EDPCSV(TAB_TAB_"Exposed in Treatment Room"),BLANK^EDPCSV
- D ADD^EDPCSV(TAB_TAB_"Patients Directly Exposed in Different Treatment Rooms"),BLANK^EDPCSV
- ;***
+ D ADD^EDPCSV(TAB_TAB_"Exposed in Treatment Room"),BLANK^EDPCSV
  I '$O(TREAT(0)) D ADD^EDPCSV(TAB_TAB_"  None")
  E  S LOG=0 F  S LOG=$O(TREAT(LOG)) Q:LOG<1  D ADD(LOG),STAFF(LOG)
  D BLANK^EDPCSV
@@ -89,12 +81,7 @@ ADD(LOG) ; Add row to CSV for each room used during visit
  . S ROW=ROW_TAB_$$SHIFT^EDPRPT5(X)_" - "_$$EDATE^EDPRPT(X)
  . S X0=$G(^EDP(230,LOG,0)),X=$$DXPRI^EDPQPCE(+$P(X0,U,3),LOG)
  . S ROW=ROW_TAB_$P(X,U,2) ;Dx
- . ;DRP Begin EDP*2.0*2 Changes
- . S ROW=ROW_TAB_$P(X,U,1) ; added ICD Code
- . S ROW=ROW_TAB_$P(X,U,3) ;added ICDType 
- . ;End EDP*2.0*2 Changes
- . ;TDP - Patch 2 mod to capture all dispositions
- . S X=$P($G(^EDP(230,LOG,1)),U,2),ROW=ROW_TAB_$S($$ECODE^EDPRPT(X)'="":$$ECODE^EDPRPT(X),1:$$DISP^EDPRPT(X)) ;dis
+ . S X=$P($G(^EDP(230,LOG,1)),U,2),ROW=ROW_TAB_$$ECODE^EDPRPT(X) ;dis
  . S X=$P(X0,U,10),ROW=ROW_TAB_$$ENAME^EDPRPT(X) ;arrival
  . S LABS=$D(^EDP(230,LOG,8,"AC","L")),XRAY=$D(^("R")),X=""
  . I LABS!XRAY D  S X=X_" ordered"

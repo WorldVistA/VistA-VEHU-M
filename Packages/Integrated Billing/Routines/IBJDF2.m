@@ -1,6 +1,6 @@
-IBJDF2 ;ALB/CPM - THIRD PARTY FOLLOW-UP SUMMARY REPORT ;03-JAN-97
- ;;2.0;INTEGRATED BILLING;**69,91,100,118,133,205,554**;21-MAR-94;Build 81
- ;Per VA Directive 6402, this routine should not be modified.
+IBJDF2 ;ALB/CPM - THIRD PARTY FOLLOW-UP SUMMARY REPORT ;Feb 09, 2018@10:11:43
+ ;;2.0;INTEGRATED BILLING;**69,91,100,118,133,205,554,597,568**;21-MAR-94;Build 40
+ ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; - Option entry point.
  ;
@@ -68,7 +68,7 @@ DQ ; - Tasked entry point.
  .I IBA#100=0 S IBQ=$$STOP^IBOUTL("Third Party Follow-Up Summary Report") Q:IBQ
  .;
  .S IBAR=$G(^PRCA(430,IBA,0))
- .I $P(IBAR,U,2)'=9,$P(IBAR,U,2)'=45 Q  ; Not an RI bill.
+ .I $P(IBAR,U,2)'=9,$P(IBAR,U,2)'=45,$P(IBAR,U,2)'=46,$P(IBAR,U,2)'=47 Q  ; Not an RI bill.
  .S:"Aa"[IBSDATE IBARD=$$ACT(IBA) S:"Dd"[IBSDATE IBARD=$$DATE1(IBA) I 'IBARD Q  ; No activation date.
  .I '$D(^DGCR(399,IBA,0)) Q  ;     No corresponding claim to this AR.
  .;
@@ -100,11 +100,12 @@ DQ ; - Tasked entry point.
  I IBQ G ENQ
  ;
  ; - Extract summary data.
+ ; *597 fix array subscripts for all types
  I $G(IBXTRACT) D  G ENQ
  .F I=1:1:8 D
- ..F J=1,2 S $P(IB(0,4,9),U,J)=$P(IB(0,4,9),U,J)+$P(IB(0,4,I),U,J)
+ ..F J=1,2 S $P(IB(0,5,9),U,J)=$P(IB(0,5,9),U,J)+$P(IB(0,5,I),U,J)
  .S I=0 F J=1:1:9 D
- ..S I=I+1,IB(I)=+IB(0,4,J),I=I+1,IB(I)=$J(+$P(IB(0,4,J),U,2),0,2)
+ ..S I=I+1,IB(I)=+IB(0,5,J),I=I+1,IB(I)=$J(+$P(IB(0,5,J),U,2),0,2)
  .D E^IBJDE(9,0)
  ;
  ; - Print the reports.

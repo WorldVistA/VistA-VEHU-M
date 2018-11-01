@@ -1,5 +1,5 @@
-PSUPR2 ;BIR/PDW - Procurement extract from file 58.811 ; 4/1/08 4:09pm
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**13**;MARCH, 2005;Build 3
+PSUPR2 ;BIR/PDW - Procurement extract from file 58.811 ; 1/10/11 7:20am
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;**13,18**;MARCH, 2005;Build 7
  ;DBIAs
  ; Reference to file #58.811 supported by DBIA 2521
  ; Reference to file #51.5   supported by DBIA 1931
@@ -50,6 +50,8 @@ INVOICE ;EP process an invoice within an order
  S PSURDT=PSUINV(8)
  S PSUIVNUM=PSUINV(.01)
  ;
+ ;*18 Clear out Division for each invoice.
+ S PSUDIV=""
  I $G(PSUINV(4)) D DIV
  I $L(PSUDIV) S PSUDIVI=""
  E  S PSUDIV=PSUSNDR,PSUDIVI="H"

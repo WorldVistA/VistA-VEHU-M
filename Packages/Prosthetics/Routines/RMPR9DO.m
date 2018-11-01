@@ -1,5 +1,5 @@
 RMPR9DO ;HOIFO/HNC -  ORDER CONROL PROCESSING-REMOTE PROCEDURE ;9/8/03  07:12
- ;;3.0;PROSTHETICS;**59,77,90,60,135,163**;Feb 09, 1996;Build 9
+ ;;3.0;PROSTHETICS;**59,77,90,60,135,163,188**;Feb 09, 1996;Build 1
  ;
  ;8/5/03 Make sure no dups, HNC patch 77
  ;
@@ -236,7 +236,7 @@ REC ;records to grid
  I LINKED'=0&(TYPE'["MANUAL") S CLNK=CLNK+1
  S ^TMP($J,RMPRA)=^TMP($J,RMPRA)_STOPDT_U_DH6_U_HD1_U_HD2_U_HD3_U_HD4_U_HD5
  S ^TMP($J,RMPRA)=^TMP($J,RMPRA)_U_STATUS_U_RMPRA_U_STNX_U_LINKED
- S ^TMP($J,RMPRA)=^TMP($J,RMPRA)_U_U_SD1_U_SD2_U_SD3_U_SD4_U_SD5
+ S ^TMP($J,RMPRA)=^TMP($J,RMPRA)_U_U_SD1_U_SD2_U_SD3_U_SD4_U_SD5_U_DFN
  K CDATE,WHO,SSN,TYPE,DES,PDAY,STATUS,ADATE
  ;PUT RESULTS IN GLOBAL!!
  Q
@@ -245,7 +245,7 @@ EXIT ;common exit point
  Q
 MAIL ;send to PCM full dataset
  S XMY("G.RMPR SERVER")=""
- S XMY("G.PROSTHETICS@PSAS.MED.VA.GOV")=""
+ S XMY("G.PROSTHETICS@PSAS.DOMAIN.EXT")=""
  S XMDUZ=.5
  S XMSUB="Full DOR From Station: "_STNX
  N LASTIEN
@@ -264,7 +264,7 @@ MAIL ;send to PCM full dataset
 MAILG ;Mail message to local staff
  S XMDUZ=.5
  S XMY("G.RMPR SERVER")=""
- S XMY("VHACOPSASPIPReport@MED.VA.GOV")=""
+ S XMY("VHACOPSASPIPReport@DOMAIN.EXT")=""
  S XMSUB="DOR From Station: "_STNX
  S RMPRMSG(1)="The Automated Delayed Order Report has transmitted to Prosthetics HQ."
  S RMPRMSG(2)="This was activated by "_$P(XMFROM,"@",1)

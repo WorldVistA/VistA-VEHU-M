@@ -1,7 +1,7 @@
-PXRMREDF ; SLC/PJH - Edit PXRM reminder findings. ;05/08/2014
- ;;2.0;CLINICAL REMINDERS;**4,6,12,26**;Feb 04, 2005;Build 404
+PXRMREDF ; SLC/PJH - Edit PXRM reminder findings. ;09/21/2017
+ ;;2.0;CLINICAL REMINDERS;**4,6,12,26,47,42**;Feb 04, 2005;Build 80
  ;
- ; Called by PXRMREDT which newes and initialized DEF, DEF1, DEF2.
+ ; Called by PXRMREDT which newes and initializes DEF, DEF1, DEF2.
  ;
 SET S:'$D(^PXD(811.9,DA,20,0)) ^PXD(811.9,DA,20,0)="^811.902V" Q
  ;Display ALL findings
@@ -77,7 +77,8 @@ FEDIT(IEN) ;
  ;Rx Type
  I (TYPE="DC")!(TYPE="DG")!(TYPE="DR") S DR=DR_";16;27",STATUS=1
  ;Condition
- S DR=DR_";14;15;18"
+ ;S DR=DR_";14;15;18"
+ S DR=DR_";14;15//YES;18"
  I TYPE="CF" S DR=DR_";26"
  ;Found/not found text
  S DR=DR_";4;5"
@@ -318,12 +319,13 @@ TRMED(DA) ;
  ;Display term findings
  D TDSP(DA)
  ;Initialize change history
- S CS1=$$FILE^PXRMEXCS(811.5,DA)
+ ;DBIA 6157
+ S CS1=$$FILE^XLFSHAN(256,811.5,DA)
  ;Edit term findings
  S DIC="^PXRMD(811.5,"
  D EDIT^PXRMTMED(DIC,DA)
  ;Update change history
- S CS2=$$FILE^PXRMEXCS(811.5,DA)
+ S CS2=$$FILE^XLFSHAN(256,811.5,DA)
  I CS2=0 Q
  I CS2'=CS1 D SEHIST^PXRMUTIL(811.5,DIC,DA)
  Q

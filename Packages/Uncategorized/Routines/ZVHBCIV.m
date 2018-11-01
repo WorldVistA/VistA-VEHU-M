@@ -105,7 +105,7 @@ IV(ZVHPT,ZVHROOM,ZVHFILE,SILENT,END,ZVHERRIV) ; ZVHPT,ZVHROOM,$GET(ZVHFILE),SILE
  N MEDARRAY,MED,EDATE,XX S (MEDARRAY,MED)="" ;
  N ZVHMED,ZVHINF S (ZVHMED,ZVHINF)=""
  N ZVHDUZ,ZVHUSARRAY,ZVHERRUS,ZVHERRMED,ZVHERRBC S (ZVHDUZ,ZVHUSARRAY)="",(ZVHERRUS,ZVHERRMED,ZVHERRIV,ZVHERRBC,ZVHERRLG)=0
- N ZVHDATE,ZVHIVED S (ZVHDATE,ZVHIVED)=""	 ;identify if the order is active for a given date to be administered
+ N ZVHDATE,ZVHIVED S (ZVHDATE,ZVHIVED)=""        ;identify if the order is active for a given date to be administered
  N ZVHBCUSED,ZVHDONE1,ZVHINC1,ZVHON,ZVHBRCD S (ZVHBRCD,ZVHDONE1,ZVHINC1,ZVHON)=""
  N ZVHNUM,LASTGVN,ZVHHRBG S (ZVHNUM,LASTGVN,ZVHHRBG)=""
  F  S ZVHDATE=$O(^TMP("ZVHDTARY",$J,ZVHDATE)) Q:'ZVHDATE  D
@@ -127,7 +127,7 @@ NXMD . ;start loop thru the med array
  .. I 'SILENT W ?4,$P(^TMP("PSJ",$J,ZVHMED,3),U,2)," (IEN ",ZVHMED,")",! ; Medication
  .. I ($P(^TMP("PSJ",$J,ZVHMED,1),"^")'="IV")&'($D(^TMP("PSJ",$J,ZVHMED,950,0))) Q
  .. I ($P(^TMP("PSJ",$J,ZVHMED,1),"^")="IV")&($D(^TMP("PSJ",$J,ZVHMED,950,0))) S ZVHINF=1 ; 
-BC	;CHECK IF BARCODE USED
+BC      ;CHECK IF BARCODE USED
  .. I (ZVHINF)&($P(^TMP("PSJ",$J,ZVHMED,0),U,3)["V") N ZVHBRCD S (ZVHBRCD)=""
  .. ;B 
  .. S ZVHON=$P(^TMP("PSJ",$J,ZVHMED,0),"^",3) ; pharm order number
@@ -234,7 +234,7 @@ SETFDA ..;
  ;B
  QUIT
  ;
- ;BC	;CHECK IF BARCODE USED
+ ;BC    ;CHECK IF BARCODE USED
  I (ZVHINF)&($P(^TMP("PSJ",$J,ZVHMED,0),U,3)["V") N ZVHBRCD S (ZVHBRCD)=""
  ;B 
  S ZVHON=$P(^TMP("PSJ",$J,ZVHMED,0),"^",3) ; pharm order number
@@ -267,7 +267,7 @@ SETFDA ..;
  QUIT
  ;
  ;
-IVCONT(PATIENT,ROOMBED,ZVHFILE,SILENT,SDATE,EDATE,ERROR)	; give Infusions
+IVCONT(PATIENT,ROOMBED,ZVHFILE,SILENT,SDATE,EDATE,ERROR)        ; give Infusions
  ;[2014aug20 AJC] Rebuild to try to fix the stack overflow errors from 
  ;   infinite looping
  ; pass by value: PATIENT, ROOMBED, SDATE (Start date/time) EDATE 
@@ -397,7 +397,7 @@ IVCONT(PATIENT,ROOMBED,ZVHFILE,SILENT,SDATE,EDATE,ERROR)	; give Infusions
  QUIT  ; label IVCONT
  ;
  ;
-MAX(START,END,HOURS)	; determine the maximum potential administrations
+MAX(START,END,HOURS)    ; determine the maximum potential administrations
  ;req: pass by value start date/time, end date/time, hours per bag
  ;  date/time must be fileman format
  ; errors will return a -1
@@ -425,7 +425,7 @@ MAX(START,END,HOURS)	; determine the maximum potential administrations
  QUIT  ; label MAX
  ;
  ;
-HRBAG(MED)	; compute hours per bag from ^tmp("psj",med 
+HRBAG(MED)      ; compute hours per bag from ^tmp("psj",med 
  ; required: pass by value MED 
  QUIT:$GET(MED)="" -1
  QUIT:'$DATA(^TMP("PSJ",$J)) -1
@@ -455,7 +455,7 @@ HRBAG(MED)	; compute hours per bag from ^tmp("psj",med
  QUIT HOURS ; label HRBAG
  ;
  ;
-HRBAG1(PSBIEN)	; compute hours per bag for a running IV use ^psb(53.79,psbien 
+HRBAG1(PSBIEN)  ; compute hours per bag for a running IV use ^psb(53.79,psbien 
  ; required: pass by valuePSBIEN
  ; errors returned as -1
  QUIT:$GET(PSBIEN)="" -1
@@ -485,7 +485,7 @@ HRBAG1(PSBIEN)	; compute hours per bag for a running IV use ^psb(53.79,psbien
  QUIT HOURS ; label HRBAG1
  ;
  ;
-INFUSING(PATIENT,ZVHFILE,SILENT,SDATE,EDATE,MED,ERROR,STDTTM,HRPERBAG)	; if the IV is currently infusing
+INFUSING(PATIENT,ZVHFILE,SILENT,SDATE,EDATE,MED,ERROR,STDTTM,HRPERBAG)  ; if the IV is currently infusing
  ;req..
  ;if it's infusing, will complete it and return the next start date/time (STDTTM) and hours per bag (HRPERBAG)
  ;
@@ -505,7 +505,7 @@ INFUSING(PATIENT,ZVHFILE,SILENT,SDATE,EDATE,MED,ERROR,STDTTM,HRPERBAG)	; if the 
  QUIT  ; label INFUSING
  ;
  ;
-IVCOMP(PSBIEN,STOPDATE,RNDUZ,SILENT,ZVHFILE,ERROR)	; complete an IV
+IVCOMP(PSBIEN,STOPDATE,RNDUZ,SILENT,ZVHFILE,ERROR)      ; complete an IV
  ; REQUIRED: PSBIEN (the IEN from 53.79) 
  ; optional: stop date/time
  ;    WARNING: if time is not included, the stop date will be at 00:00
@@ -629,7 +629,7 @@ IVSTRT(STARTDATE,RNDUZ,MED,IEN,SILENT,ZVHFILE,ERROR) ; start the infusion
  QUIT  ; label IVSTRT
  ;
  ;
-GETRN(DATE,RNDUZ,SILENT,ERROR)	; return a random nurse that is active on a specific date
+GETRN(DATE,RNDUZ,SILENT,ERROR)  ; return a random nurse that is active on a specific date
  ;REQUIRED: pass by value DATE, pass by reference: RNDUZ
  ; duz for the nurse is returned in RNDUZ
  ;
@@ -651,7 +651,7 @@ GETRN(DATE,RNDUZ,SILENT,ERROR)	; return a random nurse that is active on a speci
  QUIT  ; label GETRN
  ;
  ;
-RANGE(START,STOP,DATE,IN,SILENT)	; compare a date to a range, returns IN=1 if in the range.
+RANGE(START,STOP,DATE,IN,SILENT)        ; compare a date to a range, returns IN=1 if in the range.
  ;REQ: pass by value START, STOP, DATE as fileman date/times, SILENT= 0 0r 1
  ;     pass by ref: IN (1=true it is IN the range; 0 = not in range; -1 = error)
  ;
@@ -677,7 +677,7 @@ RANGE(START,STOP,DATE,IN,SILENT)	; compare a date to a range, returns IN=1 if in
  QUIT  ; label RANGE
  ;
  ;
-CHKINF(PATIENT,PSJON,SDATE,EDATE,SILENT)	; check what is infusing
+CHKINF(PATIENT,PSJON,SDATE,EDATE,SILENT)        ; check what is infusing
  ;REQUIRED: new the variable array INFUSIONS before calling this label
  ;  pass by value PATIENT ien and PSJON order number
  ;  pass by value start date/time (SDATE) and end date/time (EDATE) for the range
@@ -736,7 +736,7 @@ CHKINF(PATIENT,PSJON,SDATE,EDATE,SILENT)	; check what is infusing
  QUIT  ; label CHKINF
  ;
  ;
-GETSTRT(PSBIEN)	; use the audit log to find the start date/time of an infusion
+GETSTRT(PSBIEN) ; use the audit log to find the start date/time of an infusion
  ; this will only find the oldest one (if multiples)
  ;REQUIRED: pass by value the PSBIEN from ^psb(53.79,PSBIEN,0
  ;
@@ -754,7 +754,7 @@ GETSTRT(PSBIEN)	; use the audit log to find the start date/time of an infusion
  QUIT OUTPUT ; label GETSTRT
  ;
  ;
-IVARRAY(PATIENT,EDATE,SILENT,ERROR)	; set up the array of active IV's in MEDARRAY
+IVARRAY(PATIENT,EDATE,SILENT,ERROR)     ; set up the array of active IV's in MEDARRAY
  ; REQUIRED: new the array var MEDARRAY before calling this label
  ;     pass by value PATIENT ien, end date (EDATE)
  ; Optional: pass Silent as 1=true or 0=false
@@ -791,7 +791,7 @@ IVARRAY(PATIENT,EDATE,SILENT,ERROR)	; set up the array of active IV's in MEDARRA
  QUIT  ; label IVARRAY
  ;
  ;
-EDITPSB(ZVHFILE,ERROR,SILENT)	; edit an existing PSB record
+EDITPSB(ZVHFILE,ERROR,SILENT)   ; edit an existing PSB record
  ; required: new ZVHFDA before calling this label.
  ;    new and pass by ref: ERROR for error tracking
  ;    pass by value: ZVHFILE (=1 to save the edit)
@@ -811,7 +811,7 @@ EDITPSB(ZVHFILE,ERROR,SILENT)	; edit an existing PSB record
  QUIT  ; label EDITPSB
  ;
  ;
-OVERLAP(STARTDATE,STOPDATE,SDATE,EDATE,ERROR)	; determine what type of overlap
+OVERLAP(STARTDATE,STOPDATE,SDATE,EDATE,ERROR)   ; determine what type of overlap
  ;REQUIRED: 
  ; pass by value:
  ;  start date/time and stop date/time of the Infusion

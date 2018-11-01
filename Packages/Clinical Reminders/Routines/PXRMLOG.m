@@ -1,5 +1,5 @@
-PXRMLOG ;SLC/PKR - Clinical Reminders logic routines. ;11/06/2013
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17,18,26**;Feb 04, 2005;Build 404
+PXRMLOG ;SLC/PKR - Clinical Reminders logic routines. ;08/24/2017
+ ;;2.0;CLINICAL REMINDERS;**4,6,12,17,18,26,47,42**;Feb 04, 2005;Build 80
  ;==========================================================
 EVALPCL(DEFARR,PXRMPDEM,FREQ,PCLOGIC,FIEVAL) ;Evaluate the Patient Cohort
  ;Logic.
@@ -45,16 +45,17 @@ ACHK ;
  I FREQ="" D
  . S AGEFI=0
  .;If there is no resolution logic then frequency is not required.
- . I DEFARR(35)'="" S ^TMP(PXRMPID,$J,PXRMITEM,"INFO","NOFREQ")="There is no reminder frequency!"
+ . I DEFARR(35)="" S ^TMP(PXRMPID,$J,PXRMITEM,"INFO","NOFREQ")="There is no reminder frequency!"
+ . I DEFARR(35)'="" S ^TMP(PXRMPID,$J,PXRMITEM,"FERROR","NOFREQ")="There is resolution logic but no reminder frequency!"
  E  D
  .;Save the final frequency and age range for display.
  .;Use the z so this will be the last of the info text.
  . S ^TMP(PXRMPID,$J,PXRMITEM,"zFREQARNG")=FREQ_U_MINAGE_U_MAXAGE_U_FIFREQ
+ . S ^TMP("PXRHM",$J,PXRMITEM,PXRMRNAM,"FREQ")=FREQ
  . S AGEFI=$S(FREQ=-1:0,1:$$AGECHECK^PXRMAGE(PXRMPDEM("AGE"),MINAGE,MAXAGE))
  S FIEVAL("AGE")=AGEFI
  ;
- ;Evaluate the patient cohort logic
-EVAL ;
+EVAL ;Evaluate the patient cohort logic.
  N AGE,DPCLOG,FI,FF,FUN,FUNCTION,FUNLIST,NUM,SEX,VAR
  S TEMP=DEFARR(32)
  S NUM=+$P(TEMP,U,1)

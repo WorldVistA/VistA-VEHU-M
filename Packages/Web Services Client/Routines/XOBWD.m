@@ -7,8 +7,6 @@ GENPORT(XOBY) ; -- generate http port class from WSDL during install
  NEW XOBSTAT,XOBWSDL
  SET XOBWSDL=$GET(XOBY("WSDL FILE"))
  ;
- IF ##class(%File).Exists(XOBWSDL) DO
- . SET XOBSTAT=$$ADDPROXY(.XOBY)
  ELSE  DO
  . SET XOBSTAT="0^File does not exist ["_XOBWSDL_"]"
  QUIT XOBSTAT

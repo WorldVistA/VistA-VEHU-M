@@ -1,6 +1,7 @@
-XINDX3 ;ISC/REL,GRK,RWF - PROCESS MERGE/SET/READ/KILL/NEW/OPEN COMMANDS ;06/24/08  15:44
- ;;7.3;TOOLKIT;**20,27,61,68,110,121,128,132,133**;Apr 25, 1995;Build 15
- ; Per VHA Directive 2004-038, this routine should not be modified.
+XINDX3 ;ISC/REL,GRK,RWF - PROCESS MERGE/SET/READ/KILL/NEW/OPEN COMMANDS ;2018-02-22  12:56 PM
+ ;;7.3;TOOLKIT;**20,27,61,68,110,121,128,132,133,140,10001**;Apr 25, 1995;Build 4
+ ; Original routine authored by Department of Veterans Affairs
+ ; RD3+3 contributed by George Timson (date written unknown)
 PEEK S Y=$G(LV(LV,LI+1)) Q
 PEEK2 S Y=$G(LV(LV,LI+2)) Q
 INC2 S LI=LI+1 ;Drop into INC
@@ -45,7 +46,8 @@ VLNF(X) ;Drop into VLN
 VLN ;Valid Local Name > Variable
  S ERR=0
  Q:X?1(1U,1"%").15UN
- I X?1(1A,1"%").15AN D E^XINDX1(57) Q  ;Lowercase
+ ;lower/mixed case, can't be namespaced ;p140
+ I X?1(1A,1"%").15AN D:$E(RTN,1,2)=$E(X,1,2) E^XINDX1(57) Q
  D E^XINDX1(11) ;Too long or other problem
  Q
 VGN ;Valid Global Name
@@ -71,7 +73,7 @@ N2 D INC Q:S=""  G N2:CH=","
  ;check for "@", functions, special variables, or %variables
  I CH?1P,(CH'=S) D  I $G(ERTX)]"" K ERTX G N2
  . Q:"@("[CH!(CH="%"&($E(S,2,8)?.1A.E))  ;check what's indirected on next pass or
- . ;if not $ET or $ES must use indirection 
+ . ;if not $ET or $ES must use indirection
  . I "$"[CH Q:$E(S,1,3)="$ET"!($E(S,1,3)="$ES")  I LI>1,(LV(LV,LI-1)="@") Q
  . D E^XINDX1(11)
  . Q
@@ -92,6 +94,7 @@ RD2 Q:","[CH
  D INC G RD2
 RD3 Q:","[CH  I "!#?"[CH D INC G RD3
  I (CH="%")!(CH?1A)!(CH="@") D ARG^XINDX2,INC G RD3
+ I CH="$" S ERR=21,RDTIME=1 D ^XINDX1 ;**MSC/EJ  READ can't contain $$ (Erwin); READ $P is invalid.
  Q
 O S STR=ARG,AC=99 D ^XINDX9,INC S ARG="" I S["@" D ARGS^XINDX2 Q
  D ARG^XINDX2,INC D  D INC,ARGS^XINDX2 Q
@@ -102,6 +105,6 @@ ERRCP S ERR=5 D ^XINDX1 Q
 ST ;
  S:'$D(V(LOC,S)) V(LOC,S)="" S:V(LOC,S)'[GK V(LOC,S)=V(LOC,S)_GK,GK="" Q
  Q
-ASM(WL,SI,L,SEP) ;
+ASM(WL,SI,L,SEP) ;assemble line Y from LV array
  N %,CH,Y S SEP=$G(SEP),Y="" F %=SI:1 S CH=$G(LV(WL,%)) Q:L[CH  S Y=Y_SEP_CH
  Q Y

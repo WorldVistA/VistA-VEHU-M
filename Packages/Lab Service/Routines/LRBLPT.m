@@ -1,7 +1,7 @@
 LRBLPT ;AVAMC/REG - TRANSFUSION RESULTS ;9/7/95  08:59 ;
- ;;5.2;LAB SERVICE;**72,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D END S X="BLOOD BANK" D ^LRUTL G:Y=-1 END
+ Q  D END S X="BLOOD BANK" D ^LRUTL G:Y=-1 END
  W !!?28,"Enter transfusion results"
 ASK W ! K ^TMP($J),LRZ,LRA,DIC,DIE,DR D ^LRDPA G:LRDFN=-1 END D R G ASK
  ;

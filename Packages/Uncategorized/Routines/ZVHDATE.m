@@ -117,7 +117,7 @@ DTARRAY(SDATE,EDATE,ZVHDTARY) ; Build the date array using start, end date
  ; Y(0)="APR 10,2014@13:42"
  ;
  ;
-SINGLE(DATE)	; select a single date [8/26/14 ajc]
+SINGLE(DATE)    ; select a single date [8/26/14 ajc]
  ; required: pass by reference DATE, will return a Fileman date in it.
  ;
  NEW DIR,DIRUT,DIROUT,X,Y,DTOUT,DUOUT,DA ; vars for DI Read
@@ -133,7 +133,7 @@ SINGLE(DATE)	; select a single date [8/26/14 ajc]
  QUIT  ; label SINGLE
  ;
  ;
-SELDTRG()	; select a date range  [10/28/14 ajc]
+SELDTRG()       ; select a date range  [10/28/14 ajc]
  ;EXT OUT: -1 for error, 0 for failed to select, otherwise: "start date ^ end date"
  ;
  WRITE #,"Select a date range...",!
@@ -149,10 +149,10 @@ SELDTRG()	; select a date range  [10/28/14 ajc]
  ;
  SET OUT=SDATE_"^"_EDATE
  ;
- QUIT $GET(OUT)	; label SELDTRG
+ QUIT $GET(OUT) ; label SELDTRG
  ;
  ;
-SELDATE(DISPLAY)	; select a date in the PAST (no future dates)  [10/28/14 ajc]
+SELDATE(DISPLAY)        ; select a date in the PAST (no future dates)  [10/28/14 ajc]
  ;EXT OUT: -1 for error, 0 for failed to select, otherwise a valid FM date
  ;OPTIONAL: pass a string in DISPLAY for the display name (EX: Start for start date)
  ;

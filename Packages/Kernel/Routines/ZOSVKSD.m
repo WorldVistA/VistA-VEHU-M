@@ -1,11 +1,10 @@
-%ZOSVKSD ;OAK/KAK - Calculate Disk Capacity ;5/9/07  10:36
- ;;8.0;KERNEL;**121,197,268,456**;Jul 26, 2004
+%ZOSVKSD ;OAK/KAK/RAK/JML - ZOSVKSD - Calculate Disk Capacity ;7/25/2004
+ ;;8.0;KERNEL;**121,197,268,456,568,670**;3/1/2018;Build 45
  ;
  ; This routine will help to calculate disk capacity for
- ; either DSM or Cache system platforms by looking up
- ; volume set table information
+ ; Cache system platforms by looking up volume set table information
  ;
-EN(SITENUM,SESSNUM,VOLS,OS) ;-- called by routine SYS+2^KMPSLK
+EN(SITENUM,SESSNUM,OS) ;-- called by routine SYS+2^KMPSLK
  ;--------------------------------------------------------------------
  ; SITENUM = Station number of site
  ; SESSNUM = SAGG session number
@@ -19,127 +18,103 @@ EN(SITENUM,SESSNUM,VOLS,OS) ;-- called by routine SYS+2^KMPSLK
  Q:$G(SESSNUM)=""
  Q:$G(OS)=""
  ;
- D @OS
+ D ALLOS
  ;
  Q
  ;
-CVMS ;--------------------------------------------------------------------
- ; Version for Cache for OpenVMS platform
- ;--------------------------------------------------------------------
+ALLOS ; Using InterSystems APIs.  Designed to work on all OS's
+ N KMPSARR,KMPSDIR,KMPSRNS,KMPSTNS,KMPSPTR
+ ; 
+ ; KMPS*2.0*1 -- now monitoring all volume sets
  ;
- ;-- code from routine %FREECNT
- ;
- N DIR
- ;
- S DIR=""
- F  S DIR=$O(^|"%SYS"|SYS("UCI",DIR)) Q:DIR=""  D
+ S KMPSDIR="",KMPSARR=""
+ S KMPSRNS=$ZU(5),KMPSTNS=$ZU(5,"%SYS")
+ F  S KMPSDIR=$O(^SYS("UCI",KMPSDIR)) Q:KMPSDIR=""  D
+ .Q:$G(^SYS("UCI",KMPSDIR))]""
+ .; get TOTAL BLOCKS for directory
+ .S KMPSPTR=##class(SYS.Database).%OpenId(KMPSDIR)
+ .; quit if not mounted
+ .Q:KMPSPTR.Mounted'=1
  .;
- .N BLKSIZ,DIRUP,ISBIGDB,MAX,SIZE,VOLTOT,X,Y,ZU
- .;
- .Q:$G(^|"%SYS"|SYS("UCI",DIR))]""
- .S X=DIR
- .X ^%ZOSF("UPPERCASE")
- .;
- .; strip off trailing '\' if needed
- .I $E(Y,$L(Y))="\" S Y=$E(Y,1,$L(Y)-1)
- .S DIRUP=Y
- .;
- .; use $ZU(49) to see if directory is mounted
- .S ZU=$ZU(49,DIR)
- .;
- .; quit if directory does not exist or is dismounted
- .Q:ZU<0
- .;
- .; quit is directory is not mounted
- .Q:+ZU=256
- .;
- .S ISBIGDB=0
- .S BLKSIZ=$P(ZU,",",2)
- .;
- .I BLKSIZ>2048 D
- ..S ISBIGDB=1
- ..S VOLTOT=$P(ZU,",",22)
- .;
- .E  D
- ..I $ZBITGET($ZVERSION(0),21) S SIZE=+$P(ZU,",",23),MAX=$P(ZU,",",24)
- ..E  S SIZE=+$P(ZU,",",2),MAX=$P(ZU,",",4)
- ..I 'SIZE Q
- ..S VOLTOT=MAX*SIZE
- .;
- .;-- end of code from routine %FREECNT
- .;
- .D SETNODE(SITENUM,SESSNUM,DIRUP,VOLTOT)
- ;
+ .S KMPSARR("KMPS",SITENUM,SESSNUM,"@VOL",KMPSDIR)=KMPSPTR.Blocks
+ S KMPSTNS=$ZU(5,KMPSRNS)
+ S KMPSDIR=""
+ F  S KMPSDIR=$O(KMPSARR("KMPS",SITENUM,SESSNUM,"@VOL",KMPSDIR)) Q:KMPSDIR=""  D
+ .S ^XTMP("KMPS",SITENUM,SESSNUM,"@VOL",KMPSDIR)=KMPSARR("KMPS",SITENUM,SESSNUM,"@VOL",KMPSDIR)
  Q
  ;
-CWINNT ;--------------------------------------------------------------------
- ; Version for Cache for Windows NT platform
- ;--------------------------------------------------------------------
- ;
- ;-- code from routine %FREECNT
- ;
- N DIR,DIRUP,VOLTOT
- N X,Y,ZU
- ;
- S DIR=""
- F  S DIR=$O(^|"%SYS"|SYS("UCI",DIR)) Q:DIR=""  D
- .Q:$G(^|"%SYS"|SYS("UCI",DIR))]""
- .S X=DIR
- .X ^%ZOSF("UPPERCASE")
- .;
- .; strip off trailing '\' if needed
- .I $E(Y,$L(Y))="\" S Y=$E(Y,1,$L(Y)-1)
- .S DIRUP=Y
- .;
- .; use $ZU(49) to see if directory is mounted
- .S ZU=$ZU(49,DIR)
- .;
- .; quit if directory does not exist or is dismounted
- .Q:ZU<0
- .;
- .; quit is directory is not mounted
- .Q:+ZU=256
- .;
- .; volume size = blocks per map * number of maps
- .S VOLTOT=+$P(ZU,",",2)*$P(ZU,",",4)
- .;
- .;-- end of code from routine %FREECNT
- .;
- .D SETNODE(SITENUM,SESSNUM,DIRUP,VOLTOT)
- ;
+KMPVVSTM(KMPVDATA) ; Get storage metrics for Vista Storage Monitor (VSTM) within VistA System Monitor (VSM)
+ N KMPVRNS,KMPVTNS,KMPVDIR,KMPVDB,KMPVMAX,KMPVSIZE,KMPVBSIZ,KMPVBPM,KMPVSTAT,KMPVFMB
+ N KMPVFBLK,KMPVSYSD,KMPVESIZ,KMPVFLAG,KMPVRSET,KMPVDFSP
+ S U="^"
+ ; get current namespace, switch to %SYS
+ S KMPVRNS=$ZU(5),KMPVTNS=$ZU(5,"%SYS")
+ S KMPVDIR=""
+ S KMPVTNS=$ZU(5,"%SYS")
+ F  S KMPVDIR=$O(^SYS("UCI",KMPVDIR)) Q:KMPVDIR=""  D
+ .Q:$G(^SYS("UCI",KMPVDIR))]""
+ .S KMPVDB=##class(SYS.Database).%OpenId(KMPVDIR)
+ .S KMPVMAX=KMPVDB.MaxSize,KMPVSIZE=KMPVDB.Size
+ .S KMPVBSIZ=KMPVDB.BlockSize,KMPVBPM=KMPVDB.BlocksPerMap
+ .S KMPVSTAT=KMPVDB.GetFreeSpace(KMPVDIR,.KMPVFMB,.KMPVFBLK)
+ .S KMPVSYSD=KMPVDB.IsSystemDB(KMPVDIR),KMPVESIZ=KMPVDB.ExpansionSize
+ .; MaxSize(MB)^Current Size(MB)^Block Size(int)^Bocks per Map(int)^Free space(MB)^
+ .; Free Space(int-Blocks)^System Dir(bool)^Expansion size
+ .S KMPVDATA(KMPVDIR)=KMPVMAX_U_KMPVSIZE_U_KMPVBSIZ_U_KMPVBPM_U_KMPVFMB_U_KMPVFBLK_U_KMPVSYSD_U_KMPVESIZ
+ ; Execute FreeSpace Query to add Directory Free Space
+ S KMPVFLAG="*"
+ S KMPVRSET=##class(%Library.ResultSet).%New("SYS.Database:FreeSpace")
+ D KMPVRSET.Execute(KMPVFLAG,0)
+ While (KMPVRSET.Next()) {
+  I (KMPVRSET.Data("Available")["Dismounted") continue
+  S KMPVDFSP=KMPVRSET.Data("DiskFreeSpace"),KMPVDIR=KMPVRSET.Data("Directory")
+  I $D(KMPVDATA(KMPVDIR)) S $P(KMPVDATA(KMPVDIR),"^",9)=KMPVDFSP
+ }
+ D KMPVRSET.Close()
+ ; Switch back to production namespace
+ S KMPVTNS=$ZU(5,KMPVRNS)
  Q
  ;
-SETNODE(SITENUM,SESSNUM,VOLNAM,VOLTOT) ;
- ; Set the @VOL node in the ^XTMP("KMPS" global array
+KMPVVTCM(KMPVDATA) ; Get Cache metrics for Vista Timed Collection Monitor (VTCM) within VistA System Monitor (VSM)
+ N U,KMPVRNS,KMPVTNS
+ S U="^"
+ ; get current namespace, switch to %SYS
+ S KMPVRNS=$ZU(5),KMPVTNS=$ZU(5,"%SYS")
+ S KMPVTNS=$ZU(5,"%SYS")
  ;
- ; quit if SAGG is not monitoring this volume set (directory)
- Q:'$D(VOLS(VOLNAM))
+ S KMPVDATA("KMPVDASH")=##class(SYS.Stats.Dashboard).Sample()
+ S KMPVDATA("KMPVROUT")=##class(SYS.Stats.Routine).Sample()
+ S KMPVDATA("KMPVSMH")=##class(%SYSTEM.Config.SharedMemoryHeap).GetUsageSummary()
+ S KMPVDATA("KMPVMEM")=##class(%SYSTEM.Config.SharedMemoryHeap).FreeCount()
  ;
- S ^XTMP("KMPS",SITENUM,SESSNUM,"@VOL",VOLNAM)=VOLTOT
+ ; Return to 'from' namespace
+ S KMPVTNS=$ZU(5,KMPVRNS)
  Q
  ;
+BLKCOL(KMPVRET) ;
+ ; ** Non interactive subset of Intersystems' ^BLKCOL routine - includes parts of BLKCOL and RUNERR line tags
  ;
-DCMPST(VERSION) ;-
- ;---------------------------------------------------------------------------
- ;---------------------------------------------------------------------------
- Q:$G(VERSION)="" ""
- I VERSION<5.1 D DecomposeStatus^%DM(RC,.MSGLIST,0,"") Q
- E  D DecomposeStatus^%SYS.DATABASE(RC,.MSGLIST,0,"")
+ N KMPVRNS,KMPVTNS,KMPVSEC,KMPVWAIT,KMPVDET,KMPVCOL,KMPVTO,KMPVCNT,KMPVINFO
+ ; get current namespace, switch to %SYS
+ S KMPVRNS=$ZU(5),KMPVTNS=$ZU(5,"%SYS")
+ S KMPVSEC=10,KMPVWAIT=10,KMPVDET=2,KMPVRET=""
+ ;
+ S $ZTRAP="RUNERR"
+ L +^SYS("BLKCOL"):5 E  Q
+ K ^||BLKCOL
+ S KMPVCOL=0,KMPVTO=$ZH+KMPVSEC
+ F KMPVCNT=1:1:1000 D
+ .S KMPVINFO=$zu(190,17)
+ .I KMPVINFO]"" S KMPVCOL=KMPVCOL+1
+ .H KMPVWAIT/1000
+ S KMPVRET=KMPVCNT_","_KMPVCOL
+ L -^SYS("BLKCOL")
+ ; Return to 'from' namespace
+ S KMPVTNS=$ZU(5,KMPVRNS)
  Q
- ;
-GETDIRGL(VERSION) ;-extrinsic function
- ;----------------------------------------------------------------------------
- ; ; set up GLOARRAY array indexed by global name 
- ;----------------------------------------------------------------------------
- Q:$G(VERSION)="" ""
- I VERSION<5.1 Q $$GetDirGlobals^%DM(DIRNAM,.GLOARRAY)
- E  Q $$GetDirGlobals^%SYS.DATABASE(DIRNAM,.GLOARRAY)
- ;
-GLOINTEG(VERSION) ;- extrinsic function
- ;----------------------------------------------------------------------------
- ; check integrity of a single global
- ; will stop if there are more than 999 errors with this global
- ;----------------------------------------------------------------------------
- Q:$G(VERSION)="" ""
- I VERSION<5.1 Q $$CheckGlobalIntegrity^%DM(DIRNAM,GLO,999,.GLOTOTBLKS,.GLOPNTBLKS,.GLOTOTBYTES,.GLOPNTBYTES,.GLOBIGBLKS,.GLOBIGBYTES,.GLOBIGSTRINGS,.DATASIZE)
- E  Q $$CheckGlobalIntegrity^%SYS.DATABASE(DIRNAM,GLO,999,.GLOTOTBLKS,.GLOPNTBLKS,.GLOTOTBYTES,.GLOPNTBYTES,.GLOBIGBLKS,.GLOBIGBYTES,.GLOBIGSTRINGS,.DATASIZE)
+RUNERR ; Trap errors
+ S $ZTRAP=""
+ L -^SYS("BLKCOL")
+ ; Return to 'from' namespace
+ S KMPVTNS=$ZU(5,KMPVRNS)
+ Q

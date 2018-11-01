@@ -14,7 +14,7 @@ ZVHOPM1 ; OIA/AJC - modify Outpatient Meds #2 ;1/13/15
  QUIT  ; enter at a label
  ;
  ;
-EN	; Entry point
+EN      ; Entry point
  ; Check for Production environment, quit if true
  NEW CHECK SET CHECK=$$PROD^XUPROD(1)
  IF CHECK WRITE "This routine is for TEST systems only!!!",!!,"Goodbye!",!! QUIT
@@ -65,7 +65,7 @@ EN	; Entry point
  QUIT  ; label EN
  ;
  ;
-GETREF(IEN52)	; get the refills for a specific Rx
+GETREF(IEN52)   ; get the refills for a specific Rx
  ;REQUIRED: pass by value IEN52 the ien of the Rx in file 52
  ;Ext Out: ^ delimited string: # of refills ^ refill date ^ refill date ^ refill date
  ;   EX: 5^1;3110127^2;3110428.1^3;3110730.123456^4;3110815.1432^5;3110930.235959
@@ -87,7 +87,7 @@ GETREF(IEN52)	; get the refills for a specific Rx
  QUIT $GET(OUT) ; label GETREF
  ;
  ;
-SETMEDRA(DFN)	;  build an array of all the Rx ien's for a specified patient
+SETMEDRA(DFN)   ;  build an array of all the Rx ien's for a specified patient
  ;REQUIRED: new MEDS var array before calling - this will return the Rx list
  ;    pass by value DFN - the patient's IEN from file 2
  QUIT:'$DATA(DFN)

@@ -1,5 +1,5 @@
 PSIVORC2 ;BIR/MLM - PROCESS INCOMPLETE IV ORDER - CONT ;22 OCT 97 / 3:16 PM
- ;;5.0;INPATIENT MEDICATIONS;**29,49,50,65,58,85,101,110,127,151,181,267,275,257,281,313**;16 DEC 97;Build 26
+ ;;5.0;INPATIENT MEDICATIONS;**29,49,50,65,58,85,101,110,127,151,181,267,275,257,281,313,346,355**;16 DEC 97;Build 4
  ;
  ; Reference to ^PS(51.2 is supported by DBIA #2178
  ; Reference to ^PS(55 is supported by DBIA #2191
@@ -87,7 +87,7 @@ GTIVDRG ; Try to find an IV drug from the Orderable Item.
  F FIL=52.6,52.7 D FIND^DIC(FIL,,"@;.01;2"_$S(FIL=52.6:";19",1:""),"QXP",+P("PD"),,"AOI",SCR("S"),,"PSIVOI") I +PSIVOI("DILIST",0)>0 D  Q
  . S DRGT=$S(FIL=52.6:"AD",1:"SOL"),PSIVOI=DRGT
  . I PSIVOI="AD" D
- .. N XX,XXX,QC S XX=0 F  S XX=$O(PSIVOI("DILIST",XX)) Q:XX=""  S XXX=+PSIVOI("DILIST",XX,0) D LIST^DIC(52.61,","_XXX_",","@;.01","PQ",,,,,,,"PSIVQC") D
+ .. N XX,XXX,QC S XX=0 F  S XX=$O(PSIVOI("DILIST",XX)) Q:XX=""  S XXX=+PSIVOI("DILIST",XX,0) D LIST^DIC(52.61,","_XXX_",","@;.01;1;4","PQ",,,,,,,"PSIVQC") D
  ... I +$G(PSIVQC("DILIST",0))>0 S QC=0 F  S QC=$O(PSIVQC("DILIST",QC)) Q:QC=""  S PSIVOI("DILIST",XX,QC,0)=PSIVQC("DILIST",QC,0)
  ... K PSIVQC("DILIST",0),PSIVQC("DILIST",0,"MAP")
  .. D RESET
@@ -165,7 +165,9 @@ VF ; Display Verify screen
  I +PSJSYSU=3,$L($T(EN1^ORCFLAG)) S PSGACT=PSGACT_"G"
  I P("OT")="I" S PSJSTAR="(1)^(5)^(7)^(9)^(10)"
  I P("OT")'="I" S PSJSTAR="(1)^(2)^(3)^(5)^(7)^(9)"
- D EN^VALM("PSJ LM IV INPT ACTIVE")
+ I '$G(PSJEDFLG) D
+ .D EN^VALM("PSJ LM IV INPT ACTIVE")
+ K PSJEDFLG
  ; Only store allergy if not verified after entering the order
  I ($G(ON)["P"),($S(($G(PSJOCFG)="NEW OE IV"):1,($G(PSJOCFG)="FN IV"):1,$G(PSIVENO):1,1:0)) D SETOC^PSJNEWOC(ON)
  Q
@@ -173,7 +175,8 @@ VF ; Display Verify screen
 RESET ;Reset PSIVOI("DILIST") for additives with quick codes
  N XX,XXX,CNT S CNT=0
  S XX=0 F  S XX=$O(PSIVOI("DILIST",XX)) Q:XX=""  S CNT=CNT+1,LYN(CNT)=PSIVOI("DILIST",XX,0) D
- . S XXX=0 F  S XXX=$O(PSIVOI("DILIST",XX,XXX)) Q:XXX=""  S CNT=CNT+1,LYN(CNT)=$P(PSIVOI("DILIST",XX,0),"^")_"^"_$P(PSIVOI("DILIST",XX,XXX,0),"^",2)_"^"_$P(PSIVOI("DILIST",XX,XXX,0),"^")_"^"_"QC"
+ . S XXX=0 F  S XXX=$O(PSIVOI("DILIST",XX,XXX)) Q:XXX=""  D
+ ..  S CNT=CNT+1,LYN(CNT)=$P(PSIVOI("DILIST",XX,0),"^")_"^"_$P(PSIVOI("DILIST",XX,XXX,0),"^",2)_"^"_$P(PSIVOI("DILIST",XX,XXX,0),"^")_"^"_"QC"_"^"_$P(PSIVOI("DILIST",XX,XXX,0),"^",3)_"^"_$P(PSIVOI("DILIST",XX,XXX,0),"^",4)
  K PSIVOI("DILIST")
  S PSIVOI("DILIST",0)=CNT_"^*^0^"
  S XX=0 F  S XX=$O(LYN(XX)) Q:'XX  S PSIVOI("DILIST",XX,0)=LYN(XX)

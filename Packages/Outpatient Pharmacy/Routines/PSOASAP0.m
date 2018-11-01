@@ -1,5 +1,5 @@
 PSOASAP0 ;BIRM/MFR - American Society for Automation in Pharmacy (ASAP) Segments & Fields ;09/07/12
- ;;7.0;OUTPATIENT PHARMACY;**408,451**;DEC 1997;Build 114
+ ;;7.0;OUTPATIENT PHARMACY;**408,451,496,504**;DEC 1997;Build 15
  ;External reference to $$NATURE^ORUTL3 supported by DBIA 5890
  ;External reference to ^ORDEA is supported by DBIA 5709
  ;External reference to PATIENT file (#2) supported by DBIA 5597
@@ -149,8 +149,16 @@ PAT13() ;Patient Address Information - Line 2
  Q $$ADDRESS(ADDRESS,2)
  ;
 PAT15() ;Patient State Address
- N STAIEN S STAIEN=+$G(VAPA(5)) Q:'STAIEN ""
- Q $$GET1^DIQ(5,STAIEN,1)
+ ; US State Abbreviation
+ I $$PAT22()="" Q $$GET1^DIQ(5,+$G(VAPA(5)),1)
+ ; International State/Province
+ Q $P($G(VAPA(23)),"^")
+ ;
+PAT16() ;Patient ZIP Code
+ ; US Zip Code
+ I $$PAT22()="" Q $TR($P($G(VAPA(11)),"^",1),"-")
+ ; International Postal Code
+ Q $P($G(VAPA(24)),"^")
  ;
 PAT17() ;Patient Phone Number
  N PAT17
@@ -192,7 +200,7 @@ PAT22() ;ASAP 3.0 : Primary Prescription Coverage Type (Not Used)
  N CNTRYIEN,FIPSCODE
  S CNTRYIEN=+$G(VAPA(25)) I 'CNTRYIEN Q ""
  S FIPSCODE=$$GET1^DIQ(779.004,CNTRYIEN,1.2)
- Q $S(FIPSCODE="US":"",1:FIPSCODE)
+ Q $S(FIPSCODE="US":"",FIPSCODE="CA":"CN",1:FIPSCODE)
  ;
  ; *** RX Segment (ASAP 3.0 only) ***
 RX08() ;Date Rx Written (Format: YYYYMMDD)
@@ -449,10 +457,7 @@ ADDRESS(VALUE,LINE) ;Returns Address Line1 and Line2 (max 30 characters)
  Q ADDRESS
  ;
 PRVDEA() ;Returns the Provider DEA #
- N PRVDEA,ORDIEN
- S ORDIEN=+$$GET1^DIQ(52,RXIEN,39.3,"I")
- K ^TMP($J,"ORDEA") D ARCHIVE^ORDEA(ORDIEN) S PRVDEA=$P($G(^TMP($J,"ORDEA",ORDIEN,2)),"^")
- Q PRVDEA
+ Q $$RXDEA^PSOUTIL(RXIEN)
  ;
 NUMERIC(VALUE) ;Returns the Numeric Value
  N NUMERIC,I

@@ -1,7 +1,7 @@
 LRBLDC ;AVAMC/REG/CYM - DONOR COMPONENT PREP ;7/3/96  11:58 ;
- ;;5.2;LAB SERVICE;**72,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D V^LRU S X="BLOOD BANK" D ^LRUTL G:Y=-1 END W @IOF,?20,"Collection disposition/component preparation",!
+ Q  D V^LRU S X="BLOOD BANK" D ^LRUTL G:Y=-1 END W @IOF,?20,"Collection disposition/component preparation",!
  I LRCAPA S X="DONOR COMPONENT PREPARATION",X("NOCODES")=1 D X^LRUWK G:'$D(X) END
  D BAR^LRBLB
 I R !!,"Select BLOOD DONOR: ",X:DTIME G:X=""!(X[U) END I X?7N.N,X'["?",LR,$E(X,1,$L(LR(2)))=LR(2) D EN^LRBLBU G:'$D(X) I

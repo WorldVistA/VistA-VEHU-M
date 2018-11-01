@@ -1,5 +1,5 @@
-PSULRHL1 ;HCIOFO/BH/RDC - Process real time HL7 Lab messages ;8/1/07 11:26am
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**3,11,16**;MARCH, 2005;Build 3
+PSULRHL1 ;HCIOFO/BH/RDC - Process real time HL7 Lab messages ; 1/10/11 8:10am
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;**3,11,16,18**;MARCH, 2005;Build 7
  ;
  ; DBIA 3565 to subscribe to the LR7O ALL EVSEND RESULTS protocol
  ; DBIA 998 to dig through ^DPT(i,"LR" go get the ien to file #63
@@ -17,7 +17,8 @@ PSULRHL1 ;HCIOFO/BH/RDC - Process real time HL7 Lab messages ;8/1/07 11:26am
 HL7 ; Entry point for PBM processing - triggered by lab protocol 
  ; LR7O ALL EVSEND RESULTS.
  ;
- N ARR,FIRST,LRDFN,PSUEXT,PSUHLFS,PSUHLECH,PSUHLCS
+ ;*18 Added PSUDIV
+ N ARR,FIRST,LRDFN,PSUEXT,PSUHLFS,PSUHLECH,PSUHLCS,PSUDIV
  ;
  ;  OREMSG is the pointer reference to the global that contains the
  ;  lab data and is passed in by the LR7O ALL EVSEND RESULTS protocol.
@@ -96,7 +97,8 @@ LOOP ;
  . . I SEG1'="OBR" Q
  . . ; If this is the first OBR being processed i.e. this is valid 
  . . ; chemistry data set the PID segment
- . . I FIRST D PID S FIRST=0
+ . . ;*18 Include ORC segment
+ . . I FIRST D PID,ORC S FIRST=0
  . . D OBR(REC1)
  . . S QUIT2=0
  . . F  Q:QUIT2  S PREV2=CNT,CNT=$O(@OREMSG@(CNT)) Q:'CNT  D
@@ -124,6 +126,22 @@ PID ;  Create the PID segment using the standard builder
  ; Set the data string into the PBM HL7 array
  ;
  D SETSEG(NEWSEG)
+ ;
+ Q
+ ;
+ORC ; ORC needed to send Station Number. PSU*4*18
+ N ORCSEG,STATION,SEG
+ S ORCSEG="ORC"
+ ;
+ ; Retrieve station number using the division #
+ S STATION=$$GET1^DIQ(4,$G(PSUDIV),99)
+ ;
+ S $P(SEG,PSUHL("CS"),14)=STATION
+ S $P(ORCSEG,PSUHL("FS"),11)=SEG
+ ;
+ ; Put the string into the PBM HL7 global
+ ;
+ D SETSEG(ORCSEG)
  ;
  Q
  ;
@@ -213,6 +231,7 @@ PARAMS ; Get the delimiters used in the lab data
  . S REC=@OREMSG@(CNT)
  . I $E(REC,1,3)="MSH" D  Q
  . . S PSUHLFS=$E(REC,4,4)
+ . . S PSUDIV=$P(REC,PSUHLFS,4) ;Get Division # PSU*18
  . . S ARR("PSUHLECH")=$P(REC,PSUHLFS,2),QUIT=QUIT+1
  . I $P(REC,PSUHLFS,1)="PID" D  Q
  . . S ARR("DFN")=$P(REC,PSUHLFS,4)

@@ -1,7 +1,7 @@
 LRBLDCU ;AVAMC/REG/CYM - CUMULATIVE DONATION CALCULATIONS ;6/28/96  08:47 ;
- ;;5.2;LAB SERVICE;**72,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- S IOP="HOME" D ^%ZIS,END W @IOF,?15,"Cumulative donations and new awards"
+ Q  S IOP="HOME" D ^%ZIS,END W @IOF,?15,"Cumulative donations and new awards"
  D S^LRU S LRC=0 D FIELD^DID(65.54,1,"","POINTER","X") S X=X("POINTER") F A=1:1 S B=$P(X,";",A),C=$P(B,":") Q:B=""  S LRB(C)=$P(B,":",2)
  S X=0 F A=0:0 S X=$O(LRB(X)) Q:X=""  D Z G:E["^"!(E="") END
  S I="" W !!,"Print all donors to receive new awards " S %=2 D YN^LRU G:%<1 END I %=1 G DEV

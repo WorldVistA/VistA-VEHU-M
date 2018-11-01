@@ -1,5 +1,5 @@
-EDPCSV ;SLC/MKB - CSV format utilities ;2/28/12 08:33am
- ;;2.0;EMERGENCY DEPARTMENT;**6**;Feb 24, 2012;Build 200
+EDPCSV ;SLC/MKB - CSV format utilities
+ ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
  ;
 EN(REQ) ; Controller for HTTP request
  ;
@@ -23,10 +23,6 @@ VAL(X) ; return value from request
  ;
 ADD(X) ; -- add line X
  S EDPCSV=+$G(EDPCSV)+1,EDPCSV(EDPCSV)=X
- Q
-ADDG(X,EDPCSV,EDPXML) ; -- add line x
- S EDPCSV=+$G(EDPCSV)+1,@EDPXML@(EDPCSV)=$$ESC^EDPX(X)
- ;S @EDPXML@(EDPCSV)=X
  Q
  ;
 BLANK ; -- add blank line

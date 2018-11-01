@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: NURS PARAMETERS
-24-JAN-2018 16:38:23 ZWR
+31-OCT-2018 09:24:57 ZWR
 ^DIC(213.9,0)="NURS PARAMETERS^213.9^1^1"
 ^DIC(213.9,0,"DD")="@"
 ^DIC(213.9,0,"DEL")="@"
@@ -14,8 +14,9 @@ OSEHRA ZGO Export: NURS PARAMETERS
 ^DIC(213.9,1,"MAN",0,0)="2910724^0^0^0"
 ^DIC(213.9,1,"MAN","B",0)="^1^^1"
 ^DIC(213.9,1,"MAN","B",2910724,0)=""
-^DIC(213.9,1,"OFF")="0"
+^DIC(213.9,1,"OFF")=0
 ^DIC(213.9,1,"VERSION")="2.5^2.5^2.5^2.5"
 ^DIC(213.9,"%D",0)="^^1^1^2970207^^^^"
 ^DIC(213.9,"%D",1,0)="This file contains various Nursing specific site parameters."
+^DIC(213.9,"%MSC")=3181031.17532
 ^DIC(213.9,"B","ONE",1)=""

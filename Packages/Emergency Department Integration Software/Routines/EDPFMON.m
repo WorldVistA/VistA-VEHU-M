@@ -1,5 +1,5 @@
-EDPFMON ;SLC/MKB - ED Monitor at facility ;2/28/12 08:33am
- ;;2.0;EMERGENCY DEPARTMENT;;May 2, 2012;Build 103
+EDPFMON ;SLC/MKB - ED Monitor at facility
+ ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
  ;
 EN(MSG) ; -- main entry point for EDP MONITOR where MSG contains HL7 msg
  N EDMSG,PKG,MSH,PID,PV1,ORC,DFN,LOG
@@ -141,6 +141,7 @@ COMP(ORIFN) ; -- update status when ORIFN completed
 SDAM ; -- send bulletin on check-in
  N EDPEVENT
  S EDPEVENT=$$GET^XPAR("ALL","EDPF SCHEDULING TRIGGER",1,"Q")
+ Q:EDPEVENT="D"  ; adding via scheduling disabled
  S:'EDPEVENT EDPEVENT=4
  Q:$G(SDAMEVT)'=EDPEVENT
  ;

@@ -1,6 +1,6 @@
 PSBUTL ;BIRMINGHAM/EFC-BCMA UTILITIES ;03/06/16 3:06pm
- ;;3.0;BAR CODE MED ADMIN;**3,9,13,38,45,46,63,83,97**;Mar 2004;Build 3
- ;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;3.0;BAR CODE MED ADMIN;**3,9,13,38,45,46,63,83,97,99,104**;Mar 2004;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference/IA
  ; $$PATCH & $$VERSION^XPDUTL/10141
@@ -222,6 +222,7 @@ RESETADM ;
  ;
  ;  No input is necessary. Environment should be setup at call.
  ;
+ Q:'$O(^PSB(53.79,0))  ;Quit if there are no BCMA entries, PSB*3*99
  I '$G(PSBMMEN) S X=$S($P(PSBIEN,",",2)]"":$P(PSBIEN,",",2),1:+PSBIEN) D CLEAN^PSBVT,PSJ1^PSBVT($P(^PSB(53.79,X,0),U),$P(^PSB(53.79,X,.1),U)) D:($$IVPTAB^PSBVDLU3(PSBOTYP,PSBIVT,PSBISYR,PSBCHEMT,+$G(PSBIVPSH)))  D CLEAN^PSBVT
  .S X=PSBIEN,X2=X_$S(X="+1":",",1:"") Q:'$D(PSBFDA(53.79,X2,.09))  I $F("HR",PSBFDA(53.79,X2,.09))>1 S PSBFDA(53.79,X2,.26)=""
  I $G(PSBMMEN),PSBIEN="+1",$G(PSBONX)["V" S PSBWSID=PSBFDA(53.79,"+1,",.26) K PSBFDA(53.79,"+1,",.26),PSBFDA(53.79,"+1,",.09)
@@ -413,23 +414,27 @@ REMOVES(DFN,TYPE) ;Searches xrefs for MRR type meds needing removal and adds    
  S PSBGNODE="^PSB(53.79,"_"""APATCH"""_","_DFN_")"
  F  S PSBGNODE=$Q(@PSBGNODE) Q:PSBGNODE']""  Q:($QS(PSBGNODE,2)'="APATCH")!($QS(PSBGNODE,3)'=DFN)  D
  .S PSBIEN=$QS(PSBGNODE,5),PSBONX=$P(^PSB(53.79,PSBIEN,.1),U)
+ .Q:'$D(^PSB(53.79,PSBIEN,.5,1))                        ;no disp drug
+ .Q:$P(^PSB(53.79,PSBIEN,.5,1,0),U,4)'="PATCH"          ;not a Patch
+ .Q:$P(^PSB(53.79,PSBIEN,0),U,9)'="G"                   ;not Given
+ .S PSBRMDT=$P(^PSB(53.79,PSBIEN,.1),"^",7) Q:'PSBRMDT  ;Scheduled Removal Time
+ .Q:(PSBRMDT<PSBSTART)!(PSBRMDT>PSBSTOP)
  .D PSJ1^PSBVT(DFN,PSBONX)
- .Q:(TYPE="C")&('PSBCLIEN)                      ;not a clinic order
- .Q:'$D(^PSB(53.79,PSBIEN,.5,1))                ;no disp drug
- .Q:$P(^PSB(53.79,PSBIEN,.5,1,0),U,4)'="PATCH"  ;not a Patch
- .Q:$P(^PSB(53.79,PSBIEN,0),U,9)'="G"           ;not Given
+ .Q:(TYPE="C")&('PSBCLIEN)                              ;not a clinic order
  .D SETMRR
  ;
  ;Xref AMRR search   (new xref for transdermal meds)
  S PSBGNODE="^PSB(53.79,"_"""AMRR"""_","_DFN_")"
  F  S PSBGNODE=$Q(@PSBGNODE) Q:PSBGNODE']""  Q:($QS(PSBGNODE,2)'="AMRR")!($QS(PSBGNODE,3)'=DFN)  D
  .S PSBIEN=$QS(PSBGNODE,5),PSBONX=$P(^PSB(53.79,PSBIEN,.1),U)
+ .Q:$P(^PSB(53.79,PSBIEN,.5,1,0),U,4)="PATCH"           ;Is patch already seen
+ .Q:'$D(^PSB(53.79,PSBIEN,.5,1))                        ;no disp drug
+ .Q:'$P(^PSB(53.79,PSBIEN,.5,1,0),U,6)                  ;no MRR flag
+ .Q:$P(^PSB(53.79,PSBIEN,0),U,9)'="G"                   ;not Given
+ .S PSBRMDT=$P(^PSB(53.79,PSBIEN,.1),"^",7) Q:'PSBRMDT  ;Scheduled Removal Time
+ .Q:(PSBRMDT<PSBSTART)!(PSBRMDT>PSBSTOP)
  .D PSJ1^PSBVT(DFN,PSBONX)
- .Q:(TYPE="C")&('PSBCLIEN)                      ;not a clinic order
- .Q:$P(^PSB(53.79,PSBIEN,.5,1,0),U,4)="PATCH"   ;Is patch already seen
- .Q:'$D(^PSB(53.79,PSBIEN,.5,1))                ;no disp drug
- .Q:'$P(^PSB(53.79,PSBIEN,.5,1,0),U,6)          ;no MRR flag
- .Q:$P(^PSB(53.79,PSBIEN,0),U,9)'="G"           ;not Given
+ .Q:(TYPE="C")&('PSBCLIEN)                              ;not a clinic order
  .D SETMRR
  ;
  D CLEAN^PSBVT
@@ -442,9 +447,6 @@ SETMRR ;Get and set MRR info for printing Removals
  I '$G(PSBIENS) N PSBIENS S PSBIENS=PSBRPT
  I PSBCLINORD,$D(^PSB(53.69,+PSBIENS,2,"B")),CLNAM]"",'$D(^PSB(53.69,+PSBIENS,2,"B",CLNAM)) Q   ;not on selection list when list is present
  S PSBZON=$P(^PSB(53.79,PSBIEN,.1),"^")
- S PSBRMDT=$P(^PSB(53.79,PSBIEN,.1),"^",7)
- Q:'PSBRMDT
- Q:(PSBRMDT<PSBSTART)!(PSBRMDT>PSBSTOP)
  K ^TMP("PSJ1",$J) D EN^PSJBCMA1(DFN,PSBZON,1)
  Q:$G(^TMP("PSJ1",$J,0))=-1
  S PSBONX=$P(^TMP("PSJ1",$J,0),U,3)     ; ord num w/  type "U" or "V"

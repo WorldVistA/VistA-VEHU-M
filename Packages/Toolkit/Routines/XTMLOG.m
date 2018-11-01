@@ -1,41 +1,62 @@
-XTMLOG ;JLI/FO-OAK - LOG4M M LOGGING UTILITY ;06/07/08  17:07
- ;;7.3;TOOLKIT;**81**;Apr 25, 1995;Build 13
- ;;Per VHA Directive 2004-038, this routine should not be modified
+XTMLOG ;JLI/FO-OAK - LOG4M M LOGGING UTILITY ;2017-07-25  10:37 AM
+ ;;2.4;LOG4M;;Jul 25, 2017;Build 3
+ ; 
+ ; Main Author: Joel Ivey, Ph.D. from 2007-2012
+ ; Various Changes throughout by Sam Habiel, Pharm.D. 2012-2017
+ ; Includes some public domain code written by Kevin Muldrum
  ;
  ; Routine provides logging capability similar in various
  ; respects to Log4J.
  ;
- D EN^XTMUNIT("XTMTSTL1")
+ ; TODO (sam): I added SAVEARR b/c I didn't realize the DEBUG and INFO
+ ;             can expand out arrays. It needs to be deprecated. HOWEVER,
+ ;             DEBUG and INFO don't work with sockets. So that needs to be fixed
+ ;             first!
+ ; TODO (sam): I removed Joel's ability for the socket to become a server,
+ ;             rather than a client. I couldn't ever get it to work. I should
+ ;             try harder next time and support both Server and Client models.
+ ;
+ D:$t(^%ut)]"" EN^%ut("XTMLT1",3)
  Q
  ;
 INITFILE(DIRREF,FILEREF,NAME) ; jli .SR -- Configuration is read a file (DIRREF is the directory, and FILEREF is the filename)
  N XTLOGLIN S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
  N HOSTGLOB
  S HOSTGLOB=$NA(^TMP("XTMLOG1",$J)) K @HOSTGLOB S @HOSTGLOB@(0)=""
- I '$$FTG^%ZISH(DIRREF,FILEREF,$NA(@HOSTGLOB@(1)),3) Q 0
- Q $$INITIAL(HOSTGLOB,$G(NAME,"XTMLOG"),XTLOGLIN)
+ I '$$FTG^%ZISH(DIRREF,FILEREF,$NA(@HOSTGLOB@(1)),3) Q:$Q 0 Q
+ N % S %=$$INITIAL(HOSTGLOB,$G(NAME,"XTMLOG"),XTLOGLIN)
+ Q:$Q % Q
  ;
-FILEINIT(NAMEFLD) ; jli .SR -- reads config data from NAMEFLD entry in LOG4M CONFIG file (#8992.7)
+FILEINIT(NAMEFLD) ; jli .SR -- called as extrinsic function
+ ; NAMEFLD - input - Name of entry in LOG4M CONFIG file (#8992.7 )
+ ;                   to be used for setting up logging
+ ; returns - 0 if initiating logging failed
+ ;           1 if initiating logging was successful
  N XTLOGLIN S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
  N XTMLIEN,XTMLACTV,XTMLRES,XTMLERR,XTMLARR,XVAL
  ; ZEXCEPT: XTLOGINP - KILLED IN ENDLOG
- S XTMLIEN=$O(^XTV(8992.7,"B",NAMEFLD,0)) I XTMLIEN'>0 Q 0
+ S XTMLIEN=$O(^XTV(8992.7,"B",NAMEFLD,0)) I XTMLIEN'>0 Q:$Q 0 Q
  ; get data from the LOG4M CONFIG file
- D GETS^DIQ(8992.7,XTMLIEN_",",".02:.08","I","XTMLRES","XTMLERR")
+ D GETS^DIQ(8992.7,XTMLIEN_",",".02:.06;3.01:3.03","I","XTMLRES","XTMLERR")
  S XTMLARR=$NA(XTMLRES(8992.7,XTMLIEN_","))
  ; quit if logging set to NO or it is not there
  I ($G(@XTMLARR@(.02,"I"))="N")!($G(@XTMLARR@(.02,"I"))="") Q 0
- S XVAL=@XTMLARR@(.07,"I") I (XVAL="M")!(XVAL="P") S XTLOGINP(NAMEFLD,"OUTTYPE")=XVAL,XTLOGINP(NAMEFLD,"OUTSPECS")=@XTMLARR@(.08,"I")
+ ; Following change made to make different fields for print or mail at request of DBA for files
+ ;S XVAL=@XTMLARR@(.07,"I") I (XVAL="M")!(XVAL="P") S XTLOGINP(NAMEFLD,"OUTTYPE")=XVAL,XTLOGINP(NAMEFLD,"OUTSPECS")=@XTMLARR@(.08,"I") ;121228
+ S XVAL=@XTMLARR@(3.01,"I") I (XVAL="M")!(XVAL="P") S XTLOGINP(NAMEFLD,"OUTTYPE")=XVAL S:XVAL="M" XTLOGINP(NAMEFLD,"OUTSPECS")=@XTMLARR@(3.02,"I") S:XVAL="P" XTLOGINP(NAMEFLD,"OUTSPECS")=@XTMLARR@(3.03,"I") ; 121228
  I @XTMLARR@(.02,"I")="E" Q $$INITEASY($G(@XTMLARR@(.03,"I")),$G(@XTMLARR@(.04,"I")),NAMEFLD,XTLOGLIN,$G(@XTMLARR@(.05,"I")),$G(@XTMLARR@(.06,"I")))
- Q $$INITIAL($NA(@XTMLARR@(1)),NAMEFLD,XTLOGLIN)
+ N % S %=$$INITIAL($NA(@XTMLARR@(1)),NAMEFLD,XTLOGLIN)
+ Q:$Q % Q
  ;
 INITGLOB(HOSTGLOB,NAME,XTLOGLIN) ; Configuration data is read under a global root - HOSTGLOB is a closed global root
  I '$D(XTLOGLIN) S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
- Q $$INITIAL(HOSTGLOB,$G(NAME,"XTMLOG"),XTLOGLIN)
+ N % S %=$$INITIAL(HOSTGLOB,$G(NAME,"XTMLOG"),XTLOGLIN)
+ Q:$Q % Q
  ;
 INITNONE(NAME) ; No configuration data to read - use defaults - console and global logging
  N XTLOGLIN S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
- Q $$INITIAL("",$G(NAME,"XTMLOG"),"",XTLOGLIN)
+ N % S %=$$INITIAL("",$G(NAME,"XTMLOG"),"",XTLOGLIN)
+ Q:$Q % Q
  ;
 INITEASY(CONFIG,LEVEL,NAME,XTLOGLIN,XTMLROUS,XTMLUSRS) ;
  ; for INITEASY indicate the type of appenders desired as a series of ';'-pieces with names or first
@@ -45,7 +66,7 @@ INITEASY(CONFIG,LEVEL,NAME,XTLOGLIN,XTMLROUS,XTMLUSRS) ;
  ;       Global  -- Top Subscript under XTMP, if not specified "XTMLOG" is the default
  ;       Socket  -- Port number for output of the logging data, if not specified 8025 is the default
  ;
- ;    use of D INITEASY^XTMLOG1("C;G,LOGDATA;S,9450","WARN") would have logging sent to
+ ;    use of D INITEASY^XTMLOG("C;G,LOGDATA;S,127.0.0.1:9450","WARN") would have logging sent to
  ;            the console,
  ;            stored under ^XTMP("LOGDATA",  for a week, and
  ;            sent out on a socket at port 9450 on the current system in real time
@@ -56,11 +77,13 @@ INITEASY(CONFIG,LEVEL,NAME,XTLOGLIN,XTMLROUS,XTMLUSRS) ;
  ;
  I '$D(XTLOGLIN) N XTLOGLIN S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
  S CONFIG="*"_CONFIG I $G(LEVEL)'="" S CONFIG=CONFIG_";,"_LEVEL
- Q $$INITIAL(CONFIG,$G(NAME,"XTMLOG"),XTLOGLIN,$G(XTMLROUS),$G(XTMLUSRS))
+ N % S %=$$INITIAL(CONFIG,$G(NAME,"XTMLOG"),XTLOGLIN,$G(XTMLROUS),$G(XTMLUSRS))
+ Q:$Q % Q
  ;
 INITIAL(HOSTGLOB,NAME,XTLOGLIN,XTMLROUS,XTMLUSRS) ;
  N XX,TESTLIST,I,X,XTCMLCNT,XTMLROU,XTMLCNT,XTMLRCNT
- ; ZEXCEPT: XTLOGINP,XTLOGSEQ,XTLOGSET - KILLED IN ENDLOG
+ N XTLOGSET
+ ; ZEXCEPT: XTLOGINP - KILLED IN ENDLOG
  I $G(XTMLUSRS)'="",(","_XTMLUSRS_",")'[(","_DUZ_",") Q 0 ; DON'T LOG FOR THIS USER
  I $G(XTLOGLIN)="" S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
  S NAME=$G(NAME,"XTMLOG"),XTMLROUS=$G(XTMLROUS)
@@ -69,7 +92,7 @@ INITIAL(HOSTGLOB,NAME,XTLOGLIN,XTMLROUS,XTMLUSRS) ;
  I $E(HOSTGLOB)="*" D EASYSET($E(HOSTGLOB,2,99),NAME,.XTLOGINP)
  D DEFAULTS(NAME,.XTLOGINP) ; set defaults if values not present
  F I=1:1:5 S X=$P(TESTLIST,U,I) S XTLOGSET=XTLOGSET_","_I I X=XTLOGINP(NAME,"PRIORITY") Q
- S XTLOGINP(NAME,"LOGSET")=XTLOGSET_",",XTLOGSEQ=0,XTLOGINP(NAME,"COUNT")=0
+ S XTLOGINP(NAME,"LOGSET")=XTLOGSET_",",XTLOGINP(NAME,"COUNT")=0
  S XTMLRCNT=0 F I=1:1 S XTMLROU=$P($G(XTMLROUS),",",I) Q:XTMLROU=""  S XTMLRCNT=XTMLRCNT+1,XTLOGINP(NAME,"ROUS",XTMLRCNT)=XTMLROU,XTLOGINP(NAME,"ROUS")=XTMLRCNT
  Q 1
  ;
@@ -82,12 +105,18 @@ CHKRLST(LOCATION,ROUNAME) ; function - indicates whether ROUNAME is among select
  . Q
  Q VAL
  ;
-ENDLOG(XTLOGNAM,OUTTYPE,OUTSPECS) ; OUTTYPE, AND OUTSPECS ARE OPTIONAL
- ; ZEXCEPT: XTLOGINP,XTLOGSET,XTLOGINF,XTLOGSEQ - KILLED HERE, SET ELSEWHERE
+STOPLOG(XTLOGNAM,OUTTYPE,OUTSPECS) ; JUST ANOTHER NAME FOR ENDLOG
+ D ENDLOG($G(XTLOGNAM),$G(OUTTYPE),$G(OUTSPECS))
+ Q
+ ;
+ENDLOG(XTLOGNAM,OUTTYPE,OUTSPECS) ; OUTTYPE, AND OUTSPECS ARE OPTIONAL - REMOVES LOGNAM FROM LOGGING
+ ; ZEXCEPT: XTLOGINP,XTMTCPIO - KILLED HERE, SET ELSEWHERE
+ S XTLOGNAM=$G(XTLOGNAM,"XTMLOG")
  I $G(OUTTYPE)="M"!($G(XTLOGINP(XTLOGNAM,"OUTTYPE"))="M") D SENDMAIL(XTLOGNAM,$S($G(OUTSPECS)'="":OUTSPECS,$G(XTLOGINP(XTLOGNAM,"OUTSPECS"))'="":XTLOGINP(XTLOGNAM,"OUTSPECS"),1:""))
  I $G(OUTTYPE)="P"!($G(XTLOGINP(XTLOGNAM,"OUTTYPE"))="P") D PRINTIT(XTLOGNAM,$S($G(OUTSPECS)'="":OUTSPECS,$G(XTLOGINP(XTLOGNAM,"OUTSPECS"))'="":XTLOGINP(XTLOGNAM,"OUTSPECS"),1:""))
- I $G(XTLOGNAM)'="" K XTLOGINP(XTLOGNAM)
- K XTLOGINP,XTLOGSET,XTLOGINF,XTLOGSEQ
+ I $D(XTLOGINP(XTLOGNAM,"PORT")) D CLOSE^%ZISTCP
+ K XTLOGINP(XTLOGNAM)
+ K XTMTCPIO ; This variable's presence indicates that we have a current connexion.
  Q
  ;
 EASYSET(CONFIG,NAME,XTLOGINP) ;
@@ -119,20 +148,37 @@ SETGLOB(ID,SUBSCRIP,NAME,XTLOGINP) ;
  S @NODE@("LAYOUT.CONVERSIONPATTERN")="%d %-5p %L %F - %m%n"
  S SUBSCRIP=$S($G(SUBSCRIP)="":"XTMLOG",1:SUBSCRIP)
  S:'$D(INFO("$H")) INFO("$H")=$H
- N XTMLOGDT,FORMAT S FORMAT="{yyMMdd.HHmmss",XTMLOGDT=$$GETDATE^XTMLOG1(.INFO,.FORMAT)
+ ;N XTMLOGDT,FORMAT S FORMAT="{yyMMdd.HHmmss",XTMLOGDT=$$GETDATE^XTMLOG1(.INFO,.FORMAT)
+ N XTMLOGDT S XTMLOGDT=$$NOW^XLFDT()
  S @NODE@("CLOSEDROOT")=$NA(^XTMP(SUBSCRIP,DUZ,XTMLOGDT,$J)) ; use current $H as constant and $J
- S ^XTMP(SUBSCRIP,0)=$$FMADD^XLFDT(DT,7) ; Mark it to be saved for a week
+ S ^XTMP(SUBSCRIP,0)=$$FMADD^XLFDT(DT,7)_U_DT ; Mark it to be saved for a week
  Q
  ;
 SETSOCK(ID,PORT,NAME,XTLOGINP) ;
+ ; ZEXCEPT: XTMTCPIO Set here, killed in ENDLOG
  N NODE
  S NODE=$NA(XTLOGINP(NAME,"APPENDER",ID))
  S @NODE@("TYPE")="SOCKETAPPENDER",@NODE@("LAYOUT")="PATTERNLAYOUT"
  S @NODE@("LAYOUT.CONVERSIONPATTERN")="%d %-5p %L %F - %m%n"
- S PORT=$S($G(PORT)="":8025,1:PORT)
+ ; S PORT=$S($G(PORT)="":8025,1:PORT)
  S @NODE@("PORT")=PORT
- D START^XTMLOSKT(PORT) ; Start socket running if it isn't already
- Q
+ ; D START^XTMLOSKT(PORT) ; Start socket running if it isn't already
+ N HOST S HOST=$P(PORT,":")
+ N REALPORT S REALPORT=$P(PORT,":",2)
+ D
+ . I $D(XTMTCPIO) QUIT
+ . N IO ; protect our precious IO
+ . N POP
+ . D CALL^%ZISTCP(HOST,REALPORT,0)
+ . I 'POP S XTMTCPIO=IO
+ ; IO gets restored back. XTMTCPIO is now the TCP device
+ I $D(XTMTCPIO) D
+ . N $ES,$ET S $ET="D CLOSE^%ZISTCP S $EC="""""
+ . I +$SY=47 U XTMTCPIO        ; GT.M
+ . I +$SY=0 U XTMTCPIO:(::"S") ; Cache
+ . W "Connected",$C(13,10),!
+ . D CRFLUSH^XTMLOG1
+ QUIT
  ;
 SETLEVEL(LEVEL,NAME,XTLOGINP) ;
  N X
@@ -198,7 +244,6 @@ DEBUG(MESG,VARS,XTMLOARR) ; .SR
  N XTLOGINF
  N XTLOGLIN S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
  S XTLOGINF("PRIORITY")="DEBUG"
- S XTLOGINF("NEWTYPE")=1
  D LOG(MESG,5,XTLOGLIN,$G(VARS),$G(XTMLOARR))
  Q
  ;
@@ -208,7 +253,6 @@ INFO(MESG,VARS,XTMLOARR) ; .SR
  N XTLOGINF
  N XTLOGLIN S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
  S XTLOGINF("PRIORITY")="INFO"
- S XTLOGINF("NEWTYPE")=1
  D LOG(MESG,4,XTLOGLIN,$G(VARS),$G(XTMLOARR))
  Q
  ;
@@ -218,7 +262,6 @@ WARN(MESG,VARS,XTMLOARR) ; .SR
  N XTLOGINF
  N XTLOGLIN S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
  S XTLOGINF("PRIORITY")="WARN"
- S XTLOGINF("NEWTYPE")=1
  D LOG(MESG,3,XTLOGLIN,$G(VARS),$G(XTMLOARR))
  Q
  ;
@@ -228,7 +271,6 @@ ERROR(MESG,VARS,XTMLOARR) ; .SR
  N XTLOGINF
  N XTLOGLIN S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
  S XTLOGINF("PRIORITY")="ERROR"
- S XTLOGINF("NEWTYPE")=1
  D LOG(MESG,2,XTLOGLIN,$G(VARS),$G(XTMLOARR))
  Q
  ;
@@ -238,11 +280,23 @@ FATAL(MESG,VARS,XTMLOARR) ; .SR
  N XTLOGINF
  N XTLOGLIN S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
  S XTLOGINF("PRIORITY")="FATAL"
- S XTLOGINF("NEWTYPE")=1
  D LOG(MESG,1,XTLOGLIN,$G(VARS),$G(XTMLOARR))
  Q
  ;
-LOG(MESG,SET,XTLOGLIN,VARS,XTMLOARR) ; .SR  entry point for logging an item
+ ; VEN/SMH - EP to save arrays...
+SAVEARR(IN,OUT) ; .SR
+ ; ZEXCEPT: XTLOGINP - CREATED IN INITIAL, KILLED IN ENDLOG
+ I '$D(XTLOGINP) Q
+ N XTLOGINF
+ N XTLOGLIN S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
+ I XTLOGLIN["SAVE" S XTLOGLIN=$P($STACK($STACK-2,"PLACE")," ")
+ S XTLOGINF("PRIORITY")="DEBUG"
+ I $D(OUT) M @OUT=@IN QUIT
+ D LOG(,5,XTLOGLIN,IN,,1)
+ QUIT
+ ;
+ ;
+LOG(MESG,SET,XTLOGLIN,VARS,XTMLOARR,SAVE) ; .SR  entry point for logging an item
  ; this will be ignored unless SETUP^XTMLOG has been called previously
  ; MESG - any text that should be recorded for the current location
  ;        (Required)
@@ -256,6 +310,7 @@ LOG(MESG,SET,XTLOGLIN,VARS,XTMLOARR) ; .SR  entry point for logging an item
  ;       input data might be logged in set 1, values associated with a
  ;       process might be set 2, etc. Specific sets that are active are
  ;       specified through the SET parameter in the SETUP call.
+ ; SAVE - If we want to save the array in a global or just print it out.
  ;
  I '$D(XTLOGINP) Q
  N APPENDID,APPNAME,APPTYPE,NAME,XTMECNT,XTMGLOB
@@ -274,6 +329,7 @@ LOG(MESG,SET,XTLOGLIN,VARS,XTMLOARR) ; .SR  entry point for logging an item
  . S XTLOGINF("PRIORITY")=$S($D(SET):$P("FATAL^ERROR^WARN^INFO^DEBUG",U,SET),1:"    ")
  . S XTLOGINF("$H")=$H,XTLOGINF("LOCATION")=XTLOGLIN
  . S XTLOGINF("COUNT")=XTLOGINP(NAME,"COUNT")
+ . I $G(SAVE) S XTLOGINF("SAVE")=1
  . S APPENDID=""
  . F  S APPENDID=$O(XTLOGINP(NAME,"APPENDER",APPENDID)) Q:APPENDID=""  D
  . . S APPNAME="APPENDER",APPTYPE=XTLOGINP(NAME,APPNAME,APPENDID,"TYPE")
@@ -281,7 +337,6 @@ LOG(MESG,SET,XTLOGLIN,VARS,XTMLOARR) ; .SR  entry point for logging an item
  . . E  I '$G(XTMECNT) S $ZE="APPENDER *"_APPTYPE_"* NOT SUPPORTED IN XTMLOG1" D ^%ZTER S XTMECNT=1 ; indicate that appender is not available
  . . Q
  . Q
- K XTLOGINF("NEWTYPE")
  Q
  ;
 SENDMAIL(XTMLOGID,RECIP) ; internal - used to generate an e-mail report.
@@ -320,8 +375,15 @@ REALERR ; entry to log a real error
  S XTLOGLIN=$P($STACK($STACK-1,"PLACE")," ")
  S MESG="Encountered Error: "_$ZE
  S XTLOGINF("PRIORITY")="FATAL"
- S XTLOGINF("NEWTYPE")=1
  D LOG(MESG,1) S NAME="" F  S NAME=$O(XTLOGINP(NAME)) Q:NAME=""  D ENDLOG(NAME)
  S $ETRAP=""
  G ERR^ZU
  Q
+ ; [Public Interactive Entry Points]
+ ; View Global Logs
+VIEW G VIEW^XTMLOG1
+DISPLAY G DISPLAY^XTMLOG1
+VIEWLOG G VIEWLOG^XTMLOG1
+LOGVIEW G LOGVIEW^XTMLOG1
+ ; Clear Global Logs
+CLEAR G CLEAR^XTMLOG1

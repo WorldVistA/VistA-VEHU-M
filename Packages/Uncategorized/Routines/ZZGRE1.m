@@ -46,12 +46,12 @@ FIX     S XX=3130101 F  S XX=$O(^DPT(237,"S",XX)) Q:XX'>0  D
         .S $P(^DPT(237,"S",XX,0),"^",25)="N"
         .W !,$P($G(^DPT(237,"S",XX,0)),"^",24,25),!
         Q
-GETPAT	K PAT S PAT="100843^100844^100845^8^237^100840"
-		W !,"NAME^SSN^DOB^AGE^GENDER"
-		F I=1:1:6 S IEN=$P(PAT,"^",I) D ;W !,IEN ;Q:$P(IEN,"^",I)=""  W !,$G(IEN)
-		.S PATNAME=$P(^DPT(IEN,0),"^",1),SSN=$P(^DPT(IEN,0),"^",9),DOB=$P(^DPT(IEN,0),"^",3),GENDER=$P(^DPT(IEN,0),"^",2)
-		.S AGE=$E(DT,1,3)-$E(DOB,1,3),U="^"
-		.W !,PATNAME_U_SSN_U_DOB_U_AGE_U_GENDER
-		.K PATNAME,SSN,DOB,GENDER,AGE
-		K PAT,IEN
-		Q
+GETPAT  K PAT S PAT="100843^100844^100845^8^237^100840"
+                W !,"NAME^SSN^DOB^AGE^GENDER"
+                F I=1:1:6 S IEN=$P(PAT,"^",I) D ;W !,IEN ;Q:$P(IEN,"^",I)=""  W !,$G(IEN)
+                .S PATNAME=$P(^DPT(IEN,0),"^",1),SSN=$P(^DPT(IEN,0),"^",9),DOB=$P(^DPT(IEN,0),"^",3),GENDER=$P(^DPT(IEN,0),"^",2)
+                .S AGE=$E(DT,1,3)-$E(DOB,1,3),U="^"
+                .W !,PATNAME_U_SSN_U_DOB_U_AGE_U_GENDER
+                .K PATNAME,SSN,DOB,GENDER,AGE
+                K PAT,IEN
+                Q

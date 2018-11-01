@@ -1,13 +1,13 @@
-PXRMICHK ;SLC/PKR - Integrity checking routines. ;11/14/2013
- ;;2.0;CLINICAL REMINDERS;**18,24,26**;Feb 04, 2005;Build 404
+PXRMICHK ;SLC/PKR - Integrity checking routines. ;04/05/2018
+ ;;2.0;CLINICAL REMINDERS;**18,24,26,47,42**;Feb 04, 2005;Build 80
  ;
  ;======================================================
-CCRLOGIC(COHOK,RESOK,DEFARR) ;Check cohort and resolution logic.
+CCRLOGIC(COHOK,FFOK,RESOK,DEFARR) ;Check cohort and resolution logic.
  N AGE,FIEVAL,FINDING,FF,FLIST,IND,JND,NUM,OCCN,PCLOG
  N RESLOG,RESLSTR,SEX,TEMP,TEST,TEXT
  N PXRMAGE,PXRMDOB,PXRMDOD,PXRMLAD,PXRMSEX
  S (PXRMAGE,PXRMDOB,PXRMDOD,PXRMLAD)=0
- S PXRMSEX=""
+ S (PXRMSEX,PXRMSIG)=""
  ;Set all findings false.
  S (FIEVAL("AGE"),FIEVAL("SEX"))=0
  S IND=0
@@ -15,13 +15,15 @@ CCRLOGIC(COHOK,RESOK,DEFARR) ;Check cohort and resolution logic.
  . S FIEVAL(IND)=0
  . S OCCN=$P(DEFARR(20,IND,0),U,14)
  . F JND=1:1:OCCN S FIEVAL(IND,JND)=0
- ;Evaluate function findings with all findings false.
- D EVAL^PXRMFF(0,.DEFARR,.FIEVAL)
+ ;If there were no problems with the function findings evaluate them
+ ;with all findings false.
+ I FFOK D EVAL^PXRMFF(0,.DEFARR,.FIEVAL)
+ S PCLOG=DEFARR(31)
+ I (PCLOG["FF"),('FFOK) S COHOK=0
  I COHOK D
  . S TEMP=DEFARR(32)
  . S NUM=+$P(TEMP,U,1)
  . I NUM=0 Q
- . S PCLOG=DEFARR(31)
  . S FLIST=$P(TEMP,U,2)
  . F IND=1:1:NUM D
  .. S FINDING=$P(FLIST,";",IND)
@@ -34,6 +36,8 @@ CCRLOGIC(COHOK,RESOK,DEFARR) ;Check cohort and resolution logic.
  . I TEST D
  .. S TEXT(1)="WARNING: Cohort logic is true even when there are no true findings!"
  .. D OUTPUT(1,.TEXT)
+ S (RESLOG,RESLSTR)=DEFARR(35)
+ I (RESLOG["FF"),('FFOK) S RESOK=0
  I RESOK D
  . S TEMP=DEFARR(36)
  . S NUM=+$P(TEMP,U,1)
@@ -52,14 +56,14 @@ CCRLOGIC(COHOK,RESOK,DEFARR) ;Check cohort and resolution logic.
  Q
  ;
  ;======================================================
-CFCHK(USAGE,IND,FIEN,DEF,DEFARR,TYPE) ;Check computed findings.
- N CFPR,CFNAME,CFPAR,CFTYPE,OK,TEXT
+CFCHK(USAGE,IND,FIEN,DEFIEN,DEFARR,TYPE) ;Check computed findings.
+ N CFNAME,CFPAR,CFPREQ,CFTYPE,OK,TEXT
  S OK=1
  ;Is the Computed Finding Parameter required?
- S CFPR=$P(^PXRMD(811.4,FIEN,0),U,6)
+ S CFPREQ=$P(^PXRMD(811.4,FIEN,0),U,6)
  S CFNAME=$P(^PXRMD(811.4,FIEN,0),U,1)
  S CFPAR=$P(DEFARR(20,IND,15),U,1)
- I CFPR,CFPAR="" D
+ I CFPREQ,CFPAR="" D
  . I TYPE="D" S TEXT(1)="FATAL: Finding number "_IND_" uses computed finding "_CFNAME_"."
  . I TYPE="T" S TEXT(1)="FATAL: Term finding number "_IND_" uses computed finding "_CFNAME_"."
  . S TEXT(2)="This computed finding will not work properly unless the"
@@ -78,14 +82,8 @@ CFCHK(USAGE,IND,FIEN,DEF,DEFARR,TYPE) ;Check computed findings.
  . S TEXT(3)="the Type must be 'L'."
  . D OUTPUT(3,.TEXT)
  . S OK=0
- ;If the CF is VA-REMINDER DEFINITION check for recursion.
- I (CFNAME="VA-REMINDER DEFINITION"),(CFPAR=DEF) D
- . K TEXT
- . I TYPE="D" S TEXT(1)="FATAL: Finding number "_IND_" uses computed finding "_CFNAME_"."
- . I TYPE="T" S TEXT(1)="FATAL: Term finding number "_IND_" uses computed finding "_CFNAME_"."
- . S TEXT(2)="It is recursively calling "_CFPAR
- . D OUTPUT(2,.TEXT)
- . S OK=0
+ ;If the CF is VA-REMINDER DEFINITION do additional checks.
+ I (CFNAME="VA-REMINDER DEFINITION") S OK=$$RDCFCHK(CFNAME,CFPAR,IND,TYPE)
  Q OK
  ;
  ;======================================================
@@ -149,7 +147,7 @@ DATECHK(FINDING,DATE,TYPE,DEFARR) ;Check Beginning and Ending Date/Times if
  ;
  ;======================================================
 DEF(IEN) ;Definition integrity check.
- N ARGTYPE,BDT,COHOK,DEF,DEFARR,EDT
+ N ARGTYPE,BDT,COHOK,DEF,DEFARR,EDT,FFOK
  N FFNUM,FI,FIEN,FLIST,FNUM,FUNCTION,GBL,IND,JND,KND
  N OCC,OCN,LOGCHK,LOGINTR,LOGSTR,NFI,NBFREQ,NFFREQ,OK,RESOK
  N TEXT,USAGE,ZNODE
@@ -164,6 +162,7 @@ DEF(IEN) ;Definition integrity check.
  ;
  D DEF^PXRMLDR(IEN,.DEFARR)
  S DEF=$P(DEFARR(0),U,1)
+ ;
  ;Check findings and finding modifiers.
  S IND=0
  F  S IND=+$O(DEFARR(20,IND)) Q:IND=0  D
@@ -187,12 +186,15 @@ DEF(IEN) ;Definition integrity check.
  . S EDT=$P(ZNODE,U,11)
  . I EDT["FIEVAL",'$$DATECHK(IND,EDT,"EDT",.DEFARR) S OK=0
  .;Check computed findings.
- . I (GBL="PXRMD(811.4,"),'$$CFCHK(USAGE,IND,FIEN,DEF,.DEFARR,"D") S OK=0
+ . I (GBL="PXRMD(811.4,"),'$$CFCHK(USAGE,IND,FIEN,IEN,.DEFARR,"D") S OK=0
  .;Check terms.
- . I (GBL="PXRMD(811.5,"),'$$TERMCHK(USAGE,FIEN,DEF,.DEFARR) S OK=0
+ . I (GBL="PXRMD(811.5,"),'$$TERMCHK(USAGE,FIEN,IEN,.DEFARR) S OK=0
+ ;
+ ;Check for recursion.
+ I $$RECCHK(IEN) S OK=0
  ;
  ;Check function findings.
- S FFNUM="FF"
+ S FFNUM="FF",FFOK=1
  F  S FFNUM=$O(DEFARR(25,FFNUM)) Q:FFNUM=""  D
  . S IND=$P(FFNUM,"FF",2)
  .;Check for an invalid function string.
@@ -200,7 +202,7 @@ DEF(IEN) ;Definition integrity check.
  .. K TEXT
  .. S TEXT(1)="FATAL: Function finding number "_IND_" has an invalid function string."
  .. D OUTPUT(1,.TEXT)
- .. S OK=0
+ .. S (FFOK,OK)=0
  . S JND=0
  . F  S JND=+$O(DEFARR(25,FFNUM,5,JND)) Q:JND=0  D
  .. S FUNCTION=$P(DEFARR(25,FFNUM,5,JND,0),U,2)
@@ -214,8 +216,8 @@ DEF(IEN) ;Definition integrity check.
  ..... K TEXT
  ..... S TEXT(1)="FATAL: Function finding number "_IND_" depends on finding number "_FI_" which does not exist."
  ..... D OUTPUT(1,.TEXT)
- ..... S OK=0
- ... I OK,ARGTYPE="N" D
+ ..... S (FFOK,OK)=0
+ ... I FFOK,ARGTYPE="N" D
  .... S OCN=DEFARR(25,FFNUM,5,JND,20,KND,0)
  .... S OCC=+$P(DEFARR(20,FI,0),U,14)
  .... S OCC=$S(OCC=0:1,OCC>0:OCC,1:-OCC)
@@ -225,7 +227,7 @@ DEF(IEN) ;Definition integrity check.
  ..... S TEXT(2)="of finding number "_FI_"."
  ..... S TEXT(3)="The Occurrence Count for finding "_FI_" is "_OCC_"."
  ..... D OUTPUT(3,.TEXT)
- ..... S OK=0
+ ..... S (FFOK,OK)=0
  ;
  ;Check custom date due.
  S IND=0
@@ -272,29 +274,35 @@ DEF(IEN) ;Definition integrity check.
  ;
  ;Make other checks for bad cohort and resolution logic; these are
  ;all just warnings.
- D CCRLOGIC(COHOK,RESOK,.DEFARR)
+ D CCRLOGIC(COHOK,FFOK,RESOK,.DEFARR)
  ;
- ;A frequency is required if there is resolution logic.
- I $G(DEFARR(35))'="" D
- . S (IND,NBFREQ,NFFREQ)=0
- . F  S IND=+$O(DEFARR(7,IND)) Q:IND=0  S NBFREQ=NBFREQ+1
- . I NBFREQ=0 D
- .. S IND=0
- .. F  S IND=+$O(DEFARR(20,IND)) Q:IND=0  I $P(DEFARR(20,IND,0),U,4)'="" S NFFREQ=NFFREQ+1
- .. S IND="FF"
- .. F  S IND=$O(DEFARR(25,IND)) Q:IND=""  I $P(DEFARR(25,IND,0),U,4)'="" S NFFREQ=NFFREQ+1
- . I NBFREQ=0,NFFREQ=0 D
- .. S TEXT(1)="FATAL: Definition has resolution logic but no baseline frequencies."
- .. S TEXT(2)="Also there are no findings or function findings that set a frequency."
- .. D OUTPUT(2,.TEXT)
- .. S OK=0
- . I NBFREQ=0,NFFREQ>0 D
- .. S TEXT(1)="WARNING: definition has resolution logic but no baseline frequencies."
- .. S TEXT(2)="There are findings that set a frequency but if they are all false there will not be a frequency."
- .. D OUTPUT(2,.TEXT)
+ ;Check for frequencies,a frequency is required if there is resolution
+ ;logic.
+ S (IND,NBFREQ,NFFREQ)=0
+ F  S IND=+$O(DEFARR(7,IND)) Q:IND=0  S NBFREQ=NBFREQ+1
+ I NBFREQ=0 D
+ . K TEXT
+ . S TEXT(1)="WARNING: No baseline frequencies are defined."
+ . D OUTPUT(1,.TEXT)
+ I NBFREQ=0 D
+ . S IND=0
+ . F  S IND=+$O(DEFARR(20,IND)) Q:IND=0  I $P(DEFARR(20,IND,0),U,4)'="" S NFFREQ=NFFREQ+1
+ . S IND="FF"
+ . F  S IND=$O(DEFARR(25,IND)) Q:IND=""  I $P(DEFARR(25,IND,0),U,4)'="" S NFFREQ=NFFREQ+1
+ I (NBFREQ=0),(NFFREQ=0),(DEFARR(35)'="") D
+ . K TEXT
+ . S TEXT(1)="FATAL: Definition has resolution logic but no baseline frequencies."
+ . S TEXT(2)="Also there are no findings or function findings that set a frequency."
+ . D OUTPUT(2,.TEXT)
+ . S OK=0
+ . I (NBFREQ=0),(NFFREQ>0),(DEFARR(35)'="") D
+ . K TEXT
+ . S TEXT(1)="WARNING: Definition has resolution logic but no baseline frequencies."
+ . S TEXT(2)="There are findings that set a frequency but if they are all false there will not be a frequency."
+ . D OUTPUT(2,.TEXT)
  K TEXT
- I OK S TEXT(1)="No fatal errors were found."
- E  S TEXT(1)="This definition has fatal errors and it will not work!"
+ I OK S TEXT(1)="No fatal reminder definition errors were found."
+ E  S TEXT(1)="This reminder definition has fatal errors and it will not work!"
  D OUTPUT(1,.TEXT)
  Q OK
  ;
@@ -316,8 +324,8 @@ LCOHORTC(DEFARR) ;Check list type reminder cohort logic for special
  I PCLOG["AGE" D
  .;Make sure a baseline age range is defined.
  . S IND=0 F  S IND=$O(DEFARR(7,IND)) Q:(IND="")  Q:(DEFARR(7,IND,0)'="")
- . S MINAGE=$S(IND="":0,1:+$P($G(DEFARR(7,IND,3)),U,1))
- . S MAXAGE=$S(IND="":0,1:+$P($G(DEFARR(7,IND,3)),U,2))
+ . S MINAGE=$S(IND="":0,1:+$P($G(DEFARR(7,IND,0)),U,2))
+ . S MAXAGE=$S(IND="":0,1:+$P($G(DEFARR(7,IND,0)),U,3))
  . I (MINAGE=0),(MAXAGE=0) D
  .. S NL=NL+1
  .. S TEXT(NL)="The cohort logic contains AGE but no baseline age range is defined.\\"
@@ -346,7 +354,7 @@ LOGCHECK(NFI,FLIST,LOGSTR,TYPE,DEFARR) ;Verify logic strings. Make sure the
  N FFNUM,FI,IND,OK,TEXT,X
  S OK=1
  I NFI=0 D  Q OK
- . S TEXT(1)="Warning, there is no "_TYPE_" logic."
+ . S TEXT(1)="WARNING: There is no "_TYPE_" logic."
  . D OUTPUT(1,.TEXT)
  F IND=1:1:NFI D
  . S FI=$P(FLIST,";",IND)
@@ -387,7 +395,51 @@ OUTPUT(NIN,TEXT) ;Format and output TEXT.
  Q
  ;
  ;======================================================
-TERMCHK(USAGE,TIEN,DEF,DEFARR) ;Check terms.
+RDCFCHK(CFNAME,CFPAR,IND,TYPE) ;Additional checks when the computed finding
+ ;is VA-REMINDER DEFINTION.
+ ;A blank Computed Finding Parameter has already been checked for.
+ I CFPAR="" Q 0
+ N NDEFIEN,RECUR,TEXT
+ S NDEFIEN=$O(^PXD(811.9,"B",CFPAR,""))
+ I NDEFIEN="" D  Q 0
+ . I TYPE="D" S TEXT(1)="FATAL: Finding number "_IND_" uses computed finding "_CFNAME_"."
+ . I TYPE="T" S TEXT(1)="FATAL: Term finding number "_IND_" uses computed finding "_CFNAME_"."
+ . S TEXT(2)="The Computed Finding Parameter is set to "_CFPAR_", that reminder does not exist."
+ . D OUTPUT(2,.TEXT)
+ ;Usage check.
+ S USAGE=$P(^PXD(811.9,NDEFIEN,100),U,4)
+ I USAGE["L" D  Q 0
+ . I TYPE="D" S TEXT(1)="FATAL: Finding number "_IND_" uses computed finding "_CFNAME_"."
+ . I TYPE="T" S TEXT(1)="FATAL: Term finding number "_IND_" uses computed finding "_CFNAME_"."
+ . S TEXT(2)="The Computed Finding Parameter is set to "_CFPAR_", the Usage for that reminder contains L."
+ . S TEXT(3)="List type reminders cannot be used with VA-REMINDER DEFINITION."
+ . D OUTPUT(3,.TEXT)
+ Q 1
+ ;
+ ;======================================================
+RECCHK(DEFIEN) ;Check for recursion
+ N RECUR,P1,P2,P3,TEXT,TYPE
+ S RECUR=$$RECCHK^PXRMRCUR(DEFIEN)
+ S P1=$P(RECUR,U,1)
+ I P1 D
+ . N DEFNAME
+ . S DEFNAME=$P(^PXD(811.9,DEFIEN,0),U,1)
+ . S P2=$P(RECUR,U,2)
+ . S P3=$P(RECUR,U,3)
+ . S TYPE=$S(P3'="":"T",1:"D")
+ . I TYPE="D" D
+ .. S TEXT(1)="FATAL: Finding number "_$P(P2,";",3)_" uses CF.VA-REMINDER DEFINITION."
+ .. S TEXT(2)="It is recursively calling definition "_DEFNAME_"."
+ . I TYPE="T" D
+ .. N TNAME
+ .. S TNAME=$P(^PXRMD(811.5,$P(P3,";",2),0),U,1)
+ .. S TEXT(1)="FATAL: Finding number "_$P(P2,";",3)_" uses term "_TNAME_"."
+ .. S TEXT(2)="This term is recursively calling definition "_DEFNAME_"."
+ . D OUTPUT(2,.TEXT)
+ Q P1
+ ;
+ ;======================================================
+TERMCHK(USAGE,TIEN,DEFIEN,DEFARR) ;Check terms.
  N FI,FIEN,FNUM,GBL,JND,OK,TERMARR,TNAME,TTEXT,ZNODE
  S TNAME=$P(^PXRMD(811.5,TIEN,0),U,1)_" ("_TIEN_")"
  S TTEXT=" The term is "_TNAME_"."
@@ -414,7 +466,7 @@ TERMCHK(USAGE,TIEN,DEF,DEFARR) ;Check terms.
  .. D OUTPUT(2,.TEXT)
  .. S OK=0
  .;Check computed findings.
- . I (GBL="PXRMD(811.4,"),'$$CFCHK(USAGE,JND,FIEN,DEF,.TERMARR,"T") D
+ . I (GBL="PXRMD(811.4,"),'$$CFCHK(USAGE,JND,FIEN,DEFIEN,.TERMARR,"T") D
  ..;CFCHK issues the messages for the CF, let the user know the name
  ..;of the term.
  .. K TEXT

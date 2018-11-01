@@ -1,7 +1,7 @@
 LRBLDK ;AVAMC/REG - DELETE EX-DONORS (65.5 ENTRIES) ; 11/12/88  13:19 ;
- ;;5.2;LAB SERVICE;**247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D V^LRU S X="BLOOD BANK" D ^LRUTL G:Y=-1 END
+ Q  D V^LRU S X="BLOOD BANK" D ^LRUTL G:Y=-1 END
  W !!?15,"DONORS WHO HAVE NOT DONATED SINCE A SPECIFIED DATE",!
  I '$D(^LRO(69.2,LRAA,8,65.5,1)) W !!?32,$C(7),"NO DELETION LIST",!!?14,"To obtain a list of donors to delete first print them",!,"using the Print ex-donors OPTION under supervisor OPTIONS" G END
  S X=^LRO(69.2,LRAA,8,65.5,0),LR=$P(^(1,0),U,4)

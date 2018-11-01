@@ -1,5 +1,5 @@
-MAGDHOW3 ;WOIFO/PMK - Capture Consult/GMRC data ; 12 Mar 2013 6:52 PM
- ;;3.0;IMAGING;**138**;Mar 19, 2002;Build 5380;Sep 03, 2013
+MAGDHOW3 ;WOIFO/PMK,DWM,DAC,GXT - Capture Consult/GMRC data ; 13 Apr 2018 12:12 PM
+ ;;3.0;IMAGING;**138,180,203**;Mar 19, 2002;Build 6
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -84,7 +84,8 @@ NAME(IEN,FIELD,ORCSEG) ; return person's name in HL7 format
  Q
  ;
 PHONE(IEN,FIELD,SEGMENT) ; call back phone number(s)
- N FNUMBER,EQTYPE,I,MAGOUT,MAGERR,NUMBER,USECODE,X,REP
+ N FNUMBER,EQTYPE,I,MAGOUT,MAGERR,NUMBER,USECODE,X,REP,J,VAIEN,J,NUM
+ I IEN="" Q  ; P203 DAC - Quit if no order placer. Fixes P180 bug.
  S REP=0 ; HL7 repetition
  F I=1:1 S X=$T(PHONES+I) Q:"END"[$P(X,";;",2)  D
  . S FNUMBER=$P(X,";",4),USECODE=$P(X,";",5),EQTYPE=$P(X,";",6)
@@ -92,10 +93,30 @@ PHONE(IEN,FIELD,SEGMENT) ; call back phone number(s)
  . D PHONE1(.REP,FIELD,.SEGMENT,NUMBER,USECODE,EQTYPE)
  . Q
  ; check VISITED FROM subfile (#8910) to get PHONE AT SITE field (#5)
+ ; P180 DAC - New MAGOUT array to sort from earliest to latest VISITED FROM entries
+ ; P203 Code changes to use fileman call to sort thur VISITED FROM entries;GXT
+ S J=0
  D GETS^DIQ(200,IEN_",","8910*","E","MAGOUT","MAGERR")
  S I="" F  S I=$O(MAGOUT("200.06",I)) Q:I=""  D
- . S NUMBER=MAGOUT("200.06",I,5,"E")
- . D PHONE1(.REP,FIELD,.SEGMENT,NUMBER,"WPN","PN")
+ . S NUM=$P(I,",",1) ; GET IEN NUMBER OF I
+ . I (NUM<=9)&(J<=3) D
+ . . S NUMBER=MAGOUT("200.06",I,5,"E")
+ . . N X,Y S X=NUMBER X ^%ZOSF("UPPERCASE") Q:((Y="NO PHONE")!(Y=""))
+ . . D PHONE1(.REP,FIELD,.SEGMENT,NUMBER,"WPN","PN")
+ . . S J=J+1
+ . . Q
+ . Q
+ I (J>=0)&(J<3) D
+ . S I="" F  S I=$O(MAGOUT("200.06",I)) Q:I=""  D
+ . . S NUM=$P(I,",",1)
+ . . I (NUM>=10)&(J<3) D
+ . . . S NUMBER=MAGOUT("200.06",I,5,"E")
+ . . . N X,Y S X=NUMBER X ^%ZOSF("UPPERCASE") Q:((Y="NO PHONE")!(Y=""))
+ . . . D PHONE1(.REP,FIELD,.SEGMENT,NUMBER,"WPN","PN")
+ . . . S J=J+1
+ . . . Q
+ . . Q
+ . Q
  Q
  ;
 PHONE1(REP,FIELD,SEGMENT,NUMBER,USECODE,EQTYPE) ; store phone info

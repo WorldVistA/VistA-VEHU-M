@@ -1,7 +1,7 @@
 LRBLDUC ;AVAMC/REG/CYM - DONOR ABO/RH RECHECK ;7/5/96  22:39 ;
- ;;5.2;LAB SERVICE;**72,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D V^LRU S X="BLOOD BANK" D ^LRUTL G:Y=-1 END
+ Q  D V^LRU S X="BLOOD BANK" D ^LRUTL G:Y=-1 END
  W !!?30,"Donor ABO/Rh Recheck",! I LRCAPA S X="DONOR ABO/RH RECHECK" D X^LRUWK G:'$D(X) END S Y="UC" D S^LRBLWD
  S LRB="",LRC=1 W !!,"Enter TEST COMMENT(s) " S %=2 D YN^LRU K:%=1 LRC
 DNR W ! K DA,LR,LRR S DIC="^LRE(",DIC(0)="AFQM",D="C^B",DIC("B")=LRB,DIC("A")="Select DONOR ID: " D MIX^DIC1 K DIC G:X=""!(X[U) END

@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: 2507 EXAM
-24-JAN-2018 16:38:18 ZWR
+31-OCT-2018 09:25:14 ZWR
 ^DVB(396.4,0)="2507 EXAM^396.4I^423^99"
 ^DVB(396.4,91,0)="91^45^6^X^^^^N^C"
 ^DVB(396.4,91,"CAN")="2940426.075739^11289^3"
@@ -17,7 +17,7 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,92,"RES",8,0)="111111111111111111111111111111111111111111111111111111111111111111111111111"
 ^DVB(396.4,92,"RES",9,0)="111111111111111111111111111111111111111111111111111111111111111111111111111"
 ^DVB(396.4,92,"RES",10,0)="111111111111111111111111111111111111111111111111111111111111111111111111111"
-^DVB(396.4,92,"RES",11,0)="111111111111111"
+^DVB(396.4,92,"RES",11,0)=111111111111111
 ^DVB(396.4,92,"TRAN")="^^^2930622^2940426.075747"
 ^DVB(396.4,93,0)="93^45^40^X^^2930809^SICARD^N^C"
 ^DVB(396.4,93,"CAN")="2940426.075739^11289^3"
@@ -34,7 +34,7 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,93,"RES",10,0)="999999999999999999999999999999999999999999999999999999999999999999999999999"
 ^DVB(396.4,93,"RES",11,0)="999999999999999999999999999999999999999999999999999999999999999999999999999"
 ^DVB(396.4,93,"RES",12,0)="999999999999999999999999999999999999999999999999999999999999999999999999999"
-^DVB(396.4,93,"RES",13,0)="9999999999999"
+^DVB(396.4,93,"RES",13,0)=9999999999999
 ^DVB(396.4,93,"RES",14,0)="UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU"
 ^DVB(396.4,93,"RES",15,0)="UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU"
 ^DVB(396.4,93,"RES",16,0)="UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU"
@@ -60,7 +60,7 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,252,0)="252^136^9^C^^2950907^PAT^N^C"
 ^DVB(396.4,252,"RES",0)="^^2^2^2950907^"
 ^DVB(396.4,252,"RES",1,0)="TESTING WHEN ELEC SIGN GETS FILED"
-^DVB(396.4,252,"RES",2,0)="1"
+^DVB(396.4,252,"RES",2,0)=1
 ^DVB(396.4,253,0)="253^137^4^X"
 ^DVB(396.4,253,"CAN")="2950816.163952^.5^3"
 ^DVB(396.4,253,"TRAN")="2941215^WILSON,PATRICIA L.^289"
@@ -109,11 +109,11 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,321,"TRAN")="^^^2950830^2950830.1301"
 ^DVB(396.4,322,0)="322^189^70^X^^^^N"
 ^DVB(396.4,322,"CAN")="2950915.08^11289^11"
-^DVB(396.4,322,"INREM",0)="0"
+^DVB(396.4,322,"INREM",0)=0
 ^DVB(396.4,322,"RES",0)="^^1^1^2951204^^^"
 ^DVB(396.4,322,"RES",1,0)="ELEC SIGN"
 ^DVB(396.4,323,0)="323^189^54^O^^^^N^^^"
-^DVB(396.4,323,"INREM",0)="0"
+^DVB(396.4,323,"INREM",0)=0
 ^DVB(396.4,323,"RES",0)="^^1^1^2951204^^"
 ^DVB(396.4,323,"RES",1,0)="ELEC SIGN"
 ^DVB(396.4,327,0)="327^191^54^O^^2950903^PAT^N"
@@ -218,7 +218,7 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,352,0)="352^199^32^C^^2951205^PAT"
 ^DVB(396.4,352,"TRAN")="2951102^ROWE,LINDA L.^289"
 ^DVB(396.4,353,0)="353^189^70^O^^^^^^^"
-^DVB(396.4,353,"INREM",0)="0"
+^DVB(396.4,353,"INREM",0)=0
 ^DVB(396.4,354,0)="354^199^54^C^^2951205^PAT"
 ^DVB(396.4,355,0)="355^200^54^C^^2951205^PAT^N^C"
 ^DVB(396.4,356,0)="356^201^54^C^^2951222^PAT^N^C"
@@ -277,7 +277,7 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,395,0)="395^228^78^O^^^^^^^3"
 ^DVB(396.4,396,0)="396^229^3^O^^^^^^^5^PAT"
 ^DVB(396.4,397,0)="397^230^7^O^^^^^^^^"
-^DVB(396.4,397,"INREM",0)="0"
+^DVB(396.4,397,"INREM",0)=0
 ^DVB(396.4,399,0)="399^232^3^X"
 ^DVB(396.4,399,"CAN")="2960717.154221^.5^3"
 ^DVB(396.4,399,"TRAN")="2960717^WILSON,PATRICIA L.^289"
@@ -372,7 +372,7 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,417,"RES",75,0)="posterior patella indicating degenerative patellofemoral degenerative "
 ^DVB(396.4,417,"RES",76,0)="changes"_$C(148)_".  The right knee reported "_$C(147)_"no specific narrowing noted.  Some "
 ^DVB(396.4,417,"RES",77,0)="irregularity along the posterior patella and some inferior and superior "
-^DVB(396.4,417,"RES",78,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)_""
+^DVB(396.4,417,"RES",78,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)
 ^DVB(396.4,417,"RES",79,0)=""
 ^DVB(396.4,417,"RES",80,0)="As mentioned above patients audiogram was done at Fort Harrison, MT, "
 ^DVB(396.4,417,"RES",81,0)="his vision exam was done in May 1998.  He deferred blood tests."
@@ -461,7 +461,7 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,417,"RES",164,0)="posterior patella indicating degenerative patellofemoral degenerative "
 ^DVB(396.4,417,"RES",165,0)="changes"_$C(148)_".  The right knee reported "_$C(147)_"no specific narrowing noted.  Some "
 ^DVB(396.4,417,"RES",166,0)="irregularity along the posterior patella and some inferior and superior "
-^DVB(396.4,417,"RES",167,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)_""
+^DVB(396.4,417,"RES",167,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)
 ^DVB(396.4,417,"RES",168,0)=""
 ^DVB(396.4,417,"RES",169,0)="As mentioned above patients audiogram was done at Fort Harrison, MT, "
 ^DVB(396.4,417,"RES",170,0)="his vision exam was done in May 1998.  He deferred blood tests."
@@ -552,7 +552,7 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,418,"RES",75,0)="posterior patella indicating degenerative patellofemoral degenerative "
 ^DVB(396.4,418,"RES",76,0)="changes"_$C(148)_".  The right knee reported "_$C(147)_"no specific narrowing noted.  Some "
 ^DVB(396.4,418,"RES",77,0)="irregularity along the posterior patella and some inferior and superior "
-^DVB(396.4,418,"RES",78,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)_""
+^DVB(396.4,418,"RES",78,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)
 ^DVB(396.4,418,"RES",79,0)=""
 ^DVB(396.4,418,"RES",80,0)="As mentioned above patients audiogram was done at Fort Harrison, MT, "
 ^DVB(396.4,418,"RES",81,0)="his vision exam was done in May 1998.  He deferred blood tests."

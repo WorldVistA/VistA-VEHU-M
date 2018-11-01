@@ -1,11 +1,7 @@
-ORWDPS2 ; SLC/KCM/JLI - Pharmacy Calls for Windows Dialog;05/09/2007 ; 21 Dec 2016  4:46 PM
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,116,125,131,132,148,141,195,215,258,243,424,420**;Dec 17, 1997;Build 7
+ORWDPS2 ; SLC/KCM/JLI - Pharmacy Calls for Windows Dialog;05/09/2007 ;10/12/17  09:35
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,116,125,131,132,148,141,195,215,258,243,424,420,454,452**;Dec 17, 1997;Build 2
  ;
 OISLCT(LST,OI,PSTYPE,ORVP,NEEDPI,PKIACTIV) ; return for defaults for pharmacy orderable item
- ;begin patch OR*3*420 MOD this supports the nation drug message and lab test display in CPRS RTW
- K ^TMP("OI",$J)
- S ^TMP("OI",$J,0)=OI_"^"_PSTYPE_"^"_ORVP_"^"_NEEDPI_"^"_PKIACTIV ;RTW
- ;end patch OR*3*420 MOD RTW
  I $D(NEEDPI),(NEEDPI="Y"),$G(^TMP($J,"ORWDX LOADRSP","QO SAVE")) D  ;check if bug for Supply, Clin Med/IV for NEEDPI
  .N ORQOIEN S ORQOIEN=$O(^ORD(101.41,"B","OR GTX ORDERABLE ITEM",0))
  .N ORQOI S ORQOI=$O(^ORD(101.41,$G(^TMP($J,"ORWDX LOADRSP","QO SAVE")),6,"D",ORQOIEN,0)) Q:'ORQOI
@@ -98,13 +94,16 @@ BLDDOSE(X) ; build dose info where X is ORDOSE node
  ; No TotalDose,           use LocalDose
  ; TotalDose & Strength,   use LocalDose+Conjunction+Strength+Units
  ; TotalDose, No Strength, use LocalDose+Conjunction+DispenseName
- N Y
+ N Y,A,ORNOW
+ S ORNOW=$$NOW^XLFDT
  S DD=+$P(X,U,6),DRUG=ORDOSE("DD",DD),DDNM=$P(DRUG,U),ID=$P(X,U,1,6)
  S LDOSE=$P(X,U,5),TEXT=LDOSE,STREN=$P(DRUG,U,5)_$P(DRUG,U,6)
  S $P(ID,U,7)=$P(DRUG,U,5) S $P(ID,U,8)=$P(DRUG,U,6) ; add strength
  I '$L($P(X,U)),$L($P(DRUG,U,5))  S TEXT=TEXT_CONJ_STREN
  I '$L($P(X,U)),'$L($P(DRUG,U,5)) S TEXT=TEXT_CONJ_$P(DRUG,U)
  S UD=$P(X,U,3),COST=$P(X,U,7),NF=$S($P(DRUG,U,3):"NF",1:"")
+ S A=$P($$CPTIER^PSNAPIS("",$P(ORNOW,"."),DD,1),"^")
+ I UD S COST="$"_$J(UD*$P(DRUG,U,2),1,3)_"      Tier "_A ;_" per "_UD_" "_$P(X,U,4)
  ;I UD S COST="$"_$J(UD*$P(DRUG,U,2),1,3) ;_" per "_UD_" "_$P(X,U,4)
  S Y="i"_DDNM_U_STREN_U_NF_U_$TR(ID,U,"&")_U_TEXT_U_COST_U_$P(DRUG,U,8)_U_$P(DRUG,U,4)
  Q Y

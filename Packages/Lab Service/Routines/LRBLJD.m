@@ -1,10 +1,10 @@
 LRBLJD ;AVAMC/REG/CYM - BB UNIT DISPOSITION ;7/25/96  11:53 ; 12/18/00 2:06pm
- ;;5.2;LAB SERVICE;**25,72,78,247,267**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**25,72,78,247,267,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
  ;
  ; References to ^DD(65, supported by DBIA3261
  ;
- D END S LR("M")=1,LRN="",X="BLOOD BANK" D ^LRUTL G:Y=-1 END S X=$P(^DD(65,4.1,0),U,3),LR(3)="" F Y=1:1 S Z=$P($P(X,";",Y),":",2) Q:Z=""  I $A(Z)'=84 S LRB(Y)=Z
+ Q  D END S LR("M")=1,LRN="",X="BLOOD BANK" D ^LRUTL G:Y=-1 END S X=$P(^DD(65,4.1,0),U,3),LR(3)="" F Y=1:1 S Z=$P($P(X,";",Y),":",2) Q:Z=""  I $A(Z)'=84 S LRB(Y)=Z
  W !?15,"Division: ",LRAA(4)
  I LRCAPA S X="UNIT MODIFICATION",X("NOCODES")=1 D X^LRUWK G:'$D(X) END K X S LRW("MO")=LRT S X="UNIT LOG-IN/SEND-OUT" D X^LRUWK G:'$D(X) END S LRW("S")=LRT F A=0:0 S A=$O(LRT(A)) Q:'A  S LRW("S",A)=""
  K LRT D BAR^LRBLB

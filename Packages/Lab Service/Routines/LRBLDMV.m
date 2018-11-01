@@ -1,7 +1,7 @@
 LRBLDMV ;AVAMC/REG - MOVE BLOOD DONATION ;12/19/94  11:53 ;
- ;;5.2;LAB SERVICE;**26,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**26,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- W !!?17,"Move a donation from one donor to another",!
+ Q  W !!?17,"Move a donation from one donor to another",!
 ASK D END S X="BLOOD BANK" D ^LRUTL G:Y=-1 END D REST G:Y=1 ASK
  ;
 REST W ! S DIC=65.5,DIC(0)="AEQMZ",DIC("A")="MOVE FROM DONOR: " D ^DIC Q:Y<1  S LRF=+Y D A

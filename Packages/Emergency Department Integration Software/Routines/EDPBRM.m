@@ -1,5 +1,5 @@
-EDPBRM ;SLC/KCM - Room/Bed Configuration ;2/28/12 08:33am
- ;;2.0;EMERGENCY DEPARTMENT;**6**;Feb 24, 2012;Build 200
+EDPBRM ;SLC/KCM - Room/Bed Configuration
+ ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
  ;
 LOAD(AREA) ; Load the list of rooms/beds for this area
  N BED,SEQ,BEDS,X0,TOKEN
@@ -17,8 +17,6 @@ LOAD(AREA) ; Load the list of rooms/beds for this area
  S SEQ=0 F  S SEQ=$O(BEDS(SEQ)) Q:'SEQ  D
  . S BED=0 F  S BED=$O(BEDS(SEQ,BED)) Q:'BED  D
  . . S X0=^EDPB(231.8,BED,0)
- . . ; Patch 6 (BWF) 4/24/2013 - do not display EDIS_DEFAULT bed
- . . I $P(X0,U)="EDIS_DEFAULT" Q
  . . N X
  . . S X("id")=BED
  . . S X("name")=$P(X0,U)
@@ -33,7 +31,6 @@ LOAD(AREA) ; Load the list of rooms/beds for this area
  . . S X("shared")=$P(X0,U,10)
  . . S X("board")=$P(X0,U,11)
  . . S X("color")=$P(X0,U,12)
- . . S X("primary")=$S($P(X0,U,13)=2:2,1:1,1:"")  ; ""=unknown,1=primary,2=secondary
  . . D XML^EDPX($$XMLA^EDPX("bed",.X))
  D XML^EDPX("</beds>")
  ;
@@ -79,7 +76,6 @@ UPD(FLD,ERRMSG) ; Add/Update Record
  S FDA(231.8,EDPIEN,.1)=FLD("shared")
  S FDA(231.8,EDPIEN,.11)=FLD("board")
  S FDA(231.8,EDPIEN,.12)=FLD("color")
- S FDA(231.8,EDPIEN,.13)=$S($G(FLD("primary"))=1:1,2:2,1:"")
  I EDPIEN="+1," D
  . D UPDATE^DIE("","FDA","FDAIEN","ERR")
  . I $D(DIERR) S ERRMSG=ERRMSG_"Adding "_FLD("name")_" failed.  "
@@ -91,12 +87,9 @@ UPD(FLD,ERRMSG) ; Add/Update Record
 DFLTRM(AREA) ; Load the multi-areas
  N BED,X,X0,ALPHA
  D XML^EDPX("<defaultRoomList>")
- ; bwf patch 6 4/26/2013 - removed following line, do not want "None Selected"
- ;D XML^EDPX($$XMLS^EDPX("item",-1,"(None Selected)"))   ;non-selected (-1 will delete)
+ D XML^EDPX($$XMLS^EDPX("item",-1,"(None Selected)"))   ;non-selected (-1 will delete)
  S BED=0 F  S BED=$O(^EDPB(231.8,"C",EDPSITE,AREA,BED)) Q:'BED  D
  . S X0=^EDPB(231.8,BED,0)
- . ; bwf patch 6 4/25/2013 - filter EDIS_DEFAULT
- . I $P(X0,U)="EDIS_DEFAULT" Q
  . I $P(X0,U,4) Q  ; inactive
  . I ($P(X0,U,9)=1)!($P(X0,U,9)=2) S ALPHA($P(X0,U)_"  ("_$P(X0,U,6)_")")=BED
  S X="" F  S X=$O(ALPHA(X)) Q:X=""  D XML^EDPX($$XMLS^EDPX("item",ALPHA(X),X))

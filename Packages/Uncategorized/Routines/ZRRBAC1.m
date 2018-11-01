@@ -25,7 +25,7 @@ SELECT ;examine each item within commas
  -
 GET ;search tape and put names in %UTILITY
  ; input = %ST = start string
- ; 	  %FI = end string
+ ;        %FI = end string
  I %PIECE=1 W !,"searching ..."
 GETPGM ; search tape
  I '((%ST="")!(%ST="%")) S %N=%ST,%S=1 D GETONE
@@ -34,7 +34,7 @@ GETPGM ; search tape
  -
 GETONE ; get or remove a single name
  ; Input = %N = name
- ;	  %S = silent flag
+ ;        %S = silent flag
  I %MI G REMONE
 GONEPGM ; get one program name
  I '$D(%UTI(%N)) I '%S U 0 W ?40,"No such routine ",%N,!
@@ -47,7 +47,7 @@ REMONE ;remove a single name from %UTILITY
  -
 REMOVE ;Remove entries from %UTILITY
  ; Input = %ST = start string
- ;	  %FI = end string
+ ;        %FI = end string
  I %ST["^" S %ST=$E(%ST,2,$L(%ST))
  I %FI["^" S %FI=$E(%FI,2,$L(%FI))
 REM1 S %N=%ST

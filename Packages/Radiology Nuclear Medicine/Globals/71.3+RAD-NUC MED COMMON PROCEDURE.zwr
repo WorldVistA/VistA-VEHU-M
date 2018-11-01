@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: RAD/NUC MED COMMON PROCEDURE
-24-JAN-2018 16:38:21 ZWR
+31-OCT-2018 09:30:21 ZWR
 ^RAMIS(71.3,0)="RAD/NUC MED COMMON PROCEDURE^71.3P^64^61"
 ^RAMIS(71.3,2,0)="163^^^1^^^^7^w^^^^Arthrogram Ankle"
 ^RAMIS(71.3,3,0)="154^^^2^^^^7^w^^^^Knee 2 Views"
@@ -9,8 +9,8 @@ OSEHRA ZGO Export: RAD/NUC MED COMMON PROCEDURE
 ^RAMIS(71.3,8,0)="116^^^5^^^^7^^^^^Spinal Myelogram CP"
 ^RAMIS(71.3,9,0)="133^^^6^^^^7^^^^^Forearm 2 Views"
 ^RAMIS(71.3,9,"M",0)="^71.312P^2^2"
-^RAMIS(71.3,9,"M",1,0)="2"
-^RAMIS(71.3,9,"M",2,0)="10"
+^RAMIS(71.3,9,"M",1,0)=2
+^RAMIS(71.3,9,"M",2,0)=10
 ^RAMIS(71.3,9,"M","B",2,1)=""
 ^RAMIS(71.3,9,"M","B",10,2)=""
 ^RAMIS(71.3,10,0)="135^^^7^^^^7^^^^^Wrist 2 Views"
@@ -25,12 +25,12 @@ OSEHRA ZGO Export: RAD/NUC MED COMMON PROCEDURE
 ^RAMIS(71.3,19,0)="174^^^^^^^7^^^^^ABDOMEN 3 VIEWS"
 ^RAMIS(71.3,20,0)="23^^^14^^^^7^^^^^SINUS 3 VIEW"
 ^RAMIS(71.3,20,"M",0)="^71.312P^1^1"
-^RAMIS(71.3,20,"M",1,0)="1"
+^RAMIS(71.3,20,"M",1,0)=1
 ^RAMIS(71.3,20,"M","B",1,1)=""
 ^RAMIS(71.3,21,0)="183^^^15^^^^7^^^^^UPPER GI"
 ^RAMIS(71.3,22,0)="188^^^16^^^^7^^^^^SMALL BOWEL"
 ^RAMIS(71.3,22,"M",0)="^71.312P^1^1"
-^RAMIS(71.3,22,"M",1,0)="27"
+^RAMIS(71.3,22,"M",1,0)=27
 ^RAMIS(71.3,22,"M","B",27,1)=""
 ^RAMIS(71.3,23,0)="585^^^2^^^^9^^^9^^BONE SCAN"
 ^RAMIS(71.3,24,0)="467^^^17^^R^^7^^^^^BRONCHOGRAM"

@@ -1,5 +1,5 @@
 RORX003A ;HCIOFO/SG - GENERAL UTILIZATION AND DEMOGRAPHICS ;11/14/06 8:50am
- ;;1.5;CLINICAL CASE REGISTRIES;**1,21**;Feb 17, 2006;Build 45
+ ;;1.5;CLINICAL CASE REGISTRIES;**1,21,30,31**;Feb 17, 2006;Build 62
  ;
  ; This routine uses the following IAs:
  ;
@@ -10,6 +10,10 @@ RORX003A ;HCIOFO/SG - GENERAL UTILIZATION AND DEMOGRAPHICS ;11/14/06 8:50am
  ;** MODIFICATIONS **
  ;ROR*1.5*21   SEP 2013    T KOPP       Added ICN as last report column if
  ;                                      additional identifier option selected
+ ;ROR*1.5*30   OCT 2016   M FERRARESE   Changing the display for "Sex" to "Birth Sex"
+ ;
+ ;ROR*1.5*31   MAY 2017   M FERRARESE   Adding PACT and PCP as additional identifiers.
+ ;                                                                           
  ;**
  ;***** INCREMENTS SUMMARY COUNTER
 INCSUM(SUMMARY,VAL) ;
@@ -78,11 +82,11 @@ PATIENT(IENS,PARTAG) ;
  . S RORSUM("AGE","Average")=$G(RORSUM("AGE","Average"))+TMP
  . D INCSUM("AGE",TMP-(TMP#10))
  ;
- ;--- Sex
- D:$$OPTCOL^RORXU006("SEX")
+ ;--- Birth Sex
+ D:$$OPTCOL^RORXU006("BIRTHSEX")
  . S TMP=$P(VADM(5),U,2)
- . D ADDVAL^RORTSK11(RORTSK,"SEX",TMP,PTAG,1)
- . D INCSUM("SEX",TMP)
+ . D ADDVAL^RORTSK11(RORTSK,"BIRTHSEX",TMP,PTAG,1)
+ . D INCSUM("BIRTHSEX",TMP)
  ;
  ;--- Race
  D:$$OPTCOL^RORXU006("RACE")
@@ -147,6 +151,15 @@ PATIENT(IENS,PARTAG) ;
  I $$PARAM^RORTSK01("PATIENTS","ICN") D
  . S:'$D(DFN) DFN=$G(RORBUF(798,IENS,.01,"I"))
  . D ICNDATA^RORXU006(RORTSK,DFN,PTAG)
+ ;--- PACT
+ I $$PARAM^RORTSK01("PATIENTS","PACT") D
+ . S:'$D(DFN) DFN=$G(RORBUF(798,IENS,.01,"I"))
+ . D PACTDATA^RORXU006(RORTSK,DFN,PTAG)
+ ;
+ ;--- PCP
+ I $$PARAM^RORTSK01("PATIENTS","PCP") D
+ . S:'$D(DFN) DFN=$G(RORBUF(798,IENS,.01,"I"))
+ . D PCPDATA^RORXU006(RORTSK,DFN,PTAG)
  Q 0
  ;
  ;***** GENERATES THE REPORT SUMMARY
@@ -170,7 +183,7 @@ SUMMARY(PARTAG,PATIENTS) ;
  . D ADDTEXT^RORTSK11(RORTSK,"RISK_FACTORS",.RORBUF,SUMMARY)
  ;
  ;--- Simple summaries
- F SI="RACE","ETHN","SEX"  D:$D(RORSUM(SI))>1
+ F SI="RACE","ETHN","BIRTHSEX"  D:$D(RORSUM(SI))>1
  . S TABLE=$$ADDVAL^RORTSK11(RORTSK,SI_"_SUMMARY",,SUMMARY)
  . S I=""
  . F  S I=$O(RORSUM(SI,I))  Q:I=""  D

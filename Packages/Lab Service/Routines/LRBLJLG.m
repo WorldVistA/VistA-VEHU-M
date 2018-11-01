@@ -1,7 +1,7 @@
 LRBLJLG ;AVAMC/REG/CYM - BB INVENTORY LOG-IN 11/12/96  07:49 ; 11/22/00 2:21pm
- ;;5.2;LAB SERVICE;**72,139,247,267**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,139,247,267,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D END I '$G(DUZ(2)) W $C(7),!,"I need to know the name of your site (In the INSTITUTION file)." G END
+ Q  D END I '$G(DUZ(2)) W $C(7),!,"I need to know the name of your site (In the INSTITUTION file)." G END
  S LR("M")=1,X="BLOOD BANK" D ^LRUTL G:Y=-1 END K LRDPAF
  W !!?28,"Blood Component Log-In",!!?15,"Division: ",LRAA(4) D BAR^LRBLB
  I LRCAPA S X="UNIT LOG-IN/SEND-OUT" D X^LRUWK G:'$D(X) END D S^LRBLW

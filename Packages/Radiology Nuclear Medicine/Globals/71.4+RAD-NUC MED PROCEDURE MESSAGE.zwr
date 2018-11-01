@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: RAD/NUC MED PROCEDURE MESSAGE
-24-JAN-2018 16:38:21 ZWR
+31-OCT-2018 09:30:21 ZWR
 ^RAMIS(71.4,0)="RAD/NUC MED PROCEDURE MESSAGE^71.4I^2^2"
 ^RAMIS(71.4,1,0)="Creatinine & Total Bilirubin Lab test results MUST be included with exam request.  Use the CLINICAL HISTORY field for test values."
 ^RAMIS(71.4,2,0)="ANKLE MESSAGE - HERE IS A TEMPLATE FIELD {FLD:SBK CHECK}"

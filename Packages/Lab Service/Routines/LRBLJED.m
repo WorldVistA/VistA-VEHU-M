@@ -1,10 +1,10 @@
 LRBLJED ;AVAMC/REG/CYM - BB INVENTORY EDIT 3/3/97  13:20 ;
- ;;5.2;LAB SERVICE;**72,90,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,90,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
  ;
-D D G G:Y<1 END D CK^LRU G:$D(LR("CK")) D S DR="[LRBLIDTM]" D ^DIE D FRE^LRU D:$D(LRT) FX G D
-E D G G:Y<1 END D CK^LRU G:$D(LR("CK")) E S DR="[LRBLIXR]" D ^DIE D FRE^LRU G E
-L D G G:Y<1 END D CK^LRU G:$D(LR("CK")) L S LR(0)=$P(Y,U,2),LR(4)=$P(Y(0),U,4) W !!,LR(0),"// " R X:DTIME G L:X[U!('$T),DIE:X="" I X'="@" X $P(^DD(65,.01,0),U,5,99) I '$D(X) W !,$C(7),$G(^DD(65,.01,3)) X:$D(^(4)) ^(4) G L
+D Q  D G G:Y<1 END D CK^LRU G:$D(LR("CK")) D S DR="[LRBLIDTM]" D ^DIE D FRE^LRU D:$D(LRT) FX G D
+E Q  D G G:Y<1 END D CK^LRU G:$D(LR("CK")) E S DR="[LRBLIXR]" D ^DIE D FRE^LRU G E
+L Q  D G G:Y<1 END D CK^LRU G:$D(LR("CK")) L S LR(0)=$P(Y,U,2),LR(4)=$P(Y(0),U,4) W !!,LR(0),"// " R X:DTIME G L:X[U!('$T),DIE:X="" I X'="@" X $P(^DD(65,.01,0),U,5,99) I '$D(X) W !,$C(7),$G(^DD(65,.01,3)) X:$D(^(4)) ^(4) G L
  S LR(1)=DA I X="@" W $C(7),!?3,"SURE YOU WANT TO DELETE THE ENTIRE '",LR(0),"' BLOOD INVENTORY" S %=2 D YN^LRU G:%'=1 L I %=1 S O=LR(0),X="Deleted",Z="65,.01" D EN^LRUD S LR="@",DR=".01///^S X=LR" D ^DIE G L
  D W G:'$D(X) L S LR=X,DR=".01///^S X=LR" D ^DIE S O=LR(0),Z="65,.01" D EN^LRUD
 DIE S DR="[LRBLILG]" D ^DIE I $D(DA),$P(^LRD(65,DA,0),U)'=LR(65,.01) D KK^LRBLU
@@ -30,7 +30,7 @@ KL L +^LR(T,1.6):5 I '$T W !,"Someone else is editing this entry.  Try again lat
  K ^LR(T,1.6,T(4)),^LR("AB",T,+$P(T(0),U,11),T(4)) S X(1)=$O(^LR(T,1.6,0)) S:'X(1) X(1)=0 S X=^LR(T,1.6,0),^(0)=$P(X,"^",1,2)_"^"_X(1)_"^"_$S(X(1)=0:X(1),1:($P(X,"^",4)-1)) L -^LR(T,1.6)
  Q
  ;
-A D G G:Y<1 END I '$D(^LRD(65,DA,8)) W !?7,"No autologous/directed donor entry for this unit." G A
+A Q  D G G:Y<1 END I '$D(^LRD(65,DA,8)) W !?7,"No autologous/directed donor entry for this unit." G A
  S W=^LRD(65,DA,8),(X,LRX)=+(W),W=$P(W,"^",2),W(3)=$S($P(W,"^",3)="A":"Autologous ","D":"Directed ",1:"")_"donation" I 'X W !?7,"Donor unit has been released to stock.",! G A
  I W!(W="") W:W !?7,"One or more screening tests from ",W(3)," are positive." W:W="" !?7,"Not all screening tests completed." W !?7,$C(7),"DELETION NOT ALLOWED !",! G A
  W !,$P(W(3)," ")," donor: " S X=^LR(X,0),(LRDPF,Y)=$P(X,"^",2),X=$P(X,"^",3),Y=^DIC(Y,0,"GL"),X=@(Y_X_",0)"),LRP=$P(X,"^"),SSN=$P(X,"^",9) D SSN^LRU W LRP," ",SSN," OK TO DELETE " S %=1 D YN^LRU Q:%'=1

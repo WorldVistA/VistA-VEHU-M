@@ -1,7 +1,8 @@
-XTMLOSKT ;SLC/KCM;OAK/JLI - Socket Appender borrowed from XWBTCPL ;06/07/08  17:02
- ;;7.3;T0OLKIT;**81**;Apr 25, 1995;Build 13
- ;;Per VHA Directive 2004-038, this routine should not be modified
- ;ISC-SF/EG - DHCP Broker
+XTMLOSKT ;SLC/KCM;2017-07-25  10:39 AM;06/07/08  17:02
+ ;;2.4;LOG4M;;Jul 25, 2017;Build 3
+ ;
+ ; Includes some public domain code written by Kevin Muldrum
+ ; This code is currently not used.
  ;
  ; This routine is the background process that listens for client
  ; requests to connect to M.  When a request is received, This

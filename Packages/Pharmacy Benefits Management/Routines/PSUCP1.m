@@ -1,5 +1,5 @@
-PSUCP1 ;BIR/TJH,PDW - PBM - CONTROL POINT, MANUAL ENTRY ; 1/12/09 12:12pm
- ;;4.0;PHARMACY BENEFITS MANAGEMENT;**15**;MARCH, 2005;Build 2
+PSUCP1 ;BIR/TJH,PDW - PBM - CONTROL POINT, MANUAL ENTRY ; 1/10/11 8:08am
+ ;;4.0;PHARMACY BENEFITS MANAGEMENT;**15,18**;MARCH, 2005;Build 7
  ;
  ;DBIA's
  ; Reference to file #4   supported by DBIA 10090
@@ -34,10 +34,17 @@ DATES ; do this if user entered N, wants date range
  ..W !!,"The end date of the search must be greater than the start date.",!
  ..K PSUSDT,PSUEDT
  ..S ERC=2 ; condition 2, ask dates again
- .I PSUSDT>DT!(PSUEDT>DT) D
+ .I PSUSDT>DT!(PSUEDT>DT) D  Q
  ..W !!,"Searches cannot be executed for future dates.",!
  ..K PSUSDT,PSUEDT
  ..S ERC=2 ; condition 2, ask dates again
+ .;PSU*4*18 Warn if range > 93 days.
+ .N X1,X2,X,% S X1=PSUEDT,X2=PSUSDT D ^%DTC I X>93 D  Q
+ ..W !!,"WARNING you have chosen a range greater than 93 days."
+ ..W !,"This could potentially create a very large amount of data."
+ ..W !,"This may result in system problems."
+ ..W !!,"Are you sure you want to continue"
+ ..D YN^DICN W ! I %'=1 S ERC=2
  I ERC=1 G ERR
  I ERC=2 S ERC=0 G DATES
  ;

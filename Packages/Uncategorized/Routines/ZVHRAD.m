@@ -1,4 +1,4 @@
-ZVHRAD	; OIA/AJC - EDIT RADIOLOGY REPORTS ;2/5/15
+ZVHRAD  ; OIA/AJC - EDIT RADIOLOGY REPORTS ;2/5/15
  ;;0.1;NO PKG;**NO PATCHES**;Feb  5, 2015; no build
  ;
  ; class 1 calls: PROD^XUPROD, FMTE^XLFDT; GET1^DIQ; ^DIC, ^DIR, FILE^DIE
@@ -16,7 +16,7 @@ ZVHRAD	; OIA/AJC - EDIT RADIOLOGY REPORTS ;2/5/15
  Quit  ; routine ZVHRAD
  ;
  ;
-FIXRAD	; Edit the dates of radiology reports and orders
+FIXRAD  ; Edit the dates of radiology reports and orders
  ;
  ; Check for Production environment, quit if true
  New CHECK Set CHECK=$$CHECK(1)
@@ -112,7 +112,7 @@ FIXRAD	; Edit the dates of radiology reports and orders
  Quit  ; Label FIXRAD
  ;
  ;
-AOXREFER(DFN,INVDATE,IEN7003,RADIEN)	; If AO x-ref is wrong
+AOXREFER(DFN,INVDATE,IEN7003,RADIEN)    ; If AO x-ref is wrong
  ;REQUIRED: DFN,INVDATE,IEN7003,RADIEN
  ;
  Do
@@ -140,7 +140,7 @@ AOXREFER(DFN,INVDATE,IEN7003,RADIEN)	; If AO x-ref is wrong
  Quit  ; label AOXREFER
  ;
  ;
-GETAPXRF(DFN,INVDATE)	; check AP x-reference, return procedure and number if found.
+GETAPXRF(DFN,INVDATE)   ; check AP x-reference, return procedure and number if found.
  ;REQUIRED: pass by value DFN (patient IEN) and INVDATE the inverse date used 
  ;          by 75.1 as DA
  ;EXT OUTPUT: -1 error, 0 fail, if successful - IEN of procedure from file# 71
@@ -161,7 +161,7 @@ GETAPXRF(DFN,INVDATE)	; check AP x-reference, return procedure and number if fou
  Quit $Get(OUT)
  ;
  ;
-SHOWDATE(DFN,RADIEN)	; show the dates for a radiology order
+SHOWDATE(DFN,RADIEN)    ; show the dates for a radiology order
  ;REQUIRED: pass by value DFN and RADIEN as the order ien in ^RAO(75.1
  ;   also uses ARRAY as set up in SETRA
  Quit:'$Data(ARRAY)>9
@@ -239,7 +239,7 @@ CHNGDATE(DA,DATE,FIELD,FILE,SUB) ; change a date in a file
  Quit $Get(OUT) ; label CHNGDATE
  ;
  ;
-PAUSE(STRING)	; show fileman error data, prompt for user to continue
+PAUSE(STRING)   ; show fileman error data, prompt for user to continue
  ; REQUIRED: pass by value STRING to display for the user
  ; EXT OUTPUT: -1 for error, 0 for quit, 1 for continue
  ;
@@ -289,7 +289,7 @@ GETRADPT() ; select a radiology patient and report by ^radpt
  Quit $Get(OUT) ; Label GETRADPT
  ;
  ;
-GETDATE(STRING)	; Select a date using DI Read
+GETDATE(STRING) ; Select a date using DI Read
  ; REQUIRED: pass by value STRING with the prompt for DIR("A")
  ; EXT OUTPUT: -1 error, 0 none selected, date/time in fileman format if 
  ;    successful
@@ -309,7 +309,7 @@ GETDATE(STRING)	; Select a date using DI Read
  Quit $Get(OUT) ; label GETDATE
  ;
  ;
-GET1RAD(DFN)	; Select an order from the ARRAY
+GET1RAD(DFN)    ; Select an order from the ARRAY
  ;REQUIRED: pass DFN by value (patient IEN in file 2)
  ;   must have ARRAY set by SETRA^ZVHRAD before calling
  ;Extrinsic Output: -1 for error, 0 for none selected, IEN of selected 
@@ -342,7 +342,7 @@ GET1RAD(DFN)	; Select an order from the ARRAY
  Quit $Get(OUT) ; label GET1RAD
  ;
  ;
-SETRA(DFN)	; set the array of completed lab orders
+SETRA(DFN)      ; set the array of completed lab orders
  ;REQUIRED: pass DFN by value (patient IEN in file 2)
  ;  new ARRAY before calling
  ;Ouput: List of Radiology Orders IEN in variable ARRAY
@@ -383,7 +383,7 @@ SETRA(DFN)	; set the array of completed lab orders
  Quit $Get(OUT) ; label SETRA
  ;
  ;
-EDRADPT(DFN,INVDATE,IEN7003,DATEEXAM,ERROR)	; Edit the ^RADPT global
+EDRADPT(DFN,INVDATE,IEN7003,DATEEXAM,ERROR)     ; Edit the ^RADPT global
  ; just ignore this major SAC violation of directly setting the globals :)
  ;
  ;REQUIRED: Pass the following variables by value - 

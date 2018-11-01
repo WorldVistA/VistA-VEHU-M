@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: GENERIC CODE SHEET BATCH TYPE
-24-JAN-2018 16:38:09 ZWR
+31-OCT-2018 09:26:12 ZWR
 ^GECS(2101.1,0)="GENERIC CODE SHEET BATCH TYPE^2101.1^35^35"
 ^GECS(2101.1,1,0)="FEE BASIS^^100^AMS"
 ^GECS(2101.1,1,1,0)="^^1^1^2940609^^^^"
@@ -16,7 +16,7 @@ OSEHRA ZGO Export: GENERIC CODE SHEET BATCH TYPE
 ^GECS(2101.1,2,2,"B",1253,2)=""
 ^GECS(2101.1,2,2,"B","XXX",1)=""
 ^GECS(2101.1,3,0)="RADIOLOGY^^100^AMS"
-^GECS(2101.1,3,1,0)="2"
+^GECS(2101.1,3,1,0)=2
 ^GECS(2101.1,3,1,1,0)="Contains the Radiology AMIS segments 186 (Inpatient) and"
 ^GECS(2101.1,3,1,2,0)="189 (Outpatient)."
 ^GECS(2101.1,3,2,0)="^2101.12^1^1"
@@ -48,7 +48,7 @@ OSEHRA ZGO Export: GENERIC CODE SHEET BATCH TYPE
 ^GECS(2101.1,7,2,1,0)="XXX^263^1"
 ^GECS(2101.1,7,2,"B","XXX",1)=""
 ^GECS(2101.1,8,0)="DIETETICS^^100^AMS"
-^GECS(2101.1,8,1,0)="1"
+^GECS(2101.1,8,1,0)=1
 ^GECS(2101.1,8,1,1,0)="These are code sheets for the Dietetic Service."
 ^GECS(2101.1,8,2,0)="^2101.12^1^1"
 ^GECS(2101.1,8,2,1,0)="XXX^263^1"
@@ -66,7 +66,7 @@ OSEHRA ZGO Export: GENERIC CODE SHEET BATCH TYPE
 ^GECS(2101.1,10,2,1,0)="XXX^272^1"
 ^GECS(2101.1,10,2,"B","XXX",1)=""
 ^GECS(2101.1,11,0)="VOLUNTARY^^100^VOL"
-^GECS(2101.1,11,1,0)="2"
+^GECS(2101.1,11,1,0)=2
 ^GECS(2101.1,11,1,1,0)="This batch type contains all the Voluntary Service Code Sheets transmitted"
 ^GECS(2101.1,11,1,2,0)="by the Generic Code Sheet System."
 ^GECS(2101.1,11,2,0)="^2101.12^1^1"
@@ -86,7 +86,7 @@ OSEHRA ZGO Export: GENERIC CODE SHEET BATCH TYPE
 ^GECS(2101.1,13,2,1,0)="XXX^263^1"
 ^GECS(2101.1,13,2,"B","XXX",1)=""
 ^GECS(2101.1,14,0)="PROSTHETICS^^100^AMS"
-^GECS(2101.1,14,1,0)="3"
+^GECS(2101.1,14,1,0)=3
 ^GECS(2101.1,14,1,1,0)="This batch type includes code sheets for Prosthetics Activities, "
 ^GECS(2101.1,14,1,2,0)="Restorations Clinic, Orthotics Laboratory, as well as Visual Impairment"
 ^GECS(2101.1,14,1,3,0)="Service Team and Spinal Cord Injury code sheets.  "
@@ -174,7 +174,7 @@ OSEHRA ZGO Export: GENERIC CODE SHEET BATCH TYPE
 ^GECS(2101.1,27,2,1,0)="XXX^275^1"
 ^GECS(2101.1,27,2,"B","XXX",1)=""
 ^GECS(2101.1,28,0)="DENTAL^^100^DAS"
-^GECS(2101.1,28,1,0)="1"
+^GECS(2101.1,28,1,0)=1
 ^GECS(2101.1,28,1,1,0)="Dental Service Code Sheets"
 ^GECS(2101.1,28,2,0)="^2101.12^1^1"
 ^GECS(2101.1,28,2,1,0)="XXX^234^1"
@@ -205,7 +205,7 @@ OSEHRA ZGO Export: GENERIC CODE SHEET BATCH TYPE
 ^GECS(2101.1,32,2,1,0)="XXX^336^1"
 ^GECS(2101.1,32,2,"B","XXX",1)=""
 ^GECS(2101.1,33,0)="FINANCIAL MANAGEMENT^^^FMS"
-^GECS(2101.1,33,1,0)="1"
+^GECS(2101.1,33,1,0)=1
 ^GECS(2101.1,33,1,1,0)="This BATCH TYPE contains the required information for FMS transmissions."
 ^GECS(2101.1,33,2,0)="^2101.12^1^1"
 ^GECS(2101.1,33,2,1,0)="XXX^323^1"

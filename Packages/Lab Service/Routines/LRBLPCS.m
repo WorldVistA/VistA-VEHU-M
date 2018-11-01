@@ -1,7 +1,7 @@
 LRBLPCS ;AVAMC/REG - COMPONENT SELECTION FOR PATIENTS ;8/4/95  06:32 ;
- ;;5.2;LAB SERVICE;**1,72,247,267**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**1,72,247,267,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D V^LRU,CK^LRBLPUS
+ Q  D V^LRU,CK^LRBLPUS
  G:Y=-1 END
  I LRSS'="BB" W $C(7),!!,"MUST BE BLOOD BANK" G END
  W !?20,LRAA(4),!!?15,"Selection of blood components for a patient"

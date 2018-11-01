@@ -1,7 +1,7 @@
 LRBLJSH ;AVAMC/REG - BB INVENTORY SHIPMENTS ;2/18/93  09:31 ;
- ;;5.2;LAB SERVICE;**247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D END S:'$D(DTIME) DTIME=300 S LRI=$O(^LAB(65.9,"B","SHIPPING INVOICE",0)) I 'LRI W $C(7),!!,"SHIPPING INVOICE must be an entry in the LAB LETTER FILE (65.9)." G END
+ Q  D END S:'$D(DTIME) DTIME=300 S LRI=$O(^LAB(65.9,"B","SHIPPING INVOICE",0)) I 'LRI W $C(7),!!,"SHIPPING INVOICE must be an entry in the LAB LETTER FILE (65.9)." G END
  S IOP="HOME" D ^%ZIS W @IOF,?18,"INVOICE FOR SHIPMENT OF BLOOD COMPONENTS"
  D B^LRU G:Y<0 END S LRLDT=LRLDT+.99,LRSDT=LRSDT-.01
 I R !!,"Enter SHIPPING INVOICE#: ",X:DTIME G:X[U!(X="") END S LRB=X X $P(^DD(65,.13,0),U,5,99) S:'$D(X) X="?" I X["?" W $C(7),"  Enter invoice # (2-10 characters)" G I

@@ -1,7 +1,7 @@
 LRBLJLA ;AVAMC/REG/CYM - CROSSMATCH LABELS ;6/17/96  14:21 ;
- ;;5.2;LAB SERVICE;**72,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**72,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D END,CK^LRBLPUS G:Y=-1 END S:'$D(^LRO(69.2,LRAA,9,0)) ^(0)="^69.25A^^"
+ Q  D END,CK^LRBLPUS G:Y=-1 END S:'$D(^LRO(69.2,LRAA,9,0)) ^(0)="^69.25A^^"
  W !?30,"PRINT XMATCH LABELS" S X=$P(^LRO(69.2,LRAA,9,0),"^",4) W:X !?25,"(There ",$S(X>1:"are",1:"is")," ",X," label",$S(X>1:"s",1:"")," to print)"
  W !?3,"Add labels for emergency transfusion " S %=2 D YN^LRU I %=1 D E
  W !! I '$O(^LRO(69.2,LRAA,9,0)) W $C(7),!!,"THERE ARE NO LABELS TO PRINT !",!,"DO WANT TO ADD SOME OF YOUR OWN" S %=2 D YN^LRU G:%'=1 END D C G ED

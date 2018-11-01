@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: VA ADMITTING REGULATION
-24-JAN-2018 16:38:23 ZWR
+31-OCT-2018 09:24:57 ZWR
 ^DIC(43.4,0)="VA ADMITTING REGULATION^43.4I^202^70"
 ^DIC(43.4,0,"DD")="@"
 ^DIC(43.4,0,"DEL")="@"
@@ -80,6 +80,7 @@ OSEHRA ZGO Export: VA ADMITTING REGULATION
 ^DIC(43.4,"%D",0)="^^2^2^2880924^^"
 ^DIC(43.4,"%D",1,0)="This file contains the recognized VA Admitting regulations under"
 ^DIC(43.4,"%D",2,0)="which a patient may be admitted to a VA facility."
+^DIC(43.4,"%MSC")=3181025.171523
 ^DIC(43.4,"AEDR",1,1)=""
 ^DIC(43.4,"AEDR",1,71)=""
 ^DIC(43.4,"AEDR",2,5)=""

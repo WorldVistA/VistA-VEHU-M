@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: USR AUTHORIZATION/SUBSCRIPTION
-24-JAN-2018 16:38:25 ZWR
+31-OCT-2018 09:30:41 ZWR
 ^USR(8930.1,0)="USR AUTHORIZATION/SUBSCRIPTION^8930.1IP^285^213"
 ^USR(8930.1,1,0)="244^5^9^546^&^4"
 ^USR(8930.1,1,1,0)="^^2^2^2970116^^^"
@@ -281,7 +281,7 @@ OSEHRA ZGO Export: USR AUTHORIZATION/SUBSCRIPTION
 ^USR(8930.1,119,1,1,0)="Progress notes with a status of Unsigned may be viewed by individuals"
 ^USR(8930.1,119,1,2,0)="who are members of Chief,MIS User Class."
 ^USR(8930.1,120,0)="3^5^15^48"
-^USR(8930.1,120,1,0)="2"
+^USR(8930.1,120,1,0)=2
 ^USR(8930.1,120,1,1,0)="Progress notes with a status of Unsigned may be deleted by individuals "
 ^USR(8930.1,120,1,2,0)="who are members of the Chief, MIS User Class"
 ^USR(8930.1,121,0)="3^6^7^48"

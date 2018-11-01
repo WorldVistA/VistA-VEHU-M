@@ -82,7 +82,7 @@ GETPAT1 ; TO ENTER A SINGLE or string of PATIENT OTHER THAN VEHU PATIENTs
  QUIT  ; label GETPAT
  ;
  ;
-SINGLE(DFN)	; single patient selection [8/26/2014 ajc]
+SINGLE(DFN)     ; single patient selection [8/26/2014 ajc]
  ; this label will support single patient selection
  ; Required: Pass by reference DFN.  The patient's IEN will be returned in it.
  NEW DIR,DIRUT,DIROUT,X,Y,DTOUT,DUOUT,DA
@@ -98,7 +98,7 @@ SINGLE(DFN)	; single patient selection [8/26/2014 ajc]
  QUIT  ; label SINGLE
  ;
  ;
-GETPAT3()	; select a patient.  Used by ZVHOPM and ZVHRAD
+GETPAT3()       ; select a patient.  Used by ZVHOPM and ZVHRAD
  ;Ext Ouput: -1 for error, 0 for failure, patient DFN if successful
  ;
  ;use dic to select a patient from ^DPT(

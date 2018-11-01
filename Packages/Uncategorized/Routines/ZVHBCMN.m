@@ -1,4 +1,4 @@
-ZVHBCMN	 ; OIA/AJC - Menu of options for BCMA data ; 10/17/2014
+ZVHBCMN  ; OIA/AJC - Menu of options for BCMA data ; 10/17/2014
  ;;0.1;NO PKG;**NO PATCHES**;JULY 22, 2014
  ;
  ; Menu for ZVHBC routines - Medication management for TEST accounts
@@ -6,7 +6,7 @@ ZVHBCMN	 ; OIA/AJC - Menu of options for BCMA data ; 10/17/2014
  ;
  DO EN QUIT ; just go to entry point if entered directly
  ;
-EN	; ENTRY POINT
+EN      ; ENTRY POINT
  ; Check for Production environment, quit if true
  NEW CHECK SET CHECK=$$PROD^XUPROD(1)
  IF CHECK WRITE "This routine is for TEST systems only!!!",!!,"Goodbye!",!! QUIT
@@ -18,7 +18,7 @@ EN	; ENTRY POINT
  QUIT  ; routine ZVHBCMN
  ;
  ;
-MAIN	; menu - Main:
+MAIN    ; menu - Main:
  ;
  WRITE @IOF,!!,$$CJ^XLFSTR("BCMA Data for TEST Accounts",IOM),!!
  NEW DIR,Y,DTOUT,DUOUT,DIRUT,DIROUT
@@ -46,7 +46,7 @@ MAIN	; menu - Main:
  QUIT  ; Label MAIN
  ;
  ;
-TODAY	; Menu - today's meds:
+TODAY   ; Menu - today's meds:
  WRITE @IOF,!!,$$CJ^XLFSTR("Give meds for Today",IOM),!!
  ;define the option
  WRITE "This option will give the meds for today up to the date/time of NOW.",!
@@ -84,15 +84,15 @@ TODAY	; Menu - today's meds:
  DO GOMAIN ; return the user to the main menu
  ;
  ;future - these would be cool:
- ;	Give meds for a specific patient
- ;	Give meds for a range of BCMA patients
- ;	Give meds for a range of VeHU patients
- ;	Give meds for all inpatients (use the ^DPT cross ref)
+ ;      Give meds for a specific patient
+ ;      Give meds for a range of BCMA patients
+ ;      Give meds for a range of VeHU patients
+ ;      Give meds for all inpatients (use the ^DPT cross ref)
  ;
  QUIT  ; lable TODAY
  ;
  ;
-GOMAIN(NAME,LABEL)	; repeat,return to main, or quit
+GOMAIN(NAME,LABEL)      ; repeat,return to main, or quit
  ;
  IF $DATA(NAME)&$DATA(LABEL) DO
  . NEW DIR,X,Y,DTOUT,DUOUT,DIRUT,DIROUT ; DI Read variables
@@ -116,9 +116,9 @@ GOMAIN(NAME,LABEL)	; repeat,return to main, or quit
  QUIT  ; label GOMAIN
  ;
  ;
-RANGE	;Menu - meds for a date range:
+RANGE   ;Menu - meds for a date range:
  WRITE @IOF,!!,$$CJ^XLFSTR("Give meds for specific date range",IOM),!!
- ;	(define the option)
+ ;      (define the option)
  WRITE "This option will allow you to give medications for a date range.",!
  WRITE "In order for the routine to find orders in the past, they must have:",!
  WRITE "  1. An active status in the order file (100)",!
@@ -148,18 +148,18 @@ RANGE	;Menu - meds for a date range:
  IF Y=1 DO EN^ZVHBC HANG 5 ; save=true, silent=true
  ;
  ;future ideas:
- ;	Give meds for a range of BCMA patients
- ;	Give meds for all inpatients (use the ^DPT cross ref)
+ ;      Give meds for a range of BCMA patients
+ ;      Give meds for all inpatients (use the ^DPT cross ref)
  ;
  ; Menu - Delete meds for a patient:
- ;	(define the option)
+ ;      (define the option)
  ;
  DO GOMAIN ; return the user to the main menu
  ;
  QUIT  ; label RANGE
  ;
  ;
-DELETE	; Call the delete option
+DELETE  ; Call the delete option
  ;
  ; Check for Production environment, quit if true
  NEW CHECK SET CHECK=$$PROD^XUPROD(1)
@@ -208,7 +208,7 @@ DELETE	; Call the delete option
  QUIT  ; label DELETE
  ;
  ;
-DELPSB	;	delete the entries
+DELPSB  ;       delete the entries
  ;
  ;
  ; Check for Production environment, quit if true
@@ -238,7 +238,7 @@ DELPSB	;	delete the entries
  QUIT  ; label DELPSB
  ;
  ;
-KILLPSB(PSBIEN)	; delete a BCMA entry by PSBIEN
+KILLPSB(PSBIEN) ; delete a BCMA entry by PSBIEN
  ; REQUIRED: pass by value PSBIEN as an integer
  ;
  ; Check for Production environment, quit if true
@@ -259,7 +259,7 @@ KILLPSB(PSBIEN)	; delete a BCMA entry by PSBIEN
  QUIT DONE ; label KILLPSB
  ;
  ;
-SHOWBC	; show the active barcodes for a patient, date [8/26/14 10/17/14 ajc]
+SHOWBC  ; show the active barcodes for a patient, date [8/26/14 10/17/14 ajc]
  ;
  ; choose a patient
  NEW PATIENT,DATE
@@ -311,7 +311,7 @@ SHOWBC	; show the active barcodes for a patient, date [8/26/14 10/17/14 ajc]
  QUIT  ; label SHOWBC
  ;
  ;
-SHOWUD	; show the unit dose meds
+SHOWUD  ; show the unit dose meds
  ;
  WRITE !!,?2,"Unit Dose Medications (active only)",!
  NEW MED SET MED=""
@@ -325,7 +325,7 @@ SHOWUD	; show the unit dose meds
  QUIT  ; label SHOWUD
  ;
  ;
-SHOWIV	; show the IV meds
+SHOWIV  ; show the IV meds
  ;
  WRITE !!,?2,"IV Medications (active only)",!
  NEW MED SET MED=""
@@ -369,7 +369,7 @@ SHOWIV	; show the IV meds
  QUIT  ; label SHOWIV
  ;
  ;
-BARCHK(PATIENT,MED)	; check the bar code, so if it is used
+BARCHK(PATIENT,MED)     ; check the bar code, so if it is used
  ; requires ^tmp("psj", med ien, patient IEN and new BCARRAY before calling
  NEW PSJON,BARCODE,USED ; psj order number, barcode for return, used=1 if true
  SET PSJON=$PIECE(^TMP("PSJ",$J,MED,0),"^",3) ; pharm order number

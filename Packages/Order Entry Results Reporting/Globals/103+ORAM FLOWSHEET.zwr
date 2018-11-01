@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: ORAM FLOWSHEET
-24-JAN-2018 16:38:14 ZWR
+31-OCT-2018 09:29:20 ZWR
 ^ORAM(103,0)="ORAM FLOWSHEET^103P^100806^1"
 ^ORAM(103,100806,0)="100806^2.0-3.0^CVA=436.^3150623.08^06/09/15^^30^Y^06/09/15^0^2^1^SAVE^0^^20365^^^1|LABTECH,EIGHT|3150622^0"
 ^ORAM(103,100806,1,0)="^^1^1^3150609^"
@@ -13,7 +13,7 @@ OSEHRA ZGO Export: ORAM FLOWSHEET
 ^ORAM(103,100806,3,1,1,4,0)="9:32:13 AM"
 ^ORAM(103,100806,3,1,1,5,0)="Next draw: -LE"
 ^ORAM(103,100806,3,1,3,0)="^^1^1^3150609^"
-^ORAM(103,100806,3,1,3,1,0)="Please HOLD (do not take any Warfarin (Coumadin)) as you were directed on Tuesday, June 09, 2015 and for the next 4 days.  "_$C(13)_""_$C(10)_""_$C(13)_""_$C(10)_"Then continue with the schedule below."_$C(13)_""_$C(10)_""
+^ORAM(103,100806,3,1,3,1,0)="Please HOLD (do not take any Warfarin (Coumadin)) as you were directed on Tuesday, June 09, 2015 and for the next 4 days.  "_$C(13,10,13,10)_"Then continue with the schedule below."_$C(13,10)
 ^ORAM(103,100806,3,1,"LOG",0)="^^4^4^3150609"
 ^ORAM(103,100806,3,1,"LOG",1,0)="Original FS 1: DATE=3150609, INR=, PT NOTIFIED=V, TWD=---; 20365 (3150609.123111): EDITED: 20365(3150609)"
 ^ORAM(103,100806,3,1,"LOG",2,0)="Successful appointment."

@@ -1,34 +1,32 @@
-DGPTAE01 ;ALB/MTC,HIOFO/FT - Miss. Austin Edit Checks ;11/13/14 2:22pm
- ;;5.3;Registration;**58,342,466,664,867,884**;Aug 13, 1993;Build 31
- ;
- ;no external references
+DGPTAE01 ;ALB/MTC - Miss. Austin Edit Checks ; 13 NOV 92
+ ;;5.3;Registration;**58,342,466,664,867**;Aug 13, 1993;Build 59
  ;
 INC ; VERIFY INCOME DATA
  I DGPTINC'?." "1.6N." " S DGPTERC=120
  Q
  ;
-STATE ;state
+STATE ;
  Q:$$FOR^DGADDUTL(DGPTCTRY)>0
  Q:DGPTSTE["X"
  S DGPTSTE=+DGPTSTE I DGPTSTE="" S DGPTERC=117 Q
  I DGPTSTE'?1.2N S DGPTERC=117 Q
  Q
  ;
-ZIP ;zip code
+ZIP ;
  Q:$$FOR^DGADDUTL(DGPTCTRY)>0
  I DGPTZIP'?5N&(DGPTZIP'="XXXXX") S DGPTERC=118 Q
  Q
  ;
-CNTY ;county
+CNTY ;
  Q:$$FOR^DGADDUTL(DGPTCTRY)>0
  I DGPTCTY'?1.3N S DGPTERC=117 Q
  Q
  ;
-AGO ;agent orange
+AGO ;
  I " 12345"'[DGPTEXA S DGPTERC=115 Q
  I "35"[DGPTEXA&(DGPTPOS2'=7) S DGPTERC=133 Q
  Q
-IRAD ;ionizing radiation
+IRAD ;
  I "024578"'[DGPTPOS2&(DGPTEXI'=" ") S DGPTEXI=" " Q
  I "024578"[DGPTPOS2&("1234 "'[DGPTEXI) S DGPTERC=116 Q
  I DGPTPOS2="Z"&((DGPTEXI=" ")!("1234"'[DGPTEXI)) S DGPTERC=134 Q
@@ -60,37 +58,23 @@ EDIT ;
  I $E(DGPTMTC,1)="A"&("SN"'[$E(DGPTMTC,2)) S DGPTERC=119 Q
  I $E(DGPTMTC,2)=" "&("BCGNXU"'[$E(DGPTMTC)) S DGPTERC=119 Q
  Q
-CONSIS ;check for invalid means test indicator
+CONSIS ;
  I DGPTMTC="X "&(+DGPTTY'<2860701) S DGPTERC="119" Q
  Q
  ;
 PSE ;-- check for pseudo ssn
  S DGPTALF="ABC^DEF^GHI^JKL^MNO^PQR^STU^VWX^YZ^ "
-FI ;patient's first initial
+FI ;
  I DGPTFI=" "&($E(DGPTSSN,1)=0) G MI
  I $P(DGPTALF,U,$E(DGPTSSN,1))'[DGPTFI S DGPTERC=130 G PSEQ
-MI ;patient's middle initial
+MI ;
  I DGPTMI=" "&($E(DGPTSSN,2)=0) G LN
  I $P(DGPTALF,U,$E(DGPTSSN,2))'[DGPTMI S DGPTERC=130 G PSEQ
-LN ;patient's last name
+LN ;
  I $P(DGPTALF,U,$E(DGPTSSN,3))'[$E(DGPTLN,1) S DGPTERC=130 G PSEQ
-COMP ;check pseudo ssn, name and dob for consistency
+COMP ;
  I $E(DGPTDOB,1,4)_$E(DGPTDOB,7,8)'=$E(DGPTSSN,4,9) S DGPTERC=130
  Q
 PSEQ ;
  K DGPTALF
- Q
-MST ;military sexual trauma
- I "YNDU "'[DGPTMST S ERR=152
- Q
-CV ;combat veteran
- I "12 "'[DGPTCOMVET S ERR=155
- Q
-CVDATE ;combat veteran date
- N X,Y
- Q:DGPTCOMVETDT?6" "
- S X=DGPTCOMVETDT,%DT="X" D ^%DT I Y<0 S DGPTERC=154
- Q
-SHAD ;shipboard hazard and defense
- I "10 "'[DGPTSHAD S ERR=156
  Q

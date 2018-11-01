@@ -1,8 +1,8 @@
 OSEHRA ZGO Export: LAB LETTER
-24-JAN-2018 16:38:15 ZWR
+31-OCT-2018 09:28:16 ZWR
 ^LAB(65.9,0)="LAB LETTER^65.9^11^10"
 ^LAB(65.9,2,0)="RBC ANTIGEN ABSENT, DONOR^0^2^4^15^10^0^0^29"
-^LAB(65.9,2,1)="14"
+^LAB(65.9,2,1)=14
 ^LAB(65.9,2,2,0)="16^^16^16^2890625^^^^"
 ^LAB(65.9,2,2,1,0)="You are a special person and a VERY special blood donor!!!!"
 ^LAB(65.9,2,2,2,0)=" "
@@ -22,7 +22,7 @@ OSEHRA ZGO Export: LAB LETTER
 ^LAB(65.9,2,2,16,0)="Sincerely,"
 ^LAB(65.9,2,3)="^^4"
 ^LAB(65.9,3,0)="DONATION GROUP DRIVE^0^12^5^20^10^0^0^29"
-^LAB(65.9,3,1)="19"
+^LAB(65.9,3,1)=19
 ^LAB(65.9,3,2,0)="5^^8^8^2960105^^^^"
 ^LAB(65.9,3,2,1,0)="Your church group is having a blood drive on March 11, 1989 from 10 - 2 PM at the [65.5,2].  "
 ^LAB(65.9,3,2,2,0)=" "
@@ -34,7 +34,7 @@ OSEHRA ZGO Export: LAB LETTER
 ^LAB(65.9,3,2,8,0)="Sincerely,"
 ^LAB(65.9,3,3)="^^4"
 ^LAB(65.9,4,0)="WHOLE BLOOD^1^2^4^15^10^0^0^29"
-^LAB(65.9,4,1)="14"
+^LAB(65.9,4,1)=14
 ^LAB(65.9,4,2,0)="^^12^12^2890810^^^^"
 ^LAB(65.9,4,2,1,0)="Thank you for your blood donation on [65.5,5] at the [65.54,.02] for the [65.54,.03] donation group."
 ^LAB(65.9,4,2,2,0)=" "
@@ -50,7 +50,7 @@ OSEHRA ZGO Export: LAB LETTER
 ^LAB(65.9,4,2,12,0)="Sincerely,"
 ^LAB(65.9,4,3)="^^4"
 ^LAB(65.9,5,0)="PLASMAPHERESIS^1^2^5^15^10^0^0^29"
-^LAB(65.9,5,1)="14"
+^LAB(65.9,5,1)=14
 ^LAB(65.9,5,2,0)="^^10^10^2890625^^^^"
 ^LAB(65.9,5,2,1,0)="Thank you for your special donation of plasma on [65.5,5] at the [65.54,.02] Blood Donor Center.  Your donation was used to benefit a patient whose needs were very special."
 ^LAB(65.9,5,2,2,0)=" "
@@ -64,10 +64,10 @@ OSEHRA ZGO Export: LAB LETTER
 ^LAB(65.9,5,2,10,0)="Sincerely,"
 ^LAB(65.9,5,3)="^^4"
 ^LAB(65.9,6,0)="CYTAPHERESIS^1^2^5^15^10^0^0^29"
-^LAB(65.9,6,1)="14"
+^LAB(65.9,6,1)=14
 ^LAB(65.9,6,3)="^^4"
 ^LAB(65.9,7,0)="NO DONATION^1^2^4^15^10^0^0^29"
-^LAB(65.9,7,1)="14"
+^LAB(65.9,7,1)=14
 ^LAB(65.9,7,2,0)="^^8^8^2960105^^^^"
 ^LAB(65.9,7,2,1,0)="We greatly appreciate the effort which you made to donate on [65.5,5]   "
 ^LAB(65.9,7,2,2,0)="at the [65.54,.02]."

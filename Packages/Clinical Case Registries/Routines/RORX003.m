@@ -1,5 +1,5 @@
 RORX003 ;HOIFO/SG,VAC - GENERAL UTILIZATION AND DEMOGRAPHICS ;4/7/09 2:06pm
- ;;1.5;CLINICAL CASE REGISTRIES;**1,8,13,19,21**;Feb 17, 2006;Build 45
+ ;;1.5;CLINICAL CASE REGISTRIES;**1,8,13,19,21,30,31**;Feb 17, 2006;Build 62
  ;
  ; This routine uses the following IAs:
  ;
@@ -18,6 +18,10 @@ RORX003 ;HOIFO/SG,VAC - GENERAL UTILIZATION AND DEMOGRAPHICS ;4/7/09 2:06pm
  ;ROR*1.5*19   FEB  2012   K GUPTA      Support for ICD-10 Coding System
  ;ROR*1.5*21   SEP 2013    T KOPP       Added ICN as last report column if
  ;                                      additional identifier option selected
+ ;ROR*1.5*30   OCT 2016    M FERRARESE  Changing the display for "Sex" to "Birth Sex"
+ ;
+ ;ROR*1.5*31   MAY 2017    M FERRARESE  Adding PACT and PCP as additional identifiers.
+ ;                                      
  ;******************************************************************************
  ;******************************************************************************
  Q
@@ -52,12 +56,14 @@ HEADER(PARTAG) ;
  S TMP=$$ADDVAL^RORTSK11(RORTSK,"COLUMN",,COLUMNS)  Q:TMP<0 TMP
  D ADDATTR^RORTSK11(RORTSK,TMP,"NAME",NAME)
  ;--- Optional columns
- F NAME="DOB","AGE","SEX","RACE","ETHN","RISK","SELDT","CONFDT","UTIL","DOD"  D
+ F NAME="DOB","AGE","BIRTHSEX","RACE","ETHN","RISK","SELDT","CONFDT","UTIL","DOD"  D
  . Q:'$$OPTCOL^RORXU006(NAME)
  . S TMP=$$ADDVAL^RORTSK11(RORTSK,"COLUMN",,COLUMNS)
  . D ADDATTR^RORTSK11(RORTSK,TMP,"NAME",NAME)
  ; --- ICN if selected must be last column on report
  I $$PARAM^RORTSK01("PATIENTS","ICN") D ICNHDR^RORXU006(RORTSK,COLUMNS)
+ I $$PARAM^RORTSK01("PATIENTS","PACT") D PACTHDR^RORXU006(RORTSK,COLUMNS)
+ I $$PARAM^RORTSK01("PATIENTS","PCP") D PCPHDR^RORXU006(RORTSK,COLUMNS)
  ;---
  S:$$OPTCOL^RORXU006("CONFDT") RORFL798=RORFL798_";2"
  S:$$OPTCOL^RORXU006("SELDT") RORFL798=RORFL798_";3.2"
@@ -101,7 +107,7 @@ UTLDMG(RORTSK) ;
  ;--- Default set of columns for the summary-only report
  S XREFNODE=$NA(RORTSK("PARAMS","OPTIONAL_COLUMNS","C"))
  I $$PARAM^RORTSK01("OPTIONS","SUMMARY")  D
- . F TMP="RACE","RISK","AGE","SEX","UTIL"  D
+ . F TMP="RACE","RISK","AGE","BIRTHSEX","UTIL"  D
  . . S @XREFNODE@(TMP)=""
  S:$$OPTCOL^RORXU006("RACE") @XREFNODE@("ETHN")=""
  ;--- Construct the description of utilization types

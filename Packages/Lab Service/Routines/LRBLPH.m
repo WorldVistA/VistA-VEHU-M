@@ -1,7 +1,7 @@
 LRBLPH ;AVAMC/REG - PATIENT DRUG LIST ;2/18/93  09:44
- ;;5.2;LAB SERVICE;**247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D V^LRU S LRDPAF=1 D ^LRDPA G:LRDFN<1 END I +LRDPF'=2 W $C(7),!,"Must be entry in Patient File (2)" G LRBLPH
+ Q  D V^LRU S LRDPAF=1 D ^LRDPA G:LRDFN<1 END I +LRDPF'=2 W $C(7),!,"Must be entry in Patient File (2)" G LRBLPH
  W ! S ZTRTN="QUE^LRBLPH" D BEG^LRUTL G:POP!($D(ZTSK)) END
 QUE U IO K ^TMP($J) D L^LRU,S^LRU
  D H S LR("F")=1

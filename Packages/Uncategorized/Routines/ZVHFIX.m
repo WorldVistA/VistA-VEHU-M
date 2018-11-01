@@ -15,7 +15,7 @@ STRING ; fix entries that have a string in one of the x-ref's
  Q  ; label STRING
  ;
  ;
-CHECK(START,END,SILENT)	; entry point for a silent check (no auto-repair, but options to run the repairs)
+CHECK(START,END,SILENT) ; entry point for a silent check (no auto-repair, but options to run the repairs)
  ;pass by value START and END dates in fileman format, SILENT as 0 or 1
  ;REQUIRED: new the error array ZVHERR before calling this label
  ;
@@ -110,7 +110,7 @@ AORD(SILENT) ; fix the AORD x-ref
  QUIT  ; label AORD
  ;
  ;
-AORD2(START,END,SILENT)	; silently check the AORD x-ref
+AORD2(START,END,SILENT) ; silently check the AORD x-ref
  ; Pass by value: START and END dates in fileman format.
  N BADARRAY,ZVHPT,ZVHON,ZVHDATE,ZVHNUM,DIERR S (ZVHPT,ZVHON,ZVHDATE,ZVHNUM)=0
  F  S ZVHPT=$ORDER(^PSB(53.79,"AORD",ZVHPT)) Q:ZVHPT=""  DO
@@ -258,7 +258,7 @@ AEDT(SILENT) ; fix the AEDT x-ref of dates recorded as strings
  QUIT  ; label AEDT
  ;
  ;
-AEDT2(SILENT)	; silently check the AEDT x-ref for dates recorded as strings
+AEDT2(SILENT)   ; silently check the AEDT x-ref for dates recorded as strings
  NEW DFN,BADARRAY SET DFN=0
  FOR  SET DFN=$O(^PSB(53.79,"AEDT",DFN)) QUIT:DFN=""  DO
  . ;WRITE !,"----------------- Patient: ",DFN," -----------------"
@@ -328,7 +328,7 @@ TIMECK(SILENT) ; check the time for bad entries caused by dropped zeros
  QUIT  ; label TIMECK
  ;
  ;
-TIME2(SILENT)	; Silently check the time
+TIME2(SILENT)   ; Silently check the time
  NEW IEN,BADARRAY SET BADARRAY="",IEN=0
  FOR  SET IEN=$ORDER(^PSB(53.79,IEN)) QUIT:'IEN  DO  ;
  . NEW DATETIME SET DATETIME=$P(^PSB(53.79,IEN,0),"^",4)
@@ -646,9 +646,9 @@ AINFUSING(SILENT,ZVHFILE)  ;   fix the AINFUSING x-ref  with completed order lis
  .... W:'SILENT "AINFUSING X-REF SET",! ;
  W:'SILENT !,">>----> END OF AINFUSING",!!
  Q  ; label AINFUSING
-	;
-ZVHAI	 ; 
-	;Look for IV globalS with "I" infusing indicators and sets the AINFUSING X REF. use AINFUSING to validate the reference
+        ;
+ZVHAI    ; 
+        ;Look for IV globalS with "I" infusing indicators and sets the AINFUSING X REF. use AINFUSING to validate the reference
  N ZSTAT,ZVHADAT,ZVNUM,ZVPAT S (ZVNUM,ZVPAT,ZVHADAT,ZSTAT)=""
  F ZVNUM=1:1 S ZVNUM=$O(^PSB(53.79,ZVNUM)) Q:'ZVNUM  D
  . Q:ZVNUM["A" ;W NUM

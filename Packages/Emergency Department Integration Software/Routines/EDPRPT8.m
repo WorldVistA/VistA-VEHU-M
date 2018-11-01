@@ -1,12 +1,12 @@
-EDPRPT8 ;SLC/MKB - Acuity Report ;2/28/12 08:33am
- ;;2.0;EMERGENCY DEPARTMENT;**6**;Feb 24, 2012;Build 200
+EDPRPT8 ;SLC/MKB - Acuity Report
+ ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
  ;
-ACU(BEG,END,CSV) ; Get Acuity Report for EDPSITE by date range
+ACU(BEG,END) ; Get Acuity Report for EDPSITE by date range
  ;   CNT = counters by acuity
  ;   ADM = counters for all admissions
  ;   VA  = counters for VA  admissions
  ;   MIN = accumulate #minutes
- N IN,OUT,X,X0,X1,X3,X4,DISP,ACU,CNT,ADM,MIN,VA,ROW,ADMDEC,ADMDEL,LOG
+ N IN,OUT,X,X0,X1,X3,X4,DISP,ACU,CNT,ADM,MIN,VA,ROW
  D INIT ;set counters, sums to 0
  S IN=BEG-.000001
  F  S IN=$O(^EDP(230,"ATI",EDPSITE,IN)) Q:'IN  Q:IN>END  S LOG=0 F  S LOG=+$O(^EDP(230,"ATI",EDPSITE,IN,LOG)) Q:LOG<1  D
@@ -21,8 +21,7 @@ ACU(BEG,END,CSV) ; Get Acuity Report for EDPSITE by date range
  .. S:ADMDEC MIN("DEC")=MIN("DEC")+ADMDEC,MIN("DEC",ACU)=MIN("DEC",ACU)+ADMDEC
  .. S OUT=$P(X0,U,9) ;S:OUT="" OUT=NOW
  .. S:OUT ADMDEL=$$FMDIFF^XLFDT(OUT,X,2)\60
- . ;TDP - Patch 2, insure all VA Admissions are counted. Added VADMIT1.
- . I (($$VADMIT^EDPRPT2(DISP))!($$VADMIT1^EDPRPT2($P(X1,U,2)))) D  ;VA admissions
+ . I $$VADMIT^EDPRPT2(DISP) D  ;VA admissions
  .. S VA=VA+1,VA(ACU)=VA(ACU)+1
  .. S MIN("VADEC")=MIN("VADEC")+ADMDEC
  .. S MIN("VADEC",ACU)=MIN("VADEC",ACU)+ADMDEC
@@ -42,8 +41,7 @@ A1 ; return counts and averages
  ; as CSV
  I $G(CSV) D  Q
  . N TAB S TAB=$C(9)
- . ;S X="Acuity->"_TAB_"0"_TAB_"1"_TAB_"2"_TAB_"3"_TAB_"4"_TAB_"5"_TAB_"Total/Average"
- . S X="Acuity->"_TAB_"None"_TAB_"1"_TAB_"2"_TAB_"3"_TAB_"4"_TAB_"5"_TAB_"Total/Average"
+ . S X="Acuity->"_TAB_"0"_TAB_"1"_TAB_"2"_TAB_"3"_TAB_"4"_TAB_"5"_TAB_"Total/Average"
  . D ADD^EDPCSV(X)
  . D ROW("Number of Patients",.CNT)
  . D ROW("Number Admitted",.ADM)

@@ -1,7 +1,7 @@
 LRBLDEL ;AVAMC/REG - DELETE FILE 65 ENTRIES ;8/14/90  14:36 ;
- ;;5.2;LAB SERVICE;**247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D END S X="BLOOD BANK" D ^LRUTL G:Y=-1 END
+ Q  D END S X="BLOOD BANK" D ^LRUTL G:Y=-1 END
  W !!?25,"DELETE INVENTORY FILE ENTRIES",!?28,"WITH FINAL DISPOSITIONS"
  I '$D(^LRO(69.2,LRAA,8,65,1)) W !!?26,$C(7),"NO DELETION LIST",!,"USE Print units with final disposition OPTION under supervisor OPTIONS" G END:'$D(^XUSEC("LRLIASON",DUZ)),A
  S X=^LRO(69.2,LRAA,8,65,0),LR=0

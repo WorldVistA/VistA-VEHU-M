@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: PROBLEM
-24-JAN-2018 16:38:23 ZWR
+31-OCT-2018 09:24:57 ZWR
 ^DIC(620,0)="PROBLEM^620^31^31"
 ^DIC(620,0,"AUDIT")="@"
 ^DIC(620,0,"DD")="@"
@@ -67,7 +67,7 @@ OSEHRA ZGO Export: PROBLEM
 ^DIC(620,29,0)="Self-care deficit^b"
 ^DIC(620,29,1)="SELF CARE DEFICIT"
 ^DIC(620,30,0)="HYPERTENSIVE DISORDER"
-^DIC(620,31,0)="54133"
+^DIC(620,31,0)=54133
 ^DIC(620,"%D",0)="^^4^4^2921215^^^^"
 ^DIC(620,"%D",1,0)="File stores the 29 clinical problems developed for use by the"
 ^DIC(620,"%D",2,0)="Mental Health System."

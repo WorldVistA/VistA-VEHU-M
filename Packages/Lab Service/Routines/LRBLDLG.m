@@ -1,7 +1,7 @@
 LRBLDLG ;AVAMC/REG/CYM - BB DONOR LOG-IN ;1/29/97  12:48 ;
- ;;5.2;LAB SERVICE;**90,247**;Sep 27, 1994
+ ;;5.2;LAB SERVICE;**90,247,408**;Sep 27, 1994;Build 8
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
- D V^LRU S LR("SSN")=$P($G(^LAB(69.9,1,8,1,0)),U,5),LR("LRBLDLG")="",X="BLOOD BANK" D ^LRUTL G:Y=-1 END D EN1^LRBLY,D^LRBLU G:'$D(X) END
+ Q  D V^LRU S LR("SSN")=$P($G(^LAB(69.9,1,8,1,0)),U,5),LR("LRBLDLG")="",X="BLOOD BANK" D ^LRUTL G:Y=-1 END D EN1^LRBLY,D^LRBLU G:'$D(X) END
  W @IOF,?30,"Log-in donor visits",! I LRCAPA D Z^LRBLWD G:$D(LRX) END
  S %DT="AEX",%DT(0)="-N",%DT("A")="Enter DONATION DATE: TODAY// " D ^%DT K %DT I X="" S Y=DT W LRH(0)
  G:Y<1 END S (LRAD,X)=Y,LRI=9999999-Y D DW^%DTC W " ",X S:'$D(^LRO(69.2,LRAA,5,0)) ^(0)="^69.24A^0^0"
