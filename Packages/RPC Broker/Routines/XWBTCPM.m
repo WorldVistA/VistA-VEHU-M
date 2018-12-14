@@ -1,8 +1,39 @@
-XWBTCPM ;ISF/RWF - BROKER TCP/IP PROCESS HANDLER ;05/27/15  14:40
- ;;1.1;RPC BROKER;**35,43,49,53,64**;Mar 28, 1997;Build 12
- ;Per VA Directive 6402, this routine should not be modified.
- ;
+XWBTCPM ;ISF/RWF - BROKER TCP/IP PROCESS HANDLER ; 8/28/2013 10:43am
+ ;;1.1;RPC BROKER;**35,43,49,53,991**;Mar 28, 1997;Build 9
+ ;Per VHA Directive 2004-038, this routine should not be modified
+ ;Based on: XWBTCPC & XWBTCPL, Modified by ISF/RWF
  ;Changed to be started by TCPIP service or %ZISTCPS
+ ;
+ ; Change History:
+ ;
+ ; 2005 01 20 OIFO/RWF: XWB*1.1*35 SEQ #30, NON-callback server. Original
+ ; routine created. 
+ ;
+ ; 2006 05 15 OIFO/RWF: XWB*1.1*43 SEQ #36, New broker long timeout fix.
+ ; The original Broker and the new Broker had different timeout checks
+ ; resulting in records remaining in a locked state long after client
+ ; termination. Decreasing the BROKER ACTIVITY TIMEOUT caused problems
+ ; with Imaging. The new broker was changed to use the same timeout check
+ ; as the original broker, allowing the BROKER ACTIVITY TIMEOUT value to
+ ; be changed back to its pre XWB*1.1*35 value of (180 was the
+ ; recommended value). Also folded entry point for the new M-to-M Broker
+ ; into this main broker entry point, to eliminate the need for a
+ ; separate port, entry point, and VMS or Unix service. Also added
+ ; GTMLNUX entry point to support running the Broker on GT.M on Linux
+ ; using an xinetd service. in CONNTYPE, NEW, SETTIME, GTMLNUX.
+ ;
+ ; 2009 03 31 OIFO/JLI: XWB*1.1*49 SEQ #40, Improve Support for Linux.
+ ; $$OS^XWBTCPM was changed to return "GT.M" under GTM. Revised to make
+ ; Broker work with xinetd on Linux with Cache. in OS and passim.
+ ;
+ ; 2013 08 19-28 VEN/TOAD: XWB*1.1*991 SEQ #46, M2M Security Fixes.
+ ; Load new parameter XWBM2M into new local variable XWBM2M to control
+ ; whether the M-to-M Broker is suppressed. Changed call to M2M to
+ ; honor the new XWBM2M parameter. Improved support for GT.M on Linux
+ ; by preventing an error loop that generates ZINTRECURSEIO errors at
+ ; WBF+3^XWBRW. Annotated & refactored CONNTYPE and INIT for clarity.
+ ; Change History added. in XWBTCPM, CONNTYPE, ETRAP, INIT, EOR.
+ ;
  ;
 DSM ;DSM called from ucx, % passed in with device.
  D ESET
@@ -46,20 +77,36 @@ ESET ;Set inital error trap
  S U="^",$ETRAP="D ^%ZTER H" ;Set up the error trap
  S X="",@("$ZT=X") ;Clear old trap
  Q
+ ;
+ ;
  ;Find the type of connection and jump to the processing routine.
 CONNTYPE ;
- N XWBDEBUG,XWBAPVER,XWBCLMAN,XWBENVL,XWBLOG,XWBOS,XWBPTYPE
- N XWBTBUF,XWBTIP,XWBTSKT,XWBVER,XWBWRAP,XWBSHARE,XWBT
- N SOCK,TYPE
- D INIT
- S XWB=$$BREAD^XWBRW(5,XWBTIME)
- D LOG("MSG format is "_XWB_" type "_$S(XWB="[XWB]":"NEW",XWB="{XWB}":"OLD",XWB="<?xml":"M2M",XWB="~BSE~":"BSE",XWB="~EAC~":"EAC",XWB="~SVR~":"SVR",1:"Unk")) ; XWB*1.1*XX
- I XWB["<?xml" G M2M
- I XWB["[XWB]" G NEW
- I XWB["{XWB}" G OLD^XWBTCPM1 ;Deprecated in XWB*1.1*60, to be removed when no longer being used
- I $L($T(OTH^XWBTCPM2)) D OTH^XWBTCPM2 ;See if a special code.
- I '$L($T(OTH^XWBTCPM2)) D LOG("Prefix not known: "_XWB) ; XWB*1.1*XX
- Q
+ ; input:
+ ;   error trap is set
+ ;   any interrupts are set
+ ;   socket to client is opened and used
+ ;   XWBTDEV = the socket port
+ ;
+ N SOCK,TYPE,XWBAPVER,XWBCLMAN,XWBDEBUG,XWBENVL,XWBLOG,XWBM2M,XWBOS
+ N XWBPTYPE,XWBSHARE,XWBT,XWBTBUF,XWBTIP,XWBTSKT,XWBVER,XWBWRAP
+ D INIT ; set up common variables
+ ;
+ S XWB=$$BREAD^XWBRW(5,XWBTIME) ; read in the first message
+ D LOG("MSG format is "_XWB_" type "_$S(XWB="[XWB]":"NEW",XWB="{XWB}":"OLD",XWB="<?xml":"M2M",XWB="~BSE~":"BSE",XWB="~EAC~":"EAC",XWB="~SVR~":"SVR",1:"Unk")) ; ID type
+ ;
+ I XWB["[XWB]" G NEW ; new Broker
+ ;
+ I XWB["{XWB}" G OLD^XWBTCPM1 ; old Broker
+ ;
+ I XWB["<?xml",XWBM2M G M2M ; M-to-M Broker, if allowed
+ ;
+ I $L($T(OTH^XWBTCPM2)) D  ; if it's a special supported message type
+ . D OTH^XWBTCPM2 ; process it
+ E  D  ; otherwise we don't support this message type
+ . D LOG("Prefix not known: "_XWB) ; so just log it
+ ;
+ QUIT  ; end of CONNTYPE
+ ;
  ;
 NEWJOB() ;Check if OK to start a new job, Return 1 if OK, 0 if not OK.
  N X,Y,J,XWBVOL
@@ -156,13 +203,13 @@ ETRAP(EXIT) ; -- on trapped error, send error info to client
  I $EC["U411" S XWBERROR="U411",XWBSEC="",XWBERR="Data Transfer Error to Server"
  D ^%ZTER ;%ZTER clears $ZE and $ZCODE
  D LOG("In ETRAP: "_XWBERC) ;Log
- I (XWBERC["READ")!(XWBERC["WRITE")!(XWBERC["SYSTEM-F")!(XWBERC["IOEOF") D EXIT X "HALT "
+ I (XWBERC["READ")!(XWBERC["WRITE")!(XWBERC["SYSTEM-F")!(XWBERC["IOEOF")!(XWBERC["ZINTRECURSEIO") D EXIT X "HALT "
  U XWBTDEV
  I $G(XWBT("PCNT")) L +^XUTL("XUSYS",$J,0):99
  E  L  ;Clear Locks
  ;
- D ESND^XWBRW($C(24)_XWBERR_$C(4))
  I EXIT D EXIT X "HALT "
+ D ESND^XWBRW($C(24)_XWBERR_$C(4))
  S $ETRAP="Q:($ESTACK&'$QUIT)  Q:$ESTACK -9 S $ECODE="""" D CLEANP^XWBTCPM G RESTART^XWBTCPM",$ECODE=",U99,"
  Q
  ;
@@ -196,13 +243,23 @@ TIMEOUT ;Do this on MAIN  loop timeout
 OS() ;Return the OS
  Q $S(^%ZOSF("OS")["OpenM":"OpenM",^%ZOSF("OS")["GT.M":"GT.M",^("OS")["DSM":"DSM",1:"UNK")
  ;
-INIT ;Setup
- S U="^",XWBTIME=10,XWBOS=$$OS,XWBDEBUG=0,XWBRBUF=""
- S XWBDEBUG=$$GET^XPAR("SYS","XWBDEBUG")
- S XWBT("BF")=$S(XWBOS="GT.M":"#",1:"!")
- S XWBT("PCNT")=0 I XWBOS="GT.M",$L($T(^XUSCNT)) S XWBT("PCNT")=1
- D LOGSTART^XWBDLOG("XWBTCPM")
- Q
+ ;
+INIT ; Setup common variables for all brokers types
+ S U="^"
+ S XWBDEBUG=$$GET^XPAR("SYS","XWBDEBUG") ; enable or disable debug log
+ S XWBM2M=$$GET^XPAR("ALL","XWBM2M") ; enable or disable M-to-M Broker
+ S XWBOS=$$OS ; MUMPS implementation ("operating system")
+ S XWBRBUF=""
+ S XWBT("BF")=$S(XWBOS="GT.M":"#",1:"!") ; buffer flush
+ S XWBT("PCNT")=0 ; count processes? default to false
+ I XWBOS="GT.M",$L($T(^XUSCNT)) D  ; for GT.M systems
+ . S XWBT("PCNT")=1 ; set flag to count processes
+ S XWBTIME=10 ; default time-out (overridden for new & old broker)
+ ;
+ D LOGSTART^XWBDLOG("XWBTCPM") ; start broker log
+ ;
+ QUIT  ; end of INIT
+ ;
  ;
 DEBUG ;Entry point for debug, Build a server to get the connect
  ;Cache sample;ZB SERV+1^XWBTCPM:"L+" ZB ETRAP+1^XWBTCPM:"B"
@@ -231,3 +288,5 @@ LOG(MSG) ;Record Debug Info
  D:$G(XWBDEBUG) LOG^XWBDLOG(MSG)
  Q
  ;
+ ;
+EOR ; end of routine XWBTCPM

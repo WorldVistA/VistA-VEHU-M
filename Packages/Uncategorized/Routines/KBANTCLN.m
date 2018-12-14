@@ -1,4 +1,4 @@
-KBANTCLN ; VEN/SMH - Clean Taskman Environment ;2017-12-04  2:39 PM
+KBANTCLN ; VEN/SMH - Clean Taskman Environment ;2018-03-21  10:57 AM
  ;;nopackage;0.2
  ; License: Public Domain
  ; Author not responsible for use of this routine.
@@ -16,17 +16,19 @@ KBANTCLN ; VEN/SMH - Clean Taskman Environment ;2017-12-04  2:39 PM
  D START(VOL,UCI,SITENUMBER,SITENAME,FQDN)
  QUIT
  ;
-START(VOL,UCI,SITENUMBER,SITENAME,FQDN)
+START(VOL,UCI,SITENUMBER,SITENAME,FQDN,SOFTCLN)
  I $G(VOL)="" S VOL="ROU"
  I $G(UCI)="" S UCI="VAH"
  I $G(SITENUMBER)="" S SITENUMBER=999
  I $G(SITENAME)="" S SITENAME="DEMO SYSTEM"
  I $G(FQDN)="" S FQDN="LOCALHOST"
+ I $G(SOFTCLN)="" S SOFTCLN=0
  S IO=$P,U="^"
  D ZTMGRSET(VOL,UCI)
  D DINIT(SITENUMBER,SITENAME)
  D ZUSET
- D TASKMAN
+ D MSP
+ D TASKMAN(SOFTCLN)
  D DEVCLEAN
  QUIT
  ;
@@ -39,7 +41,7 @@ ZTMGRSET(VOL,UCI) ; Silent ZTMGRSET Replacement
  N ZTMODE S ZTMODE=1
  N SCR S SCR=" I 1"
  N %S,%D
- I +$SY=0 D  ; D 3^ZTMGRSET
+ I $L($SY,":")=2 D  ; D 3^ZTMGRSET
  . S ZTOS=3
  . N I,X F I=1:2 S Z=$P($T(Z+I^ZOSFONT),";;",2) Q:Z=""  S X=$P($T(Z+1+I^ZOSFONT),";;",2,99) S ^%ZOSF(Z)=X
  . S ^%ZOSF("GSEL")="K ^CacheTempJ($J),^UTILITY($J) D ^%SYS.GSET M ^UTILITY($J)=CacheTempJ($J)"
@@ -89,7 +91,7 @@ ZUSET ;
  D POST^ZUSET
  QUIT
  ;
-TASKMAN ; Taskman Stuff --> Ends at TEND
+TASKMAN(SOFTCLN) ; Taskman Stuff --> Ends at TEND
 CONST ; Constant Integers
  N KMAXJOB S KMAXJOB=30  ; Maximum M processes on the system
  ;
@@ -185,6 +187,8 @@ F14P7 ; 14.7 clean-up. Fall through
  D UPDATE^DIE("",$NA(KBANFDA),"",$NA(KBANERR)) ; File data (Internal Format)
  I $D(KBANERR) S $EC=",U1," ; if error filing, crash
  ;
+ I SOFTCLN D SOFTCLN QUIT
+ ;
 ZTSK  K ^%ZTSK  ; ^%ZTSK clean-up
 ZTSCH K ^%ZTSCH ; ^%ZTSCH clen-up
  ;
@@ -223,14 +227,14 @@ F19P2 ; 19.2 clean-up; Fall through.
  D UPDATE^DIE("E",$NA(KBANFDA),"",$NA(KBANERR)) ; File data (External Format)
  I $D(KBANERR) S $EC=",U1," ; if error filing, crash
  ;
-DEV ; Device File Clean-up
+TEND QUIT  ; Taskman END
+ ;
 MSP ; Mailman Site Parameters Clean-up
  N KBANFDA S KBANFDA(4.3,"1,",7.5)="@" ; CPU/VOL in MSP
  N KBANERR
  D FILE^DIE("",$NA(KBANFDA),$NA(KBANERR))
  I $D(KBANERR) S $EC=",U1,"
- ;
-TEND QUIT  ; Taskman END
+ QUIT
  ;
 DEVCLEAN ; Device Cleanup
 DEVVOL ; Delete Volume field for each device.
@@ -366,6 +370,28 @@ F19P2OPT ; Map: Option Name; Startup or time to schedule; resched freq; OS-speci
  ;;XMMGR-PURGE-AI-XREF^T+1@0040^1D
  ;;<<END>>
  ;;
+SOFTCLN ; [Private] Soft clean tasks -- don't delete them as in a brand new system
+ K ^%ZTSCH("ER")
+ K ^%ZTSCH("STATUS")
+ K ^%ZTSCH("MON")
+ K ^%ZTSCH("WAIT")
+ K ^%ZTSCH("SYNC")
+ K ^%ZTSCH("STARTUP")
+ K ^%ZTSCH("DEVTRY")
+ K ^%ZTSCH("IO")
+ K ^%ZTSCH("LINK")
+ K ^%ZTSCH("SUB")
+ N X,Y
+ S X=0 F  S X=$O(^%ZTSK(X)) Q:'X  D
+ . I '$D(^%ZTSK(X,0)) QUIT
+ . N Y S Y=^%ZTSK(X,0)
+ . S $P(Y,"^",4)=UCI
+ . S $P(Y,"^",11)=UCI
+ . S $P(Y,"^",12)=VOL
+ . S $P(Y,"^",14)=UCI
+ . S ^%ZTSK(X,0)=Y
+ QUIT
+ ;
 KF(FN,IENS) ; Kill File; Private Procedure
  ; FN = File Number; pass by value. Required.
  ; IENS = IENs; pass by value. Optional.
