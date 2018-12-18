@@ -1,22 +1,35 @@
-XWBRMX ;OIFO-Oakland/REM - M2M Broker Server Request Mgr  ;05/17/2002  17:41
- ;;1.1;RPC BROKER;**28,62**;Mar 21, 2002;Build 11
- ;Per VHA Directive 6402, this routine should not be modified
+XWBRMX ;OIFO-Oakland/REM - M2M Broker Server Request Mgr ; 08/28/2013 10:41am
+ ;;1.1;RPC BROKER;**28,991**;Mar 28, 1997;Build 9
  ;
- QUIT
+ QUIT  ; routine XWBRMX is not callable at the top
+ ;
+ ; Change History:
+ ;
+ ; 2002 08 10 OIFO/REM: XWB*1.1*28 SEQ #25, M2M Broker. Original routine
+ ; created.
+ ;
+ ; 2013 08 16-28 VEN/TOAD: XWB*1.1*991 SEQ #46, M2M Security Fixes.
+ ; Eliminate unused lines in ELEST that set DUZ and tokens (unfinished).
+ ; Change History added. in XWBRMX, ELEST, EOR.
+ ;
+ ;
  ;----------------------------------------------------------------------
  ;
  ;    Request Manager -Parse XML Requests using SAX interface
- ; 
+ ;
  ;----------------------------------------------------------------------
  ;
 EN(DOC,XWBOPT,XWBDATA) ; -- Parse XML uses SAX parser
  N XWBCBK,XWBINVAL
  SET XWBINVAL="#UNKNOWN#"
- ;comment out the next 2 lines, P62
- ;SET XWBDATA("DUZ")=XWBINVAL ;**M2M don't need duz
- ;SET XWBDATA("SECTOKEN")=XWBINVAL
+ ;
+ SET XWBDATA("DUZ")=XWBINVAL ;**M2M don't need duz
+ SET XWBDATA("SECTOKEN")=XWBINVAL
  DO SET(.XWBCBK)
  DO EN^MXMLPRSE(DOC,.XWBCBK,.XWBOPT)
+ ;
+ ;;D ^%ZTER
+ ;
 ENQ Q
  ;
 SET(CBK) ; -- set the event interface entry points
@@ -49,9 +62,6 @@ ELEST(ELE,ATR) ; -- element start
  ;
  ;*M2M - check for RPCBroker
  IF $G(XWBSESS) DO  QUIT
- . ;IF ELE="duz" SET (DUZ,XWBDATA("DUZ"))=$G(ATR("value")) IF +DUZ=0 SET (DUZ,XWBDATA("DUZ"))=XWBINVAL QUIT ;P62
- . IF $G(XWBSEC) DO  QUIT
- . . IF ELE="token" SET XWBDATA("SECTOKEN")=$G(ATR("value")) IF XWBDATA("SECTOKEN")="" SET XWBDATA("SECTOKEN")=XWBINVAL QUIT
  . IF ELE="security" SET XWBSEC=1 QUIT
  ;
  ; -- // TODO: make dynamic off RPC app config
@@ -73,3 +83,5 @@ CHR(TXT) ;
  IF $G(XWBDATA("APP"))="RPC" DO CHR^XWBRPC(.TXT)
  Q
  ;
+ ;
+EOR ; end of routine XWBRMX
