@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: 2507 EXAM
-31-OCT-2018 09:25:14 ZWR
+12-MAR-2019 14:33:08 ZWR
 ^DVB(396.4,0)="2507 EXAM^396.4I^423^99"
 ^DVB(396.4,91,0)="91^45^6^X^^^^N^C"
 ^DVB(396.4,91,"CAN")="2940426.075739^11289^3"
@@ -372,7 +372,7 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,417,"RES",75,0)="posterior patella indicating degenerative patellofemoral degenerative "
 ^DVB(396.4,417,"RES",76,0)="changes"_$C(148)_".  The right knee reported "_$C(147)_"no specific narrowing noted.  Some "
 ^DVB(396.4,417,"RES",77,0)="irregularity along the posterior patella and some inferior and superior "
-^DVB(396.4,417,"RES",78,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)
+^DVB(396.4,417,"RES",78,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)_""
 ^DVB(396.4,417,"RES",79,0)=""
 ^DVB(396.4,417,"RES",80,0)="As mentioned above patients audiogram was done at Fort Harrison, MT, "
 ^DVB(396.4,417,"RES",81,0)="his vision exam was done in May 1998.  He deferred blood tests."
@@ -461,7 +461,7 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,417,"RES",164,0)="posterior patella indicating degenerative patellofemoral degenerative "
 ^DVB(396.4,417,"RES",165,0)="changes"_$C(148)_".  The right knee reported "_$C(147)_"no specific narrowing noted.  Some "
 ^DVB(396.4,417,"RES",166,0)="irregularity along the posterior patella and some inferior and superior "
-^DVB(396.4,417,"RES",167,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)
+^DVB(396.4,417,"RES",167,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)_""
 ^DVB(396.4,417,"RES",168,0)=""
 ^DVB(396.4,417,"RES",169,0)="As mentioned above patients audiogram was done at Fort Harrison, MT, "
 ^DVB(396.4,417,"RES",170,0)="his vision exam was done in May 1998.  He deferred blood tests."
@@ -552,7 +552,7 @@ OSEHRA ZGO Export: 2507 EXAM
 ^DVB(396.4,418,"RES",75,0)="posterior patella indicating degenerative patellofemoral degenerative "
 ^DVB(396.4,418,"RES",76,0)="changes"_$C(148)_".  The right knee reported "_$C(147)_"no specific narrowing noted.  Some "
 ^DVB(396.4,418,"RES",77,0)="irregularity along the posterior patella and some inferior and superior "
-^DVB(396.4,418,"RES",78,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)
+^DVB(396.4,418,"RES",78,0)="posterior osteophytes indicating patellofemoral degenerative change."_$C(148)_""
 ^DVB(396.4,418,"RES",79,0)=""
 ^DVB(396.4,418,"RES",80,0)="As mentioned above patients audiogram was done at Fort Harrison, MT, "
 ^DVB(396.4,418,"RES",81,0)="his vision exam was done in May 1998.  He deferred blood tests."

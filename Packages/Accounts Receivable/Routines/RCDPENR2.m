@@ -1,5 +1,5 @@
 RCDPENR2 ;ALB/SAB - EPay National Reports - ERA/EFT Trending Report ;12/10/14
- ;;4.5;Accounts Receivable;**304**;Mar 20, 1995;Build 104
+ ;;4.5;Accounts Receivable;**304,321,326**;Mar 20, 1995;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;Read ^DGCR(399) via Private IA 3820
@@ -15,7 +15,7 @@ EFTERA()  ;  EFT/ERA TRENDING REPORT
  ;
  N DIRUT,DIROUT,DTOUT,DUOUT,X,Y,POP
  N RCBGDT,RCDATA,RCDATE,RCDISP,RCENDDT,RCPYRLST,RCSDT,RCEDT,RCRQDIV,RCRPT
- N RCTIN,RCDIV,RCEXCEL,RCEX,RCPAYR,RCTINR
+ N RCTIN,RCDIV,RCEXCEL,RCEX,RCPAR,RCPAY,RCPAYR,RCTINR,RCTYPE,RCWHICH
  ;
  ; Alert software to display to screen
  S RCDISP=1
@@ -24,16 +24,19 @@ EFTERA()  ;  EFT/ERA TRENDING REPORT
  S RCRQDIV=$$GETDIV(.RCDIV)
  Q:RCRQDIV=-1
  ;
- ; Ask the user for all payers or range of payers
- S RCEX=$$GETPAY^RCDPRU(.RCPAYR) Q:'RCEX
- Q:'RCEX
- S RCPYRLST("START")=$P($G(RCPAYR("START")),U,4),RCPYRLST("END")=$P($G(RCPAYR("END")),U,4)
+ S RCTYPE=$$RTYPE^RCDPEU1() Q:RCTYPE=-1           ; PRCA*4.5*326 - Add Tricare filter to Med/Pharm/Both
+ S RCWHICH=$$NMORTIN^RCDPEAPP() Q:RCWHICH=-1      ; PRCA*4.5*326 Filter by Payer Name or TIN
  ;
- ; Ask the user for all payers or range of payers by Tin
- S RCEX=$$GETTIN^RCDPRU(.RCTINR)   ;Get the list of payers using their TIN's
- Q:'RCEX
- S RCPYRLST("TIN","START")=$P($G(RCTINR("START")),U,2),RCPYRLST("TIN","END")=$P($G(RCTINR("END")),U,2)
- Q:$D(RCPYRLST("QUIT"))
+ S RCPAR("SELC")=$$PAYRNG^RCDPEU1(0,1,RCWHICH)    ; PRCA*4.5*326 - Selected or Range of Payers
+ Q:RCPAR("SELC")=-1                               ; PRCA*4.5*326 '^' or timeout
+ S RCPAY=RCPAR("SELC")
+ ;
+ I RCPAR("SELC")'="A" D  Q:XX=-1                  ; PRCA*4.5*326 - Since we don't want all payers 
+ . S RCPAR("TYPE")=RCTYPE                         ;         prompt for payers we do want
+ . S RCPAR("SRCH")=$S(RCWHICH=2:"T",1:"N")
+ . S RCPAR("FILE")=344.4
+ . S RCPAR("DICA")="Select Insurance Company"_$S(RCWHICH=1:" NAME: ",1:" TIN: ")
+ . S XX=$$SELPAY^RCDPEU1(.RCPAR)
  ;
  ; Ask the user for rate type
  S RCRATE=$$GETRATE()
@@ -60,15 +63,18 @@ EFTERA()  ;  EFT/ERA TRENDING REPORT
  Q
  ;
 AUTO(RCDISP,RCBGDT,RCENDDT,RCPYRLST,RCRQDIV,RCRPT,RCEXCEL,RCRATE,RCDIV) ;
- ; RCDISP - Display results to screen or archive file flag
- ; RCBGDT - begin date of the report
- ; RCENDDT - End date of the report
- ; RCPYRLST - Payers to report on (All, range, or single payer)
- ; RCRQDIV - Division to report on - (A)ll or a single division
- ; RCRPT - (M)ain, (S)ummary or (G)rand Total Report
- ; RCEXCEL - Flag to indicate output in "^" delimited format
- ; RCRATE - Billing Rate Type flag
- ; RCDIV - Divisions to report on.
+ ; Inputs: RCDISP - Display results to screen or archive file flag
+ ;         RCBGDT - begin date of the report
+ ;         RCENDDT - End date of the report
+ ;         RCPYRLST - Payers to report on (All, range, or single payer) (Redundant with PRCA*4.5*326)
+ ;         RCRQDIV - Division to report on - (A)ll or a single division
+ ;         RCRPT - (M)ain, (S)ummary or (G)rand Total Report
+ ;         RCEXCEL - Flag to indicate output in "^" delimited format
+ ;         RCRATE - Billing Rate Type flag
+ ;         RCDIV - Divisions to report on.
+ ;         RCPAY - Payers to report on (All, range, or single payer)                    ; PRCA*4.5*326
+ ;         RCTYPE - Types of payers to include (M - Medical, P - Pharmacy, T - Tricare) ; PRCA*4.5*326
+ ;         RCWHICH - select payers by name or TIN (1 - Name, 2 - TIN)                   ; PRCA*4.5*326
  ;
  ;Select output device
  W !
@@ -79,6 +85,7 @@ AUTO(RCDISP,RCBGDT,RCENDDT,RCPYRLST,RCRQDIV,RCRPT,RCEXCEL,RCRATE,RCDIV) ;
  .S ZTRTN="REPORT^RCDPENR2"
  .S ZTDESC="EFT/ERA Trending Report"
  .S ZTSAVE("RC*")=""
+ .S ZTSAVE("^TMP(""RCDPEU1"",$J,")=""
  .D ^%ZTLOAD
  .I $D(ZTSK) W !!,"Task number "_ZTSK_" has been queued."
  .E  W !!,"Unable to queue this job."
@@ -90,7 +97,7 @@ AUTO(RCDISP,RCBGDT,RCENDDT,RCPYRLST,RCRQDIV,RCRPT,RCEXCEL,RCRATE,RCDIV) ;
  ;
 REPORT   ; Trace the ERA file for the given date range
  ;
- N RCPYRS,RCINS,RCDATA,RCDTLDT,RCDTLIEN,RCIEN,RCEOB,RCBILLNO,RCBATCH,RCTYPE,RCPHARM,RCPYRFLG,RCPYALL,RCTINALL
+ N RCPYRS,RCINS,RCDATA,RCDTLDT,RCDTLIEN,RCIEN,RCEOB,RCBILLNO,RCBATCH,RCPHARM,RCPYALL,RCTINALL
  ;
  ;Note: RCPYALL an RCTINALL are used in tag HEADER to determine header output.
  ;
@@ -99,23 +106,6 @@ REPORT   ; Trace the ERA file for the given date range
  ;
  ; Compile list of divisions
  D DIV(.RCDIV)
- ;
- ; Compile the list of payers
- ; by name
- D PYRARY^RCDPENRU(RCPYRLST("START"),RCPYRLST("END"),1)  ; use insurance file payer list
- ;
- ; and by TIN
- D TINARY^RCDPENR4(RCPYRLST("TIN","START"),RCPYRLST("TIN","END"))  ; use insurance file payer list
- ;
- ; Set printout parameters
- I $D(^TMP("RCDPEADP",$J,"INS","A")) S RCPYALL=1
- I $D(^TMP("RCDPEADP",$J,"TIN","A")) S RCTINALL=1
- ;
- ; Now find only those payers in both lists
- S RCPYRFLG=$$INTRSCT^RCDPENR4()
- ;
- ; If no payers, quit.
- Q:'RCPYRFLG 
  ;
  ; Gather raw data
  D GETEFT^RCDPENR3(RCBGDT,RCENDDT,RCRATE)
@@ -133,6 +123,7 @@ REPORT   ; Trace the ERA file for the given date range
  ;
  ;Clean up temp array afterwards
  K ^TMP("RCDPENR2",$J)
+ K ^TMP("RCDPEU1",$J) ; PRCA*4.5*326
  Q 
  ;
  ;Print the results.
@@ -194,17 +185,19 @@ HEADER ;Print the results
  ;
  ; Undeclared Parameters - RCDISP and RCRPIEN
  ;
- N RCDIVTXT,RCPYRTXT,RCTINTXT,RCSTR
+ N RCDIVTXT,RCPYRTXT,RCSTR,RCTYPTXT
  ;
  S RCDIVTXT=$$DIVTXT^RCDPENR1()
- S RCPYRTXT="ALL PAYERS" S:$G(RCPYALL)'=1 RCPYRTXT=$$PAYERTXT^RCDPENR1(344.6)
- S RCTINTXT="ALL TINS" S:$G(RCTINALL)'=1 RCTINTXT=$$TINTXT()
+ S RCPYRTXT=$S(RCPAY="S":"SELECTED",RCPAY="R":"RANGE",1:"ALL")_" " ; PRCA*4.5*326
+ S RCPYRTXT=RCPYRTXT_$S(RCWHICH=2:"TINS",1:"PAYERS")               ; PRCA*4.5*326
+ S RCTYPTXT=$S('+$G(RCEXCEL):"MEDICAL/PHARMACY/TRICARE: ",1:"")    ; PRCA*4.5*326
+ S RCTYPTXT=RCTYPTXT_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL") ; PRCA*4.5*326
  ;
  S RCPAGE=RCPAGE+1
  I '+RCDISP D  Q
  . S RCSTR="EFT/ERA TRENDING REPORT^PAGE "_$J(RCPAGE,5)
  . D SAVEDATA^RCDPENR1(RCSTR,RCRPIEN)
- . S RCSTR="^"_RCDIVTXT_"^"_RCPYRTXT_"^"_RCTINTXT
+ . S RCSTR="^"_RCDIVTXT_"^"_RCPYRTXT_"^"_RCTYPTXT
  . D SAVEDATA^RCDPENR1(RCSTR,RCRPIEN)
  . S RCSTR="^"_"DATE RANGE: "_$$FMTE^XLFDT(RCBGDT,2)_" - "_$$FMTE^XLFDT(RCENDDT,2)_"^"_"RUN DATE: "_RCRUNDT
  . D SAVEDATA^RCDPENR1(RCSTR,RCRPIEN)
@@ -212,13 +205,13 @@ HEADER ;Print the results
  W @IOF,"EFT/ERA TRENDING REPORT"
  I '+$G(RCEXCEL) D  Q
  . W ?70,"PAGE ",$J(RCPAGE,5),!
- . W ?5,$E(RCDIVTXT,1,23),?30,$E(RCPYRTXT,1,28),?60,$E(RCTINTXT,1,20),!
+ . W " "_$E(RCDIVTXT,1,23),?25,$E(RCPYRTXT,1,20),?46,$E(RCTYPTXT,1,35),!
  . W ?5,"DATE RANGE: ",$$FMTE^XLFDT(RCBGDT,2)," - ",$$FMTE^XLFDT(RCENDDT,2)
  . W ?51,"RUN DATE: ",RCRUNDT,!
  . W RCLINE,!
  I +$G(RCEXCEL) D
  . W "^PAGE ",$J(RCPAGE,5),!
- . W "^",RCDIVTXT,"^",RCPYRTXT,"^",RCTINTXT,!
+ . W "^",RCDIVTXT,"^",RCPYRTXT,"^",RCTYPTXT,!
  . W "^","DATE RANGE: ",$$FMTE^XLFDT(RCBGDT,2)," - ",$$FMTE^XLFDT(RCENDDT,2)
  . W "^","RUN DATE: ",RCRUNDT,!
  . W RCLINE,!
@@ -332,11 +325,11 @@ GRAND() ;
  ;
  Q RCSTOP
  ;
- ;Print the insurance header line
-PRINTINS(RCINS) ;
- N RCSTOP
- ; undeclared parameter
- ;   RCLINE - line of "-" for report formating
+PRINTINS(RCINS) ; Print the insurance header line
+ ; Input:   RCINS   - Payer Name/TIN to be displayed
+ ;          RCLINE  - line of dashes used for separation
+ ; Returns 1 - User quit out of report, 0 otherwise
+ N RCSTOP,XX,YY,ZZ
  ;
  S RCSTOP=0
  I $Y>(IOSL-7) D
@@ -344,7 +337,8 @@ PRINTINS(RCINS) ;
  . Q:RCSTOP
  . D HEADER
  I RCSTOP Q RCSTOP
- W "PAYER NAME/TIN: ",RCINS,!
+ W "PAYER NAME/TIN",!                       ; PRCA*4.5*321
+ W " ",$$PAYTIN^RCDPRU2(RCINS,78),!         ; PRCA*4.5*321
  W RCLINE,!
  Q RCSTOP
  ;
@@ -450,17 +444,26 @@ GETEDATE(RCBDATE)  ;
  S DIR(0)="DAO^"_$G(RCBDATE)_":"_RCTODAY_":APE",DIR("A")="Go to DATE: " D ^DIR K DIR
  I $D(DTOUT)!$D(DUOUT)!(Y="") Q -1
  Q Y
+ ; 
+GETARPYR(RCTIN,RCPAY) ; Retrieve the Payer IEN from the RCDPE AUTO-PAY EXCLUSION file (#344.6)
+ ; Input: RCTIN - Payer ID
+ ;        RCPAY - Payer Name (optional)
+ ; Return: Payer IEN (#344.6)
  ;
- ; Retrieve the Payer IEN from the RCDPE AUTO-PAY EXCLUSION file (#344.6)
-GETARPYR(RCTIN) ;
- ;
- N RCIEN
+ N RCIEN,QUIT,ZZ
+ S RCPAY=$G(RCPAY)
  ;
  ; Send the IEN entry in the file if the Payer is in it.  Otherwise, send 0.
  S RCIEN=0
  ;
- ;append a space character to the tin to perform the correct search.
- S RCIEN=$O(^RCY(344.6,"C",RCTIN_" ",""))
+ ; PRCA*4.5*321 - Add optional payer name to search to narrow down payer
+ I RCPAY'="" D  ;
+ . S ZZ="",QUIT=0
+ . F  S ZZ=$O(^RCY(344.6,"C",RCTIN_" ",ZZ)) Q:ZZ=""  D  I RCIEN Q  ;
+ . . I $$GET1^DIQ(344.6,ZZ_",",.01,"E")=RCPAY S RCIEN=ZZ
+ ;
+ I 'RCIEN D  ;
+ . S RCIEN=$O(^RCY(344.6,"C",RCTIN_" ",""))
  ;
  Q +RCIEN
  ;

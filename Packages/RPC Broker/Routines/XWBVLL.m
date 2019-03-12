@@ -1,17 +1,29 @@
-XWBVLL ;OIFO-Oakland/REM - M2M Broker Listener  ;12/29/2010
- ;;1.1;RPC BROKER;**28,41,34,62,63**;Mar 28, 1997;Build 4
- ;Per VHA Directive 6402, this routine should not be modified
+XWBVLL ;OIFO-Oakland/REM - M2M Broker Listener ; 8/28/2013 10:45am
+ ;;1.1;RPC BROKER;**28,41,34,991**;Mar 28, 1997;Build 9
  ;
- QUIT
+ QUIT  ; routine XWBVLL is not callable at the top
  ;
- ;p41 - fixed infinite loop bug in SYSERR.
- ;    - new Cache/VMS tcpip entry point, called from XWBSERVER_START.COM file.
- ;p34 - added "BrokerM2M" in message type - SYSERR.
- ;    - removed the quotes (") after 'M:' - SYSERRS.
- ;    - new entry point to job off the listener for Cashe- STRT^XWBVLL(PORT).
- ;    - clear locks when error occurs - SYSERR.
- ;    - halt for read/write errors - SYSERR
- ; 
+ ; Change History:
+ ;
+ ; 2002 08 10 OIFO/REM: XWB*1.1*28 SEQ #25, M2M Broker. Original routine
+ ; created. 
+ ;
+ ; 2004 04 27 OIFO/REM: XWB*1.1*41 SEQ #29, M2M Infinite Loop. Fixed
+ ; infinite loop bug in SYSERR. Created new Cache/VMS tcpip entry point,
+ ; called from XWBSERVER_START.COM file. in SYSERR, CACHEVMS.
+ ;
+ ; 2005 10 26 OIFO/REM: XWB*1.1*34 SEQ #33, M2M Bug Fixes. Added
+ ; "BrokerM2M" in message type. Removed the quotes (") after 'M:'. Added
+ ; new entry point to job off the listener for Cache: STRT^XWBVLL(PORT).
+ ; Cleared locks when error occurs. Halt for read/write errors.
+ ; in SYSERR, SYSERRS, STRT.
+ ;
+ ; 2013 08 16-28 VEN/TOAD: XWB*1.1*991 SEQ #46, M2M Security Fixes.
+ ; Replaced non-standard error logging. Log errors. Apply logging
+ ; levels. Fix init of variables & log. Annotated. Change History added.
+ ; in XWBVLL, SPAWN, NXTCALL, SYSERR, EOR.
+ ;
+ ;
 START(SOCKET) ;Entry point for Cache/NT
  ;May be called directly to start the listener.
  ;SOCKET -is the port# to start the listener on.
@@ -19,8 +31,7 @@ START(SOCKET) ;Entry point for Cache/NT
  D LISTEN^%ZISTCPS(SOCKET,"SPAWN^XWBVLL")
  Q
  ;
-UCX ;Old entry point NOT used anymore.  *p55*
- ;DMS/VMS UCX entry point, called from XWBSERVER_START.COM file,
+UCX ;DMS/VMS UCX entry point, called from XWBSERVER_START.COM file,
  ;listener,  % = <input variable>
  ;IF $G(%)="" DO ^%ZTER QUIT
  SET (IO,IO(0))="SYS$NET"
@@ -30,14 +41,13 @@ UCX ;Old entry point NOT used anymore.  *p55*
  DO SPAWN
  QUIT
  ;
-STRT(PORT) ;*p34-This entry is called from option "XWB M2M CACHE LISTENER" and jobs off the listener for Cashe/NT.  Will call START.
+STRT(PORT) ;*p34-This entry is called from option "XWB M2M CACHE LISTENER" and jobs off the listener for Cache/NT.  Will call START.
  ;PORT -is the port# to start the listener on.
  J START^XWBVLL(PORT)::5 ;Used in place of TaskMan
  Q
  ;
 CACHEVMS ;Cache/VMS tcpip entry point, called from XWBSERVER_START.COM fLle *p41*
- ;Update the SET (IO)="SYS$NET" *p55*
- SET (IO,IO(0))=$S($ZV["VMS":"SYS$NET",1:$P) ;Support for both VMS/TCPIP and Linux/xinetd *p55*
+ SET (IO,IO(0))="SYS$NET"
  ; **CACHE/VMS specific code**
  OPEN IO::60 ELSE  SET ^TMP("XWB DSM CONNECT FAILURE",$H)="" QUIT
  X "U IO:(::""-M"")" ;Packet mode like DSM
@@ -45,40 +55,39 @@ CACHEVMS ;Cache/VMS tcpip entry point, called from XWBSERVER_START.COM fLle *p41
  QUIT
  ;
 SPAWN ; -- spawned process
- NEW U,DTIME,XWBROOT,XWBAVC,XWBSTOP
- SET U="^",DUZ=0,DUZ(0)="",DTIME=900,XWBROOT=$NA(^TMP("XWBVLL",$J)),XWBSTOP=0
+ NEW XWBSTOP
+ SET XWBSTOP=0
  ;
  ; -- initialize tcp processing variables
- DO INIT^XWBRL
+ I $G(XWBOS)="" D  ; if we have not already initialized,
+ . D INIT^XWBTCPM ; set up locals and start log
  ;
  ; -- set error trap
- NEW $ESTACK,$ETRAP S $ETRAP="D SYSERR^XWBVLL"
- ;Get IP from client
- S IO("IP")=$$GETPEER^%ZOSV()
+ NEW $ESTACK,$ETRAP S $ETRAP="D ^%ZTER HALT"
+ ;
  ; -- change job name if possible
  ;DO SETNM^%ZOSV("XWBSERVER: Server") ;**M2M - comment out for now
  DO SAVDEV^%ZISUTL("XWBM2M SERVER") ;**M2M save off server IO
- S XWBDEBUG=$$GET^XPAR("SYS","XWBDEBUG",,"Q")
- I XWBDEBUG D LOG^XWBRPC("Server Start @ "_$$NOW^XLFDT)
- ;check that XUS AV CODE is the 1st or 2nd RPC call P62
- I '$$GET^XPAR("SYS","XWB62",1,"Q") F XWBAVC=1:1:2 D NXTCALL Q:DUZ
- S XWBAVC=0
- ; process rest of messages; loop until told to stop
- D
- .I '$$GET^XPAR("SYS","XWB62",1,"Q") Q:'DUZ
- .F  DO NXTCALL QUIT:XWBSTOP
+ ;
+ ; -- loop until told to stop
+ FOR  DO NXTCALL QUIT:XWBSTOP
  ;
  ; -- final/clean tcp processing variables
  D RMDEV^%ZISUTL("XWBM2M SERVER") ;**M2M remove server IO
  Q
  ;
 NXTCALL ; -- do next call
- NEW DT,X,XWBREAD,XWBTO,XWBFIRST,XWBOK,XWBRL,BUG
+ NEW U,DTIME,DT,X,XWBROOT,XWBREAD,XWBTO,XWBFIRST,XWBOK,XWBRL,BUG
+ ;
+ ; -- set error trap
+ NEW $ESTACK,$ETRAP S $ETRAP="D SYSERR^XWBVLL"
  ;
  ; -- setup environment variables
- SET DT=$$DT^XLFDT(),XWBREAD=20,XWBTO=36000,XWBFIRST=1 ;p63
+ SET U="^",DTIME=900,DT=$$DT^XLFDT()
+ SET XWBREAD=20,XWBTO=36000,XWBFIRST=1
  ;
- ; -- clean intake global - root is request data
+ ; -- setup intake global - root is request data
+ SET XWBROOT=$NA(^TMP("XWBVLL",$J))
  KILL @XWBROOT
  ;
  ; -- set parameters for RawLink
@@ -91,26 +100,15 @@ NXTCALL ; -- do next call
  ; -- read from socket
  SET XWBOK=$$READ^XWBRL(XWBROOT,.XWBREAD,.XWBTO,.XWBFIRST,.XWBSTOP)
  ;
- ;**TESTING **REM
- ;For debugging - hard set ^TMP(..."DEBUG") and ^TMP(..."CNT") to 1
- I $G(^TMP("XWBM2M","DEBUG")) D
- . S XWBCNT=(^TMP("XWBM2M","CNT"))+1
- . M ^TMP("XWBM2MSV","REQUEST",XWBCNT)=^TMP("XWBVLL",$J)
- . S ^TMP("XWBM2M","CNT")=XWBCNT
- . Q
- ;
- ;**TESING **RWF
- I $G(XWBDEBUG) D
- . N CNT
- . S CNT=$G(^TMP("XWBM2ML",$J))+1,^($J)=CNT
- . M ^TMP("XWBM2ML",$J,CNT)=^TMP("XWBVLL",$J)
- . Q
+ ; -- log request
+ I $G(XWBDEBUG)>1 D  ; if debug="verbose" or "very verbose"
+ . D LOG^XWBDLOG("Request Received",$NA(^TMP("XWBVLL",$J)))
  ;
  IF 'XWBOK GOTO NXTCALLQ
  ;
- ; -- call request manager           
+ ; -- call request manager
  SET XWBOK=$$EN^XWBRM(XWBROOT)
- ; 
+ ;
 NXTCALLQ ; -- exit
  ;
  QUIT
@@ -118,26 +116,49 @@ NXTCALLQ ; -- exit
  ; ---------------------------------------------------------------------
  ;                                System Error Handler
  ; ---------------------------------------------------------------------
-SYSERR ; -- send system error message
+SYSERR ; -- log & send system error message
  ;p41-don't new $Etrap, it was causing infinite loop.
  ;p34-added "BrokerM2M" in message type in SYSERR.
  ;   -halt for read/write errors
- NEW XWBDAT,XWBMSG ;,$ETRAP ;*p41
+ ;
+ N XWBDAT,XWBMSG ;,$ETRAP ;*p41
  S $ETRAP="D ^%ZTER HALT" ;If we get an error in the error handler just Halt
- SET XWBMSG=$$EC^%ZOSV ;Get the error code
+ ;
+ S XWBMSG=$$EC^%ZOSV ;Get the error code
  D ^%ZTER ;Save off the error
- SET XWBDAT("MESSAGE TYPE")="Gov.VA.Med.BrokerM2M.Errors" ;*34
- SET XWBDAT("ERRORS",1,"CODE")=1
- SET XWBDAT("ERRORS",1,"ERROR TYPE")="system"
- SET XWBDAT("ERRORS",1,"CDATA")=1
- SET XWBDAT("ERRORS",1,"MESSAGE",1)=$P($TEXT(SYSERRS+1),";;",2)_XWBMSG
+ ;
+ S XWBDAT("MESSAGE TYPE")="Gov.VA.Med.BrokerM2M.Errors" ;*34
+ S XWBDAT("ERRORS",1,"CODE")=1
+ S XWBDAT("ERRORS",1,"ERROR TYPE")="system"
+ S XWBDAT("ERRORS",1,"CDATA")=1
+ S XWBDAT("ERRORS",1,"MESSAGE",1)=$P($TEXT(SYSERRS+1),";;",2)_XWBMSG
+ ;
  ;*p34-will halt for read/write errors
- I XWBMSG["<READ>" HALT
- DO ERROR^XWBUTL(.XWBDAT)
+ I XWBMSG["<READ>" D:$G(XWBDEBUG)  HALT
+ . ; log read error if debugging is on
+ . N XWBENAME ; name of error
+ . I XWBDEBUG=1 D  ; if debug=1, "on"
+ . . S XWBENAME="Error"
+ . E  D  ; if debug=2 or 3, "verbose" or "very verbose"
+ . . S XWBENAME="Error: "_$G(XWBDAT("ERRORS",1,"MESSAGE",1))
+ . N XWBARRAY ; error array, usually empty & not passed
+ . N XWBANAME S XWBANAME="" ; name of error array to pass
+ . I XWBDEBUG=3 D  ; if debug="very verbose"
+ . . M XWBARRAY=XWBDAT ; include the whole error type message
+ . . S XWBANAME="XWBARRAY" ; set name to pass
+ . D LOG^XWBDLOG(XWBENAME,XWBANAME) ; log the error
+ ;
+ D ERROR^XWBUTL(.XWBDAT) ; transmit XML error message to client
+ ;
  D UNWIND^%ZTER ;Return to NXTCALL loop
  L  ;Clear locks *p34
- Q
+ ;
+ QUIT  ; end of SYSERR
+ ;
  ;
 SYSERRS ; -- application errors
  ;*p34-removed the quotes (") after 'M:'
  ;;A system error occurred in M:
+ ;
+ ;
+EOR ; end of routine XWBVLL

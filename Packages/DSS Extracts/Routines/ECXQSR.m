@@ -1,5 +1,5 @@
-ECXQSR ;ALB/JAP,BIR/PTD-DSS QUASAR Extract ;4/14/17  16:59
- ;;3.0;DSS EXTRACTS;**11,8,13,26,24,34,33,35,39,43,46,49,64,71,84,92,106,105,120,124,127,132,136,144,154,161,166**;Dec 22, 1997;Build 24
+ECXQSR ;ALB/JAP,BIR/PTD-DSS QUASAR Extract ;12/14/18  15:57
+ ;;3.0;DSS EXTRACTS;**11,8,13,26,24,34,33,35,39,43,46,49,64,71,84,92,106,105,120,124,127,132,136,144,154,161,166,170,173**;Dec 22, 1997;Build 3
 BEG ;entry point from option
  I '$O(^ACK(509850.8,0)) W !,"You must be using the Quality Audiology & Speech Pathology",!,"Audit & Review (QUASAR) software to run this extract.",!! Q
  I '$D(^ACK(509850.8,1,"DSS")) W !,"Linkage has not been established between QUASAR and the DSS UNIT file (#724).",!! Q
@@ -29,7 +29,7 @@ QINST ;Get installed information for QUASAR
 UPDATE ;create record for each unique CPT code for clinic visit 
  N ARY,ECZNODE,CPT,LOC,MOD,STR,VOL,XX,ECTP,ECV,ECUPCE,ECDSSE ;154
  N ECXICD10P,ECXICD101,ECXICD102,ECXICD103,ECXICD104,ECXVNS,ECX4CHAR,ECXESC,ECXECL,ECXCLST ;144
- N ECXTEMPW,ECXTEMPD,ECXSTANO  ;166
+ N ECXTEMPW,ECXTEMPD,ECXSTANO,ECXASIH  ;166,170
  Q:'$D(^ACK(509850.6,ECDA,0))
  S ECZNODE=^ACK(509850.6,ECDA,0),EC2NODE=$G(^ACK(509850.6,ECDA,2))
  S ECDT=$P(ECZNODE,U),ECDAY=$$ECXDATE^ECXUTL(ECDT,ECXYM)
@@ -58,7 +58,7 @@ UPDATE ;create record for each unique CPT code for clinic visit
  Q:'ECDU
  S ECDSSU=$G(^ECD(ECDU,0)),ECCS=+$P(ECDSSU,U,4),(ECO,ECM)=+$P(ECDSSU,U,3),ECXDSSD=$E($P(ECDSSU,U,5),1,10),ECUPCE=$P(ECDSSU,U,14)
  S (ECHLS,ECHL2S)="000",ECAC=$P($G(ECZNODE),U,6)
- I ECUPCE="A"!(ECUPCE="O"&(ECXA="O")) D  ;154
+ I ECUPCE="A"!(ECUPCE="O"&(ECXA="O"))!(ECUPCE="OOS") D  ;154,173 add "OOS" units
  .I ECAC D  ;154
  ..S ECHL=+$P($G(^SC(ECAC,0)),U,7),ECHL2=+$P($G(^(0)),U,18) I ECHL D  ;154
  ...S ECHLS=$P($G(^DIC(40.7,+ECHL,0)),U,2),ECHL2S=$P($G(^DIC(40.7,+ECHL2,0)),U,2) ;154
@@ -176,6 +176,7 @@ UPDATE ;create record for each unique CPT code for clinic visit
  S ECDSSE=$S(ECHLS<101!(ECHLS>999):"ECQ",1:ECHLS)_ECHL2S ;154 If stop code is invalid set it to ECQ for encounter number creation
  S ECXENC=$$ENCNUM^ECXUTL4(ECXA,ECXSSN,ECXADMDT,ECDT,ECXTS,ECXOBS,ECHEAD,ECDSSE,) ;154 Send ECDSSE for encounter # creation
  Q:ECXENC=""
+ I $G(ECXASIH) S ECXA="A" ;170
  ;Loop through array of unique procedures. Create record in ECODE.
  S CPT="" F  S CPT=$O(LOC(CPT)) Q:CPT=""  D
  .S ECV=+$P(LOC(CPT),U),ECXCPT=$$CPT^ECXUTL3(CPT,$G(ARY(CPT)),ECV)

@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: DEVICE
-31-OCT-2018 09:24:35 ZWR
+12-MAR-2019 14:31:58 ZWR
 ^%ZIS(1,0)="DEVICE^3.5Is^710^46"
 ^%ZIS(1,5,0)="TEST^^^^^^^^"
 ^%ZIS(1,5,1)="ORBITTER"
@@ -24,7 +24,7 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,521,"TYPE")="TRM"
 ^%ZIS(1,524,0)="HFS^/dev/shm/hfs.dat^^^^^^^^^"
 ^%ZIS(1,524,1)="Host File Device^^^^1^"
-^%ZIS(1,524,5)=424
+^%ZIS(1,524,5)=512
 ^%ZIS(1,524,"IOPAR")="(nowrap:stream:newversion)"
 ^%ZIS(1,524,"SUBTYPE")=16
 ^%ZIS(1,524,"TYPE")="HFS"
@@ -63,9 +63,9 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,648,0)="AFJX RESOURCE^AFJX RESOURCE^^^^^^^^^^1"
 ^%ZIS(1,648,1)="IRM^^^^^^^^^1"
 ^%ZIS(1,648,"TYPE")="RES"
-^%ZIS(1,649,0)="TELNET^/dev/pts/^1^1^^^^^^^1"
+^%ZIS(1,649,0)="TELNET^|TNT|^1^1^^^^^^^1"
 ^%ZIS(1,649,1)="TELNET PORT"
-^%ZIS(1,649,5)=27539
+^%ZIS(1,649,5)=29559
 ^%ZIS(1,649,"MN",0)="^3.501^^0"
 ^%ZIS(1,649,"SUBTYPE")=230
 ^%ZIS(1,649,"TYPE")="VTRM"
@@ -290,7 +290,6 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,"C","/dev/pts",700)=""
 ^%ZIS(1,"C","/dev/pts",707)=""
 ^%ZIS(1,"C","/dev/pts",710)=""
-^%ZIS(1,"C","/dev/pts/",649)=""
 ^%ZIS(1,"C","/dev/shm/hfs.dat",524)=""
 ^%ZIS(1,"C","/dev/tty",595)=""
 ^%ZIS(1,"C","/tmp/XMHFS.TEMP",674)=""
@@ -322,6 +321,7 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,"C","WS.DAT",677)=""
 ^%ZIS(1,"C","|PRN|",705)=""
 ^%ZIS(1,"C","|TCP|",641)=""
+^%ZIS(1,"C","|TNT|",649)=""
 ^%ZIS(1,"CPU",".$[TEMP]XMHFS.DAT",704)=""
 ^%ZIS(1,"CPU","./HFS/XMHFS.TMP",596)=""
 ^%ZIS(1,"CPU","./dev/null",709)=""
@@ -329,7 +329,6 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,"CPU","./dev/pts",700)=""
 ^%ZIS(1,"CPU","./dev/pts",707)=""
 ^%ZIS(1,"CPU","./dev/pts",710)=""
-^%ZIS(1,"CPU","./dev/pts/",649)=""
 ^%ZIS(1,"CPU","./dev/shm/hfs.dat",524)=""
 ^%ZIS(1,"CPU","./dev/tty",595)=""
 ^%ZIS(1,"CPU","./tmp/XMHFS.TEMP",674)=""
@@ -362,6 +361,7 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,"CPU",".WS.DAT",677)=""
 ^%ZIS(1,"CPU",".|PRN|",705)=""
 ^%ZIS(1,"CPU",".|TCP|",641)=""
+^%ZIS(1,"CPU",".|TNT|",649)=""
 ^%ZIS(1,"CPU","SMA.1",595)=""
 ^%ZIS(1,"CPU","SMA.101",611)=""
 ^%ZIS(1,"CPU","SMA.102",612)=""
@@ -453,12 +453,12 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,"CPU","VSA._RTA",525)=""
 ^%ZIS(1,"G","SYS..$[TEMP]XMHFS.DAT",704)=""
 ^%ZIS(1,"G","SYS../dev/pts",700)=""
-^%ZIS(1,"G","SYS../dev/pts/",649)=""
 ^%ZIS(1,"G","SYS../dev/tty",595)=""
 ^%ZIS(1,"G","SYS..2",242)=""
 ^%ZIS(1,"G","SYS..FTA",702)=""
 ^%ZIS(1,"G","SYS..OPA0:",701)=""
 ^%ZIS(1,"G","SYS..RT",525)=""
+^%ZIS(1,"G","SYS..|TNT|",649)=""
 ^%ZIS(1,"G","SYS.SMA.180",584)=""
 ^%ZIS(1,"G","SYS.SMA.183",624)=""
 ^%ZIS(1,"G","SYS.SMA.184",252)=""

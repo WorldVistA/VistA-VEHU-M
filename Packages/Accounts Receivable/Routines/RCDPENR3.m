@@ -1,5 +1,5 @@
 RCDPENR3 ;ALB/SAB - EPay National Reports - ERA/EFT Trending Report, part 2 ;06/30/15
- ;;4.5;Accounts Receivable;**304**;Mar 20, 1995;Build 104
+ ;;4.5;Accounts Receivable;**304,321,326**;Mar 20, 1995;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;Read ^DGCR(399) via Private IA 3820
@@ -197,10 +197,10 @@ GETEFT(RCSDATE,RCEDATE,RCRATE) ;
  ; 17     RCINSTIN - Insurance/Insurance TIN
  ; 18     RCEFTPD  - Amount paid as an EFT, not as a check.
  ;
- N RCLDATE,RCINS,RCIEN,RCEFTDT,RCERA,RCEFT,RCRCPT,RCPOSTED,RCPAYTYP,RCERADT,RCTRACE,RCERAIDX
+ N OKAY,RCLDATE,RCINS,RCIEN,RCEFTDT,RCERA,RCEFT,RCRCPT,RCPOSTED,RCPAYTYP,RCERADT,RCTRACE,RCERAIDX
  N RCTRLN,RCTRBD,RCERANUM,RCTIN,RCPAYER,RCINSTIN,RCLPIEN,RCDTDATA,RCEOB,RCBILL,RCDIV,RCDOS,RCAMTBL
  N RCDTBILL,RCMETHOD,RCPAPER,RCEFTTYP,RCEFTPD,RCTRNTYP,RCDATA,RCAMTPD,RCEFTRCD,RCERARCD,RCRATETP
- N RCMSTAT,RCESUMDT,RCPSUMDT
+ N RCMSTAT,RCESUMDT,RCPSUMDT,ZZPNAME
  ;
  ;Get the EFT Detail information for the report batches sent within the given date range.
  S RCLDATE=RCSDATE-.001
@@ -209,9 +209,16 @@ GETEFT(RCSDATE,RCEDATE,RCRATE) ;
  . F  S RCIEN=$O(^RCY(344.31,"ADR",RCLDATE,RCIEN)) Q:'RCIEN  D
  . . S RCEFTDT=$G(^RCY(344.31,RCIEN,0))
  . . Q:RCEFTDT=""
+ . . I RCPAY="A",RCTYPE'="A" D  Q:'OKAY  ; PRCA*4.5*326 If all payers included, check by type
+ . . . S OKAY=$$ISTYPE^RCDPEU1(344.31,RCIEN,RCTYPE)
+ . . ; Check Payer Name
+ . . I RCPAY'="A" D  Q:'OKAY               ; PRCA*4.5*326 
+ . . . S OKAY=$$ISSEL^RCDPEU1(344.31,RCIEN)
+ . . ;
  . . S RCERA=$P(RCEFTDT,U,10)            ; ERA IEN
  . . S RCEFTRCD=$P(RCEFTDT,U,13)
  . . S RCEFT=$P(RCEFTDT,U)
+ . . S ZZPNAME=$P(RCEFTDT,U,2)
  . . S RCMSTAT=$P(RCEFTDT,U,8)
  . . S RCRCPT=$P(RCEFTDT,U,9)
  . . S RCEFTPD=$P(RCEFTDT,U,7)
@@ -227,9 +234,9 @@ GETEFT(RCSDATE,RCEDATE,RCRATE) ;
  . . . S RCERANUM=$P(RCERADT,U,11)
  . . . S RCTIN=$P(RCERADT,U,3)
  . . . S RCINS=$P(RCERADT,U,6)
- . . . S RCPAYER=$$GETARPYR^RCDPENR2(RCTIN) ; find the AR Payer IEN
- . . . Q:'RCPAYER                  ; Quit if Payer/TIN not found
- . . . Q:'$$INSCHK^RCDPENR2(RCPAYER)    ; Payer is not in the included list for the report
+ . . . S RCPAYER=$$GETARPYR^RCDPENR2(RCTIN,ZZPNAME) ; find the AR Payer IEN
+ . . . ; Q:'RCPAYER                  ; Quit if Payer/TIN not found
+ . . . ; Q:'$$INSCHK^RCDPENR2(RCPAYER)    ; Payer is not in the included list for the report
  . . . S RCINSTIN=RCINS_"/"_RCTIN
  . . . S RCLPIEN=0
  . . . F  S RCLPIEN=$O(^RCY(344.4,RCERA,1,RCLPIEN)) Q:'RCLPIEN  D
@@ -266,9 +273,9 @@ GETEFT(RCSDATE,RCEDATE,RCRATE) ;
  . . I (RCMSTAT=2),(RCIEN),('$D(^TMP("RCDPENR2",$J,"EFT",RCIEN))) D
  . . . S RCTIN=$P(RCEFTDT,U,3)
  . . . S RCINS=$P(RCEFTDT,U,2)
- . . . S RCPAYER=$$GETARPYR^RCDPENR2(RCTIN) ; find the AR Payer IEN
- . . . Q:'RCPAYER                  ; Quit if Payer/TIN not found
- . . . Q:'$$INSCHK^RCDPENR2(RCPAYER)    ; Payer is not in the included list for the report
+ . . . S RCPAYER=$$GETARPYR^RCDPENR2(RCTIN,ZZPNAME) ; find the AR Payer IEN
+ . . . ; Q:'RCPAYER                  ; Quit if Payer/TIN not found
+ . . . ; Q:'$$INSCHK^RCDPENR2(RCPAYER)    ; Payer is not in the included list for the report
  . . . S RCINSTIN=RCINS_"/"_RCTIN
  . . . S RCESUMDT=$G(^TMP("RCDPENR2",$J,"GTOT",3))
  . . . S RCPSUMDT=$G(^TMP("RCDPENR2",$J,"PAYER",RCINSTIN,3))

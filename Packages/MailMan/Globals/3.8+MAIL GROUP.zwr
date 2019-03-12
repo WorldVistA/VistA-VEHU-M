@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MAIL GROUP
-31-OCT-2018 09:30:58 ZWR
-^XMB(3.8,0)="MAIL GROUP^3.8^443^424"
+12-MAR-2019 14:43:55 ZWR
+^XMB(3.8,0)="MAIL GROUP^3.8^445^426"
 ^XMB(3.8,1,0)="YS PSYCHTEST^PR^^^^0"
 ^XMB(3.8,1,1,0)="^3.81P^^0"
 ^XMB(3.8,1,2,0)="^^1^1^2921113^^"
@@ -3304,7 +3304,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,398,1,"B",10000000216,1)=""
 ^XMB(3.8,398,3)=10000000216
 ^XMB(3.8,399,0)="RCDPE AUDIT^PU^y^^^0^"
-^XMB(3.8,399,2,0)="^3.801^3^3^3111110^^^^"
+^XMB(3.8,399,2,0)="^3.801^3^3^3150617^^^^"
 ^XMB(3.8,399,2,1,0)="This is the mail group that will receive warning bulletins produced by the"
 ^XMB(3.8,399,2,2,0)="ePayments Workload Notification process. Warnings for overdue EFT and ERA"
 ^XMB(3.8,399,2,3,0)="are sent to this group."
@@ -3605,6 +3605,15 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,442,3)=1
 ^XMB(3.8,443,0)="RADNTRT^PU^n^^^^1"
 ^XMB(3.8,443,3)=1
+^XMB(3.8,444,0)="PSS DEE AUDIT^PU^^^^^"
+^XMB(3.8,444,2,0)="^3.801^1^1^3180521^^^^"
+^XMB(3.8,444,2,1,0)="Mail group for DRUG file audits."
+^XMB(3.8,444,3)=11720
+^XMB(3.8,445,0)="DVBA C 2507 REROUTE^PU^^^^^"
+^XMB(3.8,445,2,0)="^3.801^1^1^3170525^^^^"
+^XMB(3.8,445,2,1,0)="This MAIL GROUP is to receive 2507 Request Reroute information."
+^XMB(3.8,445,3)=11720
+^XMB(3.8,445,5,0)="^3.811P"
 ^XMB(3.8,"AB",.5,120,1)=""
 ^XMB(3.8,"AB",.5,372,1)=""
 ^XMB(3.8,"AB",.5,428,1)=""
@@ -4575,6 +4584,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,"B","DVBA C 2507 CANCELLATION",64)=""
 ^XMB(3.8,"B","DVBA C 2507 EXAM READY",65)=""
 ^XMB(3.8,"B","DVBA C 2507 EXAM REOPENED",66)=""
+^XMB(3.8,"B","DVBA C 2507 REROUTE",445)=""
 ^XMB(3.8,"B","DVBA C EXAM ADDED",67)=""
 ^XMB(3.8,"B","DVBA C NEW C&P VETERAN",68)=""
 ^XMB(3.8,"B","DVBA VR VOCREHAB PERSONNEL",412)=""
@@ -4798,6 +4808,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,"B","PSO TPB GROUP",281)=""
 ^XMB(3.8,"B","PSO TPB HL7 EXTRACT",278)=""
 ^XMB(3.8,"B","PSOCLOZ",55)=""
+^XMB(3.8,"B","PSS DEE AUDIT",444)=""
 ^XMB(3.8,"B","PSS ORDER CHECKS",371)=""
 ^XMB(3.8,"B","PSU PBM",73)=""
 ^XMB(3.8,"B","PSX EXTERNAL DISPENSE ALERTS",370)=""

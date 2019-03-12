@@ -1,5 +1,5 @@
 RCDPEWL8 ;ALB/TMK/PJH - EDI LOCKBOX WORKLIST ERA LEVEL ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**208,269,276,298,304**;Mar 20, 1995;Build 104
+ ;;4.5;Accounts Receivable;**208,269,276,298,304,318,321,326**;Mar 20, 1995;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -168,10 +168,20 @@ HASADJ(RCSCR,RCOK) ; Function=1 if WL entry has any adj not yet distributed
  . I $P(Z0,U,6)<0 S RCSTOP=1
  Q RCSTOP
  ;
-VERIF ; Entrypoint to verification options
- N DIR,X,Y,RCQUIT,DTOUT,DUOUT
+VERIF ;EP - Protocol action - RCDPE EOB WORKLIST VERIFY
+ ; Entrypoint to verification options
+ N DIR,DTOUT,DUOUT,RCAUTO,RCQUIT,X,Y ; PRCA*4.5*326
  D FULL^VALM1
- I $S($P($G(^RCY(344.4,RCSCR,4)),U,2)]"":1,1:0) D NOEDIT^RCDPEWLP G VERIFQ   ;prca*4.5*298  auto-posted ERAs cannot enter VERIFY action        
+ I '$D(^XUSEC("RCDPEPP",DUZ)) D  Q  ; PRCA*4.5*318 Added security key check
+ . W !!,"This action can only be taken by users that have the RCDPEPP security key.",!
+ . D PAUSE^VALM1
+ . S VALMBCK="R"
+ ; BEGIN PRCA*4.5*326
+ ;I $S($P($G(^RCY(344.4,RCSCR,4)),U,2)]"":1,1:0) D NOEDIT^RCDPEWLP G VERIFQ   ;prca*4.5*298  auto-posted ERAs cannot enter VERIFY action
+ S RCAUTO=$$GET1^DIQ(344.4,RCSCR_",",4.02,"I") ; Autopost status
+ ; If ERA is an auto-post allow report only
+ I RCAUTO]"" D RPT1^RCDPEV0(RCERA) W !! Q
+ ; END PRCA*4.5*326
  ;
  W !!!!
  S RCQUIT=0
@@ -227,7 +237,7 @@ BATED ; Entry point to batch edit options
 BATEDQ S VALMBCK="R"
  Q
  ;
-AUTOPOST(SOURCE) ;
+AUTOPOST(SOURCE) ;EP Protocol action - RCDPE EOB WORKLIST MARK FOR AUTO POST
  ; Input:
  ;   SOURCE
  ;      1:Called by Worklist (RCDPE WORKLIST ERA MARK FOR AUTO POST)
@@ -235,16 +245,20 @@ AUTOPOST(SOURCE) ;
  ;   If SOURCE=2, RCSCR will be set to the IEN of 344.4
  ;
  D FULL^VALM1
+ I '$D(^XUSEC("RCDPEPP",DUZ)) D  Q  ; PRCA*4.5*318 Added security key check
+ . W !!,"This action can only be taken by users that have the RCDPEPP security key.",!
+ . D PAUSE^VALM1
+ . S VALMBCK="R"
  ;
  ; If called by Worklist (SOURCE=1), then ask which ERA
  ; If called by Scratchpad (SOURCE=2), ERA is already in variable RCSCR
  N RCERA
  I SOURCE=1 S RCERA=$$SEL^RCDPEWL7()
  I SOURCE=2 S RCERA=$G(RCSCR)
- I 'RCERA S VALMCK="R" Q
+ I 'RCERA S VALMBCK="R" Q
  ;
  N AUTOPOST
- S AUTOPOST=$$AUTOCHK2^RCDPEAP1(RCERA)
+ S AUTOPOST=$$AUTOCHK2^RCDPEAP1(RCERA,0) ; added parameter - PRCA*4.5*321
  I AUTOPOST D
  . D SETSTA^RCDPEAP(RCERA,0,"Worklist: Marked as Auto-Post Candidate")
  . W !,"ERA has been successfully Marked as an Auto-Post CANDIDATE"

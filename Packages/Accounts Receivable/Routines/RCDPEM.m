@@ -1,8 +1,9 @@
 RCDPEM ;ALB/TMK/PJH - POST EFT, ERA MATCHING TO EFT ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,255,269,276,283,298,304**;Mar 20, 1995;Build 104
+ ;;4.5;Accounts Receivable;**173,255,269,276,283,298,304,318,321,326**;Mar 20, 1995;Build 26
  ;Per VA Directive 6402, this routine should not be modified.
  ; IA 4050 covers call to SPL1^IBCEOBAR
- ; Note - keep processing in line with RCDPXPAP 
+ ; Note - keep processing in line with RCDPXPAP
+ ;
 EN ; Post EFT deposits, auto-match EFT's and ERA's 
  ;
  K ^TMP($J,"RCDPETOT"),^TMP("RCDPEAP",$J)
@@ -75,6 +76,9 @@ EN ; Post EFT deposits, auto-match EFT's and ERA's
  ;Auto Decrease - PRCA*4.5*298
  D EN^RCDPEAD
  ;
+ ;Workload Notifications - PRCA*4.5*321
+ D EN^RCDPEM7
+ ;
  L -^RCY(344.3,"ALOCK")
 ENQ K ^TMP($J,"RCDPETOT"),^TMP("RCDPEAP",$J)
  ;
@@ -122,28 +126,30 @@ LOCKDEP(RCDEP,LOCK) ; Lock/confirm deposit ien RCDEP file 341.1
  . D CONFIRM^RCDPUDEP(RCDEP) ; confirm to prevent changes
  I '$G(LOCK) L -^RCY(344.1,RCDEP,0)
  Q
- ;
-RCPTDET(RCRZ,RECTDA1,RCER) ; Adds detail to a receipt based on file 344.49
+ ; PRCA*4.5*326 Add RCDUZ to parameters
+RCPTDET(RCRZ,RECTDA1,RCER,RCDUZ) ; Adds detail to a receipt based on file 344.49
  ; RCRZ = ien of ERA entry in file 344.49
  ; RECTDA1 = ien of receipt entry in file 344
  ; RCER = error array returned if passed by reference
  ;
- N RCR,RCSPL,RCZ0,RCTRANDA,RCQ,DR,DA,DIE,X,Y,Q,Z0,Z1,Z
+ N DA,DIE,DR,Q,RCR,RCSPL,RCZ0,RCTRANDA,RCQ,X,Y,Z0,Z1,Z ; PRCA*4.5*318
  ;
  S RCR=0 F  S RCR=$O(^RCY(344.49,RCRZ,1,RCR)) Q:'RCR  D
  . S RCZ0=$G(^RCY(344.49,RCRZ,1,RCR,0))
  . I $P(RCZ0,U)'["." S RCSPL(+RCZ0)=$P(RCZ0,U,9) Q
  . I $S(+$P(RCZ0,U,3)=0:$P($G(^RCY(344.49,RCRZ,0)),U,3),1:$P(RCZ0,U,3)<0) S RCSPL(RCZ0\1,+RCZ0)=RCZ0 Q
- . S RCTRANDA=$$ADDTRAN^RCDPURET(RECTDA1)
+ . S RCTRANDA=$$ADDTRAN^RCDPURET(RECTDA1,$G(RCDUZ)) ; PRCA*4.5*326 Add RCDUZ to parameters
  . ;
- . I 'RCTRANDA D  Q  ; Error adding receipt detail
- .. S RCER(1)=$$SETERR^RCDPEM0() S RCER($O(RCER(""),-1)+1)="  NO DETAIL LINE ADDED TO RECEIPT "_$P($G(^RCY(344,RECTDA1,0)),U)_" FOR LINE #"_$P(RCZ0,U)_" IN EEOB WORKLIST SCRATCH PAD"
+ . I RCTRANDA'>0 D  Q  ; Error adding receipt detail - PRCA*4.5*318
+ .. S RCER(1)=$$SETERR^RCDPEM0(1) ; PRCA*4.5*318 - pass RCPROC value to $$SETERR
+ .. S RCER($O(RCER(""),-1)+1)="  NO DETAIL LINE ADDED TO RECEIPT "_$P($G(^RCY(344,RECTDA1,0)),U)_" FOR LINE #"_$P(RCZ0,U)_" IN EEOB WORKLIST SCRATCH PAD"
  . ;
  . ;Store receipt line detail
  . D DET(RCRZ,RCR,RECTDA1,RCTRANDA)
  . S RCSPL(RCZ0\1,+RCZ0)=RCZ0
+ ;
+ ; Update A/R CORRECTED PAYMENT multiple with apportionment for split lines
  S Z=0 F  S Z=$O(RCSPL(Z)) Q:'Z  S RCQ=+$G(RCSPL(Z)) I RCQ D
- .;;Move EEOB if one claim entered-changed 10/19/11-see +25^RCDPEWL8
  . S Z1=$O(RCSPL(Z,"")) Q:Z1=""
  . I $O(RCSPL(Z,""),-1)=Z1,'$$SPLIT(Z,Z1,RCERA) Q  ; No split occurred
  . S Z1=0 F  S Z1=$O(RCSPL(Z,Z1)) Q:'Z1  S Z0=$G(RCSPL(Z,Z1)) D
@@ -153,6 +159,24 @@ RCPTDET(RCRZ,RECTDA1,RCER) ; Adds detail to a receipt based on file 344.49
  ... D SPL1^IBCEOBAR(Q,$S($P(Z0,U,2)="":"NO BILL",1:$P(Z0,U,2)),"",$P(Z0,U,6)) ; IA 4050
  .. E  D
  ... D SPL1^IBCEOBAR(Q,$P(Z0,U,2),$P(Z0,U,7),$P(Z0,U,6)) ; Add the split bill # ; IA 4050
+ . ; BEGIN - PRCA*4.5*321
+ . ;Move/Copy/Remove EEOB detail for split line
+ . N CLAIM,IEN3611,RCSPLIT,RCSUB,RCZSAV
+ . ; Sub-array of split claim detail for individual line
+ . M RCSPLIT=RCSPL(Z)
+ . ; Protect Z subscript variable from overwrite by triggers
+ . S RCZSAV=Z
+ . ; Get scratchpad line number for this ERA line
+ . S RCSUB=$O(^RCY(344.49,RCRZ,1,"ASEQ",Z,""))
+ . ; Original claim number from Scratchpad line
+ . S CLAIM=$$GET1^DIQ(344.491,RCSUB_","_RCRZ_",",.02)
+ . ; EOB for original claim from ERA line
+ . S IEN3611=$$GET1^DIQ(344.41,RCQ_","_RCRZ_",",.02,"I")
+ . ; Automatic Move/Copy/Remove EOB
+ . I $$AUTO^RCDPEM5(CLAIM,.RCSPLIT,RCERA,"W",IEN3611)
+ . ; Restore Z
+ . S Z=RCZSAV
+ . ; END  - PRCA*4.5*321
  ;
  Q
 SPLIT(Z,Z1,RCERA) ;Check if worklist was split but to to single claim
@@ -191,5 +215,7 @@ DET(RCZ,RCR,RECTDA1,RCTRANDA) ; Store receipt detail
  I $P($G(^RCY(344.49,RCZ,0)),U,4)'="" S DR=DR_".07////"_$P($G(^RCY(344.49,RCZ,0)),U,4)_";"
  S DA(1)=RECTDA1,DA=RCTRANDA,DIE="^RCY(344,"_DA(1)_",1,"
  D ^DIE
+ ;Update comment history - PRCA*4.5*321
+ D:RCCOM]"" AUDIT^RCDPECH(RECTDA1,RCTRANDA,RCZ,RCR)
  Q
  ;

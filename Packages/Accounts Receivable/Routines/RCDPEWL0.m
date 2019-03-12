@@ -1,5 +1,5 @@
 RCDPEWL0 ;ALB/TMK/PJH - ELECTRONIC EOB WORKLIST ACTIONS ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,208,252,269,298,317**;Mar 20, 1995;Build 8
+ ;;4.5;Accounts Receivable;**173,208,252,269,298,317,321,326**;Mar 20, 1995;Build 26
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -8,8 +8,10 @@ PARAMS(SOURCE) ; Retrieve/Edit/Save View Parameters for ERA Worklist
  ;                        "CV" - Change View Action
  ; Output: Sort/Filtering Criteria for the worklist sent into ^TMP("RCERA_PARAMS",$J)
  ;         ^TMP("RCERA_PARAMS",$J,"RCPOST") - ERA Posting Status ("P":Posted/"U":Unposted)
- ;         ^TMP("RCERA_PARAMS",$J,"RCAUTOP")- Auto-Posting Status
+ ;         ^TMP("RCERA_PARAMS",$J,"RCAUTOP")- Auto-Posting Queue
  ;                                            ("A":Auto-Posting/"N":Non Auto-Posting/"B":Both)
+ ;         ^TMP("RCERA_PARAMS",$J,"RCAPSTA")- Auto-Posting Status  ; PRCA*4.5*326
+ ;                                            ("M":Marked/"P":Partial/"C":Complete/"A":All)
  ;         ^TMP("RCERA_PARAMS",$J,"RCMATCH")- ERA Matching Status ("M":Matched/"U":Unmatched)
  ;         ^TMP("RCERA_PARAMS",$J,"RCTYPE") - ERA Claim Type ("M":Medical/"P":Pharmacy/"B":Both)
  ;         ^TMP("RCERA_PARAMS",$J,"RCDT")   - A1^A2 Where:
@@ -83,9 +85,14 @@ GETWLPVW(RCXPAR) ;  Retrieves the preferred view settings for the ERA worklist
  S XX=$G(RCXPAR("ERA-EFT_MATCH_STATUS"))
  S ^TMP("RCERA_PARAMS",$J,"RCMATCH")=$S(XX'="":XX,1:"B")
  S XX=$G(RCXPAR("ERA_CLAIM_TYPE"))
- S ^TMP("RCERA_PARAMS",$J,"RCTYPE")=$S(XX'="":XX,1:"B")
+ ; S ^TMP("RCERA_PARAMS",$J,"RCTYPE")=$S(XX'="":XX,1:"B")     ; PRCA*4.5*321
+ S ^TMP("RCERA_PARAMS",$J,"RCTYPE")=$S(XX'="":XX,1:"A")       ; PRCA*4.5*321 change default to (A)LL
  S XX=$G(RCXPAR("ALL_PAYERS/RANGE_OF_PAYERS"))
  S ^TMP("RCERA_PARAMS",$J,"RCPAYR")=$S(XX'="":$TR(XX,";","^"),1:"A")
+ S XX=$G(RCXPAR("ERA_PAYMENT_TYPE"))                                 ; PRCA*4.5*321 new filter
+ S ^TMP("RCERA_PARAMS",$J,"RCPAYMNT")=$S(XX'="":XX,1:"B")            ; PRCA*4.5*321
+ S XX=$G(RCXPAR("AUTO-POST_STATUS")) ; PRCA*4.5*326
+ S ^TMP("RCERA_PARAMS",$J,"RCAPSTA")=$S(XX'="":XX,1:"A") ; PRCA*4.5*326
  Q
  ;
 PVWSAVE(RCXPAR) ; Save a copy of the preferred view on file
@@ -100,12 +107,16 @@ PVWSAVE(RCXPAR) ; Save a copy of the preferred view on file
  Q:'$D(RCXPAR("ERA-EFT_MATCH_STATUS"))
  Q:'$D(RCXPAR("ERA_CLAIM_TYPE"))
  Q:'$D(RCXPAR("ALL_PAYERS/RANGE_OF_PAYERS"))
+ Q:'$D(RCXPAR("ERA_PAYMENT_TYPE"))  ; PRCA*4.5*321
+ Q:'$D(RCXPAR("AUTO-POST_STATUS"))  ; PRCA*4.5*326
  ;
  S ^TMP("RCERA_PVW",$J,"RCPOST")=RCXPAR("ERA_POSTING_STATUS")
  S ^TMP("RCERA_PVW",$J,"RCAUTOP")=RCXPAR("ERA_AUTO_POSTING")
  S ^TMP("RCERA_PVW",$J,"RCMATCH")=RCXPAR("ERA-EFT_MATCH_STATUS")
  S ^TMP("RCERA_PVW",$J,"RCTYPE")=RCXPAR("ERA_CLAIM_TYPE")
  S ^TMP("RCERA_PVW",$J,"RCPAYR")=$TR(RCXPAR("ALL_PAYERS/RANGE_OF_PAYERS"),";","^")
+ S ^TMP("RCERA_PVW",$J,"RCPAYMNT")=RCXPAR("ERA_PAYMENT_TYPE") ; PRCA*4.5*321 new filter
+ S ^TMP("RCERA_PVW",$J,"RCPAPST")=RCXPAR("AUTO-POST_STATUS") ; PRCA*4.5*326
  Q
  ;
 PREFVW(SOURCE) ; Checks to see if the user has a preferred view
@@ -129,6 +140,8 @@ PREFVW(SOURCE) ; Checks to see if the user has a preferred view
  Q:$G(^TMP("RCERA_PARAMS",$J,"RCMATCH"))'=$G(^TMP("RCERA_PVW",$J,"RCMATCH")) 0
  Q:$G(^TMP("RCERA_PARAMS",$J,"RCTYPE"))'=$G(^TMP("RCERA_PVW",$J,"RCTYPE")) 0
  Q:$G(^TMP("RCERA_PARAMS",$J,"RCPAYR"))'=$G(^TMP("RCERA_PVW",$J,"RCPAYR")) 0
+ Q:$G(^TMP("RCERA_PARAMS",$J,"RCPAYMNT"))'=$G(^TMP("RCERA_PVW",$J,"RCPAYMNT")) 0  ; PRCA*4.5*321
+ Q:$G(^TMP("RCERA_PARAMS",$J,"RCAPSTA"))'=$G(^TMP("RCERA_PVW",$J,"RCAPSTA")) 0 ; PRCA*4.5*326
  Q 1
  ;
 ASKUVW() ;EP from PARAMS^RCDPEWLA, PARAMS^RCDPEAA1
@@ -169,6 +182,10 @@ SAVEPVW ; Option to save as User Preferred View
  D EN^XPAR(DUZ_";VA(200,","RCDPE EDI LOCKBOX WORKLIST","ERA_CLAIM_TYPE",XX,.RCERROR)
  S XX=$TR(^TMP("RCERA_PARAMS",$J,"RCPAYR"),"^",";")
  D EN^XPAR(DUZ_";VA(200,","RCDPE EDI LOCKBOX WORKLIST","ALL_PAYERS/RANGE_OF_PAYERS",XX,.RCERROR)
+ S XX=^TMP("RCERA_PARAMS",$J,"RCPAYMNT")                                               ; PRCA*4.5*321
+ D EN^XPAR(DUZ_";VA(200,","RCDPE EDI LOCKBOX WORKLIST","ERA_PAYMENT_TYPE",XX,.RCERROR) ; PRCA*4.5*321
+ S XX=$TR(^TMP("RCERA_PARAMS",$J,"RCAPSTA"),"^",";") ; PRCA*4.5*326
+ D EN^XPAR(DUZ_";VA(200,","RCDPE EDI LOCKBOX WORKLIST","AUTO-POST_STATUS",XX,.RCERROR) ; PRCA*4.5*326
  ;
  K ^TMP("RCERA_PVW",$J)
  M ^TMP("RCERA_PVW",$J)=^TMP("RCERA_PARAMS",$J)  ; capture new preferred settings for comparison
@@ -221,39 +238,6 @@ DTRANGE(DEFFROM,DEFTO) ; Asks for and returns a Date Range
  D ^DIR
  I $D(DTOUT)!$D(DUOUT) Q "^"
  Q (RCDFR_"^"_Y)
- ;
-FILTER(IEN344P4) ; Returns 1 if record in entry IEN344P4 in 344.4 passes
- ; the edits for the worklist selection of ERAs
- ; Parameters found in ^TMP("RCERA_PARAMS",$J)
- N OK,RCPOST,RCAUTOP,RCMATCH,RCTYPE,RCDFR,RCDTO,RCPAYFR,RCPAYTO,RCPAYR,RC0,RC4
- S OK=1,RC0=$G(^RCY(344.4,IEN344P4,0)),RC4=$G(^RCY(344.4,IEN344P4,4))
- ;
- S RCMATCH=$G(^TMP("RCERA_PARAMS",$J,"RCMATCH")),RCPOST=$G(^TMP("RCERA_PARAMS",$J,"RCPOST"))
- S RCAUTOP=$G(^TMP("RCERA_PARAMS",$J,"RCAUTOP")),RCTYPE=$G(^TMP("RCERA_PARAMS",$J,"RCTYPE"))
- S RCDFR=+$P($G(^TMP("RCERA_PARAMS",$J,"RCDT")),U),RCDTO=+$P($G(^TMP("RCERA_PARAMS",$J,"RCDT")),U,2)
- S RCPAYR=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U),RCPAYFR=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U,2),RCPAYTO=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U,3)
- ;
- ; If receipt exists, scratchpad must exist
- ;I $P(RC0,U,8),'$D(^RCY(344.49,+IEN344P4,0)) S OK=0 G FQ
- ; Post status
- I $S(RCPOST="B":0,RCPOST="U":$P(RC0,U,14),1:'$P(RC0,U,14)) S OK=0 G FQ
- ; Auto-Posting status
- I $S(RCAUTOP="B":0,RCAUTOP="A":($P(RC4,U,2)=""),1:($P(RC4,U,2)'="")) S OK=0 G FQ
- ; Match status
- I $S(RCMATCH="B":0,RCMATCH="N":$P(RC0,U,9),1:'$P(RC0,U,9)) S OK=0 G FQ
- ; Medical/Pharmacy Claim
- I $S(RCTYPE="B":0,RCTYPE="M":$$PHARM^RCDPEWLP(IEN344P4),1:'$$PHARM^RCDPEWLP(IEN344P4)) S OK=0 G FQ
- ; dt rec'd range
- I $S(RCDFR=0:0,1:$P(RC0,U,7)\1<RCDFR) S OK=0 G FQ
- I $S(RCDTO=DT:0,1:$P(RC0,U,7)\1>RCDTO) S OK=0 G FQ
- ; Payer name
- I RCPAYR'="A" D  G:'OK FQ
- . N Q
- . S Q=$$UP^RCDPEARL($P(RC0,U,6))
- . I $S(Q=RCPAYFR:1,Q=RCPAYTO:1,Q]RCPAYFR:RCPAYTO]Q,1:0) Q
- . S OK=0
- ;
-FQ Q OK
  ;
 SPLIT ; Split line in ERA list
  ; input - RCSCR = ien of 344.49 and 344.4

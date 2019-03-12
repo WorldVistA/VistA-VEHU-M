@@ -1,5 +1,5 @@
 RCDPEAP1 ;ALB/KML - AUTO POST MATCHING EFT ERA PAIR - CONT. ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**298,304**;Mar 20, 1995;Build 104
+ ;;4.5;Accounts Receivable;**298,304,318,321,326**;Mar 20, 1995;Build 26
  ;Per VA Directive 6402, this routine should not be modified.
  ;Read ^IBM(361.1) via Private IA 4051
  ;
@@ -19,12 +19,20 @@ AUTOCHK(RCERA) ;Verify if ERA can be auto-posted - PRE-CHECK USED IN RCDPEM0
  Q:NOTOK 0
  ; Ignore ERA if ERA level Adjustments exist
  I $O(^RCY(344.4,RCERA,2,0)) Q 0
+ ; BEGIN PRCA*4.5*326
+ ; Ignore non-ACH type ERA to prevent CHK type ERA from automatically auto-posting in nightly job - PRCA*4.5*321
+ ;I $$GET1^DIQ(344.4,RCERA_",",.15)'="ACH" Q 0 ; extended - PRCA*4.5*326
+ ; Ignore non-valid auto-post ERA types
+ I "^ACH^CHK^BOP^NON^"'[(U_$$GET1^DIQ(344.4,RCERA_",",.15)_U) Q 0
+ ; ERA must be matched to an EFT to be eligible for mark for autopost
+ I '$O(^RCY(344.31,"AERA",RCERA,"")) Q 0
+ ; END PRCA*4.5*326
  ;Create scratchpad
  S RCSCR=$$SCRPAD^RCDPEAP(RCERA) Q:'RCSCR 0
  ;Ignore ERA if claim level adjustments without payment exist
  ;This will only get set if the scratchpad is created, not if it already exists.  Looking at the code, it
- ; will mainly set set if there are ERA level adjustments and may get set for unbalanced pairs, which is found
- ; by the ZEROBAL function.  So, I think this does not have a real purpose but was not 100% sure.
+ ;will mainly set if there are ERA level adjustments and may get set for unbalanced pairs, which is found
+ ;by the ZEROBAL function.  So, I think this does not have a real purpose but was not 100% sure.
  I $D(^TMP($J,"RCDPEWLA","ERA LEVEL ADJUSTMENT EXISTS")) D CLEAR^RCDPEAP(RCSCR) Q 0
  ; ERA needs to drop to standard worklist if adjustment between matching 
  ;positive/negative does not create a zero balance
@@ -34,19 +42,22 @@ AUTOCHK(RCERA) ;Verify if ERA can be auto-posted - PRE-CHECK USED IN RCDPEM0
  ;This is valid auto-post - return to MATCH^RCPDEM0
  Q 1
  ;
-AUTOCHK2(RCERA) ;
+AUTOCHK2(RCERA,RCTYP) ; RCTYP added PRCA*4.5*321
  ;Check if this entry is an auto-post candidate
  ;This has the same/similar checks as MATCH^RCDPEM0 and AUTOCHK above.  If those procedures are
  ;  changed, this may need to updated as well.
  ;
  ;Input
  ;  RCERA: IEN from Electronic Remittance Advice file (#344.4)
+ ;  RCTYP: Call type 0 = Worklist/Mark for autopost  1 = Manual match ; PRCA*4.5*321
  ;Output
  ;  1: Auto-Post candidate
  ;  0^Reason: Not a auto-post candidate and reason
  ;
  ; Validate Parameter
  I '$G(RCERA) Q "0^Invalid Parameter"
+ I $G(RCTYP)="" Q "0^Invalid Parameter" ; PRCA*4.5*321
+ I (RCTYP>1)!(RCTYP<0) Q "0^Invalid Parameter" ; PRCA*4.5*321
  ;
  N STATUS,RC0,RCERATYP,RCXCLDE,RCDSUB,NOTOK,RCCREATE,RCSCR
  K ^TMP($J,"RCDPEWLA")
@@ -95,8 +106,17 @@ AUTOCHK2(RCERA) ;
  ; Check if receipt already created
  I +$P(RC0,U,8) Q "0^ERA has a receipt"
  ;
- ; Check if they is a ACH paymentT
- I "^ACH^"'[(U_$P(RC0,U,15)_U) Q "0^Payment Type is not ACH"
+ ; BEGIN PRCA*4.5*326
+ ; Check payment type of ERA - CHK type is allowed for a manual match
+ ;I "^ACH^CHK^"'[(U_$P(RC0,U,15)_U) Q "0^Payment Type is not ACH or CHK" ; PRCA*4.5*321
+ ; Check payment type of ERA - now also includes CHK, NON and BOP type from manual match
+ I "^ACH^CHK^BOP^NON^"'[(U_$P(RC0,U,15)_U) Q "0^Payment Type is not ACH, CHK, BOP or NON"
+ ;
+ ; CHK type ERA must be matched to an EFT to be eligible for mark for autopost
+ ;I $P(RC0,U,15)="CHK",'$O(^RCY(344.31,"AERA",RCERA,"")) Q "0^ERA is not matched to an EFT" ; PRCA*4.5*321
+ ;  CHK, NON and BOP type ERA must be matched to an EFT to be eligible for mark for autopost
+ I "^CHK^BOP^NON^"'[(U_$P(RC0,U,15)_U),'$O(^RCY(344.31,"AERA",RCERA,"")) Q "0^ERA is not matched to an EFT" ; 
+ ; END PRCA*4.5*326
  ;
  ; Create scratchpad if needed
  S RCCREATE=0
@@ -106,7 +126,7 @@ AUTOCHK2(RCERA) ;
  ;
  ; Check if claim level adjustments without payment exist
  ; Note that PRCA*298 sets this temp global only if the scratchpad is created by the call above ($$SCRPAD^RCDPEAP). If the
- ;   scratchpad already exists, the TMP global will never get set.   Looking at the code, it will mainly set set if there
+ ;   scratchpad already exists, the TMP global will never get set.   Looking at the code, it will mainly set if there
  ;   are ERA level adjustments and may get set for unbalanced pairs, which is found by the ZEROBAL function.  So, I think
  ;   this does not have a real purpose but was not 100% sure and wanted to mimic what AUTOCHK does.
  I $D(^TMP($J,"RCDPEWLA","ERA LEVEL ADJUSTMENT EXISTS")) D:RCCREATE CLEAR^RCDPEAP(RCSCR) Q "0^Claim Level Adjustments w/o payment"
@@ -149,27 +169,27 @@ ERADET(RCERA,RCRCPTDA,RCLINES) ; called on subsequent attempts of auto-post for 
  I '$G(RCERA) Q
  S RCRCPTDA=$G(RCRCPTDA)
  ;
- N DA,DIC,DIE,DLAYGO,DR,X,DO
+ N DA,DIC,DIE,DLAYGO,DO,DR,X
  ; Update receipt.  If this is the first receipt, put it in the RECEIPT (#08) field.  If not, put in OTHER RECEIPTS multiple (#344.48)
  I RCRCPTDA D
  . I $P($G(^RCY(344.4,RCERA,0)),U,8)]"" S DA(1)=RCERA,DIC="^RCY(344.4,"_DA(1)_",8,",DIC(0)="L",X=RCRCPTDA D FILE^DICN I 1
  . E  S DIE="^RCY(344.4,",DR=".14////1;.08////"_RCRCPTDA,DA=RCERA D ^DIE
  ;
  ; Update ERA detail line with Receipt or reject reason as appropriate
- N RCLIN,LNUM,RCI,REJECT
- S RCLIN=0 F  S RCLIN=$O(RCLINES(RCLIN)) Q:'RCLIN  D
- . ; Set REJECT to true if the line if it was rejected during validation
+ ; PRCA*4.5*318 begins
+ N RCLIN,REJECT
+ S RCLIN=0
+ F  S RCLIN=$O(RCLINES(RCLIN)) Q:'RCLIN  D
+ . ; Set REJECT to true if the line was rejected during validation
  . S REJECT=0 I '$P(RCLINES(RCLIN),U) S REJECT=1
- . ;Get all ERA line references; RCLINES(RCLIN) could have multiple line # references (e.g., RCLINES(3,4) or RCLINES(3))
- . ;Need to parse out each line reference so that the necessary fields can be updated for the specific line.
  . ;If not posted then update the AUTO-POST REJECTION REASON (#5)
- . ;Otherwise update line with receipt number and auto-post date
- . ;Set MARK FOR AUTO-POST (#6) to off for every line
- . F RCI=1:1 S LNUM=$P(RCLIN,",",RCI) Q:LNUM=""  D
- . . S DA(1)=RCERA,DA=LNUM,DIE="^RCY(344.4,"_DA(1)_",1,"
- . . I REJECT S DR="5////"_$P(RCLINES(RCLIN),U,3)_";6////0"
- . . E  S DR=".25////"_RCRCPTDA_";9////"_DT_";6////0"
- . . D ^DIE
+ . ;Otherwise update line with receipt number and autopost date
+ . S DA(1)=RCERA,DA=RCLIN,DIE="^RCY(344.4,"_DA(1)_",1,"
+ . I 'REJECT,'RCRCPTDA Q
+ . I REJECT S DR="5///"_$P(RCLINES(RCLIN),U,3)
+ . E  S DR=".25///"_RCRCPTDA_";9///"_DT
+ . D ^DIE
+ ; PRCA*4.5*318 ends
  Q
  ;
 ZEROBAL(RCSCR) ;
@@ -236,9 +256,11 @@ VALID(RCERA,RCLINES) ;
  .. S ERALINE=$P(WLINE,U,9)
  .. ; If ERA reference is missing (should not happen), skip ahead to next integer sequence
  .. I ERALINE="" S SUB=SUB\1_".999" Q
+ .. ; Check for receipt - PRCA*4.5*318 
+ .. I $$GET1^DIQ(344.41,ERALINE_","_RCERA_",",.25)]"" S SUB=SUB\1_".999" Q  ; PRCA*4.5*318
  .. S AUTOPOST=1
  .. F PIECE=1:1 S SEQ=$P(ERALINE,",",PIECE) Q:'SEQ  I '$P($G(^RCY(344.4,RCERA,1,SEQ,5)),U,2) S AUTOPOST=0 Q
- .. ; Unless all of the associated ERA detail lines lines are set for auto-post, skip ahead to next integer sequence
+ .. ; Unless all of the associated ERA detail lines are set for auto-post, skip ahead to next integer sequence
  .. I 'AUTOPOST S SUB=SUB\1_".999" Q
  . ;If no claim number (suspense), set to autopost but check the rest of the lines for the ERA reference
  . S CLAIM=$P(WLINE,U,7)
@@ -256,7 +278,31 @@ VALID(RCERA,RCLINES) ;
  . I '$$CHECKPAY^RCDPEAP(.CLARRAY,CLAIM) S RCLINES(ERALINE)="0^^3",SUB=SUB\1_".999",CLARRAY(CLAIM)=+$G(CLARRAY(CLAIM))-$P(WLINE,U,3) Q
  . ;Line is potentially postable - update flag
  . S RCLINES(ERALINE)=1
- ;Count number of lines set for posting
- S RCLINES=0
- S SEQ="" F  S SEQ=$O(RCLINES(SEQ)) Q:SEQ=""  I +RCLINES(SEQ) S RCLINES=RCLINES+1
+ ;
+ ;Reset the MARK FOR AUTOPOST flag on ERA lines and return count of auto-postable lines - PRCA*4.5*318
+ N DA,DIE,DR,RCLIN,RCI
+ S RCLIN=0,RCLINES=0 F  S RCLIN=$O(RCLINES(RCLIN)) Q:'RCLIN  D
+ . I +RCLINES(RCLIN) S RCLINES=RCLINES+1
+ . ;Set MARK FOR AUTO-POST (#6) to NO for every line
+ . S DA(1)=RCERA,DA=RCLIN,DIE="^RCY(344.4,"_DA(1)_",1,"
+ . S DR="6///0"
+ . D ^DIE
  Q
+ ;
+UNBAL(RCERA) ; PRCA*4.5*318 added method
+ ; Determine if the ERA total matches the EFT total for the selected ERA
+ ; Input:   RCERA    - Internal IEN of the selected ERA
+ ; Returns: 1 - ERA is unbalanced, 0 otherwise
+ N RCLTOT,RCSUB,RCTOT
+ ;ERA total balance - on matched ERAs the ERA total balance is the same as the EFT total
+ S RCTOT=+$$GET1^DIQ(344.4,RCERA_",",.05)
+ ;Sum of ERA claim line payments
+ S RCSUB=0,RCLTOT=0
+ F  S RCSUB=$O(^RCY(344.4,RCERA,1,RCSUB)) Q:'RCSUB  D
+ . S RCLTOT=RCLTOT+$$GET1^DIQ(344.41,RCSUB_","_RCERA_",",.03)
+ ;Plus sum of ERA adjustment lines
+ S RCSUB=0
+ F  S RCSUB=$O(^RCY(344.4,RCERA,2,RCSUB)) Q:'RCSUB  D
+ . S RCLTOT=RCLTOT+$$GET1^DIQ(344.42,RCSUB_","_RCERA_",",.03)
+ ;Return 1 if total of ERA lines does not match EFT
+ Q $S(RCTOT=RCLTOT:0,1:1)

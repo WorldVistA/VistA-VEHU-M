@@ -1,5 +1,5 @@
 RCDPEMA ;ALB/PJH - AUTO-POSTING RECEIPT CREATION ;Oct 15, 2014@12:37:52
- ;;4.5;Accounts Receivable;**298,304**;Mar 20, 1995;Build 104
+ ;;4.5;Accounts Receivable;**298,304,318,321,326**;Mar 20, 1995;Build 26
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 RCPTDET(RCRZ,RECTDA1,RCLINES,RCER) ; Adds detail to a receipt based on file 344.49 and exceptions in array RCLINES
@@ -8,7 +8,7 @@ RCPTDET(RCRZ,RECTDA1,RCLINES,RCER) ; Adds detail to a receipt based on file 344.
  ; RCER = error array returned if passed by reference
  ; RCLINES = array to indicate which scratchpad lines can be posted (assigned a receipt)
  ;
- N DA,DIE,DR,Q,RCLINE,RCQ,RCR,RCSPL,RCTRANDA,RCZ0,SEQLINES,RCSEQ,X,Y,Z,Z0,Z1
+ N DA,DIE,DR,Q,RCDUZ,RCLINE,RCOSEQ,RCQ,RCR,RCSPL,RCTRANDA,RCZ0,SEQLINES,RCSEQ,X,Y,Z,Z0,Z1
  ;
  S RCR=0 F  S RCR=$O(^RCY(344.49,RCRZ,1,RCR)) Q:'RCR  D
  . S RCZ0=$G(^RCY(344.49,RCRZ,1,RCR,0)),RCSEQ=$P(RCZ0,U)
@@ -18,14 +18,19 @@ RCPTDET(RCRZ,RECTDA1,RCLINES,RCER) ; Adds detail to a receipt based on file 344.
  . Q:'$D(SEQLINES(RCSEQ\1))
  . I RCSEQ'["." S RCSPL(+RCZ0)=$P(RCZ0,U,9) Q
  . I $S(+$P(RCZ0,U,3)=0:$P($G(^RCY(344.49,RCRZ,0)),U,3),1:$P(RCZ0,U,3)<0) S RCSPL(RCZ0\1,+RCZ0)=RCZ0 Q
- . S RCTRANDA=$$ADDTRAN^RCDPURET(RECTDA1)
+ . S RCOSEQ=$G(RCSPL(RCSEQ\1)) ; PRCA*4.5*326
+ . S RCDUZ=$$GET1^DIQ(344.41,RCOSEQ_","_RCRZ_",",6.01,"I") ; PRCA*4.5*326
+ . S RCTRANDA=$$ADDTRAN^RCDPURET(RECTDA1,RCDUZ) ; PRCA*4.5*326 Pass RCDUZ
  . ;
- . I 'RCTRANDA D  Q  ; Error adding receipt detail
- .. S RCER(1)=$$SETERR^RCDPEM0() S RCER($O(RCER(""),-1)+1)="  NO DETAIL LINE ADDED TO RECEIPT "_$P($G(^RCY(344,RECTDA1,0)),U)_" FOR LINE #"_$P(RCZ0,U)_" IN EEOB WORKLIST SCRATCH PAD"
+ . I RCTRANDA'>0 D  Q  ; Error adding receipt detail - PRCA*4.5*318
+ .. S RCER(1)=$$SETERR^RCDPEM0(1) ; PRCA*4.5*318 - pass RCPROC value to $$SETERR 
+ .. S RCER($O(RCER(""),-1)+1)="  NO DETAIL LINE ADDED TO RECEIPT "_$P($G(^RCY(344,RECTDA1,0)),U)_" FOR LINE #"_$P(RCZ0,U)_" IN EEOB WORKLIST SCRATCH PAD"
  . ;
  . ;Store receipt line detail
  . D DET(RCRZ,RCR,RECTDA1,RCTRANDA)
  . S RCSPL(RCZ0\1,+RCZ0)=RCZ0
+ ;
+ ; Update A/R CORRECTED PAYMENT multiple with apportionment for split lines
  S Z=0 F  S Z=$O(RCSPL(Z)) Q:'Z  S RCQ=+$G(RCSPL(Z)) I RCQ D
  .; Move EEOB if one claim entered-changed 10/19/11-see +25^RCDPEWL8
  . S Z1=$O(RCSPL(Z,"")) Q:Z1=""
@@ -37,7 +42,24 @@ RCPTDET(RCRZ,RECTDA1,RCLINES,RCER) ; Adds detail to a receipt based on file 344.
  ... D SPL1^IBCEOBAR(Q,$S($P(Z0,U,2)="":"NO BILL",1:$P(Z0,U,2)),"",$P(Z0,U,6)) ; IA 4050
  .. E  D
  ... D SPL1^IBCEOBAR(Q,$P(Z0,U,2),$P(Z0,U,7),$P(Z0,U,6)) ; Add the split bill # ; IA 4050
- ;
+ . ; BEGIN - PRCA*4.5*321
+ . ;Move/Copy/Remove EEOB detail for split line
+ . N CLAIM,IEN3611,RCSPLIT,RCSUB,RCZSAV
+ . ; Sub-array of split claim detail for individual line
+ . M RCSPLIT=RCSPL(Z)
+ . ; Protect Z subscript variable from overwrite by triggers
+ . S RCZSAV=Z
+ . ; Get scratchpad line number for this ERA line
+ . S RCSUB=$O(^RCY(344.49,RCRZ,1,"ASEQ",Z,""))
+ . ; Original claim number from Scratchpad line
+ . S CLAIM=$$GET1^DIQ(344.491,RCSUB_","_RCRZ_",",.02)
+ . ; EOB for original claim from ERA line
+ . S IEN3611=$$GET1^DIQ(344.41,RCQ_","_RCRZ_",",.02,"I")
+ . ; Automatic Move/Copy/Remove EOB
+ . I $$AUTO^RCDPEM5(CLAIM,.RCSPLIT,RCERA,"A",IEN3611)
+ . ; Restore Z
+ . S Z=RCZSAV
+ . ; END  - PRCA*4.5*321 ;
  Q
  ;
 SPLIT(Z,Z1,RCERA) ;Check if worklist was split to single claim
@@ -74,9 +96,11 @@ DET(RCZ,RCR,RECTDA1,RCTRANDA) ; Store receipt detail
  I $P($G(^RCY(344.49,RCZ,0)),U,4)'="" S DR=DR_".07////"_$P($G(^RCY(344.49,RCZ,0)),U,4)_";"
  S DA(1)=RECTDA1,DA=RCTRANDA,DIE="^RCY(344,"_DA(1)_",1,"
  D ^DIE
+ ;Update comment history - PRCA*4.5*321
+ D:RCCOM]"" AUDIT^RCDPECH(RECTDA1,RCTRANDA,RCZ,RCR)
  Q
- ;
-BLDRCPT(RCERA) ; Create a receipt for Auto Posting ERA with multiple Receipts - alpha char at the 10th character
+ ; PRCA*4.5*326 Add RCDUZ parameter
+BLDRCPT(RCERA,RCDUZ) ; Create a receipt for Auto Posting ERA with multiple Receipts - alpha char at the 10th character
  ; LAYGO new entry to AR BATCH PAYMENT file (#344)
  ; input - RCERA = Pointer to 344.4
  ; returns new IEN on success, else zero
@@ -86,7 +110,7 @@ BLDRCPT(RCERA) ; Create a receipt for Auto Posting ERA with multiple Receipts - 
  S TYPE=$E($G(^RC(341.1,+$O(^RC(341.1,"AC",14,0)),0)))  ; ^RC(341.1,0) = AR EVENT TYPE
  ; retrieve the last receipt recorded on the ERA (if it exists)
  S LASTREC=$$GETREC(RCERA)
- ; Make sure last receit for the ERA is 10-chars long and the last char is between A - Y (can't be Z),
+ ; Make sure last receipt for the ERA is 10-chars long and the last char is between A - Y (can't be Z),
  ; Otherwise grab a new number and append "A"
  I LASTREC'="",$L(LASTREC)=10,$A($E(LASTREC,10))>64,$A($E(LASTREC,10))<90 D
  . S RECEIPT=$E(LASTREC,1,9)_$C($A($E(LASTREC,10))+1)
@@ -102,10 +126,10 @@ BLDRCPT(RCERA) ; Create a receipt for Auto Posting ERA with multiple Receipts - 
  ; add entry to AR BATCH PAYMENT file (#344)
  N %,%DT,D0,DA,DD,DI,DIC,DIE,DLAYGO,DO,DQ,DR,X,Y
  S DIC="^RCY(344,",DIC(0)="L",DLAYGO=344
- ;  .02 = opened by                  .03 = date opened = transmission dt
+ ;  .02 = opened by                  .03 = date opened = transmission date
  ;  .04 = type of payment           
  ;  .14 = status (set to 1:open)
- S DIC("DR")=".02////"_DUZ_";.03///"_DT_";.04////14;.14////1;"
+ S DIC("DR")=".02////"_$S($G(RCDUZ):RCDUZ,1:DUZ)_";.03///"_DT_";.04////14;.14////1;"
  S X=RECEIPT
  D FILE^DICN
  L -^RCY(344,"B",RECEIPT)

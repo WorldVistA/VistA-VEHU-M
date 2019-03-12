@@ -1,5 +1,5 @@
 RCDPEWL7 ;ALB/TMK/KML - EDI LOCKBOX WORKLIST ERA DISPLAY SCREEN ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**208,222,269,276,298,304**;Mar 20, 1995;Build 104
+ ;;4.5;Accounts Receivable;**208,222,269,276,298,304,318,321,326**;Mar 20, 1995;Build 26
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -12,7 +12,7 @@ BLD(RCSORT) ; Build list with sort criteria
  S (RCT,VALMCNT)=0
  I '$D(^TMP($J,"RCERA_LIST")) D
  . S Z=0 F  S Z=$O(^TMP("RCDPE-ERA_WLDX",$J,Z)) Q:'Z  S RCZ=$P($G(^(Z)),U,2) D
- .. I $$FILTER^RCDPEWL0(RCZ) S ^TMP($J,"RCERA_LIST",$$SL(RCZ,$P(RCSORT,U)),$$SL(RCZ,$P(RCSORT,U,2)),RCZ)=""
+ .. I $$FILTER(RCZ) S ^TMP($J,"RCERA_LIST",$$SL(RCZ,$P(RCSORT,U)),$$SL(RCZ,$P(RCSORT,U,2)),RCZ)=""
  . K ^TMP("RCDPE-ERA_WLDX",$J),^TMP("RCDPE-ERA_WL",$J)
  ;
  S Z=""
@@ -34,23 +34,32 @@ EXTRACT(RCSRT1,RCSRT2,RCT) ; Extract the data
  ; RCSRT1 = data value at 1st sort level
  ; RCSRT2 = data value at 2nd sort level
  ; RCT = running entry counter - returned if passed by ref
- N AUTOCOMP,FIRST,RC0,RCEFT,RCEXCEP,RCPOST,RCSTAT,RCZ,X,Z,Z0
+ N AUTOCOMP,FIRST,MDT,RC0,RCARC,RCEFT,RCEXCEP,RCPOST,RCSTAT,RCZ,X,XX,Z,Z0 ;PRCA*4.5*318 Variable XX added
  S RCZ=0 F  S RCZ=$O(^TMP($J,"RCERA_LIST",RCSRT1,RCSRT2,RCZ)) Q:'RCZ  D
  . S RCT=RCT+1,RC0=$G(^RCY(344.4,RCZ,0))
  . S RCEFT=+$O(^RCY(344.31,"AERA",RCZ,0))
+ . S MDT=$$MATCHDT^RCDPEWL7(RCEFT,"2D") ; PRCA*4.5*326 - Add date matched
  . S RCEXCEP=$$XCEPT^RCDPEWLP(RCZ)  ; prca*4.5*298  assignment of ERA exception flag
- . S AUTOCOMP=$S($P($G(^RCY(344.4,RCZ,4)),U,2)=2:"A",1:"")   ;prca*4.5*298  AUTO-POSTED COMPLETE indicator ("A")
+ . S AUTOCOMP=$$STA(RCZ) ;PRCA*4.5*326
+ . S RCARC=$$WLF^RCDPEWLZ(RCZ)
  . S RCSTAT=$S('RCEFT:U_$S($P(RC0,U,15)="CHK":"(CHECK PAYMENT EXPECTED)",$P(RC0,U,15)="NON":"(NO PAYMENT EXPECTED)",$P(RC0,U,9)=2:"(CHECK PAYMENT CHOSEN)",1:"N/A"),1:$$FMSSTAT^RCDPUREC(+$P($G(^RCY(344.31,RCEFT,0)),U,9)))
  . S RCPOST=$S(RCEFT:"EFT RECEIPT STATUS: ",1:"")_$P(RCSTAT,U,2)
  . ;prca*4.5*298 include Auto-Post Complete indicator and ERA exception flag in $SELECT statement
- . S X=$E(RCT_$J("",5),1,5)_"  "_$S(RCEXCEP]"":RCEXCEP,AUTOCOMP]"":AUTOCOMP,$D(^RCY(344.49,RCZ)):" ",1:"-")_$E($P(RC0,U)_$J("",10),1,10)_"  "_$E($P(RC0,U,2)_$J("",50),1,50)
+ . S X=$E(RCT_$J("",5),1,5)_"  "_$S(RCEXCEP]"":RCEXCEP,AUTOCOMP]"":AUTOCOMP,RCARC]"":RCARC,$D(^RCY(344.49,RCZ)):" ",1:"-")_$E($P(RC0,U)_$J("",10),1,10)_"  "_$E($P(RC0,U,2)_$J("",50),1,50)
  . D SET(X,RCT,RCZ)
- . S X=$J("",40)_$J($$FMTE^XLFDT($P(RC0,U,7),"2D"),8)_$J("",5)_$J(+$P(RC0,U,5),12,2)
+ . S X=$J("",43)_$J($$FMTE^XLFDT($P(RC0,U,7),"2D"),8)_$J("",2)_$J(+$P(RC0,U,5),12,2)
  . S $E(X,73,80)=$$FMTE^XLFDT($P(RC0,U,7),"2D")
  . D SET(X,RCT,RCZ)
- . S X=$J("",12)_$E($P(RC0,U,6)_$J("",30),1,30)_"  APPROX # EEOBs: "_+$$CTEEOB^RCDPEWLB(RCZ)
+ . ; PRCA*4.5*326 Start changed block
+ . S X=$J("",8)_$E($P(RC0,U,6)_$J("",30),1,30)_"  APPROX # EEOBs: "_+$$CTEEOB^RCDPEWLB(RCZ)
  . D SET(X,RCT,RCZ)
- . S X=$J("",12)_$E($$EXTERNAL^DILFD(344.4,.09,"",$P(RC0,U,9))_$J("",30),1,30)_"  "_RCPOST
+ . S X=$P(RC0,U,9),XX=$$EXTERNAL^DILFD(344.4,.09,"",$P(RC0,U,9))
+ . S XX=$S(X=1:"EFT MATCHED",X=2:"CHK MATCHED",X=3:"MATCH-0 PAY",XX=-1:"MATCH W/ERR",1:$P(XX," ",1))
+ . I X=2 S MDT=$$GET1^DIQ(344.4,RCZ_",",5.03,"I") I MDT'="" S MDT=$$FMTE^XLFDT(MDT,"2D")
+ . S:$$UNBAL^RCDPEAP1(RCZ) XX=XX_" - UNBALANCED"
+ . S X=$J("",8)_$E(XX_$J("",25),1,25)_" "_$E(MDT_$J("",8),1,8)
+ . S X=X_"  "_RCPOST
+ . ; PRCA*4.5*326 End changed block
  . D SET(X,RCT)
  . D SET(" ",RCT)
  ;.; prca*4.5*298  per patch requirements, keep code related to
@@ -60,9 +69,51 @@ EXTRACT(RCSRT1,RCSRT2,RCT) ; Extract the data
  ;...; S X=$J("",12)_$E("- BATCH #"_$P(Z0,U)_$J("",4),1,13)_" "_$E($P(Z0,U,2)_$J("",30),1,30)_"  "_$S('$P(Z0,U,3):"NOT ",1:"")_"READY TO POST"
  ;... ;D SET(X,RCT)
  ;
- S VALMSG="|'-' No scratchpad|'x' EXC |'A' autopost complete"
+ S VALMSG="Enter ?? for more actions and help" ; PRCA*4.5*326
  ;
  Q
+ ;
+ ; BEGIN PRCA*4.5*326
+STA(RCZ) ;Determine auto-post status and if marked for auto-post
+ ; Input - RCZ = ERA ien
+ ; Output - "" = UNPOSTED
+ ;          "A" = COMPLETE
+ ;          "P" = PARTIAL
+ ;          "M" = MARKED
+ N STA
+ ;Get ERA auto-post status
+ S STA=$$GET1^DIQ(344.4,RCZ_",",4.02,"I")
+ ;Not auto-post ERA
+ Q:STA="" ""
+ ;Unposted but marked for autopost
+ I STA=0,$$GET1^DIQ(344.4,RCZ_",",4.04,"I")]"" Q "M"
+ ;Unposted - EFT still not accepted
+ Q:STA=0 ""
+ ;Complete
+ Q:STA=2 "A"
+ ;Partial
+ N MATCH,SUB
+ S MATCH=0,SUB=0
+ F  S SUB=$O(^RCY(344.4,RCZ,1,SUB)) Q:'SUB  D  Q:MATCH
+ .S MATCH=$$GET1^DIQ(344.41,SUB_","_RCZ,6,"I")
+ Q $S(MATCH:"M",1:"P")
+ ; END PRCA*4.5*326
+ ;
+MATCHDT(RCEFT,FORMAT) ;EP
+ ; Get the Date the ERA was matched
+ ; Input: RCEFT    - IEN for file 344.31
+ ;        FORMAT   - (Optional) date format for second parameter of FMTE^XLFDT (Defaults to 2DZ)
+ ; Returns: External date when the ERA was matched or ""
+ I '$G(RCEFT) Q ""
+ N IENS,XX
+ I $G(FORMAT)="" S FORMAT="2DZ"
+ S XX=$O(^RCY(344.31,RCEFT,4,"A"),-1)   ; Get last Match Status History record
+ Q:XX="" ""
+ S IENS=XX_","_RCEFT_","
+ S XX=$$GET1^DIQ(344.314,IENS,.02,"I")
+ Q:XX="" ""
+ S XX=$$FMTE^XLFDT(XX,FORMAT)
+ Q XX
  ;
 SL(Y,SORT) ; Returns data for sort level from entry Y in file 344.4
  ; SORT = the sort data in ';' delimited pieces
@@ -117,7 +168,7 @@ INIT ; Entry point for List template to build the display of ERAs
  . . D RESETKB^XGF
  . ;
  . S RC0=$G(^RCY(344.4,RCZ,0))
- . I $$FILTER^RCDPEWL0(RCZ) S ^TMP($J,"RCERA_LIST",$$SL(RCZ,"DR"),$$SL(RCZ,""),RCZ)=""
+ . I $$FILTER(RCZ) S ^TMP($J,"RCERA_LIST",$$SL(RCZ,"DR"),$$SL(RCZ,""),RCZ)=""
  ;
  ; Output the list
  I 'RCQUIT D
@@ -129,20 +180,56 @@ INIT ; Entry point for List template to build the display of ERAs
  Q
  ;
 HDR ; Header for ERA Worklist (List user Current Screen View selections)
- N X
- S X=$G(^TMP("RCERA_PARAMS",$J,"RCMATCH"))
- S VALMHDR(1)="SELECTED MATCH STATUS: "_$S(X="N":"NOT MATCHED",X="M":"MATCHED",1:"BOTH")
- S X=$G(^TMP("RCERA_PARAMS",$J,"RCPOST"))
- S $E(VALMHDR(1),42)="POST STATUS     : "_$S(X="U":"UNPOSTED",X="P":"POSTED",1:"BOTH")
+ ; Input: ^TMP("RCERA_PARAMS",$J)
+ ; Output: VALMHDR
+ N X,XX,XX2
+ ;
+ ; PRCA*4.5*321 - Total re-write of header subroutine to add new filters and shorten lines etc.
+ ; First header line. Date range and Pharmacy/Tricare/Medical
  S X=$G(^TMP("RCERA_PARAMS",$J,"RCDT"))
- S VALMHDR(2)=$J("",11)_"DATE RANGE: "_$S($P(X,U):$$FMTE^XLFDT($P(X,U),2)_$S($P(X,U,2):"-"_$$FMTE^XLFDT($P(X,U,2),2),1:""),1:"NONE SELECTED")
- S X=$G(^TMP("RCERA_PARAMS",$J,"RCAUTOP"))
- S $E(VALMHDR(2),42)="AUTO-POSTING    : "_$S(X="A":"AUTO-POSTING ONLY",X="N":"NON AUTO-POSTING ONLY",1:"BOTH")
- S X=$G(^TMP("RCERA_PARAMS",$J,"RCPAYR"))
- S VALMHDR(3)=$J("",10)_$S($P(X,U)="A"!(X=""):"ALL PAYERS",1:"PAYERS: "_$P(X,U,2)_"-"_$P(X,U,3))
+ S XX="DATE RANGE  : "
+ I $P(X,U) D  ;
+ . S XX=XX_$$FMTE^XLFDT($P(X,U),2)
+ . I $P(X,U,2) S XX=XX_"-"_$$FMTE^XLFDT($P(X,U,2),2)
+ E  S XX=XX_"NONE SELECTED"
  S X=$G(^TMP("RCERA_PARAMS",$J,"RCTYPE"))
- S $E(VALMHDR(3),42)="PHARMACY/MEDICAL: "_$S(X="M":"MEDICAL ONLY",X="P":"PHARMACY ONLY",1:"BOTH")
- S X=$G(^TMP("RCERA_PARAMS",$J,"RCERA_TRACE#"))
+ S XX2="PHARM/TRIC/MEDICAL: "
+ S XX2=XX2_$S(X="M":"MEDICAL ONLY",X="P":"PHARMACY ONLY",X="T":"TRICARE ONLY",1:"ALL")
+ S XX=$$SETSTR^VALM1(XX2,XX,40,41)
+ S VALMHDR(1)=XX
+ ;
+ ; Second header line. Match/Unmatched and Auto-posting/Non Autoposting
+ S X=$G(^TMP("RCERA_PARAMS",$J,"RCMATCH"))
+ S XX="MATCH STATUS: "_$S(X="N":"NOT MATCHED",X="M":"MATCHED",1:"BOTH")
+ S X=$G(^TMP("RCERA_PARAMS",$J,"RCAUTOP"))
+ S XX2="AUTO-POSTING: "
+ S XX2=XX2_$S(X="A":"AUTO-POSTING ONLY",X="N":"NON AUTO-POSTING ONLY",1:"BOTH")
+ S XX=$$SETSTR^VALM1(XX2,XX,46,35)
+ ; BEGIN PRCA*4.5*326
+ I X'="N" D
+ .S X=$G(^TMP("RCERA_PARAMS",$J,"RCAPSTA"))
+ .S XX2="AUTOP: "_$S(X="P":"PARTIAL",X="C":"COMPLETE",X="M":"MARKED",1:"ALL")
+ .S XX=$$SETSTR^VALM1(XX2,XX,27,15)
+ ; END PRCA*4.5*326
+ S VALMHDR(2)=XX
+ ;
+ ; Third header line. Post status, payer name range and zero payment/payment
+ S X=$G(^TMP("RCERA_PARAMS",$J,"RCPOST"))
+ S XX="POST STATUS : "_$S(X="U":"UNPOSTED",X="P":"POSTED",1:"BOTH")
+ S X=$G(^TMP("RCERA_PARAMS",$J,"RCPAYR"))
+ I $P(X,U)="A"!(X="") D  ;
+ . S XX2="ALL PAYERS"
+ E  D  ;
+ . S XX2=$P(X,U,2)_"-"_$P(X,U,3)
+ . I $L(XX2)>11 S XX2="RANGE"
+ S XX2="PAYERS: "_XX2
+ S XX=$$SETSTR^VALM1(XX2,XX,26,20)
+ S X=$G(^TMP("RCERA_PARAMS",$J,"RCPAYMNT"))
+ S XX2="PAYMENT TYPE: "
+ S XX2=XX2_$S(X="Z":"ZERO PAYMENTS ONLY",X="P":"PAYMENTS ONLY",1:"BOTH")
+ S XX=$$SETSTR^VALM1(XX2,XX,46,35)
+ S VALMHDR(3)=XX
+ ;
  S VALMHDR(4)="#       ERA #            Trace#"
  Q
  ;
@@ -182,7 +269,7 @@ WL(RCERA) ; Enter worklist
  Q:RCERA'>0
  ; PRCA*4.5*304 - Reentry if we cleared exceptions
 WL1 ; retest to make sure this ERA does not have an exception
- S TYPE=$S($$PHARM^RCDPEWLP(RCERA):"P",1:"M"),RCEXC=0
+ S TYPE=$S($$PAYTYPE("P"):"P",1:"M"),RCEXC=0 ; PRCA*4.5*321
  ; PRCA*4.5*304 - see if we have the ERA and go to WL1 to retest.
  I ($$XCEPT^RCDPEWLP(RCERA)]"")&(TYPE="M") D EXCDENY^RCDPEWLP Q  ;cannot process MEDICAL ERA if exception exists then fall back to Worklist.
  ; PRCA*4.5*304 - Removed the G:($G(RCERA)'="")&&($G(RCEXC)=1) WL1 from above so it falls back to the worklist instead of going forward to the "Select ERA"
@@ -260,7 +347,119 @@ BAT(RCERA) ; Select batch, if needed
  ;
 BATQ Q RCOK
  ;
-HELP ; -- help code
- S X="?" D DISP^XQORM1 W !!
- Q
+PAYTYPE(IEN,TYPE) ; EP - New way to tell if a payer is pharamcy, Tricare or medical - Added for PRCA*4.5*321
+ ; Input: IEN - Internal entry number of an ERA (#344.4)
+ ;        TYPE="P" - Pharmacy, "T" - Tricare, "M" - Medical
+ ;        ("M" is neither pharmacy nor Tricare)
+ ; Return: 1 - Payer on ERA matches the TYPE
+ ;         0 - Payer on ERA does not match the type. Or can't find payer.
  ;
+ N FLAG,RETURN
+ S RETURN=0
+ I '$$PAYFLAGS(IEN,.FLAG) Q 0
+ I TYPE="P",FLAG("P") S RETURN=1
+ I TYPE="T",FLAG("T") S RETURN=1
+ I TYPE="M",'FLAG("P"),'FLAG("T") S RETURN=1
+ Q RETURN
+ ;
+PAYFLAGS(IEN,FLAG) ; EP - Return the pharmacy and tricare flags for an ERA
+ ; Input: IEN - Internal entry number of an ERA (#344.4)
+ ; Return: 1 - Payer found
+ ;         0 - Can't find payer.
+ ; Variable FLAG passed by reference to return values of the pharmacy and Tricare flags.
+ ;
+ N RCINS,RCPAYIEN,RCTIN,X
+ S RCTIN=$$GET1^DIQ(344.4,IEN_",",.03)
+ I RCTIN="" Q 0
+ S RCINS=$$GET1^DIQ(344.4,IEN_",",.06)
+ I RCINS="" Q 0
+ ;
+ ; Find a payer that matches both TIN and PAYER NAME from the ERA
+ S RCPAYIEN=""
+ S X=0
+ F  S X=$O(^RCY(344.6,"C",RCTIN_" ",X)) Q:'X  D  Q:RCPAYIEN  ;
+ . N PAYNAME
+ . S PAYNAME=$$GET1^DIQ(344.6,X_",",.01)
+ . I PAYNAME=RCINS S RCPAYIEN=X
+ I 'RCPAYIEN Q 0
+ ;
+ S FLAG("P")=+$$GET1^DIQ(344.6,RCPAYIEN_",",.09,"I")
+ S FLAG("T")=+$$GET1^DIQ(344.6,RCPAYIEN_",",.1,"I")
+ Q 1
+ ;
+ ; BEGIN PRCA*4.5*326
+HELP ; list manager help
+ D FULL^VALM1
+ S VALMBCK="R"
+ W @IOF
+ W !,"ePay Electronic Remittance Advice Status"
+ W !!,"The following ERA Status indicators may appear to the left of ERA number:",!
+ ;
+ W !," '-' = No scratchpad."
+ W !," 'x' = EXC exceptions exist."
+ W !," 'c' = No-pay ERA with auto-decrease CARCs."
+ W !," 'A' = Auto-post complete."
+ W !," 'P' = Auto-post partially completed."
+ W !," 'M' = Marked for Auto-post, waiting processing."
+ D PAUSE^VALM1
+ Q
+ ; Following FILTER code moved from RCDPEWL0 due to routine size
+FILTER(IEN344P4) ; Returns 1 if record in entry IEN344P4 in 344.4 passes
+ ; the edits for the worklist selection of ERAs
+ ; Parameters found in ^TMP("RCERA_PARAMS",$J)
+ N OK,RCPOST,RCAPST,RCAPSTA,RCAUTOP,RCMATCH,RCTYPE,RCDFR,RCDTO,RCPAYFR,RCPAYMNT,RCPAYTO,RCPAYR,RC0,RC4
+ S OK=1,RC0=$G(^RCY(344.4,IEN344P4,0)),RC4=$G(^RCY(344.4,IEN344P4,4))
+ ;
+ S RCMATCH=$G(^TMP("RCERA_PARAMS",$J,"RCMATCH")),RCPOST=$G(^TMP("RCERA_PARAMS",$J,"RCPOST"))
+ S RCAUTOP=$G(^TMP("RCERA_PARAMS",$J,"RCAUTOP")),RCTYPE=$G(^TMP("RCERA_PARAMS",$J,"RCTYPE"))
+ S RCDFR=+$P($G(^TMP("RCERA_PARAMS",$J,"RCDT")),U),RCDTO=+$P($G(^TMP("RCERA_PARAMS",$J,"RCDT")),U,2)
+ S RCPAYR=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U),RCPAYFR=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U,2),RCPAYTO=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U,3)
+ S RCPAYMNT=$G(^TMP("RCERA_PARAMS",$J,"RCPAYMNT"))    ; PRCA*4.5*321
+ S RCAPSTA=$G(^TMP("RCERA_PARAMS",$J,"RCAPSTA"))
+ ;
+ ; Post status
+ I $S(RCPOST="B":0,RCPOST="U":$P(RC0,U,14),1:'$P(RC0,U,14)) S OK=0 G FQ
+ ; Auto-Posting status
+ I $S(RCAUTOP="B":0,RCAUTOP="A":($P(RC4,U,2)=""),1:($P(RC4,U,2)'="")) S OK=0 G FQ
+ ; If ERA is autopost and filtering on selected Autopost statuses check status
+ I $P(RC4,U,2)'="",RCAPSTA'="A",(RCAUTOP="B")!(RCAUTOP="A") D  G:OK=0 FQ
+ .;Auto-post Status
+ .S RCAPST=$$GET1^DIQ(344.4,IEN344P4_",",4.02,"I")
+ .;Complete filter
+ .I RCAPSTA="C" S:RCAPST'=2 OK=0 G FQ
+ .;Partial filter
+ .I RCAPSTA="P" S:RCAPST'=1 OK=0 G FQ
+ .;Marked for Auto-post filter - ignores if not partial post or unposted
+ .I RCAPSTA="M",RCAPST'=1,RCAPST'=0 S OK=0 G FQ
+ .;Marked for Auto-post filter - ignores PARTIAL auto-post era if no lines on ERA are marked
+ .I RCAPSTA="M",RCAPST=1,'$O(^RCY(344.4,"AP",1,IEN344P4,"")) S OK=0 G FQ
+ .;Marked for Auto-post filter - ignores UNPROCESSED auto-post era if no marked for autopost user 
+ .I RCAPSTA="M",RCAPST=0,$$GET1^DIQ(344.4,IEN344P4_",",4.04,"I")="" S OK=0 G FQ
+ ; Match status
+ I $S(RCMATCH="B":0,RCMATCH="N":$P(RC0,U,9),1:'$P(RC0,U,9)) S OK=0 G FQ
+ ; Medical/Pharmacy/Tricare Claim
+ ; I $S(RCTYPE="B":0,RCTYPE="M":$$PHARM^RCDPEWLP(IEN344P4),1:'$$PHARM^RCDPEWLP(IEN344P4)) S OK=0 G FQ
+ I RCTYPE'="A" D  I 'OK G FQ
+ . N RCFLAG
+ . I '$$PAYFLAGS^RCDPEWL7(IEN344P4,.RCFLAG) S OK=0 Q
+ . I RCTYPE="P",'RCFLAG("P") S OK=0 Q
+ . I RCTYPE="T",'RCFLAG("T") S OK=0 Q
+ . I RCTYPE="M",(RCFLAG("P")!RCFLAG("T")) S OK=0
+ ; dt rec'd range
+ I $S(RCDFR=0:0,1:$P(RC0,U,7)\1<RCDFR) S OK=0 G FQ
+ I $S(RCDTO=DT:0,1:$P(RC0,U,7)\1>RCDTO) S OK=0 G FQ
+ ; Payer name
+ I RCPAYR'="A" D  G:'OK FQ
+ . N Q
+ . S Q=$$UP^RCDPEARL($P(RC0,U,6))
+ . I $S(Q=RCPAYFR:1,Q=RCPAYTO:1,Q]RCPAYFR:RCPAYTO]Q,1:0) Q
+ . S OK=0
+ ; PRCA*4.5*321 - Start modified code block
+ ; Zero amount or payment
+ I RCPAYMNT'="B" D  ;
+ . I RCPAYMNT="Z",$P(RC0,U,5) S OK=0 Q
+ . I RCPAYMNT="P",'$P(RC0,U,5) S OK=0
+ ; PRCA*4.5*321 - End modified code block
+ ;
+FQ Q OK
+ ; END PRCA*4.5*326

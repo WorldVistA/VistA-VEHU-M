@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: ^DOSV
-31-OCT-2018 09:25:06 ZWR
+12-MAR-2019 14:32:49 ZWR
 ^DOSV(0,"/dev/pts/0",0,1,"N")=310
 ^DOSV(0,"/dev/pts/0","F",1)="200^.01^NAME^RFX"
 ^DOSV(0,"/dev/pts/1","F",1)="9.9^.01^PATCH NAME^RF"

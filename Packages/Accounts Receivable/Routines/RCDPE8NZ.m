@@ -1,12 +1,12 @@
 RCDPE8NZ ;ALB/TMK/KML/hrubovcak - Unapplied EFT Deposits report ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,212,208,269,276,283,293,298,317**;Mar 20, 1995;Build 8
+ ;;4.5;Accounts Receivable;**173,212,208,269,276,283,293,298,317,318,326**;Mar 20, 1995;Build 26
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; entry point for Unapplied EFT Deposits Report [RCDPE UNAPPLIED EFT DEP REPORT]
  ; ^RCY(344.3,0) = EDI LOCKBOX DEPOSIT^344.3I^
  ;
- N %ZIS,DIR,RCDISPTY,RCDTRNG,RCENDT,RCHDR,RCLNCNT,RCLSTMGR,RCPGNUM,RCRPLST,RCSTDT,RCTMPND,X,Y
- ; RCDISPTY - display taype for Excel
+ N %ZIS,DIR,RCDISPTY,RCDTRNG,RCENDT,RCHDR,RCLNCNT,RCLSTMGR,RCPGNUM,RCRPLST,RCSTDT,RCTMPND,RCTYPE,X,Y
+ ; RCDISPTY - display type for Excel
  ; RCDTRNG - range of dates
  ; RCHDR - report header
  ; RCLNCNT - line counter for ^TMP storage
@@ -14,9 +14,11 @@ EN ; entry point for Unapplied EFT Deposits Report [RCDPE UNAPPLIED EFT DEP REPO
  ; RCPGNUM - page number
  ; RCRPLST - node for report list in ^TMP
  ; RCTMPND - storage node (or null) for SL^RCPEARL
+ ; RCTYPE - Payer type filter M - MEDICAL, P-PHARMACY, T-TRICARE, A-ALL
  ;
  S RCRPLST=$T(+0)_"_EFT"  ; storage for list of entries
  S RCLNCNT=0,RCLSTMGR="",RCTMPND=""  ; initial values for ListMan
+ S RCTYPE=$$RTYPE^RCDPEU1("A") G:(RCTYPE=-1) RPTQ ; PRCA*4.5*326 - Add M/P/T filter
  S RCDTRNG=$$DTRNG^RCDPEM4() G:'(RCDTRNG>0) RPTQ
  S RCSTDT=$P(RCDTRNG,U,2),RCENDT=$P(RCDTRNG,U,3)
  ; ask if export to excel
@@ -64,6 +66,7 @@ MKRPRT ; Entry point for queued job
  . Q:RCDT>(RCENDT+.999999)  ; After the end date
  . Q:'$P(RCDATA,"^",8)  ; no payment amt
  . S RCEFT=0 F  S RCEFT=$O(^RCY(344.31,"B",RCDA,RCEFT)) Q:'RCEFT!RCSTOP  S RCDATA(0)=$G(^RCY(344.31,RCEFT,0)) D  Q:RCSTOP
+ . . I '$$ISTYPE^RCDPEU1(344.31,RCEFT,RCTYPE) Q  ;PRCA*4.5*326
  . . S RCTSKCNT=RCTSKCNT+1
  . . I '(RCTSKCNT#100),$D(ZTQUEUED),$$S^%ZTLOAD S (RCSTOP,ZTSTOP)=1 K ZTREQ Q
  . . Q:$P($G(^RCY(344.31,RCEFT,3)),U)        ; EFT has been removed   PRCA*4.5*293
@@ -87,6 +90,7 @@ MKRPRT ; Entry point for queued job
  Q
  ;
 RPT ;  display/print the report using data populated in temporary global array
+ N RCPAYID,RCPAYER,XX,YY,ZZ   ;PRCA*4.5*318
  ;
  D:'RCLSTMGR HDRLST^RCDPEARL(.RCSTOP,.RCHDR)  ; initial report header
  ;
@@ -114,7 +118,16 @@ RPT ;  display/print the report using data populated in temporary global array
  ...N RCPAY S RCPAY=$P(RCEFT("DEP"),U,2) S:RCPAY="" RCPAY="NO PAYER NAME RECEIVED" ; PRCA*4.5*298
  ...;
  ...; PRCA*4.5*317 Shift line 2 chars to the right
- ...S Y="   "_RCPAY_"/"_$P(RCEFT("DEP"),U,3)  D SL^RCDPEARL(Y,.RCLNCNT,RCTMPND)   ; payer/ID
+ ...;S Y="   "_RCPAY_"/"_$P(RCEFT("DEP"),U,3)  D SL^RCDPEARL(Y,.RCLNCNT,RCTMPND)   ; payer/ID
+ ...; PRCA*4.5*318 Account for payer names of 60 characters and payer ID of 20 characters
+ ...S RCPAYID=$P(RCEFT("DEP"),U,3)
+ ...S RCPAYER=RCPAY_"/"_RCPAYID      ; payer/ID
+ ...I $L(RCPAYER)>77 D
+ ... . S ZZ=$L(RCPAYER,"/"),XX=$P(RCPAYER,"/",1,ZZ-1),YY=$P(RCPAYER,"/",ZZ)
+ ... . S XX=$E(XX,1,$L(XX)-($L(RCPAYER)-77)),RCPAYER=XX_"/"_YY
+ ...S Y="   "_RCPAYER
+ ...; end of PRCA*4.5*318
+ ...D SL^RCDPEARL(Y,.RCLNCNT,RCTMPND)   ; payer/ID
  ...; PRCA*4.5*317 Shift line 2 chars to the right
  ...S Y="    "_$E($P(RCEFT("DEP"),U,4)_$J("",50),1,50)                ; trace #
  ...S Y=Y_" "_$E($J(+$P(RCEFT("DEP"),U,7),"",2)_$J("",12),1,12)       ; payment amt
@@ -180,7 +193,9 @@ HDRBLD ; create the report header
  ;
  S Y=$$HDRNM,HCNT=1,RCHDR(HCNT)=$J("",80-$L(Y)\2)_Y  ; line 1 will be replaced by XECUTE code below
  S RCHDR("XECUTE")="N Y S RCPGNUM=RCPGNUM+1,Y=$$HDRNM^"_$T(+0)_"_$S(RCLSTMGR:"""",1:$J(""Page: ""_RCPGNUM,12)),RCHDR(1)=$J("" "",80-$L(Y)\2)_Y"
- S Y="Run Date: "_RCHDR("RUNDATE"),HCNT=HCNT+1,RCHDR(HCNT)=$J("",80-$L(Y)\2)_Y  ; line 1 will be replaced by XECUTE code below
+ S Y="Run Date: "_RCHDR("RUNDATE")_"                 MEDICAL/PHARMACY/TRICARE: "   ; PRCA*4.5*326
+ S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL") ; PRCA*4.5*326
+ S HCNT=HCNT+1,RCHDR(HCNT)=$J("",80-$L(Y)\2)_Y
  ;
  S Y="Date Range: "_$$FMTE^XLFDT(RCSTDT,2)_" - "_$$FMTE^XLFDT(RCENDT,2)_" (Deposit Date)",Y=$J("",80-$L(Y)\2)_Y
  S HCNT=HCNT+1,RCHDR(HCNT)=Y
@@ -208,7 +223,10 @@ HDRLM ; create the report header
  ;
  N DIV,HCNT,Y
  S HCNT=0  ; header counter
- S Y="Date Range: "_$$FMTE^XLFDT(RCSTDT,2)_" - "_$$FMTE^XLFDT(RCENDT,2)_" (Deposit Date)",HCNT=HCNT+1,RCHDR(HCNT)=Y
+ S Y="Date Range: "_$$FMTE^XLFDT(RCSTDT,2)_" - "_$$FMTE^XLFDT(RCENDT,2)_" (Deposit Date) "
+ S Y=Y_"MEDICAL/PHARMACY/TRICARE: "                                                ; PRCA*4.5*326
+ S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL") ; PRCA*4.5*326
+ S HCNT=HCNT+1,RCHDR(HCNT)=Y
  S Y="TOTAL NUMBER OF UNAPPLIED DEPOSITS: "_RCUNAP,HCNT=HCNT+1,RCHDR(HCNT)=Y
  S Y="TOTAL AMOUNT OF UNAPPLIED DEPOSITS: $"_$FN(RCSUM,",",2),HCNT=HCNT+1,RCHDR(HCNT)=Y
  ;
