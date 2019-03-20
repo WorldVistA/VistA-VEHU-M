@@ -1,5 +1,5 @@
-GMTSPXEP ; SLC/SBW,KER,PKR - PCE Patient Education comp ; 08/24/2017
- ;;2.7;Health Summary;**8,10,28,35,56,122**;Oct 20, 1995;Build 28
+GMTSPXEP ; SLC/SBW,KER,PKR - PCE Patient Education comp ; 02/08/2019
+ ;;2.7;Health Summary;**8,10,28,35,56,122**;Oct 20, 1995;Build 71
  ;
  ; External References
  ;   DBIA  3063  EDUC^PXRHS08
@@ -54,11 +54,12 @@ MRPTED ; Most recent patient education
  Q
  ;
 HDR ; Header
- W ?2,"Date",?12,"Facility",?25,"Topic - Understanding Level",!!
+ W "Event/Visit",?12,"Facility",?25,"Topic - Understanding Level"
+ W !,?3,"Date",!!
  Q
  ;
 EDMAIN ; Main Education Display
- N COMMENT,DATASRC,ED,GMDT,GMED,GMICL,GMIFN,GMN0,GMN1,GMTSDATE,GMSITE
+ N COMMENT,ED,GMDT,GMED,GMICL,GMIFN,GMN0,GMN1,GMTSDATE,GMSITE
  N GMTSLN,GMTAB,LEVEL,LTXT,PSITE,PDT,TEXT,X
  S GMDT=0
  F  S GMDT=$O(^TMP("PXPE",$J,GMDT)) Q:GMDT'>0  D  Q:$D(GMTSQIT)
@@ -82,17 +83,13 @@ EDMAIN ; Main Education Display
  . . . I $G(^TMP("PXPE",$J,GMDT,GMED,GMIFN,"MEASUREMENT"))'="" D
  . . . . N MEAS
  . . . . S MEAS=^TMP("PXPE",$J,GMDT,GMED,GMIFN,"MEASUREMENT")
- . . . . S TEXT="Measurement: "_$P(MEAS,U,1)
+ . . . . S TEXT="  Measurement: "_$P(MEAS,U,1)
  . . . . I $P(MEAS,U,2)'="" S TEXT=TEXT_" "_$$UCUMCODE^LEXMUCUM($P(MEAS,U,2))
  . . . . I $L(TEXT)<56 W ?25,TEXT,!
  . . . . E  D LONGTEXT(TEXT)
  . . . S COMMENT=$P(^TMP("PXPE",$J,GMDT,GMED,GMIFN,"COM"),U,1)
  . . . I COMMENT]"" S GMICL=26,GMTAB=2 D FORMAT I $D(^UTILITY($J,"W")) D 
  . . . . F GMTSLN=1:1:^UTILITY($J,"W",DIWL) D LINE Q:$D(GMTSQIT)
- . . . S DATASRC=^TMP("PXPE",$J,GMDT,GMED,GMIFN,"S")
- . . . I DATASRC'="" D
- . . . . S DATASRC=$P(^PX(839.7,DATASRC,0),U,1)
- . . . . W ?25,"Data Source: ",DATASRC,!
  K ^TMP("PXPE",$J)
  Q
  ;

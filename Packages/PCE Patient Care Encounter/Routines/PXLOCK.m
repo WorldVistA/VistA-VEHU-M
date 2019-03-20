@@ -1,5 +1,5 @@
 PXLOCK ;SLC/PKR - PCE Locking/Unlocking utility; 09/28/2017
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;AUG 12, 1996;Build 244
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;AUG 12, 1996;Build 340
  ;
  ;====================
 FINDLOCK(VISITIEN,ERROR) ;Try to determine who has the lock on the
@@ -17,7 +17,7 @@ FINDLOCK(VISITIEN,ERROR) ;Try to determine who has the lock on the
 LOCK(VISITIEN,USER,NUMTRIES,ERROR,SOURCE) ;Lock the encounter.
  I $G(VISITIEN)="" S ERROR("LOCK")="Could not get lock, Visit not specified." Q 0
  I $G(USER)="" S ERROR("LOCK")="Could not get lock, User not specified." Q 0
- N IND,LOCK,SUB
+ N IND,LOCK,NOW,SUB
  S SUB="PXLOCK:"_VISITIEN_":"_USER_":"_$J
  ;See if the encounter is already locked.
  I $D(^XTMP(SUB,0)) Q 1

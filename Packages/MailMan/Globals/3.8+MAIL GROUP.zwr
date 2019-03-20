@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MAIL GROUP
-12-MAR-2019 14:43:55 ZWR
-^XMB(3.8,0)="MAIL GROUP^3.8^445^426"
+22-MAR-2019 10:13:53 ZWR
+^XMB(3.8,0)="MAIL GROUP^3.8^447^428"
 ^XMB(3.8,1,0)="YS PSYCHTEST^PR^^^^0"
 ^XMB(3.8,1,1,0)="^3.81P^^0"
 ^XMB(3.8,1,2,0)="^^1^1^2921113^^"
@@ -2590,7 +2590,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,274,2,1,0)="This mail group is used to notify Patient Record Flag administrators of "
 ^XMB(3.8,274,2,2,0)="transmission errors that occur during the processing of HL7 messages."
 ^XMB(3.8,274,3)=10000000020
-^XMB(3.8,275,0)="GMPL CODE SET VERSION UPDATES^PU^n^^^^10000000020"
+^XMB(3.8,275,0)="GMPL CODE SET VERSION UPDATES^PU^n^1^3190322^^10000000020"
 ^XMB(3.8,275,2,0)="^3.801^2^2^3030414^^^"
 ^XMB(3.8,275,2,1,0)="This mail group will be used to send information about the status of ICD9 "
 ^XMB(3.8,275,2,2,0)="codes attached to problems on problem selection lists."
@@ -3517,7 +3517,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,428,2,5,0)="clinic inactivation messages will error out. The routine"
 ^XMB(3.8,428,2,6,0)="SDNACT needs this mail group in order to work properly."
 ^XMB(3.8,428,3)=11720
-^XMB(3.8,429,0)="REMINDER MANAGEMENT^PU^n^44^3181031^^1"
+^XMB(3.8,429,0)="REMINDER MANAGEMENT^PU^n^45^3190322^^1"
 ^XMB(3.8,429,1,0)="^3.81P^2^2"
 ^XMB(3.8,429,1,1,0)="1^I"
 ^XMB(3.8,429,1,2,0)="11720^I"
@@ -3614,6 +3614,14 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,445,2,1,0)="This MAIL GROUP is to receive 2507 Request Reroute information."
 ^XMB(3.8,445,3)=11720
 ^XMB(3.8,445,5,0)="^3.811P"
+^XMB(3.8,446,0)="PHARMACY SUPERVISORS^PU^n^^^^.5"
+^XMB(3.8,446,2,0)="^^1^1^3190319"
+^XMB(3.8,446,2,1,0)="Pharmacy Supervisors Group for end of RX Numbering Alert"
+^XMB(3.8,446,3)=.5
+^XMB(3.8,447,0)="CS BALANCE DISCREPANCY^PU"
+^XMB(3.8,447,2,0)="^^1^1^3190319"
+^XMB(3.8,447,2,1,0)="Pharmacy Supervisors Group for reporting Narcotic Balance Discrepancies"
+^XMB(3.8,447,3)=.5
 ^XMB(3.8,"AB",.5,120,1)=""
 ^XMB(3.8,"AB",.5,372,1)=""
 ^XMB(3.8,"AB",.5,428,1)=""
@@ -4282,6 +4290,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,"AC",.5,344)=""
 ^XMB(3.8,"AC",.5,345)=""
 ^XMB(3.8,"AC",.5,346)=""
+^XMB(3.8,"AC",.5,446)=""
 ^XMB(3.8,"AC",1,228)=""
 ^XMB(3.8,"AC",1,343)=""
 ^XMB(3.8,"AC",1,347)=""
@@ -4548,6 +4557,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,"B","CLICKAAH",100)=""
 ^XMB(3.8,"B","CLM",14)=""
 ^XMB(3.8,"B","CNH",33)=""
+^XMB(3.8,"B","CS BALANCE DISCREPANCY",447)=""
 ^XMB(3.8,"B","CSCLIN2",192)=""
 ^XMB(3.8,"B","DEATH GROUP",2)=""
 ^XMB(3.8,"B","DENTV ADA CODE MAPPING",305)=""
@@ -4778,6 +4788,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,"B","PEOPLE",139)=""
 ^XMB(3.8,"B","PERSON CLASS UPDATE",417)=""
 ^XMB(3.8,"B","PHARMACY PRIME VENDOR",203)=""
+^XMB(3.8,"B","PHARMACY SUPERVISORS",446)=""
 ^XMB(3.8,"B","PHY",36)=""
 ^XMB(3.8,"B","PII",22)=""
 ^XMB(3.8,"B","PL TEST",111)=""

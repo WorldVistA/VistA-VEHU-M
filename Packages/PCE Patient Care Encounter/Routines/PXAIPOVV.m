@@ -1,5 +1,7 @@
-PXAIPOVV ;ISL/JVS,PKR - VALIDATE DIAGNOSIS ;03/06/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**121,194,199,211**;Aug 12, 1996;Build 244
+PXAIPOVV ;ISL/JVS,PKR - VALIDATE DIAGNOSIS ;11/28/2018
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**121,194,199,211**;Aug 12, 1996;Build 340
+ ;
+ ;Reference to ICDEX supported by ICR #5747.
  ;
 ERRSET ;Set the rest of the error data.
  S STOP=1
@@ -9,16 +11,10 @@ ERRSET ;Set the rest of the error data.
  Q
  ;
 PRIM(VISITIEN,PXADATA,PXAERRF) ;Make sure there is only one primary diagnosis.
- N DIAG,IND,NPDE,NPDN,NPDT,PDLISTE,PDLISTN,PRIM,STOP
- S IND=0
- F  S IND=$O(^AUPNVPOV("AD",VISITIEN,IND)) Q:IND=""  D
- . I $P(^AUPNVPOV(IND,0),U,12)="P" D
- .. S DIAG=$P(^AUPNVPOV(IND,0),U,1)
- .. S PDLISTE(DIAG)=""
- ;
+ N DIAG,IND,NPDIAG,NPDN,PDLISTN,PRIM
  S IND=0
  F  S IND=+$O(@PXADATA@("DX/PL",IND)) Q:IND=0  D
- . S DIAG=@PXADATA@("DX/PL",IND,"DIAGNOSIS")
+ . S DIAG=$G(@PXADATA@("DX/PL",IND,"DIAGNOSIS"))
  . I DIAG="" Q
  . S PRIM=$G(@PXADATA@("DX/PL",IND,"PRIMARY"))
  .;Check for a change to the existing primary diagnosis.
@@ -29,33 +25,13 @@ PRIM(VISITIEN,PXADATA,PXAERRF) ;Make sure there is only one primary diagnosis.
  . I (PRIM=1)!(PRIM="P") S PDLISTN(DIAG)=""
  . I +$G(@PXADATA@("DX/PL",IND,"DELETE")) K PDLISTN(DIAG) Q
  ;
- S DIAG="",NPDE=0
- F  S DIAG=$O(PDLISTE(DIAG)) Q:DIAG=""  S NPDE=NPDE+1,EPDIAG(NPDE)=DIAG
  S DIAG="",NPDN=0
  F  S DIAG=$O(PDLISTN(DIAG)) Q:DIAG=""  S NPDN=NPDN+1,NPDIAG(NPDN)=DIAG
  ;
- I NPDE>1 D  Q
+ I NPDN>1 D  Q
  . S PXAERR(9)="DIAGNOSIS"
- . S PXAERR(11)="VISIT IEN="_VISITIEN
- . S PXAERR(12)="This encounter already has "_NPDE_" primary diagnoses, there can only be one."
+ . S PXAERR(12)=NPDN_" diagnoses have been designated as primary, there can only be one."
  . S PXAERR(12)=PXAERR(12)_" They are: "
- . F IND=1:1:NPDE S PXAERR(12)=PXAERR(12)_$S(IND=1:" ",1:", ")_EPDIAG(IND)
- . D ERRSET
- ;
- S NPDT=NPDE+NPDN
- ;If there is no primary diagnosis give a warning.
- I NPDT=0 D  Q
- . S PXAERR(9)="DIAGNOSIS"
- . S PXAERR(12)="The encounter does not have a primary diagnoses, a complete encounter requires one."
- . D ERRSET
- . S PXADI("DIALOG")=8390001.002
- . S PXAERRW=1
- ;
- I NPDT>1 D  Q
- . S PXAERR(9)="DIAGNOSIS"
- . S PXAERR(12)=NPDT_" diagnoses have been designated as primary, there can only be one."
- . S PXAERR(12)=PXAERR(12)_" They are: "
- . F IND=1:1:NPDE S PXAERR(12)=PXAERR(12)_$S(IND=1:" ",1:",")_EPDIAG(IND)
  . F IND=1:1:NPDN S PXAERR(12)=PXAERR(12)_$S(IND=1:" ",1:",")_NPDIAG(IND)
  . D ERRSET
  Q
@@ -69,13 +45,14 @@ VAL ;Validate the input data.
  ;Save the code or the pointer.
  S PXAERR(11)=$G(PXAA("DIAGNOSIS"))
  ;
- N CODE,CODEIEN,EVENTDT,FMT,ICDDATA
- S EVENTDT=$G(PXAA("EVENT D/T"))
- I EVENTDT="" S EVENTDT=$P(^AUPNVSIT(PXAVISIT,0),U,1)
- S CODE=PXAA("DIAGNOSIS")
- S FMT=$S(CODE?1.N:"I",1:"E")
- S ICDDATA=$$ICDDX^ICDEX(CODE,EVENTDT,"",FMT,0)
- S CODEIEN=$P(ICDDATA,U,1)
+ N CODE,CODEIEN,CODESYS,EVENTDT,FMT,ICDDATA,SERVCAT,TEMP
+ S TEMP=^AUPNVSIT(PXAVISIT,0)
+ S SERVCAT=$P(TEMP,U,7)
+ ;For historical encounters use the Date the Visit was created.
+ S EVENTDT=$S(SERVCAT="E":$P(TEMP,U,2),$G(PXAA("EVENT D/T"))'="":PXAA("EVENT D/T"),1:$P(TEMP,U,1))
+ S FMT=$S(PXAA("DIAGNOSIS")?1.N:"I",1:"E")
+ I FMT="E" S CODE=PXAA("DIAGNOSIS"),CODEIEN=$P($$CODEN^ICDEX(CODE,80),"~",1)
+ I FMT="I" S CODEIEN=PXAA("DIAGNOSIS"),CODE=$$CODEC^ICDEX(80,CODEIEN)
  I CODEIEN'>0 D  Q
  . S PXAERR(9)="DIAGNOSIS"
  . S PXAERR(11)=PXAA("DIAGNOSIS")
@@ -89,7 +66,8 @@ VAL ;Validate the input data.
  I $G(PXAA("DELETE"))=1 Q
  ;
  ;Make sure the code is active.
- I $P(ICDDATA,U,10)'=1 D  Q
+ S CODESYS=$$CSI^ICDEX(80,CODEIEN)
+ I '$$ISCACT^PXLEX(CODESYS,CODE,EVENTDT) D
  . S PXAERR(9)="DIAGNOSIS"
  . S PXAERR(11)=PXAA("DIAGNOSIS")
  . S PXAERR(12)=PXAERR(11)_" is not an active ICD code."
@@ -114,12 +92,19 @@ VAL ;Validate the input data.
  I $G(PXAA("LEXICON TERM"))'="",'$D(^LEX(757.01,PXAA("LEXICON TERM"),0)) D  Q
  . S PXAERR(9)="LEXICON TERM"
  . S PXAERR(11)=PXAA("LEXICON TERM")
- . S PXAERR(12)=PXAA("LEXICON TERM")_" is not a valid point to the Clincial Expression file #757.01."
+ . S PXAERR(12)=PXAA("LEXICON TERM")_" is not a valid point to the Clinical Expression file #757.01."
  . D ERRSET
  ;
  ;If Narrative is input validate it.
  I $G(PXAA("NARRATIVE"))'="",'$$TEXT^PXAIVAL("NARRATIVE",PXAA("NARRATIVE"),2,245,.PXAERR) D  Q
  . D ERRSET
+ ;
+ ;Provider Narrative is required so if it is not input create one from
+ ;the code description.
+ I $G(PXAA("NARRATIVE"))="" D
+ . N NARR
+ . S NARR=$$LD^ICDEX(80,CODEIEN,EVENTDT,.NARR,245)
+ . S PXAA("NARRATIVE")=$S($P(NARR,U,1)=-1:"",1:NARR)
  ;
  ;If Provider Narrative Category is input validate it.
  I $G(PXAA("CATEGORY"))'="",'$$TEXT^PXAIVAL("CATEGORY",PXAA("CATEGORY"),2,245,.PXAERR) D  Q

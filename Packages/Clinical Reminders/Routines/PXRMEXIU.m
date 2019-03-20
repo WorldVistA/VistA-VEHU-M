@@ -1,5 +1,5 @@
-PXRMEXIU ;SLC/PKR/PJH - Utilities for installing repository entries. ;03/30/2018
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17,18,24,26,47,42**;Feb 04, 2005;Build 80
+PXRMEXIU ;SLC/PKR/PJH - Utilities for installing repository entries. ;11/14/2018
+ ;;2.0;CLINICAL REMINDERS;**4,6,12,17,18,24,26,47,42**;Feb 04, 2005;Build 132
  ;===================
 DEF(FDA,NAMECHG) ;Check the reminder definition to make sure the related
  ;reminder exists and all the findings exist.
@@ -80,7 +80,7 @@ EDU(FDA,EDULIST) ;Education Topics special handling. Add national education
  . I FDA(9999999.09,IENS,100)="NATIONAL" S EDULIST(FDA(TOPFNUM,IENS,.01))=""
  S CDEF=$S($$GET1^DID(9999999.09,100,"","LABEL","","MSG")="CLASS":1,1:0)
  I 'CDEF Q
- S FDA(9999999.09,IENS,100)=$S(PXRMNAT:"NATIONAL",1:"LOCAL")
+ S FDA(9999999.09,IENS,100)=$S($G(PXRMNAT):"NATIONAL",1:"LOCAL")
  I FDA(9999999.09,IENS,100)="NATIONAL" S EDULIST(FDA(TOPFNUM,IENS,.01))=""
  Q
  ;
@@ -95,7 +95,7 @@ EXAM(FDA) ;Check the health factor to make sure a category does not
  I $G(FDA(9999999.15,IENS,100))'="" Q
  S CDEF=$S($$GET1^DID(9999999.15,100,"","LABEL","","MSG")="CLASS":1,1:0)
  I 'CDEF Q
- S FDA(9999999.15,IENS,100)=$S(PXRMNAT:"NATIONAL",1:"LOCAL")
+ S FDA(9999999.15,IENS,100)=$S($G(PXRMNAT):"NATIONAL",1:"LOCAL")
  Q
  ;
  ;===================
@@ -103,7 +103,7 @@ EXISTS(FILENUM,NAME,FLAG) ;Check for existence of an entry with the
  ;same name. Return 0 for null name. If FLAG="W" then if necessary
  ;display the warning message.
  I NAME="" Q 0
- ;Return the ien if it does, 0 otherwise.
+ ;Return the IEN if it does, 0 otherwise.
  N IEN,MSG
  I FILENUM=0 S IEN=$$EXISTS^PXRMEXCF(NAME) Q
  N FLAGS,RESULT,SCREEN
@@ -207,7 +207,7 @@ GNEW S NEWPT01=$$GETNAME(ATTR("MIN FIELD LENGTH"),ATTR("FIELD LENGTH"))
  Q NEWPT01
  ;
  ;===================
-HF(FDA,ATTR,NAMECHG,ACTION) ;Health factor special handling.
+HF(FDA) ;Health factor special handling.
  N CDEF,IENS,MSG
  S IENS=$O(FDA(9999999.64,""))
  I IENS="" Q
@@ -218,7 +218,7 @@ HF(FDA,ATTR,NAMECHG,ACTION) ;Health factor special handling.
  I $G(FDA(9999999.64,IENS,100))'="" Q
  S CDEF=$S($$GET1^DID(9999999.64,100,"","LABEL","","MSG")="CLASS":1,1:0)
  I 'CDEF Q
- S FDA(9999999.64,IENS,100)=$S(PXRMNAT:"NATIONAL",1:"LOCAL")
+ S FDA(9999999.64,IENS,100)=$S($G(PXRMNAT):"NATIONAL",1:"LOCAL")
  Q
  ;
  ;===================

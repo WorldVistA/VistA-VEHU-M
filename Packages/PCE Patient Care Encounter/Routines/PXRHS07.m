@@ -1,5 +1,5 @@
-PXRHS07 ;ISL/PKR - PCE V HEALTH FACTORS extract routine ;12/21/2017
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**13,123,211**;Aug 12, 1996;Build 244
+PXRHS07 ;ISL/PKR - PCE V HEALTH FACTORS extract routine ;02/05/2019
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**13,123,211**;Aug 12, 1996;Build 340
  ; Extract returns HEALTH FACTORS data
  ;Original version by SBW
 HF(DFN,BEGDT,ENDDT,OCCLIM,ITEMS) ; Control branching
@@ -16,24 +16,28 @@ HF(DFN,BEGDT,ENDDT,OCCLIM,ITEMS) ; Control branching
  ;                          many occurrences are retrieved but it is
  ;                          it is based on visit date not event date.
  ;         ITEMS    - Optional array containing a selected list of
- ;                    HF Categories. If not used will get all catergories
+ ;                    HF Categories. If not used will get all categories
  ;                    of health factors.
  ;OUTPUT :
  ;  Data from V HEALTH FACTORS (9000010.23) file
- ;  ^TMP("PXF,$J,HFC,HF,InvDt,IFN,0) = PRINT NAME  or Health Factor [E;.01]
+ ;  ^TMP("PXF,$J,HFC,InvDt,HF,IFN,0) = PRINT NAME  or Health Factor [E;.01]
  ;     ^ EVENT DATE/TIME or VISIT/ADMIT DATE&TIME [I;1201 or .03] 
  ;     ^ SHORT NAME [E;9999999.64;.04] ^ LEVEL/SEVERITY [E;.04]
  ;     ^ ORDERING PROVIDER [E;1202] ^ ENCOUNTER PROVIDER [E;1204] 
- ;  ^TMP("PXF",$J,HFC,HF,InvDt,IFN,1) = HOSPITAL LOCATION [E;9000010;.22] 
+ ;  ^TMP("PXF",$J,HFC,InvDt,HF,IFN,1) = HOSPITAL LOCATION [E;9000010;.22] 
+ ;  ^TMP("PXF",$J,HFC,InvDt,HF,IFN,1) = HOSPITAL LOCATION [E;9000010;.22] 
+ ;  ^TMP("PXF",$J,HFC,InvDt,HF,IFN,1) = HOSPITAL LOCATION [E;9000010;.22] 
+ ;  ^TMP("PXF",$J,HFC,InvDt,HF,IFN,1) = HOSPITAL LOCATION [E;9000010;.22] 
+ ;  ^TMP("PXF",$J,HFC,InvDt,HF,IFN,1) = HOSPITAL LOCATION [E;9000010;.22] 
  ;     ^ HOSP. LOC. ABBREVIATION [E;44;1]
  ;     ^ LOC OF ENCOUNTER [E;9000010;.06] ^ OUTSIDE LOC [E;9000010;2101]
- ;  ^TMP("PXF",$J,HFC,HF,InvDt,IFN,"S") = DATA SOURCE [E;81203]
+ ;  ^TMP("PXF",$J,HFC,InvDt,HF,IFN,"S") = DATA SOURCE [E;81203]
  ;
  ;   [] = [I(nternal)/E(xternal); Optional file #; Record #]
  ;   Subscripts:
  ;     HFC   - Health Factor Category name
- ;     HF    - Health Factor name
  ;     InvDt - Inverse FileMan date of Event Date and Time or Visit
+ ;     HF    - Health Factor name
  ;     IFN   - Internal Record #
  ;
  Q:$G(DFN)']""!'$D(^PXRMINDX(9000010.23,"PI",DFN))
@@ -78,12 +82,12 @@ ADDHF(HFIEN,VHFIEN,BEGDT,ENDDT) ;Check a specific health factor and determine
  S HLOCABB=$P(VDATA,U,6)
  S DATASRC=$P(TMP812,U,3)
  S COMMENT=TMP811
- S IDT=9999999-EVENTDT
- S ^TMP("PXF",$J,HFCNAME,HFNAME,IDT,VHFIEN,0)=PNAME_U_EVENTDT_U_SNAME_U_LEVEL_U_OPROV_U_EPROV
- S ^TMP("PXF",$J,HFCNAME,HFNAME,IDT,VHFIEN,1)=HLOC_U_HLOCABB_U_$P(VDATA,U,2)_U_$P(VDATA,U,4)
- S ^TMP("PXF",$J,HFCNAME,HFNAME,IDT,VHFIEN,"COM")=COMMENT
- I TMP220'="" S ^TMP("PXF",$J,HFCNAME,HFNAME,IDT,VHFIEN,"MEASUREMENT")=TMP220
- S ^TMP("PXF",$J,HFCNAME,HFNAME,IDT,VHFIEN,"S")=DATASRC
+ S IDT=9999999-$P(EVENTDT,".",1)
+ S ^TMP("PXF",$J,HFCNAME,IDT,HFNAME,VHFIEN,0)=PNAME_U_EVENTDT_U_SNAME_U_LEVEL_U_OPROV_U_EPROV
+ S ^TMP("PXF",$J,HFCNAME,IDT,HFNAME,VHFIEN,1)=HLOC_U_HLOCABB_U_$P(VDATA,U,2)_U_$P(VDATA,U,4)
+ S ^TMP("PXF",$J,HFCNAME,IDT,HFNAME,VHFIEN,"COM")=COMMENT
+ I TMP220'="" S ^TMP("PXF",$J,HFCNAME,IDT,HFNAME,VHFIEN,"MEASUREMENT")=TMP220
+ S ^TMP("PXF",$J,HFCNAME,IDT,HFNAME,VHFIEN,"S")=DATASRC
  Q 1
  ;
  ;====================

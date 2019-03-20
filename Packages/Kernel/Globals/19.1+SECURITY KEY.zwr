@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: SECURITY KEY
-12-MAR-2019 14:32:49 ZWR
-^DIC(19.1,0)="SECURITY KEY^19.1^744^686"
+22-MAR-2019 10:04:36 ZWR
+^DIC(19.1,0)="SECURITY KEY^19.1^745^687"
 ^DIC(19.1,0,"DD")="#"
 ^DIC(19.1,0,"DEL")="#"
 ^DIC(19.1,0,"GL")="^DIC(19.1,"
@@ -2932,6 +2932,12 @@ OSEHRA ZGO Export: SECURITY KEY
 ^DIC(19.1,744,1,1,0)="This key will allow users the ability to add/inactivate/activate the list "
 ^DIC(19.1,744,1,2,0)="of reasons within the CAPRI exam cancellation window. The VHA Office of"
 ^DIC(19.1,744,1,3,0)="Disability and Medical Assessment should designate who gets this key."
+^DIC(19.1,745,0)="RA UNVERIFY^Unverify a report"
+^DIC(19.1,745,1,0)="^^4^4^3180330^"
+^DIC(19.1,745,1,1,0)="This security key gives the user supervisor-type privilege to back a"
+^DIC(19.1,745,1,2,0)="report down from a Report Status value of 'Verified'. This key supersedes"
+^DIC(19.1,745,1,3,0)="the RA MGR key which, prior to this patch, was required to back down a"
+^DIC(19.1,745,1,4,0)="verified report."
 ^DIC(19.1,"%",0)="^1.005^2^2"
 ^DIC(19.1,"%",1,0)="XU"
 ^DIC(19.1,"%",2,0)="XQ"
@@ -3426,6 +3432,7 @@ OSEHRA ZGO Export: SECURITY KEY
 ^DIC(19.1,"B","RA PTEDIT",79)=""
 ^DIC(19.1,"B","RA PTENTRY",78)=""
 ^DIC(19.1,"B","RA SITE",85)=""
+^DIC(19.1,"B","RA UNVERIFY",745)=""
 ^DIC(19.1,"B","RA VERIFY",86)=""
 ^DIC(19.1,"B","RA XUSEC",80)=""
 ^DIC(19.1,"B","RCCPC TRANSMIT",390)=""
@@ -3923,6 +3930,7 @@ OSEHRA ZGO Export: SECURITY KEY
 ^DIC(19.1,"E","TRICARE OVERRIDE FUNCTION.",636)=""
 ^DIC(19.1,"E","UE STATUS LETTER OVERRIDE",588)=""
 ^DIC(19.1,"E","UNABLE TO SCAN REPORTS ACCESS",607)=""
+^DIC(19.1,"E","UNVERIFY A REPORT",745)=""
 ^DIC(19.1,"E","USED BY HOWDY",653)=""
 ^DIC(19.1,"E","USER OF THE CPRS MED BUTTON",481)=""
 ^DIC(19.1,"E","VIEW GET DOCS FROM VIRTUAL VA",695)=""

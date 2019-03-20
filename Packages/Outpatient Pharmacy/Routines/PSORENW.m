@@ -1,5 +1,5 @@
 PSORENW ; BIR/SAB - renew main driver ;4/25/07 8:42am
- ;;7.0;OUTPATIENT PHARMACY;**11,27,30,46,71,96,100,130,148,206,388,390,417,313,411,504**;DEC 1997;Build 15
+ ;;7.0;OUTPATIENT PHARMACY;**11,27,30,46,71,96,100,130,148,206,388,390,417,313,411,504,508,550**;DEC 1997;Build 2
  ;External reference to ^PSDRUG( supported by DBIA 221
  ;External reference to $$L^PSSLOCK supported by DBIA 2789
  ;External reference to UL^PSSLOCK supported by DBIA 2789
@@ -46,6 +46,11 @@ OERR ;entry for renew backdoor
  I $$TITRX^PSOUTL(PSORXIEN)="t" D  Q
  . S VALMSG="Cannot Renew a 'Titration Rx'.",VALMBCK="R" W $C(7)
  I $$LMREJ^PSOREJU1(PSORXIEN,,.VALMSG,.VALMBCK) Q
+ ; PSO*7*508 - check if the Rx is an eRx. If so, inform the user and ask to proceed.
+ N ERXORN,ERXIEN,ERXPROC S ERXORN=$$GET1^DIQ(52,$P(PSOLST(ORN),U,2),39.3)
+ S ERXIEN=$$CHKERX^PSOERXU1(ERXORN)
+ I ERXIEN D FULL^VALM1 S ERXPROC=$$PROVPMT^PSOERXU1(ERXIEN) Q:'ERXPROC
+ ; PSO*7*508 - end
  S PSOPLCK=$$L^PSSLOCK(PSODFN,0) I '$G(PSOPLCK) D LOCK^PSOORCPY S VALMSG=$S($P($G(PSOPLCK),"^",2)'="":$P($G(PSOPLCK),"^",2)_" is working on this patient.",1:"Another person is entering orders for this patient.") K PSOPLCK S VALMBCK="" Q
  K PSOPLCK S X=PSODFN_";DPT(" D LK^ORX2 I 'Y S VALMSG="Another person is entering orders for this patient.",VALMBCK="" D UL^PSSLOCK(PSODFN) Q
  K PSOID,PSOFDMX,PSORX("FILL DATE"),PSORENW("FILL DATE"),PSORX("QS"),PSORENW("QS"),PSOBARCD,COPY

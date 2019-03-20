@@ -1,5 +1,5 @@
-PXXDPT ;ISL/DLT - Synchronize Patient File (2) and IHS Patient File (#9000001) ;10/12/2017
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**1,211**;Aug 12, 1996;Build 244
+PXXDPT ;ISL/DLT - Synchronize Patient File (2) and IHS Patient File (#9000001) ;05/15/2018
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**1,211**;Aug 12, 1996;Build 340
  ;;1.0;PCE Patient/IHS Subset;;Nov 01, 1994
  ;
 SETSSN ; Entry Point from PX09 cross-reference on File 2, field .09
@@ -7,10 +7,12 @@ SETSSN ; Entry Point from PX09 cross-reference on File 2, field .09
  D CHECK Q:'$T
 EN Q:PX=""
  ;DA is the DFN and PX is the SSN.
+ ;If the patient entry already exists quit.
+ I $D(^AUPNPAT(DA,0)) Q
  N FDA,FDAIEN,MSG,PXXLOC
  S PXXLOC=+$P($G(^PX(815,1,"PXPT")),"^",1)
  I PXXLOC=0 S PXXLOC=$P($$SITE^VASITE,U,1)
- S FDAIEN(1)=DFN,FDAIEN(2)=PXXLOC
+ S FDAIEN(1)=DA,FDAIEN(2)=PXXLOC
  S FDA(9000001,"+1,",.01)=DA
  S FDA(9000001.41,"+2,+1,",.01)=PXXLOC
  S FDA(9000001.41,"+2,+1,",.02)=PX

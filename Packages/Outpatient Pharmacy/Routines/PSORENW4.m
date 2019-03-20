@@ -1,5 +1,5 @@
 PSORENW4 ;BIR/SAB - rx speed renew ;03/06/95
- ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,37,64,46,75,71,100,130,117,152,148,264,225,301,390,313,411,444,504**;DEC 1997;Build 15
+ ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,37,64,46,75,71,100,130,117,152,148,264,225,301,390,313,411,444,504,508,550**;DEC 1997;Build 2
  ;External reference to ^PSDRUG( supported by DBIA 221
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference to $$L^PSSLOCK supported by DBIA 2789
@@ -40,6 +40,11 @@ PROCESS ; Process one order at a time
  S MAXNUMRF=$$MAXNUMRF^PSOUTIL(+$$GET1^DIQ(52,PSORXIEN,6,"I"),+$G(PSORENW("DAYS SUPPLY")),+$G(PSORENW("PATIENT STATUS")),.CLOZPAT)
  I PSORENW("# OF REFILLS")>MAXNUMRF D  K DIR,PSOMSG D PAUSE^VALM1 Q
  . W $C(7),!!,"Rx# "_$$GET1^DIQ(52,PSORXIEN,.01)_" - # of Refills requested exceeds maximum allowed ("_MAXNUMRF_") for this Rx"
+ ; PSO*7*508 - check if the Rx is an eRx. If so, inform the user and ask to proceed.
+ N ERXORN,ERXIEN,ERXPROC S ERXORN=$$GET1^DIQ(52,$P(PSOLST(ORN),U,2),39.3)
+ S ERXIEN=$$CHKERX^PSOERXU1(ERXORN)
+ I ERXIEN S ERXPROC=$$PROVPMT^PSOERXU1(ERXIEN) Q:'ERXPROC
+ ; PSO*7*508 - end
  ; Checking if Rx is locked by Another person
  D PSOL^PSSLOCK(PSORXIEN) I '$G(PSOMSG) W $C(7),!!,$S($P($G(PSOMSG),"^",2)'="":$P($G(PSOMSG),"^",2),1:"Another person is editing Rx "_$P(^PSRX(PSORXIEN,0),"^")),! K DIR,PSOMSG D PAUSE^VALM1 Q
  K RET,DRET,PRC,PHI S PSORENW("OIRXN")=PSORXIEN,PSOFROM="NEW"

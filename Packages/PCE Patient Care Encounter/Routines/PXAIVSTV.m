@@ -1,5 +1,5 @@
-PXAIVSTV ;ISL/JVS,PKR ISA/KWP - VALIDATE THE VISIT DATA ;04/02/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**9,15,19,74,111,116,130,124,168,211**;Aug 12, 1996;Build 244
+PXAIVSTV ;ISL/JVS,PKR ISA/KWP - VALIDATE THE VISIT DATA ;11/28/2018
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**9,15,19,74,111,116,130,124,168,211**;Aug 12, 1996;Build 340
  ;
  Q
 ERRSET ;Set the rest of the error data.
@@ -51,6 +51,13 @@ VAL ;--Validate the input.
  . S PXAERR(12)=PXAA("PATIENT")_" is not a valid pointer to the PATIENT/IHS file # 9000001."
  . D ERRSET
  ;
+ ;Visit date before the patient's date of birth.
+ I PXAA("ENC D/T")<$P(^DPT(PXAA("PATIENT"),0),U,3) D  Q
+ . S PXAERR(9)="ENC D/T"
+ . S PXAERR(11)=PXAA("ENC D/T")
+ . S PXAERR(12)="The visit date is before the patient's date of birth"
+ . D ERRSET
+ ;
  ;Service category is required.
  I '$D(PXAA("SERVICE CATEGORY")) D  Q
  . S PXAERR(9)="SERVICE CATEGORY"
@@ -79,6 +86,10 @@ VAL ;--Validate the input.
  . S PXAERR(11)=PXAA("HOS LOC")
  . S PXAERR(12)=PXAA("HOS LOC")_" is not a valid pointer to the Hospital Location file #44."
  . D ERRSET
+ ;
+ ;If a valid Hospital Location is passed use it to automatically
+ ;set DSS ID.
+ I $G(PXAA("HOS LOC"))'="" S PXAA("DSS ID")=$P(^SC(PXAA("HOS LOC"),0),U,7)
  ;
  ;Is the pointer to Clinic Stop file valid?
  I $G(PXAA("DSS ID"))'="",'$D(^DIC(40.7,PXAA("DSS ID"),0)) D  Q
@@ -197,15 +208,14 @@ VALSCC ;--VALIDATE SERVICE CONNECTIVENESS
  Q
  ;
 VPKG(EPKG,PKG) ;Is the Package parameter valid?
+ I EPKG'="" Q EPKG
+ I $G(PKG)="" D  Q 0
+ . S PXAERR(7)="ENCOUNTER"
+ . S PXAERR(9)="DATA2PCE parameter: PKG"
+ . S PXAERR(12)="PKG is required and it is NULL."
+ . D ERRSET
  N PIEN
  S PIEN=$$VPKG^PXAIVAL($G(PKG),.PXAERR)
- I (EPKG'=""),(PIEN>0),(EPKG'=PIEN) D  Q EPKG
- . S PXAERR(7)="PACKAGE"
- . S PXAERR(9)=PKG
- . S PXAERR(12)="PACKAGE cannot be edited."
- . S PXAERRW=1
- . S PXADI("DIALOG")=8390001.002
- I EPKG'="" Q EPKG
  I PIEN=0 D  Q 0
  . S PXAERR(7)="PACKAGE"
  . D ERRSET
@@ -213,23 +223,25 @@ VPKG(EPKG,PKG) ;Is the Package parameter valid?
  ;
 VPTR(VISITIEN) ;Is the Visit pointer valid?
  I '$D(^AUPNVSIT(VISITIEN,0)) D
- . S PXAERR(7)="DATA SOURCE"
+ . S PXAERR(7)="VISIT POINTER"
  . S PXAERR(9)="DATA2PCE parameter: VISIT"
  . S PXAERR(11)=VISITIEN
  . S PXAERR(12)="The Visit pointer that was input is not valid."
  . D ERRSET
  Q
  ;
-VSOURCE(ESRC,SOURCE) ;Is the Data Source valid?
+VSOURCE(PXAPKG,ESRC,SOURCE) ;Is the Data Source valid?
+ ;Scheduling creates encounters using Visit Tracking, it does not call
+ ;DATA2PCE and it does not set Source.
+ I $P(^DIC(9.4,PXAPKG,0),U,1)="SCHEDULING" Q ""
+ I ESRC'="" Q ESRC
+ I $G(SOURCE)="" D  Q 0
+ . S PXAERR(7)="ENCOUNTER"
+ . S PXAERR(9)="DATA2PCE parameter: SOURCE"
+ . S PXAERR(12)="SOURCE is required and it is NULL."
+ . D ERRSET
  N SRC
  S SRC=$$VSOURCE^PXAIVAL($G(SOURCE),.PXAERR)
- I (ESRC'=""),(SRC>0),(ESRC'=SRC) D  Q ESRC
- . S PXAERR(7)="DATA SOURCE"
- . S PXAERR(9)=SRC
- . S PXAERR(12)="DATA SOURCE cannot be edited."
- . S PXAERRW=1
- . S PXADI("DIALOG")=8390001.002
- I ESRC'="" Q ESRC
  I SRC=0 D  Q 0
  . S PXAERR(7)="DATA SOURCE"
  . D ERRSET

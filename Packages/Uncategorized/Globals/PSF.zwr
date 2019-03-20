@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: ^PSF
-12-MAR-2019 14:40:54 ZWR
+22-MAR-2019 10:11:06 ZWR
 ^PSF("CUTDATE")="S X1=DT,X2=-$P(%PSITE,""^"",23) D C^%DTC S PSDTCUT=X,PSPRFPAS=$P(%PSITE,""^"",24)"
 ^PSF("FIXEXPDT")="F J=0:0 S J=$N(^PSRX(J)) Q:J'>0  I $D(^(J,0))#2 S RX0=^(0),RX2=$S($D(^(2))#2:^(2),1:"""") D ^PSEXDT:'$P(RX2,""^"",6)"
 ^PSF("MAD TIMES")="S X1=X9,X2=1 D C^%DTC S ET=X_"".""_$P(X9,""."",2),D=X11\24,H=X11#24,(L,S)=X9 X:D>0 ^PSF(""MAD TIMES"",1) S CR=0 F I=1:1 S L=L+(H/100) X:(H=0)!("".""_$P(L,""."",2)'<.25)&('CR) ^PSF(""MAD TIMES"",1) Q:L'<ET  S S=S_""~""_L"

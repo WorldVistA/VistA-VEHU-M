@@ -1,7 +1,11 @@
-PSNPPSNF ;HP/MJE-PPSN update NDF data ; 05 Mar 2014  1:20 PM
- ;;4.0;NATIONAL DRUG FILE;**513**; 30 Oct 98;Build 53
+PSNPPSNF ;HP/MJE-PPSN update NDF data ;2019-02-14  10:39 AM
+ ;;4.0;NATIONAL DRUG FILE;**513,10001,10002**; 30 Oct 98;Build 6
  ;Reference to ^%ZISH supported by DBIA #2320
  ;Reference to ^XUTMOPT supported by DBIA #1472
+ ; Original Routine authored by Department of Veterans Affairs
+ ; *10001* modification made by OSEHRA/Sam Habiel (c) 2018
+ ; *10002* modification made by CRH/David Whitten (c) 2019
+ ; See https://github.com/shabiel/PSN-4-513
  ;
  ;This routine is used to locate and move PPSN NDF update host files into Cache for processing
  Q
@@ -43,7 +47,7 @@ FIND ;Get list of files, quit if flag set to disable update function
  S A1("PPS_*")="",(PSNFND,PSNFLG,QUIT2,PSRUNCNT)=0,COMM=1
  I $D(^TMP("PSN PPSN READ",$J)) K ^TMP("PSN PPSN READ",$J)
  S Y=$$LIST^%ZISH($$GETD^PSNFTP(),$NA(A1),$NA(B2))
- S I="" F  S I=$O(B2(I)) Q:I=""  S B1(99999999+(+$P(I,"_",2)))=I
+ S I="" F  S I=$O(B2(I)) Q:I=""  I I?1"PPS_"1.N1"PRV_"1.N1"NEW.DAT".1"s" S B1(99999999+(+$P(I,"_",2)))=I ; *10002* - filter to pattern, don't include zip files etc
  K B2
 CKDIR ;
  G EXIT:'$D(B1)
@@ -77,6 +81,9 @@ EXIT2 ;
  ;
 READ ;Read in file
  S (INSFILE,REJFILE)=""
+ ; OSE/SMH *10001* - Update control file in case files were downloaded manually
+ D UPDTCTRL(PSNHLD)
+ ; /end OSE/SMH
  S REJFILE=$$REJCHK($P(PSNHLD,";")) Q:+REJFILE
  S INSFILE=$$INSTCHK($P(PSNHLD,";"))
  I '+INSFILE,'$G(PSNSCJOB) W !!,$P(PSNHLD,";")_" has not been installed.",! Q
@@ -106,7 +113,9 @@ READ ;Read in file
  N PSERRMSG,PSMSGTXT,PSRGP,XMTEXT,XMY,PSNSITET,PSNZISH
  S PSNSITET=$P($G(^PS(59.7,1,10)),"^",12)
  D CTRKDL^PSNPPSMS("Install STARTED message sent to PPS-N")
- I PSNSITET="P" S COMM=$$SEND^PSNPPSNC("STARTED",$P(PSNHLD,";"),"")
+ ; OSE/SMH *10001* - Only send a message inside the VA (add DUZ("AG"))
+ I PSNSITET="P",DUZ("AG")="V" S COMM=$$SEND^PSNPPSNC("STARTED",$P(PSNHLD,";"),"")
+ ; /OSE/SMH
  S COMM=1
  ;
  I COMM=0 D  Q
@@ -155,8 +164,10 @@ COMM ;
  D CTRKDL^PSNPPSMS("Checking for errors and sending install completion message")
  W:'$G(PSNSCJOB) !,"Sending install completion message to PPS-N...",!
 COMMAGN ;
- I PSNSITET="Q"!(PSNSITET="P") S COMM=$$SEND^PSNPPSNC("COMPLETED",$P(PSNHLD,";"),""),COMMAGN=COMMAGN+1
- I PSNSITET="T"!(PSNSITET="S")!(PSNSITET="N") S COMM=1
+ ; OSE/SMH *10001* - Only send messages inside the VA (DUZ("AG")="V")
+ I PSNSITET="Q"!(PSNSITET="P"),DUZ("AG")="V" S COMM=$$SEND^PSNPPSNC("COMPLETED",$P(PSNHLD,";"),""),COMMAGN=COMMAGN+1
+ I PSNSITET="T"!(PSNSITET="S")!(PSNSITET="N")!(DUZ("AG")'="V") S COMM=1
+ ; /OSE/SMH
  I 'COMM&(COMMAGN<3) H 3 W !,"Install completion message could not be sent to PPS-N.  Trying again... " G COMMAGN
  I 'COMM W !,"The install completion message was not accepted by PPS-N.  Please contact ",!,"the National Help Desk.",!
  I $G(ERRCHK) D IERRMSG^PSNPPSMG G COMM2
@@ -213,6 +224,19 @@ NDFK(PSNHLD) ; flag to proceed with purging NDFK file
  S PSI=$O(^PS(57.23,1,5,"B",PSNHLD,""),-1) I PSI D
  . S NODE=$G(^PS(57.23,1,5,PSI)) I '$P(NODE,"^",3) S FLG=0
  Q FLG
+ ;
+ ;
+ ;
+UPDTCTRL(FILE) ; OSE/SMH *10001* - Update the control file - delegate to UPDTCTRL^PSNFTP
+ ; Create variables expected by UPDTCTRL^PSNFTP
+ Q:$D(^PS(57.23,1,4,"G",FILE))
+ N PSREMFIL S PSREMFIL=FILE
+ N PSNDNLDB S PSNDNLDB=$$NOW^XLFDT()
+ N PSWRKDIR S PSWRKDIR=$$GETD^PSNFTP()
+ N PSSIZE S PSSIZE=$$SIZE^%ZISH(PSWRKDIR,FILE)
+ D UPDTCTRL^PSNFTP
+ QUIT
+ ; /OSE/SMH *10001*
  ;
 REJCHK(FILE) ; check if the file has been rejected & finalized
  ;LSTD - Last Download version

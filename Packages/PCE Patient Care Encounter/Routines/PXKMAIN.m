@@ -1,5 +1,5 @@
 PXKMAIN ;ISL/JVS,PKR,ISA/Zoltan - Main Routine for Data Capture ;03/29/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,59,73,88,69,117,130,124,174,164,210,215,216,211**;Aug 12, 1996;Build 244
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,59,73,88,69,117,130,124,174,164,210,215,216,211**;Aug 12, 1996;Build 340
  ;+This routine is responsible for:
  ;+
  ;+LOCAL VARIABLE LIST:
@@ -12,7 +12,7 @@ PXKMAIN ;ISL/JVS,PKR,ISA/Zoltan - Main Routine for Data Capture ;03/29/2018
  ;+ PXKFGAD  = ADD flag
  ;+ PXKFGED  = EDIT flag
  ;+ PXKFGDE  = DELETE flag
- ;+ PXKSEQ   = Sequence number in PXK tmp global
+ ;+ PXKSEQ   = Sequence number in PXK TMP global
  ;+ PXKCAT   = Category of entry (CPT,MSR,VST...)
  ;+ PXKREF   = Root of temp global
  ;+ PXKPIEN  = IEN of v file or the visit file
@@ -186,3 +186,4 @@ CQDEL ;Classification question deletion check
  I PXKCAT'="VST" Q
  S PXJ="" F  S PXJ=$O(PXKBV(800,PXJ)) Q:'PXJ  I PXKBV(800,PXJ)'="" I '$D(PXKAV(800,PXJ)) S PXKAV(800,PXJ)="@"
  K PXJ Q
+ ;

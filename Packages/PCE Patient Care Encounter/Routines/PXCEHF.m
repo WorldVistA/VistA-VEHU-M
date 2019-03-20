@@ -1,5 +1,5 @@
-PXCEHF ;ISL/dee,PKR - Used to edit and display V HEALTH FACTORS ;04/16/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**27,22,211**;Aug 12, 1996;Build 244
+PXCEHF ;ISL/dee,PKR - Used to edit and display V HEALTH FACTORS ;02/28/2019
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**27,22,211**;Aug 12, 1996;Build 340
  ;; ;
  Q
  ;
@@ -14,8 +14,8 @@ PXCEHF ;ISL/dee,PKR - Used to edit and display V HEALTH FACTORS ;04/16/2018
  ;  (The .01 field cannot have a special edit.)
  ;
 FORMAT ;;Health Factors~9000010.23~0,12,220,811,812~1~^AUPNVHF
- ;;0~1~.01~Health Factor:  ~Health Factor:  ~~~~~~B
- ;;0~4~.04~Level/Severity:  ~Level/Severity:  ~~~~~~D
+ ;;0~1~.01~Health Factor:  ~Health Factor:  ~~~~~B
+ ;;0~4~.04~Level/Severity:  ~Level/Severity:  ~~~~~D
  ;;12~1~1201~Event Date and Time:  ~Event Date and Time: ~~EVENTDT^PXCEHF(.PXCEAFTR)~~~D
  ;;220~1~220~Magnitude: ~Magnitude: ~~MEAS^PXCEHF(.PXCEAFTR)~~~D
  ;;220~2~221~UCUM Code: ~UCUM Description: ~~SKIP^PXCEHF~~~D

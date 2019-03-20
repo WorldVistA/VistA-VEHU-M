@@ -1,5 +1,5 @@
-PXMCLINK ;SLC/PKR - Mapped codes linking and unlinking routines. ;12/14/2017
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 244
+PXMCLINK ;SLC/PKR - Mapped codes linking and unlinking routines. ;02/20/2019
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
  ;
  ;==========================================
 ASSOVFILE(FILENUM) ;Given a PCE data type file number return the associated
@@ -75,7 +75,7 @@ LINK(FILENUM,GBL,IEN,CODESYSL) ;Create entries in V Standard Codes file for
  ;IEN is the internal entry number of the data type.
  ;CODESYSL is the list of mapped codes: (CODESYS,CODE)
  N ASSOVFILE,CODE,CODEDT,CODEIEN,CODESYS,DAS,DATE,DFN,ERROR,FDA,FDAIEN
- N FROM,IENS,IND,MSG,MSOURCE,NUMACT,NUMINACT,NL,SUBJECT,TO
+ N FROM,IENS,IND,MSG,MSOURCE,NUMLINK,NL,SUBJECT,TO
  N VCODFNUM,VFDATA,VISITIEN
  K ^TMP("PXXMZ",$J)
  S ASSOVFILE=$$ASSOVFILE(FILENUM)
@@ -90,8 +90,7 @@ LINK(FILENUM,GBL,IEN,CODESYSL) ;Create entries in V Standard Codes file for
  . S FDA(VCODFNUM,IENS,.05)=CODESYS
  . S CODE=""
  . F  S CODE=$O(CODESYSL(CODESYS,CODE)) Q:CODE=""  D
- .. S NUMACT(CODESYS,CODE)=0
- .. S NUMINACT(CODESYS,CODE)=0
+ .. S NUMLINK(CODESYS,CODE)=0
  .. S FDA(VCODFNUM,IENS,.01)=CODE
  .. S DFN=""
  .. F  S DFN=$O(^PXRMINDX(ASSOVFILE,"IP",IEN,DFN)) Q:DFN=""  D
@@ -99,11 +98,6 @@ LINK(FILENUM,GBL,IEN,CODESYSL) ;Create entries in V Standard Codes file for
  ... S FDA(VCODFNUM,IENS,.02)=DFN
  ... S DATE=""
  ... F  S DATE=$O(^PXRMINDX(ASSOVFILE,"IP",IEN,DFN,DATE)) Q:DATE=""  D
- ....;If the mapped code is not active on the date of the source entry
- ....;do not make the V-Standard Codes entry.
- .... I '$$ISCACT^PXLEX(CODESYS,CODE,DATE) D  Q
- ..... S NUMINACT(CODESYS,CODE)=NUMINACT(CODESYS,CODE)+1
- .... S NUMACT(CODESYS,CODE)=NUMACT(CODESYS,CODE)+1
  .... S DAS=""
  .... F  S DAS=$O(^PXRMINDX(ASSOVFILE,"IP",IEN,DFN,DATE,DAS)) Q:DAS=""  D
  ..... D VFDATA(VCODFNUM,ASSOVFILE,DAS,IENS,.FDA)
@@ -118,6 +112,7 @@ LINK(FILENUM,GBL,IEN,CODESYSL) ;Create entries in V Standard Codes file for
  ...... S ERROR=1
  ...... S SUBJECT="Mapped code linking failed for file #"_FILENUM_", IEN="_IEN_", DFN="_DFN
  ...... D SENDEMSG(SUBJECT,.MSG)
+ ..... S NUMLINK(CODESYS,CODE)=NUMLINK(CODESYS,CODE)+1
  .....;Fire PXK VISIT DATA EVENT for the addition of a code.
  ..... D ADDEVENT^PXMCEVNT(VCODFNUM,FDAIEN(1))
  I ERROR K ^TMP("PXXMZ",$J) Q
@@ -137,10 +132,8 @@ LINK(FILENUM,GBL,IEN,CODESYSL) ;Create entries in V Standard Codes file for
  .. S IND=CODESYSL(CODESYS,CODE)
  .. S $P(@GBL@(IEN,210,IND,0),U,4)=LINKDT
  .. S NL=NL+1,^TMP("PXXMZ",$J,NL,0)=" "_CODESYS_":  "_CODE
- .. I NUMACT(CODESYS,CODE)>0 D
- ... S NL=NL+1,^TMP("PXXMZ",$J,NL,0)=" There were "_NUMACT(CODESYS,CODE)_" instances on dates where the code was active."
- .. I NUMINACT(CODESYS,CODE)>0 D
- ... S NL=NL+1,^TMP("PXXMZ",$J,NL,0)=" There were "_NUMINACT(CODESYS,CODE)_" instances on dates where the code was inactive."
+ .. I NUMLINK(CODESYS,CODE)>0 D
+ ... S NL=NL+1,^TMP("PXXMZ",$J,NL,0)=" There were "_NUMLINK(CODESYS,CODE)_" instances where the code was linked."
  .. S NL=NL+1,^TMP("PXXMZ",$J,NL,0)=""
  D SEND^PXMSG("PXXMZ",SUBJECT,.TO,FROM)
  K ^TMP("PXXMZ",$J)
@@ -204,7 +197,7 @@ MCLINK(FILENUM,IEN) ;Check for codes that have been mapped but not linked,
  . S TEXT(3)="there is no data to link."
  . D EN^DDIOL(.TEXT) H 3
  K DIR
- S DIR(0)="YAO",DIR("B")="Y"
+ S DIR(0)="YAO",DIR("B")="N"
  S DIR("A")="Do you want to link them? "
  D ^DIR
  I 'Y Q
@@ -216,7 +209,6 @@ MCLINK(FILENUM,IEN) ;Check for codes that have been mapped but not linked,
  I (Y="^")!(Y="") Q
  S STARTDT=Y
  D TASKLINK(FILENUM,GBL,IEN,.CODESYSL,STARTDT)
- ;D LINK(FILENUM,GBL,IEN,.CODESYSL)
  Q
  ;
  ;==========================================
@@ -245,7 +237,6 @@ MCUNLINK(FILENUM,IEN) ;Start a task to unlink mapped codes, called from
  D EN^DDIOL(.TEXT)
  S STARTDT=$$NOW^XLFDT
  D TASKUNLK(FILENUM,IEN,STARTDT)
- ;D UNLINK^PXMCLINK(FILENUM,IEN)
  Q
  ;
  ;==========================================

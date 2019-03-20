@@ -1,5 +1,5 @@
-PXP211I ;SLC/PKR - Init routine for PX*1.0*211 ;03/19/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 244
+PXP211I ;SLC/PKR - Init routine for PX*1.0*211 ;11/27/2018
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
  ;======================
 ADDDS ;Add entries to PCE DATA SOURCE.
  I $O(^PX(839.7,"B","PCE CODE MAPPING",0))>0 Q
@@ -45,6 +45,16 @@ BINDEX ;Make sure the "B" index matches what is in the .01, for Education
  . D BMES^XPDUTL("Setting B index for Health Factor: "_NAME)
  . K ^AUTTHF("B",BNAME)
  . S ^AUTTHF("B",NAME,IEN)=""
+ Q
+ ;
+ ;======================
+DSB ;Redo the PCE Data Source "B" index so it is the full length.
+ D BMES^XPDUTL("Creating full length 'B' index PCE Data Source.")
+ ;Kill the old "B" index.
+ K ^PX(839.7,"B")
+ N DIK
+ S DIK="^PX(839.7,",DIK(1)=".01^B"
+ D ENALL^DIK
  Q
  ;
  ;======================
@@ -274,14 +284,17 @@ POST ;Post-init
  D GENPNAME^PXP211I
  D UPCNAME^PXP211I
  D HFCAT^PXP211I
- D VSCINDEX^PXP211I
+ D VSCITASK^PXP211I
+ D DSB^PXP211I
  D PROVNARB^PXP211I
+ D RBLDBI^PXP211I
+ D RMNCTE^PXP211I
  Q
  ;
  ;======================
 PROVNARB ;Redo the Provider Narrative "B" index so it is the full
  ;length.
- ;First determine if the new full-length "B" index is in place.
+ ;First determine if the new full-length "B" index is already in place.
  N LEN,MAXLEN,NAME
  S MAXLEN=0,NAME=""
  F  S NAME=$O(^AUTNPOV("B",NAME)) Q:(MAXLEN>30)!(NAME="")  D
@@ -298,11 +311,30 @@ PROVNARB ;Redo the Provider Narrative "B" index so it is the full
  Q
  ;
  ;======================
+RBLDBI ;Make sure the is only one "B" index for PCE Data Source and
+ ;Education Topics.
+ N DIK
+ K ^AUTTEDT("B")
+ S DIK="^AUTTEDT(",DIK(1)=".01^B"
+ D ENALL^DIK
+ K ^PX(839.7,"B")
+ S DIK="^PX(839.7,",DIK(1)=".01^B"
+ D ENALL^DIK
+ Q
+ ;
+ ;======================
+RMNCTE ;Remove the national class entries that were created for testing.
+ D DELTLFE^PXUTIL(9999999.09,"VA-NATIONAL CLASS TEST")
+ D DELTLFE^PXUTIL(9999999.15,"VA-NATIONAL CLASS TEST")
+ D DELTLFE^PXUTIL(9999999.64,"VA-NATIONAL CLASS TEST")
+ Q
+ ;
+ ;======================
 RMOLDDDS ;Remove old data dictionaries.
  N DIU,TEXT
  D EN^DDIOL("Removing old data dictionaries.")
  S DIU(0)=""
- F DIU=9000010.16,9000010.13,9000010.23,9999999.09,9999999.15,9999999.27,9999999.64 D
+ F DIU=815,839.7,9000010,900010.07,900010.11,900010.12,9000010.13,9000010.16,900010.18,900010.23,9000010.71,9999999.09,9999999.15,99999999.27,9999999.64 D
  . S TEXT=" Deleting data dictionary for file # "_DIU
  . D EN^DDIOL(TEXT)
  . D EN^DIU2
@@ -348,8 +380,6 @@ SETCLASS ;Until a decision on national entries has been made make everything
  . D MES^XPDUTL(" Setting the Class of HF: "_NAME_" to LOCAL.")
  . K FDA,MSG
  . S IENS=IEN_","
- .;Remove "VA-" from any non-national entries.
- . ;I $E(NAME,1,3)="VA-" S FDA(9999999.64,IENS,.01)=$E(NAME,4,99)
  . S FDA(9999999.64,IENS,100)="L"
  . D FILE^DIE("ET","FDA","MSG")
  Q
@@ -414,5 +444,20 @@ VSCINDEX ;Initialize or rebuild the Clinical Reminders Index for V Standard Code
  D IXALL2^DIK
  D IXALL^DIK
  D VSC^PXPXRMI2
+ S ZTREQ="@"
+ Q
+ ;
+ ;======================
+VSCITASK ;Start a TaskMan job the for rebuilding the V Standard Codes
+ ;indexes.
+ N TEXT
+ S TEXT(1)="Starting a TaskMan job to initialize/rebuild V STANDARD CODES indexes."
+ S ZTRTN="VSCINDEX^PXP211I"
+ S ZTDESC="Build V STANDARD CODES indexes"
+ S ZTDTH=$$NOW^XLFDT
+ S ZTIO=""
+ D ^%ZTLOAD
+ S TEXT(2)="The task number is: "_ZTSK
+ D BMES^XPDUTL(.TEXT)
  Q
  ;

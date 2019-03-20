@@ -1,6 +1,10 @@
-PSNPPSMG ;HP/MJE-PPSN update NDF data ; 05 Mar 2014  1:20 PM
- ;;4.0;NATIONAL DRUG FILE;**513**; 30 Oct 98;Build 53
+PSNPPSMG ;HP/MJE-PPSN update NDF data ;2019-02-14  10:41 AM
+ ;;4.0;NATIONAL DRUG FILE;**513,10001,565,10002**; 30 Oct 98;Build 6
  ;Reference to ^PSDRUG supported by DBIA #2352,#221
+ ; Original code authored by Department of Veterans Affairs
+ ; *10001*/*10002* modification made by OSEHRA/Sam Habiel (c) 2018-2019
+ ; *10002* does not introduce any changes. It restores 10001 changes over 565.
+ ; See https://github.com/shabiel/PSN-4-513
  ;
 MESSAGE ;
  D CTRKDL^PSNPPSMS("Sending DATA UPDATE FOR NDF email")
@@ -27,7 +31,7 @@ GROUP K XMY S X=$G(^TMP("PSN PPSN PARSED",$J,"GROUP")) I X]"" S XMY("G."_X_"@"_^
  S PSNPS=$P($G(^PS(59.7,1,10)),"^",12)
  D XMY
  S XMSUB="DATA UPDATE FOR NDF"
- S XMDUZ="noreply@DOMAIN.EXT"
+ S XMDUZ="noreply@domain.ext"
  S XMTEXT="^TMP($J," N DIFROM D ^XMD
  D CTRKDL^PSNPPSMS("Sent email for DATA UPDATE FOR NDF.")
  K FDA
@@ -40,7 +44,7 @@ GROUP K XMY S X=$G(^TMP("PSN PPSN PARSED",$J,"GROUP")) I X]"" S XMY("G."_X_"@"_^
  D XMY
  D CTRKDL^PSNPPSMS("Sending UPDATED INTERACTIONS and FDA MED GUIDE message")
  S XMSUB="UPDATED INTERACTIONS AND FDA MED GUIDE"
- S XMDUZ="noreply.domain.ext"
+ S XMDUZ="noreply@domain.ext"
  S XMTEXT="^TMP($J," N DIFROM D ^XMD
  D CTRKDL^PSNPPSMS("Sent email for UPDATED INTERACTIONS and FDA MED GUIDE.")
  K DA
@@ -180,15 +184,12 @@ DRGMSG ;
  D ^XMD
  K DIE,DR
  Q
-UXFSIZE(PSWRKDIR,PSNHLD,PSSIZE) ; get linux file size
- N XPV,PSXLOG,PV S PSSIZE=""
+UXFSIZE(PSWRKDIR,PSNHLD,PSSIZE) ; get linux file size (OSE/SMH - modified in *10001*/restored in *10002*)
  S:'$D(PSWRKDIR) PSWRKDIR=$$GETD^PSNFTP()
- S XPV="S PV=$ZF(-1,""stat -c%s "_PSWRKDIR_PSNHLD_">"_PSWRKDIR_"PSNSIZE.DAT"")"
- X XPV
- S PSXLOG="",PSXLOG=$$FTG^%ZISH(PSWRKDIR,"PSNSIZE.DAT",$NA(^TMP("PSNFSIZELOG",$J,1)),3)
- I $D(^TMP("PSNFSIZELOG",$J,1)) S PSSIZE=$G(^TMP("PSNFSIZELOG",$J,1)) K ^TMP("PSNFSIZELOG",$J)
- D LINUXDEL^PSNFTP(1,PSWRKDIR,"PSNSIZE.DAT")
- Q
+ S PSSIZE=$$SIZE^%ZISH(PSWRKDIR,PSNHLD)
+ QUIT
+ ; OSE/SMH *10001*/*10002*
+ ;
 TRNS(PSNFILE,IEN,PSNFIELD) ; get the label of file/field
  N PSNF,FILE,FILENM,FIELD,PSNARR,FLD,FIELDX
  S (FIELD,FILE,FILENM,PSNARR,FLD,PSNF)=""
