@@ -28,7 +28,7 @@ OSEHRA ZGO Export: KERNEL SYSTEM PARAMETERS
 ^XTV(8989.3,1,"DEV")="^/tmp"
 ^XTV(8989.3,1,"DNS")="9.9.9.9"
 ^XTV(8989.3,1,"INTRO",0)="^^32^32^3181031^"
-^XTV(8989.3,1,"INTRO",1,0)="     VEHU or CPRS DEMO INSTANCE - Patched to October 2018 by OSEHRA."
+^XTV(8989.3,1,"INTRO",1,0)="     VEHU or CPRS DEMO INSTANCE - Patched to January 2019 by OSEHRA."
 ^XTV(8989.3,1,"INTRO",2,0)=" "
 ^XTV(8989.3,1,"INTRO",3,0)="     NAME                     ACCESS    VERIFY    E SIG"
 ^XTV(8989.3,1,"INTRO",4,0)="     ----                     ------    ------    -----"
