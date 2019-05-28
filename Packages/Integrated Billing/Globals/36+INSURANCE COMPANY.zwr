@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: INSURANCE COMPANY
-22-MAR-2019 10:04:36 ZWR
+28-MAY-2019 11:58:00 ZWR
 ^DIC(36,0)="INSURANCE COMPANY^36I^3^3"
 ^DIC(36,0,"DD")="#"
 ^DIC(36,0,"DEL")="d"
@@ -25,7 +25,7 @@ OSEHRA ZGO Export: INSURANCE COMPANY
 ^DIC(36,"%D",4,0)="changed the user must be assigned the appropriate MAS or IB module option."
 ^DIC(36,"%D",5,0)=" "
 ^DIC(36,"%D",6,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(36,"%MSC")=3190319.171806
+^DIC(36,"%MSC")=3190524.16322
 ^DIC(36,"B","HEALTH INSURANCE PLUS",3)=""
 ^DIC(36,"B","MEDICARE",2)=""
 ^DIC(36,"B","PRIVATE INSURANCE CO INC",1)=""

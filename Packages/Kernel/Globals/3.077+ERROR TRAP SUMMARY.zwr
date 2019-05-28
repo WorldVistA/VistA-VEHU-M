@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: ERROR TRAP SUMMARY
-22-MAR-2019 10:04:08 ZWR
-^%ZTER(3.077,0)="ERROR TRAP SUMMARY^3.077^9^9"
+28-MAY-2019 11:57:40 ZWR
+^%ZTER(3.077,0)="ERROR TRAP SUMMARY^3.077^11^11"
 ^%ZTER(3.077,1,0)="FB146PO+4~FB146PO, Fall-through to a label with formallist is not allowed,150374442,-%GTM-E-FALLINTOFLST^3181025.171523^3181025.171523"
 ^%ZTER(3.077,1,4,0)="^3.0775"
 ^%ZTER(3.077,1,4,64946,0)="~~~~~~~~~~~~~~~~~1"
@@ -29,10 +29,18 @@ OSEHRA ZGO Export: ERROR TRAP SUMMARY
 ^%ZTER(3.077,9,0)="VISIT+18~ZGO, Command expected but not found,150372458,-%GTM-E-CMD^3181031.203821^3181031.203919"
 ^%ZTER(3.077,9,4,0)="^3.0775"
 ^%ZTER(3.077,9,4,64952,0)="~~~~~~~~~~~~~~~~~~~~4"
+^%ZTER(3.077,10,0)="LR511 : Application Error!, please disregard^3190524.161531^3190524.161531"
+^%ZTER(3.077,10,4,0)="^3.0775"
+^%ZTER(3.077,10,4,65157,0)="~~~~~~~~~~~~~~~~1"
+^%ZTER(3.077,11,0)="LR515 : Application Error!, please disregard^3190524.162922^3190524.162922"
+^%ZTER(3.077,11,4,0)="^3.0775"
+^%ZTER(3.077,11,4,65157,0)="~~~~~~~~~~~~~~~~1"
 ^%ZTER(3.077,"B",",,,-",4)=""
 ^%ZTER(3.077,"B","ADDPROXY+8~XOBWD, Expression e",6)=""
 ^%ZTER(3.077,"B","FB146PO+4~FB146PO, Fall-throug",1)=""
 ^%ZTER(3.077,"B","GENPORT+4~XOBWD, Expression ex",5)=""
+^%ZTER(3.077,"B","LR511 : Application Error!, pl",10)=""
+^%ZTER(3.077,"B","LR515 : Application Error!, pl",11)=""
 ^%ZTER(3.077,"B","PRE+4~ETS1P1, Expression expec",2)=""
 ^%ZTER(3.077,"B","PRE+6~ETS1P1, Undefined local ",3)=""
 ^%ZTER(3.077,"B","VISIT+18~ZGO, Command expected",9)=""

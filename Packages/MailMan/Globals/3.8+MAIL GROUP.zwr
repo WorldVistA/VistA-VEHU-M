@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MAIL GROUP
-22-MAR-2019 10:13:53 ZWR
-^XMB(3.8,0)="MAIL GROUP^3.8^447^428"
+28-MAY-2019 12:00:45 ZWR
+^XMB(3.8,0)="MAIL GROUP^3.8^449^429"
 ^XMB(3.8,1,0)="YS PSYCHTEST^PR^^^^0"
 ^XMB(3.8,1,1,0)="^3.81P^^0"
 ^XMB(3.8,1,2,0)="^^1^1^2921113^^"
@@ -1041,12 +1041,6 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,121,2,0)="^^1^1^2940929^^^"
 ^XMB(3.8,121,2,1,0)="Receive's Project Planning messages from the Regional Construction Database"
 ^XMB(3.8,121,3)=10652
-^XMB(3.8,122,0)="SPNL SCD COORDINATOR^PU^^336^3090104^^11289"
-^XMB(3.8,122,1,0)="^3.81P^^0"
-^XMB(3.8,122,2,0)="^^2^2^2941020^^^"
-^XMB(3.8,122,2,1,0)="to receive error messages that result from problems with data extract"
-^XMB(3.8,122,2,2,0)="transmissions"
-^XMB(3.8,122,3)=11289
 ^XMB(3.8,123,0)="RJTMAIL^PU^n^^^^1039"
 ^XMB(3.8,123,1,0)="^3.81P^1^1"
 ^XMB(3.8,123,1,1,0)=1039
@@ -3622,6 +3616,19 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,447,2,0)="^^1^1^3190319"
 ^XMB(3.8,447,2,1,0)="Pharmacy Supervisors Group for reporting Narcotic Balance Discrepancies"
 ^XMB(3.8,447,3)=.5
+^XMB(3.8,448,0)="GMRCCCRA NOTIFICATIONS^PU^^^^^"
+^XMB(3.8,448,2,0)="^^4^4^3180412^"
+^XMB(3.8,448,2,1,0)="This mail group is used to send messages to the CCRA support team when an "
+^XMB(3.8,448,2,2,0)="issue or problem with the GMRC CCRA SEND HL7 Application Parameter "
+^XMB(3.8,448,2,3,0)="detects a problem with sending HL7 messages to the CCRA HealthShare "
+^XMB(3.8,448,2,4,0)="server."
+^XMB(3.8,448,3)=11720
+^XMB(3.8,449,0)="DGPF PRF TRANSFER REQUESTS^PU^n^^^^"
+^XMB(3.8,449,2,0)="^3.801^2^2^3180730^^^"
+^XMB(3.8,449,2,1,0)="This is the mail group for individuals authorized to approve/reject"
+^XMB(3.8,449,2,2,0)="requests for active national (Cat I) PRF flag ownership transfer."
+^XMB(3.8,449,3)=11720
+^XMB(3.8,449,5,0)="^3.811P"
 ^XMB(3.8,"AB",.5,120,1)=""
 ^XMB(3.8,"AB",.5,372,1)=""
 ^XMB(3.8,"AB",.5,428,1)=""
@@ -4362,7 +4369,6 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,"AC",11281,214)=""
 ^XMB(3.8,"AC",11281,215)=""
 ^XMB(3.8,"AC",11281,216)=""
-^XMB(3.8,"AC",11289,122)=""
 ^XMB(3.8,"AC",11289,137)=""
 ^XMB(3.8,"AC",11289,150)=""
 ^XMB(3.8,"AC",11289,161)=""
@@ -4579,6 +4585,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,"B","DGPF CLINICAL HR FLAG REVIEW",411)=""
 ^XMB(3.8,"B","DGPF HL7 TRANSMISSION ERRORS",274)=""
 ^XMB(3.8,"B","DGPF MISSING PT FLAG REVIEW",426)=""
+^XMB(3.8,"B","DGPF PRF TRANSFER REQUESTS",449)=""
 ^XMB(3.8,"B","DGPM UR ADMISSION",78)=""
 ^XMB(3.8,"B","DGPRE PRE-REG STAFF",175)=""
 ^XMB(3.8,"B","DGRU ADT/HL7",233)=""
@@ -4636,6 +4643,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,"B","GMRA VERIFY FOOD ALLERGY",102)=""
 ^XMB(3.8,"B","GMRA VERIFY OTHER ALLERGY",103)=""
 ^XMB(3.8,"B","GMRC HCP HL7 MESSAGES",427)=""
+^XMB(3.8,"B","GMRCCCRA NOTIFICATIONS",448)=""
 ^XMB(3.8,"B","HBH",35)=""
 ^XMB(3.8,"B","HBHC MEDICAL FOSTER HOME",367)=""
 ^XMB(3.8,"B","HDIS ERRORS",319)=""
@@ -4891,7 +4899,6 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,"B","SENSITIVITY REMOVED",12)=""
 ^XMB(3.8,"B","SHERYL",29)=""
 ^XMB(3.8,"B","SJ TEST GROUP",69)=""
-^XMB(3.8,"B","SPNL SCD COORDINATOR",122)=""
 ^XMB(3.8,"B","SR CONSULT",341)=""
 ^XMB(3.8,"B","SR TRANSPLANT",359)=""
 ^XMB(3.8,"B","SR-QUARTERLY",167)=""

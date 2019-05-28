@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: DEVICE
-22-MAR-2019 10:04:00 ZWR
+28-MAY-2019 11:57:35 ZWR
 ^%ZIS(1,0)="DEVICE^3.5Is^710^46"
 ^%ZIS(1,5,0)="TEST^^^^^^^^"
 ^%ZIS(1,5,1)="ORBITTER"
@@ -24,7 +24,7 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,521,"TYPE")="TRM"
 ^%ZIS(1,524,0)="HFS^/dev/shm/hfs.dat^^^^^^^^^"
 ^%ZIS(1,524,1)="Host File Device^^^^1^"
-^%ZIS(1,524,5)=593
+^%ZIS(1,524,5)=720
 ^%ZIS(1,524,"IOPAR")="(nowrap:stream:newversion)"
 ^%ZIS(1,524,"SUBTYPE")=16
 ^%ZIS(1,524,"TYPE")="HFS"
@@ -65,7 +65,7 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,648,"TYPE")="RES"
 ^%ZIS(1,649,0)="TELNET^|TNT|^1^1^^^^^^^1"
 ^%ZIS(1,649,1)="TELNET PORT"
-^%ZIS(1,649,5)=31295
+^%ZIS(1,649,5)=33752
 ^%ZIS(1,649,"MN",0)="^3.501^^0"
 ^%ZIS(1,649,"SUBTYPE")=230
 ^%ZIS(1,649,"TYPE")="VTRM"

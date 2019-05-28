@@ -1,5 +1,18 @@
-EDPQLE ;SLC/KCM - Retrieve Log Entry
- ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
+EDPQLE ;SLC/KCM - Retrieve Log Entry ;2/28/12 08:33am
+ ;;2.0;EMERGENCY DEPARTMENT;**6,2,12**;Feb 24, 2012;Build 2
+ ;
+ ; DBIA#  SUPPORTED
+ ; -----  ---------  ------------------------------------
+ ;  1894  Cont Sub   ENCEVENT^PXAPI
+ ; 10103  Sup        $$NOW^XLFDT,$$FMDIFF^XLFDT
+ ;  2056  Sup        $$GET1^DIQ
+ ; 10061  Sup        DEM^VADPT
+ ;  2815  Sup        ^ICPT("B"
+ ;  1593  Cont Sub   ^AUTNPOV(
+ ; 10035  Sup        ^DPT(
+ ; 10040  Sup        ^SC(
+ ; 10060  Sup        ^VA(200
+ ; 10076  Sup        ^XUSEC("PROVIDER"
  ;
 GET(LOG,CHOICES) ; Get a log entry by request
  N CURBED,CURVAL,PERSON,CODED,CHTS,CHLOAD,CLINIC
@@ -58,7 +71,7 @@ LOG(LOG) ; return the log entry as XML
  S X("delay")=$$CODE($P(X1,U,5)),CODED("delay")=X("delay")
  S X("disposition")=$$CODE($P(X1,U,2)),CODED("disposition")=X("disposition")
  S X("required")=$$REQ(.X)
- S CURBED=X("bed")  ; for later use by BEDS
+ S CURBED=X("bed")_U_$P(X3,U,9)  ; for later use by BEDS
  ;
  D XML^EDPX("<logEntry>")
  D XMLE^EDPX(.X)
@@ -89,13 +102,16 @@ PRIMPCE(EDPVISIT) ; return primary provider from PCE
  ;
 DIAGPCE(EDPVISIT) ; add PCE diagnoses
  Q:'EDPVISIT
- N I,X,CODE
+ ;BEGIN EDP*2.0*2 CHANGES replace line below with one that follows
+ N I,X,CODE,EDPLVDT,EDPLCIEN,EDPLCTYPE
  S I=0 F  S I=$O(^TMP("PXKENC",$J,EDPVISIT,"POV",I)) Q:'I  D
  . K X S X=^TMP("PXKENC",$J,EDPVISIT,"POV",I,0)
- . S X("type")="POV"
- . S CODE=$P(X,U) S:CODE CODE=$P(^ICD9(CODE,0),U)
- . S X("code")=$P(^ICD9($P(X,U),0),U)
- . S X("label")=^AUTNPOV($P(X,U,4),0)
+ . S X("type")="POV",EDPLVDT=$P($G(^TMP("PXKENC",$J,EDPVISIT,"VST",EDPVISIT,0)),U)
+ . S EDPLCIEN=$P(X,U),EDPLCTYPE=$$VER^EDPLEX($$CSYS^EDPLEX(EDPLVDT)) ;DRP Added this line
+ . S:EDPLCIEN (X("code"),CODE)=$P($$ICDDATA^EDPLEX("DIAG",EDPLCIEN,EDPLVDT),U,2)
+ . S X("label")=^AUTNPOV($P(X,U,4),0),X("icdType")=EDPLCTYPE,X("ien")=EDPLCIEN
+ . S:X("label")'[EDPLCTYPE X("label")=X("label")_" ("_$G(EDPLCTYPE)_" "_$G(CODE)_")" ; drp added this line
+ . ;END EDP*2.0*2 CHANGES
  . S X("primary")=($P(X,U,12)="P")
  . D XML^EDPX($$XMLA^EDPX("diagnosis",.X))
  S I=0 F  S I=$O(^TMP("PXKENC",$J,EDPVISIT,"CPT",I)) Q:'I  D
@@ -103,18 +119,24 @@ DIAGPCE(EDPVISIT) ; add PCE diagnoses
  . S X("type")="CPT"
  . S CODE=$O(^ICPT("B",$P(X,U),0)) S:CODE CODE=$P(^ICPT(CODE,0),U)
  . S X("code")=CODE
- . S X("label")=^AUTNPOV($P(X,U,4),0)
+ . ;  **  EDP *2* 12  **  NULL narrative = XML error  --  "faultCode:Client.CouldNotDecode faultString:'Error #1085' faultDetail:'null'"
+ . S X("label")=$G(^AUTNPOV(+$P(X,U,4),0))
  . S X("quantity")=$P(X,U,16)
  . D XML^EDPX($$XMLA^EDPX("proc",.X))
  Q
 DIAGFREE(LOG) ; add free text diagnoses
  N DIAG,CODE,LABEL,X4
  S DIAG=0 F  S DIAG=$O(^EDP(230,LOG,4,DIAG)) Q:'DIAG  D
+ . S EDPLVDT=$P(^EDP(230,LOG,0),U,8) ;drp EDP*2.0*2 added to retrieve Date of Interest
  . S X4=^EDP(230,LOG,4,DIAG,0)
+ . ;BEGIN EDP*2.0*2 CHANGES
  . S X4("type")="POV"
- . S CODE=$P(X4,U,2) S:CODE CODE=$P(^ICD9(CODE,0),U)
- . S X4("code")=CODE
+ . S EDPLCIEN=$P(X4,U,2) S:EDPLCIEN CODE=$P($$ICDDATA^EDPLEX("DIAG",EDPLCIEN,EDPLVDT),U,2) ;drp
+ . S:$G(CODE)'="" X4("code")=CODE,EDPLCTYPE=$$VER^EDPLEX($$CSYS^EDPLEX(EDPLVDT)),X4("ien")=EDPLCIEN
+ . S:$G(EDPLCTYPE)'="" X4("icdType")=EDPLCTYPE ; added this line drp
  . S X4("label")=$P(X4,U,1)
+ . S:X4("label")'[$G(EDPLCTYPE) X4("label")=X4("label")_" ("_$G(EDPLCTYPE)_" "_$G(CODE)_")" ; drp added this line
+ . ;drp END EDP*2.0*2 CHANGES
  . S X4("primary")=+$P(X4,U,3)
  . D XML^EDPX($$XMLA^EDPX("diagnosis",.X4))
  Q
@@ -131,9 +153,11 @@ CODE(IEN) ; set NOVAL code to 0 when returning code
 BEDS ; add a list of available room/beds for this area
  D XML^EDPX("<bedList>")
  D XML^EDPX($$XMLS^EDPX("bed",0,"None"))   ;non-selected
- N BED,X0,MULTI,SEQ
+ N BED,X0,MULTI,SEQ,OCCUPIED,MYBED
  S BED=0 F  S BED=$O(^EDPB(231.8,"C",EDPSITE,AREA,BED)) Q:'BED  D
  . S SEQ=$P(^EDPB(231.8,BED,0),U,5) S:'SEQ SEQ=99999
+ . ; PATCH 6 (BWF - 4/24/2013) - Additional filter for EDIS_DEFAULT
+ . I $$GET1^DIQ(231.8,BED,.01,"E")="EDIS_DEFAULT" Q
  . S SEQ(SEQ,BED)=""
  S SEQ=0 F  S SEQ=$O(SEQ(SEQ)) Q:'SEQ  D
  . S BED=0 F  S BED=$O(SEQ(SEQ,BED)) Q:'BED  D
@@ -142,7 +166,9 @@ BEDS ; add a list of available room/beds for this area
  .. I $P(X0,U,4) Q
  .. ; QUIT if occupied, unless own bed or multi-assign
  .. S MULTI=+$P(X0,U,9) S:MULTI=3 MULTI=0 ; single non-ed
- .. I $D(^EDP(230,"AL",EDPSITE,AREA,BED)),((BED'=CURBED)&'MULTI) Q
+ .. S OCCUPIED=$D(^EDP(230,"AL",EDPSITE,AREA,BED))!$D(^EDP(230,"AH",EDPSITE,AREA,BED))
+ .. S MYBED=(BED=+CURBED)!(BED=$P(CURBED,U,2))
+ .. I OCCUPIED,'MYBED,'MULTI Q
  .. ;
  .. S X("data")=BED
  .. S X("label")=$P(X0,U,6)_"  ("_$P(X0,U)_")"
@@ -183,7 +209,10 @@ REQ(VAL) ; return the fields required to close this entry
  S PARAM=$G(^EDPB(231.9,AREA,1)),NEED=""
  I $P(PARAM,U,1) S $P(NEED,",",1)="diag"
  I $P(PARAM,U,3) S $P(NEED,",",2)="disp"
- I $$DLYREQ,$$NOTOBS,$$EXCEED S $P(NEED,",",3)="delay"
+ ; bwf - 4/26/13 - per Dr. Gelman, want delay reason no matter whether patient is in observation or not.
+ ;               - replaced line below with one that follows
+ ;I $$DLYREQ,$$NOTOBS,$$EXCEED S $P(NEED,",",3)="delay"
+ I $$DLYREQ,$$EXCEED S $P(NEED,",",3)="delay"
  Q NEED
  ;
 DLYREQ() ; return true if delay params set to required

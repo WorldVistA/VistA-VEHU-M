@@ -1,16 +1,31 @@
-EDPLPCE ;SLC/KCM - Create a Visit
- ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
+EDPLPCE ;SLC/KCM - Create a Visit ;2/28/12 08:33am
+ ;;2.0;EMERGENCY DEPARTMENT;**2,12**;Feb 24, 2012;Build 2
+ ;
+ ; DBIA#  SUPPORTED
+ ; -----  ---------  ------------------------------------
+ ;  1894  Cont Sub   ENCEVENT^PXAPI
+ ;  1889  Cont Sub   DATA2PCE^PXAPI
+ ;  5747  Sup        $$CODEC^ICDEX
+ ; 10103  Sup        $$NOW^XLFDT,$$FMADD^XLFDT
+ ;  2053  Sup        FILE^DIE
+ ;  2263  Sup        $$GET^XPAR,GETLST^XPAR
+ ;  1890  Cont Sub   $$DELVFILE^PXAPI
+ ;  5679  Sup        $$ONE^LEXU
+ ;  1573  Sup        $$CPTONE^LEXU
+ ;  2028  Cont Sub   ^AUPNVSIT(
+ ; 10048  Sup        ^DIC(9.4
+ ;  2815  Sup        ^ICPT("B"
  ;
 UPDVISIT(LOG,PCE) ; Get / Create a Visit
  ; PCE is list of potential updates to the visit
  ; PCE(TYP,n)=type^ien^code^label^add^del^upd^prim^qty
- N DFN,TS,LOC,X0
+ N DFN,TS,LOC,X0,I,X,PRVVISIT
  S X0=^EDP(230,LOG,0),DFN=$P(X0,U,6),TS=$P(X0,U,8),LOC=$P(X0,U,14)
  I 'LOC S LOC=$$DFLTLOC(DFN)
  I 'DFN!('TS)!('LOC) Q 0  ; not enough info
  ;
  N EDPDATA,EDPVISIT,EDPPCHG
- S EDPVISIT=$P(X0,U,12),EDPPCHG=0 S:'EDPVISIT TS=$$TS4VISIT(DFN,LOC,TS)
+ S EDPVISIT=$P(X0,U,12),EDPPCHG=0 S:'EDPVISIT TS=$$TS4VISIT(DFN,LOC,TS,.PRVVISIT)
  ;
  ; if closed record and no visit, bail
  I $P(X0,U,7),'EDPVISIT Q 0
@@ -18,12 +33,16 @@ UPDVISIT(LOG,PCE) ; Get / Create a Visit
  ; if no visit, but diagnoses exist, xfer the diagnoses
  I 'EDPVISIT D XFERDIAG(LOG,.PCE)
  ; remove current primary provider(s) if there is a new one
- I EDPVISIT,$G(PCE("PRI")) D
- . N IPRV,XPRV,OLDPRI
+ I $G(PCE("PRI")) D
+ . N IPRV,XPRV,OLDPRI,EDPLCSYS,EDPLCIEN,GETVISIT ; Begin EDP*2.0*2 changes
+ . S GETVISIT=0
+ . I $G(PRVVISIT) S GETVISIT=PRVVISIT ;if we have no current visit but there is a recent visit we'll link to.
+ . I $G(EDPVISIT) S GETVISIT=EDPVISIT ;we have a current visit
+ . I 'GETVISIT Q
  . K ^TMP("PXKENC",$J)
- . D ENCEVENT^PXAPI(EDPVISIT)
- . S IPRV=0 F  S IPRV=$O(^TMP("PXKENC",$J,EDPVISIT,"PRV",IPRV)) Q:'IPRV  D
- .. S XPRV=^TMP("PXKENC",$J,EDPVISIT,"PRV",IPRV,0)
+ . D ENCEVENT^PXAPI(GETVISIT)
+ . S IPRV=0 F  S IPRV=$O(^TMP("PXKENC",$J,GETVISIT,"PRV",IPRV)) Q:'IPRV  D
+ .. S XPRV=^TMP("PXKENC",$J,GETVISIT,"PRV",IPRV,0)
  .. Q:$P(XPRV,U,4)'="P"
  .. I +XPRV'=$G(PCE("PRI")) S EDPDATA("PROVIDER",IPRV,"NAME")=+XPRV,EDPDATA("PROVIDER",IPRV,"PRIMARY")=0
  ; add any new providers that were entered
@@ -31,15 +50,23 @@ UPDVISIT(LOG,PCE) ; Get / Create a Visit
  . S EDPDATA("PROVIDER",I,"NAME")=+PCE("PRV",I)
  . I +PCE("PRV",I)=$G(PCE("PRI")) S EDPDATA("PROVIDER",I,"PRIMARY")=1,EDPPCHG=1
  ; update diagnoses
+ ; DRP 04062012 Begin EDP*2.0*2 Changes  
  S I=0 F  S I=$O(PCE("POV",I)) Q:'I  D
  . S X=PCE("POV",I)
  . Q:'($P(X,U,5)!$P(X,U,6)!$P(X,U,7))  ; no updates for this diagnosis
  . I $P(X,U,2) D
- .. N CODE S CODE=$$ICDONE^LEXU($P(X,U,2),TS)
+ .. S EDPLCSYS=$$CSYS^EDPLEX(TS)
+ .. I EDPLCSYS="ICD" D
+ ... N EDPLCIEN S EDPLCIEN=$$ONE^LEXU($P(X,U,2),TS,EDPLCSYS)
+ ... Q:'$L(EDPLCIEN)
+ ... S:$L(EDPLCIEN) $P(X,U,2)=$P($$ICDDATA^EDPLEX(EDPLCSYS,EDPLCIEN,TS,"E"),U,1) ;drp patch 2
+ ...Q
+ .. N CODE S CODE=$$CODEC^ICDEX(80,$P(X,U,2))
  .. S $P(X,U,3)=CODE
  . Q:'$L($P(X,U,3))                   ; not coded
- . S IEN=+$O(^ICD9("BA",$P(X,U,3)_" ",0)) Q:'IEN
- . S EDPDATA("DX/PL",I,"DIAGNOSIS")=IEN
+ . S EDPLCIEN=$P($$ICDDATA^EDPLEX("DIAG",$P(X,U,3),TS,"E"),U,1) Q:'EDPLCIEN
+ . S EDPDATA("DX/PL",I,"DIAGNOSIS")=EDPLCIEN
+ . ;DRP end EDP*2.0*2 changes
  . S EDPDATA("DX/PL",I,"NARRATIVE")=$P(X,U,4)
  . I $P(X,U,8) S EDPDATA("DX/PL",I,"PRIMARY")=1
  . I $P(X,U,6) S EDPDATA("DX/PL",I,"DELETE")=1
@@ -67,6 +94,7 @@ UPDVISIT(LOG,PCE) ; Get / Create a Visit
  S EDPDATA("ENCOUNTER",1,"SERVICE CATEGORY")="A"
  S EDPDATA("ENCOUNTER",1,"ENCOUNTER TYPE")="P"
  I 'EDPVISIT S EDPDATA("ENCOUNTER",1,"ENC D/T")=TS
+ ;
  S OK=$$DATA2PCE^PXAPI("EDPDATA",EDPKG,EDPSRC,.EDPVISIT,,,,EDPPCHG,.EDPERR)
  I OK<1 D
  . N NOW S NOW=$$NOW^XLFDT
@@ -82,12 +110,14 @@ UPDVISIT(LOG,PCE) ; Get / Create a Visit
  . D FILE^DIE("","FDA","ERR")
  Q
 XFERDIAG(LOG,PCE) ; Setup diagnosis list based on entries in 230
- N IEN,X0,CODE
+ ;DRP 04062012 Begin EDP*2.0*2 ICD10 CHANGES
+ N IEN,X0,CODE,EDPDOI,EDPLCIEN
  K PCE("POV")  ; not worried about adds & subtracts, so start over
  S IEN=0 F  S IEN=$O(^EDP(230,LOG,4,IEN)) Q:'IEN  D
- . S X0=$G(^EDP(230,LOG,4,IEN,0))
- . S PCE("POV",IEN)="POV^^^^1"
- . S CODE=$P(X0,U,2) S:CODE CODE=$P(^ICD9(CODE,0),U)
+ . S X0=$G(^EDP(230,LOG,4,IEN,0)),EDPDOI=$P(^EDP(230,LOG,0),U,8) ; GET DATE OF INTEREST
+ . S PCE("POV",IEN)="POV^^^^1",EDPLCIEN=$P(X0,U,2)
+ . S CODE=$P($$ICDDATA^EDPLEX("DIAG",EDPLCIEN,EDPDOI),U,2)
+ . ;DRP End EDP*2.0*2 Changes
  . S $P(PCE("POV",IEN),U,3)=CODE        ; code
  . S $P(PCE("POV",IEN),U,4)=$P(X0,U)    ; text
  . S $P(PCE("POV",IEN),U,8)=$P(X0,U,3)  ; primary
@@ -128,13 +158,14 @@ DFLTLOC(DFN) ; Return the default location for the ED
  S I=$O(LST(0)) S:I LOC=$P(LST(I),U,2)
  Q LOC
  ;
-TS4VISIT(DFN,LOC,TS) ; Return visit time if there is already a visit
+TS4VISIT(DFN,LOC,TS,PRVVISIT) ; Return visit time if there is already a visit
  N BACKTO,VTM,VLOC,VCAT,NEWTS
  S BACKTO=$$FMADD^XLFDT($$NOW^XLFDT,0,-1),NEWTS=""
  S VTM="" F  S VTM=$O(^AUPNVSIT("AET",DFN,VTM),-1) Q:VTM<BACKTO  D
  . S VLOC=0 F  S VLOC=$O(^AUPNVSIT("AET",DFN,VTM,VLOC)) Q:'VLOC  Q:VLOC'=LOC  D
  .. S VCAT="" F  S VCAT=$O(^AUPNVSIT("AET",DFN,VTM,VLOC,VCAT)) Q:VCAT'="P"  D
  ... S NEWTS=VTM
+ ... S PRVVISIT=$O(^AUPNVSIT("AET",DFN,VTM,VLOC,VCAT,""))
  Q:NEWTS NEWTS
  Q TS
  ;
