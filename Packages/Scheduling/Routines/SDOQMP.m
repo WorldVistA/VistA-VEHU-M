@@ -1,8 +1,12 @@
-SDOQMP ;ALB/SCK - Appointment Monitoring / Performance Measure report ; [07/17/96]
- ;;5.3;SCHEDULING;**47**;AUG 13,1993
+SDOQMP ;ALB/SCK - Appointment Monitoring / Performance Measure report;07/17/96
+ ;;5.3;SCHEDULING;**47,640**;AUG 13,1993;Build 8
  Q
  ;
 EN ;  Entry point for Access PM extract to be sent to data collection server
+ ;
+ ; SD*640 Stop sending data to data collection server even this option 
+ ; has not been used for a long time.
+ Q
  ;
  Q:$$CHKTASK^SDOQMP0
  D INIT,LOOP,START^SDOQMP2,BLDPME
@@ -167,9 +171,9 @@ MAIL(PMDATA,LINCNT,CNT) ;  Send data message to server.
  S XMLOC=0
  S XMDUZ=.5
  S XMY(".5")=""
- S XMY("S.A1BO PM NEXT APPT EXTRACT@DEVFEX.ISC-ALBANY.VA.GOV")=""
+ S XMY("S.A1BO PM NEXT APPT EXTRACT@DEVFEX.ISC-ALBANY.DOMAIN.EXT")=""
  S XMY("G.SD PM NOTIFICATION")=""
- S XMY("G.SD PM EXTRACT@ISC-ALBANY.VA.GOV")=""
+ S XMY("G.SD PM EXTRACT@ISC-ALBANY.DOMAIN.EXT")=""
  ;
  S PMFAC=$$SITE^VASITE
  D NOW^%DTC

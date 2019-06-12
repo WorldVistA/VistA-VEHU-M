@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: BULLETIN
-22-MAR-2019 10:13:42 ZWR
-^XMB(3.6,0)="BULLETIN^3.6^286^200"
+28-MAY-2019 12:00:38 ZWR
+^XMB(3.6,0)="BULLETIN^3.6^286^199"
 ^XMB(3.6,1,0)="XMRDACK^Confirmation of message"
 ^XMB(3.6,1,1,0)="^3.61A^3^3^2990306^^^^"
 ^XMB(3.6,1,1,1,0)="Your message:"
@@ -2927,21 +2927,6 @@ OSEHRA ZGO Export: BULLETIN
 ^XMB(3.6,199,4,9,0)=9
 ^XMB(3.6,199,4,9,1,0)="^^1^1^2980918^^"
 ^XMB(3.6,199,4,9,1,1,0)="Re-indexing rate (documents/sec)"
-^XMB(3.6,200,0)="SPNLBULLETIN^SERVER REQUST NOTICE"
-^XMB(3.6,200,2,0)="^3.62P^1^1"
-^XMB(3.6,200,2,1,0)=122
-^XMB(3.6,200,2,"B",122,1)=""
-^XMB(3.6,200,3,0)="^^3^3^2980520^^^^"
-^XMB(3.6,200,3,1,0)="This bulletin is used to transfer data to the National SCD registry"
-^XMB(3.6,200,3,2,0)="program office.  It should be associated to the SPNL SCD COORDINATOR"
-^XMB(3.6,200,3,3,0)="mail group."
-^XMB(3.6,200,4,0)="^3.64A^6^6"
-^XMB(3.6,200,4,1,0)=1
-^XMB(3.6,200,4,2,0)=2
-^XMB(3.6,200,4,3,0)=3
-^XMB(3.6,200,4,4,0)=4
-^XMB(3.6,200,4,5,0)=5
-^XMB(3.6,200,4,6,0)=6
 ^XMB(3.6,201,0)="OOPS CASE^ASISTS Case Notification"
 ^XMB(3.6,201,1,0)="^3.61A^19^19^3040220^^^^"
 ^XMB(3.6,201,1,1,0)="              ****INFORMATION ONLY***"
@@ -5217,7 +5202,6 @@ OSEHRA ZGO Export: BULLETIN
 ^XMB(3.6,"B","SCDX INCOMPLETE ENCOUNTER MGMT",190)=""
 ^XMB(3.6,"B","SCMC PROVIDER INACTIVATION",270)=""
 ^XMB(3.6,"B","SD API ERROR NOTICE",256)=""
-^XMB(3.6,"B","SPNLBULLETIN",200)=""
 ^XMB(3.6,"B","TEST",163)=""
 ^XMB(3.6,"B","TIU DS CONVERSION CLEAN",186)=""
 ^XMB(3.6,"B","TIU DS CONVERSION ERRORS",187)=""
