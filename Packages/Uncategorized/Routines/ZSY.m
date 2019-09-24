@@ -1,5 +1,5 @@
 ZSY ;ISF/RWF,VEN/SMH - GT.M/VA system status display ;Oct 23, 2018@09:58
- ;;8.0;KERNEL;**349,10001,10002,10004**;Jul 10, 1995;Build 3
+ ;;8.0;KERNEL;**349,10001,10002,10004**;Jul 10, 1995;Build 20
  ; Submitted to OSEHRA in 2017 by Sam Habiel for OSEHRA
  ; Original Routine of unknown provenance -- was in unreleased VA patch XU*8.0*349 and thus perhaps in the public domain.
  ; Rewritten by KS Bhaskar and Sam Habiel 2005-2015

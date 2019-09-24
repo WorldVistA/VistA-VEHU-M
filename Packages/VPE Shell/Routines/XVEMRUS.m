@@ -1,7 +1,8 @@
-XVEMRUS ;DJB/VRR**Rtn Selector ;2017-08-15  4:33 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMRUS ;DJB/VRR**Rtn Selector ;2019-08-09  4:25 PM
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  ; Mumps V1 routine selection (tag 20) Sam Habiel (c) 2017
+ ; GT.M/YottaDB routine selection (tag 19) David Wicksell (c) 2019
  ;
 SELECT ;
  NEW FLAGQ,QUIT
@@ -42,6 +43,12 @@ ZOSF ;Use ^%ZOSF("RSEL")
  I $L($T(KERNEL^%RSET)) D KERNEL^%RSET KILL %ST Q  ;VA Kernel rtn
  NEW %JO,%UR,%R
  S %JO=$J,%UR="^ROUTINE",%R=0 D ROU^%RSET
+ Q
+19 ;Rtn Select for YottaDB/GT.M
+ K ^UTILITY($J)
+ D ^%RSEL
+ S X="" F  S X=$O(%ZR(X)) Q:X=""  S ^UTILITY($J,X)=""
+ K %ZR
  Q
 20 ;Rtn Select for MV1
  KILL ^UTILITY($J)

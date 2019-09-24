@@ -1,5 +1,5 @@
-XVEMRM1 ;DJB/VRR**FndTag,LctStrg,Goto,More,Param ;2017-08-15  4:20 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMRM1 ;DJB/VRR**FndTag,LctStrg,Goto,More,Param ;2019-08-09  4:14 PM
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  ;
 GETTAG ;Get tag from scroll array and convert to external format
@@ -58,7 +58,7 @@ GOTO ;Go to a line
 MORE ;MORE Menu
  D ENDSCR^XVEMKT2
  W !?5,"CALL = Insert programmer call"
- W !?5,"I    = Run %INDEX"
+ W !?5,"I    = Run XINDEX"
  W !?5,"J    = Join 2 lines you select"
  W !?5,"JC   = Join next line to current line"
  W !?5,"LC   = Locate and change all occurrences of a string"

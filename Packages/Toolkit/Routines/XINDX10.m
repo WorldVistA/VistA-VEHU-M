@@ -1,9 +1,9 @@
-XINDX10 ;ISC/GRK,KRM/CJE,OSE/SMH - assemble DD executable code ;2018-03-13  10:37 AM
- ;;7.3;TOOLKIT;**20,27,66,68,132,10001**;Apr 25, 1995;Build 4
+XINDX10 ;ISC/GRK,KRM/CJE,OSE/SMH - assemble DD executable code ; 7/30/19 2:30pm
+ ;;7.3;TOOLKIT;**20,27,66,68,132,10001,10003**;Apr 25, 1995;Build 2
  ; Original routine authored by U.S. Department of Veterans Affairs
  ; Entry points ASKNS,ASKFILES,N1,F1,NS,FILE,INDX &
  ; Lines START+1,STRIP+14-16 authored by Christopher Edwards 2017.
- ; Lines STRIP+16ff, tags ROUTAG,DATA1,AGAIN by Sam Habiel for XINDEXING data 2018.
+ ; Lines STRIP+16ff, tags ROUTAG,DATA1,AGAIN by Sam Habiel for XINDEXING data 2018-2019.
 ASK ;Ask for Build, Install, or Package file.
  N X,Y,P,V,RN
  S DA=0,Y=-1,INP(11)=""
@@ -113,7 +113,7 @@ STRIP ;
  S INDEL="" F  S INDEL=$O(^DD(INDFN,INDF,"V",INDEL)) Q:INDEL=""  I $D(^(INDEL,1))#2 S INDC=INDF_"VPSCR"_INDEL_" ; VARIABLE POINTER SCREEN",INDX=^(1) D ADD
  ;
  ; Modifications to XINDEX data *10001* OSE/SMH
- I A["K" D DATA1(INDFN,INDF) ; OSE/SMH - M code in Data
+ I A["K"!($P(^DD(INDFN,INDF,0),"^",5,999)["^DIM") D DATA1(INDFN,INDF) ; OSE/SMH;WV/DJW - M code in Data ; *10003* M CODE if has ^DIM in input transform
  I $P(^DD(INDFN,INDF,0),U)["ROUTINE" D ROUTAG ; OSE/SMH - Routine and tag stored separately
  ;
  Q

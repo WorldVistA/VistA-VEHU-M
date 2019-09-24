@@ -1,6 +1,6 @@
-XINDEX ;ISC/REL,GFT,GRK,RWF - INDEX & CROSS-REFERENCE ;08/04/08  13:19
- ;;7.3;TOOLKIT;**20,27,48,61,66,68,110,121,128,132,133**;Apr 25, 1995;Build 4
- ; Per VHA Directive 2004-038, this routine should not be modified.
+XINDEX ;ISC/REL,GFT,GRK,RWF - INDEX & CROSS-REFERENCE ; 7/29/19 11:20am
+ ;;7.3;TOOLKIT;**20,27,48,61,66,68,110,121,128,132,133,10003**;Apr 25, 1995;Build 2
+ ; BEG+1 modified in *10003* to accomodate 8-16 char routines by Sam Habiel 2019
  G ^XINDX6
 SEP F I=1:1 S CH=$E(LIN,I) D QUOTE:CH=Q Q:" "[CH
  S ARG=$E(LIN,1,I-1) S:CH=" " I=I+1 S LIN=$E(LIN,I,999) Q
@@ -19,7 +19,7 @@ LOAD S X=RTN,XCNP=0,DIF="^UTILITY("_$J_",1,RTN,0," X ^%ZOSF("TEST") Q:'$T  X ^%Z
  I $D(^UTILITY($J,1,RTN,0,0)) S ^UTILITY($J,1,RTN,"RSUM")="B"_$$SUMB^XPDRSUM($NA(^UTILITY($J,1,RTN,0)))
  Q
 BEG ;
- S %=INDLC*5 W:$X+10+%>IOM ! W RTN,$J("",10+%-$L(RTN))
+ S %=INDLC*5 W:$X+10+%>IOM ! W RTN,$J("",16+%-$L(RTN)) ; *10003*
  S (IND("DO"),IND("SZT"),IND("SZC"),LABO)=0,LC=$G(^UTILITY($J,1,RTN,0,0))
  I LC="" W !,">>>Routine '",RTN,"' not found <<<",! Q
  S TXT="",LAB=$P(^UTILITY($J,1,RTN,0,1,0)," ") I RTN'=$P(LAB,"(") D E^XINDX1(17)

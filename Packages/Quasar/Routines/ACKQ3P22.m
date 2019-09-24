@@ -96,10 +96,10 @@ DIAG ;;TYPE^icd10^descrpt^^^^^^^TOTAL
  ;;D~DIAGNOSIS^H74.312^Ankylosis of ear ossicles, left ear
  ;;D~DIAGNOSIS^H74.313^Ankylosis of ear ossicles, bilateral
  ;;D~DIAGNOSIS^H74.319^Ankylosis of ear ossicles, unspecified ear
- ;;D~DIAGNOSIS^H81.01^Ménière's disease, right ear
- ;;D~DIAGNOSIS^H81.02^Ménière's disease, left ear
- ;;D~DIAGNOSIS^H81.03^Ménière's disease, bilateral
- ;;D~DIAGNOSIS^H81.09^Ménière's disease, unspecified ear
+ ;;D~DIAGNOSIS^H81.01^MÃ©niÃ¨re's disease, right ear
+ ;;D~DIAGNOSIS^H81.02^MÃ©niÃ¨re's disease, left ear
+ ;;D~DIAGNOSIS^H81.03^MÃ©niÃ¨re's disease, bilateral
+ ;;D~DIAGNOSIS^H81.09^MÃ©niÃ¨re's disease, unspecified ear
  ;;D~DIAGNOSIS^H81.10^Benign paroxysmal vertigo, unspecified ear
  ;;D~DIAGNOSIS^H81.11^Benign paroxysmal vertigo, right ear
  ;;D~DIAGNOSIS^H81.12^Benign paroxysmal vertigo, left ear

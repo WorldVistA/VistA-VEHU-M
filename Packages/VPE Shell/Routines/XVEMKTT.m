@@ -1,5 +1,5 @@
-XVEMKTT ;DJB/KRN**Txt Scroll-SELECTOR READ ;2017-08-15  1:16 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMKTT ;DJB/KRN**Txt Scroll-SELECTOR READ ;Aug 20, 2019@17:08
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  ;
 READ ;Get input
@@ -34,9 +34,9 @@ READ1 D HIGHLITE("ON")
  I KEY="-" D FIND^XVEMKTS("-") Q
  I KEY="M" D MORE^XVEMKTU,REDRAW^XVEMKT2() Q
  I KEY="N",$G(NEW)=1 D  S FLAGQ=1 Q
- . KILL ^TMP("VPE","SELECT",$J)
+ . KILL ^TMP("XVV1","SELECT",$J)
  . R KEY:1 ;Pause in case user hits N,<RETURN>
- . S ^TMP("VPE","SELECT",$J,"NEW")=""
+ . S ^TMP("XVV1","SELECT",$J,"NEW")=""
  I KEY="P" D PAGE^XVEMKTS Q
  I KEY="S" D SHOW^XVEMKTU,REDRAW^XVEMKT2() Q
  I VK="<F4T>" D CURSORUP^XVEMKTS Q  ;Tag cursor to top line
@@ -65,7 +65,7 @@ HIGHLITE(MODE) ; MODE="ON"  - Draw highlight
  NEW HL I $G(MODE)'="ON" S MODE="OFF"
  S DX=0,DY=XVVT("H$Y")-1 X XVVS("CRSR")
  W:MODE="ON" @XVV("RON")
- W $S($D(^TMP("VPE","SELECT",$J,XVVT("HLN")-1)):"=>",1:"  ")
+ W $S($D(^TMP("XVV1","SELECT",$J,XVVT("HLN")-1)):"=>",1:"  ")
  W:MODE="ON" @XVV("ROFF")
  Q
  ;====================================================================

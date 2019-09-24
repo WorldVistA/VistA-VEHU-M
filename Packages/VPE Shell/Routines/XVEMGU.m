@@ -1,6 +1,7 @@
-XVEMGU ;DJB/VGL**Utility Routine - ZDELIM,Get File,Heading [07/29/94];2017-08-15  12:48 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMGU ;DJB/VGL**Utility Routine - ZDELIM,Get File,Heading ;Aug 23, 2019@12:21
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
+ ; Minor mods in ZDELIM (c) Sam habiel 2019
  ;
 TRAN(X) ;Substitute ZDELIM with comma in subscript so I can check for $D.
  NEW ZDELIM,I,Y S ZDELIM=$C(127)_$C(124),Y=""
@@ -9,12 +10,13 @@ TRAN(X) ;Substitute ZDELIM with comma in subscript so I can check for $D.
 ZDELIM(SUB) ;Replace commas, spaces, and colons (if not between quotes) with variable ZDELIM, ZDELIM1, or ZDELIM2
  I $G(SUB)="" Q ""
  NEW CHK,NEWSUB,X,Y
- S (CHK,X)=0,NEWSUB=$P($E(SUB,1,$L(SUB)-1),"(",2,99)
+ S (CHK,X)=0,NEWSUB=$P(SUB,"(",2,99)
  F  S X=X+1 Q:$E(NEWSUB,X)=""  S:$E(NEWSUB,X)="""" CHK=CHK=0 I 'CHK D
  . S Y=$E(NEWSUB,X)
  . S Y=$S(Y=",":ZDELIM,Y=" ":ZDELIM1,Y=":":ZDELIM2,1:"QUIT")
  . Q:Y="QUIT"  S NEWSUB=$E(NEWSUB,1,X-1)_Y_$E(NEWSUB,X+1,99),X=X+1
  . Q
+ I $E(NEWSUB,$L(NEWSUB))=")" S $E(NEWSUB,$L(NEWSUB))=""
  Q NEWSUB
 GETFILE ;Select global by entering file name or number
  NEW DIC,GLOBAL,X,Y

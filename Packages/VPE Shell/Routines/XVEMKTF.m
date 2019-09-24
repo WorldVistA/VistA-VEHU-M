@@ -1,11 +1,11 @@
-XVEMKTF ;DJB/KRN**Txt Scroll-Select FM Fields [2/1/97 10:23am];2017-08-15  1:12 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMKTF ;DJB/KRN**Txt Scroll-Select FM Fields ;2019-08-20  5:32 PM
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  Q
 SELECT(XVVFILE,XVVLEVEL) ;Use Selector to get fields from a FM file.
  ;XVVFILE=File DD number
  ;XVVLEVEL: TOP=Top level flds only  ALL=Include multiple fields
- ;Return array: ^TMP("VPE","FIELDS",$J,File#,Field#)
+ ;Return array: ^TMP("XVV1","FIELDS",$J,File#,Field#)
  ;
  Q:'$G(XVVFILE)
  I '$D(^DIC) D  Q
@@ -21,7 +21,7 @@ SELECT(XVVFILE,XVVLEVEL) ;Use Selector to get fields from a FM file.
  S ^TMP("XVV",$J,"HD")="   "_FILENAM_" file"
  D SELECT^XVEMKT("^TMP(""XVV"","_$J_")")
  D CONVERT
- KILL ^TMP("VPE","SELECT",$J)
+ KILL ^TMP("XVV1","SELECT",$J)
  Q
 BUILD ;Loop and get fields
  NEW BAR,CNT,DASHES,DATA,FILE,FLD,I,LEV,NP,PIECE,SPACE,SYM,TMP
@@ -73,9 +73,9 @@ CONVERT ;Sort Selector array into "File#,Field#" order
  NEW DATA,FIELD,FILE,X
  KILL ^TMP("XVV",$J)
  S X=0
- F  S X=$O(^TMP("VPE","SELECT",$J,X)) Q:'X  D  ;
+ F  S X=$O(^TMP("XVV1","SELECT",$J,X)) Q:'X  D  ;
  . S DATA=$G(^(X)) Q:DATA']""
  . S DATA=$P(DATA,$C(9),1)
  . S FILE=$P(DATA,";",1),FIELD=$P(DATA,";",2)
- . S ^TMP("VPE","FIELDS",$J,FILE,FIELD)=""
+ . S ^TMP("XVV1","FIELDS",$J,FILE,FIELD)=""
  Q

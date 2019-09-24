@@ -1,5 +1,5 @@
-XVEMSRL ;DJB/VSHL**Routine Lister [9/29/97 8:03pm];2017-08-16  10:39 AM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMSRL ;DJB/VSHL**Routine Lister ;Aug 20, 2019@16:25
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  ;
 EN ;
@@ -22,14 +22,17 @@ EX ;
  ;==================================================================
 DEVICE ;
  NEW %,%X,%XX,%Y,%YY
- S %ZIS="M" D ^%ZIS Q:POP
- ;
- ;Check for TRACE devices
- S CEMETHOD=$S(ION="TRACE SCREEN CAPTURE":"S",ION="TRACE FILE":"F",1:"P")
- I CEMETHOD'="P" D ^%ZISC
- ;
- S RLIOF=IOF,RLSIZE=(IOSL-5)
- S:$E(IOST,1,2)="P-" FLAGP=1
+ IF $T(+0^%ZIS)'="" DO
+ . N %ZIS S %ZIS="M" D ^%ZIS Q:POP
+ . ;
+ . ;Check for TRACE devices
+ . S CEMETHOD=$S(ION="TRACE SCREEN CAPTURE":"S",ION="TRACE FILE":"F",1:"P")
+ . I CEMETHOD'="P" D ^%ZISC
+ . ;
+ . S RLIOF=IOF,RLSIZE=(IOSL-5)
+ . S:$E(IOST,1,2)="P-" FLAGP=1
+ ELSE  DO
+ . S RLIOF="",RLSIZE=XVV("IOSL")-5,FLAGP=1
  Q
 GETTYPE ;
  W !!,"Select [B]LOCK [L]IST or [#]LINES: L// "
@@ -90,9 +93,7 @@ HD ;Header
  W !?6,"--------",?16,"-----",?23,"--------------------------------------------------------"
  Q
 INIT ;
- I $D(^%ZOSF("SIZE")) D  I 1
- . S RTNSIZE="ZL @RTN X ^%ZOSF(""SIZE"") S BYTES=Y"
- E  S RTNSIZE="S BYTES=0 F I=1:1 S %=$T(+I^@RTN) Q:%=""""  S BYTES=BYTES+$L(%)+2"
+ S RTNSIZE="S BYTES=0 F I=1:1 S %=$T(+I^@RTN) Q:%=""""  S BYTES=BYTES+$L(%)+2"
  S $P(LINE,"=",212)=""
  S RLIOF=XVV("IOF"),RLSIZE=18
  Q

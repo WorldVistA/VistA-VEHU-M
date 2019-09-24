@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: DEVICE
-28-MAY-2019 11:57:35 ZWR
-^%ZIS(1,0)="DEVICE^3.5Is^710^46"
+24-SEP-2019 07:12:59 ZWR
+^%ZIS(1,0)="DEVICE^3.5Is^712^48"
 ^%ZIS(1,5,0)="TEST^^^^^^^^"
 ^%ZIS(1,5,1)="ORBITTER"
 ^%ZIS(1,242,0)="SPOOL^2^^^^^^^^^1"
@@ -11,7 +11,7 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,242,"SPL","B",562,1)=""
 ^%ZIS(1,242,"SUBTYPE")=16
 ^%ZIS(1,242,"TYPE")="SPL"
-^%ZIS(1,267,0)="PMT290^0^1^1^^^^^^^"
+^%ZIS(1,267,0)="PMT290^0^1^1^^^^^^^1"
 ^%ZIS(1,267,1)="SLAVE^^168"
 ^%ZIS(1,267,5)=1
 ^%ZIS(1,267,"SUBTYPE")=168
@@ -22,9 +22,9 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,521,"MN",0)="^3.501^^0"
 ^%ZIS(1,521,"SUBTYPE")=9
 ^%ZIS(1,521,"TYPE")="TRM"
-^%ZIS(1,524,0)="HFS^/dev/shm/hfs.dat^^^^^^^^^"
+^%ZIS(1,524,0)="HFS^/tmp/hfs.dat^^^^^^^^^"
 ^%ZIS(1,524,1)="Host File Device^^^^1^"
-^%ZIS(1,524,5)=720
+^%ZIS(1,524,5)=75
 ^%ZIS(1,524,"IOPAR")="(nowrap:stream:newversion)"
 ^%ZIS(1,524,"SUBTYPE")=16
 ^%ZIS(1,524,"TYPE")="HFS"
@@ -97,7 +97,7 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,670,"TYPE")="RES"
 ^%ZIS(1,671,0)="ORW THREAD RESOURCE^ORW THREAD RESOURCE^^^^^^^"
 ^%ZIS(1,671,1)="CPRS GUI background data retrieval^^^^^^^^^9"
-^%ZIS(1,671,5)=3550
+^%ZIS(1,671,5)=3553
 ^%ZIS(1,671,"SUBTYPE")=16
 ^%ZIS(1,671,"TYPE")="RES"
 ^%ZIS(1,674,0)="ZZP-MESSAGE-HFS (ONT)^/tmp/XMHFS.TEMP^0^0^^^^^^^0^0"
@@ -161,7 +161,7 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,699,"TYPE")="RES"
 ^%ZIS(1,700,0)="TELNET-VMS^/dev/pts^1^^^^^^^^1"
 ^%ZIS(1,700,1)="VMS"
-^%ZIS(1,700,5)=1741
+^%ZIS(1,700,5)=6527
 ^%ZIS(1,700,"SUBTYPE")=231
 ^%ZIS(1,700,"TYPE")="VTRM"
 ^%ZIS(1,701,0)="CONSOLE-VMS^OPA0:^1^^^^^^^^1"
@@ -212,7 +212,7 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,708,1)="Controls the number of HMP extract jobs that run simultaneously.^^^^^^^^^10"
 ^%ZIS(1,708,"SUBTYPE")=16
 ^%ZIS(1,708,"TYPE")="RES"
-^%ZIS(1,709,0)="NULL^/dev/null^^^^^^^^^"
+^%ZIS(1,709,0)="ZZNULL^/dev/null^^^^^^^^^"
 ^%ZIS(1,709,1)="BIT BUCKET"
 ^%ZIS(1,709,5)=5
 ^%ZIS(1,709,"SUBTYPE")=16
@@ -221,6 +221,15 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,710,1)="Virtual Terminal"
 ^%ZIS(1,710,"SUBTYPE")=230
 ^%ZIS(1,710,"TYPE")="VTRM"
+^%ZIS(1,711,0)="NULL^/dev/null^^^^^^^^^"
+^%ZIS(1,711,1)="BIT BUCKET"
+^%ZIS(1,711,5)=5
+^%ZIS(1,711,"SUBTYPE")=16
+^%ZIS(1,711,"TYPE")="TRM"
+^%ZIS(1,712,0)="VIRTUAL TERMINAL^/dev/pts^1^^^^^^^^1"
+^%ZIS(1,712,1)="Virtual Terminal"
+^%ZIS(1,712,"SUBTYPE")=230
+^%ZIS(1,712,"TYPE")="VTRM"
 ^%ZIS(1,"AH","IDCU",564)=""
 ^%ZIS(1,"AH","IDCU",586)=""
 ^%ZIS(1,"AH","IDCU",587)=""
@@ -251,7 +260,7 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,"B","LOCAL MAIL",615)=""
 ^%ZIS(1,"B","LRRESOURCE",692)=""
 ^%ZIS(1,"B","NOIS UPDATES",691)=""
-^%ZIS(1,"B","NULL",709)=""
+^%ZIS(1,"B","NULL",711)=""
 ^%ZIS(1,"B","OR MOVEMENT RESOURCE",670)=""
 ^%ZIS(1,"B","OR WINDOWS HFS",675)=""
 ^%ZIS(1,"B","OR WORKSTATION",667)=""
@@ -275,8 +284,10 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,"B","TELNET-VMS",700)=""
 ^%ZIS(1,"B","TIU/PXAPI RESOURCE",663)=""
 ^%ZIS(1,"B","VIRTUAL TERMINAL",710)=""
+^%ZIS(1,"B","VIRTUAL TERMINAL",712)=""
 ^%ZIS(1,"B","ZZNULL",521)=""
 ^%ZIS(1,"B","ZZNULL",706)=""
+^%ZIS(1,"B","ZZNULL",709)=""
 ^%ZIS(1,"B","ZZP-MESSAGE-HFS (ONT)",674)=""
 ^%ZIS(1,"B","ZZP-MESSAGE-HFS (VXD)",704)=""
 ^%ZIS(1,"B","ZZP-MESSAGE-HFS-ONT",596)=""
@@ -286,13 +297,15 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,"C","$[TEMP]XMHFS.DAT",704)=""
 ^%ZIS(1,"C","/HFS/XMHFS.TMP",596)=""
 ^%ZIS(1,"C","/dev/null",709)=""
+^%ZIS(1,"C","/dev/null",711)=""
 ^%ZIS(1,"C","/dev/null/",706)=""
 ^%ZIS(1,"C","/dev/pts",700)=""
 ^%ZIS(1,"C","/dev/pts",707)=""
 ^%ZIS(1,"C","/dev/pts",710)=""
-^%ZIS(1,"C","/dev/shm/hfs.dat",524)=""
+^%ZIS(1,"C","/dev/pts",712)=""
 ^%ZIS(1,"C","/dev/tty",595)=""
 ^%ZIS(1,"C","/tmp/XMHFS.TEMP",674)=""
+^%ZIS(1,"C","/tmp/hfs.dat",524)=""
 ^%ZIS(1,"C","AFJX RESOURCE",648)=""
 ^%ZIS(1,"C","DG FIELD MONITOR",694)=""
 ^%ZIS(1,"C","FTA",702)=""
@@ -325,13 +338,15 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,"CPU",".$[TEMP]XMHFS.DAT",704)=""
 ^%ZIS(1,"CPU","./HFS/XMHFS.TMP",596)=""
 ^%ZIS(1,"CPU","./dev/null",709)=""
+^%ZIS(1,"CPU","./dev/null",711)=""
 ^%ZIS(1,"CPU","./dev/null/",706)=""
 ^%ZIS(1,"CPU","./dev/pts",700)=""
 ^%ZIS(1,"CPU","./dev/pts",707)=""
 ^%ZIS(1,"CPU","./dev/pts",710)=""
-^%ZIS(1,"CPU","./dev/shm/hfs.dat",524)=""
+^%ZIS(1,"CPU","./dev/pts",712)=""
 ^%ZIS(1,"CPU","./dev/tty",595)=""
 ^%ZIS(1,"CPU","./tmp/XMHFS.TEMP",674)=""
+^%ZIS(1,"CPU","./tmp/hfs.dat",524)=""
 ^%ZIS(1,"CPU",".0",267)=""
 ^%ZIS(1,"CPU",".AFJX RESOURCE",648)=""
 ^%ZIS(1,"CPU",".DG FIELD MONITOR",694)=""
@@ -454,6 +469,7 @@ OSEHRA ZGO Export: DEVICE
 ^%ZIS(1,"G","SYS..$[TEMP]XMHFS.DAT",704)=""
 ^%ZIS(1,"G","SYS../dev/pts",700)=""
 ^%ZIS(1,"G","SYS../dev/tty",595)=""
+^%ZIS(1,"G","SYS..0",267)=""
 ^%ZIS(1,"G","SYS..2",242)=""
 ^%ZIS(1,"G","SYS..FTA",702)=""
 ^%ZIS(1,"G","SYS..OPA0:",701)=""

@@ -1,16 +1,16 @@
-XVEMRID ;DJB/VRR**INSERT - Programmer Call ;2017-08-15  1:56 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMRID ;DJB/VRR**INSERT - Programmer Call ;Aug 20, 2019@17:11
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  ; New Error trap in EN (c) 2016 Sam Habiel
  ;
 EN ;Insert programmer call into current program
- S ^TMP("VPE",$J)=$P(FLAGMENU,"^",1) ;...YND
+ S ^TMP("XVV1",$J)=$P(FLAGMENU,"^",1) ;...YND
  D SYMTAB^XVEMKST("C","VRR",VRRS) ;...Save/Clear symbol table
  D ENDSCR^XVEMKT2
  I '$D(^XVV(19200.113)) D  G EX ;...Quit if FM isn't in this UCI
  . W !,"I can't find the VPE files that support CALL..."
  . D PAUSE^XVEMKU(2,"P")
- I $G(^TMP("XVV","IR"_VRRS,$J,^TMP("VPE",$J)))=" <> <> <>" D  G EX
+ I $G(^TMP("XVV","IR"_VRRS,$J,^TMP("XVV1",$J)))=" <> <> <>" D  G EX
  . W !,"You may not insert a CALL while you are on the ' <> <> <>' line."
  . W !,"Move up one line."
  . D PAUSE^XVEMKU(2,"P")
@@ -27,7 +27,7 @@ EN ;Insert programmer call into current program
  G:$$ASK^XVEMKU(" Insert this Call into your routine",1)'="Y" EX
  D INSERT
 EX ;
- KILL ^TMP("VPE",$J)
+ KILL ^TMP("XVV1",$J)
  D SYMTAB^XVEMKST("R","VRR",VRRS) ;Restore symbol table
  X XVVS("RM0")
  Q
@@ -51,7 +51,7 @@ DDS ;Call ScreenMan
  Q
 INSERT ;Insert Call code into rtn
  NEW CNT,I,NUM,SUB,YND
- S YND=$G(^TMP("VPE",$J)) Q:YND'>0
+ S YND=$G(^TMP("XVV1",$J)) Q:YND'>0
  ;--> Get line number
  S NUM=$$LINENUM^XVEMRU(YND)+1
  ;--> Set YND to line number after wrapped lines

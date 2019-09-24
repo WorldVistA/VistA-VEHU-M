@@ -1,5 +1,5 @@
-XVEMKTS ;DJB/KRN**Txt Scroll-SELECTOR ;2017-08-15  1:15 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMKTS ;DJB/KRN**Txt Scroll-SELECTOR ;Aug 20, 2019@17:06
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  ; New Error trap in TOP+1,INIT+3 (c) 2016 Sam Habiel
  ;
@@ -8,7 +8,7 @@ TOP ;
  NEW DX,DY,FLAGQ,XVVT NEW:'$D(XVV) XVV NEW:'$D(XVVS) XVVS
  S FLAGQ=0
  KILL ^TMP("XVV","K",$J)
- KILL ^TMP("VPE","SELECT",$J)
+ KILL ^TMP("XVV1","SELECT",$J)
  D INIT G:FLAGQ EX
  D TEMPLATE
  D SCROLL^XVEMKT2()
@@ -23,7 +23,7 @@ LIST ;Display text
  S XVVT=$G(^TMP("XVV","K",$J,XVVT("BOT")))
  W ! I XVVT=" <> <> <>" W ?3,XVVT
  E  D  ;
- . W:$D(^TMP("VPE","SELECT",$J,XVVT("HLN"))) "=>"
+ . W:$D(^TMP("XVV1","SELECT",$J,XVVT("HLN"))) "=>"
  . W ?3 W:$G(NUMBER) $J(XVVT("HLN"),3)_". "
  . W $S(XVVT[$C(9):$P(XVVT,$C(9),2,999),1:XVVT)
  S XVVT("BOT")=XVVT("BOT")+1
@@ -34,7 +34,7 @@ LIST ;Display text
  G LIST
  ;====================================================================
 TAG ;Tag/Untag a line
- I $D(^TMP("VPE","SELECT",$J,XVVT("HLN")-1)) KILL ^(XVVT("HLN")-1) Q
+ I $D(^TMP("XVV1","SELECT",$J,XVVT("HLN")-1)) KILL ^(XVVT("HLN")-1) Q
  D SET(XVVT("HLN")-1)
  Q
 ALL ;Tag all lines
@@ -53,7 +53,7 @@ CURSORDN ;Tag Cursor-to-Bottom
  D REDRAW^XVEMKT2()
  Q
 CLEAR ;Clear all tagged lines
- KILL ^TMP("VPE","SELECT",$J) D REDRAW^XVEMKT2()
+ KILL ^TMP("XVV1","SELECT",$J) D REDRAW^XVEMKT2()
  Q
 PAGE ;Tag a page
  NEW I
@@ -86,7 +86,7 @@ FIND6 F I=1:1 Q:'$D(^TMP("XVV","K",$J,I))  S DATA=^(I) D  ;
  . I AND="A",$P(DATA,"|",COL1)'[CHAR1!($P(DATA,"|",COL2)'[CHAR2) Q
  . I AND="O",$P(DATA,"|",COL1)'[CHAR1&($P(DATA,"|",COL2)'[CHAR2) Q
  . I MODE="+" D SET(I) Q
- . KILL ^TMP("VPE","SELECT",$J,I) ;Clear tag
+ . KILL ^TMP("XVV1","SELECT",$J,I) ;Clear tag
  D REDRAW^XVEMKT2()
  Q
  ;
@@ -109,7 +109,7 @@ FINDCHR1 W !,"Enter CHARACTERS: "
  ;
 SET(VAL) ;Set "tagged" array. VAL=Line number
  Q:'$D(^TMP("XVV","K",$J,VAL))  Q:^(VAL)=" <> <> <>"
- S ^TMP("VPE","SELECT",$J,VAL)=^TMP("XVV","K",$J,VAL)
+ S ^TMP("XVV1","SELECT",$J,VAL)=^TMP("XVV","K",$J,VAL)
  Q
  ;====================================================================
 TEMPLATE ;Set pre-selected nodes
@@ -118,7 +118,7 @@ TEMPLATE ;Set pre-selected nodes
  S SUB=0
  F  S SUB=$O(@TEMPLATE@(SUB)) Q:'SUB  D  ;
  . Q:'$D(^TMP("XVV","K",$J,SUB))
- . S ^TMP("VPE","SELECT",$J,SUB)=^TMP("XVV","K",$J,SUB)
+ . S ^TMP("XVV1","SELECT",$J,SUB)=^TMP("XVV","K",$J,SUB)
  Q
 INIT ;
  NEW HD,TOT

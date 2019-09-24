@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MAIL GROUP
-28-MAY-2019 12:00:45 ZWR
-^XMB(3.8,0)="MAIL GROUP^3.8^449^429"
+24-SEP-2019 07:15:31 ZWR
+^XMB(3.8,0)="MAIL GROUP^3.8^450^430"
 ^XMB(3.8,1,0)="YS PSYCHTEST^PR^^^^0"
 ^XMB(3.8,1,1,0)="^3.81P^^0"
 ^XMB(3.8,1,2,0)="^^1^1^2921113^^"
@@ -721,7 +721,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,84,2,1,0)="Incident Reporting V2.0 mailgroup"
 ^XMB(3.8,84,2,2,0)="|"
 ^XMB(3.8,84,3)=1999
-^XMB(3.8,85,0)="MAIL ERRORS^PU^n^2176^3181030^"
+^XMB(3.8,85,0)="MAIL ERRORS^PU^n^2177^3190923^"
 ^XMB(3.8,85,1,0)="^3.81P^4^4"
 ^XMB(3.8,85,1,1,0)=11247
 ^XMB(3.8,85,1,2,0)=10119
@@ -1411,7 +1411,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,167,2,3,0)="acknowledgment message from the national database when the transmitted"
 ^XMB(3.8,167,2,4,0)="Quarterly Report is received.  Also, this group may receive alerts and"
 ^XMB(3.8,167,2,5,0)="other mail messages relating to the Quarterly Report."
-^XMB(3.8,168,0)="NDF DATA^PU^n^719^3181031^^11595"
+^XMB(3.8,168,0)="NDF DATA^PU^n^721^3190924^^11595"
 ^XMB(3.8,168,1,0)="^3.81P^5^5"
 ^XMB(3.8,168,1,1,0)=11595
 ^XMB(3.8,168,1,2,0)=11733
@@ -2801,7 +2801,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,312,0)="GEC2 NATIONAL ROLLUP^PU^y^^^^10000000020"
 ^XMB(3.8,312,3)=10000000020
 ^XMB(3.8,312,6,0)="^3.812^^0"
-^XMB(3.8,313,0)="NEW USER^PU^n^1229^3181030"
+^XMB(3.8,313,0)="NEW USER^PU^n^1230^3190923"
 ^XMB(3.8,313,1,0)="^3.81P^1^1"
 ^XMB(3.8,313,1,1,0)=10000000020
 ^XMB(3.8,313,1,"B",10000000020,1)=""
@@ -3511,7 +3511,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,428,2,5,0)="clinic inactivation messages will error out. The routine"
 ^XMB(3.8,428,2,6,0)="SDNACT needs this mail group in order to work properly."
 ^XMB(3.8,428,3)=11720
-^XMB(3.8,429,0)="REMINDER MANAGEMENT^PU^n^45^3190322^^1"
+^XMB(3.8,429,0)="REMINDER MANAGEMENT^PU^n^47^3190924^^1"
 ^XMB(3.8,429,1,0)="^3.81P^2^2"
 ^XMB(3.8,429,1,1,0)="1^I"
 ^XMB(3.8,429,1,2,0)="11720^I"
@@ -3629,6 +3629,12 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,449,2,2,0)="requests for active national (Cat I) PRF flag ownership transfer."
 ^XMB(3.8,449,3)=11720
 ^XMB(3.8,449,5,0)="^3.811P"
+^XMB(3.8,450,0)="ISO SECURITY^PU^n^^^0^"
+^XMB(3.8,450,2,0)="^^3^3^3180702^"
+^XMB(3.8,450,2,1,0)="Members of this mail group will automatically receive an email from the "
+^XMB(3.8,450,2,2,0)="XUSERDIS/XUSERDEAC bulletins for each user that has the DISUSER field "
+^XMB(3.8,450,2,3,0)="set to ""YES"", or is deactivated at the sites."
+^XMB(3.8,450,3)=1
 ^XMB(3.8,"AB",.5,120,1)=""
 ^XMB(3.8,"AB",.5,372,1)=""
 ^XMB(3.8,"AB",.5,428,1)=""
@@ -4695,6 +4701,7 @@ OSEHRA ZGO Export: MAIL GROUP
 ^XMB(3.8,"B","IRM",369)=""
 ^XMB(3.8,"B","ISC TECH SUPPORT",110)=""
 ^XMB(3.8,"B","ISM",71)=""
+^XMB(3.8,"B","ISO SECURITY",450)=""
 ^XMB(3.8,"B","IVM ADDR UPDT REPORT",292)=""
 ^XMB(3.8,"B","IVM MESSAGES",124)=""
 ^XMB(3.8,"B","IVM TRANSMISSIONS",98)=""

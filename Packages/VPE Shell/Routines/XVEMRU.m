@@ -1,7 +1,10 @@
-XVEMRU ;DJB/VRR**Utilities ;2017-08-15  4:31 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMRU ;DJB/VRR**Utilities ;2019-08-16  11:28 AM
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  ; LINECNT bug fix for routines > 8 c long (c) 2016 Sam Habiel
+ ; Syntax highlighting support by David Wicksell (c) 2019
+ ; LINECNT display bug fix for routines > 999 lines by David Wicksell (c) 2019
+ ; Dynamic linelabel+offset display support by David Wicksell (c) 2019
  ;
 LNSTART(CD) ;Find start of line for EDIT mode.
  ;"2^11" - TAG starts at 2, LINE starts at 11
@@ -84,14 +87,17 @@ REDRAW(YVAL) ;Adjust line count and redraw from YVAL to bottom of screen
  . . S XVVT("BOT")=XVVT("BOT")+1,XVVT("GAP")=XVVT("GAP")-1
  . S DX=0,DY=I-XVVT("TOP")+1
  . X XVVS("CRSR") W @XVVS("BLANK_C_EOL") X XVVS("XY")
- . W $P(TMP,$C(30),1),$P(TMP,$C(30),2)
+ . I XVV("SYN")="ON" D
+ . . D SYNTAX^XVEMSYN(TMP,I)
+ . E  D
+ . . W $P(TMP,$C(30),1),$P(TMP,$C(30),2)
  . I TMP=" <> <> <>" S FLAGQ=1 Q
  D LINECNT
  S DX=XCUR,DY=YCUR X XVVS("CRSR")
  Q
  ;
 REDRAW1 ;Adjust line count and then redraw top & bottom of screen
- D LINECNT,REDRAW^XVEMKT2(1)
+ D LINECNT,LINELBL,REDRAW^XVEMKT2(1)
  Q
  ;
 REDRAW2 ;Redraw screen with no adjustments
@@ -103,17 +109,51 @@ REDRAW3 ;Adjust line count and then redraw screen
  Q
  ;
 LINECNT ;Adjust line count at top of screen
- NEW NEWHIGH
- S NEWHIGH=VRRHIGH_$E("    ",1,3-$L(VRRHIGH))
+ NEW NEWHIGH,END
+ S NEWHIGH=$E("   ",1,3-$L(VRRHIGH))_VRRHIGH
  N TOPUT S TOPUT=$F(XVVT("HD",1),"Lines:") ; (sam): Where should we put this?
- S XVVT("HD",1)=$E(XVVT("HD",1),1,TOPUT)_NEWHIGH_$E(XVVT("HD",1),TOPUT+4,XVV("IOM"))
- S DX=TOPUT,DY=0 X XVVS("CRSR") W VRRHIGH
+ S $P(END,"=",XVV("IOM")-TOPUT-$L(NEWHIGH)-2)="",END=END_"|"
+ S XVVT("HD",1)=$E(XVVT("HD",1),1,TOPUT)_NEWHIGH_"]"_END
+ S DX=TOPUT,DY=0 X XVVS("CRSR") W NEWHIGH_"]"_END
+ Q
+ ;
+LINELBL(RSETCRSR) ;Adjust line label plus offset at top of screen
+ N I,NUM,QFLAG,NAME,TOPUT,TAG,FIND,MAR,LINE,DIV
+ S NAME="^"_^TMP("XVV","VRR",$J,VRRS,"NAME")
+ S NUM=YND+1,(I,QFLAG)=0,TAG=""
+ I $G(^TMP("XVV","IR"_VRRS,$J,YND))'=" <> <> <>" D
+ . F  S NUM=$O(^TMP("XVV","IR"_VRRS,$J,NUM),-1) Q:NUM=""  D  Q:QFLAG
+ . . S FIND=^(NUM)
+ . . I FIND'[$C(30) Q
+ . . S FIND=$P(FIND,$C(30))
+ . . I FIND="" S QFLAG=1 Q
+ . . I FIND'?1.N2." " S TAG=$TR($P(FIND,"(")," ","") I TAG'[":" S TAG=TAG_$S(I>0:"+"_I,1:""),QFLAG=1 Q
+ . . S I=I+1
+ I NUM="" S NAME=$S(I>0:"+"_I,1:"")_"^"_$P(NAME,"^",2)
+ E  S NAME=TAG_"^"_$P(NAME,"^",2)
+ S MAR=$G(XVV("IOM")) S:MAR'>0 MAR=80
+ S $P(LINE,"=",MAR)=""
+ S NUM=MAR-($L(NAME)+$L(VRRS)+$L(VRRHIGH)+44)
+ I NUM<0 D
+ . I $G(^TMP("XVV","IR"_VRRS,$J,YND))'=" <> <> <>" D
+ . . N TAG,OFFSET,ROUTINE
+ . . S TAG=$P(NAME,"^"),TAG=$P(TAG,"+"),OFFSET=$S(I>0:"+"_I,1:""),ROUTINE="^"_$P(NAME,"^",2)
+ . . S NUM=MAR-($L(TAG)+$L(OFFSET)+$L(VRRS)+$L(VRRHIGH)+44)
+ . . I NUM<0 S NAME=$E(TAG,1,$L(TAG)+NUM-2)_".."_OFFSET
+ . . E  I NUM<4 S NAME=$E(TAG,1,$L(TAG)+NUM)_OFFSET
+ . . E  S NAME=TAG_OFFSET_$E(ROUTINE,1,NUM-2)_"..",NUM=0
+ . E  S NAME=$E(NAME,1,$L(NAME)+NUM-2)_".."
+ S DIV=$E(LINE,1,NUM)
+ S XVVT("HD",1)="|=======|===["_NAME_"]==="_DIV_"["_VRRS_" of 1024]===[Lines: "_VRRHIGH_"]===|"
+ S TOPUT=$F(XVVT("HD",1),"[")
+ S DX=TOPUT-1,DY=0 X XVVS("CRSR") W $E(XVVT("HD",1),$F(XVVT("HD",1),"["),$L(XVVT("HD",1)))
+ I $G(RSETCRSR,0) S DX=XCUR,DY=YCUR X XVVS("CRSR")
  Q
  ;
 MODEON(MODE,QUIT) ;MODE display in upper right of screen.
  ;MODE=BLOCK or WEB
  ;QUIT=1 Quit before repositioning the cursor
- S DX=$S($G(MODE)="WEB":65,1:72)
+ S DX=$S($G(MODE)="WEB":3,1:2)
  S DY=(XVVT("S1")-2) X XVVS("CRSR")
  W @XVV("RON") X XVVS("XY") W MODE,@XVV("ROFF")
  Q:$G(QUIT)
@@ -122,7 +162,7 @@ MODEON(MODE,QUIT) ;MODE display in upper right of screen.
  ;
 MODEOFF(MODE,QUIT) ;Turn off MODE notice
  ;MODE=BLOCK or WEB
- S DX=$S($G(MODE)="WEB":65,1:72)
+ S DX=$S($G(MODE)="WEB":3,1:2)
  S DY=(XVVT("S1")-2) X XVVS("CRSR") W "======"
  Q:$G(QUIT)
  S DX=XCUR,DY=YCUR X XVVS("CRSR")

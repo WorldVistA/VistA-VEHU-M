@@ -1,5 +1,5 @@
-XVEMRLZ ;DJB/VRR**RTN VER - ..LBRY Options ;2017-08-15  2:08 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMRLZ ;DJB/VRR**RTN VER - ..LBRY Options ;Aug 20, 2019@17:14
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  ; New Error traps in DELETE and BULKDEL (c) 2016 Sam Habiel
  ;
@@ -17,7 +17,7 @@ DELETE ;Delete versions
  . W $C(7),!!,"This program is currently being edited. Try later.",!
  . D PAUSE^XVEMKU(2,"P")
  ;
- KILL ^TMP("VPE",$J)
+ KILL ^TMP("XVV1",$J)
  S CNT=1,VER=0
  F  S VER=$O(^XVV(19200.112,"AKEY",RTN,VER)) Q:'VER  D  ;
  . I $D(XVSIMERR) S $EC=",U-SIM-ERROR,"
@@ -26,21 +26,21 @@ DELETE ;Delete versions
  . S DESC=$P(ND,"^",3) S:DESC="" DESC="No description"
  . S TMP="Version: "_VER
  . S TMP=TMP_$J("",15-$L(TMP))_"|"_DESC
- . S ^TMP("VPE",$J,CNT)=IEN_$C(9)_TMP
+ . S ^TMP("XVV1",$J,CNT)=IEN_$C(9)_TMP
  . S CNT=CNT+1
  ;
- G:'$D(^TMP("VPE",$J)) DELEX ;.............No versions on file
- S ^TMP("VPE",$J,"HD")="^"_RTN_" routine "
- D SELECT^XVEMKT("^TMP(""VPE"","_$J_")") ;Call SELECTOR
- G:'$D(^TMP("VPE","SELECT",$J)) DELEX  ;...Nothing selected
+ G:'$D(^TMP("XVV1",$J)) DELEX ;.............No versions on file
+ S ^TMP("XVV1",$J,"HD")="^"_RTN_" routine "
+ D SELECT^XVEMKT("^TMP(""XVV1"","_$J_")") ;Call SELECTOR
+ G:'$D(^TMP("XVV1","SELECT",$J)) DELEX  ;...Nothing selected
  ;
  S RENUM=$$ASK^XVEMKU("Renumber any remaining versions, starting with 1",1)
  W !
  G:$$ASK^XVEMKU("Ok to delete now",1)'="Y" DELEX
  ;
  S CNT=0
- F  S CNT=$O(^TMP("VPE","SELECT",$J,CNT)) Q:'CNT  D  ;
- . S ND=$G(^TMP("VPE","SELECT",$J,CNT))
+ F  S CNT=$O(^TMP("XVV1","SELECT",$J,CNT)) Q:'CNT  D  ;
+ . S ND=$G(^TMP("XVV1","SELECT",$J,CNT))
  . S DA=$P(ND,$C(9),1) Q:'DA
  . S DIK="^XVV(19200.112,"
  . D ^DIK
@@ -51,8 +51,8 @@ DELETE ;Delete versions
  D PAUSE^XVEMKU(2)
 DELEX ;
  L -VRRLOCK(RTN) ;Unlock routine editing
- KILL ^TMP("VPE",$J)
- KILL ^TMP("VPE","SELECT",$J)
+ KILL ^TMP("XVV1",$J)
+ KILL ^TMP("XVV1","SELECT",$J)
  Q
  ;
 DELRENUM(RTN) ;Renumber remaining versions.
@@ -75,16 +75,16 @@ BULKDEL ;Bulk delete
  ;
  Q:'$D(^XVV(19200.112))  ;...Version file doesn't exist
  N $ES,$ET S $ET="D ERROR^XVEMRLZ,UNWIND^XVEMSY"
- KILL ^TMP("VPE",$J)
+ KILL ^TMP("XVV1",$J)
  ;
  S SHOW=$$BULKS() G:SHOW="" BULKEX
  I SHOW="L" D BULKL I 1 ;Show only Library routines in Selector
  E  D BULKA ;Show ALL routines in Selector
  ;
- G:'$D(^TMP("VPE",$J)) BULKEX ;............No versions on file
- S ^TMP("VPE",$J,"HD")="Routines on file "
- D SELECT^XVEMKT("^TMP(""VPE"","_$J_")") ;Call SELECTOR
- G:'$D(^TMP("VPE","SELECT",$J)) BULKEX  ;..Nothing selected
+ G:'$D(^TMP("XVV1",$J)) BULKEX ;............No versions on file
+ S ^TMP("XVV1",$J,"HD")="Routines on file "
+ D SELECT^XVEMKT("^TMP(""XVV1"","_$J_")") ;Call SELECTOR
+ G:'$D(^TMP("XVV1","SELECT",$J)) BULKEX  ;..Nothing selected
  ;
  S PRESERVE=$$BULKV() ;Preserve any versions?
  I PRESERVE W ! D  ;
@@ -96,8 +96,8 @@ BULKDEL ;Bulk delete
  D PAUSE^XVEMKU(2)
  ;
 BULKEX ;Exit
- KILL ^TMP("VPE",$J)
- KILL ^TMP("VPE","SELECT",$J)
+ KILL ^TMP("XVV1",$J)
+ KILL ^TMP("XVV1","SELECT",$J)
  Q
  ;
 BULKS() ;Which routines to show in Selector?
@@ -125,7 +125,7 @@ BULKA ;Present all routines in Selector
  . S (NUM,VER)=0
  . F  S VER=$O(^XVV(19200.112,"AKEY",RTN,VER)) Q:'VER  S NUM=NUM+1
  . S TMP=TMP_"|"_NUM_" version"_$S(NUM>1:"s",1:"")
- . S ^TMP("VPE",$J,CNT)=RTN_"^"_NUM_$C(9)_TMP
+ . S ^TMP("XVV1",$J,CNT)=RTN_"^"_NUM_$C(9)_TMP
  . S CNT=CNT+1
  Q
  ;
@@ -145,15 +145,15 @@ BULKL ;Present only those routines signed out in the Library
  . S (NUM,VER)=0
  . F  S VER=$O(^XVV(19200.112,"AKEY",RTN,VER)) Q:'VER  S NUM=NUM+1
  . S TMP=TMP_"|"_NUM_" version"_$S(NUM>1:"s",1:"")
- . S ^TMP("VPE",$J,CNT)=RTN_"^"_NUM_$C(9)_TMP
+ . S ^TMP("XVV1",$J,CNT)=RTN_"^"_NUM_$C(9)_TMP
  . S CNT=CNT+1
  Q
  ;
 BULKD ;Do deletions
  NEW CNT,DA,DIC,DIK,I,ND,NUM,TMP,RTN,VER
  S CNT=0
- F  S CNT=$O(^TMP("VPE","SELECT",$J,CNT)) Q:'CNT  D  ;
- . S ND=$G(^TMP("VPE","SELECT",$J,CNT))
+ F  S CNT=$O(^TMP("XVV1","SELECT",$J,CNT)) Q:'CNT  D  ;
+ . S ND=$G(^TMP("XVV1","SELECT",$J,CNT))
  . S TMP=$P(ND,$C(9),1)
  . S RTN=$P(TMP,"^",1) Q:RTN']""  ;Routine name
  . S NUM=$P(TMP,"^",2) ;Number of versions on file

@@ -1,6 +1,7 @@
-XVEMREO ;DJB/VRR**EDIT - Open/Close/Blank/Unblank lines ;2017-08-15  1:43 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMREO ;DJB/VRR**EDIT - Open/Close/Blank/Unblank lines ;2019-08-09  4:39 PM
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
+ ; Syntax highlighting support by David Wicksell (c) 2019
  ;
 OPEN ;Open a new line.
  S XCUR=0
@@ -96,25 +97,33 @@ REDRAW(START,END) ;Redraw rest of screen
  . S DY=DY+1 X XVVS("CRSR")
  . W @XVVS("BLANK_C_EOL") X XVVS("XY")
  . S TMP=$G(^TMP("XVV","IR"_VRRS,$J,I))
- . W $P(TMP,$C(30),1)
- . W $P(TMP,$C(30),2,99)
+ . I XVV("SYN")="ON" D
+ . . D SYNTAX^XVEMSYN(TMP,I)
+ . E  D
+ . . W $P(TMP,$C(30),1)
+ . . W $P(TMP,$C(30),2,99)
  Q
  ;==================================================================
- ;I don't remember why this code is here. Thought I'd keep it anyway.
-REDRAWX(NUM) ;
+REDRAWX(NUM,DIR) ;
  NEW I,TMP
- D @$S(YCUR<(XVVT("BOT")-XVVT("TOP")-NUM):"REDRAWB",1:"REDRAWA")
+ D @$S($G(DIR,1):"REDRAWA",1:"REDRAWB")
  S DX=XCUR,DY=YCUR X XVVS("CRSR")
  Q
 REDRAWA ;Redraw lines above current line
  F I=1:1:NUM D  ;
  . S DX=0,DY=YCUR-I X XVVS("CRSR") W @XVVS("BLANK_C_EOL") X XVVS("XY")
  . S TMP=$G(^TMP("XVV","IR"_VRRS,$J,YND-I)) Q:TMP']""
- . W $P(TMP,$C(30),1),$P(TMP,$C(30),2,99)
+ . I XVV("SYN")="ON" D
+ . . D SYNTAX^XVEMSYN(TMP,YND-I)
+ . E  D
+ . . W $P(TMP,$C(30),1),$P(TMP,$C(30),2,99)
  Q
 REDRAWB ;Redraw lines below current line
  F I=1:1:NUM D  ;
- . S DX=0,DY=YCUR+I X XVVS("CRSR") W @XVVS("BLANK_C_EOL") X XVVS("XY")
+ . S DX=0,DY=YCUR+I-1 X XVVS("CRSR") W @XVVS("BLANK_C_EOL") X XVVS("XY")
  . S TMP=$G(^TMP("XVV","IR"_VRRS,$J,YND+I-1)) Q:TMP']""
- . W $P(TMP,$C(30),1),$P(TMP,$C(30),2,99)
+ . I XVV("SYN")="ON" D
+ . . D SYNTAX^XVEMSYN(TMP,YND+I-1)
+ . E  D
+ . . W $P(TMP,$C(30),1),$P(TMP,$C(30),2,99)
  Q

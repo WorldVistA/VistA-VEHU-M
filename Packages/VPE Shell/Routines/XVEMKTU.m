@@ -1,5 +1,5 @@
-XVEMKTU ;DJB/KRN**Txt Scroll-SELECTOR Help [8/16/97 11:10am];2017-08-15  1:17 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMKTU ;DJB/KRN**Txt Scroll-SELECTOR Help ;2019-08-20  5:33 PM
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  ;
 HELP ;
@@ -40,9 +40,9 @@ SHOW ;Show selected items
  NEW FLAGQ,I,ITEM
  W !,"S E L E C T E D   I T E M S"
  S (FLAGQ,ITEM)=0
- F  S ITEM=$O(^TMP("VPE","SELECT",$J,ITEM)) Q:'ITEM!FLAGQ  D  ;
- . W !,$P($G(^TMP("VPE","SELECT",$J,ITEM)),$C(9),2)
- . I '$O(^TMP("VPE","SELECT",$J,ITEM)) D  S FLAGQ=1 Q
+ F  S ITEM=$O(^TMP("XVV1","SELECT",$J,ITEM)) Q:'ITEM!FLAGQ  D  ;
+ . W !,$P($G(^TMP("XVV1","SELECT",$J,ITEM)),$C(9),2)
+ . I '$O(^TMP("XVV1","SELECT",$J,ITEM)) D  S FLAGQ=1 Q
  . . F I=$Y:1:(XVV("IOSL")-4) W !
  . . D PAUSE^XVEMKC(1)
  . I $Y>(XVV("IOSL")-4) D PAUSEQ^XVEMKC(1) Q:FLAGQ  W @XVV("IOF")

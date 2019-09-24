@@ -1,4 +1,4 @@
-OCXOZ01 ;SLC/RJS,CLA - Order Check Scan ;AUG 14,2014 at 15:44
+OCXOZ01 ;SLC/RJS,CLA - Order Check Scan ;SEP 23,2019 at 19:08
  ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
@@ -15,7 +15,7 @@ OCXOZ01 ;SLC/RJS,CLA - Order Check Scan ;AUG 14,2014 at 15:44
  ;   Program Execution Trace Mode: OFF
  ;
  ;               Raw Data Logging: OFF
- ; Compiler mode: Queued
+ ; Compiler mode:  ON
  ;   Compiled by: PROGRAMMER,ONE  (DUZ=1)
  Q
  ;

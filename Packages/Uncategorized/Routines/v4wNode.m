@@ -2,7 +2,7 @@ v4wNode() ;; 2017-06-03  1:39 PM
  ; A GT.M database driver for Node.js
  ;
  ; Written by David Wicksell <dlw@linux.com>
- ; Copyright © 2012-2017 Fourth Watch Software LC
+ ; Copyright Â© 2012-2017 Fourth Watch Software LC
  ;
  ; This program is free software: you can redistribute it and/or modify
  ; it under the terms of the GNU Affero General Public License (AGPL)

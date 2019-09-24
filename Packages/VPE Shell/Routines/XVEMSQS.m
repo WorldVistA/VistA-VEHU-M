@@ -1,14 +1,14 @@
-XVEMSQS ;DJB/VSHL**QWIKs - List & Select ;2017-08-16  10:37 AM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMSQS ;DJB/VSHL**QWIKs - List & Select ;Aug 20, 2019@17:16
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  ; LIST code corrected to not hardcode right margin (c) 2016 Sam Habiel
  ;
 QWIK(CD) ;User's entry used the "." or ".." syntax.
  NEW I,TYPE
- KILL ^TMP("VPE",$J)
+ KILL ^TMP("XVV1",$J)
  D PARAMS G:CD']"" EX D GETTYPE G:CD']"" EX D GETCODE
 EX ;
- KILL ^TMP("VPE",$J)
+ KILL ^TMP("XVV1",$J)
  S XVVSHC=CD I CD']"" F I=1:1:9 KILL @("%"_I)
  Q
 PARAMS ;Identify passed parameters.
@@ -43,7 +43,7 @@ LOOKUPU ;Look up User QWIKs
  W ! F  S HLD=$O(^XVEMS("QU",XVV("ID"),HLD)) Q:HLD']""!FLAGQ!($E(HLD,1,$L(XVVSHC))'=XVVSHC)  D  ;
  . W !,$J(CNT,3),". ",HLD,?15,$P($G(^(HLD,"DSC")),"^",1)
  . S STAT=$E($O(^XVEMS("QU",XVV("ID"),HLD)),1,$L(XVVSHC))'=XVVSHC
- . S ^TMP("VPE",$J,CNT)=$S($D(^XVEMS("QU",XVV("ID"),HLD,XVV("OS"))):^(XVV("OS")),$D(^XVEMS("QU",XVV("ID"),HLD)):^(HLD),1:"")
+ . S ^TMP("XVV1",$J,CNT)=$S($D(^XVEMS("QU",XVV("ID"),HLD,XVV("OS"))):^(XVV("OS")),$D(^XVEMS("QU",XVV("ID"),HLD)):^(HLD),1:"")
  . S CNT=CNT+1
  . I STAT D ASK Q
  . I CNT#6=0 D ASK Q
@@ -55,7 +55,7 @@ LOOKUPS ;Look up System QWIKs
  W ! F  S HLD=$O(^XVEMS("QS",HLD)) Q:HLD']""!FLAGQ!($E(HLD,1,$L(XVVSHC))'=XVVSHC)  D  ;
  . W !,$J(CNT,3),". ",HLD,?15,$P($G(^(HLD,"DSC")),"^",1)
  . S STAT=$E($O(^XVEMS("QS",HLD)),1,$L(XVVSHC))'=XVVSHC
- . S ^TMP("VPE",$J,CNT)=$S($D(^XVEMS("QS",HLD,XVV("OS"))):^(XVV("OS")),$D(^XVEMS("QS",HLD)):^(HLD),1:"")
+ . S ^TMP("XVV1",$J,CNT)=$S($D(^XVEMS("QS",HLD,XVV("OS"))):^(XVV("OS")),$D(^XVEMS("QS",HLD)):^(HLD),1:"")
  . S CNT=CNT+1
  . I STAT D ASK Q
  . I CNT#6=0 D ASK Q
@@ -66,7 +66,7 @@ ASK ;
 ASK1 I 'STAT W !?1,"TYPE '^' TO STOP, OR"
  W !?1,"CHOOSE 1-"_(CNT-1)_": "
  R ASK:300 S:'$T ASK="^" I "^"[ASK S:ASK="^" FLAGQ=1 Q
- I ASK?1.N,$D(^TMP("VPE",$J,ASK)) S CD=^(ASK),FLAGQ=1 Q
+ I ASK?1.N,$D(^TMP("XVV1",$J,ASK)) S CD=^(ASK),FLAGQ=1 Q
  W $C(7),"   ??"
  G ASK1
 NOQWIK ;Bogus QWIK entered

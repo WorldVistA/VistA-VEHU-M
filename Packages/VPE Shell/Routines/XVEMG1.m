@@ -1,5 +1,5 @@
-XVEMG1 ;DJB/VGL**Get Global ;2017-08-15  12:25 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMG1 ;DJB/VGL**Get Global ;Aug 23, 2019@12:19
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
  ;
 GETGL ;Get Global
@@ -9,7 +9,6 @@ GETGL ;Get Global
  . I $E(ZGL)'="^" D GETFILE^XVEMGU I ZGL']"" S FLAGQ=1
  D:GLS=1 HD^XVEMGU
  I $G(XVVSHL)="RUN" D  G:ZGL?1"<".E1">" GETGL G GETGL1
- . S FLAGPAR=0 ;FLAGPAR tells CLH to remove ending ")"
  . W ! S ZGL=$$CLHEDIT^XVEMSCL("VGL","Session "_GLS_"...Global ^")
  W !!?1,"Session ",GLS,"...Global ^"
  R ZGL:XVV("TIME") S:'$T ZGL="^"
@@ -29,7 +28,6 @@ GETGL1 ;Come here when passing a parameter
  . F  Q:ZGL'?.E1","  S FLAGC=FLAGC+1,ZGL=$E(ZGL,1,$L(ZGL)-1)
  I ZGL?.E1"(".E1")" S FLAGOPEN=1 ;FLAGOPEN notes if right ")" was entered.
  I ZGL?.E1"(" S ZGL=$P(ZGL,"(")
- I ZGL?.E1"(".E,ZGL'?.E1")" S ZGL=ZGL_")",FLAGPAR=1 ;FLAGPAR tells Command Line History to remove ending ")"
  S TEMP=$P(ZGL,"(") D  I FLAGQ W !!?1,"Invalid global name." Q
  . I TEMP["[" D  Q
  . . ;--------> ^["MGR","ROU"]%ZIS <--------

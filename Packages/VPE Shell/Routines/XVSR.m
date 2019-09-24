@@ -1,13 +1,13 @@
-XVSR ; Paideia/SMH - VPE Single Character Reads  ;2017-08-16  10:58 AM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
- ; (c) 2010-2016 Sam Habiel
+XVSR ; Paideia/SMH - VPE Single Character Reads  ;Aug 21, 2019@13:53
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
+ ; (c) 2010-2016,2019 Sam Habiel
  ;
 ZR1 ; Main
  N CD,FLAGCLH,PROMPT,Y
  S:'$D(XVV("IOM")) XVV("IOM")=80
  D ZR2
  S CD="",FLAGCLH=">>"
- D SCREEN^XVEMKEA(PROMPT,0,XVV("IOM")-2)
+ D SCREEN^XVEMKEA(PROMPT,0,XVV("IOM")-2,1)
  D ZR4,ZR3
  QUIT
 ZR2 ; Special prompt handling (like $ZPROMPT)

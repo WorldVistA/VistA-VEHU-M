@@ -1,6 +1,8 @@
-XVEMRER ;DJB/VRR**EDIT - RUN menu choices ;2017-08-16  12:14 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMRER ;DJB/VRR**EDIT - RUN menu choices ;2019-08-09  5:00 PM
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
+ ; Syntax highlighting support by David Wicksell (c) 2019
+ ; Dynamic linelabel+offset display support by David Wicksell (c) 2019
  ;
 RUN ;
  KILL DIRHLD ;Tracks cursor for <AU> & <AD>
@@ -29,10 +31,12 @@ RUN2 ;Help Text
 RUN3 ;Goto Top/Bottom of Rtn
  KILL DIRHLD ;Tracks cursor for <AU> & <AD>
  I ",<F4AR>,<END>,"[(","_VK_",") D  Q  ;Goto bottom of rtn
+ . I XVV("SYN")="ON" N I S I=0 F  S I=$O(^TMP("XVV","IR"_VRRS,$J,I)) Q:I=""  D SYNTAX^XVEMSYN(^(I),I,0)
  . D BOTTOM^XVEMKT2("IR"_VRRS,1)
  . S YND=XVVT("TOP")
  . S YCUR=$O(^TMP("XVV","IR"_VRRS,$J,""),-1)-YND
  . S:YCUR<1 YCUR=1
+ . D LINELBL^XVEMRU
  I ",<F4AL>,<HOME>,"[(","_VK_",") D  Q  ;Goto top of rtn
  . S (YCUR,YND,XVVT("TOP"))=1 D REDRAW1^XVEMRU
  Q
@@ -49,11 +53,13 @@ BACKUP ;Backup a page
  S (XVVT("BOT"),XVVT("TOP"))=$S(XVVT("TOP")'>XVVT("SL"):1,1:XVVT("TOP")-XVVT("SL"))
  S YND=XVVT("TOP")+YCUR-1,XVVT("GAP")=XVVT("SL")
  D SCROLL^XVEMKT2(1)
+ D LINELBL^XVEMRU
  Q
 FORWARD ;Go forward a page
  S XVVT("TOP")=XVVT("BOT"),XVVT("GAP")=XVVT("SL")
  S YND=XVVT("TOP")+YCUR-1
  D SCROLL^XVEMKT2(1)
+ D LINELBL^XVEMRU
  Q
 SCRNTOP ;Go to top of screen
  S YND=XVVT("TOP"),DX=XCUR,(DY,YCUR)=1 X XVVS("CRSR")

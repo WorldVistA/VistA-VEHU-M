@@ -1,3 +1,21 @@
 OSEHRA ZGO Export: SQLI_DATA_TYPE
-28-MAY-2019 11:57:40 ZWR
-^DMSQ("DT",0)="SQLI_DATA_TYPE^1.5211A^^"
+24-SEP-2019 07:13:06 ZWR
+^DMSQ("DT",0)="SQLI_DATA_TYPE^1.5211A^9^9"
+^DMSQ("DT",1,0)="PRIMARY_KEY^Table domain, used for primary and foreign keys"
+^DMSQ("DT",2,0)="CHARACTER^Free Text less than 256 characters"
+^DMSQ("DT",3,0)="INTEGER^Up to 15 numeric characters without leading zeroes"
+^DMSQ("DT",4,0)="NUMERIC^Up to 15 numeric characters with at most one decimal point"
+^DMSQ("DT",5,0)="DATE^Base date is M $H format, ODBC = YYYY-MM-DD"
+^DMSQ("DT",6,0)="TIME^Base is M $H format, ODBC = HH:MM:SS[.S...]"
+^DMSQ("DT",7,0)="MOMENT^Base is M $H format"
+^DMSQ("DT",8,0)="BOOLEAN^YES or NO, internally 1 or 0"
+^DMSQ("DT",9,0)="MEMO^Huge character string up to 32KB long"
+^DMSQ("DT","B","BOOLEAN",8)=""
+^DMSQ("DT","B","CHARACTER",2)=""
+^DMSQ("DT","B","DATE",5)=""
+^DMSQ("DT","B","INTEGER",3)=""
+^DMSQ("DT","B","MEMO",9)=""
+^DMSQ("DT","B","MOMENT",7)=""
+^DMSQ("DT","B","NUMERIC",4)=""
+^DMSQ("DT","B","PRIMARY_KEY",1)=""
+^DMSQ("DT","B","TIME",6)=""

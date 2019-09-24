@@ -1,10 +1,11 @@
-XVEMRE ;DJB/VRR**EDIT - READ,UP,DOWN,LEFT,RIGHT ;2017-08-15  1:43 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMRE ;DJB/VRR**EDIT - READ,UP,DOWN,LEFT,RIGHT ;2019-08-26  3:59 PM
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
- ; New Error trap in READ (c) 2016 Sam Habiel
+ ; New Error trap in READ (c) 2016,2019 Sam Habiel
+ ; Syntax highlighting support by David Wicksell (c) 2019
+ ; Dynamic linelabel+offset display support by David Wicksell (c) 2019
  ;
 READ ;Get input
- N $ETRAP S $ETRAP="D ERROR1^XVEMRY"
  I $D(XVSIMERR3) S $EC=",U-SIM-ERROR,"
  NEW DIRHLD,KEY,QUIT,TMP,VK
  I XVVT("GAP"),YCUR>(XVVT("BOT")-XVVT("TOP")) D  ;
@@ -60,16 +61,20 @@ UP(NUM) ;Scroll up NUM lines. Insert line at top.
  NEW I,ND,TMP
  I YCUR=1 Q:$$TOPFILE()
  S NUM=$G(NUM) D HIGHOFF
- I NUM=1 S YND=YND-1 D  D CURSOR("U"),HIGHON Q
+ I NUM=1 S YND=YND-1 D  D CURSOR("U"),HIGHON,LINELBL^XVEMRU(1) Q
  . I YCUR>1 S YCUR=YCUR-1 Q
  . D INSERT^XVEMRU(0,(XVVT("S1")-2))
  . S DX=0,DY=(XVVT("S1")-1) X XVVS("CRSR")
  . S XVVT("TOP")=XVVT("TOP")-1
  . S TMP=$G(^TMP("XVV","IR"_VRRS,$J,XVVT("TOP")))
- . W $P(TMP,$C(30),1),$P(TMP,$C(30),2,99)
+ . I XVV("SYN")="ON" D
+ . . D SYNTAX^XVEMSYN(TMP,XVVT("TOP"))
+ . . I XVV("OS")=18,$IO["TRM" D REDRAWX^XVEMREO(XVVT("BOT")-XVVT("TOP"),0)
+ . E  D
+ . . W $P(TMP,$C(30),1),$P(TMP,$C(30),2,99)
  I YCUR=1 W $C(7) Q
  F I=1:1:NUM I YCUR>1 S YCUR=YCUR-1,YND=YND-1
- D CURSOR("U"),HIGHON
+ D CURSOR("U"),HIGHON,LINELBL^XVEMRU(1)
  Q
  ;
 DOWN(NUM) ;Scroll down NUM lines. Insert line at bottom.
@@ -77,15 +82,19 @@ DOWN(NUM) ;Scroll down NUM lines. Insert line at bottom.
  I $G(^TMP("XVV","IR"_VRRS,$J,YND))=" <> <> <>" W $C(7) Q
  S NUM=$G(NUM) D HIGHOFF
  ;--> When cursor's at screen bottom:
- I YCUR'<(XVVT("BOT")-XVVT("TOP")) D  D CURSOR("D"),HIGHON Q
+ I YCUR'<(XVVT("BOT")-XVVT("TOP")) D  D CURSOR("D"),HIGHON,LINELBL^XVEMRU(1) Q
  . I NUM>1 W $C(7) Q  ;Don't allow cursor jump
  . S YND=YND+1,XVVT("BOT")=XVVT("BOT")+1,XVVT("TOP")=XVVT("TOP")+1
  . S TMP=$G(^TMP("XVV","IR"_VRRS,$J,YND))
- . W !,$P(TMP,$C(30),1),$P(TMP,$C(30),2,99)
+ . I XVV("SYN")="ON" D
+ . . W ! D SYNTAX^XVEMSYN(TMP,YND)
+ . . I XVV("OS")=18,$IO["TRM" D REDRAWX^XVEMREO(XVVT("BOT")-XVVT("TOP")-1,1)
+ . E  D
+ . . W !,$P(TMP,$C(30),1),$P(TMP,$C(30),2,99)
  ;--> Move cursor down
  F I=1:1:NUM Q:YCUR'<(XVVT("BOT")-XVVT("TOP"))  D  ;
  . S YCUR=YCUR+1,YND=YND+1
- D CURSOR("D"),HIGHON
+ D CURSOR("D"),HIGHON,LINELBL^XVEMRU(1)
  Q
  ;
 LEFT ;Cursor left/up

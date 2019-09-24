@@ -1,6 +1,8 @@
-XVEMRC ;DJB/VRR**Saves editing changes ;2017-08-15  1:39 PM
- ;;14.1;VICTORY PROG ENVIRONMENT;;Aug 16, 2017
+XVEMRC ;DJB/VRR**Saves editing changes ;Aug 16, 2019@15:17
+ ;;15.2;VICTORY PROG ENVIRONMENT;;Aug 27, 2019
  ; Original Code authored by David J. Bolduc 1985-2005
+ ; ASK+4 modified by Sam Habiel (c) 2019 to prevent ESC-ESC
+ ; DATE modified by Sam habiel (c) 2019 for SAC Compliance
  ;
 SAVE(ND) ;Sets up ^UTILITY so rtn editor can save changes.
  ;ND=Rtn Session # (VRRS)
@@ -54,7 +56,7 @@ ASK ;Ask to save changes
  NEW DEFAULT
  S DEFAULT=$S($G(FLAGSAVE)>0:2,1:1)
  W !,"Routine: ^",VRRPGM,!,"Save your changes?",!!
- S XX=$$CHOICE^XVEMKC("QUIT^SAVE^SAVE_AS^SAVE_NODT",DEFAULT)
+ S XX=$$CHOICE^XVEMKC("QUIT^SAVE^SAVE_AS^SAVE_NODT",DEFAULT,,,1) ; 1 to prevent ESC-ESC from exiting
  I XX<2 S VRRPGM="" Q
  D:XX=3 SAVEAS
  S:XX=4 VRRNODT=1
@@ -107,7 +109,9 @@ DATE ;Attach date to top line
  . Q:$P(LN," [",PIECE)'?1.2N1"/"1.2N1"/"2N.E1."]"
  . S LN=$P(LN," [",1,PIECE-1)
  ;
- S LN=LN_" ; "_DATE_" "_TIME
+ ; VA SAC Compliance if XLFDT is present, use it.
+ I $T(+0^XLFDT)'="" S LN=LN_" ;"_$$FMTE^XLFDT($E($$NOW^XLFDT,1,12)) I 1
+ E  S LN=LN_" ; "_DATE_" "_TIME
  S ^UTILITY($J,0,1)=TG_" "_LN
  Q
  ;
