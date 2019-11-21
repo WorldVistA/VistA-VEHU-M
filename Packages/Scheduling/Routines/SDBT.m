@@ -1,8 +1,8 @@
-SDBT ; GENERATED FROM 'SDB' INPUT TEMPLATE(#102), FILE 44;10/30/18
+SDBT ; GENERATED FROM 'SDB' INPUT TEMPLATE(#102), FILE 44;11/21/19
  D DE G BEGIN
 DE S DIE="^SC(",DIC=DIE,DP=44,DL=1,DIEL=0,DU="" K DG,DE,DB Q:$O(^SC(DA,""))=""
- I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,1) S:%]"" DE(1)=% S %=$P(%Z,U,2) S:%]"" DE(2)=% S %=$P(%Z,U,7) S:%]"" DE(17)=% S %=$P(%Z,U,8) S:%]"" DE(9)=% S %=$P(%Z,U,15) S:%]"" DE(15)=% S %=$P(%Z,U,17) S:%]"" DE(10)=% S %=$P(%Z,U,18) S:%]"" DE(43)=%
- I  S %=$P(%Z,U,19) S:%]"" DE(4)=% S %=$P(%Z,U,21) S:%]"" DE(12)=% S %=$P(%Z,U,24) S:%]"" DE(30)=% S %=$P(%Z,U,25) S:%]"" DE(19)=% S %=$P(%Z,U,30) S:%]"" DE(34)=%
+ I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,1) S:%]"" DE(1)=% S %=$P(%Z,U,2) S:%]"" DE(2)=% S %=$P(%Z,U,7) S:%]"" DE(17)=% S %=$P(%Z,U,8) S:%]"" DE(9)=% S %=$P(%Z,U,15) S:%]"" DE(15)=% S %=$P(%Z,U,17) S:%]"" DE(10)=% S %=$P(%Z,U,19) S:%]"" DE(4)=%
+ I  S %=$P(%Z,U,21) S:%]"" DE(12)=% S %=$P(%Z,U,24) S:%]"" DE(30)=% S %=$P(%Z,U,25) S:%]"" DE(19)=% S %=$P(%Z,U,30) S:%]"" DE(34)=%
  I $D(^(99)) S %Z=^(99) S %=$P(%Z,U,1) S:%]"" DE(20)=%
  I $D(^(99.1)) S %Z=^(99.1) S %=$P(%Z,U,1) S:%]"" DE(22)=%
  I $D(^("AT")) S %Z=^("AT") S %=$P(%Z,U,1) S:%]"" DE(18)=%
@@ -92,7 +92,7 @@ C1S S X="" G:DG(DQ)=X C1F1 K DB
  X ^DD(44,.01,1,12,1.3) I X S X=DIV X ^DD(44,.01,1,12,89.2) S X=$P(Y(101),U,1) S D0=I(0,0) S DIU=X K Y S X=DIV S X=DIV X ^DD(44,.01,1,12,1.4)
  I $D(DE(1))'[0!($G(^DD(DP,DIFLD,"AUDIT"))["y") S X=DG(DQ),DIIX=3_U_DIFLD D AUDIT^DIET
 C1F1 S DIEZRXR(44,DIIENS)=$$OREF^DILF($NA(@$$CREF^DILF(DIE)))
- F DIXR=1346 S DIEZRXR(44,DIXR)=""
+ F DIXR=1346,1548 S DIEZRXR(44,DIXR)=""
  Q
 X1 K:$L(X)>30!($L(X)<2)!'(X'?1P.E)!(X'?.ANP) X
  I $D(X),X'?.ANP K X
@@ -152,10 +152,16 @@ C7F1 Q
 X7 Q
 8 S DQ=9 ;@07
 9 D:$D(DG)>9 F^DIE17,DE S DQ=9,DW="0;8",DV="RS",DU="",DIFLD=9,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
+ S DE(DW)="C9^SDBT",DE(DW,"INDEX")=1
  S DU="M:MEDICINE;S:SURGERY;P:PSYCHIATRY;R:REHAB MEDICINE;N:NEUROLOGY;0:NONE;"
  G RE
+C9 G C9S:$D(DE(9))[0 K DB
+C9S S X="" G:DG(DQ)=X C9F1 K DB
+C9F1 S DIEZRXR(44,DIIENS)=$$OREF^DILF($NA(@$$CREF^DILF(DIE)))
+ F DIXR=1548 S DIEZRXR(44,DIXR)=""
+ Q
 X9 Q
-10 S DW="0;17",DV="RSa",DU="",DIFLD=2502,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
+10 D:$D(DG)>9 F^DIE17,DE S DQ=10,DW="0;17",DV="RSa",DU="",DIFLD=2502,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
  S DE(DW)="C10^SDBT"
  S DU="Y:YES;N:NO;"
  G RE
@@ -211,7 +217,9 @@ C17X1(DION) K X
  S X(1)=$G(@DIEZTMP@("V",44,DIIENS,8,DION),$P($G(^SC(DA,0)),U,7))
  S X=$G(X(1))
  Q
-C17F2 Q
+C17F2 S DIEZRXR(44,DIIENS)=$$OREF^DILF($NA(@$$CREF^DILF(DIE)))
+ F DIXR=1548 S DIEZRXR(44,DIXR)=""
+ Q
 X17 S DIC("S")="I $P(^(0),U,2)'=900&$S('$P(^(0),U,3):1,$P(^(0),U,3)>DT:1,1:0),""PE""[$P(^(0),U,6),$S('$P(^(0),U,7):1,$P(^(0),U,7)'>DT:1,1:0)" D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X
  Q
  ;
@@ -380,26 +388,4 @@ X41 K:+X'=X!(X>365)!(X<1)!(X?.E1"."1N.N) X
  S DU="Y:YES;"
  G RE
 X42 Q
-43 S DW="0;18",DV="*P40.7'Xa",DU="",DIFLD=2503,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
- S DE(DW)="C43^SDBT",DE(DW,"INDEX")=1
- S DU="DIC(40.7,"
- G RE
-C43 G C43S:$D(DE(43))[0 K DB
- D ^SDBT3
-C43S S X="" G:DG(DQ)=X C43F1 K DB
- D ^SDBT4
-C43F1 N X,X1,X2 S DIXR=445 D C43X1(U) K X2 M X2=X D C43X1("O") K X1 M X1=X
- I $G(X(1))]"" D
- . K ^SC("ACST",X,DA)
- K X M X=X2 I $G(X(1))]"" D
- . S ^SC("ACST",X,DA)=""
- G C43F2
-C43X1(DION) K X
- S X(1)=$G(@DIEZTMP@("V",44,DIIENS,2503,DION),$P($G(^SC(DA,0)),U,18))
- S X=$G(X(1))
- Q
-C43F2 Q
-X43 S DIC("S")="I $P(^(0),U,2)'=900&$S('$P(^(0),U,3):1,$P(^(0),U,3)>DT:1,1:0),""SE""[$P(^(0),U,6),$S('$P(^(0),U,7):1,$P(^(0),U,7)'>DT:1,1:0)" D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X
- Q
- ;
-44 D:$D(DG)>9 F^DIE17 G ^SDBT5
+43 D:$D(DG)>9 F^DIE17 G ^SDBT3
