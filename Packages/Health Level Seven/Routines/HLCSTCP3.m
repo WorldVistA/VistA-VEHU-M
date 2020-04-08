@@ -1,7 +1,11 @@
-HLCSTCP3 ;SFIRMFO/RSD - BI-DIRECTIONAL TCP ;2018-09-06  10:24 AM
- ;;1.6;HEALTH LEVEL SEVEN;**76,77,133,122,153,157,OSEHRA**;OCT 13, 1995;Build 8
+HLCSTCP3 ;SFIRMFO/RSD - BI-DIRECTIONAL TCP ;Apr 03, 2020@14:43
+ ;;1.6;HEALTH LEVEL SEVEN;**76,77,133,122,153,157,10001**;OCT 13, 1995;Build 3
  ;
- ; Changes **OSEHRA** by Sam Habiel (c) 2018
+ ; Original code in the public domain by Dept of Veterans Affairs.
+ ; Changes **10001** by Sam Habiel (c) 2020.
+ ; Changes indicated inline.
+ ; Licensed under Apache 2.0.
+ ; 
  ;
 OPENA ;
  ; called from $$OPEN^HLCSTCP2 and this sub-routine OPENA
@@ -67,12 +71,13 @@ RETRY ;
  . ; write and read to check if still open
  . ; patch HL*1.6*157: HLOS is from calling $$OS^%ZOSV
  . ; Q:HLOS'["OpenM"  X "U IO:(::""-M"")" ; must be Cache/NT + use packet mode
- . ; Q:(HLOS'["VMS")&(HLOS'["UNIX")  X "U IO:(::""-M"")" ; must be Cache + packet mode  ; **OSEHRA** -> This line crashes on GTM/YDB
- . ; **OSEHRA** - begin replacement code
+ . ; Q:(HLOS'["VMS")&(HLOS'["UNIX")  X "U IO:(::""-M"")" ; must be Cache + packet mode  ; **10001** -> This line crashes on GTM/YDB
+ . ; **10001** - begin replacement code
  . Q:(HLOS'["VMS")&(HLOS'["UNIX")
  . I ^%ZOSF("OS")["OpenM" U IO:(::"-M")
  . E  I ^%ZOSF("OS")["GT.M"  U IO:(nowrap:nodelimiter)
  . E  U IO
+ . ; *10001** end
  . Q:$P(^HLCS(870,HLDP,400),U,7)'="Y"  ; must want to SAY HELO
  . U IO W "HELO "_$$KSP^XUPARAM("WHERE"),! R X:1
  ;openfail-try DNS lookup
@@ -124,7 +129,7 @@ DNS ;VA domains must have "med" inserted.
  ;configure their local DNS with "HL7.yourdomain.com" and entries
  ;are created in the logical link file and domain file.
  D MON^HLCSTCP("DNS Lkup")
- I HLDOM["VA.GOV"&(HLDOM'[".MED.") S HLDOM=$P(HLDOM,".VA.GOV")_".MED.VA.GOV"
+ I HLDOM["DOMAIN.EXT"&(HLDOM'[".MED.") S HLDOM=$P(HLDOM,".DOMAIN.EXT")_".DOMAIN.EXT"
  I HLTCPORT=5000 S HLDOM="HL7."_HLDOM
  I HLTCPORT=5500 S HLDOM="MPI."_HLDOM
  ;
