@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: SQLI_KEY_FORMAT
-24-SEP-2019 07:13:14 ZWR
+ZWR
 ^DMSQ("KF",0)="SQLI_KEY_FORMAT^1.5213AO^1^1"
 ^DMSQ("KF",1,0)="LONG_CHARACTER^2^Truncate long free text fields to 30 characters"
 ^DMSQ("KF",1,1)="$E({I},1,30)"

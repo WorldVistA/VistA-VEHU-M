@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: SQLI_DATA_TYPE
-24-SEP-2019 07:13:06 ZWR
+ZWR
 ^DMSQ("DT",0)="SQLI_DATA_TYPE^1.5211A^9^9"
 ^DMSQ("DT",1,0)="PRIMARY_KEY^Table domain, used for primary and foreign keys"
 ^DMSQ("DT",2,0)="CHARACTER^Free Text less than 256 characters"

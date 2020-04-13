@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: SQLI_DOMAIN
-24-SEP-2019 07:13:06 ZWR
+ZWR
 ^DMSQ("DM",0)="SQLI_DOMAIN^1.5212AO^16716^16635"
 ^DMSQ("DM",1,0)="PRIMARY_KEY^1^Table domain, used for primary and foreign keys"
 ^DMSQ("DM",2,0)="CHARACTER^2^Free Text less than 256 characters^^30"

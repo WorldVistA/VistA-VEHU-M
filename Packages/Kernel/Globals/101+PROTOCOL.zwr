@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: PROTOCOL
-24-SEP-2019 07:14:45 ZWR
+ZWR
 ^ORD(101,-1,0)="^Dietetics MAS Event Processor^^X"
 ^ORD(101,-1,1,0)="^^2^2^2900206^^"
 ^ORD(101,-1,1,1,0)="This protocol is used to process MAS events (admissions, discharges,"

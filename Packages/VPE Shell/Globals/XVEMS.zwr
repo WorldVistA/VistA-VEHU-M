@@ -1,5 +1,5 @@
 OSEHRA ZGO Export: ^XVEMS
-24-SEP-2019 07:15:32 ZWR
+ZWR
 ^XVEMS("%")="Scratch area"
 ^XVEMS("CLH")="Command line history"
 ^XVEMS("CLH",1,"VEDD")=9
