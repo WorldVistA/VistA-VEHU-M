@@ -1,5 +1,5 @@
-YTQAPI2B ;SLC/BLD- MHAX ANSWERS SPECIAL HANDLING #2 ;2/7/2018  17:35
- ;;5.01;MENTAL HEALTH;**134,136**;Dec 30, 1994;Build 235
+YTQAPI2B ;SLC/BLD - MHAX ANSWERS SPECIAL HANDLING #2 ; 2/7/18 17:35
+ ;;5.01;MENTAL HEALTH;**134,136,139,142**;Dec 30, 1994;Build 14
  ;
  ; This routine was split from YTQAPI2A.
  ; This routine handles limited complex reporting requirements without
@@ -20,22 +20,25 @@ SPECIAL(TSTNM,YSDATA,N,YSAD,YSTSTN) ; 1 add "hidden" computed question text
  .D GETSCORE^YTQAPI8(.YSCORE,.YS)
  .S SCORES=$P(^TMP($J,"YSCOR",2),"=",2)
  .I SCORES=0 D
+ ..S YSDATA(N)="7776^9999;1^"_SCORES,N=N+1
  ..S YSDATA(N)="7771^9999;1^The score for this administration indicates a NEGATIVE screen for PTSD." S N=N+1
  .S SUISCORE=$P(^TMP($J,"YSCOR",3),"=",2)
  .I $G(SCORES)<4,$G(SCORES)>0 D
+ ..S YSDATA(N)="7776^9999;1^"_SCORES,N=N+1
  ..S YSDATA(N)="7771^9999;1^The score for this administration is "_SCORES_", which indicates ",N=N+1
  ..S YSDATA(N)="7772^9999;1^   a NEGATIVE screen for PTSD in the past month." S N=N+1
  .I $G(SCORES)>3 D
+ ..S YSDATA(N)="7776^9999;1^"_SCORES,N=N+1
  ..S YSDATA(N)="7771^9999;1^The score for this administration is "_SCORES_", which indicates ",N=N+1
  ..S YSDATA(N)="7772^9999;1^   a POSITIVE screen for PTSD in the past month. Further assessment is recommended.",N=N+1
  .;
  .I $G(SUISCORE)=0 D
- ..;S YSDATA(N)="7773^9999;1^The results of this administration indicates a NEGATIVE screen ",N=N+1
- ..;S YSDATA(N)="7774^9999;1^   for Risk of Suicide over the last 2 weeks.",N=N+1
+ ..S YSDATA(N)="7777^9999;1^"_SUISCORE,N=N+1
  ..S YSDATA(N)="7773^9999;1^The score on this administration is 0, which indicates a NEGATIVE ",N=N+1
  ..S YSDATA(N)="7774^9999;1^   screen for Risk of Suicide over the last 2 weeks."
  .S SUISCRN=$P(^TMP($J,"YSCOR",3),"=",2)
  .I SUISCRN>0 D
+ ..S YSDATA(N)="7777^9999;1^"_SUISCORE,N=N+1
  ..I SUISCRN=1 S TEXT="SEVERAL DAYS"
  ..I SUISCRN=2 S TEXT="MORE THAN HALF THE DAYS"
  ..I SUISCRN=3 S TEXT="NEARLY EVERY DAY"
@@ -84,23 +87,21 @@ SPECIAL(TSTNM,YSDATA,N,YSAD,YSTSTN) ; 1 add "hidden" computed question text
  ;
  ;bld/dsb 3/1/2018 Complex Reporting for C-SSRS
  I TSTNM="C-SSRS" D  Q
- .N I,YSCORE,YSCREC,PTSD,SCORES,SCRE,QUESNBR,TEXT,TEXT1,TEXT2,TEXT2A,TEXT2B,TEXT3,TEXT3A,TEXT4,TEXT5,TEXT8,TEXT8A,TEXT8B,ADDTEXT
+ .N I,YSCORE,YSCREC,PTSD,SCORES,SCRE,QUESNBR,TEXT,TEXT3,TEXT3A,TEXT3B,TEXT4,TEXT5,TEXT8,TEXT8A,TEXT8B,ADDTEXT,STRNG
  .S SCORES=""
  .D GETSCORE^YTQAPI8(.YSCORE,.YS)
  .I ^TMP($J,"YSCOR",1)'="[DATA]" Q
  .S LP=1
- .S ADDTEXT="This indicates a clear need for further assessment and clinical management."
- .S TEXT1="This administration indicates presence of SUICIDAL IDEATION WITH AT LEAST SOME INTENT TO DIE in the past one month. "_ADDTEXT
- .S TEXT2A="This administration indicates presence of RECENT SUICIDAL BEHAVIOR. The presence of ANY suicidal behavior (suicide attempt,"
- .S TEXT2B=" interrupted attempt, aborted attempt and preparatory behavior) in the past 3 months indicates clear need for further assessment and clinical management."
- .S TEXT2=TEXT2A_TEXT2B
+ .S ADDTEXT="This indicates a clear need |for further assessment and clinical management."
  .;
- .S TEXT3="This administration indicates presence of SUICIDAL IDEATION "
- .S TEXT3A="WITH AT LEAST SOME INTENT TO DIE in the past month. "  ;q4=yes, q5=no
+ .S TEXT3="  This administration indicates presence of SUICIDAL IDEATION "
+ .S TEXT3A="WITH AT LEAST |SOME INTENT TO DIE in the past month. "  ;q4=yes, q5=no
+ .; patch 142
+ .S TEXT3B="WITH |CONSIDERATION OF METHOD in the past month. "
  .;
- .S TEXT8="This administration indicates presence of RECENT SUICIDAL BEHAVIOR. The presence of ANY suicidal "
- .S TEXT8A="behavior (suicide attempt, interrupted attempt, aborted attempt and preparatory behavior) "
- .S TEXT8B="in the past 3 months indicates clear need for further assessment and clinical management."
+ .S TEXT8="  ||This administration indicates presence of RECENT SUICIDAL BEHAVIOR. The |presence of ANY suicidal "
+ .S TEXT8A="behavior (suicide attempt, interrupted attempt, |aborted attempt and preparatory behavior) "
+ .S TEXT8B="in the past 3 months indicates |clear need for further assessment and clinical management."
  .F  S LP=$O(^TMP($J,"YSCOR",LP)) Q:'LP  D
  ..; Yes=1, No=2 and Skipped=0
  ..S SCRE=$P(^TMP($J,"YSCOR",LP),"=",2)
@@ -131,21 +132,16 @@ SPECIAL(TSTNM,YSDATA,N,YSAD,YSTSTN) ; 1 add "hidden" computed question text
  ..I ($E(SCORES,7)=1)&($E(SCORES,8)=2) S YSDATA(N)="7773^9999;1^Past Suicidal Behavior (>3 Months)"  S N=N+1 Q
  ..I ($E(SCORES,7)=2) S YSDATA(N)="7773^9999;1^No Past Suicidal Behavior Reported"  S N=N+1 Q
  .;
- .;Key Indicators
- .S QUESNBR=7774
- .S KEY=""
- .I ($E(SCORES,4)=1)!($E(SCORES,5)=1) D
- ..S YSDATA(N)="7774^9999;1^"_TEXT3,N=N+1
- ..S YSDATA(N)="7775^9999;1^"_TEXT3A,N=N+1
- ..S YSDATA(N)="7776^9999;1^"_ADDTEXT,N=N+1
- ..S N=N+1,QUESNBR=7777,KEY=1
- .;
+ .;Key Indicators, in Question 7774
+ .S STRNG=""
+ .I ($E(SCORES,3)=1)!($E(SCORES,4)=1)!($E(SCORES,5)=1) D
+ ..S STRNG=TEXT3
+ ..I ($E(SCORES,4)=1)!($E(SCORES,5)=1) S STRNG=STRNG_TEXT3A
+ ..I ($E(SCORES,3)=1)&($E(SCORES,4)=2)&($E(SCORES,5)=2) S STRNG=STRNG_TEXT3B
+ ..S STRNG=STRNG_ADDTEXT
  .I ($E(SCORES,8)=1) D
- ..S YSDATA(N)=QUESNBR_"^9999;1^"_TEXT8 S N=N+1,QUESNBR=QUESNBR+1
- ..S YSDATA(N)=QUESNBR_"^9999;1^"_TEXT8A S N=N+1,QUESNBR=QUESNBR+1
- ..S YSDATA(N)=QUESNBR_"^9999;1^"_TEXT8B S N=N+1,QUESNBR=QUESNBR+1,KEY=1
- .I 'KEY S YSDATA(N)="7774^9999;1^None" S N=N+1
- .; Get results code is saved in One Note
+ ..S STRNG=STRNG_TEXT8_TEXT8A_TEXT8B
+ .I $L(STRNG) S YSDATA(N)="7774^9999;1^"_STRNG
  .Q
  ;
  ;dsb/BLD 3/1/2018 Complex Reporting for PSS-3
