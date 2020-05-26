@@ -1,5 +1,5 @@
-GMTSPSTN ;BIR/RMS - MED RECON TOOL #1 NO GLOSSARY (MED REC PROFILE) ;May 14, 2018@20:52
- ;;2.7;Health Summary;**94,127**;Oct 20, 1995;Build 4
+GMTSPSTN ;BIR/RMS - MED RECON TOOL #1 NO GLOSSARY (MED REC PROFILE) ; 12/5/19 2:57pm
+ ;;2.7;Health Summary;**94,127,131,132**;Oct 20, 1995;Build 1
  ;Reference to COVER^ORWPS supported by IA 4926
  ;References to ^ORRDI1 supported by IA 4659
  ;Reference to ^XTMP("ORRDI","PSOO" supported by IA 4660
@@ -12,6 +12,8 @@ GMTSPSTN ;BIR/RMS - MED RECON TOOL #1 NO GLOSSARY (MED REC PROFILE) ;May 14, 201
  ;Reference to $$PKGID^ORX8 supported by IA 3071
  ;Reference to BCMALG^PSJUTL2 supported by IA 5057
  ;Reference to OEL^PSOORRL supported by IA 2400
+ ;Reference to PACKAGE FILE, file 9.4, supported by IA 10048
+ ;Reference to $$GET1^DIQ supported by IA 2056
 TOOL1 ;ENTRY POINT FOR HEALTH SUMMARY
  N ALPHA,DRUGNM,EXPDAYS,IND1,LIST,ORDER,PSNUM,RPC,RPCT,RPCNODE,SAVE,SAVERD
  D ADD^GMTSPSTR("GMTSPSTN")
@@ -140,7 +142,8 @@ INPDISP ;Display an Inpatient or Clinic Meds Entry
  Q
  ;
 DRUGDSP ; Get Medication with Dosage
- S PSIFN=$G(^OR(100,ORDER,4)),OR0=$G(^OR(100,ORDER,0)),TYPE=$P(OR0,U,12)
+ S PSIFN=$G(^OR(100,ORDER,4)),OR0=$G(^OR(100,ORDER,0))
+ S TYPE=$$GETPKG(ORDER)
  S ORVP=$P(OR0,U,2) K ^TMP("PS",$J)
  D OEL^PSOORRL(+ORVP,PSIFN_";"_TYPE)   ; IA 2400
  S DRUGDISP="" I $P($G(^TMP("PS",$J,"DD",1,0)),U,1)]"" D
@@ -175,9 +178,10 @@ OPTDISP ;Display an Outpatient Prescription Entry
  . S ORDTYP=$P($G(^TMP($J,"GMTSPSTN",DFN,+PACKREF,2)),U,1)
  . S QDFLAG=0 I ORIGRX]"",ORDTYP="RNW" D
  .. W !?10,"Renewed from Rx# "_ORIGRX
- .. D CKP Q:$D(QMTSQIT)
+ .. D CKP Q:$D(GMTSQIT)
  .. W ?50,"Qty/Days Supply: "_$G(^TMP($J,"GMTSPSTN",DFN,+PACKREF,12))_"/"_$G(^TMP($J,"GMTSPSTN",DFN,+PACKREF,101))
- .. S QDFLAG=1 D CKP Q:$D(GMTSQIT)
+ .. S QDFLAG=1
+ . D CKP Q:$D(GMTSQIT)
  . W !?10,"Login Date: "_$$FMTE^XLFDT(+$G(^TMP($J,"GMTSPSTN",DFN,+PACKREF,15)),"2D")
  . D CKP Q:$D(GMTSQIT)
  . I 'QDFLAG D
@@ -313,6 +317,13 @@ LRD(PACKREF) ;Calculate LAST RELEASE DATE as latest of original + refill relDate
  ;
 CKP D CKP^GMTSUP Q
  ;
+GETPKG(ORDER) ;GET PACKAGE TYPE, added by GMTS*2.7*132
+ N PKGIEN,PKGTYPE
+ S PKGIEN=$$GET1^DIQ(100,ORDER_",",12,"I")
+ S PKGTYPE=$$GET1^DIQ(9.4,PKGIEN_",",.01,"I")
+ I PKGTYPE="INPATIENT MEDICATIONS" Q "I"
+ I PKGTYPE="OUTPATIENT PHARMACY" Q "O"
+ Q $$GET1^DIQ(100,ORDER_",",10,"I")
 HEADTXT1 ;;
  ;;INCLUDED IN THIS LIST:  Alphabetical list of active outpatient
  ;;prescriptions dispensed from this VA (local) and dispensed from another

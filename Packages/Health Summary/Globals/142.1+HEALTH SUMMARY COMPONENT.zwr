@@ -755,7 +755,7 @@ ZWR
 ^GMT(142.1,61,3.5,4,0)="parameter is set to NO), date of onset (if problem is active), date"
 ^GMT(142.1,61,3.5,5,0)="problem resolved (if inactive), date last modified, the responsible"
 ^GMT(142.1,61,3.5,6,0)="provider, and all active comments for the problems."
-^GMT(142.1,62,0)="SOCIAL WORK^MAIN;GMTSSOWK^^SW^^^^^Social Work^^^^SOWK"
+^GMT(142.1,62,0)="SOCIAL WORK^MAIN;GMTSSOWK^^SW^^P^^^Social Work^^^^SOWK"
 ^GMT(142.1,62,.1,0)="^142.11^1^1"
 ^GMT(142.1,62,.1,1,0)=";SOWKHSUM"
 ^GMT(142.1,62,.1,"B",";SOWKHSUM",1)=""

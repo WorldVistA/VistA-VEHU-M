@@ -1,5 +1,6 @@
-SDEC55A ;ALB/SAT - VISTA SCHEDULING RPCS ;NOV 05, 2015
- ;;5.3;Scheduling;**627,671**;Aug 13, 1993;Build 25
+SDEC55A ;ALB/SAT - VISTA SCHEDULING RPCS ; 18 Jun 2018  4:04 PM
+ ;;5.3;Scheduling;**627,671,701,722,734**;Aug 13, 1993;Build 3
+ ;;Per VHA Directive 2004-038, this routine should not be modified
  ;
  Q
  ;
@@ -107,6 +108,8 @@ APPSDGET(SDECY,MAXREC,LASTSUB,SDBEG,SDEND,NOTEFLG,SDRES,DFN,SDID,SDIEN)  ;GET ap
  ;                     35           36         37            38
  S SDTMP=SDTMP_"^T00030DAPTDT^T00030SDID^T00030SDAPTYP^T00200NOTE^T00030EESTAT^T00030APPTTYPE_IEN^T00030APPTTYPE_NAME"
  S @SDECY@(SDECI)=SDTMP_$C(30)
+ ;*zeb+1 722 1/9/19 prevent giant loop on bad data
+ I $G(SDIEN)_$G(DFN)_$G(SDRES)="" G GETX
  ;validate MAXREC - optional
  S MAXREC=$G(MAXREC)
  I MAXREC'="" I '+MAXREC S MAXREC=""
@@ -117,11 +120,23 @@ APPSDGET(SDECY,MAXREC,LASTSUB,SDBEG,SDEND,NOTEFLG,SDRES,DFN,SDID,SDIEN)  ;GET ap
  ;validate SDBEG - optional
  S SDBEG=$G(SDBEG)
  I $G(SDBEG)'="" S %DT="" S X=$P($G(SDBEG),"@",1) D ^%DT S SDBEG=Y I Y=-1 D ERR1^SDECERR(-1,"Invalid begin date/time.",SDECI,SDECY) Q
- I SDBEG="" S SDBEG=1000101
+ I SDBEG'="",SDBEG<$$FMADD^XLFDT($$NOW^XLFDT(),-10*365) D ERR1^SDECERR(-1,"Invalid begin date/time.",SDECI,SDECY) Q  ;
+ ;
+ ;  Limit search to start 10 years ago.  wtc 6/18/18 SD*5.3*701
+ ;
+ I SDBEG="" S SDBEG=$$FMADD^XLFDT($$NOW^XLFDT(),-10*365) ;
+ ;
+ ;I SDBEG="" S SDBEG=1000101
  ;validate SDEND - optional
  S SDEND=$G(SDEND)
  I $G(SDEND)'="" S %DT="" S X=$P($G(SDEND),"@",1) D ^%DT S SDEND=Y_".2359" I Y=-1 D ERR1^SDECERR(-1,"Invalid end date/time.",SDECI,SDECY) Q
- I SDEND="" S SDEND=9991231.2359
+ I SDEND'="",SDEND>$$FMADD^XLFDT($$NOW^XLFDT(),390) D ERR1^SDECERR(-1,"Invalid end date/time.",SDECI,SDECY) Q  ;
+ ;
+ ;  Limit search to no later than 390 days in the future.  wtc 6/18/18 SD*5.3*701
+ ;
+ I SDEND="" S SDEND=$P($$FMADD^XLFDT($$NOW^XLFDT(),390),".",1)_".2359" ;
+ ;
+ ;I SDEND="" S SDEND=9991231.2359
  ;validate NOTEFLG - optional
  S NOTEFLG=$S($G(NOTEFLG)=1:1,1:0)
  ;validate SDRES -optional
@@ -211,7 +226,7 @@ GET1(SDAPP,SDBEG,SDEND,NOTEFLG,SDRES,DFN,SDID,SDECI,SDECY) ;get 1 appointment re
  S $P(SDRET,U,32)=@SDA@(.18,"E")  ;length of appt
  S $P(SDRET,U,33)=@SDA@(.19,"I")  ;prev appt status ID
  S $P(SDRET,U,34)=@SDA@(.19,"E")  ;prev appt status NAME
- S $P(SDRET,U,35)=@SDA@(.2,"E")   ;desired date of appointment
+ S $P(SDRET,U,35)=$P(@SDA@(.2,"E"),"@",1) ;desired date of appointment ; wtc 734 10/7/2019 - strip off time that VAOS puts on CID
  S $P(SDRET,U,36)=@SDA@(.21,"E")  ;external id
  Q:(SDID'="")&($P(SDRET,U,36)'=SDID)
  S SDX=@SDA@(.22,"I") S SDY=$P(SDX,";",2)

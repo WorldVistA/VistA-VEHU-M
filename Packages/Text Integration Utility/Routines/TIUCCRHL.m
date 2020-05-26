@@ -1,5 +1,5 @@
 TIUCCRHL ;LB/PB - Send TIU Notes MDM-T02 HL7 Message to CCRA/HSRM ;02/01/19 09:00
- ;;1.0;TEXT INTEGRATION UTILITIES;**323**;Feb 1, 2019;Build 33
+ ;;1.0;TEXT INTEGRATION UTILITIES;**323,327,329**;Oct 24, 2019;Build 42
  ;This patch requires:
  ;four (4) CCRA TIU Historical Documents :
  ;     1   COMMUNITY CARE - PATIENT LETTER       TITLE  
@@ -54,7 +54,7 @@ TIUCCRHL ;LB/PB - Send TIU Notes MDM-T02 HL7 Message to CCRA/HSRM ;02/01/19 09:0
  Q
  ;
 EN() ;Entry point to routine called from POSTSIGN^TIULC1 for the CCRA TIU Documents - Historical
- ;Expects the context has defined: DFN (Patient IEN -^DPT(), DA (TIU document ID:^TIU(8925,DA) 
+ ;Expects the context has defined: DFN (Patient IEN -^DPT(), DA (TIU document ID:^TIU(8925,DA)
  ;
  N I,GMRCDA,GMRCM,STATUS,POSTSIGC,PARDOCTY,OK,TIUTYP
  ;SET HL7 VARIABLES
@@ -62,6 +62,11 @@ EN() ;Entry point to routine called from POSTSIGN^TIULC1 for the CCRA TIU Docume
  N MSG,HDR,SEG,SEGTYPE,MSGARY,LASTSEG,HDRTIME,ABORT,BASEDT,CLINARY,COUNT,PROVDTL
  ;
  I +$G(DA)'>0 S ^TMP("TIUHL7CCRA",$J,"ERR NO TIU Document IEN("_DA_") passed from CPRS")="" Q
+ ;Patch 329 fix thE undefined DFN, occuring  when  the user comes back in CPRS
+ ;and signs a previously saved and unsigned note
+ I $G(DFN)="" D
+ . S DFN=$P($G(^TIU(8925,+DA,0)),"^",2)
+ . I $G(DFN)="" S ^TMP("TIUHL7CCRA",$J,"ERR NO TIU Document IEN("_DA_") passed from CPRS")="" Q
  ;
  N SNAME,GMRCHL,ZERR,ZCNT,ECH,DATA,GDATA,URG,TYP,RES,EFFDT,PDUZ,PN,ADDR,PH,GMRCP,SENS,DX,DXCODE
  N PCP,PCDUZ,PCPN,PCADDR,PCPH
@@ -88,8 +93,10 @@ EN() ;Entry point to routine called from POSTSIGN^TIULC1 for the CCRA TIU Docume
  D GETS^DIQ(8925,GMRCDA,"*","IE",DATA)
  ;File 8925 data IN ^TMP
  S GDATA=$NA(^TMP("TIUHL7CCRA",$J,8925,+GMRCDA_","))
- I DFN'=$G(@GDATA@(.02,"I")) S ^TMP("TIUHL7CCRA",$J,"ERR: CPRS Patient DFN :"_DFN_" doesn't match Document Patient DFN: "_$G(@GDATA@(.02,"I")))="" Q
- ;check if addendum DA is passed in and check if it is for Community 
+ ;Patch TIU*1*329 fix <undefined> When User picks up an unsigned  note  from another CPRS session-
+ ;I DFN'=$G(@GDATA@(.02,"I")) S ^TMP("TIUHL7CCRA",$J,"ERR: CPRS Patient DFN :"_DFN_" doesn't match Document Patient DFN: "_$G(@GDATA@(.02,"I")))="" Q
+ I $G(DFN)'=$G(@GDATA@(.02,"I")) S ^TMP("TIUHL7CCRA",$J,"ERR: CPRS Patient DFN :"_$G(DFN)_" doesn't match Document Patient DFN: "_$G(@GDATA@(.02,"I")))="" Q
+ ;check if addendum DA is passed in and check if it is for Community
  S TIUTYP=$G(@GDATA@(.01,"E"))
  S OK=1
  I TIUTYP="ADDENDUM" D
@@ -138,13 +145,13 @@ EN() ;Entry point to routine called from POSTSIGN^TIULC1 for the CCRA TIU Docume
  ;
  ;TXA segment
  ;  TXA.1 Set ID - TXA: "1"
- ;  TXA.2 Document Type: .01      DOCUMENT TYPE  
+ ;  TXA.2 Document Type: .01      DOCUMENT TYPE
  ;  TXA.4 Activity Date/Time:  1301     REFERENCE DATE
  ;  TXA.8 Edit Date/Time: 1201     ENTRY DATE/TIME
  ;  TXA.12 Unique Document Number: GMRCDA   TIU note IEN
  ;  TXA.13 Parent Document Number: GMRCDA/DA        TIU note/ADDENDUM IEN
  ;  TXA.16 Unique Document File Name: ADDENDUM Parent Document Title
- ;   XA.17 Document Completion Status: .05      STATUS 
+ ;   XA.17 Document Completion Status: .05      STATUS
  S ZCNT=ZCNT+1
  S GMRCM(ZCNT)="TXA"_FS_"1"_FS_$G(@GDATA@(.01,"E"))_FS_FS_$$FMTHL7^XLFDT($G(@GDATA@(1301,"I")))_FS_FS_FS_FS_$$FMTHL7^XLFDT($G(@GDATA@(1201,"I")))
  S GMRCM(ZCNT)=GMRCM(ZCNT)_FS_FS_FS_FS_GMRCDA_FS_$G(@GDATA@(.06,"I"))_FS_FS_FS_$G(@GDATA@(.06,"E"))_FS_$G(@GDATA@(.05,"E"))
@@ -154,7 +161,7 @@ EN() ;Entry point to routine called from POSTSIGN^TIULC1 for the CCRA TIU Docume
  ;      OBX.2-Value Type: "TX"
  ;      OBX.3-Observation Identifier:TIU note IEN (GMRCDA)
  ;      OBX.11-Observation result status codes interpretation: F (Final results)
- ;      OBX.14-Date/Time of the Observation:  1201 -TIU ENTRY DATE/TIME 
+ ;      OBX.14-Date/Time of the Observation:  1201 -TIU ENTRY DATE/TIME
  ;      OBX.16-ResponsibleObserver() : 1204     EXPECTED SIGNER /1208 EXPECTED COSIGNER
  N PRSIG1,PRSIG2
  S ZCNT=ZCNT+1
@@ -181,11 +188,13 @@ NTE(HL) ; Find TIU and build NTE segments
  S ZCNT=ZCNT+1,GMRCM(ZCNT)="NTE"_FS_NTECNT_FS_"P"_FS_"Progress Note:"_$G(@GDATA@(.01,"E"))
  ;check if Document Type is ADDENDUM
  S TIUTYP=$G(@GDATA@(.01,"E"))
- I TIUTYP="ADDENDUM" D 
+ I TIUTYP="ADDENDUM" D
  . S GMRCCMP=$$DATE^GMRCCCRA($G(@GDATA@(1301,"I")),"MM/DD/CCYY")_" ADDENDUM"_"                      STATUS: "_$$GET1^DIQ(8925,+GMRCDA_",",.05)
  S I=0
- F  S I=$O(@GDATA@(2,I)) Q:I=""  S X=@GDATA@(2,I) D
+ F  S I=$O(@GDATA@(2,I)) Q:+I=0  S X=@GDATA@(2,I) D
  .S X=$$TRIM^XLFSTR(X) I $L(X)=0 Q
+ .S X=$$TIUC(X) ; Check for control characters -emergency patch TIU*1.0*32
+ .I $L(X)=0 Q
  .D HL7TXT^GMRCHL7P(.X,.HL,"\")
  .S ZCNT=ZCNT+1,NTECNT=NTECNT+1,GMRCM(ZCNT)="NTE"_FS_NTECNT_FS_FS_X
  Q
@@ -259,3 +268,17 @@ MESSAGE(MSGID,ERRARY) ; Send a MailMan Message with the errors
  S XMY("G.GMRC HCP HL7 MESSAGES")=""
  D ^XMD
  Q
+TIUC(X) ; Check each segment of the TIU notes for HL7 control characters
+ Q:$G(X)=""
+ I $G(X)[$C(13,10,10) S X=$TR(X,$C(13,10,10),"") ; <cr><lf><lf>
+ I $G(X)[$C(13,10) S X=$TR(X,$C(13,10),"") ; <cr><lf>
+ I $G(X)[$C(13) S X=$TR(X,$C(13),"") ; TERM char
+ I $G(X)[$C(1) S X=$TR(X,$C(1),"") ; SOH
+ I $G(X)[$C(2) S X=$TR(X,$C(2),"") ; STX
+ I $G(X)[$C(3) S X=$TR(X,$C(3),"") ; ETX
+ I $G(X)[$C(4) S X=$TR(X,$C(4),"") ; EOT
+ I $G(X)[$C(5) S X=$TR(X,$C(5),"") ; ENQ
+ I $G(X)[$C(6) S X=$TR(X,$C(6),"") ; ACK
+ I $G(X)[$C(21) S X=$TR(X,$C(21),"") ; NAK
+ I $G(X)[$C(23) S X=$TR(X,$C(23),"") ; ETB
+ Q X

@@ -1,13 +1,84 @@
-IBXX22 ; COMPILED XREF FOR FILE #399.0292 ; 05/24/19
+IBXX22 ; COMPILED XREF FOR FILE #399.0222 ; 05/22/20
  ; 
- S DA=0
-A1 ;
- I $D(DISET) K DIKLM S:DIKM1=1 DIKLM=1 G @DIKM1
-0 ;
-A S DA=$O(^DGCR(399,DA(1),"U9",DA)) I DA'>0 S DA=0 G END
-1 ;
- S DIKZ(0)=$G(^DGCR(399,DA(1),"U9",DA,0))
- S X=$P($G(DIKZ(0)),U,1)
- I X'="" S ^DGCR(399,DA(1),"U9","B",$E(X,1,30),DA)=""
- G:'$D(DIKLM) A Q:$D(DISET)
+ I X'="" D
+ .N DIK,DIV,DIU,DIN
+ .K DIV S DIV=X,D0=DA,DIV(0)=D0 S Y(1)=$S($D(^DGCR(399,D0,"MP")):^("MP"),1:"") S X=$P(Y(1),U,8),X=X S DIU=X K Y S X=DIV S X=$S(($D(DUZ)#2):DUZ,1:"") X ^DD(399,473,1,2,1.4)
+ S DIKZ("MP")=$G(^DGCR(399,DA,"MP"))
+ S X=$P($G(DIKZ("MP")),U,3)
+ I X'="" S ^DGCR(399,"E",$E(X,1,30),DA)=""
+ S X=$P($G(DIKZ("MP")),U,5)
+ I X'="" S ^DGCR(399,"F",$E(X,1,30),DA)=""
+ S X=$P($G(DIKZ("MP")),U,7)
+ I X'="" S ^DGCR(399,"G",$E(X,1,30),DA)=""
+CR1 S DIXR=190
+ K X
+ S DIKZ("M")=$G(^DGCR(399,DA,"M"))
+ S X(1)=$P(DIKZ("M"),U,1)
+ S X(2)=$P(DIKZ("M"),U,2)
+ S X(3)=$P(DIKZ("M"),U,3)
+ S X(4)=$P(DIKZ("M"),U,13)
+ S X(5)=$P(DIKZ("M"),U,12)
+ S X(6)=$P(DIKZ("M"),U,14)
+ S X=$G(X(1))
+ D
+ . K X1,X2 M X1=X,X2=X
+ . N DIKXARR M DIKXARR=X S DIKCOND=1
+ . S X=$S($O(^DGCR(399,DA,"PRV",0)):1,1:0)
+ . S DIKCOND=$G(X) K X M X=DIKXARR
+ . Q:'DIKCOND
+ . D:X1(1)'=X2(1)!(X1(5)'=X2(5)) SETID^IBCEP3(DA,1) D:X1(2)'=X2(2)!(X1(4)'=X2(4)) SETID^IBCEP3(DA,2) D:X1(3)'=X2(3)!(X1(6)'=X2(6)) SETID^IBCEP3(DA,3)
+CR2 S DIXR=507
+ K X
+ S DIKZ("M")=$G(^DGCR(399,DA,"M"))
+ S X(1)=$P(DIKZ("M"),U,1)
+ S X(2)=$P(DIKZ("M"),U,2)
+ S X(3)=$P(DIKZ("M"),U,3)
+ S DIKZ(0)=$G(^DGCR(399,DA,0))
+ S X(4)=$P(DIKZ(0),U,2)
+ S X=$G(X(1))
+ D
+ . K X1,X2 M X1=X,X2=X
+ . N CURR S CURR=+$$COBN^IBCEF(DA) I $G(X(4)),$G(X(CURR)) S ^DGCR(399,"AE",X(4),X(CURR),DA)=""
+CR3 S DIXR=855
+ K X
+ S DIKZ(0)=$G(^DGCR(399,DA,0))
+ S X(1)=$P(DIKZ(0),U,22)
+ S DIKZ("U2")=$G(^DGCR(399,DA,"U2"))
+ S X(2)=$P(DIKZ("U2"),U,10)
+ S DIKZ("MP")=$G(^DGCR(399,DA,"MP"))
+ S X(3)=$P(DIKZ("MP"),U,2)
+ S X(4)=$P(DIKZ(0),U,19)
+ S X=$G(X(1))
+ D
+ . K X1,X2 M X1=X,X2=X
+ . D TAX^IBCEF79(DA)
+CR4 S DIXR=918
+ K X
+ S DIKZ(0)=$G(^DGCR(399,DA,0))
+ S X(1)=$P(DIKZ(0),U,19)
+ S X=$G(X(1))
+ D
+ . K X1,X2 M X1=X,X2=X
+ . N IBLNPRV I $$LNPRVFT^IBCEU7(X,.IBLNPRV) D FILE^DIE("E","IBLNPRV") Q
+CR5 S DIXR=919
+ K X
+ S DIKZ(0)=$G(^DGCR(399,DA,0))
+ S X(1)=$P(DIKZ(0),U,19)
+ S X=$G(X(1))
+ D
+ . K X1,X2 M X1=X,X2=X
+ . N DIKXARR M DIKXARR=X S DIKCOND=1
+ . S X=X(1)=3
+ . S DIKCOND=$G(X) K X M X=DIKXARR
+ . Q:'DIKCOND
+ . D REMOVE^IBCEU7(DA,X(1))
+CR6 S DIXR=924
+ K X
+ S DIKZ(0)=$G(^DGCR(399,DA,0))
+ S X(1)=$P(DIKZ(0),U,27)
+ S X=$G(X(1))
+ I $G(X(1))]"" D
+ . K X1,X2 M X1=X,X2=X
+ . D CMAEDALL^IBCU9(DA)
+CR7 K X
 END G ^IBXX23

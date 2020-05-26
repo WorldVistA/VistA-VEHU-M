@@ -1,11 +1,15 @@
-YTQAPI ;ASF/ALB,HIOFO/FT - MHQ REMOTE PROCEDURES ; 3/14/13 12:17pm
- ;;5.01;MENTAL HEALTH;**85,108**;Dec 30, 1994;Build 17
- ;No external references
+YTQAPI ;ASF/ALB - MHQ REMOTE PROCEEDURES ; 4/3/07 10:36am
+ ;;5.01;MENTAL HEALTH;**85,130**;Dec 30, 1994;Build 62
+ ;
+ ; External Reference    ICR#
+ ; ------------------   -----
+ ; DID                   2052
+ ; DIQ                   2056
+ ;
  Q
 TSLIST(YSDATA) ;list tests and surveys
- ;Entry point for YTQ TSLIST rpc
  ;Input: none
- ;Output: TEST NAME = LAST EDIT DATE^OPERATIONAL^REQUIRES LICENSE^LICENSE CURRENT^IS LEGACY^IEN^R PRIVILEGE^IS NATIONAL^HAS BEEN OPERATIONAL
+ ;Output: TEST NAME = LAST EDIT DATE^OPERATIONAL^REQUIRES LISCENCE^LISCENCE CURRENT^IS LEGACY^IEN^R PRIVILEGE^IS NATIONAL^HAS BEEN OPERATIONAL
  N YSTESTN,YSTEST,N,G,G1,G2,G3,G4,G5,G6,G7
  K ^TMP($J,"YSTL")
  S YSDATA=$NA(^TMP($J,"YSTL"))
@@ -24,27 +28,22 @@ TSLIST(YSDATA) ;list tests and surveys
  . S ^TMP($J,"YSTL",N)=YSTEST_"="_G_U_G1_U_G2_U_G3_U_G4_U_YSTESTN_U_G5_U_G6_U_G7
  Q
 TSLIST1(YSDATA,YS) ;list questions for a single test
- ;Entry point for YTQ TSLIST1 rpc
  ;input: CODE as test name
  ;output: Field^Value
- N YSERROR,YSF,YSI,YSJ,YSN,YSTARGET,YSTEST,YSTESTN
+ N YSTESTN,YSTEST,YSF,YSV,N,I,YSEI
  S YSTEST=$G(YS("CODE"))
  I YSTEST="" S YSDATA(1)="[ERROR]",YSDATA(2)="NO code" Q  ;-->out
  S YSTESTN=$O(^YTT(601.71,"B",YSTEST,0))
  I YSTESTN'>0 S YSDATA(1)="[ERROR]",YSDATA(2)="bad code" Q  ;-->out
- D GETS^DIQ(601.71,YSTESTN_",","*","EI","YSTARGET","YSERROR")
- I $D(YSERROR) D  Q
- .S YSDATA(1)="[ERROR]",YSDATA(2)=$G(YSERROR("DIERR",1,"TEXT",1))
- S YSN=2,YSDATA(1)="[DATA]",YSDATA(2)="IEN="_YSTESTN
- S YSI=0,YSJ=YSTESTN_","
- F  S YSI=$O(YSTARGET(601.71,YSJ,YSI)) Q:'YSI  D
- .S YSN=YSN+1
- .D FIELD^DID(601.71,YSI,"","LABEL","YSF")
- .I YSI=18 S YSDATA(YSN)=YSF("LABEL")_"="_$G(YSTARGET(601.71,YSJ,YSI,"I")) Q
- .S YSDATA(YSN)=YSF("LABEL")_"="_$G(YSTARGET(601.71,YSJ,YSI,"E"))
+ S N=2,YSDATA(1)="[DATA]",YSDATA(2)="IEN="_YSTESTN
+ F I=.01,2,3,4,5,7,7.5,8,9,10,10.5,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,100.01,100.02,100.03,100.04 D
+ . S N=N+1
+ . S YSEI=$S(I=18:"I",1:"E")
+ . D FIELD^DID(601.71,I,"","LABEL","YSF")
+ . S YSV=$$GET1^DIQ(601.71,YSTESTN_",",I,YSEI)
+ . S YSDATA(N)=YSF("LABEL")_"="_YSV
  Q
 CHOICES(YSDATA,YS) ;list choices for a question
- ;Entry point for YTQ CHOICES rpc
  ;input: CODE as test name
  ;output: 601.75(1) CHOICETYPE ID^SEQUENCE^CHOICE IFN^CHOICE TEXT^LEGACY VALUE
  N YSCDA,YSIC,YSQN,YSN,YSN1,YSTESTN,YSTEST,YSF,YSV,N,G,YSCTYP,YSCTYPID,G,G1,X
@@ -66,7 +65,6 @@ C2 ;
  ... S YSDATA(N)=YSN_U_YSN1_U_YSCDA_U_$G(^YTT(601.75,YSCDA,1))_U_$P($G(^YTT(601.75,YSCDA,0)),U,2)
  Q
 SKIPPED(YSDATA,YS) ; skipped questions for an instrument
- ;Entry point for YTQ SKIP rpc
  ;input: CODE as test name
  ;output: QUESTIONID^SKIPQUESTIONID
  ; for single test in question,skipped order
@@ -83,7 +81,6 @@ SKIPPED(YSDATA,YS) ; skipped questions for an instrument
  S N1=0 F  S N1=$O(G(N1)) Q:N1'>0  S N2=0 F  S N2=$O(G(N1,N2)) Q:N2'>0  S N=N+1,YSDATA(N)=N1_U_N2
  Q
 SECTION(YSDATA,YS) ;section captions
- ;Entry point for YTQ SECTION rpc
  ;input: CODE as test name
  ;output: FIRSTQUESTIONID^TABCAPTION^SECTIONCAPTION^DISPLAYID
  ; for single test in questionID order

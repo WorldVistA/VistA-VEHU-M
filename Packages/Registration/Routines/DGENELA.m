@@ -1,5 +1,5 @@
-DGENELA ;ALB/CJM,KCL,Zoltan/PJR,RGL,LBD,EG,TMK,CKN,ERC,TDM,JLS - Patient Eligibility API ;3/3/11 3:40pm
- ;;5.3;Registration;**121,147,232,314,451,564,631,672,659,583,653,688,841,909**;Aug 13,1993;Build 32
+DGENELA ;ALB/CJM,KCL,Zoltan/PJR,RGL,LBD,EG,TMK,CKN,ERC,TDM,JLS,HM - Patient Eligibility API ;3/3/11 3:40pm
+ ;;5.3;Registration;**121,147,232,314,451,564,631,672,659,583,653,688,841,909,972,952**;Aug 13,1993;Build 160
  ;
 GET(DFN,DGELG) ;
  ;Description: Used to obtain the patient eligibility data.
@@ -58,10 +58,14 @@ GET(DFN,DGELG) ;
  ;"CVELEDT"           COMBAT VETERAN END DATE
  ;"SHAD"              SHAD EXPOSURE
  ;"MOH"               MEDAL OF HONOR
+ ;"MOHAWRDDATE"       MEDAL OF HONOR AWARD DATE
+ ;"MOHSTATDATE"       MEDAL OF HONOR CHANGE DATE
+ ;"MOHEXEMPDATE"      MEDAL OF HONOR COPAYMENT EXEMPTION DATE
  ;"CLE"                CAMP LEJEUNE INDICATED?
  ;"CLEDT"              CAMP LEJEUNE DATE
  ;"CLEST"              CAMP LEJEUNE CHANGE SITE
  ;"CLESOR"             CAMP LEJEUNE SOURCE
+ ;"OTHTYPE"           EXPANDED MH CARE TYPE (OTH)
  ;
  K DGELG
  S DGELG=""
@@ -134,7 +138,10 @@ GET(DFN,DGELG) ;
  ;
  ; Medal of Honor Indicator
  S NODE=$G(^DPT(DFN,.54))
- S DGELG("MOH")=$P(NODE,"^")
+ S DGELG("MOH")=$P(NODE,"^",1)
+ S DGELG("MOHAWRDDATE")=$P(NODE,"^",2) ;MH AWARD DATE DG*5.3*972 HM
+ S DGELG("MOHSTATDATE")=$P(NODE,"^",3) ;MH STATUS DATE DG*5.3*972 HM
+ S DGELG("MOHEXEMPDATE")=$P(NODE,"^",4) ;MH COPAYMENT EXEMPTION DATE DG*5.3*972 HM
  ;
  ; Camp Lejeune Eligibility Indicator  DG*5.3*909
  S NODE=$G(^DPT(DFN,.3217))
@@ -142,6 +149,10 @@ GET(DFN,DGELG) ;
  S DGELG("CLEDT")=$P(NODE,"^",2)
  S DGELG("CLEST")=$P(NODE,"^",3)
  S DGELG("CLESOR")=$P(NODE,"^",4)
+ ;
+ ; Expanded MH care type for OTH patients DG*5.3*952
+ S NODE=$G(^DPT(DFN,.55))
+ S DGELG("OTHTYPE")=$P(NODE,U)
  ;
  ;means test category
  S DGELG("MTSTA")=""
