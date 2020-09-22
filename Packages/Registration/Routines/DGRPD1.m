@@ -1,5 +1,5 @@
 DGRPD1 ;BPFO/JRC,BAJ,DJE,ARF - PATIENT INQUIRY (NEW) ;Sep 28, 2017  5:35PM
- ;;5.3;Registration;**703,730,688,863,935,985**;Aug 13, 1993;Build 15
+ ;;5.3;Registration;**703,730,688,863,935,985,OSEHRA**;Aug 13, 1993;Build 15
  ; DG*5.3*688 BAJ
  ; tags HDR & OKLINE moved as is from DGRPD for size considerations
  Q
@@ -78,6 +78,7 @@ HDR I '$D(IOF) S IOP="HOME" D ^%ZIS K IOP
  F DGLN=1:1:DGCNT S DGLINE=$TR(^UTILITY($J,"W",0,DGLN,0),"_"," ") W !,DGLINE  ;replaced "_" for display
  S X="",$P(X,"=",78)="" W !,X,!
  K ^UTILITY($J,"W")
+ QUIT  ; **OSEHRA**
 OKLINE(DGLINE) ;DOES PAUSE/HEADER IF $Y EXCEEDS DGLINE
  ;
  ;IN:   DGLINE --MAX LINE COUNT W/O PAUSE
