@@ -26,7 +26,7 @@ ZWR
 ^XTV(8989.3,1,"DEV")="/tmp/^/tmp"
 ^XTV(8989.3,1,"DNS")="9.9.9.9"
 ^XTV(8989.3,1,"INTRO",0)="^^33^33^3190924^"
-^XTV(8989.3,1,"INTRO",1,0)="     VEHU or CPRS DEMO INSTANCE - Patched to August 2019 by OSEHRA."
+^XTV(8989.3,1,"INTRO",1,0)="     VEHU or CPRS DEMO INSTANCE - Patched to March 2020 by Sam Habiel"
 ^XTV(8989.3,1,"INTRO",2,0)=" "
 ^XTV(8989.3,1,"INTRO",3,0)="     NAME                     ACCESS    VERIFY    E SIG"
 ^XTV(8989.3,1,"INTRO",4,0)="     ----                     ------    ------    -----"
