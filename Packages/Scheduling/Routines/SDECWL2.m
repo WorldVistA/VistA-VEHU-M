@@ -1,10 +1,13 @@
-SDECWL2 ;ALB/SAT - VISTA SCHEDULING RPCS ;JUN 21, 2017
- ;;5.3;Scheduling;**627,642,658,665**;Aug 13, 1993;Build 14
+SDECWL2 ;ALB/SAT,WTC,LAB - VISTA SCHEDULING RPCS ;Apr 10, 2020@15:22
+ ;;5.3;Scheduling;**627,642,658,665,694,745**;Aug 13, 1993;Build 40
+ ;;Per VHA Directive 2004-038, this routine should not be modified
  ;
  Q
  ;
 WLSET(RET,INP) ;Waitlist Set
- ;WLSET(RET,INP...)  external parameter tag in SDEC
+ ;SD*5.3*745 replace external 'INP...' due to XINDEX issue.  Parameters are then rolled into the INP array
+ ;WLSET(RET,S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14,S15,S16,S17,S18,S19,S20,S21,S22,S23,S24,S25,S26,SD27) external parameter tag in SDEC
+ ; INP - Input parameters array
  ;  INP(1)  = (integer)  Wait List IEN point to
  ;                       SD WAIT LIST file 409.3.
  ;                       If null, a new entry will be added
@@ -76,8 +79,12 @@ WLSET(RET,INP) ;Waitlist Set
  I '+DFN S RET=RET_"-1^Invalid Patient ID."_$C(30,31) Q
  I '$D(^DPT(DFN,0)) S RET=RET_"-1^Invalid Patient ID"_$C(30,31) Q
  S WLEDT=$P($G(INP(3)),":",1,2)
- S %DT="TX" S X=WLEDT D ^%DT S WLEDT=Y
- I Y=-1 S RET=RET_"-1^Invalid Origination date."_$C(30,31) Q
+ ;
+ ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
+ ;
+ S WLEDT=$$NETTOFM^SDECDATE(WLEDT,"Y","N") I WLEDT=-1 S RET=RET_"-1^Invalid Origination date."_$C(30,31) Q  ;
+ ;S %DT="TX" S X=WLEDT D ^%DT S WLEDT=Y
+ ;I Y=-1 S RET=RET_"-1^Invalid Origination date."_$C(30,31) Q
  S WLORIGDT=$P(WLEDT,".",1)
  S WLINST=$G(INP(4)) I WLINST'="" D
  .I '+WLINST S WLINST=$O(^DIC(4,"B",WLINST,0))
@@ -228,7 +235,11 @@ WL23(INP23,WLI) ;Patient Contacts
  F WLI1=1:1:$L(INP23,"::") D
  .S STR23=$P(INP23,"::",WLI1)
  .K FDA
- .S %DT="T" S X=$P($P(STR23,"~~",1),":",1,2) D ^%DT S WLASD=Y
+ . ;
+ . ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
+ . ;
+ . S WLASD=$$NETTOFM^SDECDATE($P($P(STR23,"~~",1),":",1,2),"Y","N") ;
+ . ;S %DT="T" S X=$P($P(STR23,"~~",1),":",1,2) D ^%DT S WLASD=Y
  .I (WLASD=-1)!(WLASD="") Q
  .S WLASDH=""   ;$O(^SDWL(409.3,WLI,4,"B",WLASD,0))
  .S WLIENS1=$S(WLASDH'="":WLASDH,1:"+1")_","_WLIENS

@@ -1,5 +1,5 @@
-PXRMREDT ;SLC/PKR,PJH - Edit PXRM reminder definition. ;08/16/2018
- ;;2.0;CLINICAL REMINDERS;**4,6,12,18,26,47,42**;Feb 04, 2005;Build 132
+PXRMREDT ;SLC/PKR,PJH - Edit PXRM reminder definition. ;08/29/2018
+ ;;2.0;CLINICAL REMINDERS;**4,6,12,18,26,47,45**;Feb 04, 2005;Build 566
  ;
  ;---------------
 EEDIT ;Entry point for PXRM DEFINITION EDIT option.
@@ -101,7 +101,8 @@ STRTEDIT S BLDLOGIC=0
  . I '$D(^PXD(811.9,DA)) Q
  . I OPTION="^" G STRTEDIT
  . W !,"Checking integrity of the definition ...",#
- . I '$$DEF^PXRMICHK(DA) G STRTEDIT
+ . N OUTPUT
+ . I '$$DEF^PXRMICHK(DA,.OUTPUT,1) G STRTEDIT
  .;If it passes the integrity check save the edit history.
  . D SEHIST^PXRMUTIL(811.9,ROOT,DA)
  Q
@@ -109,7 +110,7 @@ STRTEDIT S BLDLOGIC=0
  ;Reminder Edit
  ;---------------
 EDIT(ROOT,DA) ;
- N DIC,DIDEL,DIE,DR,RESULT
+ N DIC,DIDEL,DIE,DR,OUTPUT,RESULT
  S DIE=ROOT,DIDEL=811.9
  ;Edit the fields in the same order they are printed by a reminder
  ;inquiry.
@@ -131,7 +132,7 @@ EDIT(ROOT,DA) ;
  D WEB Q:$D(Y)
  W #
  I '$D(^PXD(811.9,DA)) Q
- I '$$DEF^PXRMICHK(DA) G STRTEDIT
+ I '$$DEF^PXRMICHK(DA,.OUTPUT,1) G STRTEDIT
  ;If it passes the integrity check save the edit history.
  D SEHIST^PXRMUTIL(811.9,DIC,DA)
  Q

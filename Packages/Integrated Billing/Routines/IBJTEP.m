@@ -1,7 +1,7 @@
-IBJTEP ;ALB/TJB - TP ERA/835 INFORMATION SCREEN ;01-MAY-2015
- ;;2.0;INTEGRATED BILLING;**530,609,633**;21-MAR-94;Build 21
- ;;Per VA Directive 6402, this routine should not be modified.
- ;; ;
+IBJTEP ;ALB/TJB - TP ERA/835 INFORMATION SCREEN ;20 Dec 2018 14:47:23
+ ;;2.0;INTEGRATED BILLING;**530,609,633,639**;21-MAR-94;Build 30
+ ;Per VA Directive 6402, this routine should not be modified.
+ ;
 EN ; -- main entry point for IBJT ERA 835 INFORMATION
  D EN^VALM("IBJT ERA 835 INFORMATION")
  Q
@@ -99,14 +99,14 @@ INIT ; -- init variables and list array
  .. I EPIEN,'$D(EOBLST(EPIEN)) D  ;
  ... D EOBDET(EPIEN,0,EOBCT,IBEBERA,ERAIEN) ; PRCA*4.5*332
  ... S EOBLST(EPIEN)=""
- . D SET(.LINE,"================================================================================")
+ . D SET(.LINE,$TR(SP80," ","="))
  . S EPIEN=ZZEPIEN
  I RCCOPY D  ;
  . S (X,XX)=0 F  S X=$O(RCCOPY(X)) Q:'X  D  ; Display copied EOBs - PRCA*4.5*332
  . . I '$D(EOBLST(RCCOPY(X))) D  ;
  . . . D EOBDET(RCCOPY(X),1,X,RCCOPY,"")
  . . . S EOBLST(RCCOPY(X))="",XX=XX+1
- . I XX D SET(.LINE,"================================================================================")
+ . I XX D SET(.LINE,$TR(SP80," ","="))
  ; No EEOB IEN, then report that No ERA recieved for this bill
  I LINE=0 S VALMCNT=2 D SET^VALM10(1," "),SET^VALM10(2,"No ERA Information for Bill: "_EPBILL) G INITQ
  S VALMCNT=LINE
@@ -157,7 +157,7 @@ EOBDET(EPIEN,TYPE,EOBCT,IBEBERA,ERAIEN) ; Add EOB detail to List Manager Array
  ;         ERAIEN - Internal entry number from file 344.4
  ;
  N IBEOB,IBGX,IBCL,IBDGCR,IBRX,IBSPL,IBEERR,RCTRACE
- D GETS^DIQ(361.1,EPIEN_",",".01;.02;.03;.04;.06;.07;.14;1.01;1.02;1.03;1.1;1.11;2.03;2.04;3.03;3.04;3.05;3.06;3.07;102","EI","IBEOB")
+ D GETS^DIQ(361.1,EPIEN_",",".01;.02;.03;.04;.06;.07;.14;1.01;1.02;1.03;1.1;1.11;2.03;2.04;3.03;3.04;3.05;3.06;3.07;102;104","EI","IBEOB")
  D GETS^DIQ(361.1,EPIEN_",","10*;","EI","IBGX"),RESORT^IBJTEP1("IBGX",361.111),RESORT^IBJTEP1("IBGX",361.11) ; Claim Level Adjustments
  D GETS^DIQ(361.1,EPIEN_",","15*;","EI","IBCL") ; Line Level Adjustments
  D GETS^DIQ(361.1,EPIEN_",","8*;","EI","IBSPL") ; ERA Splits for this EEOB
@@ -171,7 +171,19 @@ EOBDET(EPIEN,TYPE,EOBCT,IBEBERA,ERAIEN) ; Add EOB detail to List Manager Array
  D SET(.LINE,"********** "_$S(TYPE=0:"",1:"COPIED ")_"EOB/835 INFORMATION ("_EOBCT_" of "_IBEBERA_") **********")
  I $G(IBEOB("361.1",EPIEN_",","102","I")) D  Q  ; EOB Removed
  . D EOBREM^IBJTEP1(EPIEN,.LINE)
- . D SET(.LINE,"--------------------------------------------------------------------------------")
+ . D SET(.LINE,$TR(SP80," ","-"))
+ ;
+ I $G(ERADA) D  ; ORIGINAL PATIENT NAME added in IB*2.0*639
+ . S ERAIEN("p344.41")=$O(^RCY(344.4,ERADA,1,"AC",EPIEN,0))
+ . I ERAIEN("p344.41") D  ; POINTER TO ERA DETAIL 344.41
+ . .  S XLN="  Free Text Patient Name: "_$$GET1^DIQ(344.41,ERAIEN("p344.41")_","_ERADA_",",.15,"E")
+ . .  D SET(.LINE,XLN)
+ E  D  ;
+ . S ERAIEN("p344.41")=$G(IBEOB("361.1",EPIEN_",","104","E"))
+ . I ERAIEN("p344.41")'="" D  ;
+ . .  S XLN="  Free Text Patient Name: "_$$GET1^DIQ(344.41,ERAIEN("p344.41"),.15,"E")
+ . .  D SET(.LINE,XLN)
+ ;
  S XLN="  EOB Type: "_$G(IBEOB("361.1",EPIEN_",",".04","E")),XSP=$E(SP80,1,(40-$L(XLN)))
  D SET(.LINE,XLN_XSP_"EOB Paid Date: "_$G(IBEOB("361.1",EPIEN_",",".06","E")))
  S TSDT=$$FMTE^XLFDT($G(IBEOB("361.1",EPIEN_",","1.1","I")),"2Z"),TEDT=$$FMTE^XLFDT($G(IBEOB("361.1",EPIEN_",","1.11","I")),"2Z"),XLN="  Svc From Date: "_TSDT,XSP=$E(SP80,1,(40-$L(XLN)))
@@ -202,7 +214,7 @@ EOBDET(EPIEN,TYPE,EOBCT,IBEBERA,ERAIEN) ; Add EOB detail to List Manager Array
  D SET(.LINE,"  Total Submitted Charges :"_$J($G(IBEOB("361.1",EPIEN_",","2.04","E")),11,2)_"  Payer Covered Amount    :"_$J($G(IBEOB("361.1",EPIEN_",","1.03","E")),11,2))
  D SET(.LINE,"  Payer Paid Amount       :"_$J($G(IBEOB("361.1",EPIEN_",","1.01","E")),11,2)_"  MEDICARE Allowed Amount :"_$J($G(IBEOB("361.1",EPIEN_",","2.03","E")),11,2))
  D SET(.LINE,"  Patient Responsibility  :"_$J($G(IBEOB("361.1",EPIEN_",","1.02","E")),11,2)_" %              Collected :"_$J(+IBCOL,11,0)_" %") ; IB*2.0*609
- D SET(.LINE,"--------------------------------------------------------------------------------")
+ D SET(.LINE,$TR(SP80," ","-"))
  D SET(.LINE,"CLAIM LEVEL ADJUSTMENTS:")
  S AA="",ACNT=0 F  S AA=$O(IBGX(361.11,AA)) Q:AA=""  S ACNT=ACNT+1,AQ="" D
  . S CC=AA F  S CC=$O(IBGX(361.111,CC)) Q:$E(CC,1,$L(AA))'=AA  D
@@ -223,7 +235,7 @@ EOBDET(EPIEN,TYPE,EOBCT,IBEBERA,ERAIEN) ; Add EOB detail to List Manager Array
  . S RCRC=RCRC+1 D SET(.LINE,"  --- REMARK CODE("_RCRC_"): "_IBEOB("361.1",EPIEN_",",II,"E")_" => "_RCFLD(1))
  . I RCFLD>1 F II=2:1:RCFLD D SET(.LINE,"          "_RCFLD(II))
  I RCRC=0 D SET(.LINE,"  -- None --")
- D SET(.LINE,"--------------------------------------------------------------------------------")
+ D SET(.LINE,$TR(SP80," ","-"))
  ; Walk through the line level information...
  D SET(.LINE,"EEOB LINE LEVEL ADJUSTMENTS:")
  K ^XTMP("IBJTEP",$J) M ^XTMP("IBJTEP",$J)=IBCL

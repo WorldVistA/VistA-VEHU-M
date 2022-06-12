@@ -1,23 +1,26 @@
-IBECEAU2 ;ALB/CPM-Cancel/Edit/Add... User Prompts ; 19-APR-93
- ;;2.0;INTEGRATED BILLING;**7,52,153,176,545,563,614,618,646,663,671**;21-MAR-94;Build 13
+IBECEAU2 ;ALB/CPM - Cancel/Edit/Add... User Prompts ; 19-APR-93
+ ;;2.0;INTEGRATED BILLING;**7,52,153,176,545,563,614,618,646,663,671,669,653,678**;21-MAR-94;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 REAS(IBX) ; Ask for the cancellation reason.
  ; Input:   IBX  --  "C" (Cancel a charge), "E" (Edit a Charge)
- S DIC="^IBE(350.3,",DIC(0)="AEMQZ",DIC("A")="Select "_$S(IBX="E":"EDIT",1:"CANCELLATION")_" REASON: "
- S DIC("S")=$S(IBXA=7:"I 1",IBXA=6:"I $P(^(0),U,3)=3",IBXA=5:"I ($P(^(0),U,3)=1)!($P(^(0),U,3)=3)",1:"I ($P(^(0),U,3)=2)!($P(^(0),U,3)=3)")
- D ^DIC K DIC
- ;IB*2.0*663 - added block to prevent use of Non UC cancellation reasons on UC copays.
- S IBCRES=+Y
- I Y<0 W !!,"No ",$S(IBX="E":"edit",1:"cancellation")," reason entered - the transaction cannot be completed." Q
+ N IBUC
  ;
- I (IBX="C"),Y(0,0)="PATIENT DECEASED" Q
- I (IBX="C"),Y(0,0)="RECD INPATIENT CARE" Q
- I (IBX="C"),Y(0,0)="BILLED AT HIGHER TIER RATE" Q
- I (IBX="C"),(Y(0,0)'["UC - "),($$GET1^DIQ(350.1,$P(IBND,U,3)_",",.01)["CC URGENT CARE") D
- . W !!,"This is an Urgent Care Copayment. Please use an Urgent Care cancellation reason.",!,"This transaction cannot be completed.",!
- . S IBCRES=-1
- ;end IB*2.0*663
+ ;start IB*2.0*678
+ ;Check the Brief Description field of the copay being cancelled to see if it is an Urgent Care Copay 
+ S IBUC=""
+ S:$P(IBND,U,8)["URGENT" IBUC=1
+ ;end IB*2.0*678
+ ;
+ S DIC="^IBE(350.3,",DIC(0)="AEMQZ",DIC("A")="Select "_$S(IBX="E":"EDIT",1:"CANCELLATION")_" REASON: "
+ ;
+ ;IB*2.0*678 added an Inactive screen to most of the Copays.  Built a new Screen for the UC copays.
+ S:'IBUC DIC("S")=$S(IBXA=7:"I 1",IBXA=6:"I $P(^(0),U,3)=3",IBXA=5:"I ($P(^(0),U,3)=1)!($P(^(0),U,3)=3)",1:"I ($P(^(0),U,3)=2)!($P(^(0),U,3)=3)")_",(+($P(^(0),U,6))=0)"
+ S:IBUC DIC("S")="I ($P(^(0),U,4)=1),(+($P(^(0),U,6))=0)"
+ ;end IB*2.0*678
+ ;
+ D ^DIC K DIC
+ S IBCRES=+Y
  ;
  Q
  ;
@@ -25,15 +28,7 @@ UNIT(DEF) ; Ask for units for Rx copay charges
  ; Input:   DEF  --  Default value if previous charge is to be displayed
  N DA,DIR,DIRUT,DUOUT,DTOUT,X,X1,Y
  S DA=IBATYP,IBDESC="RX COPAYMENT" D COST^IBAUTL S IBCHG=X1
- ;                                                                                                                      IB*2.0*614  
- ;                                                                                                                      Check for HRfS flag and days supply, if flag and days supply is less than 30 prorate cost
- I $$CHKHRFS^IBAMTS3(DFN,IBEFDT) N IBSUPP D  ;Pt has the HRfS active flag
- . N DA,DIR,DIRUT,DUOUT,DTOUT,X,X1,Y
- . S DIR("0")="N^1:90",DIR("?")="Enter a whole number between 1 and 90",DIR("A")="DAYS SUPPLY",DIR("B")=30
- . D ^DIR I 'Y!($D(DIRUT))!($D(DUOUT)) Q
- . I $G(Y)>29 Q   ;Quit if day supply is not less than 30
- . S IBCHG=$$PRORATE^IBAMTS3(Y,IBCHG)   ;Prorate the cost as per regulation
- ;                                                                                                                       END OF IB*2.0*614 changes
+ ;IB*2.0*653 removed the functionality added (we formerly ask days supply) in IB*2.0*614 no longer needed 
  S DIR(0)="N^::0^K:X<1!(X>12) X",DIR("A")="Units",DIR("?")="^D HUN^IBECEAU2"
  S:DEF DIR("B")=DEF D ^DIR I Y S IBUNIT=Y,IBCHG=IBCHG*Y
  I 'Y W !!,"Units not entered - transaction cannot be completed." S IBY=-1
@@ -48,7 +43,8 @@ FRA S:$G(DEF) DIR("B")=$$DAT2^IBOUTL(DEF)
  I IBXA=7 G FRQ
  I IBXA'=8,IBXA'=9,IBXA'=5,'IBUC,'$$BIL^DGMTUB(DFN,IBFR+.24) D CATC G FRA    ;IB*2.0*646 - added UC check.
  I IBXA>7,IBXA<10,$$LTCST^IBAECU(DFN,IBFR,1)<2 W !,"This patient is not LTC billable on this date.",! G FRA
- I IBXA=4,$$BFO^IBECEAU(DFN,IBFR) W !!,"This patient has already been billed the outpatient copay charge for ",$$DAT1^IBOUTL(IBFR),".",! G FRA
+ ;IB*2.0*678 Moved Dup check to IBECEA3 because of additional functionality for Dup checks.
+ ;I IBXA=4,$$BFO^IBECEAU(DFN,IBFR) W !!,"This patient has already been billed the outpatient copay charge for ",$$DAT1^IBOUTL(IBFR),".",! G FRA
 FRQ Q
  ;
 TO(DEF) ; Ask Bill To Date

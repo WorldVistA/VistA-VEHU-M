@@ -1,5 +1,5 @@
 GMRCIACT ;SLC/JFR - PROCESS ACTIONS ON IFC ;02/15/19  05:42
- ;;3.0;CONSULT/REQUEST TRACKING;**22,47,58,66,73,121**;DEC 27, 1997;Build 6
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,47,58,66,73,121,154**;DEC 27, 1997;Build 135
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;#2051($$FIND1^DIC), #2053(DIE), #2165 HLMA1, #2701 MPIF001, #10103 XLFDT, #3065 XLFNAME, #2171 XUAF4
  Q  ;don't start here!
@@ -16,7 +16,7 @@ NW(ARRAY) ;process and file new order
  . S GMRCROUT=$$IEN^XUAF4($P($P(GMRCORC,"|",2),U,2))
  . I '$O(^GMR(123,"AIFC",GMRCROUT,GMRCFCN,0)) Q  ;no dup
  . S GMRCITER=802
- . D APPACK^GMRCIAC2(0,"AR",GMRCITER) ;send app. ack w/ error
+ . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",GMRCITER,GMRCCRNR,GMRCMSGI) ;send app. ack w/ error ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
  . K ^TMP("GMRCIN",$J) Q
  I '$D(^TMP("GMRCIN",$J,"PID")) Q  ;prepare reject message (no PID)
  D  ;get patient DFN from ICN in message
@@ -28,7 +28,7 @@ NW(ARRAY) ;process and file new order
  . N STA S STA=$P($P(^TMP("GMRCIN",$J,"ORC"),"|",2),U,2)
  . N OBR S OBR=^TMP("GMRCIN",$J,"OBR")
  . D PTERRMSG^GMRCIERR(^TMP("GMRCIN",$J,"PID"),STA,,OBR)
- . D APPACK^GMRCIAC2(0,"AR",201) ; send app. ack w/error
+ . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",201,GMRCCRNR,GMRCMSGI) ; send app. ack w/error ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
  . K ^TMP("GMRCIN",$J) Q
  D  ;get ordered item and service
  . S GMRCITM=$P(^TMP("GMRCIN",$J,"OBR"),"|",4)
@@ -44,7 +44,7 @@ NW(ARRAY) ;process and file new order
  .. I +SERV'>0 S GMRCITER=$P(SERV,U,3)
  .. S GMRCFDA(1)=SERV
  I $D(GMRCITER) D  Q  ;error in procedure or service, reject new order
- . D APPACK^GMRCIAC2(0,"AR",GMRCITER) ; send app. ACK
+ . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",GMRCITER,GMRCCRNR,GMRCMSGI) ; send app. ACK  ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
  . K ^TMP("GMRCIN",$J) Q
  ;
  S GMRCFDA(.01)=$$NOW^XLFDT
@@ -99,7 +99,7 @@ NW(ARRAY) ;process and file new order
  M FDA(1,123,"+1,")=GMRCFDA
  D UPDATE^DIE("","FDA(1)","GMRCDA","GMRCERR")
  I '$D(GMRCDA) D  Q  ;couldn't get new consult #
- . D APPACK^GMRCIAC2(0,"AR",901) ; send app. ACK
+ . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",901,GMRCCRNR,GMRCMSGI) ; send app. ACK ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
  . K ^TMP("GMRCIN",$J) Q
  K GMRCFDA,FDA
  D  ; file reason for request
@@ -126,19 +126,23 @@ NW(ARRAY) ;process and file new order
  K ^TMP("GMRCIN",$J)
  Q
  ;
-DIS(GMRCAR) ;dis-associate a result from a remote request
+DIS(GMRCAR,GMRCCRNR,GMRCMSGI) ;dis-associate a result from a remote request ; MKN GMRC*3.0*154 added GMRCCRNR and GMRCMSGI
  ;Input:
  ; GMRCAR = array name containing message
  ;      e.g.  ^TMP("GMRCIF",$J)
+ ; GMRCCRNR = 1 if message came from Cerner
+ ; GMRCMSGI = message ID
+ ;
  N GMRCDA,GMRCFDA,FDA,GMRCERR,GMRCORC
  M ^TMP("GMRCID",$J)=@GMRCAR
  S GMRCORC=^TMP("GMRCID",$J,"ORC")
  S GMRCDA=$$GETDA^GMRCIAC2(GMRCORC)
+ S GMRCCRNR=$G(GMRCCRNR,0),GMRCMSGI=$G(GMRCMSGI) ;MKN GMRC*3*154
  I '$$LOCKREC^GMRCUTL1(GMRCDA) D  Q  ;couldn't lock record
- . D APPACK^GMRCIAC2(GMRCDA,"AR",901) ;send app. ACK
+ . D APPACK^GMRCIAC2(GMRCDA,"AR",901,GMRCCRNR,GMRCMSGI) ;send app. ACK ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
  . K ^TMP("GMRCID",$J) Q
  ;    v--check to see if a dup transmission
- I $$DUPACT^GMRCIAC2(GMRCDA,12,GMRCORC,^TMP("GMRCID",$J,"OBX",4,1)) Q
+ I $$DUPACT^GMRCIAC2(GMRCDA,12,GMRCORC,^TMP("GMRCID",$J,"OBX",4,1),GMRCCRNR,GMRCMSGI) Q  ;MKN GMRC*3*154 added CRNR and MSGI
  ;
  D FILEACT^GMRCIAC2(GMRCDA,12,,$NA(^TMP("GMRCID",$J))) ; act. tracking
  D FILRES^GMRCIAC2(GMRCDA,^TMP("GMRCID",$J,"OBX",4,1)) ;file results
@@ -156,12 +160,14 @@ DIS(GMRCAR) ;dis-associate a result from a remote request
  K ^TMP("GMRCID",$J)
  Q
  ;
-OTHER(GMRCAR) ;process most IFC actions
+OTHER(GMRCAR,GMRCCRNR,GMRCMSGI) ;process most IFC actions
  ;will process the receive, schedule, DC, cancel and added comment action
  ;
  ;Input:
  ; GMRCAR = array name containing message
  ;      e.g.  ^TMP("GMRCIF",$J)
+ ; GMRCCRNR = 1 if message came from Cerner
+ ; GMRCMSGI = message ID
  ;
  N GMRCDA,GMRCFDA,GMRCORC,GMRCLAT,GMRCACT,GMRCROL,FDA
  K ^TMP("GMRCIN",$J)
@@ -170,8 +176,9 @@ OTHER(GMRCAR) ;process most IFC actions
  S GMRCORC=^TMP("GMRCIN",$J,"ORC")
  S GMRCDA=$$GETDA^GMRCIAC2(GMRCORC)  ;get ien to work on
  S GMRCROL=$P(^GMR(123,GMRCDA,12),U,5)
+ S GMRCCRNR=$G(GMRCCRNR,0),GMRCMSGI=$G(GMRCMSGI) ;MKN GMRC*3*154
  I '$$LOCKREC^GMRCUTL1(GMRCDA) D  Q  ;couldn't lock record
- . D APPACK^GMRCIAC2(GMRCDA,"AR",901) ; send app. ACK
+ . D APPACK^GMRCIAC2(GMRCDA,"AR",901,GMRCCRNR,GMRCMSGI) ; send app. ACK ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
  . K ^TMP("GMRCIN",$J) Q
  ;
  I $P(GMRCORC,"|")'="IP" D  ; status update
@@ -186,7 +193,7 @@ OTHER(GMRCAR) ;process most IFC actions
  . I GMRCFDA(8)=13 S (GMRCFDA(9),GMRCLAT)=19 Q
  ;                         ^--last action taken
  ;    v-- check to see if a dup transmission
- I $$DUPACT^GMRCIAC2(GMRCDA,GMRCLAT,GMRCORC) Q
+ I $$DUPACT^GMRCIAC2(GMRCDA,GMRCLAT,GMRCORC,,GMRCCRNR,GMRCMSGI) Q  ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
  ;
  M FDA(1,123,GMRCDA_",")=GMRCFDA
  D UPDATE^DIE("","FDA(1)",,"GMRCERR") ;file last action and update status

@@ -1,5 +1,5 @@
-VAFCTFIN ;BIR/DR-TREATING FACILTIY MFU PROCESSING ROUTINE ; 1/13/12 5:47pm
- ;;5.3;Registration;**428,474,520,639,707,800,821,837,863**;Aug 13, 1993;Build 2
+VAFCTFIN ;BIR/DR-TREATING FACILTIY MFU PROCESSING ROUTINE ; 5/4/20 11:03am
+ ;;5.3;Registration;**428,474,520,639,707,800,821,837,863,1013**;Aug 13, 1993;Build 2
  ;Reference to EXC, START, and STOP^RGHLLOG supported by IA #2796
  ;
 IN ;This entry point is used to process the Treating Facility Master File Update Message.
@@ -133,7 +133,8 @@ RSP ;response process logic entry point
 ROUTE ;routing logic entry point
  N MPI
  S MPI=$$MPILINK^MPIFAPI() D
- .I $P($G(MPI),U)'=-1 S HLL("LINKS",1)="VAFC MFN-M05 CLIENT"_"^"_MPI
+ .;**1013 - Story - 1260465 (ckn) - Include 200M in HLL links for HAC
+ .I $P($G(MPI),U)'=-1 S HLL("LINKS",1)="VAFC MFN-M05 CLIENT"_"^"_MPI_$S($P($$SITE^VASITE(),"^",3)=741:"^200M",1:"")
  .I $P($G(MPI),U)=-1 D
  .. N RGLOG D START^RGHLLOG(HLMTIEN,"","")
  .. D EXC^RGHLLOG(224,"No MPI link identified in CIRN SITE PARAMETER file (#991.8)",$G(PDFN))

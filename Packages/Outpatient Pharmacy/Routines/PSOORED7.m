@@ -1,11 +1,12 @@
 PSOORED7 ;ISC-BHAM/MFR - edit orders from backdoor con't ;03/06/95 10:24
- ;;7.0;OUTPATIENT PHARMACY;**148,247,281,289,358,385**;DEC 1997;Build 27
+ ;;7.0;OUTPATIENT PHARMACY;**148,247,281,289,358,385,584,611,624**;DEC 1997;Build 9
  ;called from psooredt. cmop edit checks.
  ;Reference to file #50 supported by IA 221
  ;Reference to $$ECMEON^BPSUTIL supported by IA 4410
  ;Reference to $$DIVNCPDP^BPSBUTL supported by IA 4719
  ;
 NOCHG S CMRL=1 D CHK1^PSOORED2 I '$G(CMRL) W !,"No editing allowed of "_$S(FLN=9:"Day Supply",FLN=10:"Quantity",1:"# of Refills")_" (CMOP)." D PAUSE^VALM1 K CMRL Q
+ I FLN=11,$P($G(^PSRX(PSORXED("IRXN"),2)),U,13) W !,"No editing allowed of # of Refills for released prescription" D PAUSE^VALM1 K CMRL Q  ;584
  K CMRL,DIC,DIQ
  S DIC=52,DA=PSORXED("IRXN"),DIQ="PSORXED" D EN^DIQ1 K DIC,DIQ
  S PSORXED($S(FLN=9:"DAYS SUPPLY",FLN=10:"QTY",1:"# OF REFILLS"))=PSORXED(52,DA,DR)
@@ -13,6 +14,11 @@ NOCHG S CMRL=1 D CHK1^PSOORED2 I '$G(CMRL) W !,"No editing allowed of "_$S(FLN=9
  I FLN=9 D  Q
  .D DAYS^PSODIR1(.PSORXED) I $G(PSORXED("DFLG")) K PSORXED("FLD",8) Q
  .S PSORXED("FLD",8)=PSORXED("DAYS SUPPLY")
+ .;PSO*7*611 Prompt the user for the Refills # so it will stay in sync with the Days Supply
+ .;PSO*7*624 Only prompt the user for the Refills # if a Clozapine flagged drug with at least 1 registered lab test
+ .I $D(^PSDRUG("ACLOZ",DRGIEN)),$D(^PSDRUG(DRGIEN,"CLOZ2",0)),$O(^PSDRUG(DRGIEN,"CLOZ2",0)),$D(^PSDRUG(DRGIEN,"CLOZ2",$O(^PSDRUG(DRGIEN,"CLOZ2",0)),0)) D
+ ..D REFILL^PSODIR1(.PSORXED) I $G(PSORXED("DFLG")) K PSORXED("FLD",9) Q
+ ..S PSORXED("FLD",9)=PSORXED("# OF REFILLS")
  I FLN=10 D  Q
  .D QTY^PSODIR1(.PSORXED) I $G(PSORXED("DFLG")) K PSORXED("FLD",7) Q
  .S:$G(PSORXED("QTY")) PSORXED("FLD",7)=PSORXED("QTY")

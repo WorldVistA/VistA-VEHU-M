@@ -1,5 +1,5 @@
 YTQRQAD3 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130**;Dec 30, 1994;Build 62
+ ;;5.01;MENTAL HEALTH;**130,141**;Dec 30, 1994;Build 85
  ;
  ; External Reference    ICR#
  ; ------------------   -----
@@ -24,7 +24,7 @@ REPORT1(ADMIN,REPORT) ; fill in the report text for ADMIN
 GETNOTE(ARGS,RESULTS) ; build note object based on ARGS("adminId")
  N ADMIN S ADMIN=$G(ARGS("adminId"))
  I '$D(^YTT(601.84,ADMIN,0)) D SETERROR^YTQRUTL(404,"Admin not found: "_ADMIN) QUIT
- N CONSULT S CONSULT=$P(^YTT(601.84,ADMIN,0),U,13)
+ N CONSULT S CONSULT=$P(^YTT(601.84,ADMIN,0),U,15)
  S RESULTS("adminId")=ADMIN
  S RESULTS("consultId")=$S(+CONSULT:CONSULT,1:"null")
  S RESULTS("allowNote")=$$ALWNOTE(ADMIN)
@@ -36,7 +36,7 @@ GETNOTE(ARGS,RESULTS) ; build note object based on ARGS("adminId")
 SETNOTE(ARGS,DATA) ; save note in DATA("text") using ARGS("adminId")
  N YS,YSDATA,ADMIN,CONSULT
  S ADMIN=$G(DATA("adminId"))
- S CONSULT=$P(^YTT(601.84,ADMIN,0),U,13)
+ S CONSULT=$P(^YTT(601.84,ADMIN,0),U,15)
  I '$D(^YTT(601.84,ADMIN,0)) D SETERROR^YTQRUTL(404,"Admin not found: "_ADMIN) QUIT ""
  D TXT2LN(.DATA,.YS) ; parse by CRLF and set YS(#) to note text
  S YS("AD")=ADMIN
@@ -56,7 +56,7 @@ ALWNOTE(ADMIN) ; return "true" if note could/should be saved
  S TEST=$P(^YTT(601.84,ADMIN,0),U,3) Q:'TEST "false" ; missing test
  I $L($P($G(^YTT(601.71,TEST,2)),U)) Q "false"       ; R PRIVILEGE
  I $P($G(^YTT(601.71,TEST,8)),U,8)'="Y" Q "false"    ; gen note
- S CONSULT=$P(^YTT(601.84,ADMIN,0),U,13)
+ S CONSULT=$P(^YTT(601.84,ADMIN,0),U,15)
  I CONSULT D  I 1
  . S YSTITLE=$$GET1^DIQ(601.71,TEST_",",30,"E")
  . S Y=$$WHATITLE^TIUPUTU(YSTITLE)
@@ -70,7 +70,7 @@ NOTE4PT(ADMIN) ; create a progress note for a patient-entered admin
  N CONSULT,YS,YSDATA
  I $$ALWNOTE(ADMIN)'="true" QUIT
  D BLDRPT^YTQRRPT(.YS,ADMIN,79)
- S CONSULT=$P(^YTT(601.84,ADMIN,0),U,13)
+ S CONSULT=$P(^YTT(601.84,ADMIN,0),U,15)
  S YS("AD")=ADMIN
  I CONSULT S YS("CON")=CONSULT D CCREATE^YTQCONS(.YSDATA,.YS) I 1
  E  D PCREATE^YTQTIU(.YSDATA,.YS)
@@ -89,7 +89,7 @@ REQCSGN(ADMIN,COSIGNER) ; return "true" if this user requires a cosigner
  N TEST,YSCREQ,YSTITLE,YSPERSON,X0
  S X0=$G(^YTT(601.84,ADMIN,0))
  S YSPERSON=$G(COSIGNER,$P(X0,U,6)) ; either cosigner or orderedBy
- S TEST=$P(X0,U,3),CONSULT=$P(X0,U,13)
+ S TEST=$P(X0,U,3),CONSULT=$P(X0,U,15)
  ; TODO:  account for the MHA CONSULT title
  S YSTITLE=$S(CONSULT:$P($G(^YTT(601.71,TEST,8)),U,10),1:$P($G(^YTT(601.71,TEST,8)),U,9))
  D REQCOS^TIUSRVA(.YSCREQ,YSTITLE,"",YSPERSON,"")

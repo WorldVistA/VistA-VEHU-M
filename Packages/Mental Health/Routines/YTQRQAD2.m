@@ -1,11 +1,11 @@
 YTQRQAD2 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130**;Dec 30, 1994;Build 62
+ ;;5.01;MENTAL HEALTH;**130,141**;Dec 30, 1994;Build 85
  ;
 SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  ; loop through DATA to create ANS array, then YSDATA array
  ; ANS(#)=questionId^choiceId    <-- radio group question
  ; ANS(#,#)=wp value             <-- all others
- N I,QNUM,QANS,QID,VAL,ASMT,TEST,ADMIN,CPLT,ANS,PTENT,RT1
+ N I,QNUM,QANS,QID,VAL,ANS,RT1,ADMIN
  S QNUM=0,QANS=0
  S I=0 F  S I=$O(DATA("answers",I)) Q:'I  D
  . S QID=DATA("answers",I,"id")
@@ -21,11 +21,9 @@ SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  . I $P($G(^YTT(601.72,QID,2)),U,2)=1 S RT1=1
  . I RT1 S ANS(QNUM)=QID_U_$E(VAL,2,999) QUIT
  . S ANS(QNUM)=QID D TXT2ANS(I,QNUM) ; handle longer WP values
+ K DATA("answers") ; now in ANS array (which may be large)
  ; save admin itself
- S ASMT=DATA("assignmentId")
- S TEST=DATA("instrumentId")
- S CPLT=$S(DATA("complete")="true":"Y",1:"N")
- S ADMIN=$$SETADM(ASMT,TEST,QANS,CPLT,+$G(DATA("adminId")))
+ S ADMIN=$$SETADM(.DATA,QANS)
  Q:'ADMIN ""
  ; save the answers
  N YSDATA
@@ -33,13 +31,16 @@ SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  D SAVEALL^YTQAPI17(.YSDATA,.ANS)
  I YSDATA(1)'="[DATA]" D SETERROR^YTQRUTL(500,"Answers not saved") Q ""
  ; create a note if this was patient-entered
+ N ASMT,CPLT,PTENT
+ S ASMT=DATA("assignmentId")
+ S CPLT=$S(DATA("complete")="true":"Y",1:"N")
  S PTENT=($G(^XTMP("YTQASMT-SET-"_ASMT,1,"entryMode"))="patient")
  I (CPLT="Y"),PTENT D NOTE4PT^YTQRQAD3(ADMIN)
  ; update the assignment with adminId, remove completed admins/assignments
  N NODE,REMAIN
  S NODE="YTQASMT-SET-"_ASMT,REMAIN=0
  S I=0 F  S I=$O(^XTMP(NODE,1,"instruments",I)) Q:'I  D
- . I ^XTMP(NODE,1,"instruments",I,"id")=TEST D  QUIT
+ . I ^XTMP(NODE,1,"instruments",I,"id")=DATA("instrumentId") D  QUIT
  . . ; remove instrument if complete and staff-entered
  . . I 'PTENT,(CPLT="Y") K ^XTMP(NODE,1,"instruments",I) QUIT
  . . ;I CPLT="Y" K ^XTMP(NODE,1,"instruments",I) QUIT  ; patient-entered (may need to keep)
@@ -50,28 +51,30 @@ SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  I 'REMAIN D DELASMT1^YTQRQAD1(ASMT)
  Q "/ys/mha/admin/"_ADMIN
  ;
-SETADM(ASMT,TEST,NUM,CPLT,ADMIN) ; return the id for new/updated admin
- N YSDATA,YS,NODE
- S NODE="YTQASMT-SET-"_ASMT
+SETADM(DATA,NUM) ; return the id for new/updated admin
+ N YSDATA,YS,NODE,ADMIN
+ S ADMIN=+$G(DATA("adminId"))
+ S NODE="YTQASMT-SET-"_DATA("assignmentId")
  S YS("FILEN")=601.84
  I ADMIN S YS("IEN")=ADMIN I 1
  E  S YS(1)=".01^NEW^1"
  S YS(2)="1^`"_$G(^XTMP(NODE,1,"patient","dfn"))
- S YS(3)="2^`"_TEST
+ S YS(3)="2^`"_DATA("instrumentId")
  S YS(4)="3^"_$G(^XTMP(NODE,1,"date"))
  S YS(5)="4^NOW"
  S YS(6)="5^`"_$G(^XTMP(NODE,1,"orderedBy"))
  S YS(7)="6^`"_$G(^XTMP(NODE,1,"interview"))
  S YS(8)="7^N"
- S YS(9)="8^"_CPLT
+ S YS(9)="8^"_$S(DATA("complete")="true":"YES",1:"NO")
  S YS(10)="9^"_NUM
  S YS(11)="13^`"_$G(^XTMP(NODE,1,"location"))
- ; TODO: add new field to admin file to hold consult
- ; I $G(^XTMP(NODE,1,"consult")) S YS(12)="15^`"_^XTMP(NODE,1,"consult")
- D EDAD^YTQAPI1(.YSDATA,.YS)
+ I '$L($G(DATA("source"))) S DATA("source")="web"
+ S YS(12)="15^"_DATA("source")
+ I $G(^XTMP(NODE,1,"consult")) S YS(13)="17^"_^XTMP(NODE,1,"consult")
+ D ADMSAVE^YTQAPI1(.YSDATA,.YS)
  I YSDATA(1)'="[DATA]" D SETERROR^YTQRUTL(500,"Unable to create admin") Q 0
- Q:'ADMIN $P(YSDATA(2),U,2) ; only non-null if new admin
- Q ADMIN
+ I 'ADMIN Q $P(YSDATA(2),U,2)  ; create new admin, ien found in 2nd piece
+ Q ADMIN                       ; otherwise we're updating existing admin
  ;
 GETADM(ARGS,RESULTS) ; get answers for administration identified by ARGS("adminId")
  I '$G(ARGS("adminId")) D SETERROR^YTQRUTL(404,"Missing admin parameter") Q

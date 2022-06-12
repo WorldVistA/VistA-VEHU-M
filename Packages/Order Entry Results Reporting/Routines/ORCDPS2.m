@@ -1,5 +1,5 @@
-ORCDPS2 ;SLC/MKB-Pharmacy dialog utilities ;03/22/2013  06:51
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**94,116,125,131,243,311,350**;Dec 17, 1997;Build 77
+ORCDPS2 ;SLC/MKB - Pharmacy dialog utilities ;06/08/20  09:12
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**94,116,125,131,243,311,350,377,413**;Dec 17, 1997;Build 32
  ;
 COMPLEX() ; -- Single or complex?
  N X,Y,DIR,DUOUT,DTOUT,COMPLX
@@ -46,7 +46,8 @@ CHDOSE ; -- Kill dependent values if inst ORI of dose changes
  N X,PROMPTS,P,NAME,DOSE,DD S X=$G(ORDIALOG(PROMPT,ORI))
  ;S X=$$UP^XLFSTR(X),ORDIALOG(PROMPT,ORI)=X ;force uppercase
  I X,X'?1.N.E1.A.E K DONE W $C(7),!,"Enter the amount of this drug that the patient is to receive as a dose,",!,"NOT as the number of units per dose." Q
- I $L(X)>60,'$D(ORDIALOG(PROMPT,"LIST","B",X)) K DONE W $C(7),!,"Instructions may not be longer than 60 characters." Q
+ ; OR*377 djh use "D" index, the DOSE instructions w/out any pricing
+ I $L(X)>60,'$D(ORDIALOG(PROMPT,"LIST","D",X)) K DONE W $C(7),!,"Instructions may not be longer than 60 characters." Q
  I $G(ORESET)'=X D  ;kill dependent values if new/changed dose
  . S PROMPTS="STRENGTH^DRUG NAME^DOSE^DISPENSE DRUG^DAYS SUPPLY^QUANTITY^REFILLS"
  . F P=1:1:$L(PROMPTS,U) S NAME=$P(PROMPTS,U,P) K ORDIALOG($$PTR(NAME),ORI)
@@ -146,15 +147,25 @@ CONJ() ; -- Conjunction
 DOSETEXT        ; -- Reset dose text in ORDIALOG(INSTR) for backdoor orders
  ;    [Called from ORMPS1 - uses ORCAT,PSOI,ORVP,DRUG,INSTR,DOSE]
  ;
- N ORTYPE,ORDOSE,CONJ,ORDRUG,DRUG0,STRG,ORI,LDOSE,X,PROMPT
+ N ORTYPE,ORDOSE,CONJ,ORDRUG,DRUG0,STRG,ORI,LDOSE,ORDLGDOSE,PROMPT,ORTEXTADD,ORJ,ORK
  S ORTYPE=$S($G(ORCAT)="I":"U",1:"O")
  D DOSE^PSSORUTL(.ORDOSE,+PSOI,ORTYPE,+ORVP)
  S CONJ=$P($G(ORDOSE("MISC")),U,3) S:$L(CONJ) CONJ=" "_CONJ
  S ORDRUG=+$G(ORDIALOG(DRUG,1)),DRUG0=$G(ORDOSE("DD",ORDRUG))
  S STRG=$P(DRUG0,U,5)_$P(DRUG0,U,6)
  I '$G(ORDOSE(1)) S ORI=0 F  S ORI=$O(ORDIALOG(INSTR,ORI)) Q:ORI'>0  D
- . S LDOSE=$G(ORDIALOG(INSTR,ORI)),X=$G(ORDIALOG(DOSE,ORI)) Q:'$L(X)
- . S:'X ORDIALOG(INSTR,ORI)=LDOSE_CONJ_" "_$S(STRG:STRG,1:$P(DRUG0,U))
+ . S LDOSE=$G(ORDIALOG(INSTR,ORI))
+ . S ORDLGDOSE=$G(ORDIALOG(DOSE,ORI))
+ . I '$L(ORDLGDOSE) Q
+ . I ORDLGDOSE Q
+ . S ORTEXTADD=CONJ_" "_$S(STRG:STRG,1:$P(DRUG0,U,1))
+ . ;
+ . ; Check if strength/drug name is already appended to LDOSE
+ . S ORJ=$L(LDOSE)
+ . S ORK=$L(ORTEXTADD)
+ . I ORK,ORJ>ORK,$E(LDOSE,ORJ-ORK+1,ORJ)=ORTEXTADD Q
+ . ;
+ . S ORDIALOG(INSTR,ORI)=LDOSE_ORTEXTADD
  ; -build Sig/Text if not defined
  I '$D(ORDIALOG(+$$PTR("SIG"),1)) S PROMPT=INSTR D SIG
  Q

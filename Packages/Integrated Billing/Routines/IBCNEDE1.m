@@ -1,5 +1,5 @@
 IBCNEDE1 ;DAOU/DAC - eIV INSURANCE BUFFER EXTRACT ;04-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,416,438,435,467,497,528,549,601**;21-MAR-94;Build 14
+ ;;2.0;INTEGRATED BILLING;**184,271,416,438,435,467,497,528,549,601,664**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -12,13 +12,14 @@ IBCNEDE1 ;DAOU/DAC - eIV INSURANCE BUFFER EXTRACT ;04-JUN-2002
 EN ; Loop through designated cross-references for updates
  ; Insurance Buffer Extract
  ;
+ ;/vd-IB*2*664 - Added the variable EHRSRC
  N TODAYSDT,FRESHDAY,LOOPDT,IEN,OVRFRESH,FRESHDT
  N DFN,PDOD,SRVICEDT,VERIFDDT,PAYERSTR,PAYERID,SYMBOL,PAYRNAME
  N PIEN,PNIEN,TQIEN,TRIEN,TRSRVCDT,TQCRTDT,TRANSNO,DISYS
  N ORIGINSR,ORGRPSTR,ORGRPNUM,ORGRPNAM,ORGSUBCR
  N MAXCNT,CNT,ISYMBOLM,DATA1,DATA2,ORIG,SETSTR,ISYMBOL,IBCNETOT
  N SIDDATA,SID,SIDACT,BSID,FDA,PASSBUF,SIDCNT,SIDARRAY
- N TQDT,TQIENS,TQOK,STATIEN,PATID,MCAREFLG,INSNAME,PREL,IFSRC
+ N TQDT,TQIENS,TQOK,STATIEN,PATID,MCAREFLG,INSNAME,PREL,IFSRC,EHRSRC
  ;
  S SETSTR=$$SETTINGS^IBCNEDE7(1) ; Returns buffer extract settings
  I 'SETSTR Q                    ; Quit if extract is not active
@@ -26,6 +27,7 @@ EN ; Loop through designated cross-references for updates
  S:MAXCNT="" MAXCNT=9999999999
  ;
  S IFSRC=$O(^IBE(355.12,"C","INTERFACILITY INS UPDATE",""))  ;10/24/14 *528* baa
+ S EHRSRC=$O(^IBE(355.12,"C","ELECTRONIC HEALTH RECORD",""))  ;vd/IB*2*664 -  Used to identify EHR buffer entries.
  ;
  S FRESHDAY=$P($G(^IBE(350.9,1,51)),U,1) ; System freshness days
  ;
@@ -41,6 +43,7 @@ EN ; Loop through designated cross-references for updates
  .. ;  prevent when SOURCE OF INFORMATION field = "Inter-facility Insurance update.
  .. I $P($G(^IBA(355.33,IEN,0)),U,3)=IFSRC Q
  .. ; IBCN END MOD
+ .. I $$GET1^DIQ(355.33,IEN_",",.03,"I")=EHRSRC Q   ;/vd-IB*2*664 - Prevent EHR entries from being processed.
  .. ;
  .. ; Update count for periodic check
  .. S IBCNETOT=IBCNETOT+1

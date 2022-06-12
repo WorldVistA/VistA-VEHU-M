@@ -1,5 +1,5 @@
 YTQRQAD1 ;SLC/KCM - RESTful Calls to handle MHA assignments ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130**;Dec 30, 1994;Build 62
+ ;;5.01;MENTAL HEALTH;**130,141**;Dec 30, 1994;Build 85
  ;
  ; External Reference    ICR#
  ; ------------------   -----
@@ -14,6 +14,11 @@ ASMTBYID(ARGS,RESULTS) ; get assignment identified by assignmentId
  S I=0 F  S I=$O(^XTMP(ASMT,1,"instruments",I)) Q:'I  D  ; calc progress
  . S ADMIN=+$G(^XTMP(ASMT,1,"instruments",I,"adminId"))
  . S TEST=+$G(^XTMP(ASMT,1,"instruments",I,"id"))
+ . I $$ADMEXPD(ADMIN,TEST) D  ; start over if this admin has expired
+ . . S ^XTMP(ASMT,1,"instruments",I,"adminId")="null"
+ . . I ^XTMP(ASMT,1,"patient","dfn")=$P(^YTT(601.84,ADMIN,0),U,2) D
+ . . . D DELADMIN^YTQRIS(ADMIN) ; double check DFN match just to make sure
+ . . S ADMIN=0
  . S ^XTMP(ASMT,1,"instruments",I,"progress")=$$PROGRESS(ADMIN,TEST)
  M RESULTS=^XTMP(ASMT,1)                                 ; load assignment
  Q
@@ -145,3 +150,17 @@ CHKIDX ; Check assignments to make sure the indexes are present
  . . I ^XTMP("YTQASMT-INDEX","AC",PID,LNAME,INVDT)=ASMT S FOUND=1
  . I 'FOUND W !,"Assignment "_ASMT_" missing AC index."
  Q
+ADMEXPD(ADMIN,TEST) ; return 1 if incomplete admin has expired
+ QUIT:'ADMIN 0
+ N X0,YSNOW,YSDOW,OFFSET,SAVED,RESTRT
+ S X0=$G(^YTT(601.84,ADMIN,0))
+ QUIT:$P(X0,U,9)="Y" 0                     ; admin is complete
+ QUIT:$P(X0,U,3)'=TEST 0                   ; test mismatch, something wrong
+ S YSNOW=$$NOW^XLFDT,YSDOW=$$DOW^XLFDT(YSNOW)
+ S OFFSET=$S(YSDOW=5:2,YSDOW=6:1,1:0)      ; account for weekends
+ S SAVED=$P(X0,U,5)                        ; DATE SAVED (#4)
+ S RESTRT=$P($G(^YTT(601.71,TEST,8)),U,7)  ; DAYS TO RESTART (#27)
+ QUIT:RESTRT=-1 0                          ; -1 is always restartable
+ S:'RESTRT RESTRT=2                        ; default restart is 2
+ I $$FMDIFF^XLFDT(YSNOW,SAVED,2)>((RESTRT+OFFSET)*86400) QUIT 1
+ Q 0

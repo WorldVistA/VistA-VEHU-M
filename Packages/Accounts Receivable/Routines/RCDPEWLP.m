@@ -1,5 +1,5 @@
 RCDPEWLP ;ALBANY/KML - EDI LOCKBOX ERA and EEOB WORKLIST procedures ;10 Oct 2018 11:49:24
- ;;4.5;Accounts Receivable;**298,303,304,319,332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**298,303,304,319,332,345**;Mar 20, 1995;Build 34
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -150,7 +150,7 @@ CHKEFT(RECVDT,EFTDA,TYPE,DAYSLIMT,TRARRY) ; Check EFT for warnings/errors
  ; DAYSLIMT  - days an EFT can age before post prevention rules apply 
  ; TRARRY    - Array with warning error info
  ;
- N AGED,EFTTYPE,ERAREC,MSTATUS,TRACE
+ N AGED,EFTTYPE,ERAREC,MSTATUS,RCMED,RCPHARM,RCTRIC,TRACE
  Q:$G(^RCY(344.31,EFTDA,0))=""  ; skip, no data
  Q:+$$GET1^DIQ(344.31,EFTDA_",",.07,"I")=0  ; skip, zero payment amt.
  ;
@@ -165,28 +165,29 @@ CHKEFT(RECVDT,EFTDA,TYPE,DAYSLIMT,TRARRY) ; Check EFT for warnings/errors
  S AGED=$$FMDIFF^XLFDT(DT,RECVDT)  ; days aged for EFT
  S TRACE=$$GET1^DIQ(344.31,EFTDA_",",.04,"I")  ; TRACE #
  S:TRACE="" TRACE="(No trace #)"
- ; no ERA, cannot evaluate further
- I 'ERAREC D  Q  ;
- . S EFTTYPE=$S($$ISTYPE^RCDPEU1(344.31,EFTDA,"P"):"P",$$ISTYPE^RCDPEU1(344.31,EFTDA,"T"):"T",1:"M")
- . S TRARRY("WARNING",EFTTYPE,TRACE)="No ERA found"_U_MSTATUS
  ;
- I (TYPE="A")!(TYPE="P"),$$PHARM(ERAREC) D  Q
+ ; PRCA*4.5*345 - Start modified code block - Don't show warning message for unmatched EFTs
+ S RCMED=$S(ERAREC:$$ISTYPE^RCDPEU1(344.4,ERAREC,"M"),1:$$ISTYPE^RCDPEU1(344.31,EFTDA,"M"))
+ S RCPHARM=$S(ERAREC:$$PHARM(ERAREC),1:$$ISTYPE^RCDPEU1(344.31,EFTDA,"P"))
+ S RCTRIC=$S(ERAREC:$$ISTYPE^RCDPEU1(344.4,ERAREC,"T"),1:$$ISTYPE^RCDPEU1(344.31,EFTDA,"T"))
+ ;
+ I (TYPE="A")!(TYPE="P"),RCPHARM D  Q
  . ; Aged, unposted EFT gets error message, no scratchpad for the ERA
  . I AGED>DAYSLIMT("P") S TRARRY("ERROR","P",TRACE)="ERA = "_ERAREC_U_MSTATUS Q
  . ; Aged, unposted PHARMACY EFT display warning message when entering scratchpad with the ERA
  . I '$D(TRARRY("ERROR")),AGED>21 S TRARRY("WARNING","P",TRACE)="ERA = "_ERAREC_U_MSTATUS
  ;
- I (TYPE="A")!(TYPE="T"),$$ISTYPE^RCDPEU1(344.31,EFTDA,"T") D  Q  ; is payer type Tricare?
+ I (TYPE="A")!(TYPE="T"),RCTRIC D  Q  ; is payer type Tricare?
  . ; Aged, unposted EFT gets error message, no scratchpad for the ERA
  . I AGED>DAYSLIMT("T") S TRARRY("ERROR","T",TRACE)="ERA = "_ERAREC_U_MSTATUS Q
  . ; Aged, unposted MEDICAL EFT display warning message when entering scratchpad with the ERA
  . I '$D(TRARRY("ERROR")),AGED>14 S TRARRY("WARNING","T",TRACE)="ERA = "_ERAREC_U_MSTATUS
  ;
- I (TYPE="A")!(TYPE="M"),'$$PHARM(ERAREC) D
+ I (TYPE="A")!(TYPE="M"),'RCPHARM,RCMED D
  . I AGED>DAYSLIMT("M") S TRARRY("ERROR","M",TRACE)="ERA = "_ERAREC_U_MSTATUS Q
  . ; Aged, unposted MEDICAL EFT warning message when entering scratchpad with ERA
  . I '$D(TRARRY("ERROR")),AGED>14 S TRARRY("WARNING","M",TRACE)="ERA = "_ERAREC_U_MSTATUS
- ;
+ ; PRCA*4.5*345 - End modified code block
  Q
  ;
 PROC(EFTDA) ; Check if TR Receipt for an EFT linked to Paper EOB is processed 

@@ -1,5 +1,5 @@
 DGMTA ;ALB/RMO/CAW/LD/SCG/AEG/PHH/HM - Add a New Means Test;2/24/10 2:58pm
- ;;5.3;Registration;**33,45,137,166,177,182,290,344,332,433,458,535,612,564,688,661,840,972**;Aug 13, 1993;Build 80
+ ;;5.3;Registration;**33,45,137,166,177,182,290,344,332,433,458,535,612,564,688,661,840,972,996,993**;Aug 13, 1993;Build 92
  ;
 EN ;Entry point to add a new means test
  N DGMDOD S DGMDOD=""
@@ -85,6 +85,7 @@ ADD ;Add means test
  S DGSITE=$$GETSITE^DGMTU4(.DUZ)
  S X=DGMTDT,(DIC,DIK)="^DGMT(408.31,",DIC(0)="L",DLAYGO=408.31
  ;
+ ;
  ;Look for existing IAI records and convert (if necessary)
  D ALL^DGMTU21(DFN,"VSD",DT,"IPR") ;ALL only returns IAI from last IY
  I $D(DGINC) DO
@@ -96,10 +97,12 @@ ADD ;Add means test
  ;
  I DGMTYPT=2 D
  .S DIC("DR")="2////"_(DGMTYPT'=4)_";2.05////"_DGSITE_";2.06////"_LINK
- .S DIC("DR")=DIC("DR")_";.02////"_DFN_";.019////"_DGMTYPT_";.23////1"
+ .S DIC("DR")=DIC("DR")_";.02////"_DFN_";.019////"_DGMTYPT
+ .S DIC("DR")=DIC("DR")_$S('$G(SRCTST):";.23////1",1:";.23////"_SRCTST) ;DG*5.3*996
  E  D
  .S DIC("DR")="2////"_(DGMTYPT'=4)_";2.05////"_DGSITE_";2.06////"_LINK
- .S DIC("DR")=DIC("DR")_";.019////"_DGMTYPT_";.02////"_DFN_";.23////1"
+ .S DIC("DR")=DIC("DR")_";.019////"_DGMTYPT_";.02////"_DFN
+ .S DIC("DR")=DIC("DR")_$S('$G(SRCTST):";.23////1",1:";.23////"_SRCTST) ;DG*5.3*996
  K DD,DO
  D FILE^DICN S DGMTI=+Y
  ;
@@ -138,6 +141,7 @@ FTST ; Build message for future tests that are added to the system, but
  .W ",",!?3,"if it is necessary to edit the test."
  Q
  ; HM DG*5.3*972 - added Medal of Honor to list of reasons
+ ; DSB DG*5.3*993- added Registration only
 WHY ;Why Copay Test cannot be added
  ;;Patient is not a veteran.
  ;;Patient does not have a Primary Eligibility Code.
@@ -152,3 +156,4 @@ WHY ;Why Copay Test cannot be added
  ;;Patient is Unemployable, automatically exempted.
  ;;Patient is Catastrophically Disabled, automatically exempted.
  ;;Patient is awarded Medal of Honor, automatically exempted.
+ ;;Patient's Enrollment Status is REGISTRATION ONLY.

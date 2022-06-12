@@ -1,5 +1,5 @@
 IBCEPTC3 ;ALB/ESG - EDI PREVIOUSLY TRANSMITTED CLAIMS ACTIONS ;12/19/05
- ;;2.0;INTEGRATED BILLING;**320,547,608**;21-MAR-94;Build 90
+ ;;2.0;INTEGRATED BILLING;**320,547,608,641**;21-MAR-94;Build 61
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; IB*2.0*547 Variable IBLOC is pre-defined (in IBCEPTC)
@@ -143,7 +143,8 @@ RESUB ; Resubmit selected claims
  ... S IBCLMNO=$$GET1^DIQ(399,IBIFN,.01)
  ... S IBFSKIP=IBFSKIP+1
  ... S ^TMP("IBSKIPPED",$J,IBCLMNO)=IBIFN  ; /IB*2*608 (vd) - Added to identify those claims that are Skipped
- .. N Y S Y=$$ADDTBILL^IBCB1(IBIFN)  ; new entry in file 364 - "X" status
+ .. ;JWS;IB*2.0*641v7;add resubmission parameter to $$ADDTBILL call, 3rd parameter
+ .. N Y S Y=$$ADDTBILL^IBCB1(IBIFN,"",1)  ; new entry in file 364 - "X" status
  .. I '$P(Y,U,3) Q                   ; quit if new entry didn't get added
  .. S ^TMP("IBSELX",$J,+Y)=""
  .. S ^TMP("IBRCBOLD",$J,IB364)=""   ; save list of old transmit bills

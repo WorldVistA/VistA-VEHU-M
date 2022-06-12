@@ -1,5 +1,5 @@
-RCDPEM7 ;OIFO-BAYPINES/PJH - OVERDUE EFT AND ERA BULLETINS ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**276,298,303,304,321,326**;Mar 20, 1995;Build 26
+RCDPEM7 ;OIFO-BAYPINES/PJH - OVERDUE EFT AND ERA BULLETINS ; 7/1/19 8:15am
+ ;;4.5;Accounts Receivable;**276,298,303,304,321,326,345**;Mar 20, 1995;Build 34
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; Main entry point for overdue EFT/ERA bulletins

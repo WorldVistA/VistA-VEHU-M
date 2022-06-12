@@ -1,5 +1,5 @@
-PXRMEXFI ;SLC/PKR/PJH - Exchange utilities for file entries. ;07/21/2017
- ;;2.0;CLINICAL REMINDERS;**6,12,18,24,26,47,42**;Feb 04, 2005;Build 132
+PXRMEXFI ;SLC/PKR/PJH - Exchange utilities for file entries. ;10/21/2019
+ ;;2.0;CLINICAL REMINDERS;**6,12,18,24,26,47,45**;Feb 04, 2005;Build 566
  ;==============================================
 DELALL(FILENUM,NAME) ;Delete all file entries named NAME.
  N IEN,IND,LIST,MSG
@@ -93,6 +93,12 @@ FOKTT(FILENUM) ;Check if it is ok to transport items from this file.
  ;
  ;Immunizations not allowed.
  I FILENUM=9999999.14 Q 0
+ ;
+ ;Imaging type
+ I FILENUM=79.2 Q 0
+ ;
+ ;Reminder Function Finding
+ I FILENUM=801.47 Q 0
  ;
  ;Make sure the file exists.
  I $$ROOT^DILFD(FILENUM)="" Q 0

@@ -1,5 +1,5 @@
 IBCNSUR ;ALB/CPM/CMS - MOVE SUBSCRIBERS TO DIFFERENT PLAN ;09-SEP-96
- ;;2.0;INTEGRATED BILLING;**103,276,506,516,549,602**;21-MAR-94;Build 22
+ ;;2.0;INTEGRATED BILLING;**103,276,506,516,549,602,664**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -146,7 +146,8 @@ NXTGRP ; EP for next expire group process
  ;
  W !
  ; get the expiration date
- S DIR(0)="D",DIR("A")="Enter expiration date (applies to all subscribers in this plan)"
+ ;IB*2.0*664/TAZ - Force exact date.
+ S DIR(0)="D^::EX",DIR("A")="Enter expiration date (applies to all subscribers in this plan)"
  S DIR("?")="Each active policy will be expired with the expiration date entered."
  D ^DIR K DIR
  I 'Y!$D(DIRUT) G NXTGRP

@@ -1,5 +1,5 @@
-PXRMEXCO ; SLC/PKR/PJH - Exchange File component order. ;04/23/2018
- ;;2.0;CLINICAL REMINDERS;**12,47,42**;Feb 04, 2005;Build 132
+PXRMEXCO ; SLC/PKR/PJH - Exchange File component order. ;04/18/2018
+ ;;2.0;CLINICAL REMINDERS;**12,47,45**;Feb 04, 2005;Build 566
  ;======================================================
 CLIST(IEN,CLOK) ;Build the list of components for the repository
  ;entry IEN.
@@ -152,6 +152,9 @@ CHECKCMP(IEN,NAME,DATA,DCNT) ;
  .Q:DFNUM=""
  .I DFILE'=801.41 S CMPARRAY(DFILE,DIENS,DFNUM)=DVALUE
  .;check branching logic
+ .I DFILE=801.41143,DFNUM=4 D
+ ..S TEMP=$G(^TMP($J,"PXRMEX DIALOG","LOC",DVALUE))
+ ..D CHECKCMP(IEN,DVALUE,TEMP,.DCNT)
  .I DFNUM=118 D
  ..S TEMP=$G(^TMP($J,"PXRMEX DIALOG","LOC",DVALUE))
  ..D CHECKCMP(IEN,DVALUE,TEMP,.DCNT)

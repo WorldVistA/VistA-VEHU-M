@@ -1,11 +1,11 @@
-PXRMEXCC ; SLC/PKR - Exchange component check. ;04/24/2018
- ;;2.0;CLINICAL REMINDERS;**47,42**;Feb 04, 2005;Build 132
+PXRMEXCC ; SLC/PKR - Exchange component check. ;07/02/2020
+ ;;2.0;CLINICAL REMINDERS;**47,74**;Feb 04, 2005;Build 5
  ;Used to find corrupted components, the indicator is when the Index
  ;is not at the proper line in the Exchange file.
  ;======================================================
 COMPCHK(IEN) ;Check the components for the Exchange entry.
- N BADIND,CSTART,END,FILENAME,FILENUM,IND,INDEXAT,JND,LINE
- N LNUM,NCMPNT,START,SUB,TAG,TEXT,TYPE
+ N BADIND,CSTART,CEND,END,FDAEND,FDASTART,FILENAME,FILENUM,IND,INDEXAT
+ N JND,LINE,LNUM,NCMPNT,START,SUB,TAG,TEXT,TYPE
  ;Find the Index
  S (IND,INDEXAT)=0
  F  S IND=$O(^PXD(811.8,IEN,100,IND)) Q:(INDEXAT>0)!(IND="")  D
@@ -48,16 +48,28 @@ COMPCHK(IEN) ;Check the components for the Exchange entry.
  .. S ^TMP($J,"CMPNT",IND,"IEN_ROOT_END")=$G(END("<IEN_ROOT_END>"))
  ;Look for missing TYPE, this is an indicator of an issue.
  S TEXT(1)="Component check for Exchange Entry IEN="_IEN_"."
+ S LNUM=1
+ ;Look for missing component Type, FDA_END, and FDA_START.
  S BADIND=0,IND=1
  I $G(^TMP($J,"CMPNT",1,"TYPE"))="" S BADIND=1
  F  S IND=$O(^TMP($J,"CMPNT",IND)) Q:(BADIND)!(IND="")  D
  . S TYPE=$G(^TMP($J,"CMPNT",IND,"TYPE"))
  . I TYPE="" S BADIND=IND
- I BADIND=0 S TEXT(2)="Cannot determine the problem."
+ . S FDAEND=$G(^TMP($J,"CMPNT",IND,"FDA_END"))
+ . I $G(^PXD(811.8,IEN,100,(FDAEND+1),0))'="]]>" S BADIND=IND
+ . S FDASTART=$G(^TMP($J,"CMPNT",IND,"FDA_START"))
+ . I $G(^PXD(811.8,IEN,100,FDASTART,0))'[".01" S BADIND=IND
+ I BADIND=0 D  Q
+ . S LNUM=LNUM+1,TEXT(LNUM)="Cannot determine the problem."
+ . D DISPLAY(LNUM,.TEXT)
+ . K ^TMP($J,"CMPNT")
  I BADIND>0 D
- . S TEXT(2)="There appears to be a problem in this component area."
- . S LNUM=2
- . F IND=(BADIND-1):1:(BADIND+1) D
+ . S LNUM=LNUM+1,TEXT(LNUM)="There appears to be a problem in this component area."
+ . S LNUM=LNUM+1,TEXT(LNUM)="Most likely it is component "_BADIND_"."
+ . S CSTART=$S(BADIND>1:(BADIND-1),1:1)
+ . S CEND=$O(^TMP($J,"CMPNT",""),-1)
+ . S CEND=$S(BADIND=CEND:CEND,1:(BADIND+1))
+ . F IND=CSTART:1:CEND D
  .. S LNUM=LNUM+1,TEXT(LNUM)=""
  .. S LNUM=LNUM+1,TEXT(LNUM)="Component number "_IND
  .. S SUB=""
@@ -68,10 +80,16 @@ COMPCHK(IEN) ;Check the components for the Exchange entry.
  .. S START=^TMP($J,"CMPNT",IND,"FDA_START")-2
  .. S END=^TMP($J,"CMPNT",IND,"FDA_END")+2
  .. F JND=START:1:END S LNUM=LNUM+1,TEXT(LNUM)=^PXD(811.8,IEN,100,JND,0)
+ D DISPLAY(LNUM,.TEXT)
+ K ^TMP($J,"CMPNT")
+ Q
+ ;
+ ;===============
+DISPLAY(LNUM,TEXT) ;Display the error information.
  S LNUM=LNUM+1,TEXT(LNUM)=""
  S LNUM=LNUM+1,TEXT(LNUM)="If you need assistance with this, call the National Help Desk and have them"
  S LNUM=LNUM+1,TEXT(LNUM)="enter a ticket."
  D BROWSE^DDBR("TEXT","N","Corrupted Component Information")
  I $D(DDS) D REFRESH^DDSUTL S DY=IOSL-7,DX=0 X IOXY S $Y=DY,$X=DX
- K ^TMP($J,"CMPNT")
  Q
+ ;

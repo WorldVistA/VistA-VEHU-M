@@ -1,5 +1,5 @@
 VBECSRV ;DALLAS CIOFO/RLM - INTEGRITY CHECKER FOR BLOOD BANK ROUTINES ;08/20/2001 4:35 PM
- ;;2.0;VBEC;;Jun 05, 2015;Build 4
+ ;;2.0;VBEC;**8**;Jun 05, 2015;Build 27
  ;
 START ;
  K ^TMP($J,"VBECDATA")
@@ -24,7 +24,7 @@ START ;
  S ^TMP($J,"VBECDATA",2)="Sorry, but I don't know how to "_XQSUB
  S ^TMP($J,"VBECDATA",3)="No action taken"
  S ^TMP($J,"VBECDATA",3)="Invalid VBEC Server Request From "_XMFROM_" at "_VBECSITE_" run on "_VBECNOW
- S XMY("G.bloodbank@FO-HINES.DOMAIN.EXT")=""
+ S XMY("G.bloodbank@DOMAIN.EXT")=""
  S %DT="T",X="NOW" D ^%DT,DD^%DT S VBECNOW=Y
  S XMSUB="Invalid BB Server Request From "_XMFROM_" at "_VBECSITE_" run on "_VBECNOW
  S XMTEXT="^TMP($J,""VBECDATA"",",XMDUZ="Blood Bank Monitor"
@@ -41,7 +41,7 @@ REPORT ;report on invalid checksums at a site.
   . S X=$P(VBDATA,"^") X ^%ZOSF("TEST") I '$T S ^TMP("VBECINTEG",$J,VBI,0)=X_" is missing.",VBI=VBI+1,^TMP("VBECINTEG1",$J,VBI,0)="**"_X_"^"_$P(VBDATA,"^",2)_"^0^"_DT,VBI=VBI+1 Q
   . X ^%ZOSF("RSUM1") I $P(VBDATA,"^",2)'=Y S ^TMP("VBECINTEG",$J,VBI,0)=X_" should be "_$P(VBDATA,"^",2)_" is "_Y,VBI=VBI+1
   . S ^TMP("VBECINTEG1",$J,VBI,0)="**"_X_"^"_$P(VBDATA,"^",2)_"^"_Y_"^"_VBECSIT1_"^"_DT_"^"_(Y'=$P(VBDATA,"^",2)),VBI=VBI+1
- K XMY S XMY("G.bloodbank@FO-HINES.DOMAIN.EXT")="" ;,XMY("S.VBECINTEG@FO-HINES.DOMAIN.EXT")=""
+ K XMY S XMY("G.bloodbank@DOMAIN.EXT")="" ;,XMY("S.VBECINTEG@DOMAIN.EXT")=""
  S %DT="T",X="NOW" D ^%DT,DD^%DT S VBECNOW=Y
  S XMSUB="BB CHECKSUM "_XQSUB_" at "_VBECSITE_" run on "_VBECNOW
  F I="",1 S XMTEXT="^TMP(""VBECINTEG"_I_""",$J,",XMDUZ="Blood Bank Monitor" D ^XMD
@@ -59,7 +59,7 @@ UPDATE ;Update checksums at a site.
   . I 'VBECON D UPDATE^DIE("","FDA(1)",,"VBERR")
   . I VBECON D FILE^DIE("E","FDA(1)","VBERR")
   . S ^TMP("VBECINTEG",$J,VBI,0)="Routine "_VBROU_$S(VBECON:" updated to ",1:" added with ")_"checksum "_VBCHK,VBI=VBI+1
- K XMY S XMY("G.bloodbank@FO-HINES.DOMAIN.EXT")=""
+ K XMY S XMY("G.bloodbank@DOMAIN.EXT")=""
  S %DT="T",X="NOW" D ^%DT,DD^%DT S VBECNOW=Y
  S XMSUB="BB Checksum update at "_VBECSITE_" run on "_VBECNOW
  S XMTEXT="^TMP(""VBECINTEG"",$J,",XMDUZ="Blood Bank Monitor" D ^XMD
@@ -71,7 +71,7 @@ LIST ;
   . S VBDATA=$G(^VBEC(6002.04,VBA,0)),VBROU=$P(VBDATA,"^"),VBCHK=$P(VBDATA,"^",2)
   . I VBDATA="" S ^TMP("VBECINTEG",$J,VBI,0)="Record "_VBA_" damaged." Q
   . S ^TMP("VBECINTEG",$J,VBI,0)=VBECSIT1_$E("          ",1,(10-$L(VBECSIT1)))_VBROU_$E("          ",1,(10-$L(VBROU)))_VBCHK,VBI=VBI+1
- K XMY S XMY("G.bloodbank@FO-HINES.DOMAIN.EXT")=""
+ K XMY S XMY("G.bloodbank@DOMAIN.EXT")=""
  S %DT="T",X="NOW" D ^%DT,DD^%DT S VBECNOW=Y
  S XMSUB="BB CHECKSUM "_XQSUB_" at "_VBECSITE_" run on "_VBECNOW
  S XMTEXT="^TMP(""VBECINTEG"",$J,",XMDUZ="Blood Bank Monitor" D ^XMD
@@ -79,11 +79,26 @@ LIST ;
  K ^TMP("VBECINTEG",$J),^TMP("VBECINTEG1",$J)
  Q
 PATCH ;Determine Vista patch level. Expand later to include VBECS
- f VBECI=1:1:9999 s VBECA=$$PATCH^XPDUTL("VBEC*1.0*"_VBECI) i VBECA s ^TMP("VBEC",$J,(VBECI+5),0)="Patch VBEC*1.0*"_VBECI_" has been installed."
- K XMY S XMY("G.bloodbank@FO-HINES.DOMAIN.EXT")=""
+ f VBECV=1,2 f VBECI=0:1:9999 s VBECA=$$PATCH^XPDUTL("VBEC*"_VBECV_".0*"_VBECI) i VBECA s ^TMP("VBEC",$J,(VBECI+5),0)="Patch VBEC*"_VBECV_".0*"_VBECI_" has been installed."
+ K XMY S XMY("G.bloodbank@DOMAIN.EXT")="",XMY(XQSND)=""
  S %DT="T",X="NOW" D ^%DT,DD^%DT S VBECNOW=Y
  S XMSUB="VBEC Patch List at "_VBECSITE_" run on "_VBECNOW
  S XMTEXT="^TMP(""VBEC"",$J,",XMDUZ="Blood Bank Monitor" D ^XMD
  K %DT,VBA,VBECNOW,VBECSITE,VBI,X,XMDUZ,XMSUB,XMTEXT,Y
  K ^TMP("VBECINTEG",$J),^TMP("VBECINTEG1",$J)
+ Q
+PTCAPI(RESULTS) ;Gather patch info for transmission to VBECS
+ N VBECA,VBECI,VBECV
+ S (VBECCNT,X)=0
+ S RESULTS=$NA(^TMP("VistAPatchList",$J))
+ K @RESULTS
+ D BEGROOT^VBECRPC("Patches")
+ F VBECV=1,2 f VBECI=0:1:9999 s VBECA=$$PATCH^XPDUTL("VBEC*"_VBECV_".0*"_VBECI) i VBECA D
+ . D BEGROOT^VBECRPC("Patch")
+ . D ADD^VBECRPC("<PatchName>"_$$CHARCHK^XOBVLIB("VBEC*"_VBECV_".0*"_VBECI)_"</PatchName>")
+ . D ENDROOT^VBECRPC("Patch")
+ D ENDROOT^VBECRPC("Patches")
+ ;
+ K VBECCNT
+ Q
 ZEOR ;VBECSRV

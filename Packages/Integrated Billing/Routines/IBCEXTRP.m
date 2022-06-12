@@ -1,5 +1,5 @@
 IBCEXTRP ;ALB/JEH - VIEW/PRINT EDI EXTRACT DATA ;4/22/03 9:59am
- ;;2.0;INTEGRATED BILLING;**137,197,211,348,349,377,592,623**;21-MAR-94;Build 70
+ ;;2.0;INTEGRATED BILLING;**137,197,211,348,349,377,592,623,641**;21-MAR-94;Build 61
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ;
@@ -155,7 +155,13 @@ EXITQ ; - clean up and exit
  D CLEAN^DILF
  Q
  ;
-EXTRACT(IBIFN,IBBATCH,IBFORM,IBLOCAL) ; Extracts transmitted form data into global
+EXTRACT(IBIFN,IBBATCH,IBFORM,IBLOCAL) ; 
+ ; *****************
+ ; this label is called by 2 routines outside IB
+ ;   VEJDIBPI
+ ;   VEJDIBPZ
+ ; 
+ ; Extracts transmitted form data into global
  ; ^TMP("IBXDATA",$J).  Errors are in ^TMP("IBXERR",$J,err_num)=text.
  ; IBBATCH = Batch # of bill (if known), otherwise, set to 1.  This
  ;          variable must be > 0 to prevent a new batch from being added
@@ -168,8 +174,10 @@ EXTRACT(IBIFN,IBBATCH,IBFORM,IBLOCAL) ; Extracts transmitted form data into glob
  ; Get local form associated with parent, if any
  I IBL="" S IBL=$S($P($G(^IBE(353,+IBFORM,2)),U,8):$P(^(2),U,8),1:IBFORM)
  D SETUP^IBCE837(1)
+ ;;JWS;IB*2.0*641v11;VEJD Audit Report - ;
+ I '$D(IB364IEN) S IB364IEN=+$$LAST364^IBCEF4(IBIFN)
  ;;JWS;IB*2.0*623;allow display without Batch #
- I $$GET1^DIQ(350.9,"1,",8.21,"I"),IB364IEN,$P(^IBA(364,IB364IEN,0),"^",2)="" S ^TMP("IBHDR",$J)="NOT YET ASSIGNED"
+ I $$GET1^DIQ(350.9,"1,",8.21,"I"),+IB364IEN,$P(^IBA(364,IB364IEN,0),"^",2)="" S ^TMP("IBHDR",$J)="NOT YET ASSIGNED"
  D ROUT^IBCFP1(IBFORM,1,IBIFN,0,IBL)
  Q
  ;

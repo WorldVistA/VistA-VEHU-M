@@ -1,5 +1,5 @@
 YTQROPT ;SLC/KCM - MHA Assignment Options ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130**;Dec 30, 1994;Build 62
+ ;;5.01;MENTAL HEALTH;**130,141**;Dec 30, 1994;Build 85
  ;
  ; External Reference    ICR#
  ; ------------------   -----
@@ -9,6 +9,7 @@ YTQROPT ;SLC/KCM - MHA Assignment Options ; 1/25/2017
  ; XLFDT                10103
  ;
 LSTBYPT ; List assignments by patient
+ ; Option: YTQR ASSIGNMENT BY PATIENT
  N X,Y,DIC,DUOUT,DTOUT,YSDFN,OUT
  S DIC="^DPT(",DIC(0)="AEMQ" D ^DIC I Y'>0 QUIT
  D BLD4PT(+Y,.OUT)
@@ -41,4 +42,25 @@ LSTALL ; List all active assignments
  . S PTNM=$$GET1^DIQ(2,YSDFN_",",.01)
  . W !!,?10,"---- ",PTNM," ----"
  . D SHO4PT(.OUT)
+ Q
+ADMDTL ; List details of an administration
+ ; Option: YTQR ADMINISTRATION DETAIL
+ N X,Y,DIC,DIR,DUOUT,DTOUT,DIRUT,DIROUT
+ N YSDFN,YSDT,YSDTX,YSTST,YSAD,YSCNT
+ W !,"--- List Administration Details ---",!
+ S DIC="^DPT(",DIC(0)="AEMQ" D ^DIC I Y'>0 QUIT
+ S YSDFN=+Y
+ S DIR(0)="D^::EP",DIR("A")="Date of Administration(s)" D ^DIR Q:$D(DIRUT)
+ S YSDT=$P(Y,"."),YSTST=0,YSCNT=0
+ W !
+ S YSAD=0 F  S YSAD=$O(^YTT(601.84,"C",YSDFN,YSAD)) Q:'YSAD  D
+ . I $P($P($G(^YTT(601.84,YSAD,0)),U,4),".")'=YSDT Q
+ . S YSCNT=YSCNT+1
+ . D SHOADM(YSAD)
+ I YSCNT=0 W !,"No administrations found."
+ Q
+SHOADM(YSAD) ; Show all fields for administration
+ N DIC,DA,DR
+ S DIC="^YTT(601.84,",DA=YSAD
+ D EN^DIQ
  Q

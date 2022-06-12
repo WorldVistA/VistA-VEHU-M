@@ -1,5 +1,5 @@
 IBCE837 ;ALB/TMP - OUTPUT FOR 837 TRANSMISSION ;8/6/03 10:48am
- ;;2.0;INTEGRATED BILLING;**137,191,197,232,296,349,547,592,623**;21-MAR-94;Build 70
+ ;;2.0;INTEGRATED BILLING;**137,191,197,232,296,349,547,592,623,641**;21-MAR-94;Build 61
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; Auto-txmt
@@ -29,6 +29,9 @@ SETUP(IBEXTRP) ; Txmn set up
  .. S IBXERR=1,^TMP("IBXERR",$J,1)="A PREVIOUS EDI EXTRACT IS RUNNING - ANOTHER CANNOT BE STARTED "_$$FMTE^XLFDT($$NOW^XLFDT(),2)
  ;
  I $D(^TMP("IBRESUBMIT",$J)) D  Q:$D(IBXERR)
+ .;JWS;IB*2.0*641v6;issue with resubmit of claim, batch # not generated until submitted
+ .;                ;in FHIR, transaction does not get transmitted immediately, so no need to check batch# lock
+ .I $$GET1^DIQ(350.9,"1,",8.21,"I") Q
  .N Z,Z0
  .S Z0=$P($G(^TMP("IBRESUBMIT",$J)),U,2),Z=$$LOCK^IBCEM02(364.1,Z0)
  .I 'Z D

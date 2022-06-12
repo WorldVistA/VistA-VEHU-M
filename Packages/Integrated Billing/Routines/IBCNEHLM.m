@@ -1,5 +1,5 @@
 IBCNEHLM ;DAOU/ALA - HL7 Registration MFN Message ;02-JUN-2015
- ;;2.0;INTEGRATED BILLING;**184,251,300,416,438,497,506,549,601,621,631,659**;21-MAR-94;Build 16
+ ;;2.0;INTEGRATED BILLING;**184,251,300,416,438,497,506,549,601,621,631,659,664**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -62,12 +62,15 @@ REG ;  Registration message for when a site installs
  S IHLP=$P(IBCNE,U,13),IHLT=$P(IBCNE,U,14)
  S IHLS=$P(IBCNE,U,19)
  ;
+ ; IB*2.0*184 version 1, initial release of IIV
  ; IB*2.0*549 Updated version to 7, Removed retrieval of Contact Name, Phone, email
  ; IB*2.0*601 Updated version to 8
  ; IB*2.0*621 Updated version to 9, EICD
  ; IB*2.0*631 Updated version to 10
- ; IB*2.0*659 Updated version to 11
- S IVER="11"
+ ; IB*2.0*659 Updated version to 11, Added Medicare Freshness Days to this registration msg
+ ; IB*2.0*664 Now version 12, Stats going to FSC: auto update #s split (non-medicare vs medicare)
+ ;
+ S IVER="12"
  I IHLP="I" S (IHLT,IHLS)=""
  ;
  I IHLP="B",IHLT=""!(IHLS="") D  S QFL=1
@@ -113,11 +116,15 @@ HL ;  When a site installs, the enrollment should be an
  S ^TMP("HLS",$J,3)=VZRR
  ;
  ; Set the NTE segment
- S DSTAT=$$GETSTAT^IBCNEDST()
+ ;IB*2.0*664/DW- Added logic to separate the Medicare auto updates (MCAUTO)
+ ;               from non-Medicare auto updates
+ N MCAUTO
+ S DSTAT=$$GETSTAT^IBCNEDST(.MCAUTO)
  S DSTAT2=$$GETSTAT2^IBCNEDST()                 ; IB*2.0*549 Added line
  S VNTE="NTE"_HLFS_"1"_HLFS_HLFS_IBPERSIST_HLREP_$TR(DSTAT,U,HLREP)
  S VNTE=VNTE_HLREP_RETRY_HLREP_TIMOUT           ; IB*2.0*506
  S VNTE=VNTE_HLREP_$TR(DSTAT2,U,HLREP)          ; IB*2.0*549 Added line
+ S VNTE=VNTE_HLREP_MCAUTO
  S ^TMP("HLS",$J,4)=VNTE
  ;
  D GENERATE^HLMA("IBCNE IIV REGISTER","GM",1,.HLRESLT,"")

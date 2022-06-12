@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: DEVICE
 ZWR
-^%ZIS(1,0)="DEVICE^3.5Is^714^50"
+^%ZIS(1,0)="DEVICE^3.5Is^717^53"
 ^%ZIS(1,5,0)="TEST^^^^^^^^"
 ^%ZIS(1,5,1)="ORBITTER"
 ^%ZIS(1,242,0)="SPOOL^2^^^^^^^^^1"
@@ -13,7 +13,7 @@ ZWR
 ^%ZIS(1,242,"TYPE")="SPL"
 ^%ZIS(1,267,0)="PMT290^0^1^1^^^^^^^1"
 ^%ZIS(1,267,1)="SLAVE^^168"
-^%ZIS(1,267,5)=3
+^%ZIS(1,267,5)=5
 ^%ZIS(1,267,"SUBTYPE")=168
 ^%ZIS(1,267,"TYPE")="TRM"
 ^%ZIS(1,521,0)="ZZNULL^NAL0:////./nul^1^1^^^^^^^0^0"
@@ -24,7 +24,7 @@ ZWR
 ^%ZIS(1,521,"TYPE")="TRM"
 ^%ZIS(1,524,0)="HFS^/tmp/hfs.dat^^^^^^^^^"
 ^%ZIS(1,524,1)="Host File Device^^^^1^"
-^%ZIS(1,524,5)=225
+^%ZIS(1,524,5)=212
 ^%ZIS(1,524,"IOPAR")="(nowrap:stream:newversion)"
 ^%ZIS(1,524,"SUBTYPE")=16
 ^%ZIS(1,524,"TYPE")="HFS"
@@ -161,7 +161,7 @@ ZWR
 ^%ZIS(1,699,"TYPE")="RES"
 ^%ZIS(1,700,0)="TELNET-VMS^/dev/pts^1^^^^^^^^1"
 ^%ZIS(1,700,1)="VMS"
-^%ZIS(1,700,5)=13358
+^%ZIS(1,700,5)=17157
 ^%ZIS(1,700,"SUBTYPE")=231
 ^%ZIS(1,700,"TYPE")="VTRM"
 ^%ZIS(1,701,0)="CONSOLE-VMS^OPA0:^1^^^^^^^^1"
@@ -230,7 +230,7 @@ ZWR
 ^%ZIS(1,712,1)="Virtual Terminal"
 ^%ZIS(1,712,"SUBTYPE")=230
 ^%ZIS(1,712,"TYPE")="VTRM"
-^%ZIS(1,713,0)="NULL^/dev/null^^^^^^^^^"
+^%ZIS(1,713,0)="ZZNULL^/dev/null^^^^^^^^^"
 ^%ZIS(1,713,1)="BIT BUCKET"
 ^%ZIS(1,713,5)=2
 ^%ZIS(1,713,"SUBTYPE")=16
@@ -239,6 +239,19 @@ ZWR
 ^%ZIS(1,714,1)="Virtual Terminal"
 ^%ZIS(1,714,"SUBTYPE")=230
 ^%ZIS(1,714,"TYPE")="VTRM"
+^%ZIS(1,715,0)="NULL^/dev/null^^^^^^^^^"
+^%ZIS(1,715,1)="BIT BUCKET"
+^%ZIS(1,715,5)=1
+^%ZIS(1,715,"SUBTYPE")=16
+^%ZIS(1,715,"TYPE")="TRM"
+^%ZIS(1,716,0)="VIRTUAL TERMINAL^/dev/pts^1^^^^^^^^1"
+^%ZIS(1,716,1)="Virtual Terminal"
+^%ZIS(1,716,"SUBTYPE")=230
+^%ZIS(1,716,"TYPE")="VTRM"
+^%ZIS(1,717,0)="TIU ACTIONS RESOURCE^TIU ACTIONS RESOURCE"
+^%ZIS(1,717,1)="Document actions notifier^^^^^^^^^1"
+^%ZIS(1,717,"SUBTYPE")=16
+^%ZIS(1,717,"TYPE")="RES"
 ^%ZIS(1,"AH","IDCU",564)=""
 ^%ZIS(1,"AH","IDCU",586)=""
 ^%ZIS(1,"AH","IDCU",587)=""
@@ -269,7 +282,7 @@ ZWR
 ^%ZIS(1,"B","LOCAL MAIL",615)=""
 ^%ZIS(1,"B","LRRESOURCE",692)=""
 ^%ZIS(1,"B","NOIS UPDATES",691)=""
-^%ZIS(1,"B","NULL",713)=""
+^%ZIS(1,"B","NULL",715)=""
 ^%ZIS(1,"B","OR MOVEMENT RESOURCE",670)=""
 ^%ZIS(1,"B","OR WINDOWS HFS",675)=""
 ^%ZIS(1,"B","OR WORKSTATION",667)=""
@@ -291,14 +304,17 @@ ZWR
 ^%ZIS(1,"B","TCP-IP",641)=""
 ^%ZIS(1,"B","TELNET",649)=""
 ^%ZIS(1,"B","TELNET-VMS",700)=""
+^%ZIS(1,"B","TIU ACTIONS RESOURCE",717)=""
 ^%ZIS(1,"B","TIU/PXAPI RESOURCE",663)=""
 ^%ZIS(1,"B","VIRTUAL TERMINAL",710)=""
 ^%ZIS(1,"B","VIRTUAL TERMINAL",712)=""
 ^%ZIS(1,"B","VIRTUAL TERMINAL",714)=""
+^%ZIS(1,"B","VIRTUAL TERMINAL",716)=""
 ^%ZIS(1,"B","ZZNULL",521)=""
 ^%ZIS(1,"B","ZZNULL",706)=""
 ^%ZIS(1,"B","ZZNULL",709)=""
 ^%ZIS(1,"B","ZZNULL",711)=""
+^%ZIS(1,"B","ZZNULL",713)=""
 ^%ZIS(1,"B","ZZP-MESSAGE-HFS (ONT)",674)=""
 ^%ZIS(1,"B","ZZP-MESSAGE-HFS (VXD)",704)=""
 ^%ZIS(1,"B","ZZP-MESSAGE-HFS-ONT",596)=""
@@ -310,12 +326,14 @@ ZWR
 ^%ZIS(1,"C","/dev/null",709)=""
 ^%ZIS(1,"C","/dev/null",711)=""
 ^%ZIS(1,"C","/dev/null",713)=""
+^%ZIS(1,"C","/dev/null",715)=""
 ^%ZIS(1,"C","/dev/null/",706)=""
 ^%ZIS(1,"C","/dev/pts",700)=""
 ^%ZIS(1,"C","/dev/pts",707)=""
 ^%ZIS(1,"C","/dev/pts",710)=""
 ^%ZIS(1,"C","/dev/pts",712)=""
 ^%ZIS(1,"C","/dev/pts",714)=""
+^%ZIS(1,"C","/dev/pts",716)=""
 ^%ZIS(1,"C","/dev/tty",595)=""
 ^%ZIS(1,"C","/tmp/XMHFS.TEMP",674)=""
 ^%ZIS(1,"C","/tmp/hfs.dat",524)=""
@@ -342,6 +360,7 @@ ZWR
 ^%ZIS(1,"C","RESOURCE",625)=""
 ^%ZIS(1,"C","RT",525)=""
 ^%ZIS(1,"C","SCCV RESOURCE",678)=""
+^%ZIS(1,"C","TIU ACTIONS RESOURCE",717)=""
 ^%ZIS(1,"C","TIU/PXAPI RESOURCE",663)=""
 ^%ZIS(1,"C","USER$:[TEMP]XMHFS.TXT",703)=""
 ^%ZIS(1,"C","WS.DAT",677)=""
@@ -353,12 +372,14 @@ ZWR
 ^%ZIS(1,"CPU","./dev/null",709)=""
 ^%ZIS(1,"CPU","./dev/null",711)=""
 ^%ZIS(1,"CPU","./dev/null",713)=""
+^%ZIS(1,"CPU","./dev/null",715)=""
 ^%ZIS(1,"CPU","./dev/null/",706)=""
 ^%ZIS(1,"CPU","./dev/pts",700)=""
 ^%ZIS(1,"CPU","./dev/pts",707)=""
 ^%ZIS(1,"CPU","./dev/pts",710)=""
 ^%ZIS(1,"CPU","./dev/pts",712)=""
 ^%ZIS(1,"CPU","./dev/pts",714)=""
+^%ZIS(1,"CPU","./dev/pts",716)=""
 ^%ZIS(1,"CPU","./dev/tty",595)=""
 ^%ZIS(1,"CPU","./tmp/XMHFS.TEMP",674)=""
 ^%ZIS(1,"CPU","./tmp/hfs.dat",524)=""
@@ -386,6 +407,7 @@ ZWR
 ^%ZIS(1,"CPU",".RESOURCE",625)=""
 ^%ZIS(1,"CPU",".RT",525)=""
 ^%ZIS(1,"CPU",".SCCV RESOURCE",678)=""
+^%ZIS(1,"CPU",".TIU ACTIONS RESOURCE",717)=""
 ^%ZIS(1,"CPU",".TIU/PXAPI RESOURCE",663)=""
 ^%ZIS(1,"CPU",".USER$:[TEMP]XMHFS.TXT",703)=""
 ^%ZIS(1,"CPU",".WS.DAT",677)=""

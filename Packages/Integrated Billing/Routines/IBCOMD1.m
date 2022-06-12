@@ -1,5 +1,5 @@
 IBCOMD1 ;ALB/CMS - GENERATE INSURANCE COMPANY LISTINGS ;03-AUG-98
- ;;2.0;INTEGRATED BILLING;**103,528,602**;21-MAR-94;Build 22
+ ;;2.0;INTEGRATED BILLING;**103,528,602,664**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -62,7 +62,11 @@ BEG ; Queued entry point.
  .S IBTMP=$P(IBDA0,U,1)_U
  .S IBX=$P(IBDA0,U,2) S $P(IBTMP,U,2)=$S(IBX]"":$E($$EXPAND^IBTRE(36,1,IBX),1,20),1:"")_U
  .F IBX=1:1:6 S IBTMP=IBTMP_$P(IBDA11,U,IBX)_U
- .S IBX=$P(IBTMP,U,7) S $P(IBTMP,U,7)=$S(IBX]"":$$STATE^IBCF2(IBX),1:"")_U
+ .;S IBX=$P(IBTMP,U,7) S $P(IBTMP,U,7)=$S(IBX]"":$$STATE^IBCF2(IBX),1:"")_U
+ .;/vd-IB*2.0*664 - Replaced the above line with the following 2 lines.
+ .S IBX=$P(IBTMP,U,7) S $P(IBTMP,U,7)=$S(IBX]"":$$STATE^IBCF2(IBX),1:"")
+ .S IBX=$P(IBTMP,U,8) S $P(IBTMP,U,8)=$S($L(IBX)=9:$E(IBX,1,5)_"-"_$E(IBX,6,9),1:IBX)
+ .;
  .S $P(IBTMP,U,9)=$P(IBDA13,U,1)
  .S ^TMP("IBCOMD",$J,+$P(IBDA0,U,5),$S($P(IBDA0,U,1)]"":$P(IBDA0,U,1),1:"ZZZZ"),+IBDA)=IBTMP
  ;
@@ -87,11 +91,18 @@ HD ; Write Heading
  .I $D(IBCASE) W "^where" D
  ..N I,H
  ..S (H,I)=0 F  S I=$O(IBCASE(I)) Q:'I  D
- ...I H W "^and"
- ...S H=1 W "^"_IBFLD(I)
- ...W $S(I=4:"^Equals ",$P(IBCASE(I),"^")="C":"^Contains ",1:"^Between ")
- ...W $S(I=4:$P($G(^DIC(5,+$P(IBCASE(I),"^",2),0)),"^"),$P(IBCASE(I),"^",2)="":"^'FIRST'",1:$P(IBCASE(I),"^",2))
- ...I $P(IBCASE(I),"^")="R" W "^and ",$S($P(IBCASE(I),"^",3)="zzzzzz":"^'LAST'",1:$P(IBCASE(I),"^",3)) ; **IB*2.0*602
+ ...; IB*664/DW ; update display of filter to remove delimiters between each word
+ ...;I H W "^and"
+ ...;S H=1 W "^"_IBFLD(I)
+ ...;W $S(I=4:"^Equals ",$P(IBCASE(I),"^")="C":"^Contains ",1:"^Between ")
+ ...;W $S(I=4:$P($G(^DIC(5,+$P(IBCASE(I),"^",2),0)),"^"),$P(IBCASE(I),"^",2)="":"^'FIRST'",1:$P(IBCASE(I),"^",2))
+ ...;I $P(IBCASE(I),"^")="R" W "^and ",$S($P(IBCASE(I),"^",3)="zzzzzz":"^'LAST'",1:$P(IBCASE(I),"^",3)) ; **IB*2.0*602
+ ...I H W " and"
+ ...S H=1 W " "_IBFLD(I)
+ ...W $S(I=4:" Equals ",$P(IBCASE(I),"^")="C":" Contains ",1:" Between ")
+ ...W $S(I=4:$P($G(^DIC(5,+$P(IBCASE(I),"^",2),0)),"^"),$P(IBCASE(I),"^",2)="":"'FIRST'",1:$P(IBCASE(I),"^",2))
+ ...I $P(IBCASE(I),"^")="R" W " and ",$S($P(IBCASE(I),"^",3)="zzzzzz":"'LAST'",1:$P(IBCASE(I),"^",3))
+ ...; IB*664/DW end changes
  .;
  .W !,"Active/Inactive^Insurance Name^Reimburse?^Street Address 1^Street Address 2^Street Address 3^City^State^ZIP^Phone Number"
  ; IB*602/HN end 

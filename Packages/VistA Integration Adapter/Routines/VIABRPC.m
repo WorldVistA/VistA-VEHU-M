@@ -1,5 +1,6 @@
 VIABRPC ;AAC/JMC - VIA RPCs ;04/05/2016
- ;;1.0;VISTA INTEGRATION ADAPTER;**7,8,9,12**;06-FEB-2014;Build 28
+ ;;1.0;VISTA INTEGRATION ADAPTER;**7,8,9,12,22**;06-FEB-2014;Build 2
+ ;Per VA Directive 6402, this routine should not be modified.
  ; ICR 10090    INSTITUTION FILE (supported)
  ; ICR 10048    PACKAGE FILE (#9.4) (supported)
  ; ICR 10141    XPDUTL (supported)
@@ -37,7 +38,7 @@ GETSURR(RESULT,USER) ; surrogate info.
  ;RPC VIAB GETSURR
  ; get user's surrogate info
  I $G(USER)="" S RESULT="" Q
- S RESULT=$$GETSURO^XQALSURO(USER) ;ICR(DBIA) #3213 
+ S RESULT=$$GETSURO^XQALSURO(USER) ;ICR(DBIA) #3213
  I +RESULT<1 S RESULT=""
  Q
 SNAME(RET,SID) ; get station/site name
@@ -62,7 +63,7 @@ USERDIV(RESULT,VIADUZ) ; station IEN^station number^station name^default divisio
  .S VIADC=VIADC+1
  .S RESULT(VIADC)=VIADX_"^"_$$GET1^DIQ(4,+VIADX,99)_"^"_$$GET1^DIQ(4,+VIADX,.01)_"^0"
  Q
- ; 
+ ;
 DEFRFREQ(RESULT,VIAIEN,VIADFN,RESOLVE) ;Return default reason for request for service - ICR #3119
  ;RPC VIAB DEFAULT REQUEST REASON
  ; VIAIEN=pointer to file 123.5
@@ -151,7 +152,7 @@ ISPROSVC(RESULT,GMRCIEN) ; Is this service part of the consults-prosthetics inte
  ;This RPC is a similar to ORQQCN ISPROSVC
  ;GMRCIEN - IEN of selected service
  I $$GET1^DIQ(123.5,+$G(GMRCIEN),131,"I")=1 S RESULT=1
- Q 
+ Q
  ;
 SECVST(RESULT,NOTEIEN,VIADFN,VIAENCDT,VIAHLOC) ; save secondary visit in TIU, if inpatient; ICR#1894,#3540
  ;RPC VIAB TIU SECVST
@@ -350,3 +351,7 @@ GETVSIT(VSTR,DFN) ; lookup a visit
  S VIAPXAPI("ENCOUNTER",1,"ENCOUNTER TYPE")="P"
  S OK=$$DATA2PCE^PXAPI("VIAPXAPI",PKG,SRC,.VIAVISIT)
  Q VIAVISIT
+ ;
+PATCH(VAL,X) ; Return 1 if patch X is installed *22
+ S VAL=$$PATCH^XPDUTL(X)
+ Q

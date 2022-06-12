@@ -1,5 +1,5 @@
 PSOERX1B ;ALB/BWF - Accept eRx function ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**467,506,520,527,508,551,591**;DEC 1997;Build 2
+ ;;7.0;OUTPATIENT PHARMACY;**467,506,520,527,508,551,591,606**;DEC 1997;Build 5
  ;
  Q
 ACVAL(PSOIEN,TYPE) ; NEW MTYPE, GET IT OFF FIELD .08, IF NOT DEFINED, 
@@ -8,9 +8,7 @@ ACVAL(PSOIEN,TYPE) ; NEW MTYPE, GET IT OFF FIELD .08, IF NOT DEFINED,
  D FULL^VALM1
  S VALMBCK="R"
  ; first check to see if the entry exists. cannot validate something that has no value
- ;/BLB/ PSO*7.0*551 - BEGIN CHANGE - DEFINING MTYPE
  S MTYPE=$$GET1^DIQ(52.49,PSOIEN,.08,"I") ;mtype
- ;/BLB/ PSO*7.0*551 - END CHANGE
  S RXSTAT=$$GET1^DIQ(52.49,PSOIEN,1,"E") I RXSTAT="RJ"!(RXSTAT="RM")!(RXSTAT="PR") D  Q
  .W !!,"Cannot accept validation for a prescription with a status of 'Rejected',",!,"'Removed',or 'Processed",!
  .S DIR(0)="E" D ^DIR
@@ -36,7 +34,6 @@ ACVAL(PSOIEN,TYPE) ; NEW MTYPE, GET IT OFF FIELD .08, IF NOT DEFINED,
  .I '$O(^PS(52.49,PSOIEN,21,0)) W !,"Dosing information missing." S QFLG=1
  .I $$GET1^DIQ(52.49,PSOIEN,20.1,"E")="" W !,"Quantity missing." S QFLG=1
  .I $$GET1^DIQ(52.49,PSOIEN,20.2,"E")="" W !,"Days supply missing." S QFLG=1
- .;I $$GET1^DIQ(52.49,PSOIEN,20.5,"E")="" W !,"Refills missing."  S QFLG=1
  .I QFLG=1 D
  ..W !!,"Cannot validate drug information."
  ..S DIR(0)="E" D ^DIR K DIR
@@ -53,12 +50,10 @@ ACVAL(PSOIEN,TYPE) ; NEW MTYPE, GET IT OFF FIELD .08, IF NOT DEFINED,
  I $$GET1^DIQ(52.49,PSOIEN,1,"E")="N" D UPDSTAT^PSOERXU1(PSOIEN,"I")
  I $D(FDA) D FILE^DIE(,"FDA") K FDA
  W !,"Validation Updated!!" S DIR(0)="E" D ^DIR
- ;/BLB/ PSO*7.0*527 - BEGIN CHANGE - VALIDATION/WAIT STATUS CHECK
  ; check validations and update status to 'wait' if all validations have occured.
  I MTYPE="N" D
  .I $$GET1^DIQ(52.49,PSOIEN,1.3,"I"),$$GET1^DIQ(52.49,PSOIEN,1.5,"I"),$$GET1^DIQ(52.49,PSOIEN,1.7,"I") D
  ..D UPDSTAT^PSOERXU1(PSOIEN,"W")
- .;/BLB/ - PSO*7.0*527 END CHANGE
  I MTYPE="RE" D UPDSTAT^PSOERXU1(PSOIEN,"RXW")
  I TYPE="P" D BPROC(PSOIEN,"PA",MVFLD,VBFLD,VBDTTMF,VDTTM) K @VALMAR D INIT^PSOERXP1
  I TYPE="PR" D BPROC(PSOIEN,"PR",MVFLD,VBFLD,VBDTTMF,VDTTM) K @VALMAR D INIT^PSOERXR1
@@ -79,9 +74,7 @@ BPROC(PSOIEN,BTYPE,MVFLD,VBFLD,VBDTTMF,VDTTM) ;
  ..S ERXIEN=0 F  S ERXIEN=$O(^PS(52.49,"PAT",PSNPINST,ERXSTAT,ERXPAT,ERXDT,ERXIEN)) Q:'ERXIEN  D
  ...; do not process any rx's that are not a 'newRx'.
  ...I $$GET1^DIQ(52.49,ERXIEN,.08,"I")'="N" Q
- ...;/BLB/ PSO*7.0*520 -  BEGIN CHANGE
  ...Q:PSOIEN=ERXIEN
- ...;/BLB/ PSO*7.0*520 - END CHANGE
  ...I BTYPE="PR",$$GET1^DIQ(52.49,ERXIEN,2.1,"I")'=ERXPROV Q
  ...S EXARY(ERXIEN)=""
  I '$O(EXARY(0)) Q
@@ -115,10 +108,8 @@ BPROC(PSOIEN,BTYPE,MVFLD,VBFLD,VBDTTMF,VDTTM) ;
  .S FDA(52.49,I_",",MVFLD)=1,FDA(52.49,I_",",VBFLD)=$G(DUZ),FDA(52.49,I_",",VBDTTMF)=VDTTM
  .D FILE^DIE(,"FDA") K FDA
  .I $$GET1^DIQ(52.49,I,1,"E")="N" D UPDSTAT^PSOERXU1(I,"I")
- .;/BLB/ PSO*7.0*527 - BEGIN CHANGE - BULK PROCESSING/WAIT STATUS CHECK
  .I $$GET1^DIQ(52.49,I,1.3,"I"),$$GET1^DIQ(52.49,I,1.5,"I"),$$GET1^DIQ(52.49,I,1.7,"I") D
  ..D UPDSTAT^PSOERXU1(I,"W")
- .;/BLB/ -  PSO*7.0*527 END CHANGE
  Q
  ;PSOHY("LOC")=IEN of hospital location file (#44) - NOT USED, 
  ;PSOHY("CHNUM")=EXTERNAL PLACER ORDER NUMBER (NEED TO FIND OUT HOW WE SHOULD SET THIS) (25)
@@ -132,7 +123,7 @@ BPROC(PSOIEN,BTYPE,MVFLD,VBFLD,VBDTTMF,VDTTM) ;
  ;PSOHY("REF")=# OF REFILLS (20.5)
  ;PSOHY("PAT")=PATIENT IEN (.05)
  ;PSOHY("OCC")=ORDER TYPE (ALWAYS 'NW') - NO MAPPING TO 52.49
- ;PSOHY("EDT")=LOGIN DATE (TODAYS DATE) - NO MAPPING TO 52.49
+ ;PSOHY("EDT")=LOGIN DATE/TIME (NOW) - NO MAPPING TO 52.49
  ;PSOHY("PRIOR")=PRIORITY (SET OF CODES, 52.41,25 - STAT, EMERGENCY, ROUTINE)
  ;PSOHY("EXAPP")=EXTERNAL APPLICATION (FREE TEXT), LIKELY "PSO" - NO MAPPING TO 52.49
  ;PSOHY("PRCOM",#)=PROVIDER COMMENTS (8- NOTES)
@@ -190,12 +181,11 @@ SETUP ;
  S VAREF=$G(PSODAT(F,PSOIENS,20.5,"E"))
  S VAROUT=$G(PSODAT(F,PSOIENS,20.4,"I")) I '$L(VAROUT) S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Pickup routing missing."
  S PATINST=$G(PSODAT(F,PSOIENS,27,"E"))
- ;/BLB/ PSO*7.0*551 - BEGIN CHANGE - CHANGING CALL TO AVOID SPACE CONCATENATION
+ ; CALL TO AVOID SPACE CONCATENATION
  D TXT2ARY^PSOERXD1(.PINARY,$$LSIG^PSOERXU6(PATINST))
  ; get provider comments from VA PROVIDER COMMENTS field
  S PRVCOMM=$G(PSODAT(F,PSOIENS,30,"E"))
  D TXT2ARY^PSOERXD1(.PRVARY,$$LSIG^PSOERXU6(PRVCOMM))
- ;/BLB/ PSO*7.0*551 - END CHANGE
  S (PLOOP,PCNT)=0 F  S PLOOP=$O(PRVARY(PLOOP)) Q:'PLOOP  D
  .S PCNT=PCNT+1,PSOHY("PRCOM",PCNT)=$G(PRVARY(PLOOP))
  I '$O(^PS(52.49,PSOIEN,21,0)) S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Dosing information missing."
@@ -212,7 +202,7 @@ SETUP ;
  S PSOHY("QTY")=VQTY,PSOHY("REF")=VAREF
  S (PSOHY("PAT"),DFN)=PATIEN,PSOHY("OCC")=ORDERTYP
  ; login date will always be the written date. if there is no written date by chance, use the received date
- S PSOHY("EDT")=DT,PSOHY("PRIOR")=VAPRIOR
+ S PSOHY("EDT")=$$NOW^XLFDT(),PSOHY("PRIOR")=VAPRIOR
  ; ALWAYS PSO as the external application
  S PSOHY("EXAPP")="PHARMACY"
  S PSOHY("DAYS")=VADAYS
@@ -223,8 +213,6 @@ SETUP ;
  S SLOOP2=0 F  S SLOOP2=$O(PINARY(SLOOP2)) Q:'SLOOP2  D
  .S SCNT=SCNT+1,PSOHY("SIG",SCNT)=$G(PINARY(SLOOP2))
  ; if provider, patient or drug is missing, no need to continue.
- ; future consideration - do we need to check more fields?
- ;I $D(PSOEXMS) D MSGDIR^PSOERXU1(.PSOEXMS) Q
  D ADD
  I $G(PSOEXMS)]"" W !,PSOEXMS S DIR(0)="E" D ^DIR K DIR
  K DFN
@@ -233,11 +221,6 @@ ADD(QUIET) ;Add CHCS message to Outpatient Pending Orders file
  N PSOHQ,PSOHQT,PSOCPEND,PSOHINI,PSOHINLO,ERXSTA,ORDNUM,ILOOP,IARY,PSSRET
  S (PSOHINI,PSOHINLO)=0 D
  .I $G(PSOHY("LOC")) S PSOHINLO=$P($G(^SC(PSOHY("LOC"),0)),"^",4) I PSOHINLO Q
- .; FUTURE - consider enabling further institution checks. For now the institution is being pulled from either
- .; the institution associated with the hospital location, or below, from the eRx.
- .;I $G(PSOHY("LOC")) S PSOHINI=$P($G(^SC(PSOHY("LOC"),0)),"^",15)
- .;I '$G(PSOHINI) S PSOHINI=$O(^DG(40.8,0))
- .;S PSOHINLO=+$$SITE^VASITE(PSOHINI)
  ; get institution from 52.49 if clinic was not passed in
  I $G(PSOHINLO)<1 S PSOHINLO=$$GET1^DIQ(52.49,PSOIEN,24.1,"I")
  I +$G(PSOHINLO)<1 S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Unable to derive Institution from Clinic." Q
@@ -274,7 +257,6 @@ ADD(QUIET) ;Add CHCS message to Outpatient Pending Orders file
  D EN^PSOHLSNC(PSOCPEND,"SN","IP")
  D FULL^VALM1
  ;Just set to DC, don't delete because 52.41 entry would be re-used
- ;I '$P($G(^PS(52.41,PSOCPEND,"EXT")),"^",2) S DA=PSOCPEND,DIK="^PS(52.41," D ^DIK K DIK,DA S PSOEXMS="Unable to send CHCS order to CPRS." D NAK^PSOHLEXC Q
  I '$P($G(^PS(52.41,PSOCPEND,"EXT")),"^",2) D  S $P(^PS(52.41,PSOCPEND,0),"^",3)="DC" S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Unable to send CHCS order to CPRS." Q
  .;x-ref shouldn't be set, but we'll kill them just in case
  .K ^PS(52.41,"AOR",$P(^PS(52.41,PSOCPEND,0),"^",2),+$P($G(^("INI")),"^"),PSOCPEND),^PS(52.41,"AD",$P(^PS(52.41,PSOCPEND,0),"^",12),+$P($G(^("INI")),"^"),PSOCPEND)
@@ -300,14 +282,12 @@ ADD(QUIET) ;Add CHCS message to Outpatient Pending Orders file
  .S IARY(ILOOP)=$G(^PS(52.49,PSOIEN,31,ILOOP,0))
  I $D(IARY) D WP^DIE(52.41,PSOCPEND_",",9,"K","IARY","IERR")
  I '$D(QUIET) W !!,"eRx #"_PSOHY("CHNUM")_" sent to PENDING OUTPATIENT ORDERS!"
- ;PSO*7*520 - add sending and warning/information related to RxVerify Message.
  I MTYPE="N" D
  .W !!,"Sending rxVerify Message to prescriber."
  .D POST^PSOERXO1(PSOIEN,.PSSRET,,,,1)
  .; if the post was unsuccessful, inform the user and quit.
  .I $P(PSSRET(0),U)<1 W !,$P(PSSRET(0),U,2) S DIR(0)="E" D ^DIR K DIR Q
  .I $D(PSSRET("errorMessage")) W !,PSSRET("errorMessage") S DIR(0)="E" D ^DIR K DIR Q
- ;PSO*7*520 - end rxVerify changes
  I '$D(QUIET) S DIR(0)="E" D ^DIR K DIR
  K QUIET
  Q

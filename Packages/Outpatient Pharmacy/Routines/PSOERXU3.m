@@ -1,8 +1,7 @@
 PSOERXU3 ;ALB/BWF - eRx utilities ; 5/26/2017 9:57am
- ;;7.0;OUTPATIENT PHARMACY;**508,591**;DEC 1997;Build 2
+ ;;7.0;OUTPATIENT PHARMACY;**508,591,606**;DEC 1997;Build 5
  ;
  Q
- ; PSO*508 - Added MEDDIS, RRREQ, and RRRES linetags.
  ; ERXIEN - IEN FROM 52.49
  ; DTYPE - R for REQUESTED, or D for dispensed drugs
 MEDDIS(ERXIEN,DTYPE,LINE) ;
@@ -42,9 +41,9 @@ MEDDIS(ERXIEN,DTYPE,LINE) ;
  .D SET^VALM10(LINE,LTXT) S LTXT=""
  .S DIRECT="Vista Sig: "_DIRECT
  .D TXT2ARY^PSOERXD1(.DIRARY,DIRECT," ",75)
- .S DLOOP=0 F  S DLOOP=$O(DIARY(DLOOP)) Q:'DLOOP  D
+ .S DLOOP=0 F  S DLOOP=$O(DIRARY(DLOOP)) Q:'DLOOP  D
  ..S LINE=LINE+1
- ..D SET^VALM10(LINE,DIRECT)
+ ..D SET^VALM10(LINE,$G(DIRARY(DLOOP)))
  I $G(RXIEN) D
  .S RXNUM=$$GET1^DIQ(52,RXIEN,.01,"E")
  .S INS=0 F  S INS=$O(^PSRX(RXIEN,"INS1",INS)) Q:'INS  D
@@ -201,7 +200,6 @@ AUTODC(ERXIEN) ;
  I REQIEN S NERXIEN=$$RESOLV^PSOERXU2(REQIEN)
  Q:'$P(NERXIEN,U)
  S RXIEN=$$GET1^DIQ(52.49,NERXIEN,.13,"I") Q:RXIEN=""
- ;S PENDIEN=$$GET1^DIQ(52.49,NERXIEN,.1,"E")
  ; if already DC'd, do not try to DC again
  S RXSTAT=$$GET1^DIQ(52,RXIEN,100,"I")
  I (RXSTAT=12)!(RXSTAT=14)!(RXSTAT=15) D  Q
@@ -212,7 +210,6 @@ AUTODC(ERXIEN) ;
  .D UPDSTAT^PSOERXU1(ERXIEN,"RXF",$G(VALMSG))
  S PSOSITE=$$GET1^DIQ(52,RXIEN,20,"I")
  S PSOSYS=$G(^PS(59.7,1,40.1)) Q:PSOSYS=""
- ; FUTURE ENHANCEMENT/CONSIDERATION- SET PSODIV - PSODIV IS 0 in the test account. need to determine what it is set to.
  S PSODFN=$$GET1^DIQ(52,RXIEN,2,"I") Q:'PSODFN
  ; ORN is set to 1 since we are only building one item into the list. this makes the dc function use PSOLST(ORN)
  ; or PSOLST(1)
@@ -255,7 +252,6 @@ RRRESCR(ERXIEN,OPT) ;
  .; if changes are in the drug segment only, no validations or other pharmacist actions needed
  .I OPT="DRUG" S OK=0
  I MTYPE="RE",OPT="DRUG" S OK=0 Q OK
- ;I "RERR"[$$GET1^DIQ(52.49,ERXIEN,.08,"I") Q 0
  Q OK
  ;
  ;Process refill response into pending outpatient orders
@@ -270,8 +266,6 @@ PREFRES(PSOIEN,PSOHY,PSOEXCNT,PSOEXMS,PSODAT) ;
  ; for approved response types, rebuild PSOHY and quit, using original Rx for all fields except written date and # of refills
  I RESTYPE="A" D PSOHY(.PSOHY,PSOIEN,ORXIEN,RXIEN) Q
  ; process 'approved with changes' response types
- ; FUTURE CONSIDERATION - if the patient on the response is not the same as the patient on the original Rx, we need to quit and log an error
- ;I $$GET1^DIQ(52.49,PSOIEN,.04,"I")'=$$GET1^DIQ(52.49,ORXIEN,.04,"I") S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="External Patient mismatch. Cannot process response." Q
  ; if this refill response has any validations/linkages, use them. Otherwise, use the validations/linkages from the original (new) rx.
  D RRDELTA^PSOERXU2(.DELTA,REQIEN,PSOIEN)
  S PROVIEN=""
@@ -319,16 +313,10 @@ PSOHY(PSOHY,ERXIEN,ORXIEN,RXIEN,PROVOVR) ;
  S PSOHY("QTY")=VQTY,PSOHY("REF")=VAREF
  ; DFN cannot be newed/killed here because it needs to exist for the subsequent call.
  S (PSOHY("PAT"),DFN)=PATIEN,PSOHY("OCC")=ORDERTYP
- ; login date will always be the written date. if there is no written date by chance, use the received date
+ ; login date/time will always be the written date. if there is no written date by chance, use the received date
  ;S PSOHY("EDT")=$S(WRITDT'="":$P(WRITDT,"."),1:$P($$GET1^DIQ(52.49,PSOIEN,.03,"I"),"."))
- S PSOHY("EDT")=DT,PSOHY("PRIOR")=VAPRIOR
+ S PSOHY("EDT")=$$NOW^XLFDT(),PSOHY("PRIOR")=VAPRIOR
  ; ALWAYS PSO as the external application
  S PSOHY("EXAPP")="PHARMACY"
  S PSOHY("DAYS")=VADAYS
- ; sig from eRx - not needed for rewewal - leave logic here as it may be needed for change response
- ;S (SLOOP,SCNT)=0 F  S SLOOP=$O(^PS(52.49,PSOIEN,"SIG",SLOOP)) Q:'SLOOP  D
- ;.S SIGDAT=$G(^PS(52.49,PSOIEN,"SIG",SLOOP,0))
- ;.S SCNT=SCNT+1,PSOHY("SIG",SCNT)=SIGDAT
- ;S SLOOP2=0 F  S SLOOP2=$O(PINARY(SLOOP2)) Q:'SLOOP2  D
- ;.S SCNT=SCNT+1,PSOHY("SIG",SCNT)=$G(PINARY(SLOOP2))
  Q

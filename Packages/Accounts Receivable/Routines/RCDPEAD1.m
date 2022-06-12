@@ -1,5 +1,5 @@
 RCDPEAD1 ;OIFO-BAYPINES/PJH - AUTO-DECREASE REPORT ;Nov 23, 2014@12:48:50
- ;;4.5;Accounts Receivable;**298,318,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**298,318,326,345**;Mar 20, 1995;Build 34
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 CARCS(A1,A2,A3,CARCS) ; Get CARC Auto-Decrease data
@@ -58,7 +58,8 @@ COMPILE(INPUTS,RCVAUTD,DTOTAL,GTOTAL) ; EP Generate the Auto-Decrease report ^TM
  ;          GTOTAL              - Grand totals
  ;          ^TMP("RCDPEADP",$J) - Array of report data
  ;                                See SAVE for a full description
- N AMT,ADDATE,CARCS,END,ERAIEN,EOBIEN,EXCEL,RCTR,RCRZ,RCSORT,RCTYPE,RCZERO,STA,STNAM,STNUM,XX ; PRCA*4.5*326
+ N AMT,ADDATE,CARCS,END,ERAIEN,EOBIEN,EXCEL,RCTR,RCRZ,RCSORT,RCTYPE,RCZERO
+ N STA,STNAM,STNUM,WHICH,XX ; PRCA*4.5*345 - Added WHICH
  ;
  S XX=$P(INPUTS,"^",4)                      ; Auto-Post Date range
  S ADDATE=$$FMADD^XLFDT($P(XX,"|",1),-1)
@@ -80,6 +81,7 @@ COMPILE(INPUTS,RCVAUTD,DTOTAL,GTOTAL) ; EP Generate the Auto-Decrease report ^TM
  . . D ERASTA(ERAIEN,.STA,.STNUM,.STNAM)        ; Check for valid Division
  . . I $P(INPUTS,"^",1)=2,'$D(RCVAUTD(STA)) Q   ; Not a valid Division
  . . I RCTYPE'="A",'$$ISTYPE^RCDPEU1(344.4,ERAIEN,RCTYPE) Q  ; PRCA*4.5*326 - Not a valid payer type
+ . . S WHICH=$$PHARM^RCDPEAP1(ERAIEN)           ; It must be a Medical/TRICARE or Rx ERA
  . . ;
  . . ; Scan index for auto-decreased claim lines within the ERA
  . . ; and Save claim line detail to ^TMP global
@@ -95,7 +97,7 @@ COMPILE(INPUTS,RCVAUTD,DTOTAL,GTOTAL) ; EP Generate the Auto-Decrease report ^TM
  . . . S AMT=+$$GET1^DIQ(344.41,RCRZ_","_ERAIEN_",",8)
  . . . ;
  . . . ; Find all Claim level and Claim line level CARCs
- . . . S CARCS=$$CARCLMT^RCDPEAD(EOBIEN,RCZERO,1,ADDATE) ; PRCA*4.5*326
+ . . . S CARCS=$$CARCLMT^RCDPEAD(EOBIEN,RCZERO,$S(WHICH:2,1:1),1,ADDATE) ; PRCA*4.5*345 - Added WHICH
  . . . S CARCS=$$MAX(CARCS,AMT) ; PRCA*4.5*326 - remove any CARCs which were not decreased
  . . . Q:+CARCS=0                               ; No CARCs found
  . . . D SAVE^RCDPEADP(ADDATE,ERAIEN,RCRZ,EXCEL,RCSORT,CARCS,.RCTR,STNAM,STNUM)
