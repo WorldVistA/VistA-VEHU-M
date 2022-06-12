@@ -1,5 +1,5 @@
 IBCEPTC ;ALB/TMK - EDI PREVIOUSLY TRANSMITTED CLAIMS ; 4/12/05 11:15am
- ;;2.0;INTEGRATED BILLING;**296,320,348,349,547,592,623,659**;21-MAR-94;Build 16
+ ;;2.0;INTEGRATED BILLING;**296,320,348,349,547,592,623,659,641**;21-MAR-94;Build 61
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; Main entrypoint
@@ -44,8 +44,8 @@ Q1 ;
  F  D  Q:IBQUIT
  .;I IBHOW="C" S DIR("A")="Select a"_$S(IBCT:"nother",1:"")_" Claim: ",DIR(0)="PA^364:AEMQZ",DIR("S")="I '$P(^(0),U,7),'$O(^IBA(364,""B"",+^(0),Y))"
  . ;JWS;IB*2.0*623;allow previously trans claims in test to be resubmitted if non-production environment "!'$$PROD^XUPROD(1)"
- . ;JWS;2/12/20;IB*2.0*659 removed '$$PROD^XUPROD(1) call in screen, caused Naked ref error
- . I IBHOW="C",IBLOC="" S DIR("A")="Select a"_$S(IBCT:"nother",1:"")_" Claim: ",DIR(0)="PA^364:AEMQZ",DIR("S")="I '$P(^(0),U,7),'$O(^IBA(364,""B"",+^(0),Y))"
+ . ;JWS;IB*2.0*641v9;screen change in IB*623 failed - created SCRN label in this routine to perform check
+ . I IBHOW="C",IBLOC="" S DIR("A")="Select a"_$S(IBCT:"nother",1:"")_" Claim: ",DIR(0)="PA^364:AEMQZ",DIR("S")="I $$SCRN^IBCEPTC(Y)"
  . I IBHOW="C",IBLOC=1 S DIR("A")="Select a"_$S(IBCT:"nother",1:"")_" Locally Printed Claim: ",DIR(0)="PA^399:AEMQZ",DIR("S")="I '$D(^IBA(364,""B"",Y)),$$INSOK^IBCEF4(+$$CURR^IBCEF2(Y))"
  . I IBHOW="B" S DIR("A")="Select a"_$S(IBCT:"nother",1:"")_" Batch: ",DIR(0)="PA^IBA(364.1,:AEMQ^W ""  "",$P(^(0),U,3),"" Claims""",DIR("S")="I '$P(^(0),U,14)"
  . S DIR("?")="^D SELDSP^IBCEPTC(IBHOW)"
@@ -220,4 +220,9 @@ SELDSP(IBHOW) ; Display list of selected claims/batches
  . I '(CT#10),$O(^TMP($J,IBHOW,Z)) S DIR("A")="Press return for more or '^' to exit ",DIR(0)="EA" W ! D ^DIR K DIR I $D(DTOUT)!$D(DUOUT) S QUIT=1
  W !
  Q
+ ;
+SCRN(Y) ; JWS;IB*2.0*641; added SCRN label to screen $$PROD^XUPROD(1) to allow more claim selections in non-prod environments
+ I '$$PROD^XUPROD(1),+^IBA(364,Y,0),'$O(^IBA(364,"B",+^(0),Y)) Q 1
+ I '$P(^IBA(364,Y,0),U,7),'$O(^IBA(364,"B",+^(0),Y)) Q 1
+ Q 0
  ;

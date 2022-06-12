@@ -1,5 +1,5 @@
 IBCBB1 ;ALB/AAS - CONTINUATION OF EDIT CHECK ROUTINE ;2-NOV-89
- ;;2.0;INTEGRATED BILLING;**27,52,80,93,106,51,151,148,153,137,232,280,155,320,343,349,363,371,395,384,432,447,488,554,577,592,608,623**;21-MAR-94;Build 70
+ ;;2.0;INTEGRATED BILLING;**27,52,80,93,106,51,151,148,153,137,232,280,155,320,343,349,363,371,395,384,432,447,488,554,577,592,608,623,641**;21-MAR-94;Build 61
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; *** Begin IB*2.0*488 VD  (Issue 46 RBN)
@@ -53,6 +53,8 @@ IBCBB1 ;ALB/AAS - CONTINUATION OF EDIT CHECK ROUTINE ;2-NOV-89
  ;Total Charges
  ; IB*2.0*447/TAZ Removed this error so that zero dollar revenue codes can process on the 837
  ;I +IBTC'>0!(+IBTC'=IBTC) S IBER=IBER_"IB064;"
+ ; IB*2.0*641 v9/WCJ added back so $0 claims won't go out
+ I +IBTC'>0 S IBER=IBER_"IB064;"
  ;
  ;Billable charges for secondary claim
  I $$MCRONBIL^IBEFUNC(IBIFN)&(($P(IBNDU1,U,1)-$P(IBNDU1,U,2))'>0) S IBER=IBER_"IB094;"
@@ -247,7 +249,8 @@ IBCBB1 ;ALB/AAS - CONTINUATION OF EDIT CHECK ROUTINE ;2-NOV-89
  I $$IBMICN^IBCBB13(IBIFN) S IBER=IBER_"IB346;"
  ;
  ;Test for a ZERO charge amounts. IB*2.0*447 BI
- I $$IBRCCHK^IBCBB13(IBIFN) D WARN^IBCBB11("Claim contains revenue codes with no associated charges.")
+ ;no use looking for a warning when you already flagged a fatal edit for a similar issue;WCJ;IB*2.0*641 v9;added check for IB064
+ I IBER'["IB064;",$$IBRCCHK^IBCBB13(IBIFN) D WARN^IBCBB11("Claim contains revenue codes with no associated charges.")
  ;
  ;Test for missing "Patient reason for visit". IB*2.0*447 BI
  I $$FT^IBCEF(IBIFN)=3,'$$INPAT^IBCEF(IBIFN),$$IBPRV3^IBCBB13(IBIFN) S IBER=IBER_"IB347;"

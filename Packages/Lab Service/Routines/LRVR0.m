@@ -1,5 +1,5 @@
-LRVR0 ;DALOI/STAFF - LEDI MI/AP Data Verification ;01/18/17  09:31
- ;;5.2;LAB SERVICE;**350,427,474,480**;Sep 27, 1994;Build 7
+LRVR0 ;DALOI/STAFF - LEDI MI/AP Data Verification ;Jul 20, 2020@13:53
+ ;;5.2;LAB SERVICE;**350,427,474,480,537**;Sep 27, 1994;Build 11
  ;
  ; LEDI MI/AP Auto-instrument verification
  ; Called from LRVR
@@ -258,6 +258,20 @@ ACCEPT ;Display results and accept data
  I Y=0 D PURG Q
  I Y<1 S LRNOP=1 Q
  ;
+ ;LR*5.2*537: 
+ ;Set LRM63ORG array to track organisms already on file for this
+ ;accession. Used by routine LRCAPVM downstream to determine "new"
+ ;organisms for workload accumulation. The Isolate ID instead of
+ ;the organism id is used for reference because an organism id
+ ;might be filed more than once on an accession. It's standard
+ ;laboratory practice to not change the isolate id for an organism.
+ ;In the rare instance that this occurs, workload must be adjusted
+ ;manually.
+ N LRM63ORG,LRM63SQ
+ I LRINTYPE=1 D
+ . F LRM63SQ=3,6,9,12,17 D
+ . . M LRM63ORG(LRM63SQ)=^LR(LRDFN,"MI",LRIDT,LRM63SQ,"C")
+ ;
  ; If user just accepting or doing comments then ask for tests.
  I LREDITTYPE<3 D
  . D EC^LRMIEDZ4
@@ -300,6 +314,15 @@ ACCEPT ;Display results and accept data
  ;
  ; Update accession and order
  D EC3^LRMIEDZ2
+ ;
+ ;LR*5.2*537: If UI (not LEDI) store workload
+ ;Downstream LRCAPVM will check other workload related variables
+ ;which might not be defined at this point in LRVR0
+ I LRINTYPE=1 D
+ . D LOOK^LRCAPV1
+ . ;killing LRM63ORG in case somehow a workflow will cause the array
+ . ;to be carried over between accessions
+ . K LRM63ORG
  ;
  ; Queue results if LEDI and cleanup
  D LEDI,ZAP

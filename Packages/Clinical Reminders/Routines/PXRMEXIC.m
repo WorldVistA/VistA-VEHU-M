@@ -1,5 +1,5 @@
-PXRMEXIC ;SLC/PKR/PJH - Routines to install repository entry components. ;11/14/2018
- ;;2.0;CLINICAL REMINDERS;**6,12,17,16,18,22,24,26,47,42**;Feb 04, 2005;Build 132
+PXRMEXIC ;SLC/PKR,PJH - Routines to install repository entry components. ;09/27/2018
+ ;;2.0;CLINICAL REMINDERS;**6,12,17,16,18,22,24,26,47,45**;Feb 04, 2005;Build 566
  ;=================================================
 FILE(PXRMRIEN,SITEIEN,IND120,JND120,ACTION,ATTR,NAMECHG) ;Read and process a
  ;file entry in repository entry PXRMRIEN. IND120 and JND120 are the
@@ -45,7 +45,7 @@ FILE(PXRMRIEN,SITEIEN,IND120,JND120,ACTION,ATTR,NAMECHG) ;Read and process a
  ..;
  ..;If the action is install try to install at the source IEN. If
  ..;an entry already exists at the source IEN put it in the first
- ..;open spot.
+ ..;open spot. 
  .. I ACTION="I" D
  ... S IENUSED=+$$FIND1^DIC(FILENUM,"","QU","`"_SRCIEN)
  ... S IENROOT(SRCIEN)=$S(IENUSED=0:SRCIEN,1:$$LOIEN^PXRMEXU5(FILENUM))
@@ -79,12 +79,13 @@ FILE(PXRMRIEN,SITEIEN,IND120,JND120,ACTION,ATTR,NAMECHG) ;Read and process a
  ;Special handling for file 801
  I TOPFNUM=801 D  Q:PXRMDONE
  . D SFMVPI^PXRMEXIU(.FDA,.NAMECHG,801.015)
- . D ROC^PXRMEXU5(.FDA)
+ . D ROC^PXRMEXU5(.FDA,.IENROOT)
  ;
  ;Special handling for file 801.1
  I TOPFNUM=801.1 D  Q:PXRMDONE
  . D ROCR^PXRMEXU5(.FDA)
  ;
+ I TOPFNUM=801.48 D DLINKSAV^PXRMEXU5(.FDA) Q:PXRMDONE
  ;Special handling for file 801.41
  I TOPFNUM=801.41 D  Q:PXRMDONE
  . I ACTION="M" D MOU^PXRMEXU5(801.41,SITEIEN,"18*",.FDA,.IENROOT,ACTION,.WPTMP)
@@ -95,6 +96,8 @@ FILE(PXRMRIEN,SITEIEN,IND120,JND120,ACTION,ATTR,NAMECHG) ;Read and process a
  ;
  ;Special handling for file 811.2
  I TOPFNUM=811.2 D TAX^PXRMEXU0(.FDA,"CFR")
+ ;
+ I TOPFNUM=801.46 D DIALOGGF^PXRMEXU5(.FDA,.IENROOT)
  ;
  ;If the file number is 811.4 the user must have programmer
  ;access to install it.
@@ -126,6 +129,7 @@ FILE(PXRMRIEN,SITEIEN,IND120,JND120,ACTION,ATTR,NAMECHG) ;Read and process a
  ;
  ;Special handling for file 9999999.64: Health Factors.
  I TOPFNUM=9999999.64 D HF^PXRMEXIU(.FDA)
+ ;
  ;
  ;If FDA is not defined at this point the user has opted to abort
  ;the install.
@@ -161,7 +165,7 @@ FILE(PXRMRIEN,SITEIEN,IND120,JND120,ACTION,ATTR,NAMECHG) ;Read and process a
  . D DELETE^PXRMEXFI(TOPFNUM,SITEIEN)
  D UPDATE^DIE("ES","FDA","IENROOT","MSG")
  I '$D(MSG),ATTR("FILE NUMBER")=9999999.64 D
- .;Build a list of health factor categories that need the [C] appended.
+ . ;Build a list of health factor categories that need the [C] appended
  . N IENS
  . S IENS=$O(FDA(9999999.64,""))
  . I FDA(9999999.64,IENS,.1)'="CATEGORY" Q

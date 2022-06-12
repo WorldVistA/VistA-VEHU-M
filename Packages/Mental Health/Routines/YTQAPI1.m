@@ -1,5 +1,5 @@
 YTQAPI1 ;ASF/ALB- MHAX REMOTE PROCEDURES ; 4/3/07 10:50am
- ;;5.01;MENTAL HEALTH;**85,119,121**;Dec 30, 1994;Build 61
+ ;;5.01;MENTAL HEALTH;**85,119,121,141**;Dec 30, 1994;Build 85
  Q
 RULES(YSDATA,YS) ;list rules for a survey
  ;entry point for YTQ RULES rpc
@@ -105,3 +105,22 @@ CAPIE(YSDATA,YS) ;entry point for YTQ CAPIE rpc
  . S:(^TMP("YS",$J,YSFILEN,YSIENS,N1,"E")'=^TMP("YS",$J,YSFILEN,YSIENS,N1,"I")) ^TMP("YSDATA",$J,N)=^TMP("YSDATA",$J,N)_U_^TMP("YS",$J,YSFILEN,YSIENS,N1,"E")
  K ^TMP("YS",$J)
  Q
+ADMSAVE(YSDATA,YS) ; create new entry in MH ADMINISTRATIONS (601.84)
+ ; ensure the YTQ ADMIN SAVE rpc can only modify 601.84
+ S YS("FILEN")=601.84
+ N I S I=0
+ F  S I=$O(YS(I)) Q:'I  I $P(YS(I),U)="15" S YS(I)="15^`"_$$SRC($P(YS(I),U,2))
+ D EDAD(.YSDATA,.YS)
+ Q
+SRC(ANAME) ; return IEN for entry source, adding if needed
+ N IEN
+ S IEN=$O(^YTT(601.844,"C",$$UP^XLFSTR(ANAME),0))
+ I IEN QUIT IEN
+ ;
+ N YTFDA,YTIEN,YTERR,DIERR
+ S YTFDA(601.844,"+1,",.01)=ANAME
+ D UPDATE^DIE("E","YTFDA","YTIEN","YTERR")
+ S IEN="" I '$D(DIERR),YTIEN(1) S IEN=YTIEN(1)
+ D CLEAN^DILF
+ Q IEN
+ ;

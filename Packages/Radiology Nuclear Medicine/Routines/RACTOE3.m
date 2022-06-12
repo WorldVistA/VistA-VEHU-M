@@ -1,3 +1,0 @@
-RACTOE3 ; ;03/19/19
- S X=DE(83),DIC=DIE
- K ^RAO(75.1,"AO",$E(X,1,30),DA)

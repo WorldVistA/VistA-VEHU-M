@@ -1,5 +1,5 @@
 RCDPBPLI ;WISC/RFJ-bill profile (build array cont employee/vendor) ;1 Jun 99
- ;;4.5;Accounts Receivable;**114,153,301,315,350**;Mar 20, 1995;Build 66
+ ;;4.5;Accounts Receivable;**114,153,301,315,350,372**;Mar 20, 1995;Build 9
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -70,21 +70,34 @@ TRANINIT ;  initialization for transaction and ib data display
  .   .   D SET^RCDPBPLM(X,RCLINE,77,80)  ;PRCA*4.5*315
  .   .   ;
  .   .   ;  for category c-means test, rx copay (sc/nsc)
- .   .   I BILLCAT=18!(BILLCAT=22)!(BILLCAT=23) D
+ .   .   S RCDSPINF=$$GETDSP(RCBILLDA,BILLCAT)
+ .   .   I +RCDSPINF D    ;PRCA*4.5*372 - Added outpatient Copay check
  .   .   .   D STMT^IBRFN1(RCTRANDA)
  .   .   .   I '$D(^TMP("IBRFN1",$J)) Q
  .   .   .   S IBDA=0 F  S IBDA=$O(^TMP("IBRFN1",$J,IBDA)) Q:'IBDA  D
  .   .   .   .   S DATA=^TMP("IBRFN1",$J,IBDA)
+ .   .   .   .   ;if attempting to display a VA RX and there is no prescription data (Manual VA RX Copay)
+ .   .   .   .   I (RCDSPINF=1),($P(DATA,U,7)="") S RCDSPINF="MVA"
  .   .   .   .   ;  show rx
- .   .   .   .   I BILLCAT=22!(BILLCAT=23) D  Q
+ .   .   .   .   I RCDSPINF=1 D  Q
  .   .   .   .   .   D SET^RCDPBPLM("RX "_$P(DATA,U,2),RCLINE,48,58)  ;PRCA*4.5*315 Spacing changed next several lines
  .   .   .   .   .   D SET^RCDPBPLM($P(DATA,U,3),RCLINE,60,75)
  .   .   .   .   .   ; D SET^RCDPBPLM("Qty "_$P(DATA,U,6),RCLINE,77,80)
  .   .   .   .   ;  show outpatient (type of care 430.2 = 4 outpatient care)
- .   .   .   .   I $P(^PRCA(430,RCBILLDA,0),U,16)=4 D  Q
- .   .   .   .   .   D SET^RCDPBPLM("Outpatient Visit Date: "_$E($P(DATA,U,2),4,5)_"/"_$E($P(DATA,U,2),6,7)_"/"_$E($P(DATA,U,2),2,3),RCLINE,48,80)
+ .   .   .   .   I RCDSPINF=4 D  Q
+ .   .   .   .   .   D SET^RCDPBPLM("CC RX Fill Date: "_$E($P(DATA,U,3),4,5)_"/"_$E($P(DATA,U,3),6,7)_"/"_$E($P(DATA,U,3),2,3),RCLINE,48,80)
+ .   .   .   .   I RCDSPINF="MVA" D  Q
+ .   .   .   .   .   D SET^RCDPBPLM("RX Fill Date: "_$E($P(DATA,U,3),4,5)_"/"_$E($P(DATA,U,3),6,7)_"/"_$E($P(DATA,U,3),2,3),RCLINE,48,80)
+ .   .   .   .   I RCDSPINF=5 D  Q
+ .   .   .   .   .   D SET^RCDPBPLM("OPT LTC Visit Date: "_$E($P(DATA,U,3),4,5)_"/"_$E($P(DATA,U,3),6,7)_"/"_$E($P(DATA,U,3),2,3),RCLINE,48,80)
+ .   .   .   .   I RCDSPINF=6 D  Q
+ .   .   .   .   .   D SET^RCDPBPLM("INPT LTC From: "_$E($P(DATA,U,3),4,5)_"/"_$E($P(DATA,U,3),6,7)_"/"_$E($P(DATA,U,3),2,3),RCLINE,48,80)
+ .   .   .   .   I RCDSPINF=7 D  Q
+ .   .   .   .   .   D SET^RCDPBPLM("CC LTC From: "_$E($P(DATA,U,3),4,5)_"/"_$E($P(DATA,U,3),6,7)_"/"_$E($P(DATA,U,3),2,3),RCLINE,48,80)
+ .   .   .   .   I RCDSPINF=2 D  Q
+ .   .   .   .   .   D SET^RCDPBPLM("OPT Visit Date: "_$E($P(DATA,U,2),4,5)_"/"_$E($P(DATA,U,2),6,7)_"/"_$E($P(DATA,U,2),2,3),RCLINE,48,80)
  .   .   .   .   ;  show inpatient
- .   .   .   .   D SET^RCDPBPLM("Inpatient Adm Date: "_$E($P(DATA,U,2),4,5)_"/"_$E($P(DATA,U,2),6,7)_"/"_$E($P(DATA,U,2),2,3),RCLINE,48,80)
+ .   .   .   .   D SET^RCDPBPLM("INPT Admit Date: "_$E($P(DATA,U,2),4,5)_"/"_$E($P(DATA,U,2),6,7)_"/"_$E($P(DATA,U,2),2,3),RCLINE,48,80)
  .   .   .   K ^TMP("IBRFN1",$J)
  Q
  ;
@@ -174,3 +187,16 @@ INSUR ;  show insurance data
  S RCLINE=RCLINE+1 D SET^RCDPBPLM("Secondary Ins Carrier",RCLINE,1,80,19)
  S RCLINE=RCLINE+1 D SET^RCDPBPLM(" Tertiary Ins Carrier",RCLINE,1,80,19.1)
  Q
+ ;PRCA*4.5*372
+GETDSP(RCBILLDA,BILLCAT) ; Determine what the display info should be in Description column
+ ;
+ N RCBLCT
+ ;
+ ;init the AR category lookup variable
+ S RCBLCT=BILLCAT
+ ;
+ ;If the Bill Category is 18 (C-Means Test) then get the actual category from the Type of Care field.
+ S:BILLCAT=18 RCBLCT=$P(^PRCA(430,RCBILLDA,0),U,16)
+ ;
+ ;get the display flag
+ Q $$GET1^DIQ(430.2,RCBLCT_",",1.05,"I")

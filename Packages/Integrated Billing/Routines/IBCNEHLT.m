@@ -1,5 +1,5 @@
 IBCNEHLT ;DAOU/ALA - HL7 Process Incoming MFN Messages ; 15 Mar 2016  3:00 PM
- ;;2.0;INTEGRATED BILLING;**184,251,271,300,416,438,506,549,582,601,621**;21-MAR-94;Build 14
+ ;;2.0;INTEGRATED BILLING;**184,251,271,300,416,438,506,549,582,601,621,664**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -7,38 +7,35 @@ IBCNEHLT ;DAOU/ALA - HL7 Process Incoming MFN Messages ; 15 Mar 2016  3:00 PM
  ;  update the appropriate tables
  ;
 EN ;  Entry Point
- NEW AIEN,APIEN,APP,D0,D,DESC,DQ,DR,FILE,FLN,HEDI,ID,IEN
+ NEW AIEN,APIEN,APP,D0,D,DESC,DQ,DR,EIV,FILE,FLN,HEDI,ID,IEN
  NEW PEDI,SEG,STAT,HCT,NEWID,TSSN,REQSUB,NAFLG,NPFLG,TRUSTED
  NEW IBCNACT,IBCNADT,FSVDY,PSVDY
- NEW BPSIEN,CMIEN,DATA,DATAAP,DATABPS,DATACM,DATE,ERROR,FIELDNO,FILENO
+ NEW CMIEN,DATA,DATAAP,DATABPS,DATACM,DATE,ERROR,FIELDNO,FILENO
  NEW IBSEG,MSG,BUFF
  NEW X12TABLE,BADFMT
  ;
  ; BADFMT is true if a site with patch 300 receives an eIV message in the previous HL7 interface structure (pre-300)
  ;
- ; ** With national release of IB*2*550 ePharmacy will no longer use this routine to process table
- ;    updates.
- ; ** Therefore, several lines of code will become obsolete as commented in this routine.
+ ; Build local table of file numbers of DD tables that are updated by FSC for use by the eIV interface
  ;
- ; ** Upon national release of IB*2*550 reword statement below to drop ePHARM reference
- ;
- ; Build local table of file numbers to determine if response is eIV or ePHARM
  ; * Warning: Before adding a new table to be updated by FSC, one must get FSC
  ;            to agree and the eIV ICD documentation has to be updated and 
  ;            approved by the VA HL7 team. Just adding a table number here does
  ;            absolutely nothing without involving the other teams.
  ;
  F D=11:1:18 S X12TABLE("365.0"_D)=""
- ;F D=21:1:28 S X12TABLE("365.0"_D)=""
- S X12TABLE(350.021)=""
- S X12TABLE(350.9)=""     ; IB*2.0*506
- S X12TABLE(350.9002)=""  ; IB*2.0*549
+ ;F D=21:1:28 S X12TABLE("365.0"_D)=""  ; FSC does not update files #365.022 through #365.028
+ ; IB*2*664/dw fixed typo on file number
+ ;S X12TABLE(350.021)=""
+ S X12TABLE(365.021)=""
  ;
- ; Decide if message belongs to "E-Pharm" or "eIV"
+ ;S X12TABLE(350.9)=""     ; IB*2.0*506   ; IB*2*664/dw  moved to different array as it is not a X12 file 
+ ;S X12TABLE(350.9002)=""  ; IB*2.0*549   ; IB*2*664/dw  moved to different array as it is not a X12 file 
+ S EIV(350.9)="",EIV(350.9002)="",EIV(365.12)=""    ; IB*2*664/dw  
+ ;
  S APP=""
  S HCT=0,ERFLG=0
  F  S HCT=$O(^TMP($J,"IBCNEHLI",HCT)) Q:HCT=""  D SPAR^IBCNEHLU I $G(IBSEG(1))="MFI" S FILE=$G(IBSEG(2)),FLN=$P(FILE,$E(HLECH,1),1) Q
- I ",366.01,366.02,366.03,365.12,355.3,"[(","_FLN_",") S APP="E-PHARM"   ; ** Obsolete line upon release of IB*2*550
  I FLN=365.12 D
  . S HCT=0,BADFMT=0
  . F  S HCT=$O(^TMP($J,"IBCNEHLI",HCT)) Q:HCT=""  D  Q:(APP="IIV")!BADFMT
@@ -50,54 +47,17 @@ EN ;  Entry Point
  ... S MSG(3)="of sync with the master list and will need a new copy of the payer table"
  ... S MSG(4)="update message from Austin."
  ... D MSG^IBCNEUT5($$MGRP^IBCNEUT5(),"eIV payer tables may be out of synch with master list","MSG(")
- .. I $G(IBSEG(1))="ZPA" S APP="IIV"
- I $D(X12TABLE(FLN)) S APP="IIV"
+ .. ;I $G(IBSEG(1))="ZPA" S APP="IIV" ; IB*2*664/dw  No longer needed, added 365.12 to the EIV array
+ I $D(X12TABLE(FLN))!$D(EIV(FLN)) S APP="IIV"    ; IB*2*664/dw  
  ;
- ; ** Upon release of IB*2*550, drop the ePharm reference in the comment below
- ; If neither eIV or ePHARM then quit
- I APP="" Q
+ I APP="" Q    ; If APP is not IIV then quit  (IIV is the former name for EIV)
  ;
  S HCT=1,NAFLG=0,NPFLG=0,D=""
  F  S HCT=$O(^TMP($J,"IBCNEHLI",HCT)) Q:HCT=""  D  Q:ERFLG
  . D SPAR^IBCNEHLU
  . S SEG=$G(IBSEG(1))
  . ;
- . I APP="E-PHARM" D   ;  ** This Do-loop is obsolete upon release of IB*2*550
- .. I SEG="MFI" D
- ... S FILE=$G(IBSEG(2))
- ... S FLN=$P(FILE,$E(HLECH,1),1)
- ... ;
- ... ; Initialize MFK Message (Application Acknowledgement) variables
- ... ; Master File Identifier
- ... S DATAMFK("MFI-1")=$G(IBSEG(2))
- ... ;
- ... ; File-Level Event Code
- ... S DATAMFK("MFI-3")=$G(IBSEG(4))
- .. ;
- .. I SEG="MFE" D
- ... I $G(FLN)="" S ERFLG=1,MSG(1)="File Number not found in MFN message" Q
- ... I '$$VFILE^DILFD(FLN) S ERFLG=1,MSG(1)="File "_FLN_" not found in the Data Dictionary" Q
- ... ;
- ... ; Initialize MFK Message (Application Acknowledgement) variables
- ... ; Record-Level Event Code
- ... S DATAMFK("MFE-1")=$G(IBSEG(2))
- ... ;
- ... ; Primary Key Value
- ... S DATAMFK("MFE-4")=$G(IBSEG(5))
- ... ;
- ... ; Primary Key Value Type
- ... S DATAMFK("MFE-5")=$G(IBSEG(6))
- ... ;
- ... ; Transfer control to e-Pharmacy
- ... D ^IBCNRHLT Q
- .. ;
- .. ; Transfer control on other segments
- .. I ",ZCM,ZP0,ZPB,ZPL,ZPT,ZRX,"[(","_SEG_",") D ^IBCNRHLT
- . ; ** end of obsolete do-loop upon national release of IB*2*550
- . ;
- . ;
- . ;** Upon release of IB*2*550 this if statement (I APP="IIV") won't be necessary but it DOES NOT
- . ;   hurt to leave it in moving forward as a safety valve.
+ . ; APP should always be IIV at this point but leaving it in as a safety valve.  
  . I APP="IIV" D
  .. I SEG="MFI" D
  ... S FILE=$G(IBSEG(2))
@@ -129,7 +89,7 @@ EN ;  Entry Point
  ... D PFIL
  Q
  ;
-PFIL ;  Payer Table Filer
+PFIL ;  Payer Table Filer (Updates file #365.12)
  ;  Set the action:
  ;     MAD=Add, MUP=Update, MDC=Deactivate, MAC=Reactivate
  N OLDAF,OLDTF
@@ -202,7 +162,9 @@ PFIL ;  Payer Table Filer
 PFILX ;
  Q
  ;
-TFIL ;  Non Payer Tables Filer
+TFIL ;  eIV Site Parameter table filer & X12 Code List table filer
+ ;     (Updates X12 Code lists - Refer to the X12TABLE array at the top of this routine for file #s)
+ ;     (Updates file #350.9 & some of its subfiles associated with eIV - aka IIV)
  ; Input: DESC  - Field Number
  ;        ID    - Field Value
  ;        FLN   - File Number

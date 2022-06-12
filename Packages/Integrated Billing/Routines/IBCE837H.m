@@ -1,5 +1,5 @@
 IBCE837H ;EDE/JWS - OUTPUT FOR 837 FHIR TRANSMISSION ;5/23/18 10:48am
- ;;2.0;INTEGRATED BILLING;**623**;23-MAY-18;Build 70
+ ;;2.0;INTEGRATED BILLING;**623,641**;23-MAY-18;Build 61
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 GET(RESULT,ARG) ;get claim data for TAS Core 837
@@ -20,7 +20,8 @@ GET(RESULT,ARG) ;get claim data for TAS Core 837
  ; JWS 1/1/19 - if IEN is invalid, quit
  ; JWS;IB*2.0*623;need to set IBRSBTST if test for patch 608 compliance
  S IB364=$$LAST364^IBCEF4(IBIEN)
- S IBRSBTST=$$TEST^IBCE837I(IB364)
+ ; JWS;IB*2.0*641v13;changed from TEST^IBCE837I to TEST608, with no $$PROD check
+ S IBRSBTST=$$TEST608^IBCE837I(IB364)
  ; create 837 array of data using Output Formatter for form 8
  S IBSIZE=$$EXTRACT^IBCEFG(8,IBIEN,1,.XX)
  ; do not want to include BGN record in FHIR Transaction data

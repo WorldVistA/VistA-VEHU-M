@@ -1,9 +1,10 @@
-ORQ21 ;SLC/MKB,GSS - DETAILED ORDER REPORT CONTINUED ;01/24/2014  11:39
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**141,190,195,215,243,361,350,417**;Dec 17, 1997;Build 10
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ORQ21 ;SLC/MKB,GSS - DETAILED ORDER REPORT CONTINUED ;Apr 04, 2018@19:17
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**141,190,195,215,243,361,350,417,377,521**;Dec 17, 1997;Build 3
+ ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; DBIA 2400   OEL^PSOORRL   ^TMP("PS",$J)
  ; DBIA 2266   EN30^RAO7PC1  ^TMP($J,"RAE2")
+ ; DBIA 2058   ^DIC(9.4, Direct Global Read
  ;
 RAD(TCOM) ; -- add RA data for 2.5 orders
  N RAIFN,CASE,PROC,ORD,ORI,X,ORTTL,ORB
@@ -30,7 +31,9 @@ RAD1 I $L($G(^TMP($J,"RAE2",+ORVP,CASE,PROC,"TCOM",1))) S X=^(1) D
  ;
 MED ; -- Add Pharmacy order data
  Q:$G(^OR(100,ORIFN,4))["N"  ;non-VA med -- no refill history
- N TYPE,NODE,RXN,OR5,STAT S TYPE=$P(OR0,U,12)
+ ; p521 changed the next line
+ ;N TYPE,NODE,RXN,OR5,STAT,ORIDG,ORCIDG S TYPE=$P(OR0,U,12)
+ N TYPE,NODE,RXN,OR5,STAT,ORIDG,ORCIDG S TYPE=$$GETPKG ; p521 use package instead of patient class
  I '$D(^TMP("PS",$J,0)) D  ;get PS data / DBIA 2400
  . N PSIFN S PSIFN=$G(^OR(100,ORIFN,4))
  . S:TYPE="O" PSIFN=$TR(PSIFN,"S","P")_$S(PSIFN?1.N:"R",1:"")
@@ -40,7 +43,9 @@ MED ; -- Add Pharmacy order data
  I $O(^TMP("PS",$J,"DD",0)) D  ;Disp Drugs
  . N I,X,Y S X="Dispense Drugs (units/dose):  ",I=0
  . F  S I=$O(^TMP("PS",$J,"DD",I)) Q:I'>0  S Y=$G(^(I,0)) S:Y CNT=CNT+1,@ORY@(CNT)=X_$$GET1^DIQ(50,+Y_",",.01)_" ("_$P(Y,U,2)_")"
- S:$P(NODE,U,9) CNT=CNT+1,@ORY@(CNT)="Total Dose:                   "_$P(NODE,U,9)
+ S ORIDG=$O(^ORD(100.98,"B","IV MEDICATIONS","")),ORCIDG=$O(^ORD(100.98,"B","CLINIC INFUSIONS",""))
+ I "^"_ORIDG_"^"_ORCIDG_"^"'[("^"_$P(OR0,"^",11)_"^") D
+ . S:$P(NODE,U,9) CNT=CNT+1,@ORY@(CNT)="Total Dose:                   "_$P(NODE,U,9)
 M1 I TYPE="I" D  ;admin data
  . N I,X,Y I $O(^TMP("PS",$J,"B",0)) D
  .. S X="IV Print Name:                ",I=0
@@ -136,3 +141,8 @@ SC(J) ; -- Returns name of SC field by piece number
  I J=7 Q "COMBAT VETERAN"
  I J=8 Q "SHIPBOARD HAZARD AND DEFENSE"
  Q ""
+GETPKG() ; p521 added package check
+ N PKGIEN S PKGIEN=$$GET1^DIQ(100,ORIFN_",",12,"I")
+ I $P($G(^DIC(9.4,PKGIEN,0)),U)="INPATIENT MEDICATIONS" Q "I" ; DBIA2058
+ I $P($G(^DIC(9.4,PKGIEN,0)),U)="OUTPATIENT PHARMACY" Q "O" ; DBIA 2058
+ Q $$GET1^DIQ(100,ORIFN_",",10,"I") ; default to patient class if no package match

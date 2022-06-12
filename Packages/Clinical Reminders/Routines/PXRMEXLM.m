@@ -1,5 +1,5 @@
 PXRMEXLM ;SLC/PKR/PJH - Clinical Reminder Exchange List Manager routines. ;08/16/2018
- ;;2.0;CLINICAL REMINDERS;**6,12,17,24,26,47,42**;Feb 04, 2005;Build 132
+ ;;2.0;CLINICAL REMINDERS;**6,12,17,24,26,47,45**;Feb 04, 2005;Build 566
  ;
  ;=====================================================
 CRE ;Create a packed reminder and store it in the repository.

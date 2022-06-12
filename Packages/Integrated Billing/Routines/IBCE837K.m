@@ -1,5 +1,5 @@
 IBCE837K ;EDE/JWS - ACK FOR 837 FHIR TRANSMISSION ;8/6/18 10:48am
- ;;2.0;INTEGRATED BILLING;**623**;21-MAR-94;Build 70
+ ;;2.0;INTEGRATED BILLING;**623,641**;21-MAR-94;Build 61
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 GET(RESULT,ARG) ;RPC - EDIACKCLAIMS; ack queue posting
@@ -18,10 +18,15 @@ GET(RESULT,ARG) ;RPC - EDIACKCLAIMS; ack queue posting
  ;;S IB364=$O(^IBA(364,"B",IBIEN,""),-1)
  S IB364=$$LAST364^IBCEF4(IBIEN)
  ;JWS;IB*2.0*623v24;in case there is a newer entry in file 364... seen once @ IOC vegas 7/22/19
+ ;JWS;IB*2.0*641v8;after request, 2nd 364 entry was created and transmitted, 1st one errored
  I IB364 D
  . I '$D(^IBA(364,"AC",1,IB364)) D
- .. N X1 S X1="A" F  S X1=$O(^IBA(364,"B",IBIEN,X1),-1) Q:X1=""  I $D(^IBA(364,"AC",1,X1)) Q
- .. I X1 S IB364=X1
+ .. N X1,OK  S X1="A",OK=0 F  S X1=$O(^IBA(364,"B",IBIEN,X1),-1) Q:X1=""  D  I OK Q
+ ... I $D(^IBA(364,"AC",1,X1)) D
+ .... I $P(^IBA(364,X1,0),"^",2)="" S DA=X1,DIE="^IBA(364,",DR=".03///C;.09////0" D ^DIE Q
+ .... S IB364=X1,OK=1 Q
+ .. I OK Q
+ .. S X1="A" F  S X1=$O(^IBA(364,"B",IBIEN,X1),-1) Q:X1=""  I $P(^IBA(364,X1,0),"^",2)'="" S IB364=X1 Q
  . ;JWS;IB*2.0*623;7/24/19 make sure non-prod systems are reported posted to test queue
  . S IBTEST=$G(^IBA(364,"AC",1,IB364)),IBBILL(IB364)="",IBTXTEST=$S(IBTEST:2,'$$PROD^XUPROD(1):1,1:+$$TEST^IBCEF4(IBIEN)),IBBTYP=$P("P^I^D",U,$S($$FT^IBCEF(IBIEN)=7:3,1:($$FT^IBCEF(IBIEN)=3)+1))_"-"_IBTXTEST
  . S IBDESC=$S('IBTXTEST:"",1:"TEST ")_$S($E(IBBTYP)="P":"PROF",$E(IBBTYP)="D":"DENT",1:"INST")_" CLAIM-"_$$HTE^XLFDT($H,2)
@@ -50,8 +55,9 @@ EMAIL(IBIEN,IBTXTEST,IBBATCH) ; Send an email message to MCT mail group - to emu
  ;S X=$P($H,",",2)
  S IBEQ=$S(IBTXTEST:IBTQ,1:IBLQ)
  S SUBJ="AEG"_IBIEN_" "_IBEQ_" Confirmation"
- S IBBATCHN=$O(^IBA(364.1,"B",IBBATCH,""))
- S MSG(1)="Ref:  Your "_IBEQ_" claim ("_IBCLAIM_" #"_IBBATCHN_")"_" ("_IBBATCH_")"
+ ;;JWS;IB*2.0*641;2/29/20;display claim IEN, not file 364 ien, subscript error at IOC site
+ ;;S IBBATCHN=$O(^IBA(364.1,"B",IBBATCH,""))
+ S MSG(1)="Ref:  Your "_IBEQ_" claim ("_IBCLAIM_" #"_IBIEN_")"_" ("_IBBATCH_")"
  S MSG(2)="was placed successfully onto the 837Transactions"_$S(IBEQ="MCT":"Test",1:"")
  S MSG(3)="queue for Austin to process."
  ; ***testing email vs live*** must change back to live before putting in build ***

@@ -405,10 +405,10 @@ ZWR
 ^YTT(601.72,83,1,1,0)="How often did you have a drink containing alcohol in the past year?"
 ^YTT(601.72,83,2)="4^1^46^0^0^N"
 ^YTT(601.72,84,0)=84
-^YTT(601.72,84,1,0)="^601.721^2^2^3071022^^^"
+^YTT(601.72,84,1,0)="^^2^2^3220612"
 ^YTT(601.72,84,1,1,0)="How many drinks containing alcohol did you have on a typical day when"
 ^YTT(601.72,84,1,2,0)="you were drinking in the past year?"
-^YTT(601.72,84,2)="4^1^47^0^0^N"
+^YTT(601.72,84,2)="4^1^447^0^0^N"
 ^YTT(601.72,85,0)=85
 ^YTT(601.72,85,1,0)="^^2^2^3060117^"
 ^YTT(601.72,85,1,1,0)="How often did you have six or more drinks on one occasion in the "
@@ -28108,8 +28108,8 @@ ZWR
 ^YTT(601.72,6596,1,1,0)="When I sleep poorly on one night, I know that it will disturb my sleep schedule for the whole week."
 ^YTT(601.72,6596,2)="^1^108743^0^10^Y"
 ^YTT(601.72,6597,0)=6597
-^YTT(601.72,6597,1,0)="^^1^1^3200414"
-^YTT(601.72,6597,1,1,0)="Without an adequate nights sleep, I can hardly function the next day."
+^YTT(601.72,6597,1,0)="^^1^1^3220612"
+^YTT(601.72,6597,1,1,0)="Without an adequate night's sleep, I can hardly function the next day."
 ^YTT(601.72,6597,2)="^1^108743^0^10^Y"
 ^YTT(601.72,6598,0)=6598
 ^YTT(601.72,6598,1,0)="^^1^1^3200414"
@@ -33268,7 +33268,6 @@ ZWR
 ^YTT(601.72,"ACT",46,83)=""
 ^YTT(601.72,"ACT",46,86)=""
 ^YTT(601.72,"ACT",46,89)=""
-^YTT(601.72,"ACT",47,84)=""
 ^YTT(601.72,"ACT",47,90)=""
 ^YTT(601.72,"ACT",48,85)=""
 ^YTT(601.72,"ACT",48,88)=""
@@ -35804,6 +35803,7 @@ ZWR
 ^YTT(601.72,"ACT",351,5456)=""
 ^YTT(601.72,"ACT",351,5458)=""
 ^YTT(601.72,"ACT",351,5459)=""
+^YTT(601.72,"ACT",447,84)=""
 ^YTT(601.72,"ACT",469,3869)=""
 ^YTT(601.72,"ACT",469,3870)=""
 ^YTT(601.72,"ACT",469,3874)=""

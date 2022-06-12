@@ -1,5 +1,6 @@
-TIUXRC2 ; COMPILED XREF FOR FILE #8925 ; 04/13/16
+TIUXRC2 ; COMPILED XREF FOR FILE #8925 ; 06/09/22
  ; 
+ S X=$P($G(DIKZ(0)),U,1)
  I X'="" I +$P($G(^TIU(8925,+DA,0)),U,2),+$P($G(^(0)),U,3) K ^TIU(8925,"AV",+$P(^TIU(8925,+DA,0),U,2),+X,+$P(^TIU(8925,+DA,0),U,3),+DA)
  S X=$P($G(DIKZ(0)),U,1)
  I X'="" I +$P($G(^TIU(8925,+DA,14)),U,2),+$P($G(^TIU(8925,+DA,13)),U),+$P($G(^TIU(8925,+DA,0)),U,5) K ^TIU(8925,"ATS",+$P($G(^TIU(8925,+DA,14)),U,2),+X,+$P($G(^TIU(8925,+DA,0)),U,5),(9999999-$P($G(^TIU(8925,+DA,13)),U)),DA)
@@ -97,5 +98,17 @@ CR4 S DIXR=567
  . K X1,X2 M X1=X,X2=X
  . S:$D(DIKIL) (X2,X2(1),X2(2))=""
  . K ^TIU(8925,"VBC",$E(X(1),1,14),$E(X(2),1,6),DA)
-CR5 K X
+CR5 S DIXR=1562
+ K X
+ S DIKZ(12)=$G(^TIU(8925,DA,12))
+ S X(1)=$P(DIKZ(12),U,2)
+ S DIKZ(13)=$G(^TIU(8925,DA,13))
+ S X(2)=$P(DIKZ(13),U,2)
+ S X(3)=$P(DIKZ(13),U,1)
+ S X=$G(X(1))
+ D
+ . K X1,X2 M X1=X,X2=X
+ . S:$D(DIKIL) (X2,X2(1),X2(2),X2(3))=""
+ . D KAADT^TIUDD01(.X)
+CR6 K X
 END Q

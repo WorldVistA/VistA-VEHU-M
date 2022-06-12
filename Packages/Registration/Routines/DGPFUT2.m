@@ -1,5 +1,5 @@
-DGPFUT2 ;ALB/KCL - PRF UTILITIES CONTINUED ; 12/17/03 2:56pm
- ;;5.3;Registration;**425,554,650**;Aug 13, 1993;Build 3
+DGPFUT2 ;ALB/KCL - PRF UTILITIES CONTINUED ; 2/12/2020
+ ;;5.3;Registration;**425,554,650,1005,1028**;Aug 13, 1993;Build 4
  ;
  ; This routine contains generic calls for use throughout DGPF*.
  ;
@@ -199,6 +199,7 @@ ACTDT ; update PRF Software Activation Date field in (#26.18)
  ;
  Q
  ;
+ ;
 BLDTFL(DGDFN,DGTFL) ;build array of Treating Facilities
  ; This function builds an array of INSTITUTION (#4) file pointers
  ; that are non-local medical treating facilities for a given patient.
@@ -208,26 +209,35 @@ BLDTFL(DGDFN,DGTFL) ;build array of Treating Facilities
  ;
  ;  Output:
  ;   Function value - 1 on results returned; 0 on failure
- ;    DGTFL - array of treating facility INSTITUTION (#4) file pointers
- ;            Format:  DGTFL(pointer)=date last treated
- ;
- N DGLOC   ;pointer to local facility in INSTITUTION (#4) file
- N DGDLT   ;date last treated
- N DGFAC   ;TFL API results array
- N DGI     ;generic counter
- N DGINST  ;pointer to INSTITUTION (#4) file
- ;
- Q:$G(DGDFN)'>0 0  ;validate input parameter
- ;
- D TFL^VAFCTFU1(.DGFAC,DGDFN)
- S DGLOC=$P($$SITE^VASITE(),U)
- S DGI=0
- F  S DGI=$O(DGFAC(DGI)) Q:'DGI  D
- . S DGINST=$$IEN^XUAF4($P(DGFAC(DGI),U))
- . Q:DGINST'>0
- . Q:DGINST=DGLOC  ;filter local facility
- . Q:'$$TF^XUAF4(DGINST)  ;facility must be active treating facility
- . S DGDLT=+$P(DGFAC(DGI),U,3)
- . S DGTFL(DGINST)=DGDLT
- ;
+ ;    DGTFL - array of treating facility INSTITUTION (#4) file pointerS
+ ;  Format:  DGTFL(pointer)=date last treated
+ N DGSTAT,DGSTATI,DGKEY,DGOUT,DGI,DGSTI,DGIEN,DGDLT
+ S DGSTAT=$P($$SITE^VASITE,U,3)
+ S DGSTATI=$P($$SITE^VASITE,U)
+ S DGKEY=DGDFN_U_"PI"_U_"USVHA"_U_DGSTAT
+ D TFL^VAFCTFU2(.DGOUT,DGKEY)
+ S DGI="" F  S DGI=$O(DGOUT(DGI)) Q:DGI=""  D
+ . I $P(DGOUT(DGI),U,2)="PI",$P(DGOUT(DGI),U,3)="USVHA" D
+ . . S DGSTI=$$IEN^XUAF4($P(DGOUT(DGI),U,4))
+ . . Q:DGSTI=""
+ . . S DGIEN=$O(^DGCN(391.91,"AINST",DGSTI,DGDFN,""))
+ . . Q:DGIEN=""
+ . . S DGDLT=+$P($G(^DGCN(391.91,DGIEN,0)),U,3)
+ . . S:DGSTI'=DGSTATI DGTFL(DGSTI)=DGDLT
  Q $S(+$O(DGTFL(0)):1,1:0)
+ ;
+ ;This subroutine converts the treating facility list returned by $$BLDTFL to
+ ;the format expected by XMIT^DGPFHLU6.
+ ;
+ ;Input:
+ ;  DGDFN - pointer to the patient in the PATIENT (#2) file
+ ;Output:
+ ;  DGTFL - array in the format DGTFL(#)=station number (not pointer)
+BLDTFL2(DGDFN,DGTFL) ;
+ N DGI,DGJ,DGTMP,DGRET
+ S DGRET=$$BLDTFL(DGDFN,.DGTMP)
+ S DGJ=0
+ S DGI="" F  S DGI=$O(DGTMP(DGI)) Q:DGI=""  D
+  . S DGJ=DGJ+1
+  . S DGTFL(DGJ)=$$STA^XUAF4(DGI)
+ Q

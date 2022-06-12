@@ -1,5 +1,5 @@
-PXRMEXU1 ; SLC/PKR/PJH - Reminder exchange repository utilities, #1.;01/23/2019
- ;;2.0;CLINICAL REMINDERS;**6,12,16,26,42**;Feb 04, 2005;Build 132
+PXRMEXU1 ; SLC/PKR/PJH - Reminder exchange repository utilities, #1.;10/16/2019
+ ;;2.0;CLINICAL REMINDERS;**6,12,16,26,45**;Feb 04, 2005;Build 566
  ;=====================================================
 DELETE(LIST) ;Delete the repository entries in LIST.
  N DA,DIK,IND,LNUM
@@ -155,19 +155,13 @@ SAVHIST ;Save the installation history in the repository.
  ;=====================================================
  ;Extract TIU Objects/Templates from any WP text
 TIUSRCH(GLOB,IEN,NODE,OLIST,TLIST) ;
- N NIN,NOUT,OCNT,SUB,TCNT,TEXT,TEXTIN,TEXTOUT
+ N OCNT,SUB,TCNT,TEXT
  ;Add to existing arrays
- S NIN=0
  S OCNT=+$O(OLIST(""),-1),TCNT=+$O(TLIST(""),-1),SUB=0
  ;Scan WP fields
  F  S SUB=$O(@(GLOB_IEN_","_NODE_","_SUB_")")) Q:'SUB  D
  .;Get individual line
  .S TEXT=$G(@(GLOB_IEN_","_NODE_","_SUB_",0)")) Q:TEXT=""
- .S NIN=NIN+1
- .S TEXTIN(NIN)=TEXT
- D FORMAT^PXRMTEXT(0,80,NIN,.TEXTIN,.NOUT,.TEXTOUT)
- F X=1:1:NOUT D
- .S TEXT=TEXTOUT(X)
  .;Most text lines will have no TIU link so ignore them
  .I (TEXT'["|")&(TEXT'["{FLD:") Q
  .;Templates are in format {FLD:fldname} (only applies to dialogs)

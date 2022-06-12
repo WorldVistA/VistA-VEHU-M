@@ -1,5 +1,6 @@
-DGENUPL7 ;ISA/KWP,CKN,TMK,TDM,LBD,HM - PROCESS INCOMING (Z11 EVENT TYPE) HL7 MESSAGES ;6/17/13 5:48pm
- ;;5.3;REGISTRATION;**232,367,397,417,379,431,513,628,673,653,742,688,797,871,972,952**;Aug 13,1993;Build 160
+DGENUPL7 ;ISA/KWP,CKN,TMK,TDM,LBD,HM - PROCESS INCOMING (Z11 EVENT TYPE) HL7 MESSAGES ;4/02/20 5:48pm
+ ;;5.3;REGISTRATION;**232,367,397,417,379,431,513,628,673,653,742,688,797,871,972,952,977,993**;Aug 13,1993;Build 92
+ ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;Phase II split from DGENUPL
 Z11(MSGIEN,MSGID,CURLINE,DFN,ERRCOUNT) ;
@@ -56,8 +57,13 @@ Z11(MSGIEN,MSGID,CURLINE,DFN,ERRCOUNT) ;
  .;
  .;if the msg has an enrollment process it
  .I DGENR("STATUS")!DGENR("APP") D  Q:ERROR
+ ..N DGENRYN,DGSTS
+ ..S DGENRYN=""
+ ..S DGSTS=DGENR("STATUS")
+ ..I DGSTS=25 S DGENRYN=0 ;DG*5.3*993
+ ..I DGSTS'=25,'$$PREEXIST^DGREG(DFN) S DGENRYN=1
  ..;use $$PRIORITY to get the eligibility data used to compute priority
- ..I $$PRIORITY^DGENELA4(DFN,.DGELG,.DGELGSUB,DGENR("DATE"),DGENR("APP"))
+ ..I $$PRIORITY^DGENELA4(DFN,.DGELG,.DGELGSUB,DGENR("DATE"),DGENR("APP"),$G(DGENRYN)) ;DG*5.3*993 Added DGENRYN REGISTRATION ONLY
  ..;
  ..;store the eligibility data in the enrollment record and other missing fields
  ..M DGENR("ELIG")=DGELGSUB
@@ -75,6 +81,19 @@ Z11(MSGIEN,MSGID,CURLINE,DFN,ERRCOUNT) ;
  ..I '$$CHECK^DGENA3(.DGENR,.DGPAT,.ERRMSG) D  Q
  ...S ERROR=1
  ...D ADDERROR^DGENUPL(MSGID,DGPAT("SSN"),ERRMSG,.ERRCOUNT)
+ ..; DG*5.3*993 - BEGIN
+ ..;Find patient's current enrollment record
+ ..N DGENRIEN,DGENRYN
+ ..S DGENRIEN=""
+ ..S DGENRYN=""
+ ..S DGENRIEN=$$FINDCUR^DGENA(DFN)
+ ..I DGENRIEN S:$G(DGENRYN)="" DGENRYN=$$GET1^DIQ(27.11,DGENRIEN_",",.14,"I") ;DG*5.3*993 Added REGISTRATION ONLY
+ ..I DGENRYN=1,DGENR("PTAPPLIED")=0,DGPAT("VETERAN")="Y" D  Q
+ ...S ERROR=1
+ ...S ERRMSG="Veteran has applied for enrollment. Do You Wish to Enroll cannot be No."
+ ...D ADDERROR^DGENUPL(MSGID,DGPAT("SSN"),ERRMSG,.ERRCOUNT)
+ ..;
+ ..; DG*5.3*993 - END
  ..;
  ..; removed EGT consistency check with DG*5.3*628
  ..;Phase II EGT consistency checks (SRS 6.5.1.3)
@@ -97,7 +116,6 @@ Z11(MSGIEN,MSGID,CURLINE,DFN,ERRCOUNT) ;
  .I $G(DGCDIS("VCD"))'="",$$STORE^DGENCDA2(DFN,.DGCDIS) ;checks first if there is catastrophic disability information
  .; store OTH data
  .D OTHUPLD^DGENUPL8(DFN,.DGOTH,$G(DGPAT("SSN")),$G(DGELG("ELIG","CODE"))) ; DG*5.3*952
- .D CRTEELCH^DGOTHEL(DFN,$$HASENTRY^DGOTHD2(DFN),$G(DGELG("OTHTS"))) ; DG*5.3*952
  .;
  .;Call PIMS api to file NTR data.
  .I $D(DGNTR),$$ENRUPD^DGNTAPI1(DFN,.DGNTR)
@@ -105,6 +123,9 @@ Z11(MSGIEN,MSGID,CURLINE,DFN,ERRCOUNT) ;
  .;Call PIMS api to file MST data.
  .I DGMST("MSTSTAT")'="",DGMST("MSTDT")'="",DGMST("MSTST")'="" D
  ..I $$NEWSTAT^DGMSTAPI(DFN,DGMST("MSTSTAT"),DGMST("MSTDT"),".5",DGMST("MSTST"),0)
+ ..Q
+ .; create new entry in sub-file 33.02
+ .D CRTEELCH^DGOTHEL(DFN,$$HASENTRY^DGOTHD2(DFN),$G(DGELG("OTHTS"))) ; DG*5.3*977 OTH-EXT - moved after MST data update
  .;
  .;Since HEC is authoritative source, If no OEF/OIF data in Z11, set count to 0 so existing data in VistA will be deleted.
  .I '$D(DGOEIF) S DGOEIF("COUNT")=0

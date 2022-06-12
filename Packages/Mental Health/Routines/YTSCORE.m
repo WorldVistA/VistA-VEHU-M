@@ -1,5 +1,5 @@
 YTSCORE ;SLC/KCM - Scoring for complex instruments ; 9/15/2015
- ;;5.01;MENTAL HEALTH;**119,123,142**;Dec 30, 1994;Build 14
+ ;;5.01;MENTAL HEALTH;**119,123,142,141**;Dec 30, 1994;Build 85
  ;
  ;
  Q
@@ -99,7 +99,7 @@ LDSCORES(YSDATA,YS) ;  new call for patch 123
  F  S YSCALE=$O(^YTT(601.92,"AC",YSAD,YSCALE))  Q:'YSCALE  D
  .S G=$G(^YTT(601.92,YSCALE,0))
  .S SCALE=$P(G,U,3),N=N+1
- .S ^TMP($J,"YSCOR",N)=SCALE_"="_$P(G,U,4)
+ .S ^TMP($J,"YSCOR",N)=SCALE_"="_$P(G,U,4)_$S($P(G,U,5):U_$P(G,U,5),1:"")
  Q
  ;
 UPDSCORE(YSDATA,YS) ; files entries in MH RESULTS (601.92)

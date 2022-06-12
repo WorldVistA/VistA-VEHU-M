@@ -1,8 +1,8 @@
-PXRMEXU4 ;SLC/PJH,PKR - Reminder Exchange #4, dialog changes. ;08/23/2018
- ;;2.0;CLINICAL REMINDERS;**6,12,22,26,42**;Feb 04, 2005;Build 132
+PXRMEXU4 ;SLC/PJH,PKR - Reminder Exchange #4, dialog changes. ;10/10/2019
+ ;;2.0;CLINICAL REMINDERS;**6,12,22,26,45**;Feb 04, 2005;Build 566
  ;
  Q
-BLCONV(FDA) ;
+BLCONV(FDA) ; convert branching logic from single value to multiple
  N BLIENS,ACT,IEN,IENS,LAST,TERM,SEQ,STATUS,REP
  S IENS=$O(FDA(801.44,"")) Q:IENS=""
  S IEN=$P(IENS,",",2)_","
@@ -74,7 +74,7 @@ DLG(FDA,NAMECHG) ;Check the dialog for renamed entries, called by
  .I WP'="" D TIURPL("{FLD:",WP,.NAMECHG,8927.1)
  .S WP=$G(FDA(801.41,IENS,35))
  ;
- ;D BLCONV(.FDA)
+ D BLCONV(.FDA)
  Q
  ;
  ;===============================================
@@ -170,7 +170,6 @@ FINDINGS(IENS,NUM,FIELD,TYPE,NAMECHG,ACTION,FDA,PXRMDONE) ;
  .;Save the finding information for the history.
  .I ITEM'=ORIG D
  .. S ^TMP("PXRMEXIA",$J,"DIAF",$P(IENS,",",1),ORIG)=ITEM
- .. ;S ^TMP($J,"PXRM FINDING REPLACE",NUM,FIELD,ORIG)=ITEM
  .. S ^TMP($J,"PXRM FINDING REPLACE",ORIG)=ITEM
  Q
  ;

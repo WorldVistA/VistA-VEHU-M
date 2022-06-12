@@ -1,5 +1,5 @@
 IBCNERTQ ;ALB/BI - Real-time Insurance Verification ;15-OCT-2015
- ;;2.0;INTEGRATED BILLING;**438,467,497,549,582,593,601,631,659**;21-MAR-94;Build 16
+ ;;2.0;INTEGRATED BILLING;**438,467,497,549,582,593,601,631,659,664**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -49,6 +49,8 @@ TRIG(N2) ; Called by triggers in the INSURANCE BUFFER FILE Dictionary (355.33)
  ; prevent HMS entries from creating inquiries
  N PTR S PTR=+$P($G(^IBA(355.33,N2,0)),U,3)
  I PTR,$P($G(^IBE(355.12,PTR,0)),U,2)="HMS",PREL="" Q RESPONSE
+ ;/vd-IB*2*664 - prevent entries with SOI of "EHR" from creating inquiries.
+ I PTR,$$GET1^DIQ(355.12,PTR_",",.03)="EHR" Q RESPONSE
  ;
  ; Quit if a waiting transaction exists in file #365.1
  S PTID=$P(NODE60,U,1)
@@ -94,7 +96,7 @@ ENDTRIG ; Final Clean Up.
  ;
 IBE(IEN) ; Insurance Buffer Extract
  N FRESHDAY,FRESHDT,INSNAME,ISMBI,ISYMBOL,MCAREFLG,OVRFRESH,PAYERID,PAYERSTR
- N PIEN,QUEUED,SRVICEDT,STATIEN,SYMBOL,TQDT,TQIENS,TQOK
+ N PDOD,PIEN,QUEUED,SRVICEDT,STATIEN,SYMBOL,TQDT,TQIENS,TQOK
  ;
  S QUEUED=0
  S FRESHDAY=$P($G(^IBE(350.9,1,51)),U,1)          ;System freshness days

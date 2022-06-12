@@ -1,5 +1,5 @@
 IBCBB2 ;ALB/ARH - CONTINUATION OF EDIT CHECKS ROUTINE (CMS-1500) ;04/14/92
- ;;2.0;INTEGRATED BILLING;**51,137,210,245,232,296,320,349,371,403,432,447,473,488,461,623**;21-MAR-94;Build 70
+ ;;2.0;INTEGRATED BILLING;**51,137,210,245,232,296,320,349,371,403,432,447,473,488,461,623,641**;21-MAR-94;Build 61
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;MAP TO DGCRBB2
@@ -79,8 +79,9 @@ EN ;
  . I $G(IBER)'["IB310" I $D(IBXDATA(IBI,"A")) S IBER=IBER_"IB310;" Q
  . I $D(IBXDATA(IBI,"ARX")),IBER'["311;" S IBER=IBER_"IB311;" Q
  . I $P(IBXDATA(IBI),U,14) S IBOLAB=IBOLAB+1
+ . ;JWS;IB*2.0*641v9; put back the edit for Place of Service
  . ; Place of service required => remove edit below for IB*2.0*488 ; baa
- . ;I $G(IBER)'["IB314;",$P(IBXDATA(IBI),U,3)="" S IBER=IBER_"IB314;"
+ . I $G(IBER)'["IB314;",$P(IBXDATA(IBI),U,3)="" S IBER=IBER_"IB314;"
  . ; Type of service required => remove edit below for IB*2.0*488 ; baa
  . ;I $G(IBER)'["IB313;",$P(IBXDATA(IBI),U,4)="" S IBER=IBER_"IB313;"
  . ; 43 and 53 are invalid types of service

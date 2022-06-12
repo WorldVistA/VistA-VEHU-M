@@ -1,5 +1,5 @@
-ECXPIVD2 ;ALB/JAP,BIR/DMA,CML,PTD-Extract from IV EXTRACT DATA File (#728.113) ;3/11/19  15:31
- ;;3.0;DSS EXTRACTS;**105,120,127,144,149,161,166,170,174**;Dec 22, 1997;Build 33
+ECXPIVD2 ;ALB/JAP,BIR/DMA,CML,PTD-Extract from IV EXTRACT DATA File (#728.113) ;2/14/20  09:07
+ ;;3.0;DSS EXTRACTS;**105,120,127,144,149,161,166,170,174,178**;Dec 22, 1997;Build 67
 FILE ;file record
  ;node0
  ;fac^dfn^ssn^name^i/o^day^va class^qty^ward^cost^movement #^treat spec^ndc^investigational^iv dispensing fee^new feeder key^total doses^
@@ -22,6 +22,7 @@ FILE ;file record
  S ECPLACE=""
  S EC7=$O(^ECX(ECFILE,999999999),-1),EC7=EC7+1
  I ECXLOGIC>2018 S (ECXETH,ECXRC1,ECPTTM,ECPTPR,ECCLAS,ECASPR,ECCLAS2,ECASNPI,ECPTNPI)="" ;170 Fields will now be null
+ I ECXLOGIC>2020 S ECXMTST="" ;178 Means Test field will now be null
  S ECODE=EC7_U_EC23_U_ECXDIV_U_DFN_U_ECXSSN_U_ECXPNM_U_ECXA_U
  S ECODE=ECODE_$$ECXDATE^ECXUTL(ECD,ECXYM)_U_ECVACL_U_ECXCNT_U_ECXW_U
  ;convert specialty to PTF Code for transmission

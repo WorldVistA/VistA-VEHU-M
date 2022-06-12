@@ -1,5 +1,5 @@
-DDEGET ;SPFO/RAM - Entity GET Handler ;AUG 1, 2018  12:37
- ;;22.2;VA FileMan;**9,17**;Jan 05, 2016;Build 4
+DDEGET ;SPFO/RAM - Entity GET Handler ; AUG 1, 2018  12:37
+ ;;22.2;VA FileMan;**9,17,18**;Jan 05, 2016;Build 2
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -16,7 +16,7 @@ EN(ENTITY,ID,FILTER,MAX,FORMAT,TARGET,ERROR) ; -- Return [list of] data entities
  ;       FILTER("stop")    = stop date.time of search, for Query   [opt]
  ;       FILTER("patient") = DFN or DFN;ICN                        [opt]
  ;
- N DDEY,DDEI,DDER,DSYS,DTYPE,DSTRT,DSTOP,DMAX,DFORM,DDEN,DDEX,DDEZ,DDELIST,DLIST
+ N DDEY,DDEI,DDER,DSYS,DTYPE,DSTRT,DSTOP,DMAX,DFORM,DDEN,DDEX,DDEZ,DDEQUIT,DDELIST,DLIST
  N DFN,ICN,FILE,QUERY,LIST
  ;
  S DDEY=$G(TARGET,$NA(^TMP("DDE GET",$J))),DDEI=0 K @DDEY
@@ -49,10 +49,11 @@ A ; parse & validate input parameters
  S DFORM=$$UP^XLFSTR($G(FORMAT))
  S DFORM=$S(DFORM=0:0,+DFORM:DFORM,DFORM="JSON":0,DFORM="XML":1,DFORM="TEXT":2,1:0)
  ;
- D PRE(DTYPE)
+ D PRE(DTYPE) Q:$G(DDEQUIT)
  ;
 B ; extract data
- S QUERY=$G(^DDE(DTYPE,5)),LIST=0 ;TAG^RTN from ENTITY
+ S QUERY=$G(^DDE(DTYPE,5)) ;TAG^RTN from ENTITY
+ S LIST=$S(DFORM:0,1:+$G(FILTER("notag"))) ;omit tag for JSON item
  S:ID'="" DLIST(1)=ID
  I ID="" D  S:'DFORM LIST=1 ;no outer tags for a JSON list
  . N $ES,$ET S $ET="D QRY^DDERR"

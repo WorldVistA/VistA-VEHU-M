@@ -1,5 +1,5 @@
-PXRMEXSI ;SLC/PKR/PJH - Silent Exchange entry install. ;08/16/2018
- ;;2.0;CLINICAL REMINDERS;**6,12,17,18,24,42**;Feb 04, 2005;Build 132
+PXRMEXSI ;SLC/PKR/PJH - Silent Exchange entry install. ;10/10/2019
+ ;;2.0;CLINICAL REMINDERS;**6,12,17,18,24,45**;Feb 04, 2005;Build 566
  ;
  ;=======================================
 DELEXE(ENTRY,ROUTINE) ;If the Exchange File entry already exists delete it.
@@ -105,6 +105,7 @@ INSTALL(PXRMRIEN,ACTION,NOCF,NOR) ;Install all components in a repository entry.
  N CLOK,DNAME,FILENUM,IND,PXRMDONE,PXRMNAT,PXRMNMCH,REMNAME,TEMP,RNAME
  ;Get the Exchange entry's class.
  S PXRMNAT=$$EXCLASS^PXRMEXU2(PXRMRIEN)
+ S PXRMNAT=1
  S PXRMDONE=0
  S NOCF=$G(NOCF),NOR=$G(NOR)
  ;Initialize ^TMP globals.
@@ -151,6 +152,7 @@ INSTALL(PXRMRIEN,ACTION,NOCF,NOR) ;Install all components in a repository entry.
  .. S DR="51///^S X=DNAME",DIE="^PXD(811.9,",DA=RIEN
  .. D ^DIE
  ;
+ I $D(^TMP("PXRM DIALOG LINK FILE",$J))>0 D DLINKSET^PXRMEXU5
  ;Save the install history.
  D SAVHIST^PXRMEXU1
  ;If any components were skipped send the message.

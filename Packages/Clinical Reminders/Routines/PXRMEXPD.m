@@ -1,5 +1,5 @@
-PXRMEXPD ;SLC/PKR - General packing driver. ;08/16/2018
- ;;2.0;CLINICAL REMINDERS;**12,17,16,18,22,26,42**;Feb 04, 2005;Build 132
+PXRMEXPD ;SLC/PKR - General packing driver. ;10/24/2018
+ ;;2.0;CLINICAL REMINDERS;**12,17,16,18,22,26,45**;Feb 04, 2005;Build 566
  ;==========================
 BLDDESC(USELLIST,TMPIND) ;If multiple entries have been selected
  ;then initialize the description with the selected list.
@@ -47,7 +47,8 @@ CLDIQOUT(FILENUM,IEN,FIELD,IENROOT,DIQOUT) ;Clean-up the DIQOUT returned by
  ;Don't transport the obsolete taxonomy fields.
  I FILENUM=811.2 K DIQOUT(811.22102),DIQOUT(811.22103),DIQOUT(811.22104),DIQOUT(811.23102),DIQOUT(811.23104)
  ;TIU conversion for TIU/HS objects
- I FILENUM=8925.1,FIELD="**" D TIUCONV(FILENUM,IEN,.DIQOUT)
+ I FILENUM=8925.1,FIELD="**" D TIUCONV^PXRMEXPU(FILENUM,IEN,.DIQOUT)
+ I FILENUM=801.46,FIELD="**" D DIALOGGF^PXRMEXPU(FILENUM,IEN,.DIQOUT)
  Q
  ;
  ;==========================
@@ -94,7 +95,7 @@ CMPLIST(CMPLIST,SELLIST,FILELST,ERROR) ;Process the selected list and build a
  Q
  ;
  ;==========================
-CRE(REPACK,EXNAME) ;Pack a reminder component and store it in the repository.
+CRE(REPACK,EXNAME,NOTINLM) ;Pack a reminder component and store it in the repository.
  N CMPLIST,CNT,DIEN,DERRFND,DERRMSG,EFNAME,ERROR,FAIL,FAILTYPE,FILELST
  N OUTPUT,POA,RANK,SERROR,SELLIST,SUCCESS,TMPIND,USELLIST
  S TMPIND="PXRMEXPR"
@@ -128,8 +129,8 @@ CRE(REPACK,EXNAME) ;Pack a reminder component and store it in the repository.
  D CMPLIST(.CMPLIST,.SELLIST,.FILELST,.ERROR)
  I ERROR K ^TMP(TMPIND,$J) Q
  ;
- ;Check reminder definitions for errors.
- N OK
+DEF ;Check reminder definitions for errors.
+ N OK,OUTPUT
  S FAIL=0
  I $D(SELLIST(811.9)) D  I FAIL K ^TMP(TMPIND,$J) Q
  .;Check each reminder definition.
@@ -137,15 +138,32 @@ CRE(REPACK,EXNAME) ;Pack a reminder component and store it in the repository.
  . S DIEN=0
  . F  S DIEN=$O(SELLIST(811.9,"IEN",DIEN)) Q:DIEN'>0  D
  .. W !!,"Checking reminder definition "_$P(^PXD(811.9,DIEN,0),U,1)
- .. S OK=$$DEF^PXRMICHK(DIEN)
+ .. K OUTPUT
+ .. S OK=$$DEF^PXRMICHK(DIEN,.OUTPUT,1)
  .. I OK=0 S FAIL=1
  . I FAIL=0 W !!,"No fatal reminder definition problems were found, packing will continue."
  . I FAIL=1 W !!,"Cannot create the packed file, please correct the above fatal error(s)."
  . H 3
  ;
- ;Check reminder dialogs for errors.
+TERM ;Check reminder terms for errors.
+ S FAIL=0
+ I $D(SELLIST(811.5)) D  I FAIL K ^TMP(TMPIND,$J) Q
+ .;Check each reminder term.
+ . W !!,"Checking reminder term(s) for errors."
+ . S DIEN=0
+ . F  S DIEN=$O(SELLIST(811.5,"IEN",DIEN)) Q:DIEN'>0  D
+ .. W !!,"Checking reminder term "_$P(^PXRMD(811.5,DIEN,0),U,1)
+ .. K OUTPUT
+ .. S OK=$$TERM^PXRMICHK(DIEN,.OUTPUT,1)
+ .. I OK=0 S FAIL=1
+ . I FAIL=0 W !!,"No fatal reminder term problems were found, packing will continue."
+ . I FAIL=1 W !!,"Cannot create the packed file, please correct the above fatal error(s)."
+ . H 3
+ ;
+DIALOG ;Check reminder dialogs for errors
  N FAILTYPE
  S FAIL=0
+ K OUTPUT
  I $D(SELLIST(801.41)) D  I FAIL="F" K ^TMP(TMPIND,$J) Q
  .W !!,"Checking reminder dialog(s) for errors."
  . S DIEN=0
@@ -155,7 +173,7 @@ CRE(REPACK,EXNAME) ;Pack a reminder component and store it in the repository.
  .. S FAILTYPE=$$RETARR^PXRMDLRP(DIEN,.OUTPUT) Q:'$D(OUTPUT)
  .. I FAILTYPE="F" S FAIL="F"
  .. I FAILTYPE="W",FAIL=0 S FAIL="W"
- .. W !!,$S(FAILTYPE="W":"**WARNING**",1:"**FATAL ERROR**")
+ .. W !!,$S(FAILTYPE="W":"**WARNING**",FAILTYPE="F":"**FATAL ERROR**",1:"")
  .. S CNT=0 F  S CNT=$O(OUTPUT(CNT)) Q:CNT'>0  W !,OUTPUT(CNT)
  .. K OUTPUT
  .;
@@ -180,9 +198,13 @@ CRE(REPACK,EXNAME) ;Pack a reminder component and store it in the repository.
  D STOREPR^PXRMEXU2(.SUCCESS,EFNAME,TMPIND,.SELLIST)
  K ^TMP(TMPIND,$J)
  I SUCCESS D
+ . I +$G(NOTINLM) W !,EFNAME_" was saved in the Exchange File." Q
  . S VALMHDR(1)=EFNAME_" was saved in the Exchange File."
  . D BLDLIST^PXRMEXLC(1)
  E  D
+ . I +$G(NOTINLM) D  Q
+ ..W !,"Creation of Exchange File entry "_EFNAME
+ ..W !,"failed; it was not saved!"
  . S VALMHDR(1)="Creation of Exchange File entry "_EFNAME
  . S VALMHDR(2)="failed; it was not saved!"
  Q
@@ -225,7 +247,7 @@ IENSEL(LIST,ID,FILELST) ;Select entries from the selected file.
  ;==========================
 GETTEXT(FILENUM,IEN,TMPIND,INDEX) ;Let the user input some text.
  N DIC,DWLW,DWPK,FIELDNUM,TYPE
- ;If this is the description text, (signified by FILENUM>0) load the
+ ;If this is the description text, (signfied by FILENUM>0) load the
  ;description or short description as the default.
  I FILENUM>0 D
  . S FIELDNUM=$$FLDNUM^DILFD(FILENUM,"DESCRIPTION"),TYPE="WP"
@@ -464,23 +486,5 @@ PUTSRC(FILENAME,NAME,TMPIND) ;Save the source information.
  S ^TMP(TMPIND,$J,"SRC","DATE")=$$FMTE^XLFDT($$NOW^XLFDT,"5Z")
  D GETENV^%ZOSV
  S ^TMP(TMPIND,$J,"SRC","ENV")=Y
- Q
- ;
- ;==========================
-TIUCONV(FILENUM,IEN,ARRAY) ;Convert health summary object to external.
- N HSO,IENS,NAME
- S IENS="+"_IEN_","
- ;Allows non-objects to be packed up
- I ARRAY(FILENUM,IENS,.04)'="OBJECT" Q
- ;
- I $G(ARRAY(FILENUM,IENS,9))'["$$TIU^GMTSOBJ" D  Q
- . S ARRAY(FILENUM,IENS,9)="NOT A HS OBJECT"
- S HSO=$P(ARRAY(FILENUM,IENS,9),",",2)
- S HSO=$P(HSO,")")
- ;Handle corrupted health summary object names.
- I +HSO>0 S NAME=$P($G(^GMT(142.5,HSO,0)),U,1)
- E  S NAME="MISSING"
- S ARRAY(FILENUM,IENS,9)="S X=$$TIU^GMTSOBJ(DFN,"_NAME_")"
- S ARRAY(FILENUM,IENS,99)=""
  Q
  ;

@@ -1,5 +1,5 @@
-SDECWL ;ALB/SAT - VISTA SCHEDULING RPCS ;JUL 26, 2017
- ;;5.3;Scheduling;**627,642,665,672**;Aug 13, 1993;Build 9
+SDECWL ;ALB/SAT,WTC,LAB - VISTA SCHEDULING RPCS ;Apr 10, 2020@15:22
+ ;;5.3;Scheduling;**627,642,665,672,694,745**;Aug 13, 1993;Build 40
  ;
  Q
  ;
@@ -15,6 +15,8 @@ DEL(RET,INP)  ;not used
  Q
  ;
 WLCLOSE(RET,INP) ;Waitlist Close
+ ;SD*5.3*745 replace external 'INP...' due to XINDEX issue.  Parameters are then rolled into the INP array
+ ;WLCLOSE(RET,SD1,SD2,SD3,SD4) external parameter tag is in SDEC
  ; INP - Input parameters array
  ;     INP(1) - Waitlist ID - Pointer to SD WAIT LIST file
  ;     INP(2) - Disposition
@@ -25,8 +27,9 @@ WLCLOSE(RET,INP) ;Waitlist Close
  ;validate IEN
  S WLIEN=$G(INP(1)) I WLIEN="" S RET=RET_"-1^Missing IEN"_$C(30,31) Q
  ;validate DISPOSITION
+ ;*745 added Disposition of EA
  S WLDISP=$G(INP(2))
- I (WLDISP'="D"),(WLDISP'="NC"),(WLDISP'="SA"),(WLDISP'="CC"),(WLDISP'="NN"),(WLDISP'="ER"),(WLDISP'="TR"),(WLDISP'="CL") D
+ I (WLDISP'="EA"),(WLDISP'="D"),(WLDISP'="NC"),(WLDISP'="SA"),(WLDISP'="CC"),(WLDISP'="NN"),(WLDISP'="ER"),(WLDISP'="TR"),(WLDISP'="CL") D
  .S:WLDISP="DEATH" WLDISP="D"
  .S:WLDISP="REMOVED/NON-VA CARE" WLDISP="NC"
  .S:WLDISP="REMOVED/SCHEDULED-ASSIGNED" WLDISP="SA"
@@ -35,16 +38,21 @@ WLCLOSE(RET,INP) ;Waitlist Close
  .S:WLDISP="ENTERED IN ERROR" WLDISP="ER"
  .S:WLDISP="TRANSFERRED" WLDISP="TR"
  .S:WLDISP="CHANGED CLINIC" WLDISP="CL"
+ .S:WLDISP="REMOVED/EXTERNAL APP" WLDISP="EA" ;* 745
  I WLDISP="" S RET=RET_"-1^Missing value for DISPOSITION"_$C(30,31) Q
- I (WLDISP'="D"),(WLDISP'="NC"),(WLDISP'="SA"),(WLDISP'="CC"),(WLDISP'="NN"),(WLDISP'="ER"),(WLDISP'="TR"),(WLDISP'="CL") D
+ I (WLDISP'="EA"),(WLDISP'="D"),(WLDISP'="NC"),(WLDISP'="SA"),(WLDISP'="CC"),(WLDISP'="NN"),(WLDISP'="ER"),(WLDISP'="TR"),(WLDISP'="CL") D
  .S RET=RET_"-1^Invalid value for DISPOSITION"_$C(30,31) Q
  ;validate DISPOSITIONED BY
  S WLDISPBY=$G(INP(3),DUZ)
  I '+WLDISPBY S WLDISPBY=$O(^VA(200,"B",WLDISPBY,0))
  I '+WLDISPBY S RET=RET_"-1^Invalid 'DISPOSITIONED BY' user"_$C(30,31) Q
  ;validate DATE DISPOSITIONED
- S WLDISPDT=$G(INP(4),DT) I WLDISPDT'="" S %DT="" S X=WLDISPDT D ^%DT S WLDISPDT=Y
- I Y=-1 S RET=RET_"-1^Invalid 'DATE DISPOSITIONED'"_$C(30,31) Q
+ S WLDISPDT=$G(INP(4),DT) ;I WLDISPDT'="" S %DT="" S X=WLDISPDT D ^%DT S WLDISPDT=Y
+ ;
+ ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
+ ;
+ S WLDISPDT=$$NETTOFM^SDECDATE(WLDISPDT,"N","N") I WLDISPDT=-1 S RET=RET_"-1^Invalid 'DATE DISPOSITIONED'"_$C(30,31) Q
+ ;I Y=-1 S RET=RET_"-1^Invalid 'DATE DISPOSITIONED'"_$C(30,31) Q
  S WLFDA=$NA(WLFDA($$FNUM,WLIEN_","))
  S @WLFDA@(19)=WLDISPDT
  S @WLFDA@(20)=WLDISPBY
@@ -83,7 +91,11 @@ WLOPEN(RET,WLAPP,WLIEN,WLDDT) ;SET Waitlist Open/re-open
  I '$D(^SDWL(409.3,WLIEN,0)) S SDECI=SDECI+1 S @RET@(SDECI)="-1^Invalid wait list ID."_$C(30,31) Q
  ;validate WLDDT
  S WLDDT=$P($G(WLDDT),"@",1)
- I $G(WLDDT)'="" S %DT="" S X=WLDDT D ^%DT I Y=-1 S SDECI=SDECI+1 S @RET@(SDECI)="-1^Invalid desired date of appointment."_$C(30,31) Q
+ ;
+ ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
+ ;
+ I WLDDT'="" S WLDDT=$$NETTOFM^SDECDATE(WLDDT,"N","N") I WLDDT=-1 S SDECI=SDECI+1 S @RET@(SDECI)="-1^Invalid desired date of appointment."_$C(30,31) Q
+ ;I $G(WLDDT)'="" S %DT="" S X=WLDDT D ^%DT I Y=-1 S SDECI=SDECI+1 S @RET@(SDECI)="-1^Invalid desired date of appointment."_$C(30,31) Q
  ;
  S WLFDA=$NA(WLFDA(409.3,WLIEN_","))
  S @WLFDA@(19)=""
@@ -215,7 +227,7 @@ APPTYPES(RET,DFN) ; EP for SDEC APPTYPES
  S @RET@(COUNT)=@RET@(COUNT)_$C(31)
  Q
  ;
-WLPCSET(SDECY,INP,WLIEN)  ;SET update patient contacts in SD WAIT LIST file
+WLPCSET(SDECY,INP,WLIEN,SOURCE)  ;SET update patient contacts in SD WAIT LIST file
  ;WLSETPC(SDECY,INP,WLIEN)  external parameter tag in SDEC
  ;  INP = Patient Contacts separated by ::
  ;            Each :: piece has the following ~~ pieces:  (same as they are passed into SDEC WLSET)
@@ -228,6 +240,7 @@ WLPCSET(SDECY,INP,WLIEN)  ;SET update patient contacts in SD WAIT LIST file
  ;            5) = (optional)    PATIENT PHONE Free-Text 4-20 characters
  ;            6) = NOT USED (optional) Comment 1-160 characters
  ;  WLIEN = (required) Wait List Id pointer to SDEC WAIT LIST file 409.3
+ ;
  N SDECI,SDTMP,WLMSG1
  S SDECY="^TMP(""SDECWL"","_$J_",""WLSETPC"")"
  K @SDECY

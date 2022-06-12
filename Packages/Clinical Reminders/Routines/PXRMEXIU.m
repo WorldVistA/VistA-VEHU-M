@@ -1,5 +1,5 @@
-PXRMEXIU ;SLC/PKR/PJH - Utilities for installing repository entries. ;11/14/2018
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17,18,24,26,47,42**;Feb 04, 2005;Build 132
+PXRMEXIU ;SLC/PKR/PJH - Utilities for installing repository entries. ;03/30/2018
+ ;;2.0;CLINICAL REMINDERS;**4,6,12,17,18,24,26,47,45**;Feb 04, 2005;Build 566
  ;===================
 DEF(FDA,NAMECHG) ;Check the reminder definition to make sure the related
  ;reminder exists and all the findings exist.

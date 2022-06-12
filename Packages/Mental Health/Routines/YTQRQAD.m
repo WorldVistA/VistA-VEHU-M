@@ -1,5 +1,5 @@
 YTQRQAD ;SLC/KCM - RESTful Calls for Instrument Admin ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130**;Dec 30, 1994;Build 62
+ ;;5.01;MENTAL HEALTH;**130,141**;Dec 30, 1994;Build 85
  ;
  ; External Reference    ICR#
  ; ------------------   -----
@@ -9,21 +9,36 @@ YTQRQAD ;SLC/KCM - RESTful Calls for Instrument Admin ; 1/25/2017
  ; ^VA(200)             10060
  ; ^VA(200,"AUSER")      4868
  ; DIQ                   2056
+ ; MPIF001               2701
  ; XLFNAME               3065
  ; XLFSTR               10104
+ ; XQCHK                10078
  ;
  ;
  ;; -- GETs  all return M object that is transformed to JSON
  ;; -- POSTs all return a path to the created/updated object
  ;;
 PID(ARGS,RESULTS) ; get patient identifiers
- N DFN S DFN=+$G(ARGS("dfn"))
+ N DFN,ICN
+ S DFN=$G(ARGS("dfn"))
+ I DFN["V" D  QUIT:$G(YTQRERRS)
+ . S ICN=DFN,DFN=$$GETDFN^MPIF001(ICN)
+ . I DFN<1 D SETERROR^YTQRUTL(404,"ICN Not Found: "_ICN)
  I '$D(^DPT(DFN,0)) D SETERROR^YTQRUTL(404,"Not Found: "_DFN) QUIT
  S RESULTS("dfn")=DFN
  S RESULTS("name")=$P($G(^DPT(DFN,0)),U)
  S RESULTS("pid")="xxx-xx-"_$E($P($G(^DPT(DFN,0)),U,9),6,10)
  S RESULTS("ssn")=RESULTS("pid") ; TEMPORARY until a switch to PID
+ ; only include ICN if not using application proxy
+ I '$$APPROXY D
+ . I $D(ICN) S RESULTS("icn")=ICN
+ . S ICN=$$GETICN^MPIF001(DFN)
+ . S RESULTS("icn")=$S(+ICN>0:ICN,1:"null")
  Q
+APPROXY() ; return 1 if this call is via application proxy
+ N XQOPT D OP^XQCHK I $P(XQOPT,U)="YTQREST PATIENT ENTRY" Q 1
+ Q 0
+ ;
 LSTALL(ARGS,RESULTS) ; get a list of all instruments
  D GETDOC("YTL ACTIVE",.RESULTS)
  Q
@@ -31,7 +46,29 @@ LSTCPRS(ARGS,RESULTS) ; get a list of all instruments
  D GETDOC("YTL CPRS",.RESULTS)
  Q
 GETSPEC(ARGS,RESULTS) ; get an instrument specification
- D GETDOC("YTT "_$G(ARGS("instrumentName"),"MISSING NAME"),.RESULTS)
+ K ^TMP("YTQ-JSON",$J)
+ N TEST,TESTNM,SPEC
+ S TESTNM=$G(ARGS("instrumentName")) I '$L(TESTNM) D  QUIT
+ . D SETERROR^YTQRUTL(400,"Missing instrument name")
+ S TEST=$O(^YTT(601.71,"B",TESTNM,0))
+ I 'TEST S TEST=$O(^YTT(601.71,"B",$TR(TESTNM,"_"," "),0))
+ I 'TEST D SETERROR^YTQRUTL(404,"Not Found: "_TESTNM) QUIT
+ S SPEC=+$O(^YTT(601.712,"B",TEST,0))
+ I $D(^YTT(601.712,SPEC,1))<10 D  QUIT
+ . D SETERROR^YTQRUTL(404,"Specification missing")
+ D MV2TMP(SPEC)
+ I TESTNM="AUDC",$G(ARGS("assignmentid")) D VARYAUDC(ARGS("assignmentid"))
+ S RESULTS=$NA(^TMP("YTQ-JSON",$J))
+ Q
+MV2TMP(SPEC) ; Load spec into ^TMP("YTQ-JSON",$J), cleaning up line feeds
+ N I,J,X,Y
+ K ^TMP("YTQ-JSON",$J)
+ S (I,J)=0 F  S I=$O(^YTT(601.712,SPEC,1,I)) Q:'I  S X=^(I,0) D
+ . S J=J+1,^TMP("YTQ-JSON",$J,J,0)=X
+ . I (($L(X)-$L($TR(X,"""","")))#2) D  ; check for odd number of quotes
+ . . F  S I=I+1 Q:'$D(^YTT(601.712,SPEC,1,I,0))  D  Q:Y[""""
+ . . . S Y=^YTT(601.712,SPEC,1,I,0)
+ . . . S ^TMP("YTQ-JSON",$J,J,0)=^TMP("YTQ-JSON",$J,J,0)_Y
  Q
 GETDOC(DOCNAME,RESULTS) ; set ^TMP with contents of the document named
  K ^TMP("YTQ-JSON",$J)
@@ -45,6 +82,18 @@ GETDOC(DOCNAME,RESULTS) ; set ^TMP with contents of the document named
 WRCLOSE(ARGS,DATA) ; noop call for closing Delphi wrapper
  Q "/api/wrapper/close/ok"
  ;
+VARYAUDC(ASMT) ; modify the AUDC based on patient sex in ^TMP("YTQ-JSON",$J)
+ N DFN,I,DONE,X0,X1,X2
+ S DFN=+$G(^XTMP("YTQASMT-SET-"_ASMT,1,"patient","dfn")) QUIT:'DFN
+ I $P($G(^DPT(DFN,0)),U,2)'="F" QUIT  ; only need to change for female
+ ; looking for the 3rd question, so start checked at about line 25
+ S DONE=0,I=25 F  S I=$O(^TMP("YTQ-JSON",$J,I)) Q:'I  D  Q:DONE
+ . I ^TMP("YTQ-JSON",$J,I,0)'["six or more" QUIT
+ . S X0=^TMP("YTQ-JSON",$J,I,0)
+ . S X1=$P(X0,"six or more")
+ . S X2=$P(X0,"six or more",2)
+ . S ^TMP("YTQ-JSON",$J,I,0)=X1_"4 or more"_X2,DONE=1
+ Q
 PERSONS(ARGS,RESULTS) ; GET /api/mha/persons/:match
  N ROOT,LROOT,NM,IEN,SEQ,PREVNM,QUAL
  S ROOT=$$UP^XLFSTR($G(ARGS("match"))),LROOT=$L(ROOT),SEQ=0,PREVNM=""

@@ -1,5 +1,5 @@
 ECXOPRX ;ALB/JAP,BIR/DMA,CML,PTD-Prescription Extract for DSS ;7/18/19  09:40
- ;;3.0;DSS EXTRACTS;**10,11,8,13,24,30,33,38,39,46,49,71,81,84,92,105,112,120,127,136,144,149,154,166,170,174**;Dec 22, 1997;Build 33
+ ;;3.0;DSS EXTRACTS;**10,11,8,13,24,30,33,38,39,46,49,71,81,84,92,105,112,120,127,136,144,149,154,166,170,174,178**;Dec 22, 1997;Build 67
  ;
 BEG ;entry point from option
  D SETUP I ECFILE="" Q
@@ -78,6 +78,7 @@ STUFF ;get data
  I ECMW="M" S ECMW=1 I $D(^PSRX("AR",ECD,ECRX)) S ECMW=2
  I ECMW="W" S ECMW=""
  S ECXNEW="" I ECRFL=0 S ECXNEW=1
+ I $E(ECRXNUM,$L(ECRXNUM))?1A S ECXNEW=2  ;178 - RX is a renewal
  S ECXOBS=$$OBSPAT^ECXUTL4(ECXA,ECXTS) ;Observation pat indic (YES/NO)
  S ECXORDPH="" ;Ordering physician (null for FY2002)
  ;- Ordering stop code & Ordering date

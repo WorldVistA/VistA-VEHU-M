@@ -1,5 +1,5 @@
 ECXAPHA ;ALB/TMD-Pharmacy Extracts Unusual Volumes/Costs Report ;5/31/17  16:18
- ;;3.0;DSS EXTRACTS;**40,49,66,104,109,113,136,144,154,166**;Dec 22, 1997;Build 24
+ ;;3.0;DSS EXTRACTS;**40,49,66,104,109,113,136,144,154,166,178**;Dec 22, 1997;Build 67
  ;
 EN ; entry point
  N X,Y,DATE,ECRUN,ECXOPT,ECXDESC,ECXSAVE,ECXTL,ECTHLD,ECSD
@@ -12,7 +12,7 @@ EN ; entry point
  I '$G(ECXCOST) I ECXOPT=2 I FYVER'="" D @(FYVER) Q  ;144 Run previous version of routine and quit if it's the volume report
  S ECXPORT=$$EXPORT^ECXUTL1 Q:ECXPORT=-1  I ECXPORT D  Q  ;144
  .K ^TMP($J) ;144
- .S ^TMP($J,"ECXPORT",0)="NAME^SSN^DAY^GENERIC NAME^FEEDER KEY^"_$S(ECXOPT=1!(ECXOPT=3):"QUANTITY",ECXOPT=2:"TOTAL DOSES PER DAY",1:"COMPONENT DOSE GIVEN")_"^TOTAL COST"_$S(ECXOPT=1:"^DAYS SUPPLY",ECXISIG:"^SIG",1:"") ;144
+ .S ^TMP($J,"ECXPORT",0)="NAME^SSN^DAY^GENERIC NAME^FEEDER KEY^"_$S(ECXOPT=1!(ECXOPT=3):"QUANTITY",ECXOPT=2:"TOTAL DOSES PER DAY",1:"COMPONENT DOSE GIVEN")_"^TOTAL COST"_$S(ECXOPT=1:"^DAYS SUPPLY",1:"")_$S(ECXISIG:"^SIG",1:"") ;144 ;178
  .S CNT=1 ;144
  .D PROCESS ;144
  .D EXPDISP^ECXUTL1 ;144
@@ -71,7 +71,8 @@ SELECT ; user inputs for report option, threshold volume/cost and date range
  .I '$G(ECXCOST) W !!,$S(ECXOPT=2:"threshold > Total Doses Per Day < -threshold",ECXOPT=4:"Component Dose Give > Threshold",1:"Quantity > threshold") ;144
  .S DIR(0)="N^0:100000:0",DIR("A")="Enter the new threshold "_$S('$G(ECXCOST):"volume",1:"cost") D ^DIR K DIR S ECTHLD=Y I X["^" S QFLG=1 Q  ;144
  ; check to see if SIG should be place on the sec line of rpt cvw - *136 
- I ECXOPT=3!(ECXOPT=4&(ECXBCM="N")) S DIR(0)="Y",DIR("A")="Include SIG/Order Direction on line 2 of report",DIR("B")="NO" D ^DIR K DIR S:Y ECXISIG=1 I X["^" S QFLG=1 Q  ;144
+ ;I ECXOPT=3!(ECXOPT=4&(ECXBCM="N")) S DIR(0)="Y",DIR("A")="Include SIG/Order Direction on line 2 of report",DIR("B")="NO" D ^DIR K DIR S:Y ECXISIG=1 I X["^" S QFLG=1 Q  ;144
+ I ($G(ECXCOST)&(ECXOPT=3))!('$G(ECXCOST)) S DIR(0)="Y",DIR("A")="Include SIG/Order Direction on line 2 of report",DIR("B")="NO" D ^DIR K DIR S:Y ECXISIG=1 I X["^" S QFLG=1 Q  ;144  ;178 
  ; get date range from user
  W !!,"Enter the date range for which you would like to scan the ",ECXTL,!,"Extract records."
  S DONE=0 F  S (ECED,ECSD)="" D  Q:QFLG!DONE
@@ -111,7 +112,9 @@ PRINT ; process temp file and print report
  ....S SSN=""
  ....F  S SSN=$O(^TMP($J,FKEY,QTY,EDAY,ECXCOUNT,SSN)) Q:SSN=""!QFLG  S REC=^(SSN)  D
  .....I $G(ECXPORT) D  Q  ;144
- ......S ^TMP($J,"ECXPORT",CNT)=$P(REC,U)_U_$P(REC,U,2)_U_$P(REC,U,3)_U_$P(REC,U,4)_U_$P(REC,U,5)_U_$P(REC,U,6)_" "_$P(REC,U,7)_U_$P(REC,U,8)_$S(ECXOPT=1:(U_$P(REC,U,9)),ECXISIG:(U_$S($P(REC,U,10)="":"N/A",1:$P(REC,U,10))),1:"") ;144
+ ......;S ^TMP($J,"ECXPORT",CNT)=$P(REC,U)_U_$P(REC,U,2)_U_$P(REC,U,3)_U_$P(REC,U,4)_U_$P(REC,U,5)_U_$P(REC,U,6)_" "_$P(REC,U,7)_U_$P(REC,U,8)_$S(ECXOPT=1:(U_$P(REC,U,9)),ECXISIG:(U_$S($P(REC,U,10)="":"N/A",1:$P(REC,U,10))),1:"") ;144
+ ......S ^TMP($J,"ECXPORT",CNT)=$P(REC,U)_U_$P(REC,U,2)_U_$P(REC,U,3)_U_$P(REC,U,4)_U_$P(REC,U,5)_U_$P(REC,U,6)_" "_$P(REC,U,7)_U_$P(REC,U,8)_$S(ECXOPT=1:(U_$P(REC,U,9)),1:"") ;144 ; 178
+ ......S ^TMP($J,"ECXPORT",CNT)=^TMP($J,"ECXPORT",CNT)_$S(ECXISIG:(U_$S($P(REC,U,10)="":"N/A",1:$P(REC,U,10))),1:"") ;144; 178
  ......S CNT=CNT+1 ;144
  .....S COUNT=COUNT+1
  .....I $Y+3>IOSL D HEADER Q:QFLG
@@ -163,3 +166,19 @@ COST ;Section added in 144, entry point for unusual cost report
  S ECXCOST=1
  D EN
  Q
+SIGPRE(ORDNO) ;Get SIG for Prescription Order - 178
+ N DATA,SIG,RECNO,I,EXPREIEN
+ S (I,SIG,LIST)=""
+ S ECPREIEN=$O(^PSRX("B",ORDNO,"")) I ECPREIEN="" Q SIG
+ S RECNO=ECPREIEN_","
+ D GETS^DIQ(52,RECNO,"10.2*","","DATA")
+ F  S LIST=$O(DATA(52.04,LIST)) Q:LIST=""  S STR=DATA(52.04,LIST,.01)_" ",SIG=SIG_STR
+ Q SIG
+SIGIVP(ORDNO,PATNO) ;Get SIG for IV Order - 178
+ N DATA,RECNO,I,SIG
+ S SIG=""
+ I ORDNO=""!(PATNO="") Q SIG
+ S RECNO=ORDNO_","_PATNO_","
+ D GETS^DIQ(55.01,RECNO,".09;131","","DATA")
+ F I=131,.09 S SIG=$G(SIG)_$S($L(SIG)>0:" ",1:"")_$G(DATA(55.01,RECNO,I))
+ Q SIG

@@ -1,8 +1,8 @@
-XLFIPV ;ISD/HGW - IPv4 and IPv6 Utilities ;2017-01-09  3:29 PM
- ;;8.0;KERNEL;**605,638,10001**;Aug 6, 2012;Build 15
- ; Submitted to OSEHRA in 2017 by Sam Habiel for OSEHRA
+XLFIPV ;ISD/HGW - IPv4 and IPv6 Utilities ; 8/19/20 10:57am
+ ;;8.0;KERNEL;**605,638,736,10001,10006,10008**;Aug 6, 2012;Build 12
  ; Original Routine authored by Department of Veterans Affairs
  ; EP VERSION GT.M Support authored by Christopher Edwards 2016.
+ ; *10008 incorporates *736
  Q
  ;
 VALIDATE(IP) ; EXTRINSIC. ICR #5844 (supported)
@@ -113,8 +113,8 @@ VERSION() ; EXTRINSIC. ICR #5844 (supported)
  ;
  N %
  S %=0
- I $$VERSION^%ZOSV(1)["Cache" I +$$VERSION^%ZOSV()>2009 S %=$SYSTEM.Process.IPv6Format()
- I +$SY=47 D  ; GT.M
+ I ($$VERSION^%ZOSV(1)["Cache")!($$VERSION^%ZOSV(1)["IRIS") I +$$VERSION^%ZOSV()>2009 S %=$SYSTEM.Process.IPv6Format()
+ I $P($SY,",")=47 D  ; GT.M
  . I $TR($$VERSION^%ZOSV(),"-")<6.0003 QUIT  ; GT.M supports IPV6 starting in 6.0-003
  . I $ZTRNLNM("gtm_ipv4_only") QUIT
  . S %=1
@@ -187,7 +187,7 @@ VER ; OPTION. "Show system settings for IPv6" [XLFIPV VERSION]
  S X=$$VERSION,XLSYS=$$VERSION^%ZOSV(1),XLVER=+$$VERSION^%ZOSV()
  W !!,?3,XLSYS," ",XLVER
  I X=0 D  Q
- . I XLSYS["Cache" D  Q
+ . I (XLSYS["Cache")!(XLSYS["IRIS") D  Q
  . . I XLVER>2009 W !!,"   IPv6 is available but is disabled on this system." Q
  . . W !!,"   IPv6 is not available on this version of Cache."
  . W !!,"   IPv6 is not available on this system."

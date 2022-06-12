@@ -1,5 +1,5 @@
-MPIFA31B ;BP/CMC-BUILD A31 MSGS ; 8/14/18 4:15pm
- ;;1.0;MASTER PATIENT INDEX VISTA;**22,24,27,28,31,25,44,46,54,59,60,64,68**;30 Apr 99;Build 2
+MPIFA31B ;BP/CMC-BUILD A31 MSGS ; 5/4/20 11:02am
+ ;;1.0;MASTER PATIENT INDEX VISTA;**22,24,27,28,31,25,44,46,54,59,60,64,68,75**;30 Apr 99;Build 1
  ;
  ; Integration Agreements Utilized:
  ;  START, EXC, STOP^RGHLLOG - #2796
@@ -76,7 +76,8 @@ A31(DFN) ;BUILD AND SEND A31
  I $G(ZEL)'="" S HLA("HLS",EN)=ZEL,EN=EN+1 ;**59 ZEL segment
  S MPI=$$MPILINK^MPIFAPI()
  Q:$P($G(MPI),"^")=-1 "-1^No logical link defined for the MPI"
- S HLL("LINKS",1)="MPIF ADT-A31 CLIENT^"_MPI
+ ;**75 - Story - 1260465 (ckn) - Include 200M in HLL links for HAC
+ S HLL("LINKS",1)="MPIF ADT-A31 CLIENT^"_MPI_$S($P($$SITE^VASITE(),"^",3)=741:"^200M",1:"")
  D GENERATE^HLMA("MPIF ADT-A31 SERVER","LM",1,.MPIFRSLT,"","")
  S RESLT=$S(+MPIFRSLT:MPIFRSLT,1:"-1^"_$P(MPIFRSLT,"^",3))  ;**68 Story 827754 (jfw) - Make Error Data Consistent (-1^msg)
  S ^XTMP("MPIFA31%"_DFN,0)=$$FMADD^XLFDT(DT,5)_"^"_DT_"^"_"MPIA31 msg to MPI for DFN "_DFN

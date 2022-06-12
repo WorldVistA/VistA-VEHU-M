@@ -1,5 +1,5 @@
-DGENA2 ;ALB/CJM,RTK,TDM,JAM - Enrollment API - Automatic Update; 9/19/2002 ;1/31/03 11:54am
- ;;5.3;Registration;**121,122,147,232,327,469,491,779,788,824,982**;Aug 13,1993;Build 5
+DGENA2 ;ALB/CJM,RTK,TDM,JAM,ASF - Enrollment API - Automatic Update; 9/19/2002 ;1/31/03 11:54am
+ ;;5.3;Registration;**121,122,147,232,327,469,491,779,788,824,982,993,1015**;Aug 13,1993;Build 7
  ;
 AUTOUPD(DFN,EVENT) ;
  ;Description: If the patient meets the criteria for transmission to HEC,
@@ -32,14 +32,16 @@ AUTOUPD(DFN,EVENT) ;
  D:$$LOCK^DGENA1($G(DFN))  ;may drop out of block
  .S DGENRIEN=$$FINDCUR^DGENA(DFN)
  .Q:'DGENRIEN
+ .S:$G(DGENRYN)="" DGENRYN=$$GET1^DIQ(27.11,DGENRIEN_",",.14,"I") ;DG*5.3*993 Load new PT APPLIED FOR ENROLLMENT? field
  .Q:'$$GET^DGENA(DGENRIEN,.DGENR1)
  .S STATUS=$$EXT^DGENU("STATUS",DGENR1("STATUS"))
  .S (DEATH,EFFDATE)=$$DEATH^DGENPTA(DFN)
- .I STATUS'="VERIFIED",STATUS'="UNVERIFIED",STATUS'="DECEASED",STATUS'["NOT ELIGIBLE",STATUS'["PENDING",STATUS'["REJECTED" Q
+ .I STATUS'="VERIFIED",STATUS'="UNVERIFIED",STATUS'="DECEASED",STATUS'="REGISTRATION ONLY",STATUS'["NOT ELIGIBLE",STATUS'["PENDING",STATUS'["REJECTED" Q  ;DG*5.3*993 Added REGISTRATION ONLY
  .I STATUS="DECEASED",((EVENT'=1)!(DEATH)) Q
+ .I DEATH,'$$VET^DGENPTA(DFN) Q     ;DG*5.3*993
  .I STATUS["NOT ELIGIBLE",((EVENT'=2)!('$$VET^DGENPTA(DFN))) Q
  .S:'EFFDATE EFFDATE=DT
- .Q:'$$CREATE^DGENA6(DFN,DGENR1("APP"),EFFDATE,DGENR1("REASON"),DGENR1("REMARKS"),.DGENR2,DGENR1("DATE"),DGENR1("END"))
+ .Q:'$$CREATE^DGENA6(DFN,DGENR1("APP"),EFFDATE,DGENR1("REASON"),DGENR1("REMARKS"),.DGENR2,DGENR1("DATE"),DGENR1("END"),DGENRYN)  ;DG*5.3*993 Added 9th parameter DGENRYN
  .S OK=1
  .S:(DGENR1("PRIORITY")'=DGENR2("PRIORITY"))!(DGENR2("STATUS")'=DGENR1("STATUS")) OK=0
  .I OK D
@@ -181,7 +183,8 @@ REQUST(SDAMEVT,SDATA) ;
  . . N DGSCODE,DGCRCODE
  . . S DGSCODE=$$GET1^DIQ(44,DGCLN,8,"I"),DGCRCODE=$$GET1^DIQ(44,DGCLN,2503,"I")
  . . S DGSCODE=$$GET1^DIQ(40.7,DGSCODE,1),DGCRCODE=$$GET1^DIQ(40.7,DGCRCODE,1)
- . . I '$$PCACHK^DGENACL2(DGSCODE,DGCRCODE) Q
+ . . ; ASF DG*5.3*1015 - remove primary clinic requirement
+ . . ;I '$$PCACHK^DGENACL2(DGSCODE,DGCRCODE) Q 
  . . ;set fields
  . . N FDATA
  . . S FDATA(2,DFN_",",1010.161)="F"
@@ -215,7 +218,9 @@ CANNS ;If appointment cancelled or no-show, no appts made, put back on call list
  . . . ; DG*5.3*982 - code below added to check for Primary Care appt
  . . . S DGCREDIT=$P($P(DGAPPT,U,14),";",2)   ;-Set the appointment's Credit Stop Code
  . . . S DGSTOP=$P($P(DGAPPT,U,13),";",2)     ;-Set the appointment's Stop Code Number
- . . . I $$PCACHK^DGENACL2(DGSTOP,DGCREDIT) S DGCOUNT=DGCOUNT+1    ;-Check for a Primary Care Appointment match
+ . . . ; ASF DG*5.3*1015 - remove primary clinic requirement
+ . . . S DGCOUNT=DGCOUNT+1
+ . . . ;I $$PCACHK^DGENACL2(DGSTOP,DGCREDIT) S DGCOUNT=DGCOUNT+1    ;-Check for a Primary Care Appointment match
  . I DGCOUNT=0 S SDCNT=0  ;if only non-count clinic appts. (DG*5.3*982 - or no Prim Care appt), put on call list
  I SDCNT=0 D
  . S FDATA(2,DFN_",",1010.161)="@" ;delete status

@@ -1,5 +1,5 @@
-PXRMEXWB ;SLC/PKR - Reminder Exchange Web routines. ;07/26/2018
- ;;2.0;CLINICAL REMINDERS;**26,47,42**;Feb 04, 2005;Build 132
+PXRMEXWB ;SLC/PKR - Reminder Exchange Web routines. ;05/06/2020
+ ;;2.0;CLINICAL REMINDERS;**26,47,46**;Feb 04, 2005;Build 236
  ;==========================================
 LWEB(URL) ;Load a prd file from a web site into ^TMP, then into the
  ;Exchange file.
@@ -10,9 +10,6 @@ LWEB(URL) ;Load a prd file from a web site into ^TMP, then into the
  S URL=Y
  I (Y="")!(Y="^") S URL="" Q 0
  S Y=$$LOW^XLFSTR(Y)
- I $E(Y,1,5)="https" D  Q 0
- . D EN^DDIOL("The https protocol is not supported.")
- . H 2
  ;Load the file contents into ^TMP.
  S NODE="EXHF"
  K ^TMP($J,NODE),^TMP($J,"WEBPRD")
@@ -23,12 +20,6 @@ LWEB(URL) ;Load a prd file from a web site into ^TMP, then into the
  . S TEXT=TEXT_"Error "_$P(RESULT,U,1)_" "_$P(RESULT,U,2)
  . D EN^DDIOL(.TEXT) H 2
  . K ^TMP($J,"WEBPRD")
- ;Work around for bug in GETURL^XTHC10
- N DONE,IND
- S (DONE,IND)=0
- F  S IND=$O(^TMP($J,"WEBPRD",IND)) Q:DONE  D
- . I ^TMP($J,"WEBPRD",IND)="<?xml version=""1.0"" standalone=""yes""?>" S DONE=1 Q
- . K ^TMP($J,"WEBPRD",IND)
  D RBLCKWEB^PXRMTXIM("WEBPRD",NODE)
  K ^TMP($J,"WEBPRD")
  ;Load the ^TMP into the Exchange file.
