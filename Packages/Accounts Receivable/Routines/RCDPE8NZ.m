@@ -1,5 +1,5 @@
 RCDPE8NZ ;ALB/TMK/KML/hrubovcak - Unapplied EFT Deposits report ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,212,208,269,276,283,293,298,317,318,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**173,212,208,269,276,283,293,298,317,318,326,375**;Mar 20, 1995;Build 15
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; entry point for Unapplied EFT Deposits Report [RCDPE UNAPPLIED EFT DEP REPORT]
@@ -67,6 +67,7 @@ MKRPRT ; Entry point for queued job
  . Q:'$P(RCDATA,"^",8)  ; no payment amt
  . S RCEFT=0 F  S RCEFT=$O(^RCY(344.31,"B",RCDA,RCEFT)) Q:'RCEFT!RCSTOP  S RCDATA(0)=$G(^RCY(344.31,RCEFT,0)) D  Q:RCSTOP
  . . I '$$ISTYPE^RCDPEU1(344.31,RCEFT,RCTYPE) Q  ;PRCA*4.5*326
+ . . Q:$P($G(^RCY(344.31,RCEFT,0)),U,16)="D"  ; PRCA*4.5*375 - Do not show Debit EFTs because there's nothing to apply
  . . S RCTSKCNT=RCTSKCNT+1
  . . I '(RCTSKCNT#100),$D(ZTQUEUED),$$S^%ZTLOAD S (RCSTOP,ZTSTOP)=1 K ZTREQ Q
  . . Q:$P($G(^RCY(344.31,RCEFT,3)),U)        ; EFT has been removed   PRCA*4.5*293

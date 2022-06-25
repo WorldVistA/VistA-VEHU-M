@@ -1,5 +1,5 @@
 IBCE837H ;EDE/JWS - OUTPUT FOR 837 FHIR TRANSMISSION ;5/23/18 10:48am
- ;;2.0;INTEGRATED BILLING;**623,641**;23-MAY-18;Build 61
+ ;;2.0;INTEGRATED BILLING;**623,641,650**;23-MAY-18;Build 21
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 GET(RESULT,ARG) ;get claim data for TAS Core 837
@@ -7,7 +7,8 @@ GET(RESULT,ARG) ;get claim data for TAS Core 837
  K RESULT
  D CLEANP^IBCE837A
  N IBIEN,RES,IBSIZE,X0,X1,X2,X3,X4,X5,X9,DATA1,FIELD,FIELDS,J,I,DONE,FILE,CT,XREC,IBRECCT,IB364,IBTYPE,IBBDA,IBBNO,XX,IBRSBTST
- S DUZ(0)="@" D DTNOLF^DICRW
+ ;JWS;IB*2.0*650v7;3/16/21; removed setting of DUZ(0)
+ D DTNOLF^DICRW
  K ^TMP($J,"FHIR837")
  ; Get IEN for Claim File 399
  S IBIEN=ARG("IEN399")
@@ -83,12 +84,15 @@ GET(RESULT,ARG) ;get claim data for TAS Core 837
  S IBRSBTST=$$TEST^IBCE837I(IB364)
  S ^TMP($J,"FHIR837","RecCount",CT,":")="""value"":"_""""_$S(IBRSBTST=0:"live",1:"test")_"""}"
  ;JWS;IB*2.0*623v24;add re-submission flag, if defined
- I $$GET1^DIQ(364,IB364_",",.1,"I") D
+ ;JWS/IB*2.0*650;or check getBundle validate flag, [10]=0,[11]=1, then previous validDuplicate submission getBundle failed
+ I $$GET1^DIQ(364,IB364_",",.1,"I")!$$GET1^DIQ(364,IB364_",",.11,"I") D
  . D UP^IBCE837I
  . S ^TMP($J,"FHIR837","RecCount",CT,":")="{""valueString"":"_"""isValidDuplicate"""
  . D UP^IBCE837I
  . S ^TMP($J,"FHIR837","RecCount",CT,":")="""value"":"_"""true""}"
  . D SETSUB^IBCE837I(IB364,0)
+ . ;JWS/IB*2.0*650v5;set getBundle validate flag
+ . D SETSUB^IBCE837I(IB364,1,.11)
  ; create JSON structured message
  D ENCODE^XLFJSONE("^TMP($J,""FHIR837"")","RESULT")
  D FINISH^IBCE837I

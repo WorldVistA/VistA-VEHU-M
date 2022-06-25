@@ -1,5 +1,5 @@
-RAORDR1 ;ABV/SCR/MKN - Refer Pending/Hold Requests continued ; Dec 04, 2019@12:26:51
- ;;5.0;Radiology/Nuclear Medicine;**148,161**;Mar 16, 1998;Build 1
+RAORDR1 ;ABV/SCR/MKN - Refer Pending/Hold Requests continued ; Aug 13, 2020@16:14:22
+ ;;5.0;Radiology/Nuclear Medicine;**148,161,170**;Mar 16, 1998;Build 1
  ;
  ; Routine              IA          Type
  ; -------------------------------------
@@ -20,7 +20,7 @@ MAKECONS(RAOIFN) ;Create Consult using Order Dialog GMRCOR CONSULT
  ;
  N DA,DFN,DIC,DIE,DR,ORDIALOG,RADFN,RADLG,RADTDES,RAFIELDS,RAFILE,RAIENS,RAMAP,RAN,RAN1,RANEWORD,RAO,RAOIEN,RAORDG
  N RAORDIEN,RAORDITM,RAORDLOC,RAORDS,RAORDTXT,RAOREA,RAORGTX,RAORNP,RAORIT,RAORL,RAORNP,RAORPRE,RAORPREG,RAORTYP
- N RAORVP,RAORWANT,RAQUIT,RAORD,RARET,RARTRN,RAUCID,RAURG,RAWPN,RAX,RAY,RAOILOC,VADM,X,Y
+ N RAORVP,RAORWANT,RAQUIT,RAORD,RARET,RARTRN,RAUCID,RAURG,RAWPN,RAX,RAY,RAOILOC,VADM,X,Y,RAITYP
  S RADLG="GMRCOR CONSULT"
  K DIC S DIC=101.41,X=RADLG D ^DIC I Y=-1 D ERROR("Quick Order ""GMRCOR CONSULT"" not found in ORDER DIALOG file") Q 0
  S RAORIT=+Y
@@ -34,6 +34,7 @@ MAKECONS(RAOIFN) ;Create Consult using Order Dialog GMRCOR CONSULT
  S (RADFN,DFN,RAORVP)=$G(RARTRN(75.1,RAIENS,.01,"I")) ;Patient DFN P2
  S (RAORDIEN,RAORD)=$G(RARTRN(75.1,RAIENS,7,"I")) ;RAD Order IEN P100
  S RAORTYP=$G(RARTRN(75.1,RAIENS,3,"E"))  ;Type of imaging P79.2
+ S RAITYP=$G(RARTRN(75.1,RAIENS,3,"I")) ;Type of imaging p79.2 (internal)
  S RAOILOC=$G(RARTRN(75.1,RAIENS,20,"I")) ;p161 - Imaging Location p79.1
  S RAORPRE=$G(RARTRN(75.1,RAIENS,12,"E")) ;PRE-OP DATE/TIME
  S RAORPREG=$G(RARTRN(75.1,RAIENS,13,"E")) ;PREGNANT - set of codes Y,N,U
@@ -46,16 +47,28 @@ MAKECONS(RAOIFN) ;Create Consult using Order Dialog GMRCOR CONSULT
  ;Now add the responses to the dialog
  ;p161 start 
  ;Use I-LOC from order to lookup CCC in 79.1
+ ;P170 - It's possible for the order to not have a 'submit to' location, in which case we'll try to
+ ;determine a location based on imaging type and user's division.
+ I $G(RAOILOC)="" S RAOILOC=$$GETILOC^RAORDR2(RAITYP)
+ I $G(RAOILOC)=0 D ERROR("No Imaging location found/selected") Q 0
+ ;if the I-LOC doesn't have a CCC
+ I '$D(^RA(79.1,RAOILOC,"CON",1)) S RAOILOC=$$GETILOC^RAORDR2(RAITYP) ;no CCC on order location
+ I $G(RAOILOC)=0 D ERROR("No Consult title associated with I-LOC") Q 0
+ ;p170 end
+ ;
  I $D(^RA(79.1,RAOILOC,"CON")) D
  .I RAORTYP["MAMMOGRAPHY" S RAMAP=$$MAMMO() Q
  .S RAI=$O(^RA(79.1,RAOILOC,"CON",0)) S RAMAP=$$GET1^DIQ(79.11,RAI_","_RAOILOC_",",.01)
  .Q
  I $G(RAMAP)="" D ERROR("No Consult title associated with I-LOC") Q 0
- ;
- ;
- ;
- S RAORDITM=$$FIND1^DIC(101.43,,,RAMAP) I RAORDITM=0 D ERROR("Orderable Item "_RAMAP_" not found in Orderable item file") Q 0
- ;S RAORDITM=+Y
+ ;p170 - change next line to FIND^DIC to allow for partial matches
+ ;S RAORDITM=$$FIND1^DIC(101.43,,,RAMAP) I RAORDITM=0 D ERROR("Orderable Item "_RAMAP_" not found in Orderable item file") Q 0
+ D FIND^DIC(101.43,,"@;.01","P",RAMAP,,,,,"RAOI",) I $D(RAOI)=10 D
+ .N RAJ S RAJ=0 F  S RAJ=$O(RAOI("DILIST",RAJ)) Q:RAJ=""  D
+ ..I $P($G(RAOI("DILIST",RAJ,0)),U,2)=RAMAP S RAORDITM=+$G(RAOI("DILIST",RAJ,0))
+ ..Q
+ .Q
+ I $G(RAORDITM)'>0 D ERROR("Orderable Item "_RAMAP_" not found in Orderable item file") Q 0
  ;p161 end
  D UPORDLG("OR GTX ORDERABLE ITEM",RAORDITM)
  K DIC S DIC=101.42,X="ROUTINE" D ^DIC I Y=-1 D ERROR("Urgency ""ROUTINE"" not found in ORDER URGENCY file") Q 0
@@ -179,12 +192,3 @@ MAP(RAIN) ;
  F RAI=1:1 S RAX=$T(ORDITEMS+RAI) Q:RAX=" ;//"  I $P(RAX,";",2)=RAIN S RARES=$P(RAX,";",3) Q
  Q RARES
  ;
-ORDITEMS ;
- ;CT SCAN;COMMUNITY CARE-IMAGING CT-AUTO
- ;MAMMOGRAPHY;COMMUNITY CARE-IMAGING MAMMOGRAPHY DIAGNOSTIC-AUTO
- ;MAMMOGRAPHY;COMMUNITY CARE-IMAGING MAMMOGRAPHY SCREEN-AUTO
- ;MAGNETIC RESONANCE IMAGING;COMMUNITY CARE-IMAGING MAGNETIC RESONANCE IMAGING-AUTO
- ;NUCLEAR MEDICINE;COMMUNITY CARE-IMAGING NUCLEAR MEDICINE-AUTO
- ;GENERAL RADIOLOGY;COMMUNITY CARE-IMAGING GENERAL RADIOLOGY-AUTO
- ;ULTRASOUND;COMMUNITY CARE-IMAGING ULTRASOUND-AUTO
- ;//

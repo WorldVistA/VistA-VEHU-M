@@ -1,8 +1,10 @@
 IBCNINSL ;AITC/TAZ/VAD - GENERAL INSURANCE UTILITIES - LOOKUP ;8/20/20 12:46p.m.
- ;;2.0;INTEGRATED BILLING;**664**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**664,687**;21-MAR-94;Build 88
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;IB*2.0*664/TAZ/VAD - Cloned code from VAUTOMA to increase functionality
+ ;
+ ; IA #2171 used in tag INSTS
  ;
  ;Tags DIVISION, CLINIC, PATIENT, and WARD need to be updated to work with the new functionality in a future patch
 DIVISION ;
@@ -17,9 +19,33 @@ PATIENT ;
  Q
  ;S DIC="^DPT(",IBUTSTR="patient",ARRAY="IBUTN" K DIC("IGNORE") G FIRST
  ;
-WARD ;
+INST(ARRAY,PROMPT) ;  Institution/Facility Lookup
+ ;INPUT:
+ ; ARRAY    - Results of lookup to be used by calling routine
+ ; PROMPT   - Text to be used when prompting for an entry
+ ;
+ N IBUTNI,FAC
+ S SCREEN="I $$INSTS^IBCNINSL(+$G(Y))"
+ D LOOKUP(4,PROMPT,"FAC",1,,.SCREEN)
+ M ARRAY=FAC
  Q
- ;S DIC="^DIC(42,",IBUTSTR="ward",ARRAY="IBUTW",DIC("S")="I $S(IBUTD:1,$D(IBUTD(+$P(^(0),U,11))):1,'+$P(^(0),U,11)&$D(IBUTD(^DG(40.8,+$O(^DG(40.8,0)),0))):1,1:0)" G FIRST
+ ;
+INSTS(IEN) ;Screen for Institution   IA #2171
+ ;Called by:
+ ;         - Instution Lookup INST^IBCNINSL
+ ;         - Sending SITE Setup - TFL^IBCNIUF
+ ;Input:
+ ;IEN      - Internal Entry Number $G(Y)
+ ;
+ N ARRAY,OK,PRNT,PSTA,STA
+ S OK=0
+ I $$WHAT^XUAF4(IEN,13)'="VAMC" G INSTSQ         ;Not a VAMC
+ S STA=$$STA^XUAF4(IEN) I STA="" G INSTSQ        ;No Station Number
+ I '$$ACTIVE^XUAF4(IEN) G INSTSQ                 ;Inactive
+ S PRNT=$$PRNT^XUAF4(STA),PSTA=$P(PRNT,U,2)
+ S OK=$S(PRNT="":0,PSTA="":1,PSTA=STA:1,1:0)
+INSTSQ ;Exit Screen
+ Q OK
  ;
 INSCO(ARRAY) ; Insurance Company Lookup
  ;INPUT:
@@ -101,11 +127,12 @@ SETQ ;
  Q
  ;
 QQ ;Display Help
- N DIC,IBJ,IBJ1
+ N DIC,IBJ,IBJ1,PROMPT
+ S PROMPT=IBPROMPT I "yY"[$E(PROMPT,$L(PROMPT)) S PROMPT=$E(PROMPT,1,$L(PROMPT)-1)_"ies"
  W !,"ENTER:"
- I $G(IBALL) W !?5,"- ALL (Default) for all ",IBPROMPT,"s, or"
+ I $G(IBALL) W !?5,"- ALL (Default) for all ",PROMPT,", or"
  W !?5,"- Individual ",IBPROMPT
- W !?5,"- RETURN once all ",IBPROMPT,"s have been selected"
+ W !?5,"- RETURN once all ",PROMPT," have been selected"
  I $O(@ARRAY@(0))]"" D
  . W !?5,"- An entry preceeded by a minus [-] sign to remove that entry from list."
  . W !!,"NOTE, you have already selected:"

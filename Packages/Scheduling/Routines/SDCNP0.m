@@ -1,6 +1,6 @@
 SDCNP0 ;ALB/LDB - CANCEL APPT. FOR A PATIENT ;MAR 15, 2017
- ;;5.3;Scheduling;**132,167,478,517,572,592,627,658**;Aug 13, 1993;Build 23
- ;
+ ;;5.3;Scheduling;**132,167,478,517,572,592,627,658,801**;Aug 13, 1993;Build 13
+ ;;Per VHA Directive 6402, this routine should not be modified
  ; Reference/ICR
  ; ^VALM1 - 10116
  ;
@@ -31,7 +31,7 @@ CAN Q:$P(^UTILITY($J,"SDCNP",A1),"^",4)["JUST CANCELLED"  S CNT=CNT+1,DIV=$S($P(
  ;removed rounding logic for time and changed direct global writes to fileman call SD*5.3*592
  D NOW^%DTC S SDNOW=%,DIE="^DPT("_DFN_",""S"",",DA=S,DA(1)=DFN,DR="3///^S X=SDWH;14////^S X=DUZ;15///^S X=SDNOW;16////^S X=SDSCR" D ^DIE K DIE,DR,DA
  S (DA,Y)=0 F X=0:0 S X=+$O(^SC(SDCLI,"S",S,1,X)) Q:'$D(^(X,0))  D C Q:Y&(DA)
- D SDEC(DFN,S,SDCLI,SDWH,SDSCR,SDREM,SDNOW,DUZ,"1") ;update SDEC APPOINTMENT   /alb/sat  SD/627 /alb/jsm 658 add passing flag to indicate called from here
+ N REOPEN S REOPEN="" D SDEC(DFN,S,SDCLI,SDWH,SDSCR,SDREM,SDNOW,DUZ,REOPEN) ; vse-1886 reopen appt request when cancelling with VistA SD CANCEL APPOINTMENT option
  I $D(^DPT("ASDPSD","B",DIV,S\1,DFN)) D CK1
  Q:'Y  S SL=$P(^SC(SDCLI,"S",S,1,Y,0),U,2) I DA,'$D(^("OB")) K ^SC(SDCLI,"S",S,1,DA,"OB")
  S SDDA=DA,SDTTM=S,SDRT="D",SDPL=Y,SDSC=SDCLI D RT^SDUTL D CANCEL^SDCNSLT S Y=SDPL,S=SDTTM,SDCLI=SDSC,DA=SDDA K SDDA ;SD/478

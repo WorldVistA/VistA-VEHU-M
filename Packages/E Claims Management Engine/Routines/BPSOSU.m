@@ -1,5 +1,5 @@
 BPSOSU ;BHAM ISC/FCS/DRS/FLS - Common utilities ;06/01/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,7,10,20**;JUN 2004;Build 27
+ ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,7,10,20,27**;JUN 2004;Build 15
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ; Common utilities called a lot.
@@ -100,6 +100,15 @@ NEW57A N N,C
  ;
  ; Merge BPS Transaction into Log of Transactions
  M ^BPSTL(N)=^BPST(IEN59)
+ ;
+ ; Set MCCF EDI TAS PROGRESS flag to 1
+ ; Only if Transaction Type is not Non-Billable
+ I $$GET1^DIQ(9002313.59,IEN59,19,"I")'="N" D
+ . N BPSA,BPSFN,BPSREC
+ . S BPSFN=9002313.57
+ . S BPSREC=N_","
+ . S BPSA(BPSFN,BPSREC,20)=1
+ . D FILE^DIE("","BPSA","") 
  ;
  ; Build fileman indices
  D

@@ -1,5 +1,5 @@
-ORWU1 ;SLC/GRE - General Utilities for Windows Calls ;Sep 01, 2020@15:05:03
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**149,187,195,215,394,533,519**;Dec 17, 1997;Build 36
+ORWU1 ;SLC/GRE - General Utilities for Windows Calls ;May 05, 2021@15:54:58
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**149,187,195,215,394,533,519,539**;Dec 17, 1997;Build 41
  ;
  Q
  ;
@@ -11,27 +11,50 @@ NP1 ; Return a set of names from the NEW PERSON file.
  ;  .ORY=returned list.
  ;  ORDATE=Checks for an active person class on this date (optional).
  ;  ORDIR=Direction to move through the x-ref with $O.
- ;  ORFROM=Starting name for this set.
+ ;  ORFROM=Starting name for this set or, if ORSIM=true, the starting IEN.  ** NSR 20110606/539 - Allow for name or IEN **.
  ;  ORKEY=Screen users by security key (optional).
  ;  ORVIZ=If true, includes RDV users; otherwise not (optional).
+ ;  ORSIM=If true, this indicates that this is a Similar Provider RPC call NSR#20110606/539
  ;
  N ORDD,ORDIV,ORDUP,ORGOOD,ORI,ORIEN1,ORIEN2,ORLAST,ORMAX,ORMRK,ORMULTI,ORNPI,ORPREV,ORSRV,ORTTL
- ;
- S ORI=0,ORMAX=44,(ORLAST,ORPREV)="",ORKEY=$G(ORKEY),ORDATE=$G(ORDATE)
+ N ORFNM,ORFNMLEN,ORLNM,OPTIEN,ORDUPNM ; ** NSR 20110606/539 - Add first and last names, first name length and OPTIEN it is the IEN to the OPTION file
+ S ORI=0,ORMAX=44,(ORLAST,ORPREV,ORDUPNM)="",ORKEY=$G(ORKEY),ORDATE=$G(ORDATE),ORSIM=$G(ORSIM)    ; NSR 20110606/539 added ORSIM
+ S OPTIEN=$$LKOPT^XPDMENU("OR CPRS GUI CHART") ;Set IEN to option file NSR 20110606/539
  S ORMULTI=$$ALL^VASITE ; IA# 10112.  Do once at beginning of call.
+ I +ORSIM D  ; ** NSR 20110606/539 - If ORSIM, ORFROM is IEN and needs to be changed to name.  Also get first name, its length and last name **
+ .N LASTCHAR,ORFIEN,ORFROM1,XFNM,XFNMLEN
+ .S ORFIEN=ORFROM
+ .S (ORFROM,ORFROM1)=$P(^VA(200,ORFROM,0),U),$P(ORFROM,",",2)=$E($P(ORFROM,",",2),1,2)
+ .S ORFNM=$P(ORFROM,",",2),ORFNMLEN=$L(ORFNM),ORLNM=$P(ORFROM,",") ; ** NSR 20110606/539 - Add ORFNM, ORFNMLEN and ORLNM **
+ .I ORFNM]"" D
+ ..S XFNM=$P(ORFROM,",",2),XFNMLEN=$L(XFNM),LASTCHAR=$C($A(XFNM,XFNMLEN)-1),XFNM=$E(XFNM,1,XFNMLEN-1)_LASTCHAR_$C(126)
+ ..S $P(ORFROM,",",2)=XFNM
+ .S ORI=ORI+1,ORY(ORI)=ORFIEN_"^"_$$NAMEFMT^XLFNAME(ORFROM1,"F","DcMPC")
+ .S ORDUPNM(ORFIEN)=""
+ .S ORIEN2=ORFIEN
+ .;Using NP2 instead of NP4(0) in case duplicate (same but different) entry found later
+ .D NP2
+ E  D
+ .S (ORFNM,ORFNMLEN,ORLNM)=""
  ;
  ; NP3 tag includes visitors, uses full "B" x-ref.
  I +$G(ORVIZ)=1 D NP3(0) Q  ; Use alt. version, skip rest.
  ; User requested ALL users, both active and inactive.  Same call, but skip $$PROVIDER^XUSER screen
  I +$G(ORALL)=1 D NP3(0) Q
  ;
- F  Q:ORI'<ORMAX  S ORFROM=$O(^VA(200,"AUSER",ORFROM),ORDIR) Q:ORFROM=""  D
+ F  Q:ORI'<ORMAX  S ORFROM=$O(^VA(200,"AUSER",ORFROM),ORDIR) Q:ORFROM=""!'$$CHKORSIM(ORSIM,ORFNM,ORFNMLEN,ORFROM,ORLNM)  D  ; NSR 20110606/539 - Check for quitting with ORSIM and names comparison
  .S ORIEN1=""
  .F  S ORIEN1=$O(^VA(200,"AUSER",ORFROM,ORIEN1),ORDIR) Q:'ORIEN1  D
+ ..I $D(ORDUPNM(ORIEN1)) Q
+ ..; NSR 20120101 Limit Signers by Tabs & Excluded User Class
+ ..I '+$$CPRSTAB(ORIEN1) Q  ; Check core tab & Non-VA tab access including effective date and expiration date
+ ..I +OREXCLDE,+$$USRCLASS(ORIEN1) Q  ; Check Excluded User Class
  ..;
  ..I $L(ORKEY),'$D(^XUSEC(ORKEY,+ORIEN1)) Q       ; Check for key?
  ..I ORDATE>0,$$GET^XUA4A72(ORIEN1,ORDATE)<1 Q    ; Check date?
  ..I +$G(ORPDMP)=1,'$$ISAUTH^ORPDMP(+ORIEN1) Q  ;For PDMP query form, filter out non-authorized users
+ ..I '+$$ACCESS^XQCHK(ORIEN1,OPTIEN) Q    ;NSR 20110606/539
+ ..I +ORI,+ORY(ORI)=ORIEN1 Q  ; if the current IEN is already in list, quit
  ..S ORI=ORI+1,ORY(ORI)=ORIEN1_"^"_$$NAMEFMT^XLFNAME(ORFROM,"F","DcMPC")
  ..S ORDUP=0                            ; Init flag, check dupe.
  ..I ($P(ORPREV_" "," ")=$P(ORFROM_" "," ")) S ORDUP=1
@@ -81,7 +104,7 @@ NP2 ; Retrieve subset of data for dupes in NP1.
  .F  S ORDD=$O(ORZ("DILIST",ORDD)) Q:+ORDD=0!'($L(ORDD))  D  Q:ORGOOD
  ..;
  ..; See if current entry being processed is "Default" (done if so):
- ..I $P(ORZ("DILIST",ORDD,0),U,3)["Y" S ORDIV=$P(ORZ("DILIST",ORDD,0),U,2),ORGOOD=1  Q                       ; Division text.
+ ..I $P(ORZ("DILIST",ORDD,0),U,3)["Y" S ORDIV=$P(ORZ("DILIST",ORDD,0),U,2),ORGOOD=1  Q  ; Division text.
  ;
  ; add NPI information *533 ; ajb
  ; Append new pieces to array string:
@@ -106,6 +129,9 @@ NP3(COSFLAG) ; Retrieve diff. data when all users are involved, using "B" x-ref.
  F  Q:ORI'<ORMAX  S ORFROM=$O(^VA(200,"B",ORFROM),ORDIR) Q:ORFROM=""  D
  .S ORIEN1=""
  .F  S ORIEN1=$O(^VA(200,"B",ORFROM,ORIEN1),ORDIR) Q:'ORIEN1  D
+ ..; NSR 20120101 Limit Signers by Core Tabs & Excluded/Included User Class
+ ..I '+$$CPRSTAB(ORIEN1) Q  ; Check core tab access
+ ..I +$$USRCLASS(ORIEN1) Q  ; Check Excluded User Class(es)
  ..;
  ..; Screen default cosigner if appropriate (ORUSER set in ORWTPN):
  ..I COSFLAG D
@@ -200,7 +226,7 @@ DEFDIV(Y) ; Return user's default division, if specified.
  F  S ORDD=$O(ORZ("DILIST",ORDD)) Q:+ORDD=0!'($L(ORDD))  D  Q:ORGOOD
  .;
  .; See if current entry being processed is "Default" (done if so):
- .I $P(ORZ("DILIST",ORDD,0),U,3)["Y" S ORDIV=$P(ORZ("DILIST",ORDD,0),U,2),ORGOOD=1                      ; Division text.
+ .I $P(ORZ("DILIST",ORDD,0),U,3)["Y" S ORDIV=$P(ORZ("DILIST",ORDD,0),U,2),ORGOOD=1  ; Division text.
  .;
  I (ORDIV="") Q                    ; Punt if no default division.
  I $$UP^XLFSTR(ORDIV)="SALT LAKE CITY OIFO" S Y=1
@@ -217,3 +243,29 @@ NEWLOC(Y,ORFROM,DIR) ; Return "CZ" locations from HOSPITAL LOCATION file.
  . . S I=I+1,Y(I)=IEN_"^"_ORFROM
  Q
  ;
+CHKORSIM(ORSIM,ORFNM,ORFNMLEN,ORFROM,ORLNM) ; NSR 20110606/539 - Check if name complies with ORSIM flag and restrictions
+ I 'ORSIM Q 1 ; If 'ORSIM, no additional restrictions
+ I $E(ORFROM,1,$L(ORLNM))'=ORLNM Q 0 ; If last names don't match, quit now
+ I $E($P(ORFROM,",",2),1,ORFNMLEN)'=ORFNM Q 0 ; If first name portions don't match, quit now
+ Q 1 ; All checks passed
+ ;
+CPRSTAB(USER) ; NSR 20120101 - return 1 if users is ok to stay in list
+ ; update 04/19/2021 to include NVA (Non-VA Providers) tab
+ ; 1 - CPRS GUI "core" tabs.
+ ; 2 - Reports tab.
+ ; 3 - Non-VA Providers tab.
+ N ORRES,ORTAB,ORX S ORRES=0 ; result, default to 0
+ S ORX=0 F  Q:+ORRES  S ORX=$O(^VA(200,USER,"ORD","B",ORX)) Q:'+ORX  D  ; IA# 10060
+ . ;       TAB^EFFECTIVE DATE^EXPIRATION DATE
+ . S ORTAB=$G(^VA(200,USER,"ORD",$O(^VA(200,USER,"ORD","B",ORX,0)),0))
+ . ; evaluate COR or NVA tab, check effective date, check expiration date
+ . I +ORTAB=1!(+ORTAB=3) I DT'<$P(ORTAB,U,2) I +$P(ORTAB,U,3)=0!(DT<$P(ORTAB,U,3)) S ORRES=1
+ Q ORRES
+ ;
+USRCLASS(USER) ; NSR 20120101
+ N ORLIST,ORQUIT,ORX
+ S ORQUIT=0
+ D GETLST^XPAR(.ORLIST,"SYS","OR CPRS USER CLASS EXCLUDE","I") ; IA# 2263
+ S ORX="" F  S ORX=$O(ORLIST(ORX)) Q:'+ORX  D
+ . I +$$ISA^USRLM(USER,ORLIST(ORX)) S ORQUIT=1 ; IA# 1544
+ Q ORQUIT

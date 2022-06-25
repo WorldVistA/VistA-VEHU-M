@@ -1,6 +1,6 @@
 SDEC52A ;ALB/SAT,PC,LAB - VISTA SCHEDULING RPCS ;Apr 10, 2020@15:22
- ;;5.3;Scheduling;**627,658,694,745**;Aug 13, 1993;Build 40
- ;;Per VHA Directive 2004-038, this routine should not be modified
+ ;;5.3;Scheduling;**627,658,694,745,774,799**;Aug 13, 1993;Build 7
+ ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;  ICR
  ;  ---
@@ -31,6 +31,7 @@ RECSET(SDECY,INP) ; SET/EDIT an entry to the RECALL REMINDERS file 403.5
  ;   INP(13)- (optional) User Who Entered Recall pointer to NEW PERSON file; default to current user
  ;   INP(14)- (optional) Second Print Date in external format (no time)
  ;   INP(15)- (optional) DATE/TIME Recall Added in external format
+ ;   INP(16)- (optional) EAS Tracking Number
  ;RETURN:
  ; Successful Return:
  ;   Single Value return in the format "0^<Recall Reminders ien>"
@@ -44,7 +45,7 @@ RECSET(SDECY,INP) ; SET/EDIT an entry to the RECALL REMINDERS file 403.5
  ;     text back to the client.
  ;
  N APPTLEN,CLINIEN,DATE1,DATE,DATE2,DATE3,DAPTDT,DFN,FASTING,ORGDT
- N PROVIEN,RECALLIEN,RRAPPTYP,RRNOD,RRPROVIEN
+ N PROVIEN,RECALLIEN,RRAPPTYP,RRNOD,RRPROVIEN,EAS
  N SDCOMM,SDFDA,SDIEN,SDMSG,SDRET
  N X,Y,%DT
  K ^TMP("SDEC52",$J,"RECSET")
@@ -86,7 +87,8 @@ RECSET(SDECY,INP) ; SET/EDIT an entry to the RECALL REMINDERS file 403.5
  ;
  ;check FAST/NON-FASTING (optional)
  S FASTING=$G(INP(5))
- I FASTING'="" S FASTING=$S($$UP^XLFSTR(FASTING)="FASTING":"f",$$UP^XLFSTR(FASTING)="NON-FASTING":"n",$$UP^XLFSTR(FASTING)="F":"f",$$UP^XLFSTR(FASTING)="N":"n",1:"")
+ I FASTING'="" S FASTING=$S($$UP^XLFSTR(FASTING)="FASTING":"f",$$UP^XLFSTR(FASTING)="NON-FASTING":"n",$$UP^XLFSTR(FASTING)="F":"f",$$UP^XLFSTR(FASTING)="N":"n",FASTING="@":"@",1:"")
+ S INP(5)=FASTING
  ;check Length of Appointment (optional)
  S APPTLEN=$G(INP(9))
  I APPTLEN'="" I APPTLEN<10,APPTLEN>120 S APPTLEN=""
@@ -119,6 +121,8 @@ RECSET(SDECY,INP) ; SET/EDIT an entry to the RECALL REMINDERS file 403.5
  ;
  ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
  ;
+ ;set EAS Tracking Number
+ S EAS=$G(INP(16))
  I DATE3'="" S DATE3=$$NETTOFM^SDECDATE(DATE3,"N","N") I DATE3=-1 S DATE3="" ;  changed TIME requirement to NO in call to NETTOFM^SDECDATE  pwc/ *694
  ;I DATE3'="" S %DT="" S X=$P(DATE3,"@",1) D ^%DT S DATE3=Y I Y=-1 S DATE3=""
  I DATE3'="",$G(RRNOD)'="",$P(RRNOD,U,14)'="" S DATE3=""   ;only add DATE/TIME RECALL ADDED if it is not already there
@@ -140,6 +144,7 @@ RECSET(SDECY,INP) ; SET/EDIT an entry to the RECALL REMINDERS file 403.5
  S @SDFDA@(7)=PROVIEN
  S:DATE3'="" @SDFDA@(7.5)=DATE3
  S:DATE2'="" @SDFDA@(8)=DATE2
+ S @SDFDA@(100)=EAS
  D UPDATE^DIE("","SDFDA","SDIEN","SDMSG")
  S:RECALLIEN="+1" RECALLIEN=SDIEN(1)
  I $D(SDMSG) S SDECY=SDECY_"-1^Error updating RECALL REMINDERS file"_$C(30,31)

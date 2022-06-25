@@ -1,5 +1,5 @@
 YTQRIS ;SLC/KCM - Instrument Selection RPC's ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141**;Dec 30, 1994;Build 85
+ ;;5.01;MENTAL HEALTH;**130,141,182**;Dec 30, 1994;Build 13
  ;
  ; External Reference    ICR#
  ; ------------------   -----
@@ -44,6 +44,7 @@ ASSIGN(DFN) ; active patient-entry assignments
  . . . N OK S OK=$$DELIDX^YTQRQAD1(ASMT,DFN,PRV)
  . . M DATA=^XTMP("YTQASMT-SET-"_ASMT,1)
  . . I DATA("entryMode")="staff" Q             ; only show patient entered
+ . . I $$ANYCAT^YTQRCAT(ASMT) Q                ; web only for CAT/CAD
  . . S (X,NAMES)="",J=2                        ; J is piece offset for test name
  . . S I=0 F  S I=$O(DATA("instruments",I)) Q:'I  D
  . . . I $L(NAMES) S NAMES=NAMES_","
@@ -68,6 +69,7 @@ ASSIGN1(DFN,TESTNM) ; active patient-entry assignments for 1 instrument
  . . . N OK S OK=$$DELIDX^YTQRQAD1(ASMT,DFN,PRV)
  . . M DATA=^XTMP("YTQASMT-SET-"_ASMT,1)
  . . I DATA("entryMode")="staff" Q             ; only show patient entered
+ . . I $$ANYCAT^YTQRCAT(ASMT) Q                ; web only for CAT/CAD
  . . S X="",EXTRA=""
  . . S I=0 F  S I=$O(DATA("instruments",I)) Q:'I  D
  . . . I DATA("instruments",I,"name")'=TESTNM D  Q
@@ -94,6 +96,7 @@ INCPLT(DFN,ORDBY) ; add list of incomplete instruments for DFN and ORDBY
  S YS("DFN")=DFN,YS("COMPLETE")="N"
  D ADMINS^YTQAPI5(.YSDATA,.YS)
  S I=2 F  S I=$O(YSDATA(I)) Q:'I  D
+ . I $E($P(YSDATA(I),U,2),1,7)="CAT-CAD" QUIT         ; web only
  . I $D(PTADMIN(+YSDATA(I))) QUIT                     ; skip pt assigned
  . I $P(YSDATA(I),U,5)'=ORDBY QUIT                    ; not same orderedBy
  . S YSDTSAV=$P(YSDATA(I),U,4) I 'YSDTSAV QUIT        ; no date, bad entry
@@ -115,6 +118,7 @@ INCPLT1(DFN,ORDBY,TESTNM) ; add list of incomplete instruments for DFN and ORDBY
  S YS("DFN")=DFN,YS("COMPLETE")="N"
  D ADMINS^YTQAPI5(.YSDATA,.YS)
  S I=2 F  S I=$O(YSDATA(I)) Q:'I  D
+ . I $E($P(YSDATA(I),U,2),1,7)="CAT-CAD" QUIT         ; web only
  . I $D(PTADMIN(+YSDATA(I))) QUIT                     ; skip pt-entry assigned
  . I $P(YSDATA(I),U,5)'=ORDBY QUIT                    ; not same orderedBy
  . I $P(YSDATA(I),U,2)'=TESTNM QUIT                   ; only want certain test
@@ -194,7 +198,7 @@ DELASMT2(RSP,PIN,ADMINS) ; delete an assignment or incomplete admin
  F I=1:1:$L(ADMINS,",") D  Q:$L(ERRMSG)
  . S IEN=+$P(ADMINS,",",I) Q:'IEN  Q:'$D(^YTT(601.84,IEN,0))
  . S X0=^YTT(601.84,IEN,0)
- . I $P(X0,U,8)="Y" D  Q
+ . I $P(X0,U,9)="Y" D  Q
  . . S ERRMSG="Deletion not allowed:  status is 'completed'"
  . I MGR!(DUZ=$P(X0,U,6))!(DUZ=$P(X0,U,7)) D DELADMIN(IEN) I 1
  . E  S ERRMSG="Deletion not allowed:  insufficient privilege"
@@ -232,6 +236,9 @@ ACTCAT(RSP) ; return a list of active categories
  N TEST,CAT,X0,NM,SORTED
  S TEST=0 F  S TEST=$O(^YTT(601.71,TEST)) Q:'TEST  D
  . I $P($G(^YTT(601.71,TEST,2)),U,2)'="Y" QUIT  ; not active
+ . I $E($P(^YTT(601.71,TEST,0),U),1,4)="CAT-" QUIT
+ . I $E($P(^YTT(601.71,TEST,0),U),1,4)="CAD-" QUIT
+ . I $E($P(^YTT(601.71,TEST,0),U),1,7)="CAT-CAD" QUIT
  . S CAT=0 F  S CAT=$O(^YTT(601.71,TEST,10,CAT)) Q:'CAT  D
  . . S X0=^YTT(601.71,TEST,10,CAT,0)
  . . S NM=^YTT(601.97,+X0,0)
@@ -239,11 +246,14 @@ ACTCAT(RSP) ; return a list of active categories
  S NM="" F  S NM=$O(SORTED(NM)) Q:'$L(NM)  S RSP($$NXT)=NM
  Q
 INBYCAT(RSP,NM) ; return a list of instruments by category
- N TEST,CAT,SORTED
+ N TEST,CAT,SORTED,TESTNM
  S CAT=$O(^YTT(601.97,"B",NM,0)) Q:'CAT
  S TEST=0 F  S TEST=$O(^YTT(601.71,TEST)) Q:'TEST  D
  . I $P($G(^YTT(601.71,TEST,2)),U,2)'="Y" QUIT  ; not active
  . I '$D(^YTT(601.71,TEST,10,"B",CAT)) QUIT     ; not in category
+ . S TESTNM=$P(^YTT(601.71,TEST,0),U)
+ . I $E(TESTNM,1,4)="CAT-" QUIT                 ; CAT only in MHA-Web
+ . I $E(TESTNM,1,4)="CAD-" QUIT                 ; CAD only in MHA-Web
  . S SORTED($P(^YTT(601.71,TEST,0),U))=""
  S RSP(1)="Root="
  S NM="" F  S NM=$O(SORTED(NM)) Q:'$L(NM)  S RSP(1)=RSP(1)_NM_U

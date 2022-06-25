@@ -1,4 +1,4 @@
-DGPTXX10 ; COMPILED XREF FOR FILE #45 ; 06/09/22
+DGPTXX10 ; COMPILED XREF FOR FILE #45 ; 06/24/22
  ; 
  I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
  . K X1,X2 M X1=X,X2=X
@@ -199,5 +199,42 @@ CR26 S DIXR=1248
  I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
  . K X1,X2 M X1=X,X2=X
  . D SPTFDD^DGPTDDCR(.X,.DA,"D SD24")
-CR27 K X
+CR27 S DIXR=1699
+ K X
+ S DIKZ(0)=$G(^DGPT(DA,0))
+ S X(1)=$P(DIKZ(0),U,1)
+ S X(2)=$P(DIKZ(0),U,11)
+ S DIKZ(70)=$G(^DGPT(DA,70))
+ S X(3)=$P(DIKZ(70),U,10)
+ S X(4)=$P(DIKZ(70),U,16)
+ S X(5)=$P(DIKZ(70),U,17)
+ S X(6)=$P(DIKZ(70),U,18)
+ S X(7)=$P(DIKZ(70),U,19)
+ S X(8)=$P(DIKZ(70),U,20)
+ S X(9)=$P(DIKZ(70),U,21)
+ S X(10)=$P(DIKZ(70),U,22)
+ S X(11)=$P(DIKZ(70),U,23)
+ S X(12)=$P(DIKZ(70),U,24)
+ S DIKZ(71)=$G(^DGPT(DA,71))
+ S X(13)=$P(DIKZ(71),U,1)
+ S X(14)=$P(DIKZ(71),U,2)
+ S X(15)=$P(DIKZ(71),U,3)
+ S X(16)=$P(DIKZ(71),U,4)
+ S X(17)=$P(DIKZ(71),U,5)
+ S X(18)=$P(DIKZ(71),U,6)
+ S X(19)=$P(DIKZ(71),U,7)
+ S X(20)=$P(DIKZ(71),U,8)
+ S X(21)=$P(DIKZ(71),U,9)
+ S X(22)=$P(DIKZ(71),U,10)
+ S X(23)=$P(DIKZ(71),U,11)
+ S X(24)=$P(DIKZ(71),U,12)
+ S X(25)=$P(DIKZ(71),U,13)
+ S X(26)=$P(DIKZ(71),U,14)
+ S X(27)=$P(DIKZ(71),U,15)
+ S X(28)=$P(DIKZ(70),U,11)
+ S X=$G(X(1))
+ D
+ . K X1,X2 M X1=X,X2=X
+ . D NOTIFY^DGPTDD(.X1,.X2,.DA,45,"DISCHARGE","SET")
+CR28 K X
 END G ^DGPTXX11

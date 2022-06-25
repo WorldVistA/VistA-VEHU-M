@@ -1,12 +1,12 @@
 PSJHL4 ;BIR/RLW-DECODE HL7 /MESSSAGE FROM OE/RR ;16 Mar 99 / 4:55 PM
- ;;5.0;INPATIENT MEDICATIONS;**1,12,27,34,40,42,55,47,50,56,58,98,85,105,107,110,111,154,134,197,226,279**;16 DEC 97;Build 150
+ ;;5.0;INPATIENT MEDICATIONS;**1,12,27,34,40,42,55,47,50,56,58,98,85,105,107,110,111,154,134,197,226,279,419**;16 DEC 97;Build 10
  ; Reference to $$EN^PSOHLNEW is supported by DBIA# 2188.
  ; Reference to ^PS(50.7 is supported by DBIA 2180.
  ; Reference to ^PS(51.2 is supported by DBIA 2178.
  ; Reference to ^PS(55 is supported by DBIA 2191.
  ; Reference to ^PS(59.7 supported by DBIA 2181.
  ; Reference to ^ORHLESC is supported by DBIA 4922.
- ; 
+ ;
 EN(PSJMSG) ; Start
  K ^TMP("PSJNVO",$J)
  N ADCNT,SOLCNT,OCCNT
@@ -128,6 +128,17 @@ ORC ; Order
  S ORDER=FIELD(2)
  I $G(PSREASON)]"" D ERROR^PSJHL9 Q
  S PSJORDER=$P(FIELD(2),"^"),RXON=$P(FIELD(3),"^"),RXORDER=$S((RXON["N")!(RXON["P"):"^PS(53.1,"_+RXON_",",RXON["V":"^PS(55,"_PSJHLDFN_",""IV"","_+RXON_",",1:"^PS(55,"_PSJHLDFN_",5,"_+RXON_",")
+ ;
+ ; Resetting Nurse Verification Fields to sync-up CPRS & BCMA (Skips DC'd and Expired orders)
+ I PSOC'="DC",$G(PSJHLDFN),$G(RXON),RXON["V"!(RXON["U") D
+ . N PSJORSTS
+ . S PSJORSTS=$S(RXON["V":$$GET1^DIQ(55.01,+RXON_","_PSJHLDFN,100,"I"),1:$$GET1^DIQ(55.06,+RXON_","_PSJHLDFN,28,"I"))
+ . I PSJORSTS="E"!(PSJORSTS="D") Q
+ . I $P($G(^PS(55,PSJHLDFN,$S(RXON["V":"IV",1:5),+RXON,4)),"^",10) D
+ . . S $P(^PS(55,PSJHLDFN,$S(RXON["V":"IV",1:5),+RXON,4),"^",1)=""
+ . . S $P(^PS(55,PSJHLDFN,$S(RXON["V":"IV",1:5),+RXON,4),"^",2)=""
+ . . S $P(^PS(55,PSJHLDFN,$S(RXON["V":"IV",1:5),+RXON,4),"^",10)=0
+ ;
  I PSOC="NA" D ASSIGN^PSJHL5 Q
  S CLERK=+$G(FIELD(10))
  S PROVIDER=+$G(FIELD(12)) D:PSOC="NW"

@@ -1,5 +1,5 @@
 SDCCRCOR ;CCRA/LB,PB - Core Tags;APR 4, 2019
- ;;5.3;Scheduling;**707,730,735,764**;APR 4, 2019;Build 22
+ ;;5.3;Scheduling;**707,730,735,764,741**;APR 4, 2019;Build 20
  ;;Per VA directive 6402, this routine should not be modified.
  Q
  ;
@@ -276,6 +276,7 @@ APPMSG(MSGID,ABORT) ; Send a MailMan Message with the errors
  Q
 MESSAGE(MSGID,ABORT) ; Send a MailMan Message with the errors
  N MSGTEXT,DUZ,XMDUZ,XMSUB,XMTEXT,XMY,XMMG,XMSTRIP,XMROU,DIFROM,XMYBLOB,XMZ,XMMG,DATE,J,FLG1
+ Q:$P(ABORT,"^",2)=""
  S DATE=$$FMTE^XLFDT($$FMDATE^HLFNC($P(HL("DTM"),"-",1)))
  S XMSUB="Consult: "_$G(CONID)_" GMRC CCRA Scheduling Issue from HSRM"
  S:$E($P($G(ABORT),"^",2),1,9)="SCHEDULER" FLG1=1

@@ -1,5 +1,5 @@
-XQALDATA ;ISC/JLI ISD/HGW - PROVIDE DATA ON ALERTS ;10/19/18  13:08
- ;;8.0;KERNEL;**207,285,443,513,602,653**;Jul 10, 1995;Build 18
+XQALDATA ;ISC/JLI ISD/HGW - PROVIDE DATA ON ALERTS ; Jul 06, 2021@09:51
+ ;;8.0;KERNEL;**207,285,443,513,602,653,734**;Jul 10, 1995;Build 5
  ;Per VHA Directive 2004-038, this routine should not be modified
  Q
 GETUSER(ROOT,XQAUSER,FRSTDATE,LASTDATE) ; SR. ICR #4834 (private OE/RR)
@@ -66,7 +66,12 @@ GETUSER1(ROOT,XQAUSER,FRSTDATE,LASTDATE,FLAG) ;Add FLAG to check for deferred al
  S:$G(FRSTDATE)'>0 FRSTDATE=0
  S:$G(LASTDATE)'>0 LASTDATE=0
  S:$G(FLAG)'>0 FLAG=0 ;P653
- I $$ACTVSURO^XQALSURO(XQAUSER)'>0 D RETURN^XQALSUR1(XQAUSER) ; P513
+ I $$ACTVSURO^XQALSURO(XQAUSER)'>0 D
+ . D RETURN^XQALSUR1(XQAUSER) ; P513
+ . ;D RETURN(XQAUSER) ; p734
+ ; p734
+ N SURFOR D SUROFOR^XQALSURO(.SURFOR,XQAUSER) I SURFOR D FORWARD(.SURFOR,XQAUSER)
+ ;
  S NCNT=0 K @ROOT
  I FRSTDATE=0 D  Q
  . N X,X2,X3,X4,XDEF,XCKUSER,I S I="" F  S I=$O(^XTV(8992,XQAUSER,"XQA",I),-1) Q:I'>0  S X=^(I,0),X2=$G(^(2)),X3=$G(^(3)),X4=$D(^(4)) S XDEF=$P($G(X),"^",6) D  ; P653
@@ -110,11 +115,21 @@ DEFALERT(ROOT,XQAUSER1,DEFDATE,ALERTID) ;ADD DEFERRED DATE/TIME TO ALERT; FOR CP
  . Q
  ; Check deferred date can't be over 14 days deferred.
  D NOW^%DTC S X1=%,X2=14 D C^%DTC
+ I DEFDATE>X D  Q
+ . S @ROOT@(1)="-1^Deferred Date/Time is greater than 14 days in the future. The alert will not be deferred!"
+ . Q
+ ; Check if surrogacy is before DEFDATE. p734
+ N SURFOR D SUROFOR^XQALSURO(.SURFOR,XQAUSER1) I SURFOR D
+ . N USERS D USERLIST^XQALBUTL($G(ALERTID),$NAME(USERS)) I $D(USERS)>9 D
+ . . N COMUSERS D COMMON(.SURFOR,.USERS,.COMUSERS) I COMUSERS D
+ . . . N DEFDATE1 S DEFDATE1=$$MINEND(.COMUSERS,DEFDATE)
+ . . . I DEFDATE1<DEFDATE S DEFDATE=DEFDATE1,@ROOT@(1)="1^Deferred Date set to end of surrogacy: "_DEFDATE
+ ;
  N XDT,XFLAG S XFLAG=0,XDT=$P(ALERTID,";",3)-.00000001  ;P653
  F XDT=XDT:0 S XDT=$O(^XTV(8992,XQAUSER1,"XQA",XDT)) Q:XDT'>0!(XFLAG=1)  I $D(^XTV(8992,XQAUSER1,"XQA",XDT,0)) D  Q:XFLAG=1  ;P653
  .I $P(^XTV(8992,XQAUSER1,"XQA",XDT,0),"^",2)=ALERTID S XFLAG=1 Q  ;P653
- I DEFDATE>X D  Q
- . S @ROOT@(1)="-1^Deferred Date/Time is greater than 14 days in the future. The alert will not be deferred!"
+ I 'XFLAG D  Q  ; p734
+ . S @ROOT@(1)="-1^No match on alert id. The alert will not be deferred!"
  . Q
  S DA(1)=XQAUSER1
  S DA=XDT
@@ -124,9 +139,9 @@ DEFALERT(ROOT,XQAUSER1,DEFDATE,ALERTID) ;ADD DEFERRED DATE/TIME TO ALERT; FOR CP
  L +^XTV(8992,XQAUSER1,"XQA",DA):10
  ;Update value
  D ^DIE
- K DA,DIE,DR
  ;Unlock subentry
- ;L -^XTV(8992,XQAUSER1,"XQA",DA)
+ L -^XTV(8992,XQAUSER1,"XQA",DA) ; p734
+ K DA,DIE,DR
  Q
  ;. . . I XCKUSER=XQAUSER&(XNOW<XDEF) S XQUIT=1
  Q
@@ -147,3 +162,69 @@ GETPAT3(ROOT,PATIENT,XFROM,XTO) ;
  . . S @ROOT@(XQCNT)=$S($P(X3,U)'="":"G ",$P(X1,U,2,3)="^":"I ",$P(X1,U,2,3)="":"I ",1:" ")_$P(X1,U)_U_$P(X,U)_$S($P(X2,U,3)'="":U_$P(X2,U,3),1:"")
  S @ROOT@(0)=XQCNT
  Q
+ ;
+COMMON(SURFOR,USERS,RES) ; List of users common in SURFOR and USERS. p734
+ N I,J,K
+ k RES S RES=0
+ Q:'$G(SURFOR)
+ Q:$D(USERS)<10
+ S K=0
+ S I=0 F  S I=$O(SURFOR(I)) Q:'I  D
+ . S J=0 F  S J=$O(USERS(J)) Q:'J  D
+ . . I $P(USERS(J),U)=$P(SURFOR(I),U) S K=K+1,RES(K)=SURFOR(I)
+ S RES=K
+ Q
+ ;
+MINEND(SURFOR,ENDDATE)  ; Minimum of ENDDATE and end dates in surrogacy. p734
+ N XQI
+ Q:'$G(SURFOR) $G(ENDDATE)
+ S ENDDATE=$G(ENDDATE,$$FMADD^XLFDT($$NOW^XLFDT,100))
+ F XQI=1:1:SURFOR D
+ . N X
+ . S X=$P(SURFOR(XQI),U,4)
+ . Q:X=""  ; surrogacy with no end date
+ . S X=$$ETFM(X) Q:'X
+ . I X<ENDDATE S ENDDATE=X
+ Q ENDDATE
+ ;
+ETFM(EXDATE)    ; p734 external to internal FM date
+ N %DT,X,Y S %DT="TS"
+ S X=$G(EXDATE) D ^%DT
+ Q Y
+ ;
+FORWARD(SURFOR,SURR) ; p734 Forward deferred-alerts to current surrogate
+ Q:'$G(SURFOR)
+ N I,IEN,XQAUSER
+ ; for each original recipient
+ S I=0 F  S I=$O(SURFOR(I)) Q:'I  S XQAUSER=$P(SURFOR(I),U) D
+ . S IEN=0 F  S IEN=$O(^XTV(8992,XQAUSER,"XQA",IEN)) Q:'IEN  D
+ . . ; for each deferred alert by recipient, forward to surrogate
+ . . N BEGDATE,DEFDATE,ENDDATE,FWD,XQA,XQALERT,XQACMNT,XQALTID,XQALTYPE
+ . . S BEGDATE=$$ETFM($P(SURFOR(I),U,3)),ENDDATE=$$ETFM($P(SURFOR(I),U,4))
+ . . S XQALERT=$G(^XTV(8992,XQAUSER,"XQA",IEN,0)),DEFDATE=$P(XQALERT,U,6),XQAID=$P(XQALERT,U,2)
+ . . S XQALTID=$O(^XTV(8992.1,"B",XQAID,0)),FWD=$D(^XTV(8992.1,XQALTID,20,"B",SURR)) ; been fwd to surr?
+ . . I ENDDATE<0 S ENDDATE=DEFDATE ; surrogacy has no end date
+ . . I DEFDATE'="",(DEFDATE>=BEGDATE),(DEFDATE<=ENDDATE),'FWD D
+ . . . S $P(^XTV(8992,XQAUSER,"XQA",IEN,0),U,6)="" ; clear deferred date before forwarding
+ . . . S XQA(SURR)="",XQACMNT="DEFERRED BY INITIAL RECIPIENT",XQALTYPE="FWD TO SURROGATE"
+ . . . D FORWARD^XQALFWD($P(XQALERT,U,2),SURR,"A",XQACMNT)
+ . . . S $P(^XTV(8992,XQAUSER,"XQA",IEN,0),U,6)=DEFDATE ; restore after forwarding
+ . . . ;N XQAID S XQAID=$P(XQALERT,U,2) D DELETE^XQALERT
+ Q
+ ;
+RETURN(XQAUSER) ; p734 - return surrogate-deferred alerts to the user
+ Q:'$G(XQAUSER)
+ N IEN,IEN2,END,RCPNT,SURR,SURR0
+ ; for each surrogate that had XQAUSER as original recipient in the past
+ S SURR=0,IEN=0 F  S IEN=$O(^XTV(8992,XQAUSER,2,IEN)) Q:'IEN  D
+ . S SURR0=$G(^XTV(8992,XQAUSER,2,IEN,0)),SURR=$P(SURR0,U,2),END=$P(SURR0,U,3) D:SURR
+ . . S RCPNT="",IEN2=0 F  S IEN2=$O(^XTV(8992,SURR,"XQA",IEN2)) Q:IEN2=""  D
+ . . . S RCPNT=$G(^XTV(8992,SURR,"XQA",IEN2,2)) I $P(RCPNT,U)=XQAUSER,END'="",END<$$NOW^XLFDT D
+ . . . . ; for each alert still in surrogate, return to original recipient
+ . . . . N XQA,XQAID,XQALERT,XQACMNT,XQALTYPE
+ . . . . S XQALERT=$G(^XTV(8992,SURR,"XQA",IEN2,0)),XQAID=$P(XQALERT,U,2) Q:XQAID=""
+ . . . . S XQA(1)=XQAUSER,XQACMNT="RESTORED FROM SURROGATE",XQALTYPE="RESTORE FROM SURROGATE"
+ . . . . N XQAUSER S XQAUSER=SURR D FORWARD^XQALFWD(XQAID,.XQA,"A",XQACMNT)
+ . . . . D DELETE^XQALERT
+ Q
+ ;

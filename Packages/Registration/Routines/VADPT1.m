@@ -1,5 +1,5 @@
 VADPT1 ;ALB/MRL,MJK,ERC,TDM,CLT - PATIENT VARIABLES ;05 May 2017  1:41 PM
- ;;5.3;Registration;**415,489,516,614,688,754,887,941**;Aug 13, 1993;Build 73
+ ;;5.3;Registration;**415,489,516,614,688,754,887,941,1059**;Aug 13, 1993;Build 6
  ;
 1 ;Demographic [DEM]
  N W,Z,NODE
@@ -56,13 +56,36 @@ VADPT1 ;ALB/MRL,MJK,ERC,TDM,CLT - PATIENT VARIABLES ;05 May 2017  1:41 PM
  N VALANGDT,VAPRFLAN,VALANG0,VAY,VALANGDA,X,Y
  S VALANGDT=9999999,(VAPRFLAN,VALANG0)=""
  S VALANGDT=$O(^DPT(DFN,.207,"B",VALANGDT),-1)
- I VALANGDT="" DO  Q
- .S @VAV@($P(VAS,"^",13))="",@VAV@($P(VAS,"^",13),1)=""
- S VALANGDA=$O(^DPT(DFN,.207,"B",VALANGDT,0))
- S VALANG0=$G(^DPT(DFN,.207,VALANGDA,0)),Y=$P(VALANG0,U),VAPRFLAN=$P(VALANG0,U,2)
- S (VAY,Y)=VALANGDT X ^DD("DD") S VALANGDT=Y
- S @VAV@($P(VAS,"^",13))=VAY_"^"_VALANGDT ; FM version^human readable
- S @VAV@($P(VAS,"^",13),1)=VALANGDA_"^"_VAPRFLAN ; Pointer^human readable
+ I VALANGDT="" S @VAV@($P(VAS,"^",13))="",@VAV@($P(VAS,"^",13),1)=""
+ I VALANGDT'="" D
+ .S VALANGDA=$O(^DPT(DFN,.207,"B",VALANGDT,0))
+ .S VALANG0=$G(^DPT(DFN,.207,VALANGDA,0)),Y=$P(VALANG0,U),VAPRFLAN=$P(VALANG0,U,2)
+ .S (VAY,Y)=VALANGDT X ^DD("DD") S VALANGDT=Y
+ .S @VAV@($P(VAS,"^",13))=VAY_"^"_VALANGDT ; FM version^human readable
+ .S @VAV@($P(VAS,"^",13),1)=VALANGDA_"^"_VAPRFLAN ; Pointer^human readable
+ ;
+ ; Preferred Name [14 - NM]
+ ;**1059 Adding Sexual Orientation, Sexual Orientation Description, Pronoun, Pronoun Description, SIGI [14 - SOGI]
+ N SOC,CNTR,PRO,SIGI,SIGIN
+ S @VAV@($P(VAS,"^",14))=""
+ ;Sexual Orientation #.025 multiple
+ S CNTR=1,X=0 F  S X=$O(^DPT(DFN,.025,X)) Q:'X!(X="")  D
+ .S SOC=$G(^DPT(DFN,.025,X,0))
+ .S @VAV@($P(VAS,"^",14),1,CNTR)=$G(^DG(47.77,SOC,0)),CNTR=CNTR+1 ;NAME ^ CODE
+ S @VAV@($P(VAS,"^",14),1)=CNTR-1
+ ;Sexual Orientatin Description #.241
+ S @VAV@($P(VAS,"^",14),2)=$P($G(^DPT(DFN,.241)),"^")
+ ;Pronoun #.2406 multiple
+ K CNTR,X
+ S CNTR=1,X=0 F  S X=$O(^DPT(DFN,.2406,X)) Q:'X!(X="")  D
+ .S PRO=$G(^DPT(DFN,.2406,X,0))
+ .S @VAV@($P(VAS,"^",14),3,CNTR)=$G(^DG(47.78,PRO,0)),CNTR=CNTR+1 ;NAME ^ CODE
+ S @VAV@($P(VAS,"^",14),3)=CNTR-1
+ ;Pronoun Description #.24061
+ S @VAV@($P(VAS,"^",14),4)=$P($G(^DPT(DFN,.241)),"^",2)
+ ;SELF IDENTIFIED GENDER #.024
+ S SIGI=$P($G(^DPT(DFN,.24)),"^",4),SIGIN=$$GET1^DIQ(2,DFN_",",.024)
+ S @VAV@($P(VAS,"^",14),5)=SIGIN_"^"_SIGI ;NAME ^ CODE
  Q
  ;
 2 ;Other Patient Variables [OPD]

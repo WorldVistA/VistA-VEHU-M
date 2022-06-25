@@ -1,11 +1,9 @@
 PSIVORAL ;BIR/MLM - ACTIVITY LOGGER FOR PHARMACY EDITS ;May 09, 2019@11:20:16
- ;;5.0;INPATIENT MEDICATIONS;**58,135,267,279,319**;16 DEC 97;Build 31
- ;
+ ;;5.0;INPATIENT MEDICATIONS;**58,135,267,279,319,418**;16 DEC 97;Build 1
  ; Reference to ^PS(52.7 is supported by DBIA 2173.
  ; Reference to ^PS(55 is supported by DBIA 2191.
  ;
 EN ; Entry point for updating activity log from Pharmacy.
- ;
  D OPI
  ;
 REMARKS ; Record changes to remarks.
@@ -19,7 +17,15 @@ INFUS ; Record changes to infusion rate.
  D:P("DTYP")=1 SOL
  ;
 STOP ; Record changes to stop date.
- I $P(^PS(55,DFN,"IV",+ON55,0),U,3)'=P(3) S P("FC")="STOP DATE/TIME^",Y=$P(^(0),U,3) X ^DD("DD") S $P(P("FC"),U,3)=$P(Y,"@")_" "_$P(Y,"@",2),Y=P(3) X ^DD("DD") S $P(P("FC"),U,2)=$P(Y,"@")_" "_$P(Y,"@",2) D GTFC
+ N ORIGSTDT,CURSTDT,FROMSTDT
+ S ORIGSTDT=$$GET1^DIQ(55.01,+ON55_","_DFN,116,"I")
+ S CURSTDT=$$GET1^DIQ(55.01,+ON55_","_DFN,.03,"I")
+ S FROMSTDT=$S($$GET1^DIQ(55.01,+ON55_","_DFN,100,"I")="D":ORIGSTDT,1:P(3))
+ I FROMSTDT'=CURSTDT D
+ . S P("FC")="STOP DATE/TIME^",Y=CURSTDT X ^DD("DD")
+ . S $P(P("FC"),U,3)=$P(Y,"@")_" "_$P(Y,"@",2),Y=FROMSTDT X ^DD("DD")
+ . S $P(P("FC"),U,2)=$P(Y,"@")_" "_$P(Y,"@",2)
+ . D GTFC
  K DRGI,DRGN,TDRG,P("AGE"),P("FC")
  ;
 CLNAPT ; Record changes to clinic and appointment date

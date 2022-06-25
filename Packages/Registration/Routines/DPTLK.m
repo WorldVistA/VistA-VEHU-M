@@ -1,5 +1,5 @@
 DPTLK ;ALB/RMO,RTK,ARF,JAM - MAS Patient Look-up Main Routine ; 3/22/05 4:19pm
- ;;5.3;Registration;**32,72,93,73,136,157,197,232,265,277,223,327,244,513,528,541,576,600,485,633,629,647,769,857,876,915,919,993,1031**;Aug 13, 1993;Build 1
+ ;;5.3;Registration;**32,72,93,73,136,157,197,232,265,277,223,327,244,513,528,541,576,600,485,633,629,647,769,857,876,915,919,993,1031,1014**;Aug 13, 1993;Build 42
  ;
  ; mods made for magstripe read 12/96 - JFP
  ; mods made for VIC 4.0 (barcode and magstripe) read 4/2012 - ELZ (*857)
@@ -132,7 +132,10 @@ NOPAT ; -- No patient found, ask to add new
  ;
 CHKDFN ; -- 
  S:'$D(DPTDFN) DPTDFN=-1 I DPTDFN'>0!('$D(DPTS(+DPTDFN))) W:DIC(0)["Q" *7," ??" G ASKPAT:DIC(0)["A",QK
- I DIC(0)["E" D  W $S('$D(DPTSEL)&('$D(DIVP)):$P(DPTS(DPTDFN),U,2)_"  "_$P(DPTS(DPTDFN),U)_"  ",$D(^DPT(DPTDFN,0)):"  "_$P(^(0),U)_"  ",1:"") S Y=DPTDFN X:$D(^DPT(DPTDFN,0)) "N DDS X DIC(""W"")"
+ N DGPREFNM   ;DG*5.3*1014 ARF - add PRFERRED NAME to prompt display response if populated
+ S DGPREFNM=$$GET1^DIQ(2,DPTDFN,.2405)
+ ;DG*5.3*1014 - ARF -Add conditional write to the following line of code to display PREFERRED NAME .2405 when the field is populated
+ I DIC(0)["E" D  W $S('$D(DPTSEL)&('$D(DIVP)):$P(DPTS(DPTDFN),U,2)_"  "_$P(DPTS(DPTDFN),U)_"  ",$D(^DPT(DPTDFN,0)):"  "_$P(^(0),U)_"  ",1:"") W:DGPREFNM'="" "(",DGPREFNM,")" S Y=DPTDFN X:$D(^DPT(DPTDFN,0)) "N DDS X DIC(""W"")"
  .I $D(DDS) D CLRMSG^DDS S DX=0,DY=DDSHBX+1 X DDXY
  ;
  ; check for other patients in "BS5" xref on Patient file

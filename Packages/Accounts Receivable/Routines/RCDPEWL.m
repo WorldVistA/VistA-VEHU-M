@@ -1,5 +1,5 @@
 RCDPEWL ;ALB/TMK/KML - ELECTRONIC EOB MESSAGE WORKLIST ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,208,269,298,317,318,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**173,208,269,298,317,318,326,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  ; IA for read access to ^IBM(361.1 = 4051
  ;
@@ -147,16 +147,26 @@ ADDREC(RCERA,RCDAT) ; Add a record to file 344.49
  Q RCY
  ;
 HDR ; Creates header lines for the selected ERA display
- N X,Z,I,RC,RC5,RC4,RCARC,RCSORTBY,RCEEOBPU ; PRCA*4.5*326 - RCARC added
- F I=1:1:5 S VALMHDR(I)=""
+ ; PRCA*4.5*349 - Reorganized NEW list & added XX temp. variable
+ N I,RCARC,RCEEOBPU,RCSORTBY,RC,RC4,RC5,X,XX,Z  ; PRCA*4.5*326 - RCARC added
+ S RCSORTBY=$G(^TMP($J,"RC_SORTPARM"))     ; PRCA*4.5*349 - Moved to top of subroutine
+ S RCEEOBPU=$G(^TMP($J,"RC_EEOBPOST"))     ; PRCA*4.5*349 - Moved to top of subroutine
+ F I=1:1:6 S VALMHDR(I)=""                 ; PRCA*4.5*349 - Add a line to the header
  I '$G(RCSCR) S VALMQUIT=1 Q
  S RC=$G(^RCY(344.4,+RCSCR,0)),RC5=$G(^RCY(344.4,+RCSCR,5))
- S RC4=$G(^RCY(344.4,+RCSCR,4))  ;prca*4.5*298 
- S VALMHDR(1)=$E("ERA Entry #: "_$P(RC,U)_$J("",31),1,31)_"Total Amt Pd: "_$J(+$P(RC,U,5),"",2)
- S VALMHDR(2)="Payer Name/ID: "_$P(RC,U,6)_"/"_$P(RC,U,3)
+ S RC4=$G(^RCY(344.4,+RCSCR,4))  ;prca*4.5*298
+ ; PRCA*4.5*349 - Begin Modified Code Block - Reorder header information
+ S VALMHDR(1)="ERA Entry #: "_$P(RC,U)
+ S $E(VALMHDR(1),43)="Total Amount Paid: "_$J(+$P(RC,U,5),"",2)
+ S XX=$S(RCSORTBY="F":"ZERO-PAYMENTS FIRST",RCSORTBY="L":"ZERO-PAYMENTS LAST",1:"NO SORT ORDER")
+ S VALMHDR(2)="Payment Order: "_XX
+ S XX=$S(RCEEOBPU="P":"POSTED EEOBs ONLY",RCEEOBPU="U":"UNPOSTED EEOBs ONLY",1:"ALL EEOBS")
+ S $E(VALMHDR(2),39)="Disp Auto-Posted ERAs: "_XX
+ ; PRCA*4.5*349 - End Modified Code Block
  S Z=+$O(^RCY(344.31,"AERA",+RCSCR,0))
  I Z S VALMHDR(3)="EFT #/TRACE #: "_$$GET1^DIQ(344.31,Z_",",.01,"E")_"/"_$E($P(RC,U,2),1,40) ; PRCA*4.5*326
  I 'Z,$P(RC5,U,2)'="" S VALMHDR(3)="PAPER CHECK #: "_$P(RC5,U,2)
+ S VALMHDR(4)=$P(RC,U,6)_"/"_$P(RC,U,3)    ; PRCA*4.5*349 - Give all of fourth line to payer name/id
  ; prca*4.5*298  per patch requirements, keep code related to creating/maintaining
  ; batches but just remove from execution.
  ;I $G(^TMP("RCBATCH_SELECTED",$J)) D
@@ -164,26 +174,22 @@ HDR ; Creates header lines for the selected ERA display
  ;. S Z=+$G(^TMP("RCBATCH_SELECTED",$J)),Z0=$G(^RCY(344.49,RCSCR,3,Z,0))
  ;. S RCT=RCT+1,VALMHDR(RCT)="BATCH: "_Z_"  "_$P(Z0,U,2)_"  "_$$EXTERNAL^DILFD(344.493,.03,"",$P(Z0,U,3))
  I $G(RCSCR("NOEDIT")) D
- . S VALMHDR(4)="*** RECEIPT(S) ALREADY CREATED *** ("_$$RECEIPTS(RCSCR)_")"
+ . S VALMHDR(5)="*** RECEIPT(S) ALREADY CREATED *** ("_$$RECEIPTS(RCSCR)_")"         ; PRCA*4.5*349 - Shift down a line
  I $P(RC4,U,2)]"" D  ;AUTO-POST STATUS (344.4, 4.02);  if not null, then the selected ERA is designated for auto-post
  . ; Setting the Auto-Post info in the header
  . N AUTOPSTS
  . S AUTOPSTS="Auto-Post Status: "_$S($P(RC4,U,2)=0:"Unposted",$P(RC4,U,2)=1:"Partial",1:"Complete")
  . S AUTOPSTS=AUTOPSTS_"    Auto-Post Date: "_$S($P(RC4,U,2)>0:$$FMTE^XLFDT($P(RC4,U)),1:"") ; PRCA*4.5*318
- . S VALMHDR(5)=AUTOPSTS
+ . S VALMHDR(6)=AUTOPSTS                                                             ; PRCA*4.5*349 - Shift down a line
  ; BEGIN PRCA*4,.5*326
  ; Check for auto-decrease CARCs if this is a denial ERA
  I $$GET1^DIQ(344.4,+RCSCR,.15)="NON" D
  .N RCARC
  .S RCARC=$$WLH^RCDPEWLZ(+RCSCR)
- .S:RCARC]"" VALMHDR(4)=RCARC
+ .S:RCARC]"" VALMHDR(5)=RCARC         ; PRCA*4.5*349 - Shift down a line
  ; ENd PRCA*4,.5*326
  ; Displaying Current View (PRCA*4.5*298)
- S $E(VALMHDR(1),60)="Current View:"
- S RCSORTBY=$G(^TMP($J,"RC_SORTPARM"))
- S $E(VALMHDR(2),60)=$S(RCSORTBY="F":"ZERO-PAYMENTS FIRST",RCSORTBY="L":"ZERO-PAYMENTS LAST",1:"NO SORT ORDER")
- S RCEEOBPU=$G(^TMP($J,"RC_EEOBPOST"))
- S $E(VALMHDR(3),60)=$S(RCEEOBPU="P":"POSTED EEOBs ONLY",RCEEOBPU="U":"UNPOSTED EEOBs ONLY",1:"ALL EEOBS")
+ ; PRCA*4.5*349 - Moved to top of routine and restructured
  Q
  ;
 FNL ; -- Clean up list

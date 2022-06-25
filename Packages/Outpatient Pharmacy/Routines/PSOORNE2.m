@@ -1,5 +1,5 @@
 PSOORNE2 ;BIR/SAB - Display finished orders from backdoor ;7/15/16 2:30pm
- ;;7.0;OUTPATIENT PHARMACY;**11,21,23,27,32,37,46,84,103,117,131,146,156,210,148,222,238,264,281,289,251,379,391,313,282,427,454,446,467,612**;DEC 1997;Build 23
+ ;;7.0;OUTPATIENT PHARMACY;**11,21,23,27,32,37,46,84,103,117,131,146,156,210,148,222,238,264,281,289,251,379,391,313,282,427,454,446,467,612,524**;DEC 1997;Build 28
  ;
  ;^PSDRUG( -  221
  ;^YSCL(603.01 - 2697
@@ -9,9 +9,12 @@ PSOORNE2 ;BIR/SAB - Display finished orders from backdoor ;7/15/16 2:30pm
  ;$$DAWEXT^PSSDAWUT - 4708
  ;Reference to ^SC( is supported by DBIA #10040
  ;
+ ;*524 create and init psohz; user has seen Haz drug warning during this order's session
+ ;
 SEL N ORN,ORD,PSORRBLD I '$G(PSOCNT),'$G(PSORCNT) S VALMSG="This patient has no Prescriptions!" S VALMBCK="" Q
  D K1^PSOORNE6 S DIR("A")="Select Orders by number",DIR(0)="LO^1:"_$S($G(PSORCNT):PSORCNT,1:PSOCNT) D ^DIR I $D(DIRUT) D KV^PSOVER1 S VALMBCK="" Q
 NEWSEL N ORN,ORD D K2^PSOORNE6
+ N PSOHZ,PSOLSTDR S (PSOHZ,PSOLSTDR)=0  ;reset haz alerts displayed to user *524
  ;*282 Correct Patient Instructions Copy
  I +Y S PSOOELSE=1,PSLST=Y K PSOREEDT F ORD=1:1:$L(PSLST,",") Q:$P(PSLST,",",ORD)']""  D  D UL1 K ^TMP("PSORXPO",$J),PSORXED,PSONEW,PSOPINS I $G(PSOQUIT) K PSOQUIT Q
  .; bwf 1/21/2014 - replaced line below with the one that follows for remote rx data handling.
@@ -66,6 +69,8 @@ ACT N REF,RPHKEY,PKIND K ^TMP("PSOAO",$J),PCOMX,PDA,PHI,PRC,ACOM,ANS,PSOFDR,CLOZ
  ; pso*7*467 - end eRx enhancement
  S IEN=IEN+1,^TMP("PSOAO",$J,IEN,0)=$S($P($G(^PSRX(RXN,"TPB")),"^"):"            TPB Rx #: ",1:"                Rx #: ")
  S ^TMP("PSOAO",$J,IEN,0)=^TMP("PSOAO",$J,IEN,0)_$P(RX0,"^")_$S($G(^PSRX(RXN,"IB")):"$",1:"")_$$ECME^PSOBPSUT(RXN)_$$TITRX^PSOUTL(RXN)_$E(RN,$L($P(RX0,"^")_$S($G(^PSRX(RXN,"IB")):"$",1:"")_$$ECME^PSOBPSUT(RXN)_$$TITRX^PSOUTL(RXN))+1,12)
+ I $$ECME^PSOBPSUT(RXN)'="" D              ;*524
+ . S ^TMP("PSOAO",$J,IEN,0)=^TMP("PSOAO",$J,IEN,0)_"(ECME#: "_$$ECMENUM^PSOBPSU2(RXN)_")"
  S IEN=IEN+1,^TMP("PSOAO",$J,IEN,0)=" ("_$S($P(PSOPAR,"^",3):1,1:"#")_")"_" *Orderable Item: "_$S($D(^PS(50.7,$P(+RXOR,"^"),0)):$P(^PS(50.7,$P(+RXOR,"^"),0),"^")_" "_$P(^PS(50.606,$P(^(0),"^",2),0),"^"),1:"")_NFIO
  S:NFIO["<DIN>" NFIO=IEN_","_($L(^TMP("PSOAO",$J,IEN,0))-4)
  S IEN=IEN+1,^TMP("PSOAO",$J,IEN,0)=" ("_$S($P(PSOPAR,"^",3):2,1:"#")_")"_$S($D(^PSDRUG("AQ",$P(RX0,"^",6))):"       CMOP ",1:"            ")_"Drug: "_$P(^PSDRUG($P(RX0,"^",6),0),"^")_NFID

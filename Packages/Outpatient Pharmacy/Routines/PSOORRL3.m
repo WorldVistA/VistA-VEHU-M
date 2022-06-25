@@ -1,5 +1,5 @@
-PSOORRL3 ;BHAM ISC/SJA - returns patient's outpatient meds-new sort ;02/02/07
- ;;7.0;OUTPATIENT PHARMACY;**225,331,381**;DEC 1997;Build 4
+PSOORRL3 ;BHAM ISC/SJA - returns patient's outpatient meds-new sort ;Sep 08, 2020@11:47:57
+ ;;7.0;OUTPATIENT PHARMACY;**225,331,381,622**;DEC 1997;Build 44
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^VA(200 supported by DBIA 10060
@@ -40,7 +40,8 @@ OCL ;entry point to return condensed list
  S PSG="" F  S PSG=$O(^TMP("PS1",$J,PSG)) Q:PSG=""  S PST="" F  S PST=$O(^TMP("PS1",$J,PSG,PST)) Q:PST=""  S I=0 F  S I=$O(^TMP("PS1",$J,PSG,PST,I)) Q:I=""  D
  .M ^TMP("PS",$J,J)=^TMP("PS1",$J,PSG,PST,I) S J=J+1
  K ^TMP("PSO",$J),^TMP("PS1",$J)
- D OCL^PSJORRE(DFN,BDT,EDT,.TFN,+$G(VIEW)) D END^PSOORRL1
+ D OCL^PSJORRE(DFN,$G(PSOBDTIN),$G(PSOEDTIN),.TFN,+$G(VIEW))
+ D END^PSOORRL1
  K SDT,SDT1,ST,DRUG,PSG,PST,PSD,EDT,EDT1,BDT,DBT1,X
  Q
 NVA ; Set Non-VA Med Orders in the ^TMP Global

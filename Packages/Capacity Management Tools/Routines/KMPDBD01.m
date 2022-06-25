@@ -1,5 +1,5 @@
-KMPDBD01 ;OAK/RAK/JML - CM Tools Background Driver ;9/1/2015
- ;;3.0;Capacity Management Tools;**3**;Jan 15, 2013;Build 42
+KMPDBD01 ;OAK/RAK/JML - CM Tools Background Driver ;6/1/2020
+ ;;4.0;CAPACITY MANAGEMENT;**1**;Jan 15, 2013;Build 27
  ;
 EN ;-entry point for background driver
  ;
@@ -12,10 +12,11 @@ EN ;-entry point for background driver
  ;
  ; hl7
  ;compile and store daily stats in file 8973.1 (CM HL7 DATA)
- S STR=$$NOW^XLFDT,DAILY=$$FMADD^XLFDT(DT,-1)
- D DAILY^KMPDHU02(DAILY,DAILY)
+ ; NOTE: HL7 data sent via VSM nightly job
+ ;S STR=$$NOW^XLFDT,DAILY=$$FMADD^XLFDT(DT,-1)
+ ;D DAILY^KMPDHU02(DAILY,DAILY)
  ; store start, stop and delta times for daily background job
- D STRSTP^KMPDUTL2(3,1,1,STR)
+ ;D STRSTP^KMPDUTL2(3,1,1,STR)
  ;
  ; timing
  ; send raw numbers to CPE database

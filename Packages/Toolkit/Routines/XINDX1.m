@@ -1,7 +1,6 @@
-XINDX1 ;ISC/REL,GRK,RWF - ERROR ROUTINE ;2018-03-01  10:01 AM
- ;;7.3;TOOLKIT;**20,61,66,68,110,121,128,133,10001**;Apr 25, 1995;Build 4
- ; Original Routine authored by Department of Veterans Affairs
- ; 65 added in *10001* by OSEHRA/Sam Habiel in 2018
+XINDX1 ;ISC/REL,GRK,RWF - ERROR ROUTINE ;08/05/08  13:59
+ ;;7.3;TOOLKIT;**20,61,66,68,110,121,128,133,140,149,151**;Apr 25, 1995;Build 1
+ ; Per VHA Directive 2004-038, this routine should not be modified.
  G A
 E(ERR) ;
 A N %,%1 ;TXT is the line of the error.
@@ -10,13 +9,13 @@ A N %,%1 ;TXT is the line of the error.
  ;check exclude rtn list
 B I $P(%1,";",3)]"" D  Q:%1]""  ;Don't flag kernel doing kernel.
  . S %1=$P(%1,";",3)
- . F  Q:RTN[$P(%1,",")  S %1=$P(%1,",",2,99) ;quit if RTN[%1 or null.
+ . F  S %=$P(%1,",") Q:$E(RTN,1,$L(%))=%  S %1=$P(%1,",",2,99) ;RTN must begins with %1, instead of contains ;p151
  . Q
  I ERR=17,$E(RTN)'="%",$E(LAB)="%" Q  ;Don't flag %RTN w/o %.
  ;Global is Error Line,tab,error tag,tab,error text
  S %=$G(^UTILITY($J,1,RTN,"E",0))+1,^(0)=%,^(%)=TXT_$C(9)_ERTX
  Q
- ;
+ ;p149 change error 65 from S to W
  ;F = Fatal, S = Standard, W = Warning, I = Info
  ;;exclude rtn;error text
 ERROR ;
@@ -84,4 +83,4 @@ ERROR ;
 62 ;;;S - First line of routine violates the SAC.
 63 ;;;F - GO or DO mismatch from block structure (M45).
 64 ;;;F - Cache Object doesn't exist.
-65 ;;X,Z,DI,DD,KMP;S - Vendor specific code is not allowed (SACC 2.2.8)
+65 ;;X,Z,DI,DD,KMP;W - Vendor specific code is restricted.

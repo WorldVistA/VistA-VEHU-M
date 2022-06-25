@@ -1,11 +1,11 @@
-EDPQDB ;SLC/KCM - Display Active Log Entries
- ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
+EDPQDB ;SLC/KCM - Display Active Log Entries ; 1/25/21 11:22am
+ ;;2.0;EMERGENCY DEPARTMENT;**6,15**;Feb 24, 2012;Build 4
  ;
 GET(AREA,BOARD,LAST) ; Get display board contents
  ;I $G(^EDPB(231.9,AREA,230))=TOKEN D XML^EDPX("<rows status='same' />") Q
  ;
  N EDPTIME S EDPTIME=$$NOW^XLFDT
- N SEQ,BED,LOG,BEDS,DWHEN,DUP,ACU,LSTUPD,RELOAD,ATT
+ N SEQ,BED,LOG,BEDS,BED2,DWHEN,DUP,ACU,LSTUPD,RELOAD,ATT
  ;
  S LSTUPD=$P($G(^EDPB(231.9,AREA,0)),U,3),RELOAD="true",LAST=$G(LAST)
  I (LAST="")!(LAST=LSTUPD) S RELOAD="false"
@@ -23,12 +23,14 @@ GET(AREA,BOARD,LAST) ; Get display board contents
  . S BEDS(SEQ,BED)="",BEDS("B",BED,SEQ)=""
  ;
  ; Insert the active log entries into the correct sequence for the beds 
- S BED=0 F  S BED=$O(^EDP(230,"AL",EDPSITE,AREA,BED)) Q:'BED  D
+ S BED="" F  S BED=$O(^EDP(230,"AL",EDPSITE,AREA,BED)) Q:BED=""  D
  . S LOG=0 F  S LOG=$O(^EDP(230,"AL",EDPSITE,AREA,BED,LOG)) Q:'LOG  D
+ . . S BED2=BED
  . . I '$D(BEDS("B",BED)) S BEDS(99999,BED)="",BEDS("B",BED,99999)=""
  . . S SEQ=$O(BEDS("B",BED,0))
  . . S ACU=$P($G(^EDP(230,LOG,3)),U,3) S:'ACU ACU=99
- . . S BEDS(SEQ,BED,ACU,LOG)=""
+ . . I BED=0 S BED2=$P(^EDPB(231.9,AREA,1),U,12),SEQ=$P(^EDPB(231.8,BED2,0),U,5) ; Patch 15
+ . . S BEDS(SEQ,BED2,ACU,LOG)=""
  ;
  ; Loop thru the sequence of beds to create display board rows
  D BLDDUP^EDPQLP(.DUP,AREA)
@@ -53,12 +55,14 @@ EMPTY(BED) ; add row if unoccupied be should show
  D XML^EDPX($$XMLA^EDPX("row",.ROW))
  Q
 OCCUPIED(LOG,DUP) ; add log entry row
- N X0,X1,X3,ROW
- S X0=^EDP(230,LOG,0),X1=$G(^(1)),X3=$G(^(3))
+ N X0,X1,X3,X7,ROW
+ S X0=^EDP(230,LOG,0),X1=$G(^(1)),X3=$G(^(3)),X7=$G(^(7))
  S ROW("id")=LOG
+ ;S ROW("bed")=$$BEDNM(BED,$P(X3,U,9))
  S ROW("bed")=BED
  S ROW("bedNm")=$P(^EDPB(231.8,BED,0),U,6)
  S ROW("ptNm")=$P($P(X0,U,4),",")
+ S ROW("ptDfn")=$P(X0,U,6)
  S ROW("last4")=$P(X0,U,11)
  S ROW("visit")=($P(X0,U,12)!$P(X0,U,13))
  S ROW("clinic")=$P(X0,U,14)
@@ -78,18 +82,61 @@ OCCUPIED(LOG,DUP) ; add log entry row
  S ROW("emins")=$$HHMM($$MIN($P(X0,U,8)))
  S ROW("lmins")=$$HHMM($$LMIN(LOG))
  S ROW("similar")=$$SIM^EDPQLP(ROW("ptNm"),ROW("last4"),.DUP)
+ ;8/14/11 - Adding disposition to display board
+ ;4/23/13 - bwf - replacing line below with the one that follows
+ ;S ROW("disposition")=$$GET1^DIQ(233.1,$P(X1,U,2),.02,"E")
+ S ROW("disposition")=$$CAB(EDPSTA_".disposition",$P(X1,U,2))
  ;
  N STS D ORDSTS(LOG,.STS)
- S ROW("lab")=STS("LP")_"/"_STS("LC")             ; lab pending / lab complete
+ ; ROW("lab")=STS("LP")_"/"_STS("LC")             ; lab pending / lab complete
+ S ROW("lab")=STS("LP")_"/"_STS("LC") ; lab pending / lab complete
  S ROW("labUrg")=$S(STS("LS"):2,STS("LP"):1,1:0)  ; any STAT labs?
- S ROW("rad")=STS("RP")_"/"_STS("RC")             ; img pending / img complete
+ ; ROW("rad")=STS("RP")_"/"_STS("RC")             ; img pending / img complete
+ S ROW("rad")=STS("RP")_"/"_STS("RC")
  S ROW("radUrg")=$S(STS("RS"):2,STS("RP"):1,1:0)  ; any STAT imgs?
  S ROW("ordNew")=STS("ON")                        ; number of new orders
  S ROW("minLab")=STS("LO")                        ; oldest pending/active lab
  S ROW("minRad")=STS("RO")                        ; oldest pending/active img
  S ROW("minVer")=STS("OO")                        ; oldest "new" order
- D XML^EDPX($$XMLA^EDPX("row",.ROW))
+ D XML^EDPX($$XMLA^EDPX("row",.ROW,"")) K ROW
+ ;
+ S ROW("num")=STS("LP")_"/"_STS("LC")             ; lab pending / lab complete
+ D XML^EDPX($$XMLA^EDPX("labs",.ROW,""))
+ ;4/26/13 - BWF removed following two lines
+ ;I $O(STS("L",0)) D
+ ;. N ORD M ORD=STS("L") D ADDORD(.ORD,"lab")
+ D XML^EDPX("</labs>") K ROW
+ ;
+ S ROW("num")=STS("RP")_"/"_STS("RC")             ; img pending / img complete
+ D XML^EDPX($$XMLA^EDPX("rads",.ROW,""))
+ ;4/26/13 - BWF removed following two lines 
+ ;I $O(STS("R",0)) D
+ ;. N ORD M ORD=STS("R") D ADDORD(.ORD,"rad")
+ D XML^EDPX("</rads>")
+  ;
+ I $P(X7,U,2) D                                   ; vitals due
+ . N LAST,DUE D XML^EDPX("<alerts>")
+ . S LAST=$$LAST^EDPVIT($P(X0,U,6)),DUE=$$FMADD^XLFDT(LAST,,,+X7)
+ . S ROW("name")="vitals",ROW("isDue")="false"
+ . I DUE<$$NOW^XLFDT S ROW("isDue")="true",ROW("timeDue")=DUE
+ . D XML^EDPX($$XMLA^EDPX("alert",.ROW)) K ROW
+ . D XML^EDPX("</alerts>")
+ ;
+ D XML^EDPX("</row>")
  Q
+ ;
+ADDORD(LIST,TAG) ; add order detail to XML
+ N ROW,IFN,OI,X,I
+ S IFN=0 F  S IFN=+$O(LIST(IFN)) Q:IFN<1  K ROW D
+ . S ROW("orderId")=IFN
+ . S ROW("status")=$$GET1^DIQ(100,IFN_",",5)
+ . S OI=$$OI^ORX8(IFN),ROW("name")=$P(OI,U,2),X=""
+ . I $E(TAG)="l" S X=$$GET1^DIQ(60,+$P(OI,U,3)_",",51)
+ . I $E(TAG)="r" S I=+$O(^ORD(101.43,+OI,2,0)),X=$G(^(I,0))
+ . S:$L(X) ROW("abbre")=X
+ . D XML^EDPX($$XMLA^EDPX(TAG,.ROW))
+ Q
+ ;
 INITIAL(LOCID) ; Return initials
  Q:'LOCID ""
  Q $P(^VA(200,LOCID,0),U,2)
@@ -100,6 +147,11 @@ LOCNM(LOC) ; Return clinic name from 44
  Q:'$L(X) ""
  I $L($P(X,U,2)) Q $P(X,U,2)
  Q $P(X,U)
+ ;
+BEDNM(CURBED,HELDBED) ; Return string for bed
+ N X S X=$P(^EDPB(231.8,CURBED,0),U,6)
+ I +HELDBED S X=X_" ("_$P(^EDPB(231.8,HELDBED,0),U,6)_")"
+ Q X
  ;
 CAB(LST,IEN) ; Return code abbreviation
  Q:'IEN ""
@@ -141,6 +193,7 @@ ORDSTS(LOG,STS) ; compute statuses of orders
  S STS("RP")=0,STS("RO")=9999999,STS("RS")=0,STS("RC")=0
  S IEN=0 F  S IEN=$O(^EDP(230,LOG,8,IEN)) Q:'IEN  D
  . S X0=^EDP(230,LOG,8,IEN,0)
+ . S:$L($P(X0,U,2)) STS($P(X0,U,2),+X0)=""
  . I ($P(X0,U,3)="N")!($P(X0,U,3)="A") D
  . . I $P(X0,U,5)<STS("OO") S STS("OO")=$P(X0,U,5)      ; oldest order
  . . I $P(X0,U,2)="L" D

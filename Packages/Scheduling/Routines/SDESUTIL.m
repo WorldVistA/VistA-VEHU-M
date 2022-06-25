@@ -1,0 +1,27 @@
+SDESUTIL ;ALB/MGD/TAW - SDES Utilities ;11 12, 2021
+ ;;5.3;Scheduling;**801**;Aug 13, 1993;Build 13
+ ;;Per VHA Directive 6402, this routine should not be modified
+ ;
+ Q
+ ;
+PADCLTIME(TIME) ;
+ ; TIME - Time to Pad
+ S TIME=$S($G(TIME)'="":TIME,1:8)
+ I TIME'?1.2N Q -1
+ S TIME=TIME_"00"
+ Q TIME
+ ;
+PADFMTIME(TIME) ;
+ ; TIME - Time to Pad
+ I TIME'?1.4N Q -1
+ S TIME=$E(TIME_"0000",1,4)
+ Q TIME
+ ;
+PADLENGTH(STRING,CHAR,LENGTH,WHERE) ;
+ N PAD,PADST
+ I $L(STRING)'<LENGTH Q STRING
+ S PADST=LENGTH-$L(STRING)
+ S $P(PAD,CHAR,PADST)=CHAR
+ I WHERE="F" S STRING=PAD_STRING
+ I WHERE="E" S STRING=STRING_PAD
+ Q STRING

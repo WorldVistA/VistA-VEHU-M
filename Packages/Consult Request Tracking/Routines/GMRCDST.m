@@ -1,5 +1,5 @@
 GMRCDST ;ABV/BL - Retrieve Decision from DST server;May 21, 2020@07:06:12
- ;;3.0;CONSULT/REQUEST TRACKING;**124,139,152,145**;DEC 27, 1997;Build 18
+ ;;3.0;CONSULT/REQUEST TRACKING;**124,139,152,145,177**;DEC 27, 1997;Build 4
  ;
  ;SAC EXEMPTION 20200131-01 : GMRC use of vendor specific code
  ;IA6173
@@ -85,6 +85,8 @@ GETDST(IEN123,ID) ;
  ;
 TRYAG ; Execute the HTTP Get method.
  K XUERR,RESPJSON,AFOR,APAY,GMRCSS
+ K COM ; WCJ;GMRC*3.0*177
+ S ERRFLG=0  ; WCJ;GMRC*3.0*177
  S AFOR=0,APAY=""  ;Set variable to check for AutoForward
  S RESULT=$$GET^XOBWLIB(REQUEST,RESOURCE,.XUERR,0)
  I 'RESULT D
@@ -232,7 +234,7 @@ EN ;
  S WEBVER=$S(WEBVER:WEBVER,1:"+1")
  S FDA(18.12,WEBVER_",",.01)="DST GET ID SERVER"                    ; NAME
  S FDA(18.12,WEBVER_",",.03)="443"                                          ; PORT
- S FDA(18.12,WEBVER_",",.04)="dst-dev.domain"    ; SERVER
+ S FDA(18.12,WEBVER_",",.04)="dst-dev.domain.ext"    ; SERVER
  S FDA(18.12,WEBVER_",",.06)="ENABLED"                                   ; STATUS 1-ENABLED / 0-DISABLED
  S FDA(18.12,WEBVER_",",.07)=60                                          ; DEFAULT HTTP TIMEOUT
  S FDA(18.12,WEBVER_",",1.01)="NO"                                       ; LOGIN REQUIRED

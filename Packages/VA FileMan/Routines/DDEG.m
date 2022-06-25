@@ -1,5 +1,5 @@
 DDEG ;SPFO/RAM,MKB - Entity GET Extract ; AUG 1, 2018  12:37
- ;;22.2;VA FileMan;**9,16,17,18**;Jan 05, 2016;Build 2
+ ;;22.2;VA FileMan;**9,16,17,18,20**;Jan 05, 2016;Build 2
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -20,7 +20,7 @@ EN1(DIENTY,DIEN,NOTAG,ERROR) ; -- return a single Entity (expects DFORM=0/1/2)
  D IENPROC I $G(DDEOUT)!$G(DDEQUIT) K DDEOUT G ENQ
  I $G(DIEN)="" S ERROR="-1^Record "_$G(DIEN)_" not found" G ENQ
  ;
- S DAC=$P($G(^DDE(+DIENTY,"GET")),U,3) I DAC D  G:ERROR ENQ
+ S DAC=$P($G(^DDE(+DIENTY,"DAC")),U,1) I DAC D  G:ERROR ENQ  ;p20
  . N DDETXT,DDERR
  . S DAC=$$CANDO^DIAC1(DIFN,DIEN,DAC,DUZ,,,"DDETXT","DDERR")
  . S ERROR=$S(DAC<0:"-1^"_$G(DDERR(1)),'DAC:"-1^"_$G(DDETXT(1)),1:0)
@@ -121,7 +121,10 @@ WORD ; -- build one WP ITEM (from $$VALUE)
  . S VALUE=VALUE_$S($E(VALUE,$L(VALUE))=" ":"",1:" ")_X
  ;
  I $$VALID(VALUE) D  Q  ;add tags
- . I $L(VALUE)>2999999 S VALUE="Text exceeds 3 megabyte limit and could not be saved. Please contact the site for full original text." ;p16
+ . I $P(ITM0,U,10) D  ;p20
+ .. Q:$L(VALUE)'>$P(ITM0,U,10)
+ .. S VALUE=$S($P(ITM0,U,11)]"":$P(ITM0,U,11),1:"Text exceeds "_$P(ITM0,U,10)_" limit and could not be saved. Please contact the site for full original text.")
+ . E  I $L(VALUE)>2999999 S VALUE="Text exceeds 3 megabyte limit and could not be saved. Please contact the site for full original text." ;p16
  . S VALUE=$$ESC(VALUE)
  . I 'DFORM,$G(NOTAG) S ITEM=VALUE Q  ;for List items
  . S ITEM=$$ELEMENT("",TAG,VALUE)

@@ -1,13 +1,17 @@
 ECXBCM1 ;ALB/JAP-Bar Code Medical Administration Extract Cont. ;2/14/20  08:49
- ;;3.0;DSS EXTRACTS;**154,170,174,178**;Dec 22, 1997 ;Build 67
+ ;;3.0;DSS EXTRACTS;**154,170,174,178,181**;Dec 22, 1997 ;Build 71
  ;
+ ;Reference to ^XMD supported by ICR #10113
+ ;Reference to ^XMB("NETNAME") supported by ICR #1131
+ ;Reference to ^TMP($J  supported by SACC 2.3.2.5.1
+ ; 
 FILE ;file the extract record
  ;node0
  ;Sequence Number,Year Month, Extract Number (EC23)^facility (ECXFAC)^
  ;dfn (ECXDFN)^ssn (ECXSSN)^name (ECXPNM)^
  ;in/out (ECXA)^Day (ECXADT)^
  ;date of birth (ECDOB)^Gender (ECXSEX)^State (ECXSTATE)^County (ECXCNTY)^
- ;zip code (ECXZIP)^country (ECXCNTRY)^ward (ECXW)^treating speciality (ECXTSC)^
+ ;zip code (ECXZIP)^country (ECXCNTRY)^ward (ECXW)^treating specialty (ECXTSC)^
  ;provider (ECPRO)^provider person class (ECPROPC)^provider npi (ECPRONPI)^
  ;Placehold primary care provider(ECPTPR)^Placehold pc provider person class (ECCLAS)^
  ;Placehold primary care provider NPI (ECPTNPI)^Placehold primary care team (ECPTTM)^ordering stop code (ECXOSC)^
@@ -69,3 +73,41 @@ FILE ;file the extract record
  S DA=EC7,DIK="^ECX("_ECFILE_"," D IX1^DIK K DIK,DA
  Q
  ;
+SENDMSG ;181 - Called from ECXBCM
+ N ECMSG,ECX,XMSUB,XMDUZ,XMY,XMTEXT
+ ;Send missing stop  code message
+ S ECX=$O(^TMP($J,"ECXBCMM","ECXNOSC",0))
+ I ECX D
+ .S XMSUB="CLINICS WITH MISSING STOP CODE in File #44",XMDUZ="DSS SYSTEM"
+ .K XMY S XMY("G.DSS-"_ECGRP_"@"_^XMB("NETNAME"))=""
+ .S ECMSG(1,0)="The DSS-"_ECPACK_" extract (#"_$P(EC23,U,2)_") for "_ECSDN_" through"
+ .S ECMSG(2,0)=ECEDN_" contains the following clinics which have not been assigned a stop"
+ .S ECMSG(3,0)="code in the HOSPITAL LOCATION file (#44).  The DSS-"_ECPACK
+ .S ECMSG(4,0)="extract records associated with these clinics have been given a default"
+ .S ECMSG(5,0)="Stop Code of ""PHA""."
+ .S ECMSG(6,0)=""
+ .S ECMSG(7,0)="CLIN IEN  CLINIC NAME"
+ .S ECMSG(8,0)="-----------------------------------------"
+ .S ECMSG(9,0)=""
+ .S ECX=0
+ .F  S ECX=$O(^TMP($J,"ECXBCMM","ECXNOSC",ECX)) Q:ECX=""  S ECMSG(9+ECX,0)=^TMP($J,"ECXBCMM","ECXNOSC",ECX,0)
+ .S XMTEXT="ECMSG(" D ^XMD
+ ;Send Inactive Stop Code message
+ S ECX=$O(^TMP($J,"ECXBCMM","ECXINVSC",0))
+ I ECX D
+ .S XMSUB="CLINICS WITH INACTIVE STOP CODE",XMDUZ="DSS SYSTEM"
+ .K XMY S XMY("G.DSS-"_ECGRP_"@"_^XMB("NETNAME"))=""
+ .S ECMSG(1,0)="The DSS-"_ECPACK_" extract (#"_$P(EC23,U,2)_") for "_ECSDN_" through"
+ .S ECMSG(2,0)=ECEDN_" contains the following clinics which have been assigned an"
+ .S ECMSG(3,0)="inactive stop code in the HOSPITAL LOCATION file (#44).  The DSS-"
+ .S ECMSG(4,0)=ECPACK_" extract records associated with these clinics have been"
+ .S ECMSG(5,0)="given a default Stop Code of ""PHA""."
+ .S ECMSG(6,0)=""
+ .S ECMSG(7,0)="CLINIC IEN/NAME                         STOP CODE NUMBER/NAME "
+ .S ECMSG(8,0)="--------------------------------------------------------------------"
+ .S ECMSG(9,0)=""
+ .S ECX=0
+ .F  S ECX=$O(^TMP($J,"ECXBCMM","ECXINVSC",ECX)) Q:ECX=""  S ECMSG(9+ECX,0)=^TMP($J,"ECXBCMM","ECXINVSC",ECX,0)
+ .S XMTEXT="ECMSG(" D ^XMD
+ K ^TMP($J,"ECXBCMM")
+ Q

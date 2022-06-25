@@ -1,5 +1,5 @@
 IBCNEQU ;DAOU/BHS - eIV REQUEST ELECTRONIC INSURANCE INQUIRY ;24-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,416,438,497,582,601,631**;21-MAR-94;Build 23
+ ;;2.0;INTEGRATED BILLING;**184,271,416,438,497,582,601,631,668**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; eIV - Insurance Verification Interface
@@ -325,7 +325,8 @@ ELIGDTX ;
  Q ELIGDT
  ;
 MBIREQ ; User requested a MBI lookup request
- N DIR,X,Y,DIRUT,DUOUT
+ ;/vd-IB*2*668 - Added the variable APIEN
+ N APIEN,DIR,X,Y,DIRUT,DUOUT
  N IBMBIPYR,IBBUF,IBFDA
  ;
  D FULL^VALM1
@@ -338,12 +339,19 @@ MBIREQ ; User requested a MBI lookup request
  . W !!," The required MBI Payer site parameter is not populated; try again later",!
  . S DIR(0)="E" D ^DIR K DIR
  ;
- I '($$GET1^DIQ(365.121,"1,"_IBMBIPYR_",",.02,"I")) D  G MBIREQX
- . W !!," The MBI Payer is not nationally active; try again later",!
+ S APIEN=$$PYRAPP^IBCNEUT5("EIV",IBMBIPYR)   ;/vd-IB*2*668
+ ;/vd-IB*2*668 - Replaced the following 2 lines of code to remove a hardcoded value.
+ ;I '($$GET1^DIQ(365.121,"1,"_IBMBIPYR_",",.02,"I")) D  G MBIREQX
+ ;. W !!," The MBI Payer is not nationally active; try again later",!
+ I '($$GET1^DIQ(365.121,APIEN_","_IBMBIPYR_",",.02,"I")) D  G MBIREQX
+ . W !!," The MBI Payer is not NATIONALLY Enabled; try again later",!
  . S DIR(0)="E" D ^DIR K DIR
  ;
- I '($$GET1^DIQ(365.121,"1,"_IBMBIPYR_",",.03,"I")) D  G MBIREQX
- . W !!," The MBI Payer LOCAL ACTIVE field is set to 'NO'; it must be 'YES' to proceed",!
+ ;/vd-IB*2*668 - Replaced the following 2 lines of code to remove a hardcoded value.
+ ;I '($$GET1^DIQ(365.121,"1,"_IBMBIPYR_",",.03,"I")) D  G MBIREQX
+ ;. W !!," The MBI Payer LOCAL ACTIVE field is set to 'NO'; it must be 'YES' to proceed",!
+ I '($$GET1^DIQ(365.121,APIEN_","_IBMBIPYR_",",.03,"I")) D  G MBIREQX
+ . W !!," The MBI Payer is not LOCALLY Enabled; try again later",!
  . S DIR(0)="E" D ^DIR K DIR
  ;
  D DEM^VADPT ; ; ICR#10061

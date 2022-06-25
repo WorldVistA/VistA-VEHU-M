@@ -1,5 +1,5 @@
 PSOCLO1 ;BHAM ISC/SAB, HEC/hrubovcak - Clozapine Rx lockout logic ;24 Feb 2020 14:00:01
- ;;7.0;OUTPATIENT PHARMACY;**1,23,37,222,457,574,612,621**;DEC 1997;Build 13
+ ;;7.0;OUTPATIENT PHARMACY;**1,23,37,222,457,574,612,621,613**;DEC 1997;Build 10
  ; YSCLTST2 - DBIA 4556
  ;Reference to ^YSCL(603.01 - DBIA 2697
  ;MH package will authorize dispensing of the Clozapine drugs
@@ -34,7 +34,7 @@ PSOCLO1 ;BHAM ISC/SAB, HEC/hrubovcak - Clozapine Rx lockout logic ;24 Feb 2020 1
  S CLOZPAT=$P(PSOYS,U,7),CLOZPAT=$S(CLOZPAT="M":2,CLOZPAT="B":1,1:0)
  G:+PSOYS=0 OV1
  I +PSOYS=1 D
- .I '$G(CLOZFLG),$G(^TMP($J,"CLOZFLG",DFN)) S CLOZFLG=1  Q
+ .I '$G(CLOZFLG),$G(^TMP($J,"CLOZFLG",DFN)) S CLOZFLG=1 ;Q ; JCH - PSO*7*613 Remove Quit
  .D DSP
  ; Begin: JCH - PSO*7*612 - Kill ^XTMP's if patient has Active NCCC registration and valid labs
  I PSOYS("rWBC")>0,PSOYS("rANC")>1499,'$G(CLOZFLG) D:'$G(PSTYPE) GDOSE D  Q

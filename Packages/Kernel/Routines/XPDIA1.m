@@ -1,5 +1,5 @@
 XPDIA1 ;SFISC/RSD - Install Pre/Post Actions for Kernel files cont. ;06/24/2008
- ;;8.0;KERNEL;**2,44,51,58,68,85,131,146,182,229,302,399,507,539,672**;Jul 10, 1995;Build 28
+ ;;8.0;KERNEL;**2,44,51,58,68,85,131,146,182,229,302,399,507,539,672,750**;Jul 10, 1995;Build 6
  ;Per VHA Directive 2004-038, this routine should not be modified.
  Q
 HLPF1 ;help frames file pre
@@ -223,6 +223,8 @@ RPCDEL ;del Kernel RPC, file 8994
 RPCE1 ;RPC pre entry, file 8994
  ;kill Input parameters multiple, field #2
  K ^XWB(8994,DA,2)
+ ;kill Description field #1 ;p750
+ K ^XWB(8994,DA,1)
  Q
 CRC32PE ;pre entry for Kernel RPCs CRC32
  ;if there is a new Description, kill the old Description

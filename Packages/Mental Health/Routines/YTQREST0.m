@@ -1,5 +1,5 @@
 YTQREST0 ;SLC/KCM - RESTful API front controller v0 ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130**;Dec 30, 1994;Build 62
+ ;;5.01;MENTAL HEALTH;**130,178,182**;Dec 30, 1994;Build 13
  ;
  ; .HTTPREQ: HTTP-formatted request and JSON body (if present)
  ; .HTTPRSP: HTTP-formatted response and JSON body (if present)
@@ -38,6 +38,10 @@ QENTRY(HTTPRSP,HTTPREQ) ; questionnaire entry for patient
  ;;GET /api/mha/checks/:instrumentName GETCHKS^YTQRQAD2
  ;;GET /api/mha/instrument/admin/:adminId?1.N GETADM^YTQRQAD2
  ;;POST /api/mha/instrument/admin SAVEADM^YTQRQAD2
+ ;;GET /api/mha/assignment/cat/:assignmentId?1.N GCATINFO^YTQRCAT
+ ;;POST /api/mha/assignment/cat/:assignmentId?1.N PCATINFO^YTQRCAT
+ ;;GET /api/mha/cat/interview/:interviewId GETCATI^YTQRCAT
+ ;;POST /api/mha/cat/interview/:interviewId SETCATI^YTQRCAT
  ;;
  D HANDLE^YTQRUTL("QENTRY^YTQREST0",.HTTPREQ,.HTTPRSP)
  Q

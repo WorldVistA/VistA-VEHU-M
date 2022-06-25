@@ -1,5 +1,5 @@
 PSIVORFB ;BIR/MLM - FILE/RETRIEVE ORDERS IN ^PS(55 ;25 Sep 98 / 2:24 PM
- ;;5.0;INPATIENT MEDICATIONS;**3,18,28,68,58,85,110,111,120,134,213,161,181,273,267,285,257,299,323,335**;16 DEC 97;Build 6
+ ;;5.0;INPATIENT MEDICATIONS;**3,18,28,68,58,85,110,111,120,134,213,161,181,273,267,285,257,299,323,335,416**;16 DEC 97;Build 8
  ;
  ; Reference to ^PS(50.7 is supported by DBIA #2180.
  ; Reference to ^PS(51.2 is supported by DBIA #2178.
@@ -81,7 +81,7 @@ SET55 ; Move data from local variables to 55.
  I '$D(^PS(53.45,PSJSYSP,6)),($G(P("NEWON"))["P") S PSJTROPI=P("NEWON") S PSJTROPL=$$GETOPI^PSJBCMA5(DFN,PSJTROPI)
  I $G(^PS(53.45,PSJSYSP,6))!$P($G(^PS(53.45,PSJSYSP,6,0)),"^",3) D
  . I $G(PSJCOM),$G(PSJCOMSI),$G(PSJORD)["V" M ^TMP("PSJOPI",$J,6)=^PS(53.45,PSJSYSP,6)
- . D FILEOPI^PSJBCMA5(DFN,ON55) K ^TMP("PSJOPI",$J,6)
+ . D FILEOPI^PSJBCMA5(DFN,ON55) ;P416 K ^TMP("PSJOPI",$J,6) - comment out since its use the merge below
  I '$G(PSIVCHG)!($G(PSJREN)&($G(PSIVCHG)=2)) I $G(P("PON")),P("PON")'=ON55 D
  . N X S X=$S(P("PON")["P":"^PS(53.1,+P(""PON""),12,0)",P("PON")["V"&$G(PSJREN):"^PS(55,DFN,""IV"",+P(""PON""),5,0)",1:"") Q:X=""
  . I $O(@X) S %X=X,%Y="^PS(55,"_DFN_",""IV"","_+ON55_",5," D %XY^%RCR
@@ -93,8 +93,9 @@ SET55 ; Move data from local variables to 55.
  .. Q:PSJCHILD=PSJORD  K DR,DA,DIE,ORD S DR="31////"_$P($G(P("OPI")),"^",1,2),DA(1)=DFN
  .. N ON,ON55 S (ON,ON55)=+PSJCHILD_"V" S:+$G(PSJPINIT)'>0 PSJPINIT=DUZ S PSIVALT=1,PSIVAL="COMPLEX ORDER" D ENTACT^PSIVAL D
  ... I $P($G(^PS(55,DFN,"IV",+ON55,3)),"^")'=$P(P("OPI"),"^") S P("FC")="OTHER PRINT INFO^"_$P($G(^(3)),"^")_U_$P(P("OPI"),"^") D GTFC^PSIVORAL
- ... I $D(^PS(55,DFN,"IV",+ON55,0)) S ^PS(55,DFN,"IV",+ON55,3)=P("OPI") D EN1^PSJHL2(DFN,"XX",ON55)
+ ... K ^PS(55,DFN,"IV",+ON55,10)
  ... M ^PS(55,DFN,"IV",+ON55,10)=^TMP("PSJOPI",$J,6)
+ ... I $D(^PS(55,DFN,"IV",+ON55,0)) S ^PS(55,DFN,"IV",+ON55,3)=P("OPI") D EN1^PSJHL2(DFN,"XX",ON55)
  K ^TMP("PSJOPI",$J)
  Q
  ;

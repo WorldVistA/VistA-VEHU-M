@@ -1,5 +1,5 @@
-KMPDSS ;OAK/RAK,JML - CM Tools Status ;2/14/05
- ;;4.0;CAPACITY MANAGEMENT;;11/15/2017;Build 38
+KMPDSS ;OAK/RAK,JML - CM Tools Status ;6/1/2020
+ ;;4.0;CAPACITY MANAGEMENT;**1**;11/15/2017;Build 27
  ;
 EN ;-entry point
  ;
@@ -8,7 +8,7 @@ EN ;-entry point
  S OUT=0
  F  D  Q:OUT
  .D HDR^KMPDUTL4(" Check Capacity Planning Environment ")
- .S DIR(0)="SO^H:HL7;S:SAGG;T:Timing"
+ .S DIR(0)="SO^S:SAGG;T:Timing"
  .W !! D ^DIR I Y=""!(Y="^") SET OUT=1 Q
  .D DISPLAY^KMPDSS1(Y_"^"_Y(0))
  ;

@@ -1,10 +1,11 @@
 RCDPESPA ;OICO/hrubovcak - ePayment Lockbox Parameter Audit Report ;29 Jan 2019 18:00:14
- ;;4.5;Accounts Receivable;**332,345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**332,345,349**;Oct 11, 2018;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
  ;
-AUDPARM ; EDI Lockbox Parameters Audit Report [RCDPE PARAMETER AUDIT REPORT]
+AUDPARM ;EP from RCDPESP2
+ ; EDI Lockbox Parameters Audit Report [RCDPE PARAMETER AUDIT REPORT]
  ; Report logic moved from RCDPESP2, 11 October 2018
  ; Report displays the RCDPE PARAMETER AUDIT file (#344.7)
  ; and changes to the RCDPE PARAMETER file (#344.61)
@@ -41,31 +42,33 @@ AUDPARM ; EDI Lockbox Parameters Audit Report [RCDPE PARAMETER AUDIT REPORT]
  ; RCSTOP - Flag, stop displaying report
  ; RCTMP - One line from LIST^DIC
  ; 
- N %ZIS,POP,RCDIERR,RCDIGET,RCFLDS,RCIEN,RCRPRT,RCSCR,RCSTOP,X,Y
+ N %ZIS,POP,RCDIERR,RCDIGET,RCFLDS,RCIEN,RCPARAM,RCRPRT,RCSCR,RCSTOP,RCTMP,X,XX,Y
  W !!,"EDI Lockbox Parameters Audit Report",!
  ;
  ; Set up FileMan storage location
- S RCDIGET=$NA(^TMP($T(+0)_"-AUD",$J)) K @RCDIGET,^TMP($J,"RCLABEL")
+ S RCDIGET=$NA(^TMP($T(+0)_"-AUD",$J))
+ K @RCDIGET,^TMP($J,"RCLABEL")
  ;
  ; Initialize to zero
  S (RCSTOP,RCRPRT("hdrPg#"),RCRPRT("eXcel"),RCRPRT("cntr"),RCRPRT("pgLns"))=0
- ; *future build* add Tricare, change 'Both' to 'All'
- ; Retrieve report type (Medical, Pharmacy, or Both)
- S RCRPRT("typRprt")=$$RTYPE("B")
+ ; Retrieve report type (Medical, Pharmacy, or All)
+ S RCRPRT("typRprt")=$$RTYPE("A") ; PRCA*4.5*349
  Q:RCRPRT("typRprt")=-1  ; User '^' or timed out
  ;
  ; Type for header, PRCA*4.5*345
- ; ; *future build* Add Tricare, change 'both' to 'All'
- S X=RCRPRT("typRprt"),RCRPRT("hdrTyp")=$S(X="M":"Medical",X="P":"Pharmacy",1:"Both Medical&Pharmacy")
+ S XX=RCRPRT("typRprt")             ; PRCA*4.5*349 - Added line
+ S RCRPRT("hdrTyp")=$S(XX="M":"Medical",XX="P":"Pharmacy",XX="T":"TRICARE",1:"All")
  S Y("dtRange")=$$DTRNG  ; date range for report
  Q:Y("dtRange")=0  ; No date range selected
  ;
- S RCRPRT("begDate")=$P(Y("dtRange"),U,2),RCRPRT("endDate")=$P(Y("dtRange"),U,3)
+ S RCRPRT("begDate")=$P(Y("dtRange"),U,2)
+ S RCRPRT("endDate")=$P(Y("dtRange"),U,3)
  K Y
  S RCRPRT("eXcel")=$$DISPTY^RCDPEM3  ; Export to excel?
  Q:+RCRPRT("eXcel")=-1  ; User '^' or timed out
  I RCRPRT("eXcel") D INFO^RCDPEM6  ; Display capture information for Excel
- S %ZIS="M" D ^%ZIS  ; Select output device
+ S %ZIS="M"
+ D ^%ZIS  ; Select output device
  Q:POP
  U IO
  ;
@@ -76,49 +79,60 @@ AUDPARM ; EDI Lockbox Parameters Audit Report [RCDPE PARAMETER AUDIT REPORT]
  S RCFLDS="@;.04;.01I;.07;.06;.03;.05I;.02"
  D LIST^DIC(344.7,,RCFLDS,"P",,,,,RCSCR,,RCDIGET,"RCDIERR")
  I $D(RCDIERR) D  Q
- . W !!,"FileMan error when collecting report data." D ASK^RCDPEARL
+ . W !!,"FileMan error when collecting report data."
+ . D ASK^RCDPEARL
  ;
  ; No changes found for date range
  I '$D(@RCDIGET@("DILIST",1)) D RPTEND Q
  ;
+ ; PRCA*4.5*349 - Next 3 lines, get Auto-Decrease paid parameters
+ S RCRPRT("medAuto")=$$GET1^DIQ(344.61,"1,",.03,"I") ; (#.03) AUTO-DECREASE MED ENABLED
+ S RCRPRT("rxAuto")=$$GET1^DIQ(344.61,"1,",1.02,"I") ; (#1.02) AUTO-DECREASE RX ENABLED
+ S RCRPRT("triAuto")=$$GET1^DIQ(344.61,"1,",1.06,"I") ; (#.03) AUTO-DECREASE TRI ENABLED
  ; Loop though changes from #344.7
  S RCIEN=0  F  S RCIEN=$O(@RCDIGET@("DILIST",RCIEN)) Q:RCSTOP!'RCIEN  D
- . I 'RCRPRT("hdrPg#") D HDRLPR(.RCRPRT,.RCSTOP) S RCRPRT("pgLns")=9  ; page header
+ . I 'RCRPRT("hdrPg#") D  ;
+ . . D HDRLPR(.RCRPRT,.RCSTOP)
+ . . S RCRPRT("pgLns")=9  ; page header
  . Q:RCSTOP
- . N RCPARAM,RCTMP
- . S RCTMP=$P(@RCDIGET@("DILIST",RCIEN,0),U,2,8),RCPARAM("file")=$P(RCTMP,U,6)
+ . K RCPARAM
+ . S RCTMP=$P(@RCDIGET@("DILIST",RCIEN,0),U,2,8)
+ . S RCPARAM("file")=$P(RCTMP,U,6)
  . Q:RCPARAM("file")=344.6  ; Excluded payers reported elsewhere
- . S RCPARAM("fld")=$P(RCTMP,U)  ; PRCA*4.5*326
+ . S RCPARAM("fld")=$P(RCTMP,U,1)  ; PRCA*4.5*326
  . ; Store Parameter labels in ^TMP to avoid redundant FileMan calls
  . I '$D(^TMP($J,"RCLABEL",RCPARAM("file"),RCPARAM("fld"))) D
- ..  S X=$$GET1^DID(RCPARAM("file"),RCPARAM("fld"),,"LABEL")
- ..  S ^TMP($J,"RCLABEL",RCPARAM("file"),RCPARAM("fld"))=X
+ . . S X=$$GET1^DID(RCPARAM("file"),RCPARAM("fld"),,"LABEL")
+ . . S ^TMP($J,"RCLABEL",RCPARAM("file"),RCPARAM("fld"))=X
  . ; if not both types, verify field should be printed
  . S RCPARAM=^TMP($J,"RCLABEL",RCPARAM("file"),RCPARAM("fld"))
- . I '(RCRPRT("typRprt")="B") Q:'$$TYPMTCH(.RCRPRT,.RCPARAM)  ; Parameter type not selected
+ . I '(RCRPRT("typRprt")="A") Q:'$$TYPMTCH(.RCRPRT,.RCPARAM)  ; PRCA*4.5*349 change "B" tp "A"
  . S RCRPRT("cntr")=RCRPRT("cntr")+1  ; Count records listed
  . ; next 2 lines PRCA*4.5*326
  . I RCPARAM("file")=344.61,RCPARAM("fld")=.11 S RCPARAM="AUTO-DECREASE MED NOPAY ENABLED"
  . I RCPARAM("file")=344.61,RCPARAM("fld")=.12 S RCPARAM="AUTO-DECREASE MED DAYS (NO-PAY)"
  . S X=$P(RCTMP,U,2)  ; Timestamp
  . S RCPARAM("dt&tm")=$S(RCRPRT("eXcel"):$TR($$FMTE^XLFDT(X),"@"," "),1:$$FMTE^XLFDT(X,"2SZ"))
- . S RCPARAM("usr")=$P(RCTMP,U,5),RCPARAM("oldVal")=$P(RCTMP,U,3),RCPARAM("newVal")=$P(RCTMP,U,4)
+ . S RCPARAM("usr")=$P(RCTMP,U,5)
+ . S RCPARAM("oldVal")=$P(RCTMP,U,3)
+ . S RCPARAM("newVal")=$P(RCTMP,U,4)
  . I RCPARAM("file")=344.62 D  ; file 344.62, format CARC code
- ..  S Y="" I (RCPARAM("fld")>.01)&(RCPARAM("fld")<2) S Y="MED "
- ..  I RCPARAM["PHARM",(RCPARAM("fld")>2)&(RCPARAM("fld")<3) D
- ...   Q:$E(RCPARAM,1,5)="PHARM"
- ...   N F,J S F=$F(RCPARAM,"PHARM "),J=$E(RCPARAM,1,F-7)_$E(RCPARAM,F,$L(RCPARAM))
- ...   S RCPARAM("oldParam")=RCPARAM,RCPARAM=J,Y="PHARM "
- ..  S X=" ("_$S($P(RCTMP,U,7)'="":$P($G(^RCY(344.62,$P(RCTMP,U,7),0)),U),1:"ERR")_")"  ; CARC code in parentheses
- ..  S RCPARAM=Y_RCPARAM_X
+ . . S Y="" I (RCPARAM("fld")>.01)&(RCPARAM("fld")<2) S Y="MED "
+ . . I RCPARAM["PHARM",(RCPARAM("fld")>2)&(RCPARAM("fld")<3) D
+ . . . Q:$E(RCPARAM,1,5)="PHARM"
+ . . . N F,J S F=$F(RCPARAM,"PHARM "),J=$E(RCPARAM,1,F-7)_$E(RCPARAM,F,$L(RCPARAM))
+ . . . S RCPARAM("oldParam")=RCPARAM,RCPARAM=J,Y="PHARM "
+ . . S X=" ("_$S($P(RCTMP,U,7)'="":$P($G(^RCY(344.62,$P(RCTMP,U,7),0)),U),1:"ERR")_")"  ; CARC code in parentheses
+ . . S RCPARAM=Y_RCPARAM_X
  . ; format Boolean values, only if non-null
- . I RCPARAM("file")=342 D:"^7.05^^7.06^7.07^7.08^7.09"[(U_RCPARAM("fld")_U) YESNO(.RCPARAM,RCTMP)
+ . I RCPARAM("file")=342 D:"^7.05^7.06^7.07^7.08^7.09^"[(U_RCPARAM("fld")_U) YESNO(.RCPARAM,RCTMP)
  . I RCPARAM("file")=344.61 D:"^.02^.03^.11^1.01^1.02^"[(U_RCPARAM("fld")_U) YESNO(.RCPARAM,RCTMP)
- . I RCPARAM("file")=344.62 D:"^.02^.08^2.01^"[(U_RCPARAM("fld")_U) YESNO(.RCPARAM,RCTMP)
+ . ; PRCA*4.5*349 - Next line add 3.01 and 3.07 for TRICARE
+ . I RCPARAM("file")=344.62 D:"^.02^.08^2.01^3.01^3.07^"[(U_RCPARAM("fld")_U) YESNO(.RCPARAM,RCTMP)
  . ;
  . F Y="oldVal","newVal" S:'$L(RCPARAM(Y)) RCPARAM(Y)="-"  ; if null set to hyphen
  . I RCRPRT("eXcel") D  Q  ; no formatting needed
- ..  W !,RCPARAM_U_RCPARAM("dt&tm")_U_RCPARAM("oldVal")_U_RCPARAM("newVal")_U_RCPARAM("usr")
+ . . W !,RCPARAM_U_RCPARAM("dt&tm")_U_RCPARAM("oldVal")_U_RCPARAM("newVal")_U_RCPARAM("usr")
  . ;
  . S Y=$$PAD(RCPARAM,38)_$$PAD(RCPARAM("dt&tm"),19)_$$PAD(RCPARAM("oldVal"),5)_$$PAD(RCPARAM("newVal"),5)_RCPARAM("usr")
  . W !,$E(Y,1,IOM) S RCRPRT("pgLns")=RCRPRT("pgLns")+1
@@ -198,7 +212,7 @@ DATES(BDATE,EDATE) ; Get a date range, both values passed by ref.
  S EDATE=Y
  Q
  ;
-RTYPE(DEF) ;updated PRCA*4.5*345
+RTYPE(DEF) ; EP from RCDPESP2, RCDPESP1
  ; Type of information to display
  ; Input:   DEF - default value
  ; Returns:
@@ -206,9 +220,9 @@ RTYPE(DEF) ;updated PRCA*4.5*345
  ; M - Medical, P - Pharmacy, T - Tricare, A - All, -1 - ^ or timed out
  N DA,DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
  S DIR("?")="Enter the type of information to display on the report."
- S DIR(0)="SA^M:Medical;P:Pharmacy;B:Both"
- S DIR("A")="(M)edical, (P)harmacy, or (B)oth: "
- S DIR("B")=$S($G(DEF)'="":DEF,1:"Both")
+ S DIR(0)="SA^M:Medical;P:Pharmacy;T:TRICARE;A:All"         ; PRCA*4.5*349
+ S DIR("A")="(M)edical, (P)harmacy, (T)RICARE or (A)ll: "   ; PRCA*4.5*349
+ S DIR("B")=$S($G(DEF)'="":DEF,1:"All")                     ; PRCA*4.5*349
  D ^DIR
  K DIR
  I $D(DTOUT)!$D(DUOUT) Q -1
@@ -229,7 +243,7 @@ TYPMTCH(RCRPRT,RCPARAM) ; function, print changed parameter?
  . I (RCPARAM["RX")!(RCPARAM["PHARM") S OK2PRNT=1 Q
  . I RCPARAM("file")=344.62,(RCPARAM("fld")>2)&(RCPARAM("fld")<3) S OK2PRNT=1
  ;
- ;I RCRPRT("typRprt")="T",(RCPARAM["TRICARE") S OK2PRNT=1  ; *future build*, TRICARE Parameters
+ I RCRPRT("typRprt")="T",(RCPARAM["TRICARE") S OK2PRNT=1  ; PRCA*4.5*349 - TRICARE Parameters
  Q OK2PRNT
  ;
 PAD(A,N) ; pad A with N spaces
@@ -241,4 +255,3 @@ YESNO(RCPARAM,Y) ; Yes/No text, RCPARAM passed by ref., Y=RCTMP
  S:$L(RCPARAM("oldVal")) RCPARAM("oldVal")=$S($P(Y,U,3):"Yes",1:"No")
  S:$L(RCPARAM("newVal")) RCPARAM("newVal")=$S($P(Y,U,4):"Yes",1:"No")
  Q
- ;

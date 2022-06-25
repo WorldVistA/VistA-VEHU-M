@@ -1,5 +1,5 @@
 RCDPEFA2 ;AITC/FA - FIRST PARTY AUTO-DECREASE REPORT, cont. ; 5/29/19 12:31pm
- ;;4.5;Accounts Receivable;**345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**345,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  ; Read ^DG(40.8) - IA 417
  ; DIVISION^VAUTOMA - IA 664

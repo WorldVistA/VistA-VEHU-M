@@ -1,5 +1,5 @@
-DGLOCK1 ;ALB/MRL - PATIENT FILE DATA EDIT CHECK ; 28 JUL 86
- ;;5.3;Registration;**121,314**;Aug 13, 1993
+DGLOCK1 ;ALB/MRL,JAM - PATIENT FILE DATA EDIT CHECK ; 28 JUL 86
+ ;;5.3;Registration;**121,314,1014,1061**;Aug 13, 1993;Build 22
 AOD ;AO Delete
  I $D(^DPT(DFN,.321)),$P(^(.321),U,2)="Y" W !?4,*7,"Can't delete as long as Agent Orange exposure is indicated." K X
  Q
@@ -40,10 +40,13 @@ SC S DGSCON=$S('$D(^DPT(DFN,.3)):0,$P(^(.3),U,1)="Y":1,1:0) I 'DGSCON W !?4,*7,"
  ;
 ECD ;primary eligibility code input transform
  ;
- N DGNODE,DGPC,DGSER,DGVT,DGXX
+ N DGNODE,DGPC,DGSER,DGVT,DGXX,DGCOV
  S DGVT=$G(^DPT(DFN,"VET")),DGSER=$S('$D(^DPT(DFN,.3)):0,$P(^(.3),U,1)="Y":1,1:0)
  I DGVT']"" K X W !?4,*7,"'VETERAN (Y/N)' prompt must be answered to select an Eligibility Code'" Q
- S DIC("S")="I $P(^DIC(8,+Y,0),U,5)=DGVT,'$P(^(0),U,7)" I DGVT="N" G ECDS
+ ; DG*5.3*1014 - Capture if COLLATERAL OF VET is the current Primary Eligibility
+ S DGCOV=0 I $$GET1^DIQ(2,DFN_",",.361,"E")="COLLATERAL OF VET." S DGCOV=1
+ ; DG*5.3*1061 Add eligibilities 24 and 25 to the screening logic
+ S DIC("S")="I $P(^DIC(8,+Y,0),U,5)=DGVT,'$P(^(0),U,7),$$NATCODE^DGENELA(+Y)'=24&($$NATCODE^DGENELA(+Y)'=25)" I DGVT="N" G ECDS
  I DGSER S DGPC=$S(+$P(^DPT(DFN,.3),U,2)>49:1,1:0),DGXX=$S(DGPC:1,1:3),DIC("S")=DIC("S")_",($P(^(0),U,9)="_DGXX_")" G ECDS ;sc only
  I $P($G(^DPT(DFN,.52)),"^",5)="Y" S DIC("S")=DIC("S")_",($P(^(0),U,9)=18)" G ECDS ;pow only
  S DGXX="^1^3^18^" ; no sc<50, sc 50-100, pow
@@ -60,5 +63,10 @@ ECDS D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X
  ;
  ;catastrophic disability can not be primary
  I $G(X),$$NATNAME^DGENELA(X)="CATASTROPHICALLY DISABLED" K X Q
+ ; DG*5.3*1061 Prevent eligibilities 24 and 25 from being primary eligibilities
+ I $G(X),$$NATCODE^DGENELA(X)=24 K X Q
+ I $G(X),$$NATCODE^DGENELA(X)=25 K X Q
  ;
+ ; DG*5.3*1014 - if editing Primary Eligibility "COLLATERAL OF VET", save off any CCPs
+ I $G(X),DGCOV D REMOVE^DGRP1152U(DFN)
  Q

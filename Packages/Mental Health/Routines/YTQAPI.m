@@ -1,5 +1,5 @@
 YTQAPI ;ASF/ALB - MHQ REMOTE PROCEEDURES ; 4/3/07 10:36am
- ;;5.01;MENTAL HEALTH;**85,130,141**;Dec 30, 1994;Build 85
+ ;;5.01;MENTAL HEALTH;**85,130,141,182**;Dec 30, 1994;Build 13
  ;
  ; External Reference    ICR#
  ; ------------------   -----
@@ -15,6 +15,7 @@ TSLIST(YSDATA) ;list tests and surveys
  S YSDATA=$NA(^TMP($J,"YSTL"))
  S N=1,^TMP($J,"YSTL",N)="[DATA]"
  S YSTEST="" F  S YSTEST=$O(^YTT(601.71,"B",YSTEST)) Q:YSTEST=""  D
+ . I $E(YSTEST,1,4)="CAT-"!($E(YSTEST,1,4)="CAD-") Q  ;CAT only in MHA-Web
  . S YSTESTN=$O(^YTT(601.71,"B",YSTEST,0))       ;6
  . S N=N+1
  . S G=$$GET1^DIQ(601.71,YSTESTN_",",18,"I")    ;1

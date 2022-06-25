@@ -1,5 +1,5 @@
 BPSOSCC ;BHAM ISC/FCS/DRS/DLF - Set up BPS() ;06/01/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,8,10,11,19**;JUN 2004;Build 18
+ ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,8,10,11,19,27**;JUN 2004;Build 15
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; GETINFO - Create BPS array for non-repeating data
@@ -48,9 +48,12 @@ GETINFO(IEN59,IEN5902) ; EP - BPSOSCB
  D DEM^VADPT,ADD^VADPT
  S BPS("Patient","IEN")=DFN
  S (X,BPS("Patient","Name"))=$G(VADM(1))
- D NAMECOMP^XLFNAME(.X)
- S BPS("Patient","Last Name")=$G(X("FAMILY"))
- S BPS("Patient","First Name")=$G(X("GIVEN"))
+ D SETNAME^PSOSPMUT(DFN)
+ S BPS("Patient","Last Name")=$G(PSONAME("LAST"))
+ S BPS("Patient","First Name")=$G(PSONAME("FIRST"))
+ S BPS("Patient","Middle Name")=$G(PSONAME("MIDDLE"))
+ S BPS("Patient","Prefix")=$G(PSONAME("PREFIX"))
+ S BPS("Patient","Suffix")=$G(PSONAME("SUFFIX"))
  S BPS("Patient","Sex")=$P($G(VADM(5)),"^",1)
  S X=$P($G(VADM(3)),"^")  ; date of birth, FM format
  S BPS("Patient","DOB")=($E(X,1,3)+1700)_$E(X,4,7)

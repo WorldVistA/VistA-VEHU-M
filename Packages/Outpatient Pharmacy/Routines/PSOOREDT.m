@@ -1,14 +1,18 @@
 PSOOREDT ;BIR/SAB - Edit orders from backdoor ;5/8/08 3:27pm
- ;;7.0;OUTPATIENT PHARMACY;**4,20,27,37,57,46,78,102,104,119,143,148,260,281,304,289,298,379,377,391,313,427,411,505,517,574**;DEC 1997;Build 53
+ ;;7.0;OUTPATIENT PHARMACY;**4,20,27,37,57,46,78,102,104,119,143,148,260,281,304,289,298,379,377,391,313,427,411,505,517,574,524,617**;DEC 1997;Build 110
  ;External reference to ^PSDRUG( supported by DBIA 221
  ;External reference to L^PSSLOCK supported by DBIA 2789
  ;External reference to UL^PSSLOCK supported by DBIA 2789
  ;External reference to PSOL^PSSLOCK supported by DBIA 2789
  ;External reference to PSOUL^PSSLOCK supported by DBIA 2789
  ;External reference to ^VA(200 supported by DBIA 10060
+ ;
+ ;*524 add Hazardous meds alerts
+ ;
 SEL K PSOISLKD,PSOLOKED S PSOPLCK=$$L^PSSLOCK(PSODFN,0) I '$G(PSOPLCK) D LOCK^PSOORCPY D SVAL K PSOPLCK S VALMBCK="" Q
  K PSOPLCK D PSOL^PSSLOCK($P(PSOLST(ORN),"^",2)) I '$G(PSOMSG) D UL^PSSLOCK(+$G(PSODFN)) D SVALO K PSOMSG S VALMBCK="" Q
  K PSOMSG S PSOLOKED=1
+ N PSOHZ S PSOHZ=0    ;reset haz alert displayed to user *524
  S REF=0 S:$$LSTRFL^PSOBPSU1($P(PSOLST(ORN),"^",2)) REF=1  ;*377
  K PSORX("DFLG"),DIR,DUOUT,DIRUT S DIR("A")="Select fields by number"
  S DIR(0)="LO^1:"_$S($$STATUS^PSOBPSUT($P(PSOLST(ORN),"^",2))'="":21,$G(REF):20,1:19)
@@ -56,7 +60,8 @@ EDT ; Rx Edit (Backdoor)
  .S DIR(0)="E" D ^DIR K DIR
  F FLD=1:1:$L(FST,",") Q:$P(FST,",",FLD)']""!($G(PSORXED("DFLG")))!($G(PSORX("DFLG")))  S FLN=+$P(FST,",",FLD) S DRGIEN=PSODRUG("IEN") D
  .S FLNCHK=","_FLN_","
- .S PSORXED("DFLG")=0,(DA,PSORXED("IRXN"),PSORENW("OIRXN"))=$P(PSOLST(ORN),"^",2),RX0=^PSRX(PSORXED("IRXN"),0),PSOPKI=$P($G(^PSRX(PSORXED("IRXN"),"PKI")),"^") S:$G(PSOSIG)="" PSOSIG=$P(^("SIG"),"^")
+ .S PSORXED("DFLG")=0,(DA,PSORXED("IRXN"),PSORENW("OIRXN"))=$P(PSOLST(ORN),"^",2),RX0=^PSRX(PSORXED("IRXN"),0)
+ .S PSOPKI=$S($P($G(^PSRX(PSORXED("IRXN"),"PKI")),"^")!$P($G(^PSRX(PSORXED("IRXN"),"PKI")),"^",3):1,1:0) S:$G(PSOSIG)="" PSOSIG=$P(^("SIG"),"^")
  .;*298 Track PI and Oth Lang PI
  .S:$G(PSOPINS)="" PSOPINS=$G(^PSRX(DA,"INS")) S:$G(PSOOINS)="" PSOOINS=$G(^PSRX(DA,"INSS"))
  .I '$G(PSOSIGFL) D

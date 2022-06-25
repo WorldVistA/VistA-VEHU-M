@@ -1,5 +1,5 @@
-PSORXVW ;BHAM ISC/SAB - listman view of a prescription ;6/7/12 7:00pm
- ;;7.0;OUTPATIENT PHARMACY;**14,35,46,96,103,88,117,131,146,156,185,210,148,233,260,264,281,359,385,400,391,313,427,504**;DEC 1997;Build 15
+PSORXVW ;BIR/SAB - ListMan View of a Prescription ;Jan 05, 2021@12:07
+ ;;7.0;OUTPATIENT PHARMACY;**14,35,46,96,103,88,117,131,146,156,185,210,148,233,260,264,281,359,385,400,391,313,427,504,622**;DEC 1997;Build 44
  ;External reference to File ^PS(55 supported by DBIA 2228
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference ^PSDRUG( supported by DBIA 221
@@ -36,6 +36,7 @@ DP ; DBIA #4711 entry point from ECME
  S ^TMP("PSOHDR",$J,6,0)=$S(+$P(WT,"^",8):$P(WT,"^",9)_" ("_$P(WT,"^")_")",1:"_______ (______)")
  S ^TMP("PSOHDR",$J,7,0)=$S($P(HT,"^",8):$P(HT,"^",9)_" ("_$P(HT,"^")_")",1:"_______ (______)") K VM,WT,HT S PSOHD=7
  S GMRA="0^0^111" D EN1^GMRADPT S ^TMP("PSOHDR",$J,8,0)=+$G(GMRAL)
+ S ^TMP("PSOHDR",$J,14,0)=$$POSTSHRT^WVRPCOR(PSODFN)
  D DEM^VADPT I +VADM(6) D
  .S SSN=$P(^DPT(PSODFN,0),"^",9) W !,$C(7),?10,$P(^DPT(PSODFN,0),"^")_" ("_$E(SSN,1,3)_"-"_$E(SSN,4,5)_"-"_$E(SSN,6,9)_") DIED "_$P(VADM(6),"^",2),!
  .W "All Active Medications will be Autocanceled!",! H 2 S PSODEATH=1

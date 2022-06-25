@@ -1,5 +1,11 @@
 ECXUD ;ALB/JAP,BIR/DMA,PTD-Extract from UNIT DOSE EXTRACT DATA File (#728.904) ;6/26/19  10:46
- ;;3.0;DSS EXTRACTS;**10,8,24,33,39,46,49,71,84,92,107,105,120,127,144,149,154,161,166,170,174,178**;Dec 22, 1997;Build 67
+ ;;3.0;DSS EXTRACTS;**10,8,24,33,39,46,49,71,84,92,107,105,120,127,144,149,154,161,166,170,174,178,181**;Dec 22, 1997;Build 71
+ ;
+ ;Reference to $$LJ^XLFSTR supported by ICR #10104
+ ;Reference to EN^DIQ1 supported by ICR #10015
+ ;Reference to the Instution field in ^DG(40.8,0) supported by ICR #417
+ ;Reference to ^DG(40.8,"AD") cross reference supported by ICR #2817
+ ;
 BEG ;entry point from option
  I '$O(^ECX(728.904,"A",0)) W !,"There are no unit dose orders to extract",!! R X:5 K X Q
  D SETUP I ECFILE="" Q
@@ -17,6 +23,7 @@ START ;start package specific extract
  .S ECXJ=0 F  S ECXJ=$O(^ECX(728.904,"A",ECD,ECXJ)) Q:'ECXJ  Q:QFLG  I $D(^ECX(728.904,ECXJ,0)) D
  ..S DATA=^ECX(728.904,ECXJ,0),^(1)=$P(EC23,U,2),^ECX(728.904,"AC",$P(EC23,U,2),ECXJ)="" D STUFF
  K ^TMP($J,"ECXP")
+ I $D(^TMP($J,"ECXUDM")) D SENDMSG^ECXUD1 ;181 - Send messages with list of clinics with NO/Inactive Stop Code
  I 'RERUN D CLEAN(0,$$FMADD^XLFDT(ECSD,-180)) ;149 Remove old log entries
  Q
  ;
@@ -69,6 +76,9 @@ STUFF ;get data
  S ECXORDST="" I ECXA="O" D
  .;Get ordering stop code based on FY 2006 logic for outpatient
  .S ECXORDST=$$DOUDO^ECXUTL5(ECXDFN,ON)
+ .I $P(ECXORDST,U,2)'="" D  ;181 - No/Inactive Stop Code, default to PHA. Save information to send mail later
+ ..D SETTMP(ECXORDST)
+ ..S ECXORDST="PHA"
  ;Ordering Provider Person Class
  S ECXOPPC=$$PRVCLASS^ECXUTL($E(ECXPRO,2,999),$P(DATA,U,9))
  S (ECXBCDD,ECXBCDG,ECXBCUA,ECXBCIF)="" ;144 BCMA are place holders now
@@ -241,4 +251,27 @@ SETUP ;Set required input for ECXTRAC
  ;
 QUE ; entry point for the background requeuing handled by ECXTAUTO
  D SETUP,QUE^ECXTAUTO,^ECXKILL
+ Q
+ ;
+SETTMP(STR) ;181 - Set global TMP for Mail Message
+ N CLIN,SCODE,DIC,ECXDIC,ECXDICA,ECXNOSC,ECXINVSC,DIQ,DR,DA
+ I $P(STR,U,2)="MISSING STOP CODE" D  Q
+ .S CLIN=$P(STR,U)
+ .I $D(^TMP($J,"ECXUDM","NOSC",CLIN)) Q
+ .I '$D(^TMP($J,"ECXUDM","ECXNOSC")) S ^TMP($J,"ECXUDM","ECXNOSC")=0
+ .S ECXNOSC=^TMP($J,"ECXUDM","ECXNOSC")+1
+ .S DIC="^SC(",DIQ="IE",DIQ="ECXDIC",DR=".01",DA=CLIN D EN^DIQ1
+ .S ^TMP($J,"ECXUDM","ECXNOSC",ECXNOSC,0)=$J(CLIN,8)_"  "_$$LJ^XLFSTR(ECXDIC(44,CLIN,.01),32)
+ .S ^TMP($J,"ECXUDM","ECXNOSC")=ECXNOSC
+ .S ^TMP($J,"ECXUDM","NOSC",CLIN)=""
+ I $P(STR,U,2)="INVALID STOP CODE" D
+ .S CLIN=$P(STR,U),SCODE=$P(STR,U,3)
+ .I $D(^TMP($J,"ECXUDM","INVSC",CLIN)) Q
+ .I '$D(^TMP($J,"ECXUDM","ECXINVSC")) S ^TMP($J,"ECXUDM","ECXINVSC")=0
+ .S ECXINVSC=^TMP($J,"ECXUDM","ECXINVSC")+1
+ .S DIC="^SC(",DIQ="IE",DIQ="ECXDIC",DR=".01",DA=CLIN D EN^DIQ1
+ .S DIC="^DIC(40.7,",DIQ(0)="E",DIQ="ECXDICA",DR=".01;1;2",DA=SCODE D EN^DIQ1
+ .S ^TMP($J,"ECXUDM","ECXINVSC",ECXINVSC,0)=$J(CLIN,8)_"/"_$$LJ^XLFSTR(ECXDIC(44,CLIN,.01),25)_"  "_$J(ECXDICA(40.7,SCODE,1,"E"),8)_"/"_$$LJ^XLFSTR(ECXDICA(40.7,SCODE,.01,"E"),25)
+ .S ^TMP($J,"ECXUDM","ECXINVSC")=ECXINVSC
+ .S ^TMP($J,"ECXUDM","INVSC",CLIN)=""
  Q

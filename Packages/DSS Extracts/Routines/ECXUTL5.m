@@ -1,5 +1,5 @@
 ECXUTL5 ;ALB/JRC - Utilities for DSS Extracts ;5/9/19  16:31
- ;;3.0;DSS EXTRACTS;**71,84,92,103,105,120,136,166,170,174**;Dec 22, 1997;Build 33
+ ;;3.0;DSS EXTRACTS;**71,84,92,103,105,120,136,166,170,174,181**;Dec 22, 1997;Build 71
  ;
 REPEAT(CHAR,TIMES) ;REPEAT A STRING
  ;INPUT  : CHAR - Character to repeat
@@ -40,7 +40,7 @@ TYPE(DFN) ;Determine patient type DBIA #2511
  ;   DFN = patient ien
  ;
  ;   output
- ;   ECXPTYPE = patient type external value from fle 391
+ ;   ECXPTYPE = patient type external value from file 391
  ;
  ;          AC = ACTIVE DUTY        MI = MILITARY RETIREE
  ;          AL = ALLIED VETERAN     NO = NON-VETERAN (OTHER)
@@ -112,7 +112,9 @@ DOIVPO(K,L) ;Add destination for outpatient ivp orders
  ;     Input     K - DFN
  ;               L - Order # from Pharmacy Patient File (#55)
  ;
- ;     Output     ordering stop code
+ ;     Output    ordering stop code (clinic has been assigned a valid stop code)
+ ;          OR   Clinic^MISSING STOP CODE  
+ ;               Clinic^INVALID STOP CODE^Stop Code
  ;
  N ECXDIC,ECXDICA,ECXDICB,DOIVPO,CLINIC,SCODE,DIC,DIQ,DR,DA
  S (ECXDIC,ECXDICA,ECXDICB,DOIVPO,CLINIC,SCODE)=""
@@ -127,9 +129,11 @@ DOIVPO(K,L) ;Add destination for outpatient ivp orders
  I 'CLINIC Q SCODE
  ;Get stop code pointer to file 40.7 from file 44
  S DIC="^SC(",DIQ(0)="I",DIQ="ECXDICA",DR="8",DA=CLINIC D EN^DIQ1
- S SCODE=ECXDICA(44,CLINIC,8,"I")
+ S SCODE=$G(ECXDICA(44,CLINIC,8,"I")) ;181 - Add $Get
+ I 'SCODE S SCODE=CLINIC_U_"MISSING STOP CODE" Q SCODE  ;181 - Clinic has NO stop code
  ;Get stop code external value
- S DIC="^DIC(40.7,",DIQ(0)="E",DIQ="ECXDICB",DR="1",DA=SCODE D EN^DIQ1
+ S DIC="^DIC(40.7,",DIQ(0)="E",DIQ="ECXDICB",DR="1;2",DA=SCODE D EN^DIQ1 ;181 - Add Inactive Date
+ I $G(ECXDICB(40.7,SCODE,2,"E"))'="" S SCODE=CLINIC_U_"INVALID STOP CODE"_U_SCODE Q SCODE  ;181 - Stop Code is Inactive
  S SCODE=$G(ECXDICB(40.7,SCODE,1,"E"))
  Q SCODE
  ;
@@ -137,7 +141,9 @@ DOUDO(K,L) ;Add destination for outpatient udp orders
  ;     Input     K - DFN
  ;               L - Order # from Pharmacy Patient File (#55)
  ;
- ;     Output     ordering stop code
+ ;     Output    ordering stop code (clinic has been assigned a valid stop code)
+ ;          OR   Clinic^MISSING STOP CODE  
+ ;               Clinic^INVALID STOP CODE^Stop Code
  ;
  N ECXDIC,ECXDICA,ECXDICB,DOIVPO,CLINIC,SCODE,DIC,DIQ,DR,DA
  S (ECXDIC,ECXDICA,ECXDICB,DOIVPO,CLINIC,SCODE)=""
@@ -151,9 +157,11 @@ DOUDO(K,L) ;Add destination for outpatient udp orders
  I 'CLINIC Q SCODE
  ;Get stop code pointer to file 40.7 from file 44
  S DIC="^SC(",DIQ(0)="I",DIQ="ECXDICA",DR="8",DA=CLINIC D EN^DIQ1
- S SCODE=ECXDICA(44,CLINIC,8,"I")
+ S SCODE=$G(ECXDICA(44,CLINIC,8,"I")) ;181 - Add $Get
+ I 'SCODE S SCODE=CLINIC_U_"MISSING STOP CODE" Q SCODE  ;181 - Clinic has NO stop code
  ;Get stop code external value
- S DIC="^DIC(40.7,",DIQ(0)="E",DIQ="ECXDICB",DR="1",DA=SCODE D EN^DIQ1
+ S DIC="^DIC(40.7,",DIQ(0)="E",DIQ="ECXDICB",DR="1;2",DA=SCODE D EN^DIQ1 ;181 -  Add Inactive Date
+ I $G(ECXDICB(40.7,SCODE,2,"E"))'="" S SCODE=CLINIC_U_"INVALID STOP CODE"_U_SCODE Q SCODE  ;181 - Stop Code is Inactive
  S SCODE=$G(ECXDICB(40.7,SCODE,1,"E"))
  Q SCODE
  ;

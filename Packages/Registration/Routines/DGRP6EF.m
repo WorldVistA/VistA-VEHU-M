@@ -1,5 +1,5 @@
-DGRP6EF ;ALB/TMK,EG,BAJ,JLS - REGISTRATION SCREEN 6 FIELDS FOR EXPOSURE FACTORS ;05 Feb 2015  11:06 AM
- ;;5.3;Registration;**689,659,737,688,909**;Aug 13,1993;Build 32
+DGRP6EF ;ALB/TMK,EG,BAJ,JLS,ARF,JAM - REGISTRATION SCREEN 6 FIELDS FOR EXPOSURE FACTORS ;05 Feb 2015  11:06 AM
+ ;;5.3;Registration;**689,659,737,688,909,1014,1018**;Aug 13,1993;Build 5
  ;
 EN(DFN,QUIT) ; Display Environmental exposure factors/allow to edit
  N I,IND,DG321,DG322,DGCT,DIR,Z,X,Y,DIE,DR,DA,DGNONT
@@ -10,7 +10,16 @@ EN1 D CLEAR^VALM1
  S DG321=$G(^DPT(DFN,.321)),DG322=$G(^DPT(DFN,.322))
  ;
  S DIR(0)="SA^",DGCT=0
- S DGCT=DGCT+1,DIR("A",DGCT)=$$SSNNM^DGRPU(DFN)
+ N DGSSNSTR,DGPTYPE,DGSSN,DGDOB ;ARF-DG*5.3*1014 begin - add standardize patient data to the screen banner
+ S DGSSNSTR=$$SSNNM^DGRPU(DFN)
+ S DGSSN=$P($P(DGSSNSTR,";",2)," ",3)
+ S DGDOB=$$GET1^DIQ(2,DFN,.03,"I")
+ S DGDOB=$$UP^XLFSTR($$FMTE^XLFDT($E(DGDOB,1,12),1))
+ S DGPTYPE=$$GET1^DIQ(391,$$GET1^DIQ(2,DFN_",",391,"I")_",",.01)
+ S:DGPTYPE="" DGPTYPE="PATIENT TYPE UNKNOWN"
+ S DGCT=DGCT+1,DIR("A",DGCT)=$P(DGSSNSTR,";",1)_$S($$GET1^DIQ(2,DFN,.2405)'="":" ("_$$GET1^DIQ(2,DFN,.2405)_")",1:"")_"    "_DGDOB
+ S DGCT=DGCT+1,DIR("A",DGCT)=$S($P($P(DGSSNSTR,";",2)," ",2)'="":$E($P($P(DGSSNSTR,";",2)," ",2),1,40)_"    ",1:"")_DGSSN_"    "_DGPTYPE
+ ;S DGCT=DGCT+1,DIR("A",DGCT)=$$SSNNM^DGRPU(DFN) ;ARF-DG*5.3*1014 end
  S DGCT=DGCT+1,DIR("A",DGCT)="",$P(DIR("A",DGCT),"=",81)=""
  S DGCT=DGCT+1,DIR("A",DGCT)=$J("",23)_"**** ENVIRONMENTAL FACTORS ****",DGCT=DGCT+1,DIR("A",DGCT)=" "
  S IND=$S('$G(DGRPV):"[]",1:"<>")
@@ -19,7 +28,8 @@ EN1 D CLEAR^VALM1
  ; "OTHER" choice added DG*5.3*688
  ; variables S,L1,L2, & L3 used for dynamic spacing
  S SEL=$P(DG321,U,13),S=$C(32),($P(L1,S,6),$P(L2,S,$S(SEL="O":3,1:2)),$P(L3,S,3))=""
- S TYPE=$S(SEL="K":" (DMZ) ",SEL="V":" (VIET)",SEL="O":" (OTH)",1:$J("",7))
+ ; DG*5.3*1018 - Add Blue Water Navy Value "B"
+ S TYPE=$S(SEL="B":" (BWN) ",SEL="K":" (DMZ) ",SEL="V":" (VIET)",SEL="O":" (OTH)",1:$J("",7))
  S DIR("A",DGCT)=Z_L1_"A/O Exp.: "_$$YN^DGRP6CL(DG321,2)_TYPE_L2_"Reg: "_$$DAT^DGRP6CL(DG321,7,12)_L3_"Exam: "_$$DAT^DGRP6CL(DG321,9,12)_"A/O#: "_$P(DG321,U,10)
  S Z=$E(IND)_"2"_$E(IND,2)
  S DGCT=DGCT+1,DIR("A",DGCT)=Z_"     ION Rad.: "_$$YN^DGRP6CL(DG321,3)_$J("",8)_"Reg: "_$$DAT^DGRP6CL(DG321,11,12)_"Method: "
@@ -100,7 +110,23 @@ EF(DFN,LIN) ;
  . S Z="Camp Lejeune",SEQ=5
  . D SETLNEX^DGRP6(Z,SEQ,.LIN,.LENGTH)
   Q
-  ; The following tag is a table of values.  Do not change location of values including null at SELTBL+0
+  ;
+CHKAOEL(DGY) ;DG*5.3*1018;jam; - Screen logic for .3213 (AGENT ORANGE EXPOSURE LOCATION) field in PATIENT file
+ ; Returns:  TRUE if the entry DGY is valid
+ ;
+ ; Only checking B (BLUE WATER NAVY) entry - All other entries are allowed
+ I DGY'="B" Q 1
+ N DGBWNDT
+ ; Allow B to be displayed when BWN ACTIVE DATE (#1402) in MAS PARAMETER file #43 is reached 
+ ; - Get the BWN ACTIVE DATE
+ S DGBWNDT=$$GET1^DIQ(43,1,1402,"I")
+ ; - If active date not defined, return FALSE
+ I 'DGBWNDT Q 0
+ ; - If active date is in the future, return FALSE
+ I DGBWNDT>$$DT^XLFDT Q 0
+ Q 1
+ ;
+ ; The following tag is a table of values.  Do not change location of values including null at SELTBL+0
 SELTBL ;;
  ;;NO VALUE
  ;;HIROSHIMA/NAGASAKI

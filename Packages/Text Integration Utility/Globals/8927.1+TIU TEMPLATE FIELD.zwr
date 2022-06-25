@@ -8735,7 +8735,7 @@ ZWR
 ^TIU(8927.1,18813,10,1,0)="[other areas of clinical relevance not "
 ^TIU(8927.1,18813,10,2,0)="included in earlier fields]"
 ^TIU(8927.1,22428,0)="VA-WH MAMMOGRAM GUIDANCE^H^0^0^VHA Breast Cancer Screening Guidelines^^0^0^0^0^0^0^0^0^0"
-^TIU(8927.1,22428,3)="http://vaww.prevention.domain/CPS/Screening_for_Breast_Cancer.asp"
+^TIU(8927.1,22428,3)="http://vaww.prevention.domain.ext/CPS/Screening_for_Breast_Cancer.asp"
 ^TIU(8927.1,22429,0)="HOMELESSNESS EDUCATIONAL MATERIALS^H^0^0^^^0^0^0^0^0^0^0^0^0"
 ^TIU(8927.1,22429,2,0)="^^4^4^3121024"
 ^TIU(8927.1,22429,2,1,0)="Local sites need to enter the url address for a "

@@ -1,5 +1,6 @@
-SDRRISRU ;10N20/MAH - Recall Reminder Utilities ;JAN 15, 2016
- ;;5.3;Scheduling;**536,627,648**;Aug 13, 1993;Build 3
+SDRRISRU ;ALB/MAH - Recall Reminder Utilities ;JAN 15, 2016
+ ;;5.3;Scheduling;**536,627,648,799**;Aug 13, 1993;Build 7
+ ;;Per VHA Directive 6402, this routine should not be modified
  ;
 OPENSLOT(SDRRIEN,SDRRST,SDRRND) ; Function returns the number of open (available)
  ; slots at the clinic during the time period.
@@ -75,8 +76,9 @@ DELUSER(SDRRIEN) ; Record deleted by a user.
  D DELSET(SDRRIEN,.SDRRFDA)
  Q
 DELSET(SDRRIEN,SDRRFDA) ;
- N SDRRREC
+ N SDRRREC,EAS
  S SDRRREC=$G(^SD(403.5,SDRRIEN,0))
+ S EAS=$G(^SD(403.5,SDRRIEN,1))
  S SDRRFDA(403.56,"+1,",.01)=$P(SDRRREC,U,1) ; patient
  S SDRRFDA(403.56,"+1,",2)=$P(SDRRREC,U,3)   ; accession #
  S SDRRFDA(403.56,"+1,",2.5)=$P(SDRRREC,U,7) ; comment
@@ -89,5 +91,6 @@ DELSET(SDRRIEN,SDRRFDA) ;
  S SDRRFDA(403.56,"+1,",6)=$P(SDRRREC,U,10)  ; date reminder sent
  S SDRRFDA(403.56,"+1,",7)=$P(SDRRREC,U,11)  ; user who entered recall
  S SDRRFDA(403.56,"+1,",7.5)=$P(SDRRREC,U,14) ;DATE/TIME RECALL ADDED   ;alb/sat SD*5.3*627
+ S SDRRFDA(403.56,"+1,",100)=EAS ;EAS TRACKING NUMBER ADDED
  D UPDATE^DIE("","SDRRFDA")
  Q

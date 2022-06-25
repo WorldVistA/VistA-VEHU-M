@@ -1,5 +1,5 @@
-MAGVIM01 ;WOIFO/DAC/NST/BT - Utilities for RPC calls for DICOM file processing ; Feb 12, 2020@23:41:39
- ;;3.0;IMAGING;**118,138,221,250**;Mar 19, 2002;Build 8
+MAGVIM01 ;WOIFO/DAC/NST/BT - Utilities for RPC calls for DICOM file processing ; Nov 05, 2020@07:26:32
+ ;;3.0;IMAGING;**118,138,221,250,283**;Mar 19, 2002;Build 5
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -45,9 +45,9 @@ CRTITEM(OUT,TYPE,SUBTYPE,STATUS,PLACEID,PRIORITY,MSGTAGS,CRTUSR,CRTAPP) ; Create
  I $G(PLACEID)="" S OUT=-9_SSEP_"No work item LOCATION provided" Q
  I $G(PRIORITY)="" S OUT=-10_SSEP_"No work item PRIORITY provided" Q
  I ($G(CRTUSR)="")&($G(CRTAPP)="") S OUT=-11_SSEP_"No work item USER/APPLICATION provided" Q
- ; P250 DAC - Removed P142 LOCATION screen and handle both STATION and LOCATION IENS as inputs
- I PLACEID?1N.N S LOCIEN=$$STA^XUAF4(PLACEID) ; If PLACEID is an integer it should be a LOCATION IEN
- I '$G(LOCIEN) S LOCIEN=$$IEN^XUAF4(PLACEID) ; If it wasn't a LOCATION IEN, it should be a STATION NUMBER
+ ; P250 DAC - Removed P142 LOCATION screen
+ ; P283 DAC - This function will now only accepts Station Numbers as inputs. Will convert to Institution IEN before filing.
+ S LOCIEN=$$IEN^XUAF4(PLACEID) ; If it wasn't a LOCATION IEN, it should be a STATION NUMBER
  I '$G(LOCIEN) S OUT=-11_SSEP_"Invalid LOCATION provided" Q  ; If it was a LOCATION IEN or a STATION NUMBER
  S FDA(2006.941,"+1,",.01)=CRTDAT
  S FDA(2006.941,"+1,",1)=TYPE

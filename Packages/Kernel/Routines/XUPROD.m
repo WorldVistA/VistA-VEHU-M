@@ -1,8 +1,8 @@
 XUPROD ;ISF/RWF - Is this a PROD account. ;18/06/20
- ;;8.0;KERNEL;**284,440,542,717,19999**;Jul 10, 1995;Build 10
+ ;;8.0;KERNEL;**284,440,542,717,742,10008**;Jul 10, 1995;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
- ; *19999 - Make XUPROD from *717 work on GT.M
+ ; *10008 - Make XUPROD from *717,*742 work on GT.M
  ;
  ;IA# 4440
 PROD(FORCE) ;Return 1 if this is a production account
@@ -64,9 +64,9 @@ EDIT ;Edit Logical - Physical fields
 CFG(CFG) ; RETURN BOOLEAN CHECK FOR CONFIGURATION TYPE
  I $ZV["GT.M" Q 0
  ;I $G(^|"%SYS"|SYS("ZCFG"))[CFG Q $S(^|"%SYS"|SYS("ZCFG")[("-"_CFG):0,1:1)
- N X,Y S X=$$INSTNM("U"),Y=$ZSSPORT
- I CFG="PRO" I Y>19700!(($E(X,6)="P")&("PS0^PAD^PRD^PSH"'[$E(X,6,8))) Q 1
- I CFG="TST" I Y=1975!($E(Y,1,3)=195)!($E(X,6)="T")!($L(X)=7&($E(X)="T")) Q:"TAD^TRD"[$E(X,6,8) 0 Q 1
+ N X,Y S X=$$INSTNM("U")
+ I CFG="PRO" I ($E(X,6)="P")&("PS0^PAD^PRD^PSH"'[$E(X,6,8)) Q 1
+ I CFG="TST" I ($E(Y,1,3)=195)!($E(X,6)="T")!($L(X)=7&($E(X)="T")) Q:"TAD^TRD"[$E(X,6,8) 0 Q 1
  I CFG="BE",$E(X,7,9)="SVR" Q 1
  I CFG="FE",$E(X,7,8)="A0"!($E(X,7,8)="TM") Q 1
  I CFG="MS" I $E(X,6,9)="SHMS"!($E(X,6,8)="SSM") Q 1

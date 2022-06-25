@@ -1,5 +1,5 @@
 SDB1 ;ALB/GRR - SET UP A CLINIC ;JAN 15, 2016
- ;;5.3;Scheduling;**20,183,221,567,627,726**;Aug 13, 1993;Build 36
+ ;;5.3;Scheduling;**20,183,221,567,627,726,775**;Aug 13, 1993;Build 5
  ;
  ;DH=PATTERN  DO=EXPIRATION DATE  X=START DATE
 B1 S DR=0,SB=STARTDAY-1/100,STR="{}&%?#@!$* XXWVUTSRQPONMLKJIHGFEDCBA0123456789jklmnopqrstuvwxyz",SDONE=1
@@ -13,7 +13,7 @@ X I X'>DO,$G(^SC(DA,"ST",X,1))["**CANCELLED**"!($G(^SC(DA,"ST",X,1))["X") S ^TMP
 SM S SM=$P("SU^MO^TU^WE^TH^FR^SA",U,DOW+1)_" "_$E(X,6,7)_$J("",SI+SI-6)_DH_$J("",64-$L(DH)) S:'SDSAV SDSAV=1,SDPAT=SM
 I S I=DR#1-SB*100,I=I#1*SI\.6+(I\1*SI)*2,S=$E(SM,I,999),SM=$E(SM,1,I-1)
  F Y=0:0 S Y=$O(^SC(DA,"S",DR,1,Y)) Q:Y'>0  I $P(^(Y,0),"^",9)'["C",((+$E($P(DR,".",2)_"000",1,4)>=($S($P($G(^SC(DA,"SL")),U,3)>0:+$P(^SC(DA,"SL"),U,3)_"00",1:800)))) D  ;Ignore appts prior to Begin time, SD*5.3*726
- .S SDSL=$P(^SC(DA,"S",DR,1,Y,0),U,2)/SL*(SL\(60/SDSI))*HSI-HSI F I=0:HSI:SDSL S ST=$E(S,I+2) S:ST="" ST=" " S S=$E(S,1,I+2-1)_$E(STR,$F(STR,ST)-2)_$E(S,I+3,999) D OB
+ .S SDSL=$P(^SC(DA,"S",DR,1,Y,0),U,2)/SL*(SL\(60/SDSI))*HSI-HSI F I=0:HSI:SDSL S ST=$E(S,I+2) S:ST="" ST=" " S S=$E(S,1,I+2-1)_$S("{}&%?#"[ST:ST,1:$E(STR,$F(STR,ST)-2))_$E(S,I+3,999) D OB ;SD*5.3*775 - Correct overbooks >10
  S SM=SM_S,DR=+$O(^SC(DA,"S",DR)) I DR\1=X G I
  I $L(SM)>SM S ^SC(DA,"ST",X,0)=X,^(1)=SM S:'$D(^SC(DA,"ST",0)) ^(0)="^44.005DA^^" I $D(^SC(DA,"ST",X,9)) S ^SC(DA,"OST",X,1)=SDPAT,^(0)=X S:'$D(^SC(DA,"OST",0)) ^(0)="^44.0002DA^^"
  N SDCNT F SDCAN=X:0 S SDCAN=$O(^SC(DA,"SDCAN",SDCAN)) Q:(SDCAN\1-(X\1))!'SDCAN  D  ;SD*5.3*726 - Update subfile counter and remove "MES" node when removing "SDCAN" node
@@ -62,7 +62,7 @@ CHK2 I SDIN<D,SDRE,SDRE'>D K SDIN Q
  I SDIN<D,SDRE>D S POP=2,D=SDRE,X=D F I=0:1:6 D DOW^SDM0 Q:Y=DOW  S X1=D,X2=1 D C^%DTC S D=X
  S Y=SDIN D DTS^SDUTL S Y1=Y,Y=SDRE1 D DTS^SDUTL W:POP=2&('CTR) !!,"    Clinic is inactive from ",Y1," to ",Y,! S:POP=2 CTR=1
  Q
-OB S SDSLOT=$E(STR,$F(STR,ST)-2) I SDSLOT?1P,SDSLOT'?1" " S ^SC(DA,"S",DR,1,Y,"OB")="O" K SDSLOT Q
+OB S SDSLOT=$S("{}&%?#"[ST:ST,1:$E(STR,$F(STR,ST)-2)) I SDSLOT?1P,SDSLOT'?1" " S ^SC(DA,"S",DR,1,Y,"OB")="O" K SDSLOT Q  ;SD*5.3*775 - Correct overbooks >10
  K ^SC(DA,"S",DR,1,Y,"OB"),SDSLOT Q
 HLPD W !,"ENTER THE DATE THIS CLINIC BECOMES AVAILABLE TO SEE PATIENTS"
  W !,"THE DATE ENTERED WILL BE THE FIRST DATE THAT APPOINTMENTS CAN",!,"BE MADE FOR THIS CLINIC" G G1^SDB

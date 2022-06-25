@@ -1,14 +1,14 @@
-SDEC50 ;ALB/SAT/JSM,WTC - VISTA SCHEDULING RPCS ;APR 30,2020@12:54
- ;;5.3;Scheduling;**627,658,665,672,722,723,737,694,745**;Aug 13, 1993;Build 40
+SDEC50 ;ALB/SAT/JSM,TAW - VISTA SCHEDULING RPCS ;JUL 19,2021@12:54
+ ;;5.3;Scheduling;**627,658,665,672,722,723,737,694,745,790,792**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 2004-038, this routine should not be modified
  ;
  ;  ICR
  ;  ---
- ;    723 - #42 Ward location
- ;   2437 - #405 patient movement
- ;   4837 - #123 Request/Consultation
- ;   7025 - #43 MAS parameters
- ;   7030 - #2 patient appointment data
+ ;  723 - #42 Ward location
+ ; 2437 - #405 patient movement
+ ; 4837 - #123 Request/Consultation
+ ; 7025 - #43 MAS parameters
+ ; 7030 - #2 patient appointment data
  Q
  ;
 FAPPTGET(SDECY,DFN,SDBEG,SDEND,SDANC) ; GET Future appointments for given patient and date range
@@ -43,13 +43,13 @@ FAPPTGET(SDECY,DFN,SDBEG,SDEND,SDANC) ; GET Future appointments for given patien
  ;  The RPC execution stops and the RPC Broker sends the error generated text back to the client.
  ;
  N IEN,SDANCT,SDCL,SDCLN,SDCONS,SDATA,SDDT,SDST,SDT,X,Y,%DT,SDSTDT,SDSTSTR ;745 lab
- N SDTMP,SDTYP,SDTYPN,SDNOD,SDRES,SDNOD2,SDLNK ;alb/sat 672 ;*zeb 723 5/2/19 
+ N SDTMP,SDTYP,SDTYPN,SDNOD,SDRES,SDNOD2,SDLNK,PRECHINSTEP ;alb/sat 672 ;*zeb 723 5/2/19 
  S SDECI=0
  K ^TMP("SDEC50",$J)
  S SDECY="^TMP(""SDEC50"","_$J_")"
  ; data header
  S SDTMP="T00020DFN^T00020CLINIC_IEN^T00030CLINIC_NAME^T00020APPT_DATE^T00020STATUS^T00100ANCTXT"
- S SDTMP=SDTMP_"^T00030SDLNK^T00030IEN^T00030APPTYPE_IEN^T00030APPTYPE_NAME^T00030CANDATE"   ;sat 658 IEN ;sat 672 APPTYPE ;pwc/lab 745 SDLNK/CANDATE
+ S SDTMP=SDTMP_"^T00030SDLNK^T00030IEN^T00030APPTYPE_IEN^T00030APPTYPE_NAME^T00030CANDATE^T00030PRECKNCOMPLETE"   ;sat 658 IEN ;sat 672 APPTYPE ;pwc/lab 745 SDLNK/CANDATE
  S @SDECY@(0)=SDTMP_$C(30)
  ;validate Patient (required)
  I '+DFN D ERR1^SDECERR(-1,"Invalid Patient ID.",.SDECI,SDECY) Q
@@ -81,7 +81,7 @@ FAPPTGET(SDECY,DFN,SDBEG,SDEND,SDANC) ; GET Future appointments for given patien
  .. S SDCL="",SDCLN="*CORRUPT DATA" ;*zeb+8 723 5/2/19 support appointments with no resource
  .. I SDRES]"" S SDCL=$$GET1^DIQ(409.831,SDRES_",",.04,"I") S SDCLN=$$GET1^DIQ(409.831,SDRES_",",.04) ;clinic IEN/clinic name
  .. S SDDT=$$GET1^DIQ(409.84,IEN_",",.01,"I") ;appointment start date/time ;used GET1 instead of ^DD("DD") because GUI needs leading zeroes
- .. ;  Change date/time conversion so midnight is handled properly.  694 wtc/pwc 1/7/2020
+ .. ; Change date/time conversion so midnight is handled properly.  694 wtc/pwc 1/7/2020
  .. S SDDT=$$FMTONET^SDECDATE(SDDT,"N")
  .. S SDSTSTR=$$APPTSTS(IEN,SDNOD,SDCL) ;current status ;745 lab
  .. S SDST=$P(SDSTSTR,"^",1) ;745 lab
@@ -91,7 +91,8 @@ FAPPTGET(SDECY,DFN,SDBEG,SDEND,SDANC) ; GET Future appointments for given patien
  .. E  S SDTYPN="REGULAR",SDTYP=$O(^SD(409.1,"B",SDTYPN,0)) ; 737 WTC 11/19/2019
  .. S SDNOD2=$G(^SDEC(409.84,IEN,2)),SDLNK=""
  .. S SDLNK=$S(SDNOD2="":"",1:$P(SDNOD2,U,1))  ;pwc *745 ptr link files
- .. S SDECI=SDECI+1 S @SDECY@(SDECI)=DFN_U_SDCL_U_SDCLN_U_SDDT_U_SDST_U_SDANCT_U_SDLNK_U_IEN_U_SDTYP_U_SDTYPN_U_SDSTDT_$C(30) ; pwc/lab *745 SDLNK/SDSTDT
+ .. S PRECHINSTEP=$$LASTCKNSTEP^SDESCKNSTEP(IEN)
+ .. S SDECI=SDECI+1 S @SDECY@(SDECI)=DFN_U_SDCL_U_SDCLN_U_SDDT_U_SDST_U_SDANCT_U_SDLNK_U_IEN_U_SDTYP_U_SDTYPN_U_SDSTDT_U_PRECHINSTEP_$C(30) ; pwc/lab *745 SDLNK/SDSTDT
  S @SDECY@(SDECI)=@SDECY@(SDECI)_$C(31)
  Q
  ;
@@ -133,14 +134,14 @@ APPTSTS(APPTIEN,APPTNOD,CLINIEN) ;Get current status for an entry in the SDEC AP
  I STS["INPATIENT",$S('VADMVT:1,'$P(^DG(43,1,0),U,21):0,1:$P($G(^DIC(42,+$P($G(^DGPM(VADMVT,0)),U,6),0)),U,3)="D") S STS=""
  ; -- determine ci/co indicator
  S CHKIO=$S($P(APPTNOD,U,14)]"":"CHECKED OUT",$P(APPTNOD,U,3)]"":"CHECKED IN",SDT>(DT+.2400):"FUTURE",1:"NO ACTION TAKEN") ;DT is a FileMan-assumable variable with the current date
- ;  Look for check-in time in the Location file (#44) if check-in/out indicator is NO ACTION TAKEN.  Needed 'cause VPS does not update Appointment file. wtc 10/31/2019 737
+ ; Look for check-in time in the Location file (#44) if check-in/out indicator is NO ACTION TAKEN.  Needed 'cause VPS does not update Appointment file. wtc 10/31/2019 737
  I CHKIO="NO ACTION TAKEN",CLINIEN'="" D  ;
  . N SDECD2 S SDECD2=$$FIND^SDAM2(DFN,SDT,CLINIEN) I SDECD2,$P($G(^SC(CLINIEN,"S",SDT,1,SDECD2,"C")),U,1)'="" S CHKIO="CHECKED IN" ;
  S:STS="" STS=CHKIO
  ;If status is NO ACTION TAKEN, check if cancelled in Patient file (by SDCANCEL),  wtc 11/4/2019 737
  ;Changed to if status not cancelled, check if cancelled in Patient file.  wtc 1/17/2020 737
  I STS'["CANCELLED" D  ;
- . I $P($G(^DPT(DFN,"S",SDT,0)),U,1)'=CLINIEN Q  ;  If appointment does not match, leave status alone.
+ . I $P($G(^DPT(DFN,"S",SDT,0)),U,1)'=CLINIEN Q  ;If appointment does not match, leave status alone.
  . S STS=$S($P($G(^DPT(DFN,"S",SDT,0)),U,2)="PC":"CANCELLED BY PATIENT",$P($G(^DPT(DFN,"S",SDT,0)),U,2)="C":"CANCELLED BY CLINIC",1:STS) ;
  ;
  I (STS="NO ACTION TAKEN"),($P(SDT,".")=DT),(CHKIO'["CHECKED") S CHKIO="TODAY"
@@ -261,11 +262,11 @@ CHKPT  ;alb/jsm 658 added to be used by PCSTGET and PCST2GET
 PCST2GET(SDECY,DFN,STOP,SDBEG,SDEND)  ;GET patient clinic status for a service/specialty (clinic stop) for a given time frame - has the patient been seen any clinics with the given service/specialty (clinic stop) in the past 24 months
  ;PCST2GET(SDECY,DFN,STOP,SDBEG,SDEND)  external parameter tag is in SDEC
  ;INPUT:
- ; DFN     = (required) Patient ID - Pointer to the PATIENT file 2  (lookup by name is not accurate if duplicates)
- ; STOP    = (required) CLINIC STOP or Service/Specialty name - NAME from the SD WL SERVICE/SPECIALTY file - looks for 1st active
- ;                      OR - Pointer to the CLINIC STOP file
- ; SDBEG   = (optional)  Begin date in external format; defaults to 730 days previous (24 months)
- ; SDEND   = (optional)  End date in external format; defaults to today
+ ; DFN   = (required) Patient ID - Pointer to the PATIENT file 2  (lookup by name is not accurate if duplicates)
+ ; STOP  = (required) CLINIC STOP or Service/Specialty name - NAME from the SD WL SERVICE/SPECIALTY file - looks for 1st active
+ ;                    OR - Pointer to the CLINIC STOP file
+ ; SDBEG = (optional)  Begin date in external format; defaults to 730 days previous (24 months)
+ ; SDEND = (optional)  End date in external format; defaults to today
  ;RETURN:
  ; Successful Return:
  ;  a single entry in the global array indicating that patient has or has not been seen.
@@ -339,7 +340,7 @@ PCSGET(SDECY,SDSVSP,SDCL)  ;GET clinics for a service/specialty (clinic stop)  ;
  ;PCSGET(SDECY,SDSVSP)  external parameter tag is in SDEC
  ;INPUT:
  ; SDSVSP  = (required) Service/Specialty name - NAME from the SD WL SERVICE/SPECIALTY file - looks for 1st active
- ;                       OR - Pointer to the SD WL SERVICE/SPECIALTY file
+ ;                      OR - Pointer to the SD WL SERVICE/SPECIALTY file
  ;RETURN:
  ; Successful Return:
  ;  global array containing Clinic IEN and Name of matching Hospital Locations
@@ -370,7 +371,6 @@ PCSGET(SDECY,SDSVSP,SDCL)  ;GET clinics for a service/specialty (clinic stop)  ;
  ;check for valid Service/Specialty
  S SDSVSP=$G(SDSVSP)
  I SDSVSP="" D ERR1^SDECERR(-1,"Service/Specialty ID required",SDECI,SDECY) Q
- ;I +SDSVSP,$D(^SDWL(409.31,+SDSVSP,0)) S SDSCN=$P($G(^SDWL(409.31,SDSVSP,0)),U,1)
  I '+SDSVSP D
  .S H=0 F  S H=$O(^DIC(40.7,"B",SDSVSP,H)) Q:H=""  D  Q:SDSCN'=0
  ..I $P(^DIC(40.7,H,0),U,3)'="",$P(^DIC(40.7,H,0),U,3)<$$NOW^XLFDT() Q

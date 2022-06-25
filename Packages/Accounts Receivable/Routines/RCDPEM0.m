@@ -1,5 +1,5 @@
 RCDPEM0 ;ALB/TMK - ERA MATCHING TO EFT (cont) ;Jun 11, 2014@13:04:03
- ;;4.5;Accounts Receivable;**173,208,220,298,304,345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**173,208,220,298,304,345,375,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -87,10 +87,12 @@ MATCH(RCZ,RCPROC) ;EP from RCDPEM
  . S XX=$$GETPAY^RCDPEU1(NAM0,TIN0)          ; PRCA*4.5*345 - Get the IEN from 344.6
  . ;
  . ; Determine if ERA should be excluded using the site parameters
- . S RCERATYP=$$PHARM^RCDPEAP1(RCRZ)         ; It must be a Medical/TRICARE or Rx ERA
+ . I $$CHKTYPE^RCDPEU1(XX,"T") S RCERATYP=2  ; PRCA*4.5*349 - Check if this is TRICARE ERA
+ . E  S RCERATYP=$$PHARM^RCDPEAP1(RCRZ)      ; Else it must be a Medical or Rx ERA
  . S RCXCLDE=0
  . S:RCERATYP=0 RCXCLDE=$$EXCLUDE^RCDPEAP1(RCRZ)    ; PRCA*4.5*345 - Changed to =0 from 'RCERATYP
  . S:RCERATYP=1 RCXCLDE=$$EXCLDRX^RCDPEAP1(RCRZ)    ; PRCA*4.5*345 - Changed to =1 from RCERATYP
+ . S:RCERATYP=2 RCXCLDE=$$EXCLDTR^RCDPEAP1(RCRZ)    ; PRCA*4.5*349 - Added Line
  . Q:RCXCLDE                                 ; Quit if the Payer is excluded from Auto-Post
  . ;
  . ; Ignore ERA with exceptions, zero balance, or ERA-level adjustments
@@ -167,7 +169,7 @@ ADDREC(RCDEP,RCZ) ; Add receipt, send CR to FUND 528704, Rev src cd 8NZZ
  .. ;
  .. S DR=DR_";1.02////Auto added EDI Lockbox deposit;.06////"_$P(RC00,U,12)_";.04////"_$J(+$P(RC00,U,7),"",2)_";.14////"_RCTRANDA
  .. N N S N=+$O(^VA(200,"B","EDILOCKBOX,AUTOMATIC",0)) S:N=0 N=.5
- .. S DR=DR_";.12////"_N
+ .. S DR=DR_";.12////"_N_";.29////"_$P(RC00,U,16) ;PRCA*4.5*375 - Add Debit/Credit Flag to Receipt Transactions
  .. S DA(1)=RECTDA,DA=RCTRANDA,DIE="^RCY(344,"_DA(1)_",1,"
  .. S:$E(DR)=";" DR=$P(DR,";",2,999) D ^DIE
  .. S DR=".14///"_RCTRANDA_";.09///"_RECTDA,DIE="^RCY(344.31,",DA=RCT D ^DIE

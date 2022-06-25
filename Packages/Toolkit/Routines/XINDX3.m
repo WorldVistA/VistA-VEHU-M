@@ -1,7 +1,6 @@
-XINDX3 ;ISC/REL,GRK,RWF - PROCESS MERGE/SET/READ/KILL/NEW/OPEN COMMANDS ;2018-02-22  12:56 PM
- ;;7.3;TOOLKIT;**20,27,61,68,110,121,128,132,133,140,10001**;Apr 25, 1995;Build 4
- ; Original routine authored by Department of Veterans Affairs
- ; RD3+3 contributed by George Timson (date written unknown)
+XINDX3 ;ISC/REL,GRK,RWF - PROCESS MERGE/SET/READ/KILL/NEW/OPEN COMMANDS ;06/24/08  15:44
+ ;;7.3;TOOLKIT;**20,27,61,68,110,121,128,132,133,140,149**;Apr 25, 1995;Build 1
+ ; Per VHA Directive 2004-038, this routine should not be modified.
 PEEK S Y=$G(LV(LV,LI+1)) Q
 PEEK2 S Y=$G(LV(LV,LI+2)) Q
 INC2 S LI=LI+1 ;Drop into INC
@@ -60,7 +59,7 @@ KL1 D INC,ARG^XINDX2 Q
 KL2 S GK="!"
  I S1'="(" S ERR=24 D ^XINDX1
  G ARG^XINDX2
-KL3 I "^DT^DTIME^DUZ^IOST^IOM^U^"[("^"_S_"^") S ERR=39,ERR(1)=S D ^XINDX1
+KL3 I "^DT^DTIME^DILOCKTM^DUZ^IOST^IOM^U^"[("^"_S_"^") S ERR=39,ERR(1)=S D ^XINDX1 ;p149
  I "IO"=S D:S1="(" PEEKDN S ERR=39,ERR(1)=S_$S(S1["(":S1_Y_")",1:"") D:S1'="(" ^XINDX1 I S1="(",("QC"'[$E(Y,2)) D ^XINDX1
 KL5 S GK="!" D ARG^XINDX2 Q  ;KILL SUBS
  Q
@@ -73,7 +72,7 @@ N2 D INC Q:S=""  G N2:CH=","
  ;check for "@", functions, special variables, or %variables
  I CH?1P,(CH'=S) D  I $G(ERTX)]"" K ERTX G N2
  . Q:"@("[CH!(CH="%"&($E(S,2,8)?.1A.E))  ;check what's indirected on next pass or
- . ;if not $ET or $ES must use indirection
+ . ;if not $ET or $ES must use indirection 
  . I "$"[CH Q:$E(S,1,3)="$ET"!($E(S,1,3)="$ES")  I LI>1,(LV(LV,LI-1)="@") Q
  . D E^XINDX1(11)
  . Q
@@ -94,7 +93,7 @@ RD2 Q:","[CH
  D INC G RD2
 RD3 Q:","[CH  I "!#?"[CH D INC G RD3
  I (CH="%")!(CH?1A)!(CH="@") D ARG^XINDX2,INC G RD3
- I CH="$" S ERR=21,RDTIME=1 D ^XINDX1 ;**MSC/EJ  READ can't contain $$ (Erwin); READ $P is invalid.
+ I CH="$" S ERR=21,RDTIME=1 D ^XINDX1
  Q
 O S STR=ARG,AC=99 D ^XINDX9,INC S ARG="" I S["@" D ARGS^XINDX2 Q
  D ARG^XINDX2,INC D  D INC,ARGS^XINDX2 Q

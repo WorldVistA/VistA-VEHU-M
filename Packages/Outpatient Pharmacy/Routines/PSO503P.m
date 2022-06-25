@@ -1,0 +1,28 @@
+PSO503P ;EPIP/RTW - PHARMACY TELEPHONE REFILL TESTING; 12/26/17 12:13pm
+ ;;7.0;OUTPATIENT PHARMACY;**503**;Dec 1997;Build 45
+ ; --------------------------------------------------------------------------------------
+ ; 1.  TASK - schedules the new PSO PURGE PROCESSED 52.444 option
+ ; 2.  MENU - adds the new option, Process Telephone Refills [PSO PROCESS TELEPHONE REFILLS] to the existing Barcode Rx Menu [BARCODE RX MENU]
+ D TASK,MENU
+ ; disable the class 3 option A3A PHONE REFILLS by adding an out-of-order message to the entry in the OPTION file 
+ D OUT^XPDMENU("A3A PHONE REFILLS","Replaced by Class 1 Option [PSO PROCESS TELEPHONE REFILLS]")
+ Q 
+TASK ; schedule the new purge option
+ N PSOAOPTB,PSOAOPTN,DA,DIE,DR,X,PSOWHEN,PSOSD
+ S X1=DT,X2=+1 D C^%DTC S PSOSD=X
+ S PSOWHEN=PSOSD_"@0405" ;PSOPURGE DATE TIME.
+ D RESCH^XUTMOPT("PSO PURGE PROCESSED 52.444",PSOWHEN,"","1D","L",".PSOA_ERROR")
+ Q
+MENU ;add new class 1 option
+ ;PSO BARCODE MENU class 1 MENU
+ ;PSO PROCESS TELEPHONE REFILLS
+ N FDA,PSOCOP,PSOCIEN,PSOCOPNM,PSOCSYN
+ S PSOCOP=$O(^DIC(19,"B","PSO BARCODE MENU",0))
+ S PSOCOPNM="PSO PROCESS TELEPHONE REFILLS"
+ S PSOCIEN=0 S PSOCIEN=$O(^DIC(19,"B",PSOCOPNM,0))
+ S PSOCSYN="PTR"
+ Q:$D(^DIC(19,PSOCOP,10,"B",PSOCIEN))
+ S FDA(1,19.01,"+2,"_PSOCOP_",",.01)=PSOCIEN
+ S FDA(1,19.01,"+2,"_PSOCOP_",",2)=PSOCSYN
+ D UPDATE^DIE("","FDA(1)")
+ Q

@@ -1,5 +1,5 @@
-XUSAML ;ISD/HGW Kernel SAML Token Implementation ;01/27/20  15:03
- ;;8.0;KERNEL;**655,659,630,701**;Jul 10, 1995;Build 11
+XUSAML ;ISD/HGW Kernel SAML Token Implementation ; Dec 17, 2020@09:55
+ ;;8.0;KERNEL;**655,659,630,701,731**;Jul 10, 1995;Build 1
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Implements the Kernel SAML Token message framework for the Identification and
@@ -162,22 +162,31 @@ FINDUSER(XUERR) ;Function. Identify user
  I (XUHOME=$P($G(^XTV(8989.3,1,200)),U,3))&(XAUTH="ssoi") D  ;SSOi
  . S XARRY(3)=XARRY(7) ;UID=SecID
  . S DUZ("AUTHENTICATION")="SSOI"
- . S XDUZ=$$FINDUSER^XUESSO2(.XARRY) ;Identify existing user
- . Q:XDUZ>0  ; user found
+ . ; p731 ensure user is found before adding new one and deal with concurrent queries from JLV
+ . L +^VA(200,"ASECID",XARRY(3)):60
+ . S XDUZ=$$FINDUSER^XUESSO2(.XARRY) ;Identify existing user with SecID
+ . I XDUZ'>0 S XARRY(9)=$$MPISSN(.XARRY) ; retry with SSN from MPI
+ . I $G(XARRY(9))]"" S XDUZ=$$FINDUSER^XUESSO2(.XARRY)
+ . I XDUZ>0 L -^VA(200,"ASECID",XARRY(3)) Q  ; user found
  . ;Add new user on the fly
  . I $G(XARRY(5))'="" D
  . . I '$$TOKVALID(.DUZ,.XUERR) S XDUZ="-1^Cannot add untrusted token-data" Q
  . . S XDUZ=$$ADDUSER^XUESSO2(.XARRY)
+ . L -^VA(200,"ASECID",XARRY(3)) ; end p731
  ;
  E  I (XUHOME=$P($G(^XTV(8989.3,1,200)),U,3))&(XAUTH="ssoe") D  ;SSOe
  . I ($L($G(XARRY(1)))<3)!($L($G(XARRY(2)))<3) S XDUZ="-1^Invalid SORG or SORGID" Q
  . S XARRY(3)=XARRY(7) ;UID=SecID
  . I +DUZ("REMAPP")>0 D
  . . S DUZ("AUTHENTICATION")="SSOE"
- . . S XDUZ=$$FINDUSER^XUESSO2(.XARRY) ;Identify existing user
+ . . L +^VA(200,"ASECID",XARRY(3)):60 ; p731
+ . . S XDUZ=$$FINDUSER^XUESSO2(.XARRY) ;Identify existing user with SecID
+ . . I XDUZ'>0 S XARRY(9)=$$MPISSN(.XARRY) ; retry with SSN from MPI
+ . . I $G(XARRY(9))]"" S XDUZ=$$FINDUSER^XUESSO2(.XARRY)
  . . I (+XDUZ<0)&($G(XARRY(5))'="") D
  . . . I '$$TOKVALID(.DUZ,.XUERR) S XDUZ="-1^Cannot add untrusted token-data" Q
  . . . S XDUZ=$$ADDUSER^XUESSO2(.XARRY) ;Add new user on the fly
+ . . L -^VA(200,"ASECID",XARRY(3)) ; end p731
  ;
  E  I (XARRY(2)["http://")!(XARRY(2)["https://")!((XARRY(2)["urn:oid:")&(XARRY(2)'=$P($G(^XTV(8989.3,1,200)),U,3))) D  ; NHIN
  . I (+DUZ("REMAPP")>0)&(XAUTH="nhin") D
@@ -185,13 +194,17 @@ FINDUSER(XUERR) ;Function. Identify user
  . . I $G(XARRY(3))="" S XARRY(3)=XEDIPI ;NHIN: DoD CAC card identifier
  . . I $G(XARRY(3))="" S XARRY(3)=XARRY(11) ;NHIN: UID is e-mail if available (alternative to NPI)
  . . S DUZ("AUTHENTICATION")="NHIN"
+ . . L +^VA(200,"UID",XARRY(3)):60 ; p731
  . . S XDUZ=$$FINDUSER^XUESSO2(.XARRY) ;Identify user by NPI or Unique User ID
  . . I +XDUZ<0 D
  . . . S XARRY(8)=""
  . . . S XDUZ=$$FINDUSER^XUESSO2(.XARRY) ;Identify user by Unique User ID only
+ . . . I XDUZ'>0 S XARRY(9)=$$MPISSN(.XARRY) ; retry with SSN from MPI
+ . . . I $G(XARRY(9))]"" S XDUZ=$$FINDUSER^XUESSO2(.XARRY)
  . . . I (+XDUZ<0)&($G(XARRY(5))'="") D
  . . . . I '$$TOKVALID(.DUZ,.XUERR) S XDUZ="-1^Cannot add untrusted token-data" Q
  . . . . S XDUZ=$$ADDUSER^XUESSO2(.XARRY) ;Add new user on the fly
+ . . L -^VA(200,"UID",XARRY(3)) ; end p731
  ;
  I XDUZ<0 D  ; record NAME and SECID to error
  . S XUERR("SECID")=""
@@ -289,4 +302,15 @@ LOGFAIL(IEN,DUZ) ; Record failed access
  S XUF=2
  D FILE^XUSTZ
  Q
+ ;
+MPISSN(XATR) ; Return SSN found in MPI
+ N SSN,XMPI,XOUT
+ S SSN=""
+ S:$G(XATR(7))]"" XMPI("secId")=XATR(7)
+ S:$G(XATR(6))]"" XMPI("samacctnm")=XATR(6)
+ S:$G(XATR(10))]"" XMPI("VAemail")=XATR(10)
+ N XI F XI="secId","samacctnm","VAemail" D  Q:SSN]""
+ . N XIN
+ . I $G(XMPI(XI))]"" S XIN(XI)=XMPI(XI) D USER^XUIAMXML(.XOUT,.XIN) S SSN=$G(XOUT("pnid"))
+ Q SSN
  ;

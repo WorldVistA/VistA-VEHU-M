@@ -1,5 +1,5 @@
 YTQRQAD2 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141**;Dec 30, 1994;Build 85
+ ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181**;Dec 30, 1994;Build 39
  ;
 SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  ; loop through DATA to create ANS array, then YSDATA array
@@ -49,18 +49,22 @@ SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  . . I CPLT'="Y" S REMAIN=1
  . I $G(^XTMP(NODE,1,"instruments",I,"complete"))'="true" S REMAIN=1
  I 'REMAIN D DELASMT1^YTQRQAD1(ASMT)
- Q "/ys/mha/admin/"_ADMIN
+ Q "/api/mha/instrument/admin/"_ADMIN ; was erroneously /ys/mha/admin/
  ;
 SETADM(DATA,NUM) ; return the id for new/updated admin
- N YSDATA,YS,NODE,ADMIN
- S ADMIN=+$G(DATA("adminId"))
+ N YSDATA,YS,NODE,ADMIN,ADMINDT
  S NODE="YTQASMT-SET-"_DATA("assignmentId")
+ S ADMIN=+$G(DATA("adminId"))
+ I 'ADMIN S ADMIN=$$ADM4ASMT(NODE,DATA("instrumentId")) ; auto-save fix
+ ;Admin Date added so user can select previous date, time is arbitrary based on current MHA standard
+ S ADMINDT=$G(^XTMP(NODE,1,"adminDate")) I ADMINDT]"" S ADMINDT=$$ETFM(ADMINDT) S:ADMINDT ADMINDT=ADMINDT_"."_$P($$NOW^XLFDT(),".",2)
  S YS("FILEN")=601.84
  I ADMIN S YS("IEN")=ADMIN I 1
  E  S YS(1)=".01^NEW^1"
  S YS(2)="1^`"_$G(^XTMP(NODE,1,"patient","dfn"))
  S YS(3)="2^`"_DATA("instrumentId")
- S YS(4)="3^"_$G(^XTMP(NODE,1,"date"))
+ S YS(4)="3^"_$S(ADMINDT]"":ADMINDT,1:$G(^XTMP(NODE,1,"date")))
+ ;S YS(4)="3^"_$G(^XTMP(NODE,1,"date"))
  S YS(5)="4^NOW"
  S YS(6)="5^`"_$G(^XTMP(NODE,1,"orderedBy"))
  S YS(7)="6^`"_$G(^XTMP(NODE,1,"interview"))
@@ -70,11 +74,26 @@ SETADM(DATA,NUM) ; return the id for new/updated admin
  S YS(11)="13^`"_$G(^XTMP(NODE,1,"location"))
  I '$L($G(DATA("source"))) S DATA("source")="web"
  S YS(12)="15^"_DATA("source")
- I $G(^XTMP(NODE,1,"consult")) S YS(13)="17^"_^XTMP(NODE,1,"consult")
+ I $D(^XTMP(NODE,1,"consult")),($G(^XTMP(NODE,1,"consult"))]"") S YS(13)="17^"_^XTMP(NODE,1,"consult")
  D ADMSAVE^YTQAPI1(.YSDATA,.YS)
  I YSDATA(1)'="[DATA]" D SETERROR^YTQRUTL(500,"Unable to create admin") Q 0
  I 'ADMIN Q $P(YSDATA(2),U,2)  ; create new admin, ien found in 2nd piece
  Q ADMIN                       ; otherwise we're updating existing admin
+ ;
+ETFM(YSDT) ;External to FM
+ ;YSDT = DATE in external
+ N X,Y
+ I YSDT["@" S YSDT=$P(YSDT,"@")
+ S X=YSDT D ^%DT
+ I Y<0 S Y=""  ;Invalid YSDT
+ Q Y
+ADM4ASMT(NODE,TESTID) ; return adminId if one has been saved for assignment
+ N I,CURADM
+ S CURADM=0
+ S I=0 F  S I=$O(^XTMP(NODE,1,"instruments",I)) Q:'I  D  Q:CURADM
+ . I $G(^XTMP(NODE,1,"instruments",I,"id"))'=TESTID Q
+ . I $G(^XTMP(NODE,1,"instruments",I,"adminId"))>0 S CURADM=^XTMP(NODE,1,"instruments",I,"adminId")
+ Q CURADM
  ;
 GETADM(ARGS,RESULTS) ; get answers for administration identified by ARGS("adminId")
  I '$G(ARGS("adminId")) D SETERROR^YTQRUTL(404,"Missing admin parameter") Q
@@ -104,7 +123,9 @@ GETADM(ARGS,RESULTS) ; get answers for administration identified by ARGS("adminI
  . . . S VAL=$G(^YTT(601.85,ANS,1,N,0))
  . . . I '$D(TMP(+SEQ)) S TMP(+SEQ)=QID_U_$TR(VAL,"|",$C(10)) I 1
  . . . E  S L=L+1,TMP(+SEQ,L)=$TR(VAL,"|",$C(10))
- S RESULTS("progress")=$S(TOT>0:$P((((TOT-NA)/TOT)*100)+.5,"."),1:0)
+ N CATPROG S CATPROG=$$CHKPROG^YTQRCAT(ADMIN)
+ I CATPROG>-1 S RESULTS("progress")=CATPROG I 1
+ E  S RESULTS("progress")=$S(TOT>0:$P((((TOT-NA)/TOT)*100)+.5,"."),1:0)
  ; now move sorted responses from TMP into "answers" nodes
  S I="",N=0 F  S I=$O(TMP(I)) Q:'$L(I)  S N=N+1 D
  . S RESULTS("answers",N,"id")="q"_$P(TMP(I),U)

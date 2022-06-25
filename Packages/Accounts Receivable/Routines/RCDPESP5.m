@@ -1,218 +1,57 @@
-RCDPESP5 ;ALB/SAB,hrubovcak - ePayment Lockbox Site Parameters Definition - Files 344.71 ;29 Jan 2019 18:00:14
- ;;4.5;Accounts Receivable;**304,321,326,332,345**;Mar 20, 1995;Build 34
+RCDPESP5 ;ALB/SAB - ePayment Lockbox Site Parameters Definition - Files 344.71 ;29 Jan 2019 18:00:14
+ ;;4.5;Accounts Receivable;**304,321,326,332,345,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  ;
- Q
- ;
-CARC(RCQUIT,PAID,RCARCTYP) ; Update the CARC/RARC inclusion table
- ; PRCA*4.5*345 - Added RCARCTYP for Rx Auto-Decrease CARC/RARC inclusion table
- ; Input:   RCQUIT  - Added RCQUIT as input parameter - PRCA*4.5*321
- ;          PAID    - 1 - Payment lines  0 = no-payment lines - PRCA*4.5*326
- ;          RCARCTYP   - 1 - Pharmacy, 0 - Medical
- ;                    Optional defaults to 0
- N F1,F2,RCANS,RCCARC,RCCHG,RCCDATA,RCCIEN,RCRSN,RCSTAT
- N RCAMT,RCNAMT,RCCARCDS,RCYN,RCVAL,RCACTV,RCTXT,XX
- S:'$D(RCARCTYP) RCARCTYP=0
- S RCTXT=$S(PAID:"",1:"NO-PAY ")  ; PRCA*4.5*326
- ;
- ; Display initial entry line
- W !,"AUTO-DECREASE "_RCTXT
- ;
- ; PRCA*4.5*345 - Added pharmacy check below
- W $S('RCARCTYP:"MEDICAL",1:"PHARMACY")_" CLAIMS FOR THE FOLLOWING CARC/AMOUNTS ONLY:",!
- ;
- ; Loop until the user quits
- S RCANS="" F  D  Q:RCANS="Q"
- . N RCAUDARY
- . ; Display list of currently enabled/disabled CARCs/RARCs
- . D PRTCARC(PAID,RCARCTYP)  ; PRCA*4.5*326, PRCA*4.5*345 added RCARCTYP
- . W !!  ; skip lines
- . ; Ask user for the CARC/RARC to enable/disable (QUIT) [default] to exit
- . S RCCARC=$$GETCARC^RCDPESPB
- . I RCCARC=-1 S RCQUIT=1,RCANS="Q" Q
- . I RCCARC=0 S RCANS="Q" Q
- . ; Validate CARC entered
- . S RCVAL=$$VAL^RCDPCRR(345,RCCARC)   ; Validate CARC against File 345
- . S RCACTV=$$ACT^RCDPRU(345,RCCARC,DT)   ; Check if CARC is an active code
- . ; If the CARC is invalid, warn user and quit
- . I 'RCVAL D  Q
- ..  W !,"The CARC code you have entered is not a valid CARC code.  Please try again"
- . ; Print CARC and description
- . S RCCARCDS=""
- . D GETCODES^RCDPCRR(RCCARC,"","A",$$DT^XLFDT,"RCCARCDS","1^100")
- . I $D(RCCARCDS("CARC",RCCARC))'=10 D
- ..  D GETCODES^RCDPCRR(RCCARC,"","I",$$DT^XLFDT,"RCCARCDS","1^100")
- . S RCCIEN=$O(RCCARCDS("CARC",RCCARC,""))
- . S RCDESC=$P(RCCARCDS("CARC",RCCARC,RCCIEN),U,6)
- . ; If description longer than 70 characters, truncate add ellipsis
- . S:$L(RCDESC)>70 RCDESC=$E(RCDESC,1,70)_"..."
- . W !,"  "_RCDESC,!
- . I 'RCACTV W "   *** WARNING: CARC code "_RCCARC_" is no longer active.",!
- . ;
- . ; Look up CARC/RARC in table.
- . S RCCIEN=$O(^RCY(344.62,"B",RCCARC,""))
- . S (RCAMT,RCSTAT)=0  ; Initialize if new code entry for table
- . D  ; determine enable/disable CARC audit field
- ..  I RCARCTYP=0 S FIELD=$S(PAID:.02,1:.08) Q  ; medical CARC
- ..  S FIELD=2.01  ; pharmacy CARC
- . I RCCIEN D  ; Code exists in table
- ..  ; PRCA*4.5*326, PRCA*4.5*345 begin
- ..  ; Get current payment Auto-decrease status and Max decrease amount
- ..  I PAID=1 D  ; Payment lines
- ...   S F1=$S(RCARCTYP=0:.02,1:2.01)
- ...   S F2=$S(RCARCTYP=0:.06,1:2.05)
- ...   S RCSTAT=$$GET1^DIQ(344.62,RCCIEN,F1,"I")
- ...   S RCAMT=$$GET1^DIQ(344.62,RCCIEN,F2)
- ..  I PAID=0 D  ; No payment lines
- ...   S F1=$S(RCARCTYP=0:.08,1:2.07)
- ...   S F2=$S(RCARCTYP=0:.12,1:2.11)
- ...   S RCSTAT=$$GET1^DIQ(344.62,RCCIEN,F1,"I")
- ...   S RCAMT=$$GET1^DIQ(344.62,RCCIEN,F2)
- ..  ; PRCA*4.5*326, PRCA*4.5*345 end
- . ; If CARC enabled
- . I RCCIEN,RCSTAT D  Q
- ..  S RCNAMT=0,RCRSN=""
- ..  ; Confirm that this is the correct CARC
- ..  S RCYN=$$CONFIRM(4,PAID,RCARCTYP)  ; PRCA*4.5*326 -Added PAID, PRCA4*5*345 -Added RCARCTYP
- ..  Q:RCYN=-1
- ..  ; Ask for reason
- ..  S RCRSN=$$GETREASN(RCCARC)
- ..  Q:RCRSN=-1  ; User indicated to quit
- ..  ; Confirm the disabling
- ..  S RCYN=$$CONFIRM(3,PAID,RCARCTYP)  ; PRCA*4.5*326 -Added PAID, PRCA4*5*345 -Added RCARCTYP
- ..  Q:RCYN=-1
- ..  D UPDDATA(RCCIEN,0,RCAMT,RCRSN,PAID,RCARCTYP) ; If disabling - PRCA4*5*345 - Added RCARCTYP
- ..  ; audit disabled CARC: "File^Field^IEN^New Value^Old Value^Comment"
- ..  S RCAUDARY(1)="344.62^"_FIELD_"^"_RCCIEN_"^0^1^"_RCRSN ; PRCA*4.5*326
- ..  D AUDIT^RCDPESP(.RCAUDARY)
- . ;
- . ; Confirm that this is the correct CARC to Enable
- . S RCYN=$$CONFIRM(1,PAID,RCARCTYP) ; Added PAID - PRCA*4.5*326
- . Q:RCYN=-1
- . ;
- . ; Ask for new amount
- . S RCNAMT=$$GETAMT^RCDPESPB(RCARCTYP)  ; PRCA4*5*345 - Added RCARCTYP
- . Q:RCNAMT=-1  ; User indicated to quit
- . ;
- . ; Ask for reason
- . S RCRSN=$$GETREASN(RCCARC)
- . Q:RCRSN=-1  ;User indicated to quit
- . ;
- . ; Confirm save
- . S RCYN=$$CONFIRM(2,PAID,RCARCTYP) ; Added PAID - PRCA*4.5*326 Added RCARCTYP
- . I (RCYN="N")!(RCYN=-1) W !,"NOT SAVED",!! Q
- . ;
- . ; Re-enable if disabled and quit
- . I RCCIEN D  Q
- ..  D UPDDATA(RCCIEN,1,RCNAMT,RCRSN,PAID,RCARCTYP)  ; Re-enable, update amount - PRCA*4.5*326 added RCARCTYP
- ..  ; Update audit file with reason and changes (field format above)
- ..  S RCAUDARY(1)="344.62^"_FIELD_"^"_RCCIEN_"^1^0^"_RCRSN  ; PRCA*4.5*326
- ..  D  ; audit field for CARC amount
- ...   I RCARCTYP=0 S FIELD=$S(PAID:.06,1:.12) Q  ; medical CARC
- ...   S FIELD=2.05  ; pharmacy CARC
- ..  S RCAUDARY(2)="344.62^"_FIELD_"^"_RCCIEN_"^"_RCNAMT_"^"_RCAMT_"^"_RCRSN ; PRCA*4.5*326
- ..  D AUDIT^RCDPESP(.RCAUDARY)
- . ;
- . ; Store new entry
- . D ADDDATA(RCCARC,RCNAMT,RCRSN,PAID,RCARCTYP) ; PAID added PRCA*4.5*326, PRCA4*5*345 - Added RCARCTYP
- . ;
- . ; Update audit file with reason and amount changes.
- . S RCCIEN=$$FIND1^DIC(344.62,"","",RCCARC,"","","RCERR")
- . S:RCCIEN="" RCCIEN="ERROR"
- . ;
- . S RCAUDARY(1)="344.62^"_FIELD_"^"_RCCIEN_"^1^0^"_RCRSN   ; PRCA*4.5*326
- . D  ; audit field for CARC amount
- ..  I RCARCTYP=0 S FIELD=$S(PAID:.06,1:.12) Q  ; medical CARC
- ..  S FIELD=2.05  ; pharmacy CARC
- . S RCAUDARY(2)="344.62^"_FIELD_"^"_RCCIEN_"^"_RCNAMT_"^0^"_RCRSN ; PRCA*4.5*326
- . D AUDIT^RCDPESP(.RCAUDARY)
- . ;
  Q
  ;
 PRTCARC(PAID,RCARCTYP) ; Display current entries that have been defined for 
  ; inclusion or exclusion into - PAID added - PRCA*4.5*326
  ; PRCA4*5*345 - Added RCARCTYP parameter
- ; Input:   PAID:  0 - Auto-Decrease CARCs for Paid claim lines, 1 - Auto-Decrease CARCs for No-Pay claim lines
- ; RCARCTYP: 0 - Medical Auto-Decrease CARCs, 1 - Rx Auto-Decrease CARCs, Optional, defaults to 0
+ ; Input:   PAID:  0 - Auto-Decrease CARCs for Paid claim lines
+ ;                 1 - Auto-Decrease CARCs for No-Pay claim lines
+ ; RCARCTYP: 0 - Medical Auto-Decrease CARCs
+ ;           1 - Rx Auto-Decrease CARCs
+ ;           2 - TRICARE Auto-Decrease CARCs
+ ;               Optional, defaults to 0
  ;
- N FIELD,RCCIEN,RCCODE,RCCT,RCDATA,RCDESC,RCI,RCSTAT,Y
+ N FIELD,RCCIEN,RCCODE,RCCT,RCCODE,RCDATA,RCDESC,RCI,RCSTAT,Y
  S:'$D(RCARCTYP) RCARCTYP=0  ; PRCA4*5*345 - Added line
  ; Print Header
  W !,"  CARC   Description"_$J("Max. Amt",55),!,"  "_$$EQLSGNS^RCDPESP2(73)
  ;
  ; Loop and print entries
- S (RCI,RCCT)=0
- F  D  Q:'RCI
- . N RCCARCD
- . S RCI=$O(^RCY(344.62,RCI)) Q:'RCI
- . S RCDATA=$G(^RCY(344.62,RCI,0)) Q:RCDATA=""
- . S RCCODE=$P(RCDATA,U,1),RCCIEN=$O(^RC(345,"B",RCCODE,""))
- . S RCDESC=$G(^RC(345,RCCIEN,1,1,0))
- . ;
- . ; PRCA4*5*345 - Added Rx checks below
- . D  ; determine enable/disable CARC audit field
- ..  I RCARCTYP=0 S FIELD=$S(PAID:.02,1:.08) Q  ; medical CARC
- ..  S FIELD=2.01  ; pharmacy CARC
- . S RCSTAT=$$GET1^DIQ(344.62,RCI,FIELD,"I")
- . Q:RCSTAT'=1
- . S RCCT=RCCT+1
- . I $L(RCDESC)>50 S RCDESC=$E(RCDESC,1,50)_" ..."
- . D GETCODES^RCDPCRR(RCCODE,"","B",$$DT^XLFDT,"RCCARCD","1^70")
- . D  ; amount field to display
- ..  I RCARCTYP=0 S FIELD=$S(PAID:.06,1:.12) Q  ; medical CARC
- ..  S FIELD=2.05  ; pharmacy CARC
- . S Y="   "_$$PAD^RCDPESPA(RCCODE,6)_$$PAD^RCDPESPA(RCDESC,55)_$J($$GET1^DIQ(344.62,RCI,FIELD,"I"),9)
- . I $P(RCCARCD("CARC",RCCODE,RCCIEN),U,3)'="" S Y=Y_" (I)"  ; if inactive, display (I)
- . W !,Y
+ S RCCT=0
+ S RCCODE="" F  S RCCODE=$O(^RCY(344.62,"B",RCCODE)) Q:RCCODE=""  D  ; PRCA*4.5*349 - Sort CARC entries by CARC code instead of by most recently entered
+ . S RCI=0 F  S RCI=$O(^RCY(344.62,"B",RCCODE,RCI)) Q:'RCI  D        ; PRCA*4.5*349 - Sort CARC entries by CARC code instead of by most recently entered
+ . . N RCCARCD
+ . . S RCDATA=$G(^RCY(344.62,RCI,0)) Q:RCDATA=""
+ . . S RCCIEN=$O(^RC(345,"B",RCCODE,""))
+ . . S RCDESC=$G(^RC(345,RCCIEN,1,1,0))
+ . . ;
+ . . ; PRCA*4.5*345, PRCA*4.5*349 - Added Rx and TRICARE checks below
+ . . ; determine enable/disable CARC audit field
+ . . I RCARCTYP=0 S FIELD=$S(PAID:.02,1:.08)   ; Medical CARC
+ . . I RCARCTYP=1 S FIELD=2.01                 ; Pharmacy CARC
+ . . I RCARCTYP=2 S FIELD=$S(PAID:3.01,1:3.07) ; TRICARE CARC
+ . . ;
+ . . S RCSTAT=$$GET1^DIQ(344.62,RCI,FIELD,"I")
+ . . Q:RCSTAT'=1
+ . . S RCCT=RCCT+1
+ . . I $L(RCDESC)>50 S RCDESC=$E(RCDESC,1,50)_" ..."
+ . . D GETCODES^RCDPCRR(RCCODE,"","B",$$DT^XLFDT,"RCCARCD","1^70")
+ . . ; Amount field to display PRCA*4.5*349 - Add TRICARE
+ . . I RCARCTYP=0 S FIELD=$S(PAID:.06,1:.12)   ; Medical CARC
+ . . I RCARCTYP=1 S FIELD=2.05                 ; Pharmacy CARC
+ . . I RCARCTYP=2 S FIELD=$S(PAID:3.05,1:3.11) ; TRICARE CARC
+ . . ;
+ . . S Y="   "_$$PAD^RCDPESPA(RCCODE,6)_$$PAD^RCDPESPA(RCDESC,55)_$J($$GET1^DIQ(344.62,RCI,FIELD,"I"),9)
+ . . I $P(RCCARCD("CARC",RCCODE,RCCIEN),U,3)'="" S Y=Y_" (I)"  ; if inactive, display (I)
+ . . W !,Y
  ;
  I RCCT=0 W !,"    NO CARC/AMOUNTS ENTERED"
  Q
  ;
-CONFIRM(RCIDX,PAID,RCARCTYP) ; Ask user to change or disable an enabled CARC auto-decrement
- ; Added PAID - PRCA*4.5*326
- ; PRCA4*5*345 - Added RCARCTYP parameter
- ;Input: 
- ; RCIDX: 1 - Enable Auto-Decrease CARC, 2 - Confirm Enable of Auto-Decrease CARC, 3 - Confirm disable of Auto-Decrease CARC, 4 - Disable Auto-Decrease CARC
- ; PAID: 1 - Auto-Decrease CARCs for paid claims, 0 - Auto-Decrease CARCs for no-pay claims
- ; RCARCTYP: 0 - Medical Auto-Decrease CARCs, 1 - Rx Auto-Decrease CARCs, Optional, defaults to 0
- ;
- N DA,DIR,DTOUT,DUOUT,DIRUT,DIROUT,RCTXT,X,XX,Y
- S:'$D(RCARCTYP) RCARCTYP=0                       ; PRCA4*5*345 - Added line
- S RCTXT=$S(PAID:"",1:"NO-PAY ")            ; PRCA*4.5*326
- ;
- ; Confirm if the CARC code is correct
- I RCIDX=1 D
- . S DIR("?")="Either (Y)es to confirm that this is the correct code or (N)o to enter a different code."
- . ; PRCA4*5*345 - added Rx Check below
- . S XX="ENABLE this CARC for Auto-Decrease of "_RCTXT_$S(RCARCTYP=0:"Medical",1:"Pharmacy")_" Claims (Y/N)? "
- . S DIR("A")=XX
- ;
- ; Confirm user wishes to Enable changes
- I RCIDX=2 D
- . S DIR("?")="Either (Y)es to confirm changes or (N)o to exit without saving."
- . S DIR("A")="Save this CARC? (Y)es or (N)o: "
- ;
- ; Confirm user wishes to Disable changes
- I RCIDX=3 D
- . S DIR("?")="Either (Y)es to confirm changes or (N)o to exit without saving."
- . S DIR("A")="Remove this CARC? (Y)es or (N)o: "
- ;
- ; Confirm CARC code is correct
- I RCIDX=4 D
- . S DIR("?")="Either (Y)es to confirm that this is the correct code or (N)o to enter a different code."
- . S XX="DISABLE this CARC for Auto-Decrease of "_RCTXT
- . ; PRCA4*5*345 - Added Rx check below
- . S XX=XX_$S(RCARCTYP=0:"Medical",1:"Pharmacy")_" Claims (Y/N)? "
- . S DIR("A")=XX
- ;
- S DIR(0)="YA",DIR("S")="Y:Yes;N:No"
- D ^DIR
- K DIR
- I $G(DTOUT)!$G(DUOUT) S Y=-1
- I Y="0" S Y=-1
- Q Y
- ;
-GETREASN(RCCARC) ; Get the reason for modification
+GETREASN(RCCARC) ; EP from ^RCDPESP7 - Get the reason for modification
  N DA,DIR,DTOUT,DUOUT,X,Y,DIRUT,DIROUT
  S DIR("?")="Enter reason for enabling/disabling, or changing the Maximum Dollar decrease amount for CARC "_RCCARC_" (3-50 chars)."
  S DIR(0)="FA^3:50"
@@ -223,7 +62,7 @@ GETREASN(RCCARC) ; Get the reason for modification
  I $G(DUOUT) S Y=-1
  Q Y
  ;
-UPDDATA(RCCIEN,RCSTAT,RCAMT,RCRSN,PAID,RCARCTYP) ; Update the database and audit log
+UPDDATA(RCCIEN,RCSTAT,RCAMT,RCRSN,PAID,RCARCTYP) ; EP from RCDPESP7 - Update the database and audit log
  ; PAID added PRCA*4.5*326
  ; PRCA4*5*345 - Added RCARCTYP
  ; Input:   RCCIEN      - IEN of the CARC (#344.62(
@@ -231,8 +70,8 @@ UPDDATA(RCCIEN,RCSTAT,RCAMT,RCRSN,PAID,RCARCTYP) ; Update the database and audit
  ;          RCAMT       - Auto-Decrease amount for the CARC
  ;          RCRSN       - Comment
  ;          PAID        - 1 - Paid CARC list, 0 - No-Pay CARC List
- ;          RCARCTYP       - 0 - Medical Claims, 1 - Rx Claims
- N DA,DR,DIE,DTOUT,X,Y,DIC
+ ;          RCARCTYP       - 0 - Medical Claims, 1 - Rx Claims, 2 - TRICARE Claims
+ N DA,DR,DIC,DIE,DTOUT,X,Y
  ; replaced //// with /// in following 5 lines - PRCA*4.5*321
  S DA=RCCIEN,(DIC,DIE)="^RCY(344.62,"
  ; BEGIN - PRCA*4.5*326
@@ -244,13 +83,21 @@ UPDDATA(RCCIEN,RCSTAT,RCAMT,RCRSN,PAID,RCARCTYP) ; Update the database and audit
  . S DR=DR_".06///"_RCAMT_";"
  . S DR=DR_".07///"_RCRSN_";"
  ;
- ; CARCs for PAID Rx Claims PRCA4*5*345 - added If statement
+ ; CARCs for PAID Rx Claims PRCA*4.5*345 - added If statement
  I PAID=1,RCARCTYP=1 D
  . S DR="2.01///"_RCSTAT_";"
  . S DR=DR_"2.04///"_$$DT^XLFDT_";"
  . S DR=DR_"2.03///"_DUZ_";"
  . S DR=DR_"2.05///"_RCAMT_";"
  . S DR=DR_"2.06///"_RCRSN_";"
+ ;
+ ; CARCs for PAID TRICARE Claims PRCA*4.5*349 - added If statment
+ I PAID=1,RCARCTYP=2 D
+ . S DR="3.01///"_RCSTAT_";"
+ . S DR=DR_"3.04///"_$$DT^XLFDT_";"
+ . S DR=DR_"3.03///"_DUZ_";"
+ . S DR=DR_"3.05///"_RCAMT_";"
+ . S DR=DR_"3.06///"_RCRSN_";"
  ;
  ; CARCs for No-pay Medical Claims PRCA4*5*345 - added RCARCTYP=0
  I PAID=0,RCARCTYP=0 D
@@ -261,19 +108,28 @@ UPDDATA(RCCIEN,RCSTAT,RCAMT,RCRSN,PAID,RCARCTYP) ; Update the database and audit
  . S DR=DR_".13///"_RCRSN_";"
  ; END - PRCA*4.5*326
  ;
+ ;
+ ; CARCs for No-pay TRICARE claims PRCA*4.5*349 - added If statement
+ I PAID=0,RCARCTYP=2 D
+ . S DR="3.07///"_RCSTAT_";"
+ . S DR=DR_"3.1///"_$$DT^XLFDT_";"
+ . S DR=DR_"3.09///"_DUZ_";"
+ . S DR=DR_"3.11///"_RCAMT_";"
+ . S DR=DR_"3.12///"_RCRSN_";"
+ ;
  L +^RCY(344.62,RCCIEN):10 E  Q  ; PRCA*4.5*326 timeout condition added
  D ^DIE
  L -^RCY(344.62,RCCIEN)
  Q  ; PRCA*4.5*326 - return value removed 
  ;
-ADDDATA(RCCARC,RCAMT,RCRSN,PAID,RCARCTYP) ; Add new entry to the table
+ADDDATA(RCCARC,RCAMT,RCRSN,PAID,RCARCTYP) ; EP from RCDPESP7 - Add new entry to the table
  ; PAID added PRCA*4.5*326
  ; PRCA4*5*345 - Added RCARCTYP
  ; Input:   RCCARC  - IEN of the CARC being added
  ;          RCAMT   - Auto-Decrease Amount
  ;          RCRSN   - Comment
  ;          PAID    - 1 - Paid Claims, 0 - No-Pay Claims
- ;          RCARCTYP   - 0 - Medical, 1 - Rx
+ ;          RCARCTYP   - 0 - Medical, 1 - Rx, 2 - TRICARE
  N MSGROOT,RCENTRY,RCROOT
  ;
  ; BEGIN - PRCA*4.5*326
@@ -295,6 +151,15 @@ ADDDATA(RCCARC,RCAMT,RCRSN,PAID,RCARCTYP) ; Add new entry to the table
  . S RCENTRY(344.62,"+1,",2.05)=RCAMT       ; Max amount
  . S RCENTRY(344.62,"+1,",2.06)=RCRSN       ; Comment
  ;
+ ; Set up array for paid TRICARE Claims PRCA*4.5*349 - Added If statement
+ I PAID=1,RCARCTYP=2 D
+ . S RCENTRY(344.62,"+1,",.01)=RCCARC       ; CARC Code
+ . S RCENTRY(344.62,"+1,",3.01)=1           ; Enabled status
+ . S RCENTRY(344.62,"+1,",3.02)=$$DT^XLFDT  ; Date added
+ . S RCENTRY(344.62,"+1,",3.03)=DUZ         ; User
+ . S RCENTRY(344.62,"+1,",3.05)=RCAMT       ; Max amount
+ . S RCENTRY(344.62,"+1,",3.06)=RCRSN       ; Comment
+ ;
  ; Set up array for No-Pay Medical Claims PRCA4*5*345 - Added RCARCTYP
  I PAID=0,RCARCTYP=0 D
  . S RCENTRY(344.62,"+1,",.01)=RCCARC       ; CARC Code
@@ -304,6 +169,15 @@ ADDDATA(RCCARC,RCAMT,RCRSN,PAID,RCARCTYP) ; Add new entry to the table
  . S RCENTRY(344.62,"+1,",.12)=RCAMT        ; Max amount
  . S RCENTRY(344.62,"+1,",.13)=RCRSN        ; Comment
  ; END - PRCA*4.5*326
+ ;
+ ; Set up array for No-Pay TRICARE Claims PRCA*4.5*349 - Added If statement
+ I PAID=0,RCARCTYP=2 D
+ . S RCENTRY(344.62,"+1,",.01)=RCCARC       ; CARC Code
+ . S RCENTRY(344.62,"+1,",3.07)=1           ; Enabled status
+ . S RCENTRY(344.62,"+1,",3.08)=$$DT^XLFDT  ; Date added
+ . S RCENTRY(344.62,"+1,",3.09)=DUZ         ; User
+ . S RCENTRY(344.62,"+1,",3.11)=RCAMT       ; Max amount
+ . S RCENTRY(344.62,"+1,",3.12)=RCRSN       ; Comment
  ;file entry
  D UPDATE^DIE(,"RCENTRY","RCROOT","MSGROOT")
  Q
@@ -311,7 +185,7 @@ ADDDATA(RCCARC,RCAMT,RCRSN,PAID,RCARCTYP) ; Add new entry to the table
 AUDIT() ;EP from RCDPESP
  ; File Audit Trail entry
  ;
- N EMEDANS,ERXANS,MEDANS,RCPRM,RXANS ; PRCA*4.5*321
+ N EMEDANS,ERXANS,MEDANS,RCPRM,RXANS
  W !
  ; Get existing answers for Medical and Pharmacy paper bills
  S RCPRM("oldMed")=$$GET1^DIQ(342,"1,",7.05,"I")
@@ -463,4 +337,3 @@ CARCDSP(RCMAX,RCARCTYP) ; EP ^RCDPESP7
  D CHECK^RCDPESPB(RCMAX,1,0,.RCCHECK,RCARCTYP)  ; Update paid line CARCs
  I RCARCTYP'=1 D CHECK^RCDPESPB(RCMAX,0,0,.RCCHECK,RCARCTYP)  ; Update no-pay line CARCs
  Q 1
- ;

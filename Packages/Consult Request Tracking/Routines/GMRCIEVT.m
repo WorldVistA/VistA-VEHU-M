@@ -1,5 +1,5 @@
 GMRCIEVT ;SLC/JFR - process events and build HL7 message; 2/7/19 09:23
- ;;3.0;CONSULT/REQUEST TRACKING;**22,28,31,121,154**;DEC 27, 1997;Build 135
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,28,31,121,154**;DEC 27, 1997;Build 22
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  Q  ;don't start at the top
  ;DBIA#7133;GETPAT MPIFRES

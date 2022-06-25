@@ -1,5 +1,5 @@
-XUMVIENU ;MVI/CKN,MKO - Master Veteran Index Enrich New Person ;29 Jan 2020  11:24 AM
- ;;8.0;KERNEL;**711,724**;Jul 10, 1995;Build 2
+XUMVIENU ;MVI/CKN,MKO - Master Veteran Index Enrich New Person ; 1/26/21 3:10pm
+ ;;8.0;KERNEL;**711,724,744**;Jul 10, 1995;Build 1
  ;Per VA Directive 6402, this routine should not be modified.
  ;**711,Story 977838 (mko/ckn): New routine
  ;Entry point: UPDATE^XUMVIENU(XURET,.XUARR,XUFLAG)
@@ -59,6 +59,21 @@ PROC(XURET,XUARR,XUFLAG) ;Main code for RPC
  ;If add or lookup above set XURET, we're done
  Q:XURET]""
  ;
+ ;**744 - VAMPI-8213 (ckn)
+ ;If update is from PPMS/PIE and if New Person have Primary Menu,
+ ;then no update as this is a Dual Provider.
+ I $G(XUFLAG)="U",($G(XUARR("WHO"))="200PIEV"),($P($G(^VA(200,+XUDUZ,201)),"^")'="") S XURET="-1^Provider has a Primary Menu, no update." Q
+ ;**744 - VAMPI-8213 (ckn)
+ ;If update is from PPMS/PIE and if CPRS TAB multiple field have any other
+ ;values than "NVA", then no update as this is a Dual Provider.
+ N QCPFLG,TABIEN S QCPFLG=0
+ I $G(XUFLAG)="U",($G(XUARR("WHO"))="200PIEV") D
+ .N ORDIEN S ORDIEN=$O(^ORD(101.13,"B","NVA",""))
+ .I $D(^VA(200,+XUDUZ,"ORD")) D
+ ..S TABIEN=0 F  S TABIEN=$O(^VA(200,+XUDUZ,"ORD","B",TABIEN)) Q:+TABIEN=0!(QCPFLG)  D
+ ...I TABIEN'=ORDIEN S QCPFLG=1
+ I QCPFLG S XURET="-1^Provider has Non-NVA values in CPRS TAB" Q
+ ;
  ;Update the NAME first. (Within a FILE^DIE call, triggers on the .01 that in turn call FILE^DIE
  ;may cause the Filer flag to change from "E", to "".)
  I $G(XUFLAG)'="A",$D(XUARR("NAME"))#2 D
@@ -78,6 +93,9 @@ PROC(XURET,XUARR,XUFLAG) ;Main code for RPC
  ;
  ;Call the Filer
  D FILER(.FDA,"E",.XURET)
+ ;
+ ;**744 - VAMPI-3039 (ckn) - Update CPRS tab
+ I $G(XUARR("WHO"))="200PIEV" D CPRSNVA^XUMVIEU1(XUDUZ,.XUARR,OLDTDATE)
  ;
  ;If Termination Date was added or deleted, remove or add Security keys PROVIDER and XUORES
  D SECKEYS(XUDUZ,OLDTDATE,.XURET)
@@ -111,91 +129,8 @@ CHKINPUT(XUARR,XUFLAG) ;Check inputs
  Q 0
  ;
 SETFDA(IEN,XUARR,FDA) ;Set FDA from XUARR for filing into File #200
- N IENS,WHO
- S WHO=$G(XUARR("WHO"))
- S IENS=+IEN_","
- ;
- ;DEGREE
- S:$D(XUARR("DEGREE"))#2 FDA(200,IENS,10.6)=$$TRIM^XLFSTR(XUARR("DEGREE"))
- ;
- ;Subject Organization and ID
- D:$G(XUARR("SubjectOrgan"),"<undef>")=""!($G(XUARR("SubjectOrganID"),"<undef>")="") SUBJDEF(.XUARR)
- S:$D(XUARR("SubjectOrgan"))#2 FDA(200,IENS,205.2)=XUARR("SubjectOrgan")
- S:$D(XUARR("SubjectOrganID"))#2 FDA(200,IENS,205.3)=XUARR("SubjectOrganID")
- ;
- ;GENDER
- S:$D(XUARR("GENDER"))#2 FDA(200,IENS,4)=XUARR("GENDER")
- ;
- ;ADDRESS DATA
- D:$D(XUARR("ADDRESS DATA"))#2
- . N ADDR,STR1,STR2,STR3,CITY,STATE,ZIP,OPHN,FAX
- . S ADDR=XUARR("ADDRESS DATA")
- . S STR1=$P(ADDR,"|"),STR2=$P(ADDR,"|",2),STR3=$P(ADDR,"|",3)
- . S CITY=$P(ADDR,"|",4),STATE=$P(ADDR,"|",5),ZIP=$P(ADDR,"|",6)
- . S OPHN=$P(ADDR,"|",7),FAX=$P(ADDR,"|",8)
- . I $L(ZIP)=9,ZIP'["-" S ZIP=$E(ZIP,1,5)_"-"_$E(ZIP,6,9)
- . S FDA(200,IENS,.111)=$E(STR1,1,$$MAXLEN(200,.111))
- . S FDA(200,IENS,.112)=$E(STR2,1,$$MAXLEN(200,.112))
- . S FDA(200,IENS,.113)=$E(STR3,1,$$MAXLEN(200,.113))
- . S FDA(200,IENS,.114)=$E(CITY,1,$$MAXLEN(200,.114))
- . S FDA(200,IENS,.115)=$$STATEIEN(STATE)
- . S FDA(200,IENS,.116)=ZIP
- . S FDA(200,IENS,.132)=OPHN
- . S FDA(200,IENS,.136)=FAX
- ;
- ;Tax ID
- S:$D(XUARR("TaxID"))#2 FDA(200,IENS,53.92)=XUARR("TaxID")
- ;
- ;Termination
- S:$D(XUARR("Termination"))#2 FDA(200,IENS,9.2)=XUARR("Termination")
- ;Inactivate
- S:$D(XUARR("Inactivate"))#2 FDA(200,IENS,53.4)=XUARR("Inactivate")
- ;
- ;Remarks
- I $G(XUARR("Remarks"))="",WHO="200PIEV",$P($G(^VA(200,+IEN,"PS")),U,9)="" S XUARR("Remarks")="NON-VA PROVIDER"
- S:$D(XUARR("Remarks"))#2 FDA(200,IENS,53.9)=$E(XUARR("Remarks"),1,$$MAXLEN(200,53.9))
- ;
- ;Title
- I $G(XUARR("Title"))="",WHO="200PIEV",$P($G(^VA(200,+IEN,0)),U,9)="" S XUARR("Title")="NON-VA PROVIDER"
- D:$D(XUARR("Title"))#2
- . ;Add Title to TITLE file (#3.1) if not already there
- . N DIERR,DIHELP,DIMSG,XUMSG
- . S XUARR("Title")=$E($$UP^XLFSTR(XUARR("Title")),1,$$MAXLEN(200,8))
- . D:$$FIND1^DIC(3.1,"","X",XUARR("Title"),"","","XUMSG")'>0
- .. N TITLEFDA
- .. S TITLEFDA(3.1,"+1,",.01)=XUARR("Title")
- .. D UPDATER(.TITLEFDA,"E",.XURET)
- . S FDA(200,IENS,8)=XUARR("Title")
- ;
- ;Authorized to Write Med Orders
- D:$D(XUARR("AuthWriteMedOrders"))#2
- . S VAL=$$UP^XLFSTR(XUARR("AuthWriteMedOrders")) S:VAL=0!(VAL="N")!(VAL="NO") VAL=""
- . S FDA(200,IENS,53.1)=VAL
- ;
- ;Provider Class
- S:$D(XUARR("ProviderClass"))#2 FDA(200,IENS,53.5)=XUARR("ProviderClass")
- ;
- ;Non VA Prescriber
- I WHO="200PIEV",$G(XUARR("NonVAPrescriber"))="" S FDA(200,IENS,53.91)=1
- E  S:$D(XUARR("NonVAPrescriber"))#2 FDA(200,IENS,53.91)=XUARR("NonVAPrescriber")
- ;
- ;Provider Type
- D:$D(XUARR("ProviderType"))#2
- . N PROVTYPE
- . S PROVTYPE=$P(XUARR("ProviderType"),"|")
- . S:PROVTYPE="" PROVTYPE=$P(XUARR("ProviderType"),"|",2)
- . S FDA(200,IENS,53.6)=PROVTYPE
- ;
- ;SECID
- S:$D(XUARR("SECID"))#2 FDA(200,IENS,205.1)=XUARR("SECID")
- ;Unique User ID
- S:$D(XUARR("UniqueUserID"))#2 FDA(200,IENS,205.4)=XUARR("UniqueUserID")
- ;ADUPN (Email)
- S:$D(XUARR("ADUPN"))#2 FDA(200,IENS,205.5)=XUARR("ADUPN")
- ;EMAIL ADDRESS
- S:$D(XUARR("EMAIL"))#2 FDA(200,IENS,.151)=XUARR("EMAIL")
- ;Network Username
- S:$D(XUARR("NTUSERNAME"))#2 FDA(200,IENS,501.1)=XUARR("NTUSERNAME")
+ ;**744 VAMPI-3039 (ckn) - Moving this tag to new routine XUMVIEU1
+ D SETFDA^XUMVIEU1(IEN,.XUARR,.FDA)
  Q
  ;
 SUBJDEF(XUARR) ;Set default Subject Organization and ID

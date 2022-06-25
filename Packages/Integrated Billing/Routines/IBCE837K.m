@@ -1,12 +1,13 @@
 IBCE837K ;EDE/JWS - ACK FOR 837 FHIR TRANSMISSION ;8/6/18 10:48am
- ;;2.0;INTEGRATED BILLING;**623,641**;21-MAR-94;Build 61
+ ;;2.0;INTEGRATED BILLING;**623,641,650**;21-MAR-94;Build 21
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 GET(RESULT,ARG) ;RPC - EDIACKCLAIMS; ack queue posting
  ;
  N IBIEN,IBRES,IB364,IBTEST,IBBILL,IBTXTEST,IBBTYP,IBDESC,IBBATCH,RES,DUZ
  K RESULT
- S DUZ(0)="@" D DTNOLF^DICRW
+ ;JWS;IB*2.0*650v7;3/16/21;remove setting of DUZ(0)
+ D DTNOLF^DICRW
  ; Get IEN for Claim File 399
  S IBIEN=$G(ARG("IEN399")) ;$G not necessary for VistaLink provides the parameters defined
  ; Get IBRES which is the statusCode value of the write to Rabbit MQ 837Transactions queue
@@ -33,6 +34,8 @@ GET(RESULT,ARG) ;RPC - EDIACKCLAIMS; ack queue posting
  . S IBBATCH=$$GET1^DIQ(364,IB364_",",.02,"E")
  . D UPD^IBCE837A("",IBBATCH,1,.IBBILL,IBDESC,IBBTYP,"")
  . K DIE
+ . ;JWS/IB*2.0*650v5;clear getBundle validate flag [11] in file 364
+ . D SETSUB^IBCE837I(IB364,0,.11)
  . D EMAIL(IBIEN,IBTXTEST,IBBATCH)
  . Q
  S RES=1

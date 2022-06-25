@@ -1,5 +1,5 @@
 IBCNEHLM ;DAOU/ALA - HL7 Registration MFN Message ;02-JUN-2015
- ;;2.0;INTEGRATED BILLING;**184,251,300,416,438,497,506,549,601,621,631,659,664**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**184,251,300,416,438,497,506,549,601,621,631,659,664,687**;21-MAR-94;Build 88
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -69,8 +69,9 @@ REG ;  Registration message for when a site installs
  ; IB*2.0*631 Updated version to 10
  ; IB*2.0*659 Updated version to 11, Added Medicare Freshness Days to this registration msg
  ; IB*2.0*664 Now version 12, Stats going to FSC: auto update #s split (non-medicare vs medicare)
+ ; IB*2.0*687 Now version 13, IIU Functionality Added.
  ;
- S IVER="12"
+ S IVER="13"
  I IHLP="I" S (IHLT,IHLS)=""
  ;
  I IHLP="B",IHLT=""!(IHLS="") D  S QFL=1

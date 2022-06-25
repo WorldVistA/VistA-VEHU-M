@@ -1,7 +1,8 @@
 PSNPARM ;BIR/SJA-PPS-N Site Parameters ; 6/6/18 7:35am
- ;;4.0;NATIONAL DRUG FILE;**513,10001**; 30 Oct 98;Build 61
+ ;;4.0;NATIONAL DRUG FILE;**513,573,10001,10003**; 30 Oct 98;Build 60
  ; Original Code authored by Department of Veterans Affairs
  ; *10001* changes by OSEHRA/Sam Habiel (c) 2018.
+ ; *10003* Incorporation of *573* (c) Sam Habiel 2018.
  ;
  ;Reference to ^PS(59.7 supported by DBIA #2613
  ;Reference to ^VA(200 supported by DBIA #10060
@@ -112,9 +113,11 @@ RDIR ; -- recomended Unix dirrectory
  W !,"*** The recommended Unix/Linux Local Directory is ",RUXDIR,$C(7),!
  Q
 UNXLDIR ; -- Unix/Linux Local Directory
- N UNXLD,NDIR,DIR,DUOUT,DTOUT
+ ;*573 Added condition check for IRIS
+ N UNXLD,NDIR,DIR,DUOUT,DTOUT,PSNVER
+ S PSNVER=$$UP^XLFSTR($$VERSION^%ZOSV(1))
  I $$OS^%ZOSV()'="UNIX" Q
- I $$UP^XLFSTR($$VERSION^%ZOSV(1))'["CACHE" Q
+ I PSNVER'["CACHE",PSNVER'["IRIS" Q
  I $G(X)'="",$E(X,$L(X))'="/" S X=X_"/"
  S UNXLD=X
  I UNXLD'="",'$$DIREXIST^PSNFTP2(UNXLD) W ! D
@@ -129,9 +132,11 @@ UNXLDIR ; -- Unix/Linux Local Directory
  Q
  ;
 LXDIR() ; -- Returns the Linux Directory for PPSN sFTP
- N CURDIR,ROOTDIR
+ ;*573 Added condition check for IRIS
+ N CURDIR,ROOTDIR,PSNVER
+ S PSNVER=$$UP^XLFSTR($$VERSION^%ZOSV(1))
  I $$OS^%ZOSV()'="UNIX" Q ""
- I $$UP^XLFSTR($$VERSION^%ZOSV(1))'["CACHE" Q ""
+ I PSNVER'["CACHE",PSNVER'["IRIS" Q ""
  ; Retrieving the current directory
  X "S CURDIR=$ZU(12)" S ROOTDIR=$P(CURDIR,"/",1,4)
  I $E(ROOTDIR,$L(ROOTDIR))="/" S $E(ROOTDIR,$L(ROOTDIR))=""

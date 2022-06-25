@@ -1,5 +1,5 @@
 IBCNEDE ;DAOU/DAC - eIV DATA EXTRACTS ;07-MAY-2015
- ;;2.0;INTEGRATED BILLING;**184,271,300,416,438,497,549,593,595,621,659,664**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**184,271,300,416,438,497,549,593,595,621,659,664,668,687**;21-MAR-94;Build 88
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -9,7 +9,7 @@ IBCNEDE ;DAOU/DAC - eIV DATA EXTRACTS ;07-MAY-2015
  ;  populates the eIV Transmission File (sometimes it creates/updates 
  ;  an entry in the insurance buffer as well).  It then begins to 
  ;  process the inquiries in the eIV Transmission File.
- ;  08-08-2002
+ ; 08-08-2002
  ;  As this program will run in the background the variable ZTSTOP
  ;  can be returned from any of the extracts should a TaskMan stop
  ;  request occur.  Also, clear out the task record before exiting.
@@ -41,7 +41,9 @@ EN ; Entry Point
  ;  the existing utility
  I '$$FIND1^DIC(365.12,,"X","~NO PAYER") D PAYR^IBCNEUT2
  ;
- D CHKPER ; IB*2.0*595/DM Check for New Person (#200) EIV entries 
+ ; IB**2.0*687/DW removed check for new person entries to routine IBCNINS & expanded it
+ ; to include other non eIV related entries
+ ;D CHKPER ; IB*2.0*595/DM Check for New Person (#200) EIV entries 
  ; 
  ; Confirm all necessary tables have been loaded before running extracts
  I '$$TBLCHK() G EN1
@@ -134,8 +136,9 @@ TBLCHK() ;
  N PAY,PAYIEN,PAYOK,TBLOK,II
  S (PAY,PAYIEN,PAYOK)="",TBLOK=1
  F  S PAY=$O(^IBE(365.12,"B",PAY)) Q:PAY=""!PAYOK  I PAY'="~NO PAYER" D
- .  F  S PAYIEN=$O(^IBE(365.12,"B",PAY,PAYIEN)) Q:PAYIEN=""!PAYOK  D
- ..    I $$PYRAPP^IBCNEUT5("IIV",PAYIEN) S PAYOK=1 Q
+ . F  S PAYIEN=$O(^IBE(365.12,"B",PAY,PAYIEN)) Q:PAYIEN=""!PAYOK  D
+ .. ;IB*668/TAZ - Changed Payer Application from IIV to EIV
+ .. I $$PYRAPP^IBCNEUT5("EIV",PAYIEN) S PAYOK=1 Q
  I PAYOK D
  . F II=11:1:18,21 I $O(^IBE(II*.001+365,"B",""))="" S TBLOK="" Q
  Q PAYOK&TBLOK
@@ -242,25 +245,5 @@ DSTQ ; This procedure is responsible for scheduling the creation and
  ;
 DSTQX ;
  Q
- ;-------------------------------------------------------
-CHKPER ; IB*2.0*595/DM
- ; check for the existence of New Person: "INTERFACE,IB EIV" and/or "AUTOUPDATE,IBEIV"
- ; send a mailman message to "VHAeInsuranceRapidResponse@domain.ext" if either/both are missing.
- ;
- N IBA,IBI,WKDT,IBMCT,MSG,MGRP,IBXMY
- ;
- S IBA=+$$FIND1^DIC(200,,"MX","AUTOUPDATE,IBEIV"),IBI=+$$FIND1^DIC(200,,"MX","INTERFACE,IB EIV")
- I IBA,IBI Q
- ;
- S WKDT=$$SITE^VASITE()
- S MSG(1)="Missing EIV New Person entries, for station "_$P(WKDT,U,3)_":"_$P(WKDT,U,2)
- S MSG(2)="-------------------------------------------------------------------------------"
- S IBMCT=2
- I 'IBA S MSG(IBMCT)="Entry for 'AUTOUPDATE,IBEIV' is missing",IBMCT=IBMCT+1
- I 'IBI S MSG(IBMCT)="Entry for 'INTERFACE,IB EIV' is missing",IBMCT=IBMCT+1
- S MSG(IBMCT)="-------------------------------------------------------------------------------"
- S MGRP=$$MGRP^IBCNEUT5()
- ; IB*659/DW Added check for production account and changed eInsurance mailgroup to be more self documenting
- I $$PROD^XUPROD(1) S IBXMY("VHAeInsuranceRapidResponse@domain.ext")=""
- D MSG^IBCNEUT5(MGRP,"Missing EIV New Person entries ("_$P(WKDT,U,3)_")","MSG(",,.IBXMY)  ;sends to postmaster if IBXMY is empty
+CHKPER ; IB*687 moved to routine IBCNINS as we had to check for other non-eIV non-human users
  Q

@@ -1,5 +1,5 @@
 YTQRQAD ;SLC/KCM - RESTful Calls for Instrument Admin ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141**;Dec 30, 1994;Build 85
+ ;;5.01;MENTAL HEALTH;**130,141,158,181**;Dec 30, 1994;Build 39
  ;
  ; External Reference    ICR#
  ; ------------------   -----
@@ -9,31 +9,52 @@ YTQRQAD ;SLC/KCM - RESTful Calls for Instrument Admin ; 1/25/2017
  ; ^VA(200)             10060
  ; ^VA(200,"AUSER")      4868
  ; DIQ                   2056
- ; MPIF001               2701
  ; XLFNAME               3065
  ; XLFSTR               10104
  ; XQCHK                10078
+ ; TFL^VAFCTFU2          4648 (private IA)
  ;
  ;
  ;; -- GETs  all return M object that is transformed to JSON
  ;; -- POSTs all return a path to the created/updated object
  ;;
 PID(ARGS,RESULTS) ; get patient identifiers
- N DFN,ICN
+ N DFN
  S DFN=$G(ARGS("dfn"))
- I DFN["V" D  QUIT:$G(YTQRERRS)
- . S ICN=DFN,DFN=$$GETDFN^MPIF001(ICN)
- . I DFN<1 D SETERROR^YTQRUTL(404,"ICN Not Found: "_ICN)
+ ;
+ ; If DFN starts with E, treat as EDIPI and translate to DFN
+ ; Look up using TFL^VAFCTFU2. Returns DFN by station number.
+ ; Sample return from TFL^VAFCTFU2:
+ ; YTTFL(1)="5000000348V286511^NI^USVHA^200M^A" (ICN)
+ ; YTTFL(2)="100849^PI^USVHA^999^A" (DFN)
+ ; YTTFL(3)="567861^NI^USDOD^200DOD^A" (EDIPI DOD)
+ ; YTTFL(4)="567861^PI^USVHA^200CRNR^A" (EDIPI DEDUP VERSION)
+ I $E(DFN)="E" D  QUIT:$G(YTQRERRS)
+ . ;
+ . ; Get EDIPI and get Treating Facilities
+ . N EDIPI S EDIPI=$E(DFN,2,99),DFN=""
+ . N YTTFL D TFL^VAFCTFU2(.YTTFL,EDIPI_"^PI^USVHA^200CRNR") ; ICR #4648 (private IA)
+ . ;
+ . ; Did we fail to get any treating facilities?
+ . I $P(YTTFL(1),U)=-1 D SETERROR^YTQRUTL(404,"EDIPI Not Found: "_EDIPI) QUIT
+ . ;
+ . ; Look for DFN
+ . ; The call gives us DFNs by Station Numbers. We need the one for this site.
+ . ; This explains why we loop through and test each one.
+ . N STA S STA=$P($$SITE^VASITE,U,3)
+ . N R
+ . F R=0:0 S R=$O(YTTFL(R)) Q:'R  D  Q:DFN
+ .. N L S L=YTTFL(R)
+ .. I $P(L,U,2)="PI",$P(L,U,3)="USVHA",$P(L,U,4)=STA S DFN=$P(L,U)
+ . ;
+ . I 'DFN D SETERROR^YTQRUTL(404,"EDIPI Not Found: "_EDIPI) QUIT
+ ; 
  I '$D(^DPT(DFN,0)) D SETERROR^YTQRUTL(404,"Not Found: "_DFN) QUIT
  S RESULTS("dfn")=DFN
  S RESULTS("name")=$P($G(^DPT(DFN,0)),U)
  S RESULTS("pid")="xxx-xx-"_$E($P($G(^DPT(DFN,0)),U,9),6,10)
  S RESULTS("ssn")=RESULTS("pid") ; TEMPORARY until a switch to PID
- ; only include ICN if not using application proxy
- I '$$APPROXY D
- . I $D(ICN) S RESULTS("icn")=ICN
- . S ICN=$$GETICN^MPIF001(DFN)
- . S RESULTS("icn")=$S(+ICN>0:ICN,1:"null")
+ S RESULTS("email")=$P($G(^DPT(DFN,.13)),U,3)
  Q
 APPROXY() ; return 1 if this call is via application proxy
  N XQOPT D OP^XQCHK I $P(XQOPT,U)="YTQREST PATIENT ENTRY" Q 1
@@ -141,6 +162,34 @@ USERS(ARGS,RESULTS) ; GET /api/mha/users/:match
  . K ^TMP("YTQ-JSON",$J)
  . S ^TMP("YTQ-JSON",$J,1,0)="{""persons"":[]}"
  . S RESULTS=$NA(^TMP("YTQ-JSON",$J))
+ Q
+GINSTD(ARGS,RESULTS) ;Get Instrument Description
+ N YS,YSDATA,YSTESTN,II,YSAR,VAR,VAL,JSONAR,XX
+ S YS("CODE")=$G(ARGS("instrumentName"))
+ D TSLIST1^YTQAPI(.YSDATA,.YS)
+ I '$D(YSDATA) D SETERROR^YTQRUTL(404,"Error retrieving description") Q
+ S YSDATA(1)=$G(YSDATA(1)),YSDATA(2)=$G(YSDATA(2))
+ I YSDATA(1)["ERROR",(YSDATA(2)="NO code") D SETERROR^YTQRUTL(404,"No instrument name.") Q
+ I YSDATA(1)["ERROR",(YSDATA(2)="bad code") D SETERROR^YTQRUTL(404,"Instrument not found.") Q
+ S I=0 F  S I=$O(YSDATA(I)) Q:I=""  D
+ . S XX=YSDATA(I),VAR=$P(XX,"="),VAL=$P(XX,"=",2)
+ . Q:VAR=""
+ . S YSAR(VAR)=VAL
+ F VAR="PRINT TITLE^Print Title","VERSION^Version","AUTHOR^Author","PUBLISHER^Publisher","COPYRIGHT TEXT^Copyright","PUBLICATION DATE^Publication Date" D
+ . D SETVAR("Clinical Features",VAR)
+ F VAR="REFERENCE^Reference","PURPOSE^Purpose","NORM SAMPLE^Norm Sample","TARGET POPULATION^Target Population" D
+ . D SETVAR("Clinical Features",VAR)
+ F VAR="A PRIVILEGE^Administrative Privilege","R PRIVILEGE^Result Privilege","ENTERED BY^Entered By","ENTRY DATE^Entry Date" D
+ . D SETVAR("Technical Features",VAR)
+ F VAR="LAST EDITED BY^Last Edited By","LAST EDIT DATE^Last Edit Date","IS NATIONAL TEST^National Test","LICENSE CURRENT^Requires License","IS LEGACY^Is Legacy Instrument","SUBMIT TO NATIONAL DB^Submit to National DB" D
+ . D SETVAR("Technical Features",VAR)
+ K RESULTS M RESULTS=JSONAR Q
+ Q
+SETVAR(XCAT,VAR) ;Set JSON array values for Instrument Description - Requires YSAR to be set
+ N XVAR,CAP
+ S XVAR=$P(VAR,U),CAP=$P(VAR,U,2)
+ S JSONAR("Description",XCAT,XVAR,"value")=YSAR(XVAR)
+ S JSONAR("Description",XCAT,XVAR,"caption")=CAP
  Q
 RESET ; clear the ^XTMP("YTQASMT") nodes
  ; WARNING -- calling this (at RESET+3) will erase all current assignments

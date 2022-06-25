@@ -1,5 +1,5 @@
-ORWDXC ; SLC/KCM - Utilities for Order Checking ;May 08, 2018@06:47
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,141,221,243,280,346,345,311,395,269,469,377**;Dec 17, 1997;Build 582
+ORWDXC ; SLC/KCM - Utilities for Order Checking ; 3/18/21 12:17pm
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,141,221,243,280,346,345,311,395,269,469,377,539**;Dec 17, 1997;Build 41
  ;
 ON(VAL) ; returns E if order checking enabled, otherwise D
  S VAL=$$GET^XPAR("DIV^SYS^PKG","ORK SYSTEM ENABLE/DISABLE")
@@ -20,6 +20,40 @@ DISPLAY(LST,DFN,FID) ; Return list of Order Checks for a FillerID (namespace)
  D EN^ORKCHK(.ORY,DFN,.ORX,"DISPLAY")
  S I=0 F  S I=$O(ORY(I)) Q:I'>0  S LST(I)=$P(ORY(I),U,4)
  Q
+ALLERGY(LST,DFN,FID,OIL,ORDRNUM) ; Return list of allergy Order Checks on select medication
+ ; DFN = Patient IEN
+ ; FID = PSI   (Inpatient)
+ ;       PSO   (Outpatient)
+ ;       PSH   (Non-VA)
+ ; OIL = Orderable Item #
+ ; ORDRNUM = Order # (file 100)
+ I +ORDRNUM,+OIL Q  ;Only OIL or ORDRNUM is allowed, not both
+ S FID=$S(FID="PSH":FID,FID="PSX":"PSH",FID="PSO":FID,FID="PSIV":"PSIV",1:"PSI")
+ K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"ORDSGCHK_CACHE")
+ K ^TMP($J,"ORENHCHK"),^TMP($J,"ORALLERGYCHK")
+ N X,Y,USID,ORCHECK,ORI,ORX,ORY,%DT,ORDODSG,CNT,ORL,RSLT
+ K ORX,ORY
+ S ORL=""
+ ; do the ALLERGY order checks
+ I +OIL D
+ . D FNDDRUG(.USID,+OIL,DFN,FID)
+ . I FID="PSX" S FID="PSO"
+ . S (CNT,ORX)=0
+ . F  S CNT=$O(USID(CNT)) Q:CNT=""  D
+ . . S ORX(CNT)=+OIL_"|"_FID_"|"_USID(CNT)_"|",ORX=ORX+1,ORI=1
+ I +ORDRNUM D
+ . I FID="PSX" S FID="PSO"
+ . D FNDDRG(.ORX,+ORDRNUM,FID)
+ . S OIL=ORDRNUM
+ ;S ORX(1)=+OIL_"|"_FID_"||",(ORX,ORI)=1
+ D EN^ORKCHK(.ORY,DFN,.ORX,"ALLERGY",.OIL,0)
+ I $D(ORY) D RETURN^ORCHECK   ; expects ORY, ORCHECK
+ ; return ORCHECK as 1 dimensional list
+ D FDBDOWN^ORCHECK(0)
+ I $D(ORY) M ^TMP($J,"ORALLERGYCHK")=ORY
+ D CHK2LST
+ K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"DD"),^TMP($J,"ORDSGCHK_CACHE")
+ Q
 ACCEPT(LST,DFN,FID,STRT,ORL,OIL,ORIFN,ORREN)    ; Return list of Order Checks on Accept Order
  K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"ORDSGCHK_CACHE")
  ; OIL(n)=OIptr^PS|PSIV|LR^PkgInfo
@@ -30,7 +64,7 @@ ACCEPT(LST,DFN,FID,STRT,ORL,OIL,ORIFN,ORREN)    ; Return list of Order Checks on
  S ORL=ORL_";SC(",X=STRT,STRT="",ORDODSG=0
  D:X="AM" AM^ORCSAVE2 D:X="NEXT" NEXT^ORCSAVE2
  I $L(X) S %DT="FTX" D ^%DT S:Y'>0 Y="" S STRT=Y
- ; do the SELECT order checks
+  ; do the SELECT order checks
  S (ORI,ORX)=0 F  S ORI=$O(OIL(ORI)) Q:'ORI  D
  . Q:'OIL(ORI)
  . S USID=$$USID(OIL(ORI))
@@ -77,7 +111,7 @@ DELAY(LST,DFN,FID,STRT,ORL,OIL) ; Return list of Order Checks on Accept Delayed
  Q
 SESSION(LST,ORVP,ORLST) ; Return list of Order Checks on Release Order
  K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"DD")
- N ORES,ORCHECK
+ N I,ORES,ORCHECK
  S ORVP=+ORVP_";DPT("
  S I=0 F  S I=$O(ORLST(I)) Q:'I  D
  . I +$P(ORLST(I),";",2)'=1 Q  ; order not new
@@ -146,7 +180,7 @@ CHK2LST ; creates list that can be passed to broker from ORCHECK array
  . . . . S ILST=ILST+1,LST(ILST)=ORID_U_ORCHECK(ORIFN,CDL,I)
  Q
 LST2CHK ; create ORCHECK array from list passed by broker
- N ORIFN,CDL,I,ILST S I=0
+ N ORIFN,CDL,I,ILST,X S I=0
  S ILST="" F  S ILST=$O(LST("ORCHECKS",ILST)) Q:$L(ILST)'>0  D
  . I $D(LST("ORCHECKS",ILST,0)) D
  . . N J S J=0 S X=LST("ORCHECKS",ILST,J) F  S J=$O(LST("ORCHECKS",ILST,J)) Q:'J  S X=X_LST("ORCHECKS",ILST,J)
@@ -156,7 +190,7 @@ LST2CHK ; create ORCHECK array from list passed by broker
  . . S I=I+1,ORCHECK(+ORIFN,CDL,I)=$P(X,U,2,4)
  Q
 CHECKIT(X) ;remove uncessesary duplication of Duplicate Therapy checks
- N I,J,Y,Z
+ N I,J,K,Y,Z
  S I=0 F  S I=$O(X(I)) Q:'I  I $P(X(I),U,2)=17 D
  .Q:$P($G(^ORD(100.8,17,0)),U)'="DUPLICATE DRUG THERAPY"
  .N STR S STR=$P($P(X(I),"{",2),"}")
@@ -199,7 +233,7 @@ REMDUPS ;
  .. I $P(ORCHECK(IFN,CDL,I),U,7)="X" K ORCHECK(IFN,CDL,I) S ORCHECK=$G(ORCHECK)-1
  Q
 REMDUPSX ;similar to REMDUPS^ORCHECK
- N IFN,CDL,I S IFN="NEW"
+ N IFN,CDL,I,J S IFN="NEW"
  S CDL=0 F  S CDL=$O(ORCHECK(IFN,CDL)) Q:'CDL  D
  . S I=0 F  S I=$O(ORCHECK(IFN,CDL,I)) Q:'I  D
  . . S J=I F  S J=$O(ORCHECK(IFN,CDL,J)) Q:'J  I $G(ORCHECK(IFN,CDL,I))=$G(ORCHECK(IFN,CDL,J)) K ORCHECK(IFN,CDL,J) S ORCHECK=$G(ORCHECK)-1
@@ -220,4 +254,50 @@ OPOS(DFN) ;handles saving and removing order checks that should only be displaye
  ....S ORTXT=ORTXT_$G(^TMP($J,"ORK XTRA TXT",ORXTRAI,ORTXTO,ORTXTI))
  ...I $D(^TMP($J,"OC-OPOS",DFN,$E(ORTXT,1,225))) K ORCHECK(I,J,K) Q
  ...S ^TMP($J,"OC-OPOS",DFN,$E(ORTXT,1,225))="" Q
+ Q
+FNDDRUG(USID,OI,DFN,FID) ;Identify and return potential drug items based on
+ ; the Orderable Item
+ N X,RSLT
+ D OISLCT(.RSLT,OI,$S($G(FID)="PSO":"O",$G(FID)="PSH":"X",$G(FID)="PSIV":"I",1:"U"),DFN)
+ S X=0 F  S X=$O(RSLT(X)) Q:+X=0  D
+ . S USID(X)=$$DRUG($G(RSLT(X)))
+ K RSLT
+ Q
+OISLCT(LST,OI,PSTYPE,ORVP) ; Return Dispense Drug IENs ;Modified from OISLCT^ORWDPS2
+ ;TDP note - PSTYPE needs to be - O:Outpt, U:Unit Dose, I:IV, X:Non-VA Med
+ N ILST,ORDOSE,ORWPSOI,ORWDOSES,X1,X2
+ K ^TMP("PSJINS",$J),^TMP("PSJMR",$J),^TMP("PSJNOUN",$J),^TMP("PSJSCH",$J),^TMP("PSSDIN",$J)
+ S ILST=0
+ S ORWPSOI=0
+ S:+OI ORWPSOI=+$P($G(^ORD(101.43,+OI,0)),U,2)
+ ;D START^PSSJORDF(ORWPSOI,$S(PSTYPE="U":"I",1:"O")) ; dflt route, schedule, etc.
+ I '$L($T(DOSE^PSSOPKI1)) D DOSE^PSSORUTL(.ORDOSE,ORWPSOI,PSTYPE,ORVP)       ; dflt doses
+ I $L($T(DOSE^PSSOPKI1)) D DOSE^PSSOPKI1(.ORDOSE,ORWPSOI,PSTYPE,ORVP)       ; dflt doses NEW PKI CODE from pharmacy
+ ;
+ ; Modified from DISPLST^ORWDPS2, set up list of dispense drugs ien
+ N DD
+ S DD=0 F  S DD=$O(ORDOSE("DD",DD)) Q:'DD  D
+ . S ILST=ILST+1
+ . S LST(ILST)=DD
+ Q
+DRUG(ORDD) ;Returns 6 ^-piece identifier for Dispense Drug ;Modified from DRUG^ORCHECK
+ N ORNDF,Y
+ ;Next line requires work to make it usable. Variables used that are not available, like Order #
+ ;I ORDG=+$O(^ORD(100.98,"B","IV RX",0)) S ORDD=$$IV^ORCHECK G D1
+ S ORDD=+ORDD
+ Q:ORDD=0 "" S ORNDF=$$ENDCM^PSJORUTL(ORDD)
+D1 S Y=$P(ORNDF,U,3)_"^^99NDF^"_ORDD_U_$$NAME50^ORPEAPI(ORDD)_"^99PSD"
+ Q Y
+FNDDRG(ORX,ORDER,PKG) ;
+ N ORI,INST,PTR,ITEM,USID,START,ORDD
+ S ORI=0
+ F  S ORI=$O(^OR(100,ORDER,4.5,"ID","ORDERABLE",ORI)) Q:ORI'>0  D
+ . S INST=$P($G(^OR(100,ORDER,4.5,ORI,0)),U,3),PTR=$P($G(^(0)),U,2),ITEM=+$G(^(1))
+ . ;S USID=$S(PKG?1"PS".E:$$DRUG(ITEM,PTR,ORDER),1:$$USID^ORMBLD(ITEM))
+ . S ORDD=$O(^OR(100,ORDER,4.5,"ID","DRUG",0)),ORDD=+$G(^OR(100,ORDER,4.5,+ORDD,1))
+ . S USID=$$DRUG(ORDD)
+ . S START=$$START^ORCHECK(ORDER)
+ . ;S SPEC=$S(PKG="LR":$$VALUE^ORCSAVE2(ORDER,"SPECIMEN",INST),1:"")
+ . ;S ORX=+$G(ORX)+1,ORX(ORX)=ITEM_"|"_PKG_"|"_USID_"|"_START_"|"_ORDER_"|"_SPEC
+ . S ORX=+$G(ORX)+1,ORX(ORX)=ITEM_"|"_PKG_"|"_USID_"|"_START_"|"_ORDER_"|"
  Q

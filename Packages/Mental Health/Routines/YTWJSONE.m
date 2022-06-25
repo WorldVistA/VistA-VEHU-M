@@ -1,5 +1,5 @@
 YTWJSONE ;SLC/KCM - Simple Editor for JSON Instrument Spec ; 7/20/2018
- ;;5.01;MENTAL HEALTH;**141**;Dec 30, 1994;Build 85
+ ;;5.01;MENTAL HEALTH;**141,172**;Dec 30, 1994;Build 10
  ;
  ; Usage: D EN^YTWJSONE        edit entry spec JSON & update checksum
  ;        D VALIDATE^YTWJSONE  checks recorded checksum against JSON actual
@@ -135,9 +135,10 @@ SHA1ALL() ; return SHA-1 of all checksums for active instruments
  S X=""
  S IEN=0 F  S IEN=$O(^YTT(601.712,IEN)) Q:'IEN  S X=X_$P(^(IEN,0),U,3)
  W !,"Length: ",$L(X),"  X=",!,X
- W !,$$SHAHASH^ROUTINE(160,X,"H")
+ W !,$$SHAHASH^XUSHSH(160,X,"H")
  Q
 SAVE712(IEN,CRC) ; save updated specification to 601.712
+ ; expects ^TMP("YTQ-EDIT,$J,n,0) to be entry spec text
  N REC
  S REC(.02)=$$NOW^XLFDT
  S REC(.03)=CRC
@@ -158,4 +159,36 @@ VALIDATE ; compare CRC with actual and check JSON structure
  . I '$G(ERRS),(CRCSAVED=CRCCALC) W ?30,"ok" QUIT
  . I CRCSAVED'=CRCCALC W ?30,"Saved Checksum: ",CRCSAVED,"   Actual: ",CRCCALC
  . I $G(ERRS) W "  JSON errors"
+ Q
+ ;
+FILE(TEST,PATH) ; write JSON from 601.712 to host file in PATH
+ N IEN,OK,NAME
+ I TEST'=+TEST S TEST=$O(^YTT(601.71,"B",TEST,0)) Q:'TEST
+ S IEN=$O(^YTT(601.712,"B",TEST,0)) Q:'IEN
+ S NAME=$TR($P(^YTT(601.71,TEST,0),U)," ","_")_"-espec.json"
+ ;
+ K ^TMP($J)
+ M ^TMP($J)=^YTT(601.712,IEN,1) ; so can use $$GTF^%ZISH
+ K ^TMP($J,0)                   ; remove count & date node
+ S OK=$$GTF^%ZISH($NA(^TMP($J,1,0)),2,PATH,NAME)
+ I 'OK W !,"Error writing file: "_NAME
+ K ^TMP($J)
+ Q
+LOAD(TEST,PATH) ; read host file in PATH and load into 601.712
+ N TESTNM,SPEC,FILE,OK,CRCOLD,CRCNEW,ERRS
+ I TEST'=+TEST S TEST=$O(^YTT(601.71,"B",TEST,0)) QUIT:'TEST
+ S TESTNM=$P(^YTT(601.71,TEST,0),U)
+ S SPEC=$O(^YTT(601.712,"B",TEST,0)) QUIT:'SPEC
+ S FILE=$TR(TESTNM," ","_")_"-espec.json"
+ S CRCOLD=$P(^YTT(601.712,SPEC,0),U,3)
+ ;
+ K ^TMP("YTQ-EDIT",$J)
+ S OK=$$FTG^%ZISH(PATH,FILE,$NA(^TMP("YTQ-EDIT",$J,1,0)),3)
+ I 'OK W !,"Error reading file: "_FILE QUIT
+ I '$$HASMODS(SPEC) W !,"Nothing changed" QUIT
+ ;
+ D CHKSPEC($NA(^TMP("YTQ-EDIT",$J)),.ERRS,.CRCNEW) QUIT:$G(ERRS)
+ D SAVE712(SPEC,CRCNEW)
+ W !,TESTNM," entry spec saved.  Old Checksum: ",CRCOLD,"  New Checksum: ",CRCNEW
+ K ^TMP("YTQ-EDIT",$J)
  Q

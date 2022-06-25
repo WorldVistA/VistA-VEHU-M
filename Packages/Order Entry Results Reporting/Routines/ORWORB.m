@@ -1,5 +1,5 @@
-ORWORB ;SLC/DEE,REV,CLA,WAT - RPC functions which return user alert ;Nov 21, 2019@10:26
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,148,173,190,215,243,296,329,334,410,377**;Dec 17, 1997;Build 582
+ORWORB ;SLC/DEE,REV,CLA,WAT - RPC functions which return user alert ;Apr 21, 2021@13:21:23
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,148,173,190,215,243,296,329,334,410,377,498**;Dec 17, 1997;Build 38
  ;;Per VHA Directive 2004-038, this routine should not be modified
  ;
  ;DBIA reference section
@@ -34,6 +34,7 @@ FASTUSER(ORY,ORDEFFLG) ;return current user's notifications across all patients
  ; ORDEFFLG: setting this to 1 causes the alerts API to exclude deferred alerts for this user
  ;  defaults to 1 if not passed in
  N STRTDATE,STOPDATE,ORTOT,I,ORURG,URG,ORN,SORT,ORN0,URGLIST,REMLIST,REM,NONORLST,NONOR
+ N ORRMVD
  N ALRT,ALRTDT,ALRTPT,ALRTMSG,ALRTI,ALRTLOC,ALRTXQA,J,FWDBY,PRE,ALRTDFN
  K ^TMP("ORBG",$J)
  S STRTDATE="",STOPDATE="",FWDBY="Forwarded by: "
@@ -54,6 +55,7 @@ FASTUSER(ORY,ORDEFFLG) ;return current user's notifications across all patients
  ..I ALRTXQA[NONOR S REM=1  ;allow this type of alert to be Removed
  .S ALRTMSG=$P($P(ALRT,U),PRE_"  ",2)
  .I $E(ALRT,4,8)'="-----" D  ;not forwarded alert info/comment
+ ..S ORRMVD=0
  ..S ORURG="n/a"
  ..S ALRTI=$P(ALRT,"  ")
  ..S ALRTPT=""
@@ -73,8 +75,11 @@ FASTUSER(ORY,ORDEFFLG) ;return current user's notifications across all patients
  ...S ALRTDFN=$P(ALRTXQA,",",2)
  ...S ALRTLOC=$G(^DPT(+$G(ALRTDFN),.1))
  ...I $$ISSMIEN^ORBSMART(ORN) D
+ ....N ORSMBY
  ....D ALTDATA^PXRMCALT(.ORPOUT,ALRTDFN,ALRTXQA)
+ ....I $G(ORPOUT("DATA","RADIOLOGY REPORT FOUND"))=0 D DEL^ORB3FUP1(.ORSMBY,ALRTXQA,0) S ORRMVD=1 Q
  ....I $L($G(ORPOUT("DATA",1,"DIAGNOSIS")))>0 S ORBIRAD=$G(ORPOUT("DATA",1,"DIAGNOSIS"))
+ ..I ORRMVD Q
  ..S ALRTI=$S(ALRTI="I":"I",ALRTI="L":"L",1:"")
  ..I (ALRT["): ")!($G(ORN)=27&(ALRT[") CV")) D  ;WAT
  ...S ALRTPT=$P(ALRT,": ")
@@ -92,6 +97,7 @@ FASTUSER(ORY,ORDEFFLG) ;return current user's notifications across all patients
  ..I $G(ORBIRAD)'="" S ALRTMSG=ALRTMSG_" - RESULTS: "_ORBIRAD
  ..S J=J+1,^TMP("ORBG",$J,J)=ALRTI_U_ALRTPT_U_ALRTLOC_U_ORURG_U_ALRTDT_U
  ..S ^TMP("ORBG",$J,J)=^TMP("ORBG",$J,J)_ALRTMSG_U_U_ALRTXQA_U_$G(REM)_U
+ .I ORRMVD Q
  .;if alert forward info/comment:
  .I $E(ALRTMSG,1,5)="-----" D
  ..S ALRTMSG=$P(ALRTMSG,"-----",2)

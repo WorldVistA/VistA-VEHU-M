@@ -1,5 +1,5 @@
-ONCOPRT1 ;Hines OIFO/RVD - OncoTrax Reports ICD ;05/14/12
- ;;2.2;ONCOLOGY;**1,7,10**;Jul 31, 2013;Build 20
+ONCOPRT1 ;HINES OIFO/RVD - OncoTrax Reports ICD ;05/14/12
+ ;;2.2;ONCOLOGY;**1,7,10,13**;Jul 31, 2013;Build 7
  ;This routine invokes Integration Agreement #3151 and #3990.
  ;
 ICD ;check for particular ICD code.
@@ -124,7 +124,18 @@ ICD ;check for particular ICD code.
  .S DIS(118)="I $$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01,""I"")=259.8"
  .S DIS(119)="I $$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01,""I"")=624.01"
  .;ICD10 Search Logic
- .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE)=""C"")"
+ .;S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE)=""C"")"
+ .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,4)=""C00."")!($E(CODE,1,4)=""C43."")!($E(CODE,1,4)=""C4A."")"
+ .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,4)=""C45."")!($E(CODE,1,4)=""C48."")!($E(CODE,1,4)=""C49."")!($E(CODE,1,4)=""C96."")"
+ .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""C44.00"")!($E(CODE,1,6)=""C44.09"")"
+ .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""C44.20"")!($E(CODE,1,6)=""C44.29"")"
+ .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""C44.30"")!($E(CODE,1,6)=""C44.39"")"
+ .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""C44.40"")!($E(CODE,1,6)=""C44.49"")"
+ .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""C44.50"")!($E(CODE,1,6)=""C44.59"")"
+ .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""C44.60"")!($E(CODE,1,6)=""C44.69"")"
+ .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""C44.70"")!($E(CODE,1,6)=""C44.79"")"
+ .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""C44.80"")!($E(CODE,1,6)=""C44.89"")"
+ .S DIS(120)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""C44.90"")!($E(CODE,1,6)=""C44.99"")"
  .S DIS(121)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ((CODE=""D18.02"")!(CODE=""D35.2"")!(CODE=""D35.4"")!(CODE=""D45"")!(CODE=""D47.02"")!(CODE=""D35.3""))"
  .S DIS(122)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ((CODE=""D47.1"")!(CODE=""D47.3"")!(CODE=""D47.4"")!(CODE=""47.9"")!(CODE=""D49.6"")!(CODE=""D49.7""))"
  .S DIS(123)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ((CODE=""D47.Z"")!(CODE=""D47.Z1"")!(CODE=""D47.Z9""))"
@@ -134,5 +145,5 @@ ICD ;check for particular ICD code.
  .S DIS(128)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,5)=""D47.Z""),(($E(CODE,6,7)>0)&($E(CODE,6,7)<9999))"
  .S DIS(129)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE)=""D""),(($E(CODE,2,7)>31.9999)&($E(CODE,2,7)<33.9999))"
  .S DIS(130)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE)=""Z""),(($E(CODE,2,7)>84.9999)&($E(CODE,2,7)<86.9999))"
- .S DIS(131)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ((CODE=""R85.614"")!(CODE=""R87.614"")!(CODE=""87.624""))"
+ .S DIS(131)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ((CODE=""R85.614"")!(CODE=""R87.614"")!(CODE=""R87.624""))"
  Q

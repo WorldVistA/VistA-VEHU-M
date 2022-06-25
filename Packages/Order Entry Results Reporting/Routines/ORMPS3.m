@@ -1,5 +1,5 @@
-ORMPS3 ;SLC/MKB - Process Pharmacy ORM msgs cont ;Mar 28, 2019@17:00:22
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**213,243,413**;Dec 17, 1997;Build 32
+ORMPS3 ;SLC/MKB - Process Pharmacy ORM msgs cont ;Feb 26, 2021@06:35
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**213,243,413,547**;Dec 17, 1997;Build 2
  ;
 PTR(X) ; -- Return ptr to prompt OR GTX X
  Q +$O(^ORD(101.41,"AB","OR GTX "_X,0))
@@ -97,6 +97,14 @@ UPD ; -- Compare ORMSG to order, update responses [from SC^ORMPS]
  .. S CNT=1,^OR(100,ORDER,4.5,PI,2,1,0)=$$UNESC^ORMPS2($P(@ORMSG@(NTE),"|",4))
  .. S I=0 F  S I=$O(@ORMSG@(NTE,I)) Q:I<1  S CNT=CNT+1,^OR(100,ORDER,4.5,PI,2,CNT,0)=$$UNESC^ORMPS2(@ORMSG@(NTE,I))
  .. S ^OR(100,ORDER,4.5,PI,2,0)="^^"_CNT_U_CNT_U_DT_U
+ . ;update SIG ;p547
+ . N SIG
+ . S NTE=$$NTE(21),SIG=+$O(^OR(100,ORDER,4.5,"ID","SIG",0))
+ . I NTE,SIG,$$NTXT(NTE)'=$$VALTXT(ORDER,SIG) D
+ .. N CNT K ^OR(100,ORDER,4.5,SIG,2)
+ .. S CNT=1,^OR(100,ORDER,4.5,SIG,2,1,0)=$$UNESC^ORMPS2($P(@ORMSG@(NTE),"|",4))
+ .. S I=0 F  S I=$O(@ORMSG@(NTE,I)) Q:I<1  S CNT=CNT+1,^OR(100,ORDER,4.5,SIG,2,CNT,0)=$$UNESC^ORMPS2(@ORMSG@(NTE,I))
+ .. S ^OR(100,ORDER,4.5,SIG,2,0)="^^"_CNT_U_CNT_U_DT_U
  S ZSC=$$ZSC I ZSC,$P(ZSC,"|",2)'?2.3U S ^OR(100,ORDER,5)=$TR($P(ZSC,"|",2,7),"|","^") ;1 or 0 instead of [N]SC
  Q
  ;

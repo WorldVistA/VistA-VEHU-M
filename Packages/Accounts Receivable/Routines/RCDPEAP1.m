@@ -1,5 +1,5 @@
 RCDPEAP1 ;ALB/KML - AUTO POST MATCHING EFT ERA PAIR - CONT. ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**298,304,318,321,326,345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**298,304,318,321,326,345,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  ;Read ^IBM(361.1) via Private IA 4051
  ;
@@ -93,8 +93,9 @@ AUTOCHK2(RCERA,RCTYP) ; RCTYP added PRCA*4.5*321
  ; Determine if ERA should be excluded using the site parameters
  S PNAM=$$GET1^DIQ(344.4,RCERA_",",.06,"E") ; PRCA*4.5*345 - Added line - Payer Name
  S PTIN=$$GET1^DIQ(344.4,RCERA_",",.03,"E") ; PRCA*4.5*345 - Added line - Payer TIN
- S XX=$$GETPAY^RCDPEU1(PNAM,PTIN)            ; PRCA*4.5*345 - Get the IEN from 344.6
- S RCERATYP=$$PHARM^RCDPEAP1(RCERA)          ; It must be a Medical/TRICARE or Rx ERA
+ S XX=$$GETPAY^RCDPEU1(PNAM,PTIN)           ; PRCA*4.5*345 - Get the IEN from 344.6
+ I $$CHKTYPE^RCDPEU1(XX,"T") S RCERATYP=2   ; PRCA*4.5*349 - Check if this is TRICARE ERA
+ E  S RCERATYP=$$PHARM^RCDPEAP1(RCERA)      ; Else it must be a Medical or Rx ERA
  ;
  ; Check if medical claim and auto-posting is turned off
  S XX=$$GET1^DIQ(344.61,"1,",.02,"I")       ; PRCA*4.5*345 - Added line - Med Auto-Posting on/off
@@ -104,11 +105,16 @@ AUTOCHK2(RCERA,RCTYP) ; RCTYP added PRCA*4.5*321
  S XX=$$GET1^DIQ(344.61,"1,",1.01,"I")      ; PRCA*4.5*345 - Added line - Rx Auto-Posting on/off
  I RCERATYP=1,'XX Q "0^Pharmacy auto-posting off"   ; PRCA*4.5*345 - Changed RCERATYP to RCEARTYP=1
  ;
+ ; Check if TRICARE claim and auto-posting is turned off
+ S XX=$$GET1^DIQ(344.61,"1,",1.05,"I")              ; PRCA*4.5*349 - Added line - TRICARE Auto-Posting on/off
+ I RCERATYP=2,'XX Q "0^TRICARE auto-posting off"    ; PRCA*4.5*349 - Added line
+ ;
  ; Check if ERA payer is excluded from autopost
  S RCXCLDE=0
- S:RCERATYP=0 RCXCLDE=$$EXCLUDE(RCERA)       ; PRCA*4.5*345 - Changed to =0 from 'RCERATYP
- S:RCERATYP=1 RCXCLDE=$$EXCLDRX(RCERA)       ; PRCA*4.5*345 - Changed to =1 from RCERATYP
- I RCXCLDE Q "0^"_$S(RCERATYP=1:"Pharmacy",1:"Medical")_" payer excluded"
+ S:RCERATYP=0 RCXCLDE=$$EXCLUDE(RCERA)              ; PRCA*4.5*345 - Changed to =0 from 'RCERATYP
+ S:RCERATYP=1 RCXCLDE=$$EXCLDRX(RCERA)              ; PRCA*4.5*345 - Changed to =1 from RCERATYP
+ S:RCERATYP=2 RCXCLDE=$$EXCLDTR(RCERA)              ; PRCA*4.5*349 - Added Line
+ I RCXCLDE Q "0^"_$S(RCERATYP=1:"Pharmacy",RCERATYP=2:"TRICARE",1:"Medical")_" payer excluded" ; PRCA*4.5*349
  ;
  ; Check for invalid bill number exception
  S RCDSUB=0,NOTOK=0
@@ -262,6 +268,30 @@ EXCLDRX(RCERA) ; Verify if auto-posting is allowed for Pharmacy claims
  ;
  ; If payer table entry found check if payer is excluded from pharmacy auto-post
  Q:$$GET1^DIQ(344.6,RCPXDA_",",.08,"I")=1 1
+ ;
+ ; Otherwise it is OK to auto-post
+ Q 0
+ ;
+EXCLDTR(RCERA) ; Verify if auto-posting is allowed for TRICARE claims
+ ; and for the Payer - PRECHECK USED IN RCDPEM0. Not allowed if TRICARE
+ ; auto-posting is switched off
+ ; PRCA*4.5*349 - Added function
+ ; Input: RCERA - IEN for file 344.4
+ ; Returns: 1 - ERA is excluded from Auto-Posting, 0 otherwise
+ Q:'$$GET1^DIQ(344.61,"1,",1.05,"I") 1 ; TRICARE Auto-Posting is turned OFF
+ N RCPID,RCPNM,RCPXDA
+ ;
+ ; Check if Payer Name and Payer ID from ERA are in auto-posting payer table
+ S RCPNM=$$GET1^DIQ(344.4,RCERA_",",.06,"E")
+ Q:RCPNM="" 1 ; No Payer Name
+ S RCPID=$$GET1^DIQ(344.4,RCERA_",",.03,"E")
+ Q:RCPID="" 1 ; No Payer TIN
+ ;
+ ; Auto-post is allowed if this is a new payer (not in table)
+ S RCPXDA=$O(^RCY(344.6,"CPID",RCPNM,RCPID,"")) Q:RCPXDA="" 0
+ ;
+ ; If payer table entry found check if payer is excluded from TRICARE auto-post
+ Q:$$GET1^DIQ(344.6,RCPXDA_",",.13,"I")=1 1
  ;
  ; Otherwise it is OK to auto-post
  Q 0

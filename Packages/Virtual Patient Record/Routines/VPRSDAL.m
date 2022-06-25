@@ -1,5 +1,5 @@
 VPRSDAL ;SLC/MKB -- SDA Allergy utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10**;Sep 01, 2011;Build 16
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,14**;Sep 01, 2011;Build 38
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -25,7 +25,7 @@ ALG1(IEN) ; -- get info for single allergy, returns VPRALG
  Q
  ;
 ALLERGEN(VPTR) ; -- return code^name^system for Allergen
- N Y,FN,TYPE,CSYS
+ N Y,FN,TYPE,CSYS S VPTR=$G(VPTR)
  S FN=$S(VPTR["PSDRUG":50,1:+$P(VPTR,"(",2)),TYPE=$P(VPRALG,U,7)
  S CSYS=$S(TYPE="D":"RXN^UNI^SCT",TYPE["D":"RXN^SCT^UNI",1:"SCT^UNI")
  S Y=$$CODE^VPRSDA(+VPTR,FN,CSYS) I Y="" D
@@ -37,13 +37,14 @@ ALLERGEN(VPTR) ; -- return code^name^system for Allergen
  ;
 ALGCMT1(IEN,TYPE) ; -- return TYPE comment
  N I,TXT,Y
- S I=$O(^GMR(120.8,IEN,26,"AVER","E",0)),Y=""
+ S IEN=+$G(IEN),TYPE=$G(TYPE,"E") ;default to Error
+ S I=$O(^GMR(120.8,IEN,26,"AVER",TYPE,0)),Y=""
  I I M TXT=^GMR(120.8,IEN,26,I,2) S Y=$$STRING^VPRD(.TXT)
  Q Y
  ;
 ALGCMT(IEN) ; -- return list of comments in
  ; DLIST(#) = id ^ date ^ user ^ type ^ facility ^ text
- N I,X,Y,TXT
+ N I,X,Y,TXT S IEN=+$G(IEN)
  S I=0 F  S I=$O(^GMR(120.8,IEN,26,I)) Q:I<1  S X=$G(^(I,0)) D
  . Q:$P(X,U,3)="E"
  . S $P(X,U,3)=$$EXTERNAL^DILFD(120.826,1.5,,$P(X,U,3))
@@ -71,11 +72,14 @@ ALGDT(IEN) ; -- return first D/T of Event
  Q Y
  ;
 ALGSIGN(IEN) ; -- convert ien^name[^date] to national code for Sign/Symptom
- ; Return +IEN, DATA=code^name^system for SNOMED or VUID
- N Y S DATA=$G(IEN),IEN=+$G(IEN),Y=""
- S Y=$$CODE^VPRSDA(IEN,120.83,"SCT")
- I Y="" S Y=$$VUID^VPRD(IEN,120.83) S:$L(Y) Y=Y_U_$P(DATA,U,2)_"^VHAT"
- S:$L(Y) DATA=Y ;return code string
+ ; Returns +IEN, VPRDT=date [for extension],
+ ;          VPREACTN=code^name^system [SNOMED or VUID],
+ ;          VPRNAME =local name [Original Text]
+ N Y S Y="" K VPRNAME
+ S VPREACTN=$P($G(IEN),U,1,2),VPRDT=$P($G(IEN),U,3),IEN=+$G(IEN)
+ S Y=$$CODE^VPRSDA(IEN,120.83,"SCT") S:$L(Y) VPRNAME=$P(VPREACTN,U,2)
+ I Y="" S Y=$$VUID^VPRD(IEN,120.83) S:$L(Y) Y=Y_U_$P(VPREACTN,U,2)_"^VHAT"
+ S:$L(Y) VPREACTN=Y ;return code string
  Q
  ;
 ASSESS ; -- get Assessment #120.86 for patient

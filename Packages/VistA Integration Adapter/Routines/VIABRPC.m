@@ -1,5 +1,5 @@
 VIABRPC ;AAC/JMC - VIA RPCs ;04/05/2016
- ;;1.0;VISTA INTEGRATION ADAPTER;**7,8,9,12,22**;06-FEB-2014;Build 2
+ ;;1.0;VISTA INTEGRATION ADAPTER;**7,8,9,12,22,21**;06-FEB-2014;Build 1
  ;Per VA Directive 6402, this routine should not be modified.
  ; ICR 10090    INSTITUTION FILE (supported)
  ; ICR 10048    PACKAGE FILE (#9.4) (supported)
@@ -323,13 +323,48 @@ DEVICE(RESULT,FROM,DIR,MARGIN) ; Return a subset of printer entries from the Dev
  Q
  ;
 SAVE(OK,PCELIST,NOTEIEN,VIALOC) ; save PCE information
+ ;INPUTS:
+ ; PCELIST - LIST OF ENCOUNTER DATA
+ ; NOTEIEN - TIU NOTE INTERNAL ENTRY NUMBER [Optional]
+ ; VIALOC  - INPATIENT STATION [Optional]
+ ;OUTPUT:
+ ; ARRAY with success or error code followed by problems encountered on data elements
+ ;  The array may contain the following values:
+ ;
+ ;  1 Indicates success - no errors and processed completely.
+ ;
+ ; -1 An error occurred.  Data may or may not have been processed depending on nature of data.
+ ;
+ ; -2 Indicates that the routine PXAI found an issue with the visit.
+ ;
+ ; -3 Indicates that the input parameters were not properly defined.
+ ;
+ ; -4 If cannot get a lock on the encounter
+ ;
+ ; -5 If there were only warnings
+ ;
+ ; Subsequent values will vary depending on findings from DATA2PCE^PXAPI.
+ ; the following is an example:
+ ;
+ ;Example:
+ ; OK(0)="-1^Missing Required Fields"
+ ; OK(1)="AO^No error"
+ ; OK(2)="CV^NULL"
+ ; OK(3)="EC^No error"
+ ; OK(4)="HNC"^No error"
+ ; OK(5)="IR^No error"
+ ; OK(6)="MST"^No error"
+ ; OK(7)="SC^Value must be NULL"
+ ; OK(8)="SHAD^1"
+ ;
  S:$G(VIALOC)="" VIALOC="VISTA INTEGRATION ADAPTER"
- N VSTR,GMPLUSER
+ N VSTR,GMPLUSER,VOK ;*21 added VOK
  N ZTIO,ZTRTN,ZTDTH,ZTSAVE,ZTDESC,ZTSYNC,ZTSK
  S VSTR=$P(PCELIST(1),U,4) K ^TMP("VIAPCE",$J,VSTR)
  M ^TMP("VIAPCE",$J,VSTR)=PCELIST
  S GMPLUSER=$$CLINUSER(DUZ),NOTEIEN=+$G(NOTEIEN)
  D DQSAVE^VIABRPC7
+ M OK=VOK ;*21 changed return to array
  Q
  ;
 CLINUSER(VIADUZ) ;is this a clinical user?

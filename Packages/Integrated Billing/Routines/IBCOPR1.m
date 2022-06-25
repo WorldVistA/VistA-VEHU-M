@@ -1,12 +1,12 @@
 IBCOPR1 ;WISC/RFJ,BOISE/WRL - print dollar amts for pre-registration ;05 May 97  8:34 AM
- ;;2.0;INTEGRATED BILLING;**75,345,528,664**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**75,345,528,664,668**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
 EXCEL ; Excel print
  ;
  N CTR,IBIOM,SORT
- S IBIOM=IOM I IBIOM>132 S IBIOM=132
+ S IBIOM=IOM I IBIOM>200 S IBIOM=200
  ;
  ;Summary Report
  I IBCNFSUM D  G EXCELX
@@ -82,7 +82,7 @@ REPORT ; Print the report to the selected device.
  .. W !!
  ;
  ; Detail Report
- S TAB(1)=18,TAB(2)=24,TAB(3)=36,TAB(4)=58,TAB(5)=70,TAB(6)=84,TAB(7)=96,TAB(8)=110,TAB(9)=116,$P(LINE,"-",WIDTH)=""
+ S TAB(1)=18,TAB(2)=24,TAB(3)=36,TAB(4)=58,TAB(5)=70,TAB(6)=84,TAB(7)=96,TAB(8)=110,TAB(9)=116,$P(LINE,"-",IBIOM)=""
  I '$D(^TMP($J,"IBCOPR","D")) D HDR W !,"NO DATA FOR SELECTED CRITERIA" G REPORTX
  F LVL=1,3 D  I IBEX Q
  . D HDR
@@ -100,7 +100,7 @@ REPORT ; Print the report to the selected device.
  ... W ?TAB(6),$J($FN($P(DATA,U,7),",",2),10)        ;Collected Amount
  ... W ?TAB(7),$$FMTE^XLFDT($P(DATA,U,8))            ;Collected Date
  ... W ?TAB(8),$J($P(DATA,U,9),3)                    ;F/P/N
- ... W ?TAB(9),$E($P(DATA,U,10),1,(WIDTH-TAB(9)))      ;Source of Information
+ ... W ?TAB(9),$E($P(DATA,U,10),1,(IBIOM-TAB(9)))      ;Source of Information
  ... W !
  . I IBEX Q
  . D PAGE Q:IBEX
@@ -112,7 +112,7 @@ REPORT ; Print the report to the selected device.
  . W ?65,"AMOUNT: ",$J($FN($G(^TMP($J,"IBCOPR","T",LVL,"BILLAMT")),",",2),15),!
  . W ?5,"TOTAL ",$S(LVL=3:"OUTPATIENT",1:"INPATIENT")," COLLECTED COUNT:",$J($FN($G(^TMP($J,"IBCOPR","T",LVL,"CLMCNT")),","),10)
  . W ?65,"AMOUNT: ",$J($FN($G(^TMP($J,"IBCOPR","T",LVL,"CLMAMT")),",",2),15),!
- . I LVL=1 D PAUSE^VALM1 S:'Y IBEX=1
+ . I LVL=1,($E(IOST,1,2)="C-") D PAUSE^VALM1 S:'Y IBEX=1
  I IBEX G REPORTX
  K LVL D PAGE I IBEX G REPORTX
  W !,"Total Bill Ct",?30,"Total Bill Amt",?65,"Total Pymt Count",?95,"Total Pymt Amt",!
@@ -128,7 +128,8 @@ PAGE ;
  . I 'IBCNFSUM D
  .. W "* Next to bill indicates bill is canceled and not used in totals"
  .. W !,"F=Full Payment P=Partial Payment" I DATETYPE="B" W " N=No Payments Received"
- . D PAUSE^VALM1 S:'Y IBEX=1 Q:IBEX  D HDR
+ . I $E(IOST,1,2)="C-" D PAUSE^VALM1 S:'Y IBEX=1 I IBEX Q
+ . D HDR
  Q
  ;
 HDR ;Print Header

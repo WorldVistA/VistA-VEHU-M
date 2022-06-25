@@ -1,5 +1,5 @@
 IBCNAU1 ;ALB/KML/AWC - eIV USER EDIT REPORT (REPORT FILTER SELECTION) ;6-APRIL-2015
- ;;2.0;INTEGRATED BILLING;**528,664**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**528,664,668**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -92,9 +92,10 @@ SELPYQ Q IBV5
  ;/vd-IB*2*664 - Added the following module of code.
 GPYR(ALLPYRS) ; Select the Payers to be reported on.
  ; -- allow user to select payers
+ K ^TMP("IBPYR",$J)
  I ALLPYRS=1 D GPYRALL Q
  N IBPAYER,IBPYR,IBTXT
- D PAYER^IBCNINSL("IIV",1,.IBPAYER)
+ D PAYER^IBCNINSL("EIV",1,.IBPAYER)
  S IBPYR=""
  F  S IBPYR=$O(IBPAYER(IBPYR)) Q:IBPYR=""  S IBTXT=$E(IBPAYER(IBPYR),1,25) D
  . I IBTXT]"" S ^TMP("IBPYR",$J,IBTXT,IBPYR)=""
@@ -106,7 +107,8 @@ GPYRALL ; User wants to see all PAYERS that have received edits
  K ^TMP("IBPYR",$J)
  S PYRNAM="" F  S PYRNAM=$O(^IBE(365.12,"B",PYRNAM)) Q:PYRNAM=""  D
  . S PYRIEN=0 F  S PYRIEN=$O(^IBE(365.12,"B",PYRNAM,PYRIEN)) Q:'PYRIEN  D
- . . I '+$$PYRAPP^IBCNEUT5("IIV",PYRIEN) Q   ; Not an eIV Payer...Only want eIV Payers.
+ . . ;IB*668/TAZ - Changed Payer Application from IIV to EIV
+ . . I '+$$PYRAPP^IBCNEUT5("EIV",PYRIEN) Q   ; Not an eIV Payer...Only want eIV Payers.
  . . S ^TMP("IBPYR",$J,PYRNAM,PYRIEN)=""
  Q
  ;
