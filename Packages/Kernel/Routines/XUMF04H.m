@@ -1,5 +1,5 @@
-XUMF04H ;BP/RAM - INSTITUTION Handler ;12/02/2019
- ;;8.0;KERNEL;**549,678,698,723**;Jul 10, 1995;Build 3
+XUMF04H ;BP/RAM - INSTITUTION Handler ;09/10/2020
+ ;;8.0;KERNEL;**549,678,698,723,735**;Jul 10, 1995;Build 4
  ;;Per VA Directive 6402, this routine should not be modified
  ; This routine handles Institution Master File HL7 messages.
  ;
@@ -176,7 +176,7 @@ ZIN ; -- VHA Institution segment
  .D EM("error updating PARENT",.ERR)
  .K ERR
  ;
- I $G(NPIDT)'="" D
+ I $G(NPIDT)'="",NPI'="" D
  .K FDA
  .S IENS="?+2,"_IEN_","
  .S FDA(4.042,IENS,.01)=NPIDT
@@ -187,7 +187,11 @@ ZIN ; -- VHA Institution segment
  .D EM("error updating NPI",.ERR)
  .K ERR
  ;
- I $G(TAX)'="" D
+ I $G(NPIDT)'="",NPI="" D
+ . N XUIENEFF S XUIENEFF=$O(^DIC(4,IEN,"NPISTATUS","B",NPIDT,0))
+ . I XUIENEFF>0 N DIK,DA S DA(1)=IEN,DA=XUIENEFF,DIK="^DIC(4,"_DA(1)_",""NPISTATUS""," D ^DIK
+ ;
+ I $G(TAX)'="",TAXSTAT'="" D
  .K FDA,ROOT,IDX
  .N IENS
  .S IENS="?+2,"_IEN_","
@@ -198,6 +202,12 @@ ZIN ; -- VHA Institution segment
  I $D(ERR) D
  .D EM("error updating TAXANOMY",.ERR)
  .K ERR
+ ;
+ I $G(TAX)'="",TAXSTAT="" D
+ . N TAX1 S TAX1=$O(^USC(8932.1,"G",TAX,0))
+ . I TAX1'>0 Q
+ . N XUIENTAX S XUIENTAX=$O(^DIC(4,IEN,"TAXONOMY","B",TAX1,0))
+ . I XUIENTAX>0 N DIK,DA S DA(1)=IEN,DA=XUIENTAX,DIK="^DIC(4,"_DA(1)_",""TAXONOMY""," D ^DIK
  ;
  I $G(CLIA)'="" D
  .S IENS="?+2,"_IEN_","
@@ -236,6 +246,10 @@ REPLY ; -- master file response
  Q:HL("MTN")="MFR"
  Q:HL("MTN")="MFK"
  Q:HL("MTN")="ACK"
+ S HLFS=$G(HLFS)
+ S HL("MID")=$G(HL("MID"))
+ S HL("EIDS")=$G(HL("EIDS"))
+ S HL("EID")=$G(HL("EID"))
  ;
  N X
  S X="MSA"_HLFS_$S(ERROR:"AE",1:"AA")_HLFS_HL("MID")_HLFS_$P(ERROR,U,2)

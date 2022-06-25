@@ -1,5 +1,5 @@
 RCDPEAD ;ALB/PJH - AUTO DECREASE ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**298,304,318,326,332,345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**298,304,318,326,332,345,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  ;Read ^IBM(361.1) via Private IA 4051
  ;
@@ -24,12 +24,23 @@ EN ;Auto Decrease - applies to auto-posted claims only
  . S RCDAY=$$FMADD^XLFDT(DT\1,-$$GET1^DIQ(344.61,"1,",1.03))
  . D EN1A(RCDAY,1,2)
  ;
+ ; PRCA*4.5*349 - Begin added block
+ S AP=$$GET1^DIQ(344.61,"1,",1.05,"I")      ; TRICARE Claims Auto-Posting on/off
+ S AD=$$GET1^DIQ(344.61,"1,",1.06,"I")      ; TRICARE Claims w/payments Auto-Decrease on/off
+ I AP,AD D                                  ; Attempt to Auto-Decrease TRICARE Claims w/Payments
+ . S RCDAY=$$FMADD^XLFDT(DT\1,-$$GET1^DIQ(344.61,"1,",1.08))
+ . D EN1A(RCDAY,1,3)
+ ;
+ S AD=$$GET1^DIQ(344.61,"1,",1.09,"I")      ; TRICARE Claims Auto-Decrease no-pay on/off
+ I AP,AD D                                  ; Attempt to Auto-Decrease TRICARE Claims w/No Payments
+ . D REJ^RCDPEAD4(3)
+ ; PRCA*4.5*349 - End added block
+ ;
  ; Payer Rejects for Medical Claims
  S AP=$$GET1^DIQ(344.61,"1,",.02,"I")       ; Medical Claims Auto-Posting on/off
  S AD=$$GET1^DIQ(344.61,"1,",.03,"I")       ; Medical Claims Auto-Decrease on/off
  I AP,AD D                                  ; Attempt to Auto-Decrease Rx Claims w/Payments
- . S RCDAY=$$FMADD^XLFDT(DT\1,-$$GET1^DIQ(344.61,"1,",1.03))
- . D REJ(1)
+ . D REJ^RCDPEAD4(1)
  ; End PRCA*4.5*345
  Q
  ;
@@ -57,37 +68,30 @@ EN2(RCDATE,RCDAY,PAID,WHICH) ; Scans the 'F' index of the ERA file for ERA entri
  ; Input:   RCDATE      - Auto-Post Date of the ERA
  ;          RCDAY       - Day to begin search for auto-posted but not decreased lines
  ;          PAID        - 1 - Decrease paid lines, 2 - Decrease no-pay lines
- ;          WHICH       - 1 - Checking for Medical Claims, 2 - Checking for Rx Claims
+ ;          WHICH       - 1 - Checking for Medical Claims
+ ;                        2 - Checking for Rx Claims
  ;                        3 - Checking for TRICARE Claims
- N IEN3446,PAYID,PAYNAM,RCARRAY,RCERA,RCRTYPE,STOP,XX   ; PRCA*4.5*345 - Added IEN3446,STOP,XX
+ N IEN3446,PAYID,PAYNAM,RCARRAY,RCERA,RCRTYPE   ; PRCA*4.5*345 - Added IEN3446
  S RCERA=0
  F  D  Q:'RCERA
  . K RCARRAY
  . S RCERA=$O(^RCY(344.4,"F",RCDATE,RCERA))
  . Q:'RCERA
- . S RCRTYPE=$$PHARM^RCDPEAP1(RCERA)            ; It must be a Medical/TRICARE or Rx ERA
+ . S XX=$$ISTYPE^RCDPEU1(344.4,RCERA,"T")       ; PRCA*4.5*349 - Added line
+ . I XX S RCRTYPE=2                             ; PRCA*4.5*349 - Check if this is TRICARE ERA
+ . E  S RCRTYPE=$$PHARM^RCDPEAP1(RCERA)          ; It must be a Medical or Rx ERA
  . I RCRTYPE'=0,WHICH=1 Q                       ; PRCA*4.5*345 - Not processing Medical Claims
  . I RCRTYPE'=1,WHICH=2 Q                       ; PRCA*4.5*345 - Not processing Rx Claims
+ . I RCRTYPE'=2,WHICH=3 Q                       ; PRCA*4.5*349 - Not processing TRICARE Claims
  . S PAYID=$$GET1^DIQ(344.4,RCERA_",",.03,"E")  ; Payer TIN
  . S PAYNAM=$$GET1^DIQ(344.4,RCERA_",",.06,"E") ; Payer Name
  . S PAYNAM=$P($G(^RCY(344.4,RCERA,0)),U,6)
- . S IEN3446="",STOP=0
+ . S IEN3446=""
  . I PAYID'="",PAYNAM'="" D
  . . S IEN3446=$O(^RCY(344.6,"CPID",PAYNAM,PAYID,""))
  . ;
- . ; If processing Medical Claims, skip if payer is excluded from Auto-Post or Auto-Decrease
- . I WHICH=1,IEN3446'="" D  Q:STOP
- . . S XX=$$GET1^DIQ(344.6,IEN3446_",",.06,"I")
- . . I XX S STOP=1 Q                            ; Payer excluded from Medical Auto-Post
- . . S XX=$$GET1^DIQ(344.6,IEN3446_",",.07,"I")
- . . I XX S STOP=1 Q                            ; Payer excluded from Medical Auto-Decrease
- . ;
- . ; If processing Rx Claims, skip if payer is excluded from Auto-Post or Auto-Decrease
- . I WHICH=2,IEN3446'="" D  Q:STOP
- . . S XX=$$GET1^DIQ(344.6,IEN3446_",",.08,"I")
- . . I XX S STOP=1 Q                            ; Payer excluded from Rx Auto-Post
- . . S XX=$$GET1^DIQ(344.6,IEN3446_",",.12,"I")
- . . I XX S STOP=1 Q                            ; Payer excluded from Rx Auto-Decrease
+ . ; Skip if payer is excluded from Auto-Post or Auto-Decrease
+ . I $$PAYEX(WHICH,IEN3446) Q
  . ; 
  . ; Build index to scratchpad for this ERA
  . D BUILD^RCDPEAP(RCERA,.RCARRAY)
@@ -175,7 +179,8 @@ EN4(RCDATE,RCERA,RCARRAY,PAID,RCLINE,WHICH) ; Auto-decrease selected lines
  ;
  ; Get top limit for auto-decrease
  I WHICH=1 S RCMAX=+$$GET1^DIQ(344.61,"1,",.05)     ; Medical Claims limit PRCA*4.5*345
- E  S RCMAX=+$$GET1^DIQ(344.61,"1,",1.04)           ; Rx Claims limit PRCA*4.5*345
+ E  I WHICH=2 S RCMAX=+$$GET1^DIQ(344.61,"1,",1.04) ; Rx Claims limit PRCA*4.5*349
+ E  S RCMAX=+$$GET1^DIQ(344.61,"1,",1.07)           ; TRICARE Claims limit PRCA*4.5*349
  ;
  ; Walk the RCIARR and apply CARC based adjustments to the bill.
  S RCJ="",RCADJ=0
@@ -190,7 +195,7 @@ EN4(RCDATE,RCERA,RCARRAY,PAID,RCLINE,WHICH) ; Auto-decrease selected lines
  . ;
  . Q:(RCADJ+$P(RCIARR(RCJ,RCK),";",1))>RCMAX  ; Don't apply decrease if over top limit
  . ;
- . S XX=$S(WHICH=1:"MEDICAL",1:"PHARMACY")    ; PRCA*4.5*345 Added line
+ . S XX=$S(WHICH=1:"MEDICAL",WHICH=2:"PHARMACY",1:"TRICARE")    ; PRCA*4.5*345, PRCA*4.5*349 Rx and TRICARE
  . S COMMENT(1)=XX+" AUTO-DECREASE FOR CARC: "_$P(RCIARR(RCJ,RCK),";",2)    ; PRCA*4.5*345
  . S COMMENT(1)=COMMENT(1)_" AMOUNT: "_+$P(RCIARR(RCJ,RCK),";",1) ; PRCA*4.5*326
  . S COMMENT(1)=COMMENT(1)_" (MAX DEC: "
@@ -223,64 +228,6 @@ EN4(RCDATE,RCERA,RCARRAY,PAID,RCLINE,WHICH) ; Auto-decrease selected lines
  D ^DIE
  Q
  ;
-REJ(WHICH) ; Process zero balance denial ERA's - PRCA*4.5*326
- ; PRCA*4.5*345 - Added WHICH
- ; Input:   WHICH       - 1 - Medical Claims
- ; Note: Added FLD in preparation for TRICARE auto-decrease of zero-dollar claims
- N FLD,PAID,PAYID,PAYNAM,RC3446,RCDAY,RCLINE,RCPARM         ; PRCA*4.5*345 - Added FLD
- S FLD=1
- ;
- ; Get days to wait for payer rejects (rename no-pay lines field) 
- S RCDAY=$$FMADD^XLFDT(DT\1,-$$GET1^DIQ(344.61,"1,",FLD))   ; PRCA*4.5*345 - Replaced .12 w/FLD
- ;
- ; Scan AFD index for ERA received within date range
- S RCDATE=$$FMADD^XLFDT(RCDAY,-1)_".99999",PAID=0
- F  S RCDATE=$O(^RCY(344.4,"AFD",RCDATE)) Q:'RCDATE  Q:(RCDATE\1)>RCDAY  D
- . S RCERA=0
- . ; Check for payer reject ERA's
- . F  S RCERA=$O(^RCY(344.4,"AFD",RCDATE,RCERA)) Q:'RCERA  D
- . . Q:+$$GET1^DIQ(344.4,RCERA_",",.05)                 ; Ignore ERA if total paid is not zero
- . . Q:+$$GET1^DIQ(344.4,RCERA_",",.16,"I")             ; Ignore ERA if removed from worklist
- . . Q:$$GET1^DIQ(344.4,RCERA_",",.15)'="NON"           ; Ignore ERA if not payment type of NON
- . . S RCRTYPE=$$PHARM^RCDPEAP1(RCERA)
- . . Q:RCRTYPE                                          ; Quit if ERA is for Pharmacy
- . . ;
- . . ; Quit if ERA is not for Medical and not processing Medical
- . . I WHICH=1 Q:RCRTYPE'=0
- . . ;
- . . ; Check payer exclusion file for this ERA's payer   
- . . S PAYID=$P($G(^RCY(344.4,RCERA,0)),U,3)
- . . S PAYNAM=$P($G(^RCY(344.4,RCERA,0)),U,6)
- . . I PAYID'="",PAYNAM'="" D
- . . . S RCPARM=$O(^RCY(344.6,"CPID",PAYNAM,PAYID,""))
- . . . S:RCPARM'="" RC3446=$G(^RCY(344.6,RCPARM,0))
- . . ;
- . . ; Ignore ERA if EXCLUDE MED CLAIMS POSTING  (#.06) or EXCLUDE MED CLAIMS DECREASE (#.07) fields set to 'yes'
- . . ; PRCA*4.5*345 - Added ,WHICH=1
- . . I $G(RC3446)'="",WHICH=1 Q:$P(RC3446,U,6)=1  Q:$P(RC3446,U,7)=1
- . . ;
- . . ; Ignore ERA if auto-post blocked
- . . Q:$$GET1^DIQ(344.4,RCERA_",",.19,"I")
- . . ;
- . . ; Build Scratchpad (if needed) and Verify Lines
- . . K ^TMP($J,"RCDPEWLA")
- . . S RCSCR=$$SCRPAD^RCDPEWLZ(RCERA)
- . . I 'RCSCR Q
- . . ; Ignore ERA if it has PLBs
- . . I $D(^TMP($J,"RCDPEWLA","ERA LEVEL ADJUSTMENT EXISTS")) Q
- . . ;
- . . ; Build index to scratchpad for this ERA
- . . N RCARRAY
- . . D BUILD^RCDPEAP(RCERA,.RCARRAY)
- . . ; Search lines
- . . S RCLINE=0
- . . F  S RCLINE=$O(RCARRAY(RCLINE)) Q:'RCLINE  D
- . . . ; Ignore claim line if already auto decreased
- . . . Q:$P($G(^RCY(344.4,RCERA,1,RCLINE,5)),U,3)
- . . . ; Process line
- . . . D EN4(RCDATE,RCERA,.RCARRAY,PAID,RCLINE,WHICH)       ; PRCA*4.5*345 - Added WHICH
- Q
- ;
 SPLIT(RCSCR,RCLINE,RCBILL,RCARRAY) ;Check for SPLIT/EDIT in scratchpad
  ;Input RCSCR - IEN of #344.49
  ;      RCLINE - ERA detail line sequence number
@@ -310,6 +257,7 @@ CARCLMT(RCEOB,RCZERO,WHICH,FROMADP,ADATE) ;EP from COMPILE^RCDPEADP and AUTO^RCD
  ;          RCZERO  - 0 = ERA Line with payment 1 = ERA Line without payment
  ;          WHICH   - 1 - Checking Auto-Decrease for Medical CARCs
  ;                    2 - Checking Auto-Decrease for Rx CARCs
+ ;                    3 - Checking Auto-Decrease for TRICARE CARCs
  ;                    Optional, defaults to 1 (Medical)
  ; Returns: A1;A2;A3;A4^B1;B2;B3;B4^...^N1;N2;N3;N4 Where:
  ;           A1 - Auto-Decrease amount of the 1st CARC code in the EOB
@@ -430,3 +378,21 @@ FIND(RCERA,RCLINE) ; Search ORIGINAL ERA SEQUENCES for this line
  . S ORIG=","_ORIG_","
  . S:$F(ORIG,","_RCLINE_",") RET=RCSUB
  Q RET
+ ;
+PAYEX(WHICH,IEN3446) ; Check if payer is excluded
+ ; Subroutine added for PRCA*4.5*349
+ ; Input: WHICH - 1=Medical, 2=Rx, 3=TRICARE
+ ;        IEN3446 - Internal Entry number of Payer Exclusion file entry
+ ; Returns: 1 if payer is excluded, otherwise 0.
+ ;
+ N FLDA,FLDD,RETURN,XX
+ S RETURN=0
+ S FLDA=$S(WHICH=1:.06,WHICH=2:.08,1:.13)
+ S FLDD=$S(WHICH=1:.07,WHICH=2:.12,1:.14)
+ ; If processing Rx Claims, skip if payer is excluded from Auto-Post or Auto-Decrease
+ I IEN3446'="" D  ;
+ . S XX=$$GET1^DIQ(344.6,IEN3446_",",FLDA,"I")
+ . I XX S RETURN=1 Q                            ; Payer excluded from Rx Auto-Post
+ . S XX=$$GET1^DIQ(344.6,IEN3446_",",FLDD,"I")
+ . I XX S RETURN=1                              ; Payer excluded from Rx Auto-Decrease
+ Q RETURN

@@ -1,5 +1,8 @@
 ECXBCM ;ALB/JAP-Bar Code Medical Administration Extract ;6/13/19  12:36
- ;;3.0;DSS EXTRACTS;**107,127,132,136,143,144,148,149,154,160,161,166,170,174**;Dec 22, 1997 ;Build 33
+ ;;3.0;DSS EXTRACTS;**107,127,132,136,143,144,148,149,154,160,161,166,170,174,181**;Dec 22, 1997 ;Build 71
+ ;
+ ;Reference to ^TMP($J  supported by SACC 2.3.2.5.1
+ ;Reference to $$LJ^XLFSTR supported by ICR #10104
  ;
 BEG ;entry point from option
  ;ECFILE=^ECX(727.833,
@@ -13,12 +16,14 @@ START ; start package specific extract
  S RERUN=0,ECXLDT=+$P($G(^ECX(728,1,ECNODE)),U,ECPIECE) I ECXLDT'<ECSD S RERUN=1 ;154 If re-running date range, set RERUN to 1, 160 added ^ to global reference
  S ECED=ECED+.3,ECD=ECSD1
  S PIEN=0
+ K ^TMP($J,"ECXBCM") ;181
  I $G(ECSD)="" S ECSD=DT
  ; loop thru and get each new patient, reset the start date to ECSD - begin date from ECXTRAC
  F  S PIEN=$O(^PSB(53.79,"AADT",PIEN)) Q:('PIEN)  S IDAT=ECSD D
  .F  S IDAT=$O(^PSB(53.79,"AADT",PIEN,IDAT)) Q:'IDAT!(IDAT>ECED)  S RIEN="" D
  ..F  S RIEN=$O(^PSB(53.79,"AADT",PIEN,IDAT,RIEN)) Q:'RIEN  D
  ...S ECXNOD=^PSB(53.79,RIEN,0) Q:'ECXNOD  S ECXDFN=$P($G(ECXNOD),U) D GET(ECSD,ECED)
+ I $D(^TMP($J,"ECXBCMM")) D SENDMSG^ECXBCM1 ;181 - Send messages for clinics with no stop code or inactive stop code
  I 'RERUN D CLEAN(0,$$FMADD^XLFDT(ECSD,-180)) ;154 If not a rerun, clean out items given global
  Q
  ;
@@ -47,6 +52,9 @@ GET(ECSD,ECED) ;get extract data
  ; Ordering Stop Code - based on Unit dose or IV
  I ECXORN["U" Q:$$CHKUD(ECXDFN,ECSD,ECED)  S:ECXA="O" ECXOSC=$$DOUDO^ECXUTL5(ECXDFN,+ECXORN)
  I ECXORN["V" Q:$$CHKIV(ECXDFN,ECSD,ECED)  S:ECXA="O" ECXOSC=$$DOIVPO^ECXUTL5(ECXDFN,+ECXORN)
+ I $P(ECXOSC,U,2)'="" D  ;181 - NO/Inactive Stop Code, default to PHA. Save information to send mail later
+ .D SETTMP(ECXOSC)
+ .S ECXOSC="PHA"
  S ECXASTA=$$GET1^DIQ(53.79,RIEN,.09,"I")
  I "^G^S^C^I^"'[("^"_ECXASTA_"^") Q  ;160 process 'G'iven, 'S'topped,'C'ompleted,'I'nfusing
  ;get patient demographics
@@ -300,4 +308,28 @@ CONTAIN ;154, list of terms for contains check
 SETUP ;Set required input for ECXTRAC.
  S ECHEAD="BCM"
  D ECXDEF^ECXUTL2(ECHEAD,.ECPACK,.ECGRP,.ECFILE,.ECRTN,.ECPIECE,.ECVER)
+ Q
+ ;
+SETTMP(STR) ;181 - Set TMP for Mail Message
+ N CLIN,SCODE,DIC,ECXDIC,ECXDICA,ECXNOSC,ECXINVSC,DIQ,DR,DA
+ I $P(STR,U,2)="MISSING STOP CODE" D  Q
+ .S CLIN=$P(STR,U)
+ .I $D(^TMP($J,"ECXBCMM","NOSC",CLIN)) Q
+ .I '$D(^TMP($J,"ECXBCMM","ECXNOSC")) S ^TMP($J,"ECXBCMM","ECXNOSC")=0
+ .S ECXNOSC=^TMP($J,"ECXBCMM","ECXNOSC")+1
+ .S DIC="^SC(",DIQ="IE",DIQ="ECXDIC",DR=".01",DA=CLIN D EN^DIQ1
+ .S ^TMP($J,"ECXBCMM","ECXNOSC",ECXNOSC,0)=$J(CLIN,8)_"  "_$$LJ^XLFSTR(ECXDIC(44,CLIN,.01),32)
+ .S ^TMP($J,"ECXBCMM","ECXNOSC")=ECXNOSC
+ .S ^TMP($J,"ECXBCMM","NOSC",CLIN)=""
+ I $P(STR,U,2)="INVALID STOP CODE" D
+ .S CLIN=$P(STR,U),SCODE=$P(STR,U,3)
+ .I $D(^TMP($J,"ECXBCMM","INVSC",CLIN)) Q
+ .I '$D(^TMP($J,"ECXBCMM","ECXINVSC")) S ^TMP($J,"ECXBCMM","ECXINVSC")=0
+ .S ECXINVSC=^TMP($J,"ECXBCMM","ECXINVSC")+1
+ .S CLIN=$P(STR,U),SCODE=$P(STR,U,3)
+ .S DIC="^SC(",DIQ="IE",DIQ="ECXDIC",DR=".01",DA=CLIN D EN^DIQ1
+ .S DIC="^DIC(40.7,",DIQ(0)="E",DIQ="ECXDICA",DR=".01;1;2",DA=SCODE D EN^DIQ1
+ .S ^TMP($J,"ECXBCMM","ECXINVSC",ECXINVSC,0)=$J(CLIN,8)_"/"_$$LJ^XLFSTR(ECXDIC(44,CLIN,.01),25)_"  "_$J(ECXDICA(40.7,SCODE,1,"E"),8)_"/"_$$LJ^XLFSTR(ECXDICA(40.7,SCODE,.01,"E"),25)
+ .S ^TMP($J,"ECXBCMM","ECXINVSC")=ECXINVSC
+ .S ^TMP($J,"ECXBCMM","INVSC",CLIN)=""
  Q

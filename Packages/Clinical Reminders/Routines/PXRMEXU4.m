@@ -1,5 +1,5 @@
-PXRMEXU4 ;SLC/PJH,PKR - Reminder Exchange #4, dialog changes. ;10/10/2019
- ;;2.0;CLINICAL REMINDERS;**6,12,22,26,45**;Feb 04, 2005;Build 566
+PXRMEXU4 ;SLC/PJH,PKR - Reminder Exchange #4, dialog changes. ;06/29/2021
+ ;;2.0;CLINICAL REMINDERS;**6,12,22,26,45,71**;Feb 04, 2005;Build 43
  ;
  Q
 BLCONV(FDA) ; convert branching logic from single value to multiple
@@ -8,7 +8,7 @@ BLCONV(FDA) ; convert branching logic from single value to multiple
  S IEN=$P(IENS,",",2)_","
  I $G(FDA(801.41,IEN,116))="" Q
  I $G(FDA(801.41,IEN,117))="" Q
- S TERM="TM."_FDA(801.41,IEN,116)
+ S TERM="RT."_FDA(801.41,IEN,116)
  S STATUS=$G(FDA(801.41,IEN,117))
  S REP=$S($G(FDA(801.41,IEN,118))'="":$G(FDA(801.41,IEN,118)),1:"")
  S ACT=$S(REP'="":"REPLACE",1:"HIDE")
@@ -21,6 +21,14 @@ BLCONV(FDA) ; convert branching logic from single value to multiple
  S FDA(801.41143,"+"_BLIENS,2)=STATUS
  S FDA(801.41143,"+"_BLIENS,3)=ACT
  I REP'="" S FDA(801.41143,"+"_BLIENS,4)=REP
+ Q
+ ;
+BLDCONV1(FDA) ;
+ N IENS
+ S IENS=""
+ F  S IENS=$O(FDA(801.41143,IENS)) Q:IENS=""  D
+ .I $P(FDA(801.41143,IENS,1),".")="TM" D
+ ..S FDA(801.41143,IENS,1)="RT."_$P(FDA(801.41143,IENS,1),".",2)
  Q
  ;
  ;===============================================
@@ -75,6 +83,7 @@ DLG(FDA,NAMECHG) ;Check the dialog for renamed entries, called by
  .S WP=$G(FDA(801.41,IENS,35))
  ;
  D BLCONV(.FDA)
+ I $D(FDA(801.41143)) D BLDCONV1(.FDA)
  Q
  ;
  ;===============================================

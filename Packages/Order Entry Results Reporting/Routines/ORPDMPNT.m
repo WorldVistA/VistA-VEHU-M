@@ -1,5 +1,5 @@
-ORPDMPNT ;ISP/LMT - PDMP Note Code ;Jul 07, 2020@12:48:11
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**519**;Dec 17, 1997;Build 36
+ORPDMPNT ;ISP/LMT - PDMP Note Code ;Feb 18, 2021@09:29:50
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**519,498**;Dec 17, 1997;Build 38
  ;
  ; This routine uses the following ICRs:
  ;   4476 - File 8925.1, Field .01, .07   (private)
@@ -71,7 +71,7 @@ GETNOTE() ;
  S ORTITLE=$$GET^XPAR("ALL","OR PDMP NOTE TITLE",1,"I")
  I ORTITLE'>0 Q ""
  ;Request needed for ICR 2321
- I $P(^TIU(8925.1,+ORTITLE,0),U,4)'="DOC" Q ""  ; ICR 4478
+ I $P($G(^TIU(8925.1,+ORTITLE,0)),U,4)'="DOC" Q ""  ; ICR 4478
  I +$$GET1^DIQ(8925.1,ORTITLE,.07,"I")'=11 Q ""  ; ICR 4476
  ;
  Q ORTITLE

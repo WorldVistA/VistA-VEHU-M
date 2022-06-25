@@ -1,5 +1,5 @@
 PSOBPSUT ;BIRM/MFR - BPS (ECME) Utilities ;07 Jun 2005  8:39 PM
- ;;7.0;OUTPATIENT PHARMACY;**148,247,260,281,287,289,358,385,403,408,512**;DEC 1997;Build 44
+ ;;7.0;OUTPATIENT PHARMACY;**148,247,260,281,287,289,358,385,403,408,512,630**;DEC 1997;Build 26
  ;Reference to $$ECMEON^BPSUTIL supported by IA 4410
  ;Reference to IBSEND^BPSECMP2 supported by IA 4411
  ;Reference to $$STATUS^BPSOSRX supported by IA 4412
@@ -136,6 +136,32 @@ RXSTATE(RX,RFL) ; Returns the Rx Division STATE
  N SITE
  S SITE=$$RXSITE(RX,RFL) I 'SITE Q ""
  Q +$$GET1^DIQ(59,SITE,.08,"I")
+ ;
+RXSTATEP(RX,RFL,STATE) ; Returns the Rx Export States
+ ; Input:  (r) RX  - Rx IEN (#52) 
+ ;         (o) RFL - Refill #
+ ;             STATE - Selected State
+ ; Output:  RSLT - Export States
+ N SITE,MBMST,RSLT,DFN
+ S MBMST=$$GET1^DIQ(58.41,STATE,21,"I")
+ S RSLT="^"
+ I (+MBMST=0)!(+MBMST=1) D
+ .S SITE=$$RXSITE(RX,RFL) I 'SITE Q
+ .S RSLT=RSLT_+$$GET1^DIQ(59,SITE,.08,"I")_"^"
+ I (+MBMST=1)!(+MBMST=2) D
+ .S DFN=$$GET1^DIQ(52,RX,2,"I") D ADD^VADPT I +VAPA(5)]"" S RSLT=RSLT_+VAPA(5)_"^"
+ Q RSLT
+ ;
+RXSTATEZ(RX,RFL,STATE) ; Returns the Rx Export States
+ ; Input:  (r) RX  - Rx IEN (#52) 
+ ;         (o) RFL - Refill #
+ ;             STATE - Selected State
+ ; Output:  RSLT - Export to State
+ N SITE,MBMST,RSLT,DFN
+ S MBMST=$$GET1^DIQ(58.41,STATE,21,"I")
+ I (+MBMST=0)!(+MBMST=1) S SITE=$$RXSITE(RX,RFL) Q:'SITE 0 Q +$$GET1^DIQ(59,SITE,.08,"I")
+ I +MBMST=2 S DFN=$$GET1^DIQ(52,RX,2,"I") D ADD^VADPT I +VAPA(5)]"" Q +VAPA(5)
+ Q 0
  ;
 RXQTY(RXIEN,FILL) ; Returns the Quantity Dispense for the Fill
  ; Input:  (r) RXIEN - Rx IEN (#52) 

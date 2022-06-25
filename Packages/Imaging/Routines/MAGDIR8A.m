@@ -1,5 +1,5 @@
-MAGDIR8A ;WOIFO/PMK - Read a DICOM image file ; 03 Jul 2013 12:35 PM
- ;;3.0;IMAGING;**11,51,49,123,138**;Mar 19, 2002;Build 5380;Sep 03, 2013
+MAGDIR8A ;WOIFO/PMK - Read a DICOM image file ; Nov 27, 2019@16:07:40
+ ;;3.0;IMAGING;**11,51,49,123,138,231**;Mar 19, 2002;Build 9;Sep 03, 2013
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -17,6 +17,12 @@ MAGDIR8A ;WOIFO/PMK - Read a DICOM image file ; 03 Jul 2013 12:35 PM
  ;;
  ;
  ; M2MB server
+ ;
+ ; Supported IA #2051 reference $$FIND1^DIC function call
+ ; Supported IA #2056 reference $$GET1^DIQ function call
+ ; Private IA #5020 reference $$ACCFIND^RAAPI
+ ; Controlled Subscription IA #1172 to read RAD/NUC MED PATIENT file (#70)
+ ; Private IA #1174 to read RAD/NUC MED PROCEDURES file (#71)
  ;
  ; Lookup the patient/study in the imaging service's database
  ; Different entry points are invoked from LOOKUP^MAGDIR81
@@ -50,6 +56,15 @@ RADLKUP1 ; not an entry point
  N LIST
  Q:CASENUMB=""    ;LB 12/16/98
  S X=$$ACCFIND^RAAPI(CASENUMB,.LIST)
+ ;
+ I X'=1 D  ; P231 PMK 11/12/2019
+ . ; if accession number prefix exists, strip it off and try lookup again
+ . N ANPREFIX,STRIPPEDCASENUMB
+ . S ANPREFIX=$$ANPREFIX^MAGDSTAB Q:ANPREFIX=""
+ . S STRIPPEDCASENUMB=$P(CASENUMB,ANPREFIX,2,999) Q:STRIPPEDCASENUMB=""
+ . S X=$$ACCFIND^RAAPI(STRIPPEDCASENUMB,.LIST)
+ . Q
+ ;
  Q:X'=1  S X=LIST(1) ; two conditions, no accession number & duplicate
  S RADPT1=$P(X,"^",1),RADPT2=$P(X,"^",2),RADPT3=$P(X,"^",3)
  I '$D(^RADPT(RADPT1,0)) Q  ; no patient demographics file pointer

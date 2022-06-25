@@ -1,5 +1,5 @@
-DGRP7 ;ALB/MRL,CKN,ERC - REGISTRATION SCREEN 7/ELIGIBILITY INFORMATION ; 7/25/06 12:06pm
- ;;5.3;Registration;**528,653,688,842,952,977,1016**;Aug 13, 1993;Build 6
+DGRP7 ;ALB/MRL,CKN,ERC,RN - REGISTRATION SCREEN 7/ELIGIBILITY INFORMATION ; 7/25/06 12:06pm
+ ;;5.3;Registration;**528,653,688,842,952,977,1016,1061**;Aug 13, 1993;Build 22
  ;
  N DGCASH,DGMBCK,DGEMHCNVT,DGPRVSPE
  ;DG*5.3*952 add .55 into DRPG array
@@ -44,16 +44,35 @@ CONT ;
  ;display Combat Vet Eligibility, if present
  N DGCV,SHAD
  S SHAD=$P(DGRP(.321),"^",15)  ;SHAD Indicator
- S DGCV=$$CVEDT^DGCV(DFN) I +$G(DGCV)=1 D
+ S DGCV=$$CVEDT^DGCV(DFN)
+ ; DG*5.3*1061; Begin changes - get COMPACT Act Indicator (CAI)
+ N DGCOMP
+ S DGCOMP=$$CAI^DGENELA(DFN)
+ ;
+ ; DG*5.3*1061 Modify Display of groups 3.1, 3.2 for new group 3.3 (CAI)
+ ; Group 3.1 displayed - group 3.2 is on the same line with 3.3 on the line below
+ I +$G(DGCV)=1 D
  . W !,"<3.1> Combat Vet Elig.: "
  . W $S($P(DGCV,U,3)=1:"ELIGIBLE",$P(DGCV,U,3)=0:"EXPIRED",1:"")
  . I $P($G(DGCV),U,2)]"" D
  . . S Y=$P(DGCV,U,2) D DD^%DT
  . . W " End Date: "_Y
  . I SHAD=1 W ?56,"<3.2>Proj 112/SHAD: YES"  ;Only display if YES
- ;
- I (+$G(DGCV)'=1)&(SHAD=1) W !,?56,"<3.2>Proj 112/SHAD: YES"
- ;
+ . ; Display CAI on line below only if YES
+ . I +$G(DGCOMP)=1 D
+ . . W !,"<3.3> COMPACT Act Elig: "
+ . . W $S(DGCOMP=1:"ELIGIBLE",1:"")
+ ; Group 3.1 not displayed - Groups 3.3 and/or 3.2 displayed 
+ I +$G(DGCV)'=1 D
+ . ; Write a line feed if we have CAI or SHAD to display  
+ . I +$G(DGCOMP)=1!(SHAD=1) W !
+ . ; display CAI only if YES
+ . I +$G(DGCOMP)=1 D
+ . . W "<3.3> COMPACT Act Elig: "
+ . . W $S(DGCOMP=1:"ELIGIBLE",1:"")
+ . I SHAD=1 W ?56,"<3.2>Proj 112/SHAD: YES"  ;Only display if YES
+ ; DG*5.3*1061; End changes
+ ; 
  ;print sc disabilities (per patient)
  W ! S Z=4 D WW^DGRPV W " Service Connected Conditions as stated by applicant" S X="",$P(X,"-",52)="" W !?4,X
  W !?4 S I3=0 F I=0:0 S I=$O(^DPT(DFN,.373,I)) Q:'I  S I1=$P(^(I,0),"^",1)_" ("_+$P(^(0),"^",2)_"%), ",I3=I W:(79-$X)<$L(I1) !?4 W I1

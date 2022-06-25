@@ -1,5 +1,5 @@
 VPRSDA ;SLC/MKB -- SDA utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,16,20**;Sep 01, 2011;Build 9
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,16,20,26**;Sep 01, 2011;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -25,6 +25,7 @@ VPRSDA ;SLC/MKB -- SDA utilities ;10/25/18  15:29
  ; SCAPMC                        1916
  ; SDUTL3                        1252
  ; TIULQ                         2693
+ ; WVRPCVPR                      7199
  ; XLFNAME                       3065
  ;
 INTDATE(X) ; -- Return internal form of date X
@@ -122,13 +123,14 @@ DESC(CODE) ; -- called from CODE, to return coding system text
  I '$L($G(Y)) S Y=$$GET1^DIQ(FILE,IEN_",",.01)
  Q Y
  ;
-CPT(IEN,DATE) ; -- return code^description^CPT-4 for #81 IEN
+CPT(IEN,DATE,LONG) ; -- return code^description^CPT-4 for #81 IEN
  N X0,VPRX,N,I,X,Y
  S IEN=+$G(IEN),DATE=$G(DATE) S:DATE<1 DATE=DT
  S X0=$$CPT^ICPTCOD(IEN,DATE) I X0<0 Q ""
- S Y=$P(X0,U,2,3)_"^CPT-4"                ;CPT Code^Short Name
- S N=$$CPTD^ICPTCOD($P(Y,U),"VPRX",,DATE) ;CPT Description
- I N>0,$L($G(VPRX(1))) D
+ S Y=$P(X0,U,2,3)_"^CPT-4" ;CPT Code^Short Name
+ I $G(LONG) D              ;CPT Description instead
+ . S N=$$CPTD^ICPTCOD($P(Y,U),"VPRX",,DATE)
+ . I N'>0!'$L($G(VPRX(1))) Q
  . S X=$G(VPRX(1)),I=1
  . F  S I=$O(VPRX(I)) Q:I<1  Q:VPRX(I)=" "  S X=X_" "_VPRX(I)
  . S $P(Y,U,2)=X
@@ -319,4 +321,12 @@ PCMMT ; -- enter here for just the team members
  . Q:'$D(VPRPTP("SCPR",PRV,ROLE))           ;not assigned to pt
  . S VPRN=VPRN+1,DLIST(VPRN)=PRV_U_$$GET1^DIQ(404.57,ROLE,.01)
  . ; provider #200 ien ^ position name
+ Q
+ ;
+WVPL1(IEN) ; -- set up pregnancy API array (IEN will be DFN)
+ I $G(IEN)<1 S DDEOUT=1 Q
+ D:'$D(^TMP("WVPREGST",$J,"BASELINE")) BASELINE^WVRPCVPR(IEN)
+ I '$D(^TMP("WVPREGST",$J,"BASELINE")) S DDEOUT=1 Q
+ M VPRPREG=^TMP("WVPREGST",$J,"BASELINE")
+ S DFN=IEN,IEN=$G(^TMP("WVPREGST",$J,"BASELINE","EXTERNAL ID"))
  Q

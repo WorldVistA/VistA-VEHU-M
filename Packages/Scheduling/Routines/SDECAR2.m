@@ -1,6 +1,6 @@
 SDECAR2 ;ALB/SAT/JSM,WTC,LAB - VISTA SCHEDULING RPCS ;Apr 10, 2020@15:22
- ;;5.3;Scheduling;**627,642,658,671,686,694,745**;Aug 13, 1993;Build 40
- ;;Per VHA Directive 2004-038, this routine should not be modified
+ ;;5.3;Scheduling;**627,642,658,671,686,694,745,799**;Aug 13, 1993;Build 7
+ ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
  ;
@@ -351,16 +351,16 @@ AR23(INP17,ARI) ;Patient Contacts
  ..D GETS^DIQ(409.8544,ARIENS1,"*","IE","ARDATA1","ARERR1")
  ..I $P(STR17,"~~",1)'="" S @FDA@(.01)=ARDT ;DATE ENTERED external date/time
  ..I $P(STR17,"~~",2)'="" S ARUSR=$P(STR17,"~~",2) S @FDA@(2)=$S(ARUSR="":"@",+ARUSR:$P($G(^VA(200,ARUSR,0)),U,1),1:ARUSER)  ;PC ENTERED BY USER
- ..I $P(STR17,"~~",4)'="" S @FDA@(3)=$P(STR17,"~~",4)     ;ACTION  C=Called; M=Message Left; L=LETTER
- ..I $P(STR17,"~~",5)'="" S @FDA@(4)=$P(STR17,"~~",5)     ;PATIENT PHONE
+ ..I $P(STR17,"~~",4)'="" S @FDA@(3)=$P(STR17,"~~",4) ;ACTION  C=Called; M=Message Left; L=LETTER
+ ..I $P(STR17,"~~",5)'="" S @FDA@(4)=$P(STR17,"~~",5) ;PATIENT PHONE
  .I ARASDH="" D
  ..I $P(STR17,"~~",1)'="" S @FDA@(.01)=ARDT ;DATE ENTERED external date/time
  ..I $P(STR17,"~~",2)'="" S ARUSR=$P(STR17,"~~",2) S @FDA@(2)=$S(ARUSR="":"@",+ARUSR:$P($G(^VA(200,ARUSR,0)),U,1),1:ARUSR)     ;PC ENTERED BY USER
- ..I $P(STR17,"~~",4)'="" S @FDA@(3)=$P(STR17,"~~",4)     ;ACTION  C=Called; M=Message Left; L=LETTER
- ..I $P(STR17,"~~",5)'="" S @FDA@(4)=$P(STR17,"~~",5)     ;PATIENT PHONE
+ ..I $P(STR17,"~~",4)'="" S @FDA@(3)=$P(STR17,"~~",4) ;ACTION  C=Called; M=Message Left; L=LETTER
+ ..I $P(STR17,"~~",5)'="" S @FDA@(4)=$P(STR17,"~~",5) ;PATIENT PHONE
  .D:$D(@FDA) UPDATE^DIE("E","FDA","ARRET1","ARMSG1")
  Q
-UPDATE(ARIEN,APPDT,SDCL,SVCP,SVCPR,NOTE,SDAPPTYP) ;update REQ APPT REQUEST at apointment add
+UPDATE(ARIEN,APPDT,SDCL,SVCP,SVCPR,NOTE,SDAPPTYP,EAS) ;update REQ APPT REQUEST at apointment add
  ;INPUT:
  ;  ARIEN = Appt Request pointer to SD WAIT LIST file 409.85
  ;  APPDT = Appointment date/time (Scheduled Date of appt) in fm format
@@ -369,22 +369,24 @@ UPDATE(ARIEN,APPDT,SDCL,SVCP,SVCPR,NOTE,SDAPPTYP) ;update REQ APPT REQUEST at ap
  ;  SVCPR = Service Connected Priority  0:NO  1:YES
  ;  NOTE  = Comment only 1st 60 characters are used
  ;  SDAPPTYP = (optional) Appointment type ID pointer to APPOINTMENT TYPE file 409.1
+ ;  EAS = (optional) Enterprise Appointment Scheduling Tracking Number associated to an appointment.
  ;
  ;all input must be verified by calling routine
  N SDDIV,SDFDA,SDSN,SDMSG
  S:+$G(SDAPPTYP) SDFDA(409.85,ARIEN_",",8.7)=SDAPPTYP
- S SDFDA(409.85,ARIEN_",",13)=APPDT                     ;SCHEDULED DATEOF APPT       = APPDT  (SDECSTART)
- S SDFDA(409.85,ARIEN_",",13.1)=$P($$NOW^XLFDT,".",1)   ;DATE APPT. MADE= TODAY
- S SDFDA(409.85,ARIEN_",",13.2)=SDCL                    ;APPT CLINIC= SDCL   (SDECSCD)
+ S SDFDA(409.85,ARIEN_",",13)=APPDT ;SCHEDULED DATEOF APPT       = APPDT  (SDECSTART)
+ S SDFDA(409.85,ARIEN_",",13.1)=$P($$NOW^XLFDT,".",1) ;DATE APPT. MADE= TODAY
+ S SDFDA(409.85,ARIEN_",",13.2)=SDCL ;APPT CLINIC= SDCL   (SDECSCD)
  S SDFDA(409.85,ARIEN_",",13.3)=$P($G(^SC(SDCL,0)),U,4) ;APPT INSTITUTION             = Get from 44 using SDCL
  S SDFDA(409.85,ARIEN_",",13.4)=$P($G(^SC(SDCL,0)),U,7) ;APPT STOP CODE= Get from 44 using SDCL
  S SDDIV=$P($G(^SC(SDCL,0)),U,15)
  S SDSN=$S(SDDIV'="":$P($G(^DG(40.8,SDDIV,0)),U,2),1:"")
- S SDFDA(409.85,ARIEN_",",13.6)=SDSN                    ;APPT STATION NUMBER
- S SDFDA(409.85,ARIEN_",",13.7)=DUZ                     ;APPT CLERK= Current User
- S SDFDA(409.85,ARIEN_",",13.8)="R"                     ;APPT STATUS= R:Scheduled/Kept
- S:SVCP'="" SDFDA(409.85,ARIEN_",",14)=SVCP                      ;SERVICE CONNECTED PERCENTAGE = SVCP   (SDSVCP)
- S:SVCPR'="" SDFDA(409.85,ARIEN_",",15)=SVCPR                     ;SERVICE CONNECTED PRIORITY   = SVCPR  (SDSVCPR)
+ S SDFDA(409.85,ARIEN_",",13.6)=SDSN ;APPT STATION NUMBER
+ S SDFDA(409.85,ARIEN_",",13.7)=DUZ ;APPT CLERK= Current User
+ S SDFDA(409.85,ARIEN_",",13.8)="R" ;APPT STATUS= R:Scheduled/Kept
+ S:SVCP'="" SDFDA(409.85,ARIEN_",",14)=SVCP ;SERVICE CONNECTED PERCENTAGE = SVCP   (SDSVCP)
+ S:SVCPR'="" SDFDA(409.85,ARIEN_",",15)=SVCPR ;SERVICE CONNECTED PRIORITY   = SVCPR  (SDSVCPR)
  S:$G(NOTE)'="" SDFDA(409.85,ARIEN_",",25)=NOTE
+ S:$G(EAS)'="" SDFDA(409.85,ARIEN_",",100)=EAS
  D UPDATE^DIE("","SDFDA","","SDMSG")
  Q

@@ -1,10 +1,12 @@
 PRCHFPDE ;SF-ISC/TKW-EDIT FPDS DATA ON P.O. AFTER SIGNED BY P.A. ;12-6-90/15:48
-V ;;5.1;IFCAP;**79**;Oct 20, 2000
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+V ;;5.1;IFCAP;**79,100,220**;Oct 20, 2000;Build 23
+ ;Per VA Directive 6402, this routine should not be modified.
+ ;
+ ;PRC*5.1*220 Removed check/query/invoke FPDS messaging
  ;
 EN1 ;EDIT FPDS DATA ON P.O. AFTER BEING SIGNED BY P.A.
  I $D(PRCHAM) S PRCHFLG=""
- N PRCHAM,PRCHAMDA,PRCHAMT,PRCHDUZ ;Newing variables for amends
+ N PRCHER,PRCHAM,PRCHAMDA,PRCHAMT,PRCHDUZ ;Newing variables for amends
  I $D(PRCHPO) S PRCHPOO=PRCHPO N PRCHPO S PRCHPO=PRCHPOO K PRCHPOO
  D:'$D(PRCHPO) ST^PRCHE Q:'$D(PRC("SITE"))
 EN10 D:'$D(PRCHPO)!'$D(PRCHFLG) LOOK G:'$D(PRCHPO) Q D LCK1^PRCHE G:'$D(DA) EN10 S PRCHEST=$P(^PRC(442,PRCHPO,0),U,13)
@@ -36,29 +38,48 @@ ASK W !!,$C(7),"ARE YOU SURE YOU WANT TO RE-ENTER THE FPDS CODES " D YN^DICN Q:(
  I PRCHDT D FPDS^PRCHFPD2 Q:$D(PRCHFLG)>0&(%=-1)  G:'PRCHFPDS EN10
  S PRCH="" F PRCHI=1:1 S PRCH=$O(PRCH("AM",PRCH)) Q:PRCH=""  D TYPE^PRCHNPO1 S PRCHAMT=+PRCH("AM",PRCH),PRCHCN=$S(PRCH=".OM":"",1:PRCH) W ?40,"AMOUNT: ",PRCHAMT S PRCHAMT=""""_PRCHAMT_"""",DIE("NO^")="NO" D ^DIE
  ;PRC*5.1*79 - call new input templates for FPDS data.
- ;Check a regular PO from a Purchasing Agent
- I ("25"[PRCHSC),$D(^PRC(442,PRCHPO,14)) D
+ ;Check a regular PO from a Purchasing Agent.
+ ;PRC*5.1*100 - if the user times out and does not complete the input
+ ;template for the new FPDS, don't allow electronic sig. Check the last
+ ;field required for the PO, based on the source code.
+ ;
+ I ("25"[PRCHSC),$D(^PRC(442,PRCHPO,14)) D  G:$G(PRCHER)=1 Q
  . S DR="[PRCH NEW PO FPDS]" D ^DIE
+ . I '$D(^PRC(442,PRCHPO,25)) D STOP Q
+ . I $P(^PRC(442,PRCHPO,25),U,6)="" D STOP Q
+ . ;Fund agency code & fund agency office code can be empty in pairs only.
+ . I +$P(^PRC(442,PRCHPO,25),U,7)>0,$P(^PRC(442,PRCHPO,25),U,8)="" D STOP Q
+ ;End of changes for PRC*5.1*100.
  ;
  ;For FPDS purposes, consider any PO with any of the following source
  ;codes as a delivery order:
- I ("467B"[PRCHSC)&($D(^PRC(442,PRCHPO,14))) D
- . S DR="[PRCH NEW PO FPDS]" D ^DIE,POP^PRCHNPO1
+ ;PRC*5.1*100 - if the user times out, don't allow electronic sig.
+ I ("467B"[PRCHSC)&($D(^PRC(442,PRCHPO,14))) D  G:$G(PRCHER)=1 Q
+ . S DR="[PRCH NEW PO FPDS]" D ^DIE
+ . I '$D(^PRC(442,PRCHPO,25)) D STOP Q
+ . I $P(^PRC(442,PRCHPO,25),U,15)="" D STOP Q 
+ . E  D POP^PRCHNPO1
  ;
- ;See if the user filled in the minimum # of fields and mark the PO for
- ;transmission to FPDS, otherwise, issue a warning.
- I '$D(^PRC(442,PRCHPO,25)) D EN^DDIOL("WARNING: YOU HAVE NOT ENTERED ALL THE FPDS DATA - NO MESSAGE GENERATED.","","!!?5") G Q
- E  D EN^DDIOL("Ok, let me save your changes.....done!","","!!?3") D ^PRCHSF
+ ;Quit if type code, pref, program, etc., are not defined.
+ I '$D(^PRC(442,PRCHPO,9)) D STOP G Q
+ D EN^DDIOL("Ok, let me save your changes.....done!","","!!?3") D ^PRCHSF
+ ;End of changes for PRC*5.1*100.
+ ;
  ;Send HL7 message to the AAC
- I $P($G(^PRC(442,PRCHPO,25)),U,17)="YES",$P(^PRC(442,PRCHPO,0),U,15)>0 D EN^DDIOL("...now generating the FPDS message for the AAC","","!") D AAC^PRCHAAC
+ ;I $P($G(^PRC(442,PRCHPO,25)),U,17)="YES",$P(^PRC(442,PRCHPO,0),U,15)>0 D EN^DDIOL("...now generating the FPDS message for the AAC","","!") D AAC^PRCHAAC   ;PRC*5.1*220
  ;End changes for PRC*5.1*79
  K DIE F I=0:0 Q:'$D(PRCHPO)  S I=$O(^PRC(442,PRCHPO,9,I)) Q:'I  D ER2^PRCHNPO6:$P(^(I,0),U,2)="",ER3^PRCHNPO6:'$O(^(1,0))
- L  I $D(PRCHFLG) K PRCHFLG Q
+ L -^PRC(442,PRCHPO) I $D(PRCHFLG) K PRCHFLG Q
  G EN10
  ;
 OUT ;Tell the user that the PO is not eligible for FPDS
  D EN^DDIOL("This PO is not required for FPDS.","","!!?10")
  Q
+ ;
+STOP ;PRC*5.1*100 - quit if all the FPDS info was not entered.
+ D EN^DDIOL("WARNING: YOU HAVE NOT ENTERED ALL THE FPDS DATA - NO MESSAGE GENERATED.","","!!?5") S PRCHER=1
+ Q
+ ;End of changes for PRC*5.1*100.
  ;
 TBL ;TABLE LINE/ITEM AMOUNTS MINUS DISCOUNTS BY CONTRACT NO.
  S PRCHCN=$S($P(Y,U,2)'="":$P(Y,U,2),1:".OM") S:'$D(PRCH("AM",PRCHCN)) PRCH("AM",PRCHCN)="",PRCHEC=PRCHEC+1
@@ -82,4 +103,4 @@ W W !!,?10," Enter either Yes/No  or  enter ""^"" to exit."
  Q
  ;
  ;
-Q L  K PRC,PRCHI,PRCHFLG G Q^PRCHNPO4
+Q L -^PRC(442,PRCHPO) K PRC,PRCHI,PRCHFLG G Q^PRCHNPO4

@@ -1,5 +1,5 @@
-PSOSULBL ;BHAM ISC/RTR,SAB - Print Suspended labels ;4/8/93
- ;;7.0;OUTPATIENT PHARMACY;**139,173,174,148,200,260,264,287,289,290,354,421,370,427,466,539,452**;DEC 1997;Build 56
+PSOSULBL ;BHAM ISC/RTR,SAB - Print Suspended labels ;SEP 30, 2020@13:11
+ ;;7.0;OUTPATIENT PHARMACY;**139,173,174,148,200,260,264,287,289,290,354,421,370,427,466,539,452,627**;DEC 1997;Build 2
  ;External reference ^PS(55 supported by DBIA 2228
  ;Reference to SAVNDC^PSSNDCUT supported by IA 4707
  ;Reference ^PSDRUG( supported by DBIA 221
@@ -73,12 +73,14 @@ PPL ; Wait some time before printing so response from 3rd party payers can be re
  K PPL,PPL1 S ORD="" F  S ORD=$O(^TMP($J,ORD)) Q:ORD=""  D PPL1
  Q
 PPL1 ; Printing Labels
- N PARTIAL,REPRINT,REFILL,Z,QUIT,ESTAT
+ N PARTIAL,REPRINT,REFILL,RXFL,Z,QUIT,ESTAT
  S (PSOPRFLG,SUSPT)=1 S:$D(PSOPROP) PFIO=PSOPROP
  S:'$D(PDUZ) PDUZ=DUZ K RXPR,RXPR1,PPL
  F SFN=0:0 S SFN=$O(^TMP($J,ORD,SFN)) Q:'SFN  D
  .I '$D(^PS(52.5,SFN,0)) Q
- .S Z=$G(^PS(52.5,SFN,0)),SINRX=+$P(Z,"^"),REFILL=+$P(Z,"^",13)
+ .;PSO*7.0*627 - add RXFL(SINRX) for downstream outpatient dispensing robots
+ . ;             such as Optifill or ScriptPro
+ .S Z=$G(^PS(52.5,SFN,0)),SINRX=+$P(Z,"^"),(REFILL,RXFL(SINRX))=+$P(Z,"^",13)
  .S PARTIAL=$P(Z,"^",5),REPRINT=$P(Z,"^",12)
  .; - Screening out OPEN/UNRESOLVED Rejects (3rd Party Payer) 
  .S QUIT=0

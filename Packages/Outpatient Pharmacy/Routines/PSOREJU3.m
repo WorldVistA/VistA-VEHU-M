@@ -1,5 +1,5 @@
 PSOREJU3 ;BIRM/LJE - BPS (ECME) - Clinical Rejects Utilities (3) ;04/25/08
- ;;7.0;OUTPATIENT PHARMACY;**287,290,358,359,385,421,427,448,478,513,482,528**;DEC 1997;Build 10
+ ;;7.0;OUTPATIENT PHARMACY;**287,290,358,359,385,421,427,448,478,513,482,528,561**;DEC 1997;Build 41
  ;References to 9002313.99 supported by IA 4305
  ;Reference to $$CLAIM^BPSBUTL supported by IA 4719
  ;Reference to LOG^BPSOSL supported by ICR# 6764
@@ -70,6 +70,7 @@ TRIC3 ;
 TRIC4 S DIR(0)="SO^",DIR("A")="",OPTS="DQ",DEF="D"
  S PSORESP=$P($G(RESP),U,2)
  I PSORESP["NO ACTIVE/VALID ROI" S DEF="Q"  ;IB routine IBNCPDP1 contains this text.
+ I PSORESP="NOT INSURED" S DEF="Q"
  ;reference to ^XUSEC( supported by IA 10076
  I $D(^XUSEC("PSO TRICARE/CHAMPVA",DUZ)) S OPTS=OPTS_"I" ;PSO*7.0*358, if user has security key, include IGNORE in TRICARE/CHAMPVA options
  S:(OPTS["D") DIR(0)=DIR(0)_"D:(D)iscontinue - DO NOT FILL PRESCRIPTION;",DIR("A")=DIR("A")_"(D)iscontinue,"
@@ -199,7 +200,7 @@ TYPE ;
  I $G(PSONBILL)!($G(PSONPROG)) D  Q
  . D NOW^%DTC S Y=% D DD^%DT
  . W !?3,"Date/Time: "_$$FMTE^XLFDT(Y)
- . W !?3,"Reason   : ",$S($G(PSONBILL):"Drug not billable.",$G(PSONPROG):"ECME Status is in an 'IN PROGRESS' state and cannot be filled",1:"")
+ . W !?3,"Reason   : ",$S($G(PSONBILL):"Not Billable.",$G(PSONPROG):"ECME Status is in an 'IN PROGRESS' state and cannot be filled",1:"")
  ;
  I $G(DATA(REJ,"REASON"))'="" W !?3,"Reason   : " D PRT^PSOREJU2("REASON",14,62)
  N RTXT,OCODE,OTXT,I

@@ -1,5 +1,5 @@
-PSGOEE0 ;BIR/CML3 - ORDER EDIT UTILITIES ;Sep 16, 2019@15:44:38
- ;;5.0;INPATIENT MEDICATIONS;**58,95,179,216,315,319**;16 DEC 97;Build 31
+PSGOEE0 ;BIR/CML3 - ORDER EDIT UTILITIES ;Oct 27, 2020@15:14:39
+ ;;5.0;INPATIENT MEDICATIONS;**58,95,179,216,315,319,411**;16 DEC 97;Build 4
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ; Reference to ^DICN is supported by DBIA 10009.
  ; Reference to ^DIR is supported by DBIA 10026.
@@ -9,7 +9,7 @@ ENSFE(PSGP,PSGORD) ; Determine editable fields, and fields that cause new order.
  Q
 ENSFE3 ; set-up fields to edit for 53.1
  N PSJCMOF
- S PSJCMOF=$S($D(PSJCMO):1,$D(PSJCM01):1,1:0)
+ S PSJCMOF=$S($G(PSJCMO):1,$G(PSJCM01):1,1:0)
  I PSGSTAT="PENDING" S PSGEFN=$S(PSJCMOF:"1:16",1:"1:13") F X=1:1:13,$S(PSJCMOF:15,1:""),$S(PSJCMOF:16,1:"") S:X PSGEFN(+X)=$P($T(@(3_X)),";",7),PSGOEEF(+$P($T(@(3_X)),";",3))="",PSGOEEF=PSGOEEF+1
  E  S PSGEFN=$S(PSJCMOF:"1:16",1:"1:13") F X=1:1:12,$S(PSJCMOF:15,1:""),$S(PSJCMOF:16,1:"") S:X Y=$T(@(3_X)),@("PSGEFN("_+X_")="_$S($D(PSGOETOF):0,1:$P(Y,";",7))),PSGOEEF(+$P(Y,";",3))="",PSGOEEF=PSGOEEF+1
  E  S:$P(PSJSYSU,";",3)>1 PSGEFN(9)=0,PSGOEEF(+$P($T(39),";",3))="",PSGOEEF=PSGOEEF+1
@@ -20,8 +20,8 @@ ENSFE3 ; set-up fields to edit for 53.1
  ;
 ENSFE5 ; set-up fields to edit for 55
  N PSJCMOF
- S PSJCMOF=$S($D(PSJCMO):1,$D(PSJCM01):1,1:0)
- S PSGEFN=$S($D(PSJCMO):"1:16",1:"1:13")
+ S PSJCMOF=$S($G(PSJCMO):1,$G(PSJCM01):1,1:0)
+ S PSGEFN=$S($G(PSJCMO):"1:16",1:"1:13")
  F X=1:1:13,$S(PSJCMOF:15,1:""),$S(PSJCMOF:16,1:"") S:X Y=$T(@(5_X)),@("PSGEFN("_+X_")="_$S($D(PSGOETO):0,1:$P(Y,";",7))),PSGOEEF(+$P(Y,";",3))="",PSGOEEF=PSGOEEF+1
  I $P(PSJSYSU,";",3)>1 S PSGEFN(9)=0,PSGOEEF(+$P($T(59),";",3))="",PSGOEEF=PSGOEEF+1
  S PSGPDRG=PSGPD,PSGPDRGN=PSGPDN,PSGOEEND=1,PSGOEEG=5

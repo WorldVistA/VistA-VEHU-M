@@ -1,5 +1,5 @@
 DGDIS ;ALB/JDS,RN - DISPOSITION A REGISTRATION ; 8/6/04 3:17pm
- ;;5.3;Registration;**108,121,161,151,459,604,993,1031**;Aug 13, 1993;Build 1
+ ;;5.3;Registration;**108,121,161,151,459,604,993,1031,1027**;Aug 13, 1993;Build 70
  ;
  D LO^DGUTL
 GETL S L=^DG(43,1,0),DISL=+$P(L,"^",7) S:DISL=0 DISL=24 N SDISHDL
@@ -17,8 +17,9 @@ ANS ;
  I STATUS=25 S DGENRYN=0
  N SEEN S SEEN=$$GET1^DIQ(2.101,DFN1_","_DFN_",",7,"I")
  ; DG*5.3*1031 - added "+"SEEN so NULL value for SEEN is treated as a ZERO
- I STATUS=25,+SEEN=0 W !! S DR="1//2;2;2.1;13;5//NOW;D CHT^DGDIS;8"_$S(DUZ'="":";9////"_DUZ,1:""),DIE="^DPT("_DFN_",""DIS"",",DA(1)=DFN,DP=2.101 D ^DIE I $S('$D(^DPT(DFN,"DIS",DA,0)):1,'$P(^(0),"^",6):1,1:0) G DEL
- I STATUS=25,SEEN=1 W !! S DR="1//0;2;2.1;13;5//NOW;D CHT^DGDIS;8"_$S(DUZ'="":";9////"_DUZ,1:""),DIE="^DPT("_DFN_",""DIS"",",DA(1)=DFN,DP=2.101 D ^DIE I $S('$D(^DPT(DFN,"DIS",DA,0)):1,'$P(^(0),"^",6):1,1:0) G DEL
+ I '$G(DGINELIG),STATUS=25 D
+ . I +SEEN=0 W !! S DR="1//2;2;2.1;13;5//NOW;D CHT^DGDIS;8"_$S(DUZ'="":";9////"_DUZ,1:""),DIE="^DPT("_DFN_",""DIS"",",DA(1)=DFN,DP=2.101 D ^DIE I $S('$D(^DPT(DFN,"DIS",DA,0)):1,'$P(^(0),"^",6):1,1:0) G DEL
+ . I SEEN=1 W !! S DR="1//0;2;2.1;13;5//NOW;D CHT^DGDIS;8"_$S(DUZ'="":";9////"_DUZ,1:""),DIE="^DPT("_DFN_",""DIS"",",DA(1)=DFN,DP=2.101 D ^DIE I $S('$D(^DPT(DFN,"DIS",DA,0)):1,'$P(^(0),"^",6):1,1:0) G DEL
  I STATUS'=25 W !! S DR="1;2;2.1;13;5//NOW;D CHT^DGDIS;8"_$S(DUZ'="":";9////"_DUZ,1:""),DIE="^DPT("_DFN_",""DIS"",",DA(1)=DFN,DP=2.101 D ^DIE I $S('$D(^DPT(DFN,"DIS",DA,0)):1,'$P(^(0),"^",6):1,1:0) G DEL  ; Original code
  I $G(DGINELIG),STATUS=25 D
  . W !! S DR="1;2;2.1;13;5//NOW;D CHT^DGDIS;8"_$S(DUZ'="":";9////"_DUZ,1:""),DIE="^DPT("_DFN_",""DIS"",",DA(1)=DFN,DP=2.101 D ^DIE I $S('$D(^DPT(DFN,"DIS",DA,0)):1,'$P(^(0),"^",6):1,1:0) G DEL
@@ -30,7 +31,8 @@ ANS ;
  I ('DGELIGX)&(DGPOSX) W !!,"Period of Service is unspecified." K DGPOSX,DGELIGX,DGSTRX G DEL
  ;S DGXXXD=0 D EL^DGREGE
 DISP   ;**DG*5.3*993; Decoupling project
- I STATUS=25 D
+ ; DG*5.3*1027 - Made code changes to prevent duplicate prompt "Select the type of disposition:"
+ I '$G(DGINELIG),STATUS=25 D
  . ; DG*5.3*1031 - added "+"SEEN so NULL value for SEEN is treated as a ZERO
  . I +SEEN=0 D
  . . W ! S DIC="^DIC(37,",DIC(0)="AEQMZ",DIC("A")="Select the type of disposition: ",DIC("S")="I '$P(^(0),""^"",10)"

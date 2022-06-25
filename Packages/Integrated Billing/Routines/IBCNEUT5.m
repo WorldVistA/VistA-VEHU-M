@@ -1,5 +1,5 @@
 IBCNEUT5 ;DAOU/ALA - eIV MISC. UTILITIES ;20-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,284,271,416,621,602**;21-MAR-94;Build 22
+ ;;2.0;INTEGRATED BILLING;**184,284,271,416,621,602,668**;21-MAR-94;Build 28
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -103,24 +103,31 @@ PYRAPPX ;
  ;
  ;
 ACTAPP(IEN) ; Active payer applications
+ ;IB*668/TAZ - Changed Active to Enabled.  Changed location of DEACTIVATED?
  ; This function will return 1 if any of the payer applications for 
  ; this payer (being passed in by the payer IEN) are NOT deactivated.
  ; This should not be confused with the other payer application fields
- ; such as national active or local active.  The deactivated field is
- ; the .11 field in the payer application multiple.
+ ; such as national enabled or local enabled  The deactivated field is
+ ; the .07 field at the payer level.
  ;
  ; This function is invoked by the FileMan data dictionary as a screen
  ; for the Payer field (#3.1) in the Insurance company file (#36).
  ;
- NEW APPIEN,ACTAPP,APPDATA
- S APPIEN=0,ACTAPP="",IEN=+$G(IEN)
- F  S APPIEN=$O(^IBE(365.12,IEN,1,APPIEN)) Q:'APPIEN  D  Q:ACTAPP
- . S APPDATA=$G(^IBE(365.12,IEN,1,APPIEN,0))
- . I $P(APPDATA,U,11) Q
- . I $P(APPDATA,U,12) Q
- . S ACTAPP=1
- . Q
- Q ACTAPP
+ ;IB*2.0*668/TAZ - The utility will now call the new PYRDEACT utility.  The 
+ ;                 logic in the new utility returns 1 if the Payer is deactivated
+ ;                 and 0 if is activated.  This is the opposite of this utility; 
+ ;                 therefore we need to flip the logic and check for NOT Deactivated.
+ Q '$$PYRDEACT^IBCNINSU(IEN)
+ ;
+ ;NEW APPIEN,ACTAPP,APPDATA
+ ;S APPIEN=0,ACTAPP="",IEN=+$G(IEN)
+ ;F  S APPIEN=$O(^IBE(365.12,IEN,1,APPIEN)) Q:'APPIEN  D  Q:ACTAPP
+ ;. S APPDATA=$G(^IBE(365.12,IEN,1,APPIEN,0))
+ ;. I $P(APPDATA,U,11) Q
+ ;. I $P(APPDATA,U,12) Q
+ ;. S ACTAPP=1
+ ;. Q
+ ;Q ACTAPP
  ;
 ADDTQ(DFN,PAYER,SRVDT,FDAYS,EICDEXT) ; Function  - Returns flag (0/1)
  ; 1 - TQ File entry can be added as the service date for the patient 
@@ -209,7 +216,7 @@ TQUPDSVX ; TQUPDSV exit pt
 TQMAXSV(DFN,PAYER,EICDEXT) ; Returns MAX(TQ Service Date) for Patient & Payer
  ; Input: 
  ;  DFN     - Patient DFN (2)
- ;  PAYER   - Payer IEN (365.12) (If no PAYER passed in, check them all)
+ ;  PAYER   - Payer IEN (365.12)
  ;  EICDEXT - 1 OR 0 (Is this from the EICD extract?)
  ;
  ; Output:
@@ -220,7 +227,8 @@ TQMAXSV(DFN,PAYER,EICDEXT) ; Returns MAX(TQ Service Date) for Patient & Payer
  ;  "Response Received" for EICD for which the Response indicated a "Clearinghouse Timeout"
  N TQMAXSV
  S TQMAXSV=""
- I $G(DFN)="" G TQMAXSVX
+ ;IB*668/TAZ - Added check for PAYER and quit if null
+ I $G(DFN)=""!'$G(PAYER) G TQMAXSVX
  ;
  N ERTXT,IBSKIP,IBTQS,IENS,LASTBYP,STATLIST,TQIEN
  ; This is the list of statuses that are to be ignored for EICD extract only

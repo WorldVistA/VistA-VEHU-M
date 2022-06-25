@@ -1,5 +1,5 @@
-ORKCHK ; SLC/CLA - Main routine called by OE/RR to initiate order checks ;04/24/12  11:49
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**6,32,94,105,123,232,267,243,280,345**;Dec 17, 1997;Build 32
+ORKCHK ; SLC/CLA - Main routine called by OE/RR to initiate order checks ;Feb 11, 2020@14:48:20
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**6,32,94,105,123,232,267,243,280,345,539**;Dec 17, 1997;Build 41
 EN(ORKY,ORKDFN,ORKA,ORKMODE,OROIL,ORDODSG) ;initiate order checking
  ;ORKY: array of returned msgs in format: ornum^orderchk ien^clin danger^msg
  ;ORKDFN: patient dfn
@@ -10,7 +10,7 @@ EN(ORKY,ORKDFN,ORKA,ORKMODE,OROIL,ORDODSG) ;initiate order checking
  ; effective d/t|
  ; order number|
  ; filler data (LR: specimen ien, PS: meds prev ordered during this session in format med1^med2^...)
- ;ORKMODE: mode/event trigger (DISPLAY,SELECT,ACCEPT,SESSION,ALL,NOTIF)
+ ;ORKMODE: mode/event trigger (DISPLAY,SELECT,ACCEPT,SESSION,ALL,NOTIF,ALLERGY)
  ; PS: meds previously ordered during this session med1^med2^...
  ;OROIL: array containing the order info passed in (oly for ACCEPT mode)
  ;ORDODSG: flag that denotes if dosage checks should be performed
@@ -99,7 +99,7 @@ EN(ORKY,ORKDFN,ORKA,ORKMODE,OROIL,ORDODSG) ;initiate order checking
  .I '$L($G(ORKTMODE)) D
  ..I ORKMODE="DISPLAY" D EN^ORKCHK3(.ORKS,ORKDFN,ORKA(ORKX),ORENT,ORKTMODE)
  ..I ORKMODE="SELECT" D EN^ORKCHK4(.ORKS,ORKDFN,ORKA(ORKX),ORENT,ORKTMODE,.OROIL,.ORIVORDR,.ORDODSG)
- ..I ORKMODE="ACCEPT" D EN^ORKCHK5(.ORKS,ORKDFN,ORKA(ORKX),ORENT,ORKTMODE,.OROIL,.ORDODSG)
+ ..I ORKMODE="ACCEPT"!(ORKMODE="ALLERGY") D EN^ORKCHK5(.ORKS,ORKDFN,ORKA(ORKX),ORENT,ORKTMODE,.OROIL,.ORDODSG)
  ..I ORKMODE="SESSION" D EN^ORKCHK6(.ORKS,ORKDFN,ORKA(ORKX),ORENT,ORKTMODE)
  ;
  ;set messages into sorting array then into ORKY ORKS("ORK",clinical danger level,oi,msg)=ornum^order check ien^clin danger level^message

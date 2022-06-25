@@ -1,5 +1,5 @@
 PSOASAP0 ;BIRM/MFR - American Society for Automation in Pharmacy (ASAP) Segments & Fields ;09/07/12
- ;;7.0;OUTPATIENT PHARMACY;**408,451,496,504**;DEC 1997;Build 15
+ ;;7.0;OUTPATIENT PHARMACY;**408,451,496,504,625,630**;DEC 1997;Build 26
  ;External reference to $$NATURE^ORUTL3 supported by DBIA 5890
  ;External reference to ^ORDEA is supported by DBIA 5709
  ;External reference to PATIENT file (#2) supported by DBIA 5597
@@ -248,8 +248,10 @@ DSP04() ;ASAP 3.0 : Refill Number
  ;
 DSP05() ;ASAP 3.0 : Unique System ID - RPh (Not Used)
  ;       ASAP 4.0+: Date Filled (Release Date) (Format: YYYYMMDD)
+ ;   ZERO RPT 4.0+: Date Report was created    
  I PSOASVER="3.0" Q ""
  N DSP05
+ I $G(BATCHIEN),$$GET1^DIQ(58.42,BATCHIEN,2,"I")="ZR" S DSP05=$$GET1^DIQ(58.42,BATCHIEN,8,"I") Q $$FMTHL7^XLFDT((DSP05)\1)
  S DSP05=$S(RECTYPE="V":$G(RTSDATA("RELDTTM")),$$RXRLDT^PSOBPSUT(RXIEN,FILLNUM):$$RXRLDT^PSOBPSUT(RXIEN,FILLNUM),1:DT)\1
  Q $S(DSP05:$$FMTHL7^XLFDT(DSP05),1:"")
  ;
@@ -415,8 +417,14 @@ PRE08() ;ASAP 3.0 : Prescriber's Last Name
  Q $$PHA10()
  ;
 PRE09() ;ASAP 3.0: Prescriber' First Name
- I PSOASVER'="3.0" Q ""
- Q $P($P($$GET1^DIQ(200,PREIEN,.01),",",2)," ",1)
+ ;       ASAP 4.2: Prescriber's DETOX Number if DETOX drug
+ N DTXCHK,PRDEA S (DTXCHK,PRDEA)=""
+ I PSOASVER="3.0" Q $P($P($$GET1^DIQ(200,PREIEN,.01),",",2)," ",1)
+ I PSOASVER="4.2" D
+ . S DRUGIEN=$$GET1^DIQ(52,RXIEN,6,"I")
+ . S DTXCHK=$$DETOX^PSSOPKI(DRUGIEN)
+ . I DTXCHK S PRDEA=$$PRVDETOX^PSOUTIL(PREIEN)
+ Q PRDEA
  ;
 PRE10() ;ASAP 3.0: Prescriber' Middle Name
  I PSOASVER'="3.0" Q ""

@@ -1,5 +1,5 @@
 IBECEA36 ;ALB/CPM-Cancel/Edit/Add... Urgent Care Add Utilities ; 23-APR-93
- ;;2.0;INTEGRATED BILLING;**646,663,671,677,689**;21-MAR-94;Build 2
+ ;;2.0;INTEGRATED BILLING;**646,663,671,677,689,696**;21-MAR-94;Build 3
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;File 27.11 call - DBIA 5158
@@ -179,10 +179,15 @@ ADDVST(DFN,IBDT,IBN,IBSTATUS,IBREAS,IBSITE) ; Update the Visit Tracking DB
  N FDA,FDAIEN,IBSITE,IBBILL,IBERROR,IBBLSTAT
  ;
  ;check for a defined site in the copay file
- S:$G(IBSITE)="" IBSITE=$$GET1^DIQ(350,$G(IBN)_",",.13,"I")
+ ;WCJ;IB696
+ ;S:$G(IBSITE)="" IBSITE=$$GET1^DIQ(350,$G(IBN)_",",.13,"I")
+ I $G(IBSITE)="" S IBSITE=$$STA^XUAF4($$GET1^DIQ(350,$G(IBN)_",",.13,"I")) S:IBSITE]"" IBSITE=+IBSITE
  ;
  ;Otherwise, default to IBFAC
- S:$G(IBSITE)="" IBSITE=IBFAC
+ ;WCJ;IB696;IBFAC can be an IEN for a child and not the actual facility so it may not be the IEN for the actual site. Pretty sure IBSITE will already be defined
+ ;but if we need to use IBFAC, let's turn it into a site number
+ ;S:$G(IBSITE)="" IBSITE=IBFAC
+ S:$G(IBSITE)="" IBSITE=$$STA^XUAF4(IBFAC)
  ;
  S IBBILL=$$GET1^DIQ(350,$G(IBN)_",",.11,"E")
  S IBREAS=$G(IBREAS)

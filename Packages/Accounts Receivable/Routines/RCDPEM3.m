@@ -1,5 +1,5 @@
 RCDPEM3 ;OIFO-BAYPINES/RBN - ERA AUDIT REPORT and return EFT function ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**276,284,298,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**276,284,298,326,375**;Mar 20, 1995;Build 15
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; General read access of IB EOB file #361.1 is allowed from AR (IA 4051)
@@ -371,7 +371,7 @@ RETN ; Entry point for Remove Duplicate EFT Deposits [RCDPE REMOVE DUP DEPOSITS]
  W !
  D ^DIR K DIR
  I $D(DUOUT)!$D(DTOUT)!(Y=0) D NOCHNG Q
- S DIE="^RCY(344.31,",DA=RCY,DR=".19" D ^DIE
+ S DIE="^RCY(344.31,",DA=RCY,DR=".19;.2R" D ^DIE ;PRCA*4.5*375 - Add Removal Type field for Duplicate/Millenium EFTs
  I $D(Y) D NOCHNG Q  ; user aborted edit
  ;
  ; 344.31,.08 - MATCH STATUS

@@ -1,5 +1,5 @@
-ORWPCE3 ; SLC/KCM/REV/JM/TC - Get a PCE encounter for a TIU document ;04/12/17  08:53
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,190,280,306,371,361,385,377**;Dec 17, 1997;Build 582
+ORWPCE3 ; SLC/KCM/REV/JM/TC - Get a PCE encounter for a TIU document ;07/07/2020
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,190,280,306,371,361,385,377,498**;Dec 17, 1997;Build 38
  ;
 PCE4NOTE(LST,IEN,DFN,VSITSTR) ; Return encounter for an associated note
  ; LST(1)=HDR^AllowEdit^CPTRequired^VStr^Author^hasCPT
@@ -24,12 +24,12 @@ PCE4NOTE(LST,IEN,DFN,VSITSTR) ; Return encounter for an associated note
  S LST(1)="HDR"_U_("HID"[VTYP)_U_$P(X0,U,11)_U_VSTR_U_$P(X12,U,2)
  ;add hasCPT node
  S LST(1)=LST(1)_U_0
- I VISIT'>0 D  Q
+ I VISIT'>0 D  G GETFIND
  . I $G(VSTR)'="" M LST=^TMP("ORWPCE",$J,VSTR)  ; get cached visit data
  I $P(LST(1),U,2),VTYP="H" Q                    ; quit if admission
  K ^TMP("PXKENC",$J)
  D ENCEVENT^PXAPI(VISIT)
- I '$D(^TMP("PXKENC",$J,VISIT,"VST",VISIT,0)) Q
+ I '$D(^TMP("PXKENC",$J,VISIT,"VST",VISIT,0)) G GETFIND
  S $P(LST(1),U,6)=$D(^TMP("PXKENC",$J,VISIT,"CPT"))\10
  S X0=^TMP("PXKENC",$J,VISIT,"VST",VISIT,0),LOC=+$P(X0,U,22)
  S ILST=ILST+1,LST(ILST)="VST^DT^"_$P(X0,U)
@@ -197,7 +197,8 @@ PCE4NOTE(LST,IEN,DFN,VSITSTR) ; Return encounter for an associated note
  .. S $P(LST(ILST),U,10)=ICOM
  .. S ILST=ILST+1
  .. S LST(ILST)="COM"_U_ICOM_U_X811
- D GETFIND^PXRMRPCG(.GFINDS,DFN,VISIT)
+GETFIND ;
+ D GETFIND^PXRMRPCG(.GFINDS,DFN,VISIT,$G(IEN))
  S GCNT=0 F  S GCNT=$O(GFINDS(GCNT)) Q:GCNT'>0  D
  .S ILST=ILST+1
  .S LST(ILST)=GFINDS(GCNT)

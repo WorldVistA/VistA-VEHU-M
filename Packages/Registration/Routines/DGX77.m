@@ -1,4 +1,4 @@
-DGX77 ; ;06/09/22
+DGX77 ; ;06/24/22
  D DE G BEGIN
 DE S DIE="^DGPT(",DIC=DIE,DP=45,DL=1,DIEL=0,DU="" K DG,DE,DB Q:$O(^DGPT(DA,""))=""
  I $D(^(300)) S %Z=^(300) S %=$P(%Z,U,2) S:%]"" DE(1)=% S %=$P(%Z,U,3) S:%]"" DE(6)=% S %=$P(%Z,U,4) S:%]"" DE(12)=%,DE(16)=% S %=$P(%Z,U,5) S:%]"" DE(21)=% S %=$P(%Z,U,6) S:%]"" DE(26)=% S %=$P(%Z,U,7) S:%]"" DE(31)=%

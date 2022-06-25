@@ -1,5 +1,5 @@
 PSOCAN3 ;BIR/RTR/SAB - auto dc rxs due to death ;2/05/97 2:59pm
- ;;7.0;OUTPATIENT PHARMACY;**15,24,27,32,36,94,88,117,131,146,139,132,223,235,148,249,225,324,251,375,379,372,540,508,457**;DEC 1997;Build 116
+ ;;7.0;OUTPATIENT PHARMACY;**15,24,27,32,36,94,88,117,131,146,139,132,223,235,148,249,225,324,251,375,379,372,540,508,457,617**;DEC 1997;Build 110
  ;External reference to File #55 supported by DBIA 2228
  ;External references to L, UL, PSOL, and PSOUL^PSSLOCK supported by DBIA 2789
  Q
@@ -97,25 +97,28 @@ ADD S DA=RXDA,RXREF=0,PSODFN=+$P(^PSRX(DA,0),"^",2) S:$G(PSOOPT)=3 REA="L"
  Q
  ; PSO*7*508 - added ERXDCIEN parameter, and check for parameter and possession of psorph.
  ;           - the pso application proxy will not possess the PSORPH key, so we do not quit if that is the case.
-OERR(ERXDCIEN) I '$D(^XUSEC("PSORPH",DUZ)),'$P($G(PSOPAR),"^",2),'$G(ERXDCIEN) S VALMSG="Invalid Action Selection!",VALMBCK="" Q
+OERR(ERXDCIEN) ;
+ N PSORXIEN
+ S PSORXIEN=$P(PSOLST(ORN),"^",2)
+ I '$D(^XUSEC("PSORPH",DUZ)),'$P($G(PSOPAR),"^",2),'$G(ERXDCIEN) S VALMSG="Invalid Action Selection!",VALMBCK="" Q
  S PSOPLCK=$$L^PSSLOCK(PSODFN,0) I '$G(PSOPLCK) D LOCK^PSOORCPY S VALMSG=$S($P($G(PSOPLCK),"^",2)'="":$P($G(PSOPLCK),"^",2)_" is working on this patient.",1:"Another person is entering orders for this patient.") K PSOPLCK S VALMBCK="" Q
- K PSOPLCK S PSOCANRD=+$P($G(^PSRX($P(PSOLST(ORN),"^",2),0)),"^",4),PSOCANRA=1
- D PSOL^PSSLOCK($P(PSOLST(ORN),"^",2)) I '$G(PSOMSG) S VALMSG=$S($P($G(PSOMSG),"^",2)'="":$P($G(PSOMSG),"^",2),1:"Another person is editing this order."),VALMBCK="" K PSOMSG D KCAN D ULP Q
- I $P(^PSRX($P(PSOLST(ORN),"^",2),"STA"),"^"),$P(^("STA"),"^")=1!($P(^("STA"),"^")=4) S:$G(SPEED) PSONOORS=$G(PSONOOR) D DEL^PSOCAN4 S:$G(PSONOORS)'="" PSONOOR=$G(PSONOORS) K PSONOORS D KCAN D ULP Q
- I '+^PSRX($P(PSOLST(ORN),"^",2),"OR1"),$P(^("STA"),"^")=12 S VALMSG="Rx Cannot be Reinstated.  No Orderable Item." D KCAN D ULP D PSOUL^PSSLOCK($P(PSOLST(ORN),"^",2)) Q
- I $P($G(^PSRX($P(PSOLST(ORN),"^",2),"STA")),"^")=12,$P($G(^("PKI")),"^") S VALMSG="Cannot be Reinstated - Digitally Signed" D KCAN D ULP D PSOUL^PSSLOCK($P(PSOLST(ORN),"^",2)) Q
- I $P($G(^PSRX($P(PSOLST(ORN),"^",2),"STA")),"^")=12 S PSOCANRZ=1
+ K PSOPLCK S PSOCANRD=+$P($G(^PSRX(PSORXIEN,0)),"^",4),PSOCANRA=1
+ D PSOL^PSSLOCK(PSORXIEN) I '$G(PSOMSG) S VALMSG=$S($P($G(PSOMSG),"^",2)'="":$P($G(PSOMSG),"^",2),1:"Another person is editing this order."),VALMBCK="" K PSOMSG D KCAN D ULP Q
+ I $P(^PSRX(PSORXIEN,"STA"),"^"),$P(^("STA"),"^")=1!($P(^("STA"),"^")=4) S:$G(SPEED) PSONOORS=$G(PSONOOR) D DEL^PSOCAN4 S:$G(PSONOORS)'="" PSONOOR=$G(PSONOORS) K PSONOORS D KCAN D ULP Q
+ I '+^PSRX(PSORXIEN,"OR1"),$P(^("STA"),"^")=12 S VALMSG="Rx Cannot be Reinstated.  No Orderable Item." D KCAN D ULP D PSOUL^PSSLOCK(PSORXIEN) Q
+ I $P($G(^PSRX(PSORXIEN,"STA")),"^")=12,$P($G(^PSRX(PSORXIEN,"PKI")),"^")!$P($G(^PSRX(PSORXIEN,"PKI")),"^",3) S VALMSG="Cannot be Reinstated - Digitally Signed" D KCAN D ULP D PSOUL^PSSLOCK(PSORXIEN) Q
+ I $P($G(^PSRX(PSORXIEN,"STA")),"^")=12 S PSOCANRZ=1
  ; PSO*7*508 - replacing below line with following 2 lines - do not try to build header if this is an auto-dc for an eRx.
- ;D HLDHDR^PSOLMUTL S X=$P(^PSRX($P(PSOLST(ORN),"^",2),0),"^"),PS=$S($P(^PSRX($P(PSOLST(ORN),"^",2),"STA"),"^")=12:"Reinstate: ",1:"Discontinue: ")
+ ;D HLDHDR^PSOLMUTL S X=$P(^PSRX(PSORXIEN,0),"^"),PS=$S($P(^PSRX(PSORXIEN,"STA"),"^")=12:"Reinstate: ",1:"Discontinue: ")
  I '$G(ERXDCIEN) D HLDHDR^PSOLMUTL
- S X=$P(^PSRX($P(PSOLST(ORN),"^",2),0),"^"),PS=$S($P(^PSRX($P(PSOLST(ORN),"^",2),"STA"),"^")=12:"Reinstate: ",1:"Discontinue: ")
+ S X=$P(^PSRX(PSORXIEN,0),"^"),PS=$S($P(^PSRX(PSORXIEN,"STA"),"^")=12:"Reinstate: ",1:"Discontinue: ")
  ; PSO*7*508 - end changes
- S POERR=1,DFNHLD=PSODFN,DA=$P(PSOLST(ORN),"^",2) N PSOREINS,PSOONOFC S PSOREINS=1
+ S POERR=1,DFNHLD=PSODFN,DA=PSORXIEN N PSOREINS,PSOONOFC S PSOREINS=1
  I $G(PSORX("DOSING OFF")) S PSOREINF=1
  I $P(^PSRX(DA,3),"^",5) S PSOCANHD=$P(^PSRX(DA,3),"^",5)
  D LMNO S:$G(PSOONOFC) PSORX("DOSING OFF")=1 I $G(PSOQUIT) D ULP,KCAN S VALMBCK="R" Q
- D:$P($G(^PSRX($P(PSOLST(ORN),"^",2),"STA")),"^")=12 RMP
- D PSOUL^PSSLOCK($P(PSOLST(ORN),"^",2))
+ D:$P($G(^PSRX(PSORXIEN,"STA")),"^")=12 RMP
+ D PSOUL^PSSLOCK(PSORXIEN)
  K POERR,PSCAN,PSI,PSL,PSOREINF S PSODFN=DFNHLD K DFNHLD D ULP
  D KCAN
  Q

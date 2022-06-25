@@ -1,5 +1,5 @@
-ORWPS1 ; SLC/Staff - Meds Tab;03:34 AM  9 May 1998 ;12/8/98  20:56
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10**;Dec 17, 1997
+ORWPS1 ; SLC/Staff - Meds Tab;Feb 09, 2021@09:16:23;12/8/98  20:56
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,539**;Dec 17, 1997;Build 41
 NEWDLG(Y,INPAT) ; Return order dialog info for New Medication
  N DGRP,ID,IEN,TXT,TYP,X,X0,X5
  I INPAT S X=$$GET^XPAR("ALL","ORWDX NEW MED","i","I")
@@ -16,4 +16,12 @@ REFILL(Y,ORDERID,REFLOC,ORVP,ORNP,ORL) ; Refill Request
  S ORVP=ORVP_";DPT(",ORL(2)=ORL_";SC(",ORL=ORL(2)
  D REF^ORMBLDPS(ORDERID,REFLOC)
  S Y=""
+ Q
+NVADLG(Y) ; Return order dialog info for a New Non-VA Medication
+ N DGRP,ID,IEN,TXT,TYP,X0,X5
+ S IEN=+$O(^ORD(101.41,"B","PSH OERR",""))
+ I IEN=0 S Y="-1^PSH OERR (Non VA Medications (Documentation)) dialog does not exist" Q
+ S X0=$G(^ORD(101.41,IEN,0)),X5=$G(^(5))
+ S TYP=$P(X0,U,4),DGRP=+$P(X0,U,5),ID=+$P(X5,U,5),TXT=$P(X5,U,4)
+ S Y=IEN_";"_ID_";"_DGRP_";"_TYP_U_TXT
  Q

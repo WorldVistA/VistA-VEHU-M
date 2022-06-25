@@ -258,7 +258,7 @@ ZWR
 ^PXRM(810.4,46,110,1,1,0)="^^1^1^3220609"
 ^PXRM(810.4,46,110,1,1,1,0)="Exchange Install"
 ^PXRM(810.4,46,110,"B",3220609.030536,1)=""
-^PXRM(810.4,49,0)="VA-SMART FR 40-44 WANTS SCREENING^Patients who want mammogram screening^1^^^^456"
+^PXRM(810.4,49,0)="VA-SMART FR 40-44 WANTS SCREENING^Patients who want mammogram screening^1^^^^536"
 ^PXRM(810.4,49,100)="N"
 ^PXRM(810.4,49,110,0)="^810.42D^1^1"
 ^PXRM(810.4,49,110,1,0)="3220609.030535^1"

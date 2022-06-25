@@ -1,5 +1,5 @@
 IBCE837I ;EDE/JWS - OUTPUT FOR 837 FHIR TRANSMISSION ;5/23/18 10:48am
- ;;2.0;INTEGRATED BILLING;**623,641**;23-MAY-18;Build 61
+ ;;2.0;INTEGRATED BILLING;**623,641,650**;23-MAY-18;Build 21
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 RES(RES) ;Set resource name correctly
@@ -50,7 +50,8 @@ GET(RESULT,ARG) ;RPC - EDICLAIMS; get list of claims to transmit
  ;D APPERROR^%ZTER("RPC USER") ; WCJ TEMP LINE TO SEE SOME VARIABLES
  N CT,DUZ,IBGBL,IBX,IBTEST,IBXIEN,IB0,IBTXST,IBTXTEST,IBBTYP,IBDIV,IB837R,IBNF,IBNOTX,MCNT
  K ^TMP($J,"BILL"),^TMP($J,"FHIR837")
- S DUZ(0)="@" D DTNOLF^DICRW
+ ;JWS;IB*2.0*650v7;3/16/21;remove setting of DUZ(0)
+ D DTNOLF^DICRW
  S IBGBL="^IBA(364,""AC"",1)",CT=1
  ;JWS;IB*2.0*641v8;added MCNT for maximum count of claims IENs, >20,000 breaks FHIR
  S IBX="" F  S IBX=$O(@IBGBL@(IBX)) Q:'IBX  D  I $G(MCNT)>19999 Q
@@ -118,10 +119,13 @@ SETCLM(IBIEN,IBQ,RSUB) ; set the FHIR 837 claim for submission
  D ^DIE
  Q
  ;JWS;IB*2.0*623v24
-SETSUB(IBIEN,IBVAL) ; clear the resubmission flag
+ ;JWS;IB*2.0*650v5 - add set/clear of field .11, file 364 FHIR Bundle Validation flag [11]
+SETSUB(IBIEN,IBVAL,IBFLD) ; clear the resubmission flag
  N DA,D0,DR,DIE,DIC
  S DA=IBIEN I DA="" Q
- S DR=".1////"_IBVAL,DIE="^IBA(364,"
+ I $G(IBFLD)=".11" S DR=".11////"_IBVAL
+ E  S DR=".1////"_IBVAL
+ S DIE="^IBA(364,"
  D ^DIE
  Q
  ;

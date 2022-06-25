@@ -1,5 +1,5 @@
 IBCNERTQ ;ALB/BI - Real-time Insurance Verification ;15-OCT-2015
- ;;2.0;INTEGRATED BILLING;**438,467,497,549,582,593,601,631,659,664**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**438,467,497,549,582,593,601,631,659,664,668**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -46,11 +46,11 @@ TRIG(N2) ; Called by triggers in the INSURANCE BUFFER FILE Dictionary (355.33)
  I $G(IBNCPDPELIG) Q RESPONSE  ; variable set in ^IBNCPDP3
  I $P($G(^IBA(355.33,N2,0)),U,17)'="" Q RESPONSE
  ;
- ; prevent HMS entries from creating inquiries
+ ; ** Prevent creating inquiries based on Source of Information (SOI) **
  N PTR S PTR=+$P($G(^IBA(355.33,N2,0)),U,3)
  I PTR,$P($G(^IBE(355.12,PTR,0)),U,2)="HMS",PREL="" Q RESPONSE
- ;/vd-IB*2*664 - prevent entries with SOI of "EHR" from creating inquiries.
- I PTR,$$GET1^DIQ(355.12,PTR_",",.03)="EHR" Q RESPONSE
+ I PTR,$$GET1^DIQ(355.12,PTR_",",.03)="EHR" Q RESPONSE    ;/vd-IB*2*664
+ I PTR,$$GET1^DIQ(355.12,PTR_",",.03)="AMCMS" Q RESPONSE  ;IB*668/DW
  ;
  ; Quit if a waiting transaction exists in file #365.1
  S PTID=$P(NODE60,U,1)

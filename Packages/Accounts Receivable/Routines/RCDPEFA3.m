@@ -1,5 +1,5 @@
-RCDPEFA3 ;AITC/CJE - 1ST PARTY AUTO DECREASE VS MANUAL DECREASE REPORT;Jun 06, 2014@19:11:19 ; 6/27/19 8:02am
- ;;4.5;Accounts Receivable;**345**;Mar 20, 1995;Build 34
+RCDPEFA3 ;AITC/CJE - 1ST PARTY AUTO DECREASE VS MANUAL DECREASE REPORT;Jun 06, 2014@19:11:19 ; 7/3/19 8:41am
+ ;;4.5;Accounts Receivable;**345,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; Entry point for Manual vs Auto-Decrease Adjustment Report [RCDPE FIRST PARTY MANUAL VS AUTO]
@@ -21,7 +21,8 @@ EN ; Entry point for Manual vs Auto-Decrease Adjustment Report [RCDPE FIRST PART
  Q:$P(INPUT,U,5)<0                                  ; '^' or timeout
  I $P(INPUT,U,5)=1 D  Q                             ; Compile data and call listman to display
  . D LMOUT^RCDPEFA4(INPUT,.RCVAUTD,.IO)
- S $P(INPUT,U,6)=$$DISPTY^RCDPEFA2                  ; Select Display Type
+ I $P(INPUT,U,2)="D" D  ;
+ . S $P(INPUT,U,6)=$$DISPTY^RCDPEFA2                ; Select Display Type
  Q:$P(INPUT,U,6)=-1                                 ; '^' or timeout
  D:$P(INPUT,U,6)=1 INFO^RCDPEM6                     ; Display capture information for Excel
  Q:'$$DEVICE^RCDPEFA2(.IO)                          ; Ask output device
@@ -53,7 +54,7 @@ REPORT(INPUTS,RCVAUTD,IO) ; Compile and print report
  ;          RCVAUTD - Array of selected Divisions, Only passed if A1=2
  ;          IO      - Output Device
  N RCTOTAL,XX,ZTREQ
- U IO
+ U:$P(INPUTS,"^",5)'=1 IO                   ; PRCA*4.5*349 Added check to skip if in listman mode
  K ^TMP("RCDPEFADP3",$J),^TMP("RCDPE_ADP3",$J)
  D COMPILE(INPUTS,.RCVAUTD)  ; Scan AR TRANSACTION file for entries in date range
  D DISP(INPUTS)              ; Display Report
@@ -214,7 +215,7 @@ DISP(INPUTS) ; Format the display for screen/printer or MS Excel
  ; Input:   INPUTS  - See REPORT for details
  ;          ^TMP("RCDPEFADP",$J) - See SAVE for description
  N A1,A2,A3,DATA,EXCEL,GTOTAL,HDRINFO,LMAN,LCNT,MODE,PAGE,RCRDNUM,STOP,X,Y,DISP
- U IO
+ U:$P(INPUTS,"^",5)'=1 IO                   ; PRCA*4.5*349 Added check to skip if in listman mode
  S EXCEL=$P(INPUTS,U,6),LMAN=$P(INPUTS,U,5),DISP=$P(INPUTS,U,2)
  ;
  ; Header information

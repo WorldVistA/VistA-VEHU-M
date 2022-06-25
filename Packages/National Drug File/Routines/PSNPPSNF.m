@@ -1,10 +1,11 @@
 PSNPPSNF ;HP/MJE-PPSN update NDF data ;2019-02-14  10:39 AM
- ;;4.0;NATIONAL DRUG FILE;**513,10001,10002**; 30 Oct 98;Build 6
+ ;;4.0;NATIONAL DRUG FILE;**513,571,10001,10002,10003**; 30 Oct 98;Build 53
  ;Reference to ^%ZISH supported by DBIA #2320
  ;Reference to ^XUTMOPT supported by DBIA #1472
  ; Original Routine authored by Department of Veterans Affairs
  ; *10001* modification made by OSEHRA/Sam Habiel (c) 2018
  ; *10002* modification made by CRH/David Whitten (c) 2019
+ ; *10003* Incorporation of 571 (c) Sam Habiel 2022
  ; See https://github.com/shabiel/PSN-4-513
  ;
  ;This routine is used to locate and move PPSN NDF update host files into Cache for processing
@@ -64,11 +65,11 @@ CKDIR ;
  ..I '$G(PSNSCJOB) D
  ...W !,"Installation completed"_$S($G(ERRCHK):" with errors.  See error mail message",1:"")_".",!
  ...D CTRKDL^PSNPPSMS("Installation completed"_$S($G(ERRCHK):" with errors.  See error mail message",1:"")_".")
- ..I $O(B1(X22))]"",$D(^TMP("PSN PPSN READ",$J)) W:'$G(PSNSCJOB) !,"Purging background work files before starting the next install...",! K ^TMP("PSN PPSN READ",$J),^TMP("PSN PPSN PARSED",$J)
+ ..I $O(B1(X2))]"" W:'$G(PSNSCJOB) !,"Purging background work files before starting the next install...",!
+ ..K ^TMP("PSN PPSN READ",$J),^TMP("PSN PPSN PARSED",$J)
  I 'PSNFND W !,"There were no PPS-N update files to install.",!
- ;I PSNFLG S PSNFLG=0 G CKDIR
-EXIT ;
- ;D ENABLE^PSNPPSMS
+ ;
+EXIT ; Exit point
  K DIE,DA,DR
  S DIE="^PS(57.23,",DA=1,DR="10///N" D ^DIE K DIE,DA,DR
  K A1,B2,B1,^TMP("PSN PPSN READ",$J),^TMP("PSN PPSN PARSED",$J)

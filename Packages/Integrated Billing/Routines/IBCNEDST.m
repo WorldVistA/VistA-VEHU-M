@@ -1,5 +1,5 @@
 IBCNEDST ;ALB/YMG - HL7 Registration Message Statistics ;07-MAR-2013
- ;;2.0;INTEGRATED BILLING;**497,506,549,595,659,664**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**497,506,549,595,659,664,668**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -202,7 +202,8 @@ PAYINFO() ; get data from payer (file 365.12) & insurance company (file #36)
  .I $P(DATA,U,2)="" Q  ;Must have National ID
  .;
  .; Check for Locally Disabled
- .S APP=$$PYRAPP^IBCNEUT5("IIV",PAYER) I 'APP Q
+ .;IB*668/TAZ - Changed Payer Application from IIV to EIV
+ .S APP=$$PYRAPP^IBCNEUT5("EIV",PAYER) I 'APP Q
  .S DATA=$G(^IBE(365.12,PAYER,1,APP,0))
  .I $P(DATA,U,2),'$P(DATA,U,3) S LOCDIS=LOCDIS+1 ; nationally active but locally disabled payers
  .Q

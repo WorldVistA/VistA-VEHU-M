@@ -1,5 +1,5 @@
 PSORENW4 ;BIR/SAB - rx speed renew ;6 June 2019 16:18:07
- ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,37,64,46,75,71,100,130,117,152,148,264,225,301,390,313,411,444,504,508,550,457**;DEC 1997;Build 116
+ ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,37,64,46,75,71,100,130,117,152,148,264,225,301,390,313,411,444,504,508,550,457,639**;DEC 1997;Build 4
  ;External reference to ^PSDRUG( supported by DBIA 221
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference to $$L^PSSLOCK supported by DBIA 2789
@@ -72,6 +72,8 @@ PROCESS ; Process one order at a time
  S ERXIEN=$$CHKERX^PSOERXU1(ERXORN)
  I ERXIEN S ERXPROC=$$PROVPMT^PSOERXU1(ERXIEN) Q:'ERXPROC
  ; PSO*7*508 - end
+ I $$CSRX^PSOUTL(PSORXIEN),$$FMADD^XLFDT($G(PSORENW("ISSUE DATE")),180)<DT D  K DIR,PSOMSG D PAUSE^VALM1 Q
+ . W $C(7),!!,"Rx# "_$$GET1^DIQ(52,PSORXIEN,.01)_" - Rx is for a CS Drug and the Issue Date entered ("_$$FMTE^XLFDT(PSORENW("ISSUE DATE"))_") is",!,"greater than 6 months."
  ; Checking if Rx is locked by Another person
  D PSOL^PSSLOCK(PSORXIEN) I '$G(PSOMSG) W $C(7),!!,$S($P($G(PSOMSG),"^",2)'="":$P($G(PSOMSG),"^",2),1:"Another person is editing Rx "_$P(^PSRX(PSORXIEN,0),"^")),! K DIR,PSOMSG D PAUSE^VALM1 Q
  K RET,DRET,PRC,PHI S PSORENW("OIRXN")=PSORXIEN,PSOFROM="NEW"

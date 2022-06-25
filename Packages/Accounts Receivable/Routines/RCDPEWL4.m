@@ -1,5 +1,5 @@
 RCDPEWL4 ;ALB/TMK/PJH - ELECTRONIC EOB WORKLIST ACTIONS ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,208,269,298,303,318,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**173,208,269,298,303,318,326,349**;Mar 20, 1995;Build 44
  ;;Per VA Directive 6402, this routine should not be modified.
  ; RCSCR variable must be defined for this routine
  Q
@@ -118,9 +118,6 @@ VRECPT ;EP - Protocol action - RCDPE EOB WL RECEIPT VIEW
  N DIR,RCOK,RCZ,X,Y,Z,Z0
  D FULL^VALM1
  S VALMBCK="R"
- I '$D(^XUSEC("RCDPEPP",DUZ)) D  Q  ; PRCA*4.5*318 Added security key check
- . W !!,"This action can only be taken by users that have the RCDPEPP security key.",!
- . D PAUSE^VALM1
  I $S($P($G(^RCY(344.4,RCSCR,4)),U,2)]"":1,1:0) D VR^RCDPEWLP(RCSCR) G VRECPTQ   ; prca*4.5*298  auto-posted ERAs are handled differently
  ;
  ;
@@ -139,6 +136,8 @@ VRECPT ;EP - Protocol action - RCDPE EOB WL RECEIPT VIEW
  . W !
  . S DIR(0)="E" D ^DIR K DIR
  ;
+ I '$D(^XUSEC("RCDPEPP",DUZ)) D  Q          ; PRCA*4.5*349 - Added AM worklist preview
+ . D EN^VALM("RCDPE EOB RECEIPT PREVIEW AM"),VRECPTQ
  D EN^VALM("RCDPE EOB RECEIPT PREVIEW")
 VRECPTQ ;
  S VALMBCK=$S('$G(RCSCR):"Q",1:"R")

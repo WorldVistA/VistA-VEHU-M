@@ -1,11 +1,12 @@
 PSXRPPL2 ;BIR/WPB - Print From Suspense Utilities ;06/10/08
- ;;2.0;CMOP;**65,69,73,74,79,81,83,87**;11 Apr 97;Build 8
+ ;;2.0;CMOP;**65,69,73,74,79,81,83,87,91**;11 Apr 97;Build 33
  ;Reference to ^PSRX( supported by DBIA #1977
  ;Reference to ^PS(52.5, supported by DBIA #1978
  ;Reference to ^PSSLOCK  supported by DBIA #2789
  ;Reference to ^PSOBPSUT supported by DBIA #4701
  ;Reference to ^PSOBPSU1 supported by DBIA #4702
  ;Reference to ^PSOBPSU2 supported by DBIA #4970
+ ;Reference to ^PSOBPSU4 supported by DBIA #7212
  ;Reference to ^PSOREJUT supported by DBIA #4706
  ;Reference to ^PSOREJU3 supported by DBIA #5186
  ;Reference to CHANGE^PSOSUCH1 supported by DBIA #5427
@@ -92,8 +93,8 @@ EPHARM ; - ePharmacy checks for third party billing
  ;
  ; If CMOP is still processing the previous fill ($$DOUBLE), or if the
  ; RE-TRANSMIT flag is 'Yes' and the send date is in the future, or if
- ; this prescription has an unresolved 79,88, or RRR reject, then Set
- ; EPHQT to 1 and Quit.  This Rx/Fill will not be sent to CMOP.
+ ; this prescription has an unresolved 79,88, or RRR reject, then
+ ; Set EPHQT to 1 and Quit.  This Rx/Fill will not be sent to CMOP.
  ;
  I $$DOUBLE^PSXRPPL1(RXN,RFL) S EPHQT=1 Q
  I $$RETRX^PSOBPSUT(RXN,RFL),SDT>DT S EPHQT=1 Q
@@ -110,12 +111,6 @@ EPHARM ; - ePharmacy checks for third party billing
  ; ^TMP("PSXEPHIN") array and quit.
  ;
  I $$STATUS^PSOBPSUT(RXN,RFL)="IN PROGRESS" D EPH Q
- ;
- ; If this Prescription violates the 3/4 supply (i.e. if it is too soon
- ; to refill), then Set EPHQT to 1 and Quit.  This Rx/Fill will not be
- ; sent to CMOP.
- ;
- I $$PATCH^XPDUTL("PSO*7.0*289"),'$$DSH(REC) S EPHQT=1 Q
  ;
  ; If there is a host reject for this Rx/Fill, then add this Rx to the
  ; ^TMP("PSXEPHIN") array and quit.
@@ -144,6 +139,7 @@ EPH ; - Store Rx not xmitted to CMOP in XTMP file for MailMan message.
  ; RFL = Refill number
  ;Returns: 1 = OK to resubmit
  ;0 = Don't resubmit
+ ;
 ECMESTAT(RX,RFL) ;
  I '$$PATCH^XPDUTL("PSO*7.0*148") Q 0
  N STATUS,HERR,CHDAT
@@ -160,50 +156,55 @@ ECMESTAT(RX,RFL) ;
  ;   NOTE: MAKE SURE THAT IGNORED REJECTS WILL PROCESS WHENEVER MODIFICATIONS ARE MADE TO HOST REJECT 
  ;         Ignored rejects are handled by default when this subroutine Q 0 at the end.
  ;*****************************************************************************************************
-  ; check host rejects
+ ; check host rejects
  S HERR=$$HOSTREJ(RX,RFL,0)
  I HERR&(CHDAT=2) D SHDTLOG(RX,RFL) Q 0  ;Host reject and no suspense hold date defined yet; define it and don't resubmit
  I HERR&(CHDAT) Q 1  ;Host reject & suspense hold date has expired; resubmit
  Q 0  ;NOTE - IF YOU CHANGE THIS Q 0, IGNORED REJECTS WILL RESUBMIT AND REJECT AGAIN WHICH IS VERY BAD.
  ;
- ;DSH determines whether the RX SUSPENSE has a DAYS SUPPLY HOLD condition.
- ;Input: REC = Pointer to Suspense file (#52.5)
- ;Returns: 1 or 0
- ;1 (one) if 3/4 of days supply has elapsed.
- ;0 (zero) is returned if 3/4 of days supply has not elapsed. 
+ ; DSH determines whether a prescription has a 3/4 days supply hold
+ ; condition.
+ ;   Input: REC = Pointer to Suspense file (#52.5)
+ ;   Returns: 1 or 0
+ ;     1 (one) if 3/4 of days supply has elapsed.
+ ;     0 (zero) if 3/4 of days supply has not elapsed.
  ;
 DSH(REC) ;ePharmacy API to check for 3/4 days supply hold
- N PSINSUR,PSARR,SHDT,DSHOLD,DSHDT,PS0,COMM,DIE,DA,DR,RXIEN,RFL
- N DAYSSUP,LSTFIL,PTDFN,IBINS,DRG,SFN,SDT,ELIG,PREVRX
- S DSHOLD=1,PS0=^PS(52.5,REC,0),RXIEN=$P(PS0,U,1),RFL=$P(PS0,U,13)
- S LSTFIL=$$LSTRFL^PSOBPSU1(RXIEN),PTDFN=$$GET1^DIQ(52,RXIEN,"2","I")
- I RFL="" S RFL=LSTFIL
- S IBSTAT=$$INSUR^IBBAPI(PTDFN,,"E",.IBINS,"1"),DRG=$$GET1^DIQ(52,RXIEN,"6","I")
- S ELIG=$S(RFL:$P($G(^PSRX(+RXIEN,1,RFL,"EPH")),U,5),1:$P($G(^PSRX(+RXIEN,"EPH")),U,5))
  ;
- ; Don't hold Rx where the previous fill was not ebillable
- I LSTFIL>0,$$STATUS^BPSOSRX(RXIEN,LSTFIL-1)="" Q DSHOLD
- ; Don't hold when the Rx has SC/EI flagged
- I $P($G(^PSRX(RXIEN,"ICD",1,0)),U,2,10)[1 Q DSHOLD
- ; Don't hold rx if drug is non-billable
- I '$$BILLABLE^IBNCPDP(DRG,ELIG) Q DSHOLD ; IA# 6243
- ; Don't hold if no insurance
- I 'IBSTAT!(IBSTAT=-1) Q DSHOLD
+ N COMM,DA,DAYSSUP,DIE,DR,DSHDT,DSHOLD
+ N PREVRX,PSARR,PSINSUR,PSXCOMMENT,RFL,RXIEN,SDT,SFN,SHDT
+ ;
+ S DSHOLD=1
+ S RXIEN=$$GET1^DIQ(52.5,REC,.01,"I")
+ S RFL=$$GET1^DIQ(52.5,REC,9,"I")
+ I RFL="" S RFL=$$LSTRFL^PSOBPSU1(RXIEN)
+ ;
+ ; If the Rx/Fill is not e-billable, then Quit out.
+ ;
+ I '$$EBILLABLE^PSOSULB2(RXIEN,RFL) Q DSHOLD
+ ;
+ ; If the Bypass 3/4 Day Supply flag is set to "YES", then Quit with
+ ; 1 after adding a comment to the Activity Log.
+ ;
+ I $$FLAG^PSOBPSU4(RXIEN,RFL)="YES" D  Q DSHOLD  ; ICR #7212
+ . S PSXCOMMENT="3/4 Day Supply logic bypassed during CMOP processing"
+ . D RXACT^PSOBPSU2(RXIEN,RFL,PSXCOMMENT,"S",DUZ)
+ . Q
  ;
  S DSHDT=$$DSHDT(RXIEN,RFL) ; 3/4 of days supply date
  S PREVRX=$P(DSHDT,U,2)
  S DSHDT=$P(DSHDT,U)
  I DSHDT>DT S DSHOLD=0 D
- . I DSHDT'=$P(PS0,U,14) D  ; Update Suspense Hold Date and Activity Log
- . . ; MRD;PSX*2.0*79 - If a previous Rx is used in the 3/4 days' supply
- . . ; calculation, capture that Rx in the activity log.
+ . I DSHDT'=$$GET1^DIQ(52.5,REC,10,"I") D  ; Update Suspense Hold Date and Activity Log
+ . . ; If a previous Rx is used in the 3/4 days' supply calculation,
+ . . ; capture that Rx in the activity log.
  . . S COMM="3/4 of Days Supply SUSPENSE HOLD until "_$$FMTE^XLFDT(DSHDT,"2D")
  . . I PREVRX'="" S COMM=COMM_" (prior Rx "_PREVRX_")"
  . . S COMM=COMM_"."
  . . S DAYSSUP=$$LFDS(RXIEN)
  . . D RXACT^PSOBPSU2(RXIEN,RFL,COMM,"S",+$G(DUZ)) ; Update Activity Log
  . . S DR="10///^S X=DSHDT",DIE="^PS(52.5,",DA=REC D ^DIE ; File Suspense Hold Date
- . . N DA,DIE,DR,PSOX,SFN,INDT,DEAD,RXREC,SUB,XOK,OLD
+ . . N DA,DIE,DR,PSOX,SFN,INDT,DEAD,SUB,XOK,OLD
  . . S DA=REC,DIE="^PS(52.5,",DR=".02///"_DSHDT D ^DIE
  . . S SFN=REC,DEAD=0,INDT=DSHDT D CHANGE^PSOSUCH1(RXIEN,RFL)
  . . Q

@@ -1,5 +1,5 @@
 PSON52 ;BIR/DSD - files new entries in prescription file ;Jul 24, 2017@15:24
- ;;7.0;OUTPATIENT PHARMACY;**1,16,23,27,32,46,71,111,124,117,131,139,157,143,219,148,239,201,268,260,225,303,358,251,387,379,390,391,313,408,473,504,505,517,457**;DEC 1997;Build 116
+ ;;7.0;OUTPATIENT PHARMACY;**1,16,23,27,32,46,71,111,124,117,131,139,157,143,219,148,239,201,268,260,225,303,358,251,387,379,390,391,313,408,473,504,505,517,457,617**;DEC 1997;Build 110
  ;External reference ^PS(55 supported by DBIA 2228
  ;External reference to PSOUL^PSSLOCK supported by DBIA 2789
  ;External reference to ^XUSEC supported by DBIA 10076
@@ -74,8 +74,13 @@ NFILE    I $G(OR0) D  Q:$G(PSONEW("DFLG"))
  .S D=0 F  S D=$O(SIG(D)) Q:'D  S ^PSRX(PSOX("IRXN"),"SIG1",D,0)=SIG(D),$P(^PSRX(PSOX("IRXN"),"SIG1",0),"^",3)=+$P(^PSRX(PSOX("IRXN"),"SIG1",0),"^",3)+1,$P(^(0),"^",4)=+$P(^(0),"^",4)+1 Q:'$O(SIG(D))
  .K SIG
  I $D(PSOINSFL) S ^PSRX(PSOX("IRXN"),"A",0)="^52.3DA^1^1",^PSRX(PSOX("IRXN"),"A",1,0)=DT_"^G^^0^Patient Instructions "_$S(PSOINSFL=1:"",1:"Not ")_"Sent By Provider."
- I $G(OR0),$P(OR0,"^",24) S ^PSRX(PSOX("IRXN"),"PKI")=$S($G(PSOSIGFL):"^1",1:1) D ACLOG
- I $P($G(PSOX("CS")),"^"),'+$P($G(^PSRX(PSOX("IRXN"),"PKI")),"^") S $P(^PSRX(PSOX("IRXN"),"PKI"),"^",2)=1
+ I $G(OR0) D
+ . I $P(OR0,"^",24) S $P(^PSRX(PSOX("IRXN"),"PKI"),"^",1,3)=$S($G(PSOSIGFL):"^1^",1:"1^^") D ACLOG Q
+ . N ORDIEN S ORDIEN=$O(^PS(52.41,"B",$P(OR0,"^"),0))
+ . I $P($G(PSOX("CS")),"^"),ORDIEN,$$ERXIEN^PSOERXUT(ORDIEN_"P"),$$GET1^DIQ(52.49,$$ERXIEN^PSOERXUT(ORDIEN_"P"),95.1,"I") D
+ . . S $P(^PSRX(PSOX("IRXN"),"PKI"),"^",1,3)="^^1"
+ I $P($G(PSOX("CS")),"^"),'+$P($G(^PSRX(PSOX("IRXN"),"PKI")),"^"),'+$P($G(^PSRX(PSOX("IRXN"),"PKI")),"^",3) D
+ . S $P(^PSRX(PSOX("IRXN"),"PKI"),"^",2)=1
  K PSOX1,PSOFINFL,HLDSIG,D,PSOINSFL,D
  D:$G(^TMP("PSODAI",$J,0))
  .S $P(^PSRX(PSOX("IRXN"),3),"^",6)=1

@@ -1,5 +1,5 @@
 IBCNEDE7 ;DAOU/DAC - eIV DATA EXTRACTS ;04-JUN-2002
- ;;2.0;INTEGRATED BILLING;**271,416,438,497,601,621**;21-MAR-94;Build 14
+ ;;2.0;INTEGRATED BILLING;**271,416,438,497,601,621,668**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q    ; no direct calls allowed
@@ -137,12 +137,13 @@ SETTQ(DATA1,DATA2,ORIG,OVERRIDE,DATA5) ;Set extract data in TQ file 365.1
  ;
  Q $G(IENARRAY(1))
  ;
-PYRACTV(PIEN) ; check if given payer is nationally active for eIV
- ; returns 1 if payer is nationally active, 0 otherwise
+PYRACTV(PIEN) ; check if given payer is nationally enabled for eIV
+ ; returns 1 if payer is nationally enabled, 0 otherwise
+ ;IB*668/TAZ - Changed field names to enabled and Payer Application from IIV to EIV
  N APPIEN,RES
  S RES=0
  I +$G(PIEN)'>0 G PYRACTVX
- S APPIEN=$$PYRAPP^IBCNEUT5("IIV",PIEN)
+ S APPIEN=$$PYRAPP^IBCNEUT5("EIV",PIEN)
  I +$G(APPIEN)'>0 G PYRACTVX
  I $P($G(^IBE(365.12,PIEN,1,APPIEN,0)),U,2)=1 S RES=1
 PYRACTVX ;

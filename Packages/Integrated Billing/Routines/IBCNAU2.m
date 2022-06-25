@@ -1,5 +1,5 @@
 IBCNAU2 ;ALB/KML/AWC - eIV USER EDIT REPORT (COMPILE) ;6-APRIL-2015
- ;;2.0;INTEGRATED BILLING;**528,664**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**528,664,668**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Queued Entry Point for Report.
@@ -141,11 +141,12 @@ PAYERS(ALLPLANS,ALLUSERS,LN,DATE) ; PROCESS EIV PAYERS - VITO
  . . N Z
  . . S DIA0=^DIA(365.12,DIAIEN,0)
  . . S PYRIEN=+$P(DIA0,U,1),PYRAPP=$P($P(DIA0,U,1),",",2)   ; Get the internal Payer # and the Application
- . . I $$GET1^DIQ(365.121,PYRAPP_","_PYRIEN_",",.01)'="IIV" Q  ; Only want "eIV" Application Modifications.
+ . . I $$GET1^DIQ(365.121,PYRAPP_","_PYRIEN_",",.01)'="EIV" Q  ; Only want "eIV" Application Modifications.
  . . S PYRNAME=$$GET1^DIQ(365.12,PYRIEN,.01)
  . . I 'ALLPYRS,'$D(^TMP("IBPYR",$J,PYRNAME,PYRIEN)) Q   ; Is this a selected payer?
- . . I '+$$PYRAPP^IBCNEUT5("IIV",PYRIEN) Q   ; Not an eIV Payer...Only want eIV Payers.
- . . S FIELD=$S($P(DIA0,U,3)="1,.03":"LOCAL ACTIVE",1:"") I FIELD="" Q   ; Not the Local Active field.
+ . . ;IB*668/TAZ - Changed Payer Application from IIV to EIV
+ . . I '+$$PYRAPP^IBCNEUT5("EIV",PYRIEN) Q   ; Not an eIV Payer...Only want eIV Payers.
+ . . S FIELD=$S($P(DIA0,U,3)="1,.03":"LOCALLY ENABLED",1:"") I FIELD="" Q   ; Not the Locally Enabled field.
  . . S Z("DATE")=$P(DIA0,U,2),Z("FIELD")=FIELD,Z("USER")=$P(DIA0,U,4)
  . . S Z("OLDVAL")=$G(^DIA(365.12,DIAIEN,2)),Z("NEWVAL")=$G(^DIA(365.12,DIAIEN,3)),Z("PYRNAME")=PYRNAME
  . . I 'ALLUSERS,'$D(^TMP("IBUSER",$J,Z("USER"))) Q

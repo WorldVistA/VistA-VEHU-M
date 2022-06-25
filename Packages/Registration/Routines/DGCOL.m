@@ -1,5 +1,5 @@
-DGCOL ;ALB/MRL - COLLATERAL PATIENT ENTRY-EDIT ; 04 MAY 87
- ;;5.3;Registration;**2,23,32,993**;Aug 13, 1993;Build 92
+DGCOL ;ALB/MRL,ARF,RN - COLLATERAL PATIENT ENTRY-EDIT ; 04 MAY 87
+ ;;5.3;Registration;**2,23,32,993,1023,1027**;Aug 13, 1993;Build 70
 1 K DFN W !! S DGDIR=$S($D(DGDIR):DGDIR,1:1),DIC="^DPT(",DIC(0)="AEQML",DIC("DR")=".03;.09;.02;.3601;1901///^S X=""N"";391///^S X=""COLLATERAL"";.361///^S X=""COLLATERAL OF VET."";.323///^S X=""OTHER NON-VETERANS"";"
  S DLAYGO=2 D ^DIC I Y'>0 S DGDIR=0 K DLAYGO G Q
  S DFN=+Y,DGVET=$S('$D(^DPT(DFN,"VET")):0,^("VET")="Y":1,1:0) I '$P(Y,"^",3),DGVET,'DGDIR G Q
@@ -17,17 +17,42 @@ ASK W !!,"DO YOU WISH TO EDIT COLLATERAL INFORMATION" S %=2 D YN^DICN G Q:%=2!(%
 H W !!,"SHOULD COLLATERAL PATIENT ADDRESS DATA BE SAME AS SPONSOR'S" S %=2 D YN^DICN I %>0 S DGADED=(%-1) G ED
  G Q:%=-1 W !!,"Y - To stuff in sponsor's address data.",!,"N - To edit collateral address data",!,"^ - To QUIT." G H
 ED I DGADED S DR=".3601;.111;S:X']"""" Y=.114;.112;S:X']"""" Y=.114;.113:.115;.1112;.117;.131;",DIE="^DPT(",(DA,Y)=DFN D ^DIE G Q
- S DGADD=$S($D(^DPT(DFN,.11)):^(.11),1:""),DGADD=$P(DGAD1,"^",1,12)_"^"_$P(DGADD,"^",13,999),^DPT(DFN,.11)=DGADD,$P(^DPT(DFN,.13),"^",1)=$P(DGPHON,"^",2) W !!,"Sponsor address data entered..." G Q
+ ;S DGADD=$S($D(^DPT(DFN,.11)):^(.11),1:""),DGADD=$P(DGAD1,"^",1,12)_"^"_$P(DGADD,"^",13,999),^DPT(DFN,.11)=DGADD,$P(^DPT(DFN,.13),"^",1)=$P(DGPHON,"^",2) W !!,"Sponsor address data entered..." G Q
+  S DGADD=$S($D(^DPT(DFN,.11)):^(.11),1:""),DGADD=$P(DGAD1,"^",1,12)_"^^^^"_$$GET1^DIQ(2,DGCOLV,.121)_"^^"_$P(DGADD,"^",18),$P(DGADD,"^",7)=$$GET1^DIQ(2,DGCOLV,.117) D  W !!,"Sponsor address data entered..." G Q
+ .S DIE="^DPT(",DA=DFN,DR=".111///^S X=$P(DGADD,U);.112///^S X=$P(DGADD,U,2);.113///^S X=$P(DGADD,U,3);.114///^S X=$P(DGADD,U,4);.115///^S X=$P(DGADD,U,5);.116///^S X=$P(DGADD,U,6);.117///^S X=$P(DGADD,U,7)" D ^DIE
+ .S DIE="^DPT(",DA=DFN,DR=".1171///^S X=$P(DGADD,U,8);.1172///^S X=$P(DGADD,U,9);.1173///^S X=$P(DGADD,U,10);.118///^S X=$P(DGADD,U,13);.119///^S X=$P(DGADD,U,14);.12///^S X=$P(DGADD,U,15);.121///^S X=$P(DGADD,U,16)" D ^DIE
+ .S DIE="^DPT(",DA=DFN,DR=";.1118///^S X=$P(DGADD,U,18);.131///^S X=$P(DGPHON,U,2)" D ^DIE
+ .Q
 AD F I=1:1:5,12,7 I $P(X,"^",I)]"" D
  .S D=$P(X,"^",I),C=C+1
  .S:(I=12)&($L(D)>5) D=$E(D,1,5)_"-"_$E(D,6,20)
  .S $P(AD(C),"^",P)=D S:I=5 $P(AD(C),"^",P)=$S($D(^DIC(5,+D,0)):$P(^(0),"^",1),1:"STATE UNKNOWN") I I=7 S $P(AD(C),"^",P)=$S($D(^DIC(5,+$P(X,"^",5),1,+D,0)):$P(^(0),"^",1),1:"UNKNOWN")
  Q
 ENRRO ;DG*5.3*993 - Ask for SELF-SUPPORTED REGISTRATION ONLY REASON
- N DGENRODT,DGENRRSN,DGENSRCE,DGNOW,DIR,DTOUT,DUOUT
- W !!,"SELF-REPORTED REGISTRATION ONLY REASON"
- S DGENRRSN="" F  D  Q:DGENRRSN'=""
- . K DIR S DIR(0)=$$SETSET^DGREG(2),DIR("A")="SELF-REPORTED REGISTRATION ONLY REASON" D ^DIR S:$D(Y(0)) DGENRRSN=$$GETSET^DGREG(Y(0))
+ N DGENRODT,DGENRRSN,DGENSRCE,DGNOW,DIR,DGCURR,X,Y,DGKEY,DGREQNAME,DGENSTAT,DGWSHTOEN,DGRESP,DTOUT,DUOUT
+ ;DG*5.3.1027 - Modifications to input logic of field .15 (REGISTRATION ONLY REASON) of the 27.11 (PATIENT ENROLLMENT) file
+ ;W !!,"SELF-REPORTED REGISTRATION ONLY REASON"  ;DG*5.3*1027 - not needed - replaced with code below
+ W !  ;DG*5.3*1027 ;spacing only
+ S DGENRRSN=""
+ S DGCURR=$$FINDCUR^DGENA(DFN)
+ ; DG*5.3*1027 If DO YOU WISH TO ENROLL field in PATIENT (#2) file is YES AND
+ ; no current enrollment record AND 
+ ; The patient is unknown to ES, prompt for REGISTRATION ONLY REASON
+ ; Supported DBIA #2701:   The supported DBIA is used to access MPI
+ ;                         APIs to retrieve ICN, determine if ICN
+ ;                         is local and if site is LST. 
+ S DGKEY=$$GETICN^MPIF001(DFN)
+ S DGREQNAME="VistAData"
+ S DGRESP=0
+ I $P(DGKEY,"^",1)'=-1 S DGRESP=$$EN^DGREGEEWS(DGKEY,DGREQNAME,.DGENSTAT,.DGWSHTOEN)
+ I 'DGCURR,+DGRESP=0 F  D  Q:DGENRRSN
+ . K DIR
+ . S DIR("A")="SELF-REPORTED REGISTRATION ONLY REASON: "
+ . S DIR(0)="27.11,.15,AO"
+ . D ^DIR
+ . I $D(DTOUT)!$D(DUOUT) S Y=""
+ . S DGENRRSN=+Y
+ . I 'DGENRRSN W !,"This is a required field.",!  ;end DG*5.3*1027 changes
  I DGENRRSN S DGNOW=$$NOW^XLFDT(),DGENRODT=DGNOW,DGENSRCE=1 D REGONLY^DGEN(DFN)
  Q
  ;DG*5.3*993 End of mods

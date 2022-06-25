@@ -1,5 +1,8 @@
-SDEC09 ;ALB/SAT - VISTA SCHEDULING RPCS ;MAR 15, 2017
- ;;5.3;Scheduling;**627,642,658,679**;Aug 13, 1993;Build 15
+SDEC09 ;ALB/SAT/LAB - VISTA SCHEDULING RPCS ;MAR 15, 2017
+ ;;5.3;Scheduling;**627,642,658,679,801**;Aug 13, 1993;Build 13
+ ;;Per VHA Directive 6402, this routine should not be modified
+ ;
+ ; Reference to ^DPT in ICR #10035
  ;
  ;ajf ; adding PCP and MHP to return data
  Q
@@ -99,10 +102,13 @@ GETREGA(SDECRET,DFN) ;return basic reg info/demographics for given patient
  ;                    4. PRFLNAME - PRF Local Flag name
  ;                    5. PRFLSTAT - PRF Local Flag status  0=INACTIVE 1=ACTIVE
  ;   72. PRIGRP   - Patient Enrollment Priority Group
+ ;   73. PCP
+ ;   74. MHP
+ ;   75. PREFGEN  - Patient Self Identified Gender
  ;
  ;For patient with ien DFN
  ;K ^TMP("SDEC",$J)
- N SDDEMO,SDECI,SDECNOD,SDECNAM,SDECTMP,SDSENS,Y
+ N SDDEMO,SDECI,SDECNOD,SDECNAM,SDECTMP,SDSENS,Y,PREFGEN
  N PRACE,PRACEN,PETH,PETHN,PCOUNTRY,SVCCONN,SVCCONNP,SDPCP,SDMHP
  S SDECRET="^TMP(""SDEC"","_$J_")"
  K @SDECRET
@@ -127,13 +133,14 @@ GETREGA(SDECRET,DFN) ;return basic reg info/demographics for given patient
  S SDECTMP=SDECTMP_"^T00030K2STREET^T00030K2STREET2^T00030K2STREET3^T00030K2CITY^T00030K2STATE^T00030K2ZIP"   ;64
  S SDECTMP=SDECTMP_"^T00500PF_FFF^T00500PF_VCD^T00500PFNATIONAL^T00500PFLOCAL^T00030SUBGRP^T00030CAT8G^T01000SIMILAR"   ;71
  ;ajf ; adding PCP and MHP
- S SDECTMP=SDECTMP_"^T00030PRIGRP^T00030PCP^T00030MHP"
+ S SDECTMP=SDECTMP_"^T00030PRIGRP^T00030PCP^T00030MHP^T00030PREFGEN"
  ;alb/sat 658 end additions
  S ^TMP("SDEC",$J,0)=SDECTMP_$C(30)
  ;
  S SDECY="ERROR"
  I '+DFN S ^TMP("SDEC",$J,1)=$C(31) Q
  I '$D(^DPT(+DFN,0)) S ^TMP("SDEC",$J,1)=$C(31) Q
+ S PREFGEN=$$GET1^DIQ(2,DFN_",",.024,"I")
  S SDECY=""
  S $P(SDECY,U)=DFN
  S $P(SDECY,U,23)=""
@@ -211,6 +218,7 @@ GETREGA(SDECRET,DFN) ;return basic reg info/demographics for given patient
  S $P(SDECY,"^",73)=$P(SDPCP,"^",2)
  S SDMHP=$$START^SCMCMHTC(DFN) ;Return Mental Health Provider
  S $P(SDECY,"^",74)=$P(SDMHP,"^",2)
+ S $P(SDECY,"^",75)=$G(PREFGEN)
  ;
  ; alb/sat 658 end additions
  S SDECI=SDECI+1 S ^TMP("SDEC",$J,SDECI)=SDECY_$C(30,31)

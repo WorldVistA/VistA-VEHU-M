@@ -1,5 +1,5 @@
 RCDPEAD2 ;AITC/CJE - AUTO-DECREASE REPORT ;Nov 23, 2014@12:48:50
- ;;4.5;Accounts Receivable;**326,345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**326,345,349**;Mar 20, 1995;Build 44
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -41,35 +41,29 @@ CLAIM(EOBIEN) ; Gets the claim number from AR
 ACTCARC(CODE,RCZERO,WHICH) ; EP from RCDPEAD - Is this CARC an active code for auto-decrease
  ; PRCA*4.5*345 - Added WHICH
  ; Input:   CODE    - CARC code being checked
- ;          RCZERO  - O = Claim line with payment, 1 = Claim line with no payment
- ;          WHICH   - 1 Medical Claim CARCs, 2 - RX Claim CARCs
+ ;          RCZERO  - 0 = Claim line with payment, 1 = Claim line with no payment
+ ;          WHICH   - 1 Medical Claim CARCs, 2 - RX Claim CARCs, 3 TRICARE Claim CARCS
  ; Returns: '0^NOT ACTIVE' if not active
  ;          '1^{amount}' if active and the second piece is the decrease amount
- N AIEN,FIELD,XX
+ N ACTIVE,AIEN,FIELD,XX
  I $G(CODE)="" Q "0^NOT ACTIVE"
  S AIEN=$O(^RCY(344.62,"B",CODE,""))
  I AIEN="" Q "0^NOT ACTIVE"
- ; BEGIN PRCA*4.5*345
  ;
- ; Check settings for Medical Claims - No pay line CARCs have separate on/off switch
- I WHICH=1 D  Q XX
- . S FIELD=$S(RCZERO:.08,1:.02)
- . S XX=$$GET1^DIQ(344.62,AIEN,FIELD,"I")   ; Quit if auto-decrease is off
- . S FIELD=$S(RCZERO:.12,1:.06)             ; No pay line CARCs have different maximum
- . ;
- . ; Active code returns maximum allowed decrease amount
- . I XX=1 S XX="1^"_$$GET1^DIQ(344.62,AIEN,FIELD)
- . E  S XX="0^NOT ACTIVE"
+ ; PRCA*4.5*349 - Parameterize for Medical, Rx and TRICARE
+ I WHICH=1 S FIELD=$S(RCZERO:.08,1:.02)
+ E  I WHICH=2 S FIELD=2.01
+ E  S FIELD=$S(RCZERO:3.07,1:3.01)
+ S ACTIVE=$$GET1^DIQ(344.62,AIEN,FIELD,"I")   ; Quit if auto-decrease is off
  ;
- ; Check settings for Rx Claims - No pay line CARCs have separate on/off switch
- S FIELD=$S(RCZERO:2.07,1:2.01)
- S XX=$$GET1^DIQ(344.62,AIEN,FIELD,"I")     ; Quit if auto-decrease is off
- S FIELD=$S(RCZERO:2.11,1:2.05)             ; No pay line CARCs have different maximum
+ I 'ACTIVE Q "0^NOT ACTIVE"
  ;
- ; Active code returns maximum allowed decrease amount
- I XX=1 Q "1^"_$$GET1^DIQ(344.62,AIEN,FIELD)
- ; END PRCA*4.5*345
- Q "0^NOT ACTIVE"
+ I WHICH=1 S FIELD=$S(RCZERO:.12,1:.06)
+ E  I WHICH=2 S FIELD=2.05
+ E  S FIELD=$S(RCZERO:3.11,1:3.05)
+ ;
+ Q "1^"_$$GET1^DIQ(344.62,AIEN,FIELD)
+ ; END PRCA*4.5*349
  ;
 GETCARCS(RCEOB,RCCODES,FROMADP) ; EP from RCDPEAD - Extract the CARCs from an EOB at claim and line levels
  ; Input:   RCEOB   - Internal IEN for the explanation of benefits field (361.1)

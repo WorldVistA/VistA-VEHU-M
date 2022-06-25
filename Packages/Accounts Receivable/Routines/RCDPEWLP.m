@@ -1,5 +1,5 @@
-RCDPEWLP ;ALBANY/KML - EDI LOCKBOX ERA and EEOB WORKLIST procedures ;10 Oct 2018 11:49:24
- ;;4.5;Accounts Receivable;**298,303,304,319,332,345**;Mar 20, 1995;Build 34
+RCDPEWLP ;ALBANY/KML - EDI LOCKBOX ERA and EEOB WORKLIST procedures ; 6/10/19 12:31pm
+ ;;4.5;Accounts Receivable;**298,303,304,319,332,345,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -333,7 +333,8 @@ NOEDIT ; no edit allowed, ERA designated for auto-posting
  W ! D ^DIR W !
  Q
  ;
-VR(ERADA) ; handle auto-posted ERAs, Look at Receipt protocol for standard Worklist
+VR(ERADA) ; EP from RCDPEWL4, RCDPEAA3
+ ; handle auto-posted ERAs, Look at Receipt protocol for standard Worklist
  ; Input: ERADA - IEN from file 344.49 (and 344.4)
  N RCDA,RCZ,RCZ0,EEOBREC
  D SEL^RCDPEWL(.RCDA)  ; Select EEOB off scratchpad
@@ -341,7 +342,9 @@ VR(ERADA) ; handle auto-posted ERAs, Look at Receipt protocol for standard Workl
  Q:'RCZ
  S RCZ0=$G(^RCY(344.49,ERADA,1,RCZ,0))
  S EEOBREC=$P($G(^RCY(344.4,ERADA,1,+$P(RCZ0,U,9),4)),U,3)
- I EEOBREC']"" D NOVIEW Q 
+ I EEOBREC']"" D NOVIEW Q
+ I '$D(^XUSEC("RCDPEPP",DUZ)) D  Q          ; PRCA*4.5*349 - Added AM worklist preview
+ . D EN^VALM("RCDPE EOB RECEIPT PREVIEW AM")
  D EN^VALM("RCDPE AUTO EOB RECEIPT PREVIEW")
  Q
  ;

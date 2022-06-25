@@ -1,5 +1,5 @@
 PSBODO ;BIRMINGHAM/EFC-BCMA UNIT DOSE VIRTUAL DUE LIST FUNCTIONS ;03/06/16 3:06pm
- ;;3.0;BAR CODE MED ADMIN;**5,21,24,38,58,68,70,83,98**;Mar 2004;Build 2
+ ;;3.0;BAR CODE MED ADMIN;**5,21,24,38,58,68,70,83,98,106**;Mar 2004;Build 43
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference/IA
@@ -14,7 +14,7 @@ PSBODO ;BIRMINGHAM/EFC-BCMA UNIT DOSE VIRTUAL DUE LIST FUNCTIONS ;03/06/16 3:06p
  ;      adverse reactions/allergies)
  ;*70 - print clinic name at top of detail section if exists.
  ;*83 - add Removal times
- ;
+ ;*106- add Hazardous Handle & Dispose flags ;
 EN ;
  ;
  ; Description:
@@ -40,6 +40,7 @@ DISPORD ;
  D:$G(PSBONX)
  .W:$G(PSBCLORD)]"" "Clinic: "_PSBCLORD,!                         ;*70
  .W !,"Orderable Item: ",PSBOITX
+ .W !?17,$S(PSBHAZHN:"<<HAZ Handle>> ",1:""),$S(PSBHAZDS:"<<HAZ Dispose>>",1:"")    ;*106
  .I PSBONX["V" W !,"Infusion Rate:  ",PSBIFR
  .I PSBONX'["V" W !,"Dosage Ordered: ",PSBDOSE
  .W ?40,"Start:    ",PSBOSTX W:$G(^XTMP("PSB DEBUG",0)) "   ("_PSBONX_")"

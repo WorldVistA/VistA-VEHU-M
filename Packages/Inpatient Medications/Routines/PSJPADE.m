@@ -1,5 +1,5 @@
 PSJPADE ;BIR/MHA PADE SYSTEM SET UP ;6/10/15
- ;;5.0;INPATIENT MEDICATIONS;**317,337**;16 DEC 97;Build 9
+ ;;5.0;INPATIENT MEDICATIONS;**317,337,410**;16 DEC 97;Build 1
  ;Reference to ^DGPMDDCF supported by DBIA 1246
  ;Reference to ^DPT("CN" supported by DBIA 10035
  ;Reference to ^SC supported by DBIA 10040
@@ -225,7 +225,8 @@ CLARR ;
  .. S K=^(Z,0) I '$D(PDCL(K)) S PDCL(K)=""
  S I=0,L=""
  F  S I=$O(^PS(58.7,PSJCLPD,"DIV",PSJDIV,"WCN",I)) Q:'I  S J=^(I,0) D
- . S (Y,Z)=$P(J,"^") F  S Z=$O(^SC("B",Z)) Q:Z=""!($E(Z,1,$L(Y))'=Y)  D
+ . S Y=$P(J,"^"),Z=$E(Y,1,$L(Y)-1) F  S Z=$O(^SC("B",Z)) Q:Z=""  D
+ .. Q:($E(Z,1,$L(Y))'=Y)  ;p410
  .. S K=$O(^SC("B",Z,0)),L=$G(^SC(K,0)) Q:$P(L,"^",3)'="C"  Q:$P(L,"^",15)'=PSJDIV  D
  ... I '$D(PDCL(K)) S PDCL(K)=""
  Q

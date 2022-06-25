@@ -1,5 +1,5 @@
 YTQRRPT ;SLC/LLH - Report Builder ; 08/13/2018
- ;;5.01;MENTAL HEALTH;**130,141**;Dec 30, 1994;Build 85
+ ;;5.01;MENTAL HEALTH;**130,141,172**;Dec 30, 1994;Build 10
  ;
  ; External Reference    ICR#
  ; ------------------   -----
@@ -35,8 +35,8 @@ BLDRPT(RESULTS,ADMIN,MAXWIDTH) ;
  D LOADTLT(.RSTR,RPT)             ;load the report template
  I '$D(RSTR) D SETERROR^YTQRUTL(404,"Not Found: "_RPT) Q
  I $P(^YTT(601.71,+$P(^YTT(601.93,RPT,0),U,2),0),U)="AUDC" D VARYAUDC(.RSTR,ADMIN)
- I $G(MAXWIDTH)>1 D WRAPTLT(.RSTR,MAXWIDTH) ; wrap for progress notes
  D GETDATA                        ;insert the data from the answer vars
+ I $G(MAXWIDTH)>1 D WRAPTLT(.RSTR,MAXWIDTH) ; wrap for progress notes
  ;Loop back through completed array to replace "|" (line feeds) with a blank line with a space
  D FIXP(.RSTR,.RESULTS)
  Q

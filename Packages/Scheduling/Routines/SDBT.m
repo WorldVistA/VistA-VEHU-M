@@ -1,4 +1,4 @@
-SDBT ; GENERATED FROM 'SDB' INPUT TEMPLATE(#102), FILE 44;04/14/20
+SDBT ; GENERATED FROM 'SDB' INPUT TEMPLATE(#102), FILE 44;06/24/22
  D DE G BEGIN
 DE S DIE="^SC(",DIC=DIE,DP=44,DL=1,DIEL=0,DU="" K DG,DE,DB Q:$O(^SC(DA,""))=""
  I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,1) S:%]"" DE(1)=% S %=$P(%Z,U,2) S:%]"" DE(2)=% S %=$P(%Z,U,7) S:%]"" DE(17)=% S %=$P(%Z,U,8) S:%]"" DE(9)=% S %=$P(%Z,U,15) S:%]"" DE(15)=% S %=$P(%Z,U,17) S:%]"" DE(10)=% S %=$P(%Z,U,19) S:%]"" DE(4)=%

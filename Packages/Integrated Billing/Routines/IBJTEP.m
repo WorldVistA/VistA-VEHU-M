@@ -1,5 +1,5 @@
 IBJTEP ;ALB/TJB - TP ERA/835 INFORMATION SCREEN ;20 Dec 2018 14:47:23
- ;;2.0;INTEGRATED BILLING;**530,609,633,639**;21-MAR-94;Build 30
+ ;;2.0;INTEGRATED BILLING;**530,609,633,639,642**;21-MAR-94;Build 22
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; -- main entry point for IBJT ERA 835 INFORMATION
@@ -133,14 +133,15 @@ PUSH(VAR,VALUE) ;
  I U_VAR_U[(U_VALUE_U) Q VAR
  Q VAR_U_VALUE
  ;
+ ; IB*2.0*642 - 2020/02/05:DM removed to meet SAC line limit
  ; Get the code modifier description
-MODC(MCD) ;
- Q:$G(MCD)="" "No Modifier Code Description"
- N ZZIEN,ZZDEC
- S ZZIEN=$$FIND1^DIC(81.3,,"BX","26","","","")
- S ZZDEC=$$GET1^DIQ(81.3,ZZIEN_",",.02)
- Q:ZZDEC="" "No Modifier Code Description"
- Q ZZDEC
+ ;MODC(MCD) ;
+ ; Q:$G(MCD)="" "No Modifier Code Description"
+ ; N ZZIEN,ZZDEC
+ ; S ZZIEN=$$FIND1^DIC(81.3,,"BX","26","","","")
+ ; S ZZDEC=$$GET1^DIQ(81.3,ZZIEN_",",.02)
+ ; Q:ZZDEC="" "No Modifier Code Description"
+ ; Q ZZDEC
  ;
 SET(LINE,DATA) ; -- set arrays
  ; LINE = line number passed by reference
@@ -246,6 +247,8 @@ EOBDET(EPIEN,TYPE,EOBCT,IBEBERA,ERAIEN) ; Add EOB detail to List Manager Array
  . S RCDED=$$ADJU^IBJTEP1("DEDUCT",.IBCL,EE),RCOIN=$$ADJU^IBJTEP1("COINS",.IBCL,EE) ; Get Deductable and Co-Insurance amts.
  . S XLN=$J(RCPL,2,0)_" "_$$FMTE^XLFDT(IBCL(361.115,EE,.16,"I"),"2Z")_" "_$$CJ^XLFSTR(IBCL(361.115,EE,.1,"E"),5)_" "_$$CJ^XLFSTR(IBCL(361.115,EE,.04,"E"),8)_$$CJ^XLFSTR(RCMD,5)_" "_$$CJ^XLFSTR(IBCL(361.115,EE,.11,"E"),3)
  . D SET(.LINE,XLN_" "_$J(RCBAMT,9,2)_$J(RCDED,8,2)_$J(RCOIN,8,2)_$J(IBCL(361.115,EE,.13,"E"),9,2)_$J(IBCL(361.115,EE,.03,"E"),9,2))
+ . ; IB*2.0*642 - Add logic to display DRG/GRP Adjustment Weight
+ . ; N SPL S SPL=$$SUPL^IBCECSA7($P(EE,",",2),$P(EE,",")) I SPL]"" D SET(.LINE,SPL)
  . D SET(.LINE," ")
  . D SET(.LINE,"  Product/Service Description:"_IBCL(361.115,EE,.09,"E"))
  . D SET(.LINE,"  Payer Policy Reference:"_$G(IBCL(361.11512,EE,.01,"E")))
@@ -262,8 +265,11 @@ EOBDET(EPIEN,TYPE,EOBCT,IBEBERA,ERAIEN) ; Add EOB detail to List Manager Array
  ... I RCFLD>1 F II=2:1:RCFLD D SET(.LINE,"                      "_RCFLD(II))
  . ; Display RARC Codes for this Line Item
  . I $D(IBCL(361.1154))'=0 S QQ=EE,RCMD="" F  S QQ=$O(IBCL(361.1154,QQ)) Q:$E(QQ,1,$L(EE))'=EE  D
+ .. K RCERR,RCRDC,RCFLD
  .. S RMIEN=$$FIND1^DIC(346,"","BX",IBCL(361.1154,QQ,.02,"E"),"","","RCERR")
- .. I RMIEN'="" K RCERR,RCRDC,RCFLD S RCXY=$$GET1^DIQ(346,RMIEN_",",4,"","RCRDC","RCERR") D DLN^IBJTEP1("RCRDC","RCFLD",57,68)
+ .. ; avoid "undefined" if RMIEN could not be found *642
+ .. I 'RMIEN S RCFLD=1,RCFLD(1)="*["_IBCL(361.1154,QQ,.02,"E")_"] code is not on file."
+ .. I RMIEN S RCXY=$$GET1^DIQ(346,RMIEN_",",4,"","RCRDC","RCERR") D DLN^IBJTEP1("RCRDC","RCFLD",57,68)
  .. D SET(.LINE,"  --- RARC: "_IBCL(361.1154,QQ,.02,"E")_" - "_RCFLD(1))
  .. I RCFLD>1 F II=2:1:RCFLD D SET(.LINE,"          "_RCFLD(II))
  . D SET(.LINE," ")

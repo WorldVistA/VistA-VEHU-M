@@ -1,5 +1,5 @@
 RCDPESR3 ;ALB/TMK/PJH - Server auto-update utilities - EDI Lockbox ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,214,208,255,269,283,298,321,345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**173,214,208,255,269,283,298,321,345,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -19,7 +19,7 @@ EFTIN(RCTXN,RCD,XMZ,RCGBL,RCEFLG) ; Adds a new EFT record to AR file 344.3
  . I +XMRG=99,$P(XMRG,U,2)="$" S RCLAST=1 Q
  . S:XMRG'="" CT=CT+1,@RCGBL@(2,"D",CT)=XMRG
  ;
- ; PRCA*4.5*345 - Removed killing of RCGBL to ensure raw data gets sent in error message
+ ; PRCA*4.5*349 - Removed killing of RCGBL to ensure raw data gets sent in error message
  I 'RCLAST,'$G(RCERR) S RCERR=2    ; No $ as last character of msg
  ;
  I $G(RCERR)>0 D  G EFTQ

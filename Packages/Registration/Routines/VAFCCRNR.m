@@ -1,5 +1,5 @@
-VAFCCRNR ;BIR/JFW-VAFC EHRM MIGRATED FACILITIES FILE (#391.919) Utilities; ; 7/22/19 2:39pm
- ;;5.3;Registration;**981**;Aug 13, 1993;Build 1
+VAFCCRNR ;BIR/JFW-VAFC EHRM MIGRATED FACILITIES FILE (#391.919) Utilities ;4/26/21  15:51
+ ;;5.3;Registration;**981,1050**;Aug 13, 1993;Build 2
  ;
  ;Story 961754 (jfw) - Support processes where there is a need to know
  ;                     which facilities have migrated to CERNER.
@@ -51,3 +51,15 @@ OFFCRNR(VAFCSIEN) ;Set CERNER ENABLED? field to NO for Site
  S VAFCFDA(391.919,VAFCSIEN_",",.02)=0
  D FILE^DIE("K","VAFCFDA","VAFCEMSG")
  Q $S('$D(VAFCEMSG):1,1:$G(VAFCEMSG("DIERR",1))_"^"_$G(VAFCEMSG("DIERR",1,"TEXT",1)))
+ ;
+CRNRSITE(VAFCSTNUM) ;is site cerner enabled ;**1050, VAMPI-10038 (dri)
+ ;Input:
+ ;  VAFCSTNUM - station number to check
+ ;
+ ;Output;
+ ;  0 - not cerner enabled
+ ;  1 - cerner enabled
+ ;
+ I $G(VAFCSTNUM)'="",$O(^DGCN(391.919,"ACRNR",VAFCSTNUM,0)) Q 1
+ Q 0
+ ;

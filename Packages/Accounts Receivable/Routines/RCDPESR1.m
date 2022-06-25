@@ -1,5 +1,5 @@
 RCDPESR1 ;ALB/TMP - Server interface to AR from Austin ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,214,208,202,271,298,321,345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**173,214,208,202,271,298,321,345,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ;Reference to $$RXBIL^IBNCPDPU supported by DBIA 4435
@@ -65,8 +65,7 @@ OUTMSG(RCERR,RCXMZ) ; Build message to send to Outlook address
  . D OUTERA($NA(^TMP("RCERR",$J,"MSG")),.CT,"RCXM")
  ;
  S XMDUZ="",XMSUBJ="EDI LBOX-STA# "_$P($$SITE^VASITE,"^",3)_"-TRANSMISSION ERROR"
- ;S XMTO("vha835payerinquiry@domain")=""
- S XMTO("Matthew.Spoon2@domain")=""
+ S XMTO("vha835payerinquiry@domain")=""
  D
  . N DUZ S DUZ=.5,DUZ(0)="@"
  . D SENDMSG^XMXAPI(.5,XMSUBJ,XMBODY,.XMTO,,.XMZ)
@@ -76,7 +75,7 @@ OUTERA(RAW,CT,RCMTXT) ; Format ERA/EEOB for Outlook message
  ; RAW - Points to raw data from the message
  ; CT - (Passed by Reference) Current message text line count
  ; RCMTXT - Pointer to message text array
- N I,J,LN,RCDAT,RCREF,OUTXFRM,X,Y,Z
+ N I,J,LN,RC,RCDAT,RCREF,OUTXFRM,X,Y,Z
  Q:RCMTXT=""!(RAW="")
  S J="" F  S J=$O(@RAW@(J)) Q:J=""  I +$G(@RAW@(J))=835 D  Q
  . S LN=$G(@RAW@(J))
@@ -243,15 +242,14 @@ TAXERR(RCTYPE,RCINS,RCTID,RCCHG) ; Send a bulletin for a bad tax id
 BILL(X,RCDT,RCIB) ; Returns ien of bill in X or -1 if not valid
  ; RCDT = the Statement from date (used for Rx bills)
  ; and, if passed by reference, RCIB = 1 if an insurance bill
- N DIC,Y
+ N ARRAY,DIC,Y,Z
  S RCIB=0
- S X=$TR(X," "),X=$TR(X,"O","0") ; Remove spaces, change ohs to zeroes
- ; Following line removed to allow matching if payer sends 8-11 characters in the ECME - PRCA*4.5*321
+ S X=$TR(X," "),(X,Z)=$TR(X,"O","0") ; Remove spaces, change ohs to zeroes
  I X'["-",$E(X,1,3)?3N,+$E(X,1,3),$L(X)>7,$L(X)<12 S X=$E(X,1,3)_"-"_$E(X,4,$L(X))
  S DIC="^PRCA(430,",DIC(0)="MZ" D ^DIC
  ; Checks if the ECME# is valid
- I Y<0,$$VALECME^BPSUTIL2(X) D
- . S ARRAY("ECME")=X,ARRAY("FILLDT")=$G(RCDT)
+ I Y<0,$$VALECME^BPSUTIL2(Z) D
+ . S ARRAY("ECME")=Z,ARRAY("FILLDT")=$G(RCDT)
  . S Y=$$RXBIL^IBNCPDPU(.ARRAY)     ; DBIA 4435
  . I Y>0 S Y(0)=$G(^PRCA(430,+Y,0))
  I Y>0 S RCIB=($P($G(^RCD(340,+$P(Y(0),U,9),0)),U)["DIC(36,")

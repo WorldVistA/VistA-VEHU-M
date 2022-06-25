@@ -1,5 +1,5 @@
 PRCASER1 ;WASH-ISC@ALTOONA,PA/RGY - Accept transaction from billing engine ;9/8/93  2:21 PM
-V ;;4.5;Accounts Receivable;**48,104,165,233,301,307,337,353,364**;Mar 20, 1995;Build 9
+V ;;4.5;Accounts Receivable;**48,104,165,233,301,307,337,353,364,377**;Mar 20, 1995;Build 45
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;PRCA*4.5*337 Added a bill lock to insure that decreases are stacked
@@ -44,7 +44,8 @@ V ;;4.5;Accounts Receivable;**48,104,165,233,301,307,337,353,364**;Mar 20, 1995;
 Q S Y=$S($G(Y)<0:Y,1:1) Q
  ;
 DEC(PRCABN,AMT,APR,REA,BDT,PRCAEN) ;Auto decrease from service Bill#,Tran amt,person,reason,Tran date
- NEW BAL,DA,DIC,DIE,DR,ERR,PRCA,PRCAA2,PRCAMT,PRCASV,X,PRCAAMT,PRCATRAN S Y=1
+ N BAL,DA,DIC,DIE,DR,ERR,PRCA,PRCAA2,PRCAMT,PRCASV,X,PRCAAMT,PRCATRAN,RCRPIEN
+ S Y=1
  L +^PRCA(430,PRCABN,"PRCASER1"):$S(DILOCKTM>30:DILOCKTM,1:30) I '$T S Y="-1^PRCA004^AR Package 'busy' while trying to add transaction." Q
  S PRCAEN="",BAL=+$G(^PRCA(430,PRCABN,7)) I 'BAL S Y="-1^Bill balance less than decrease" G Q1
  I $P(^PRCA(430,PRCABN,0),U,8)'=$O(^PRCA(430.3,"AC",102,"")),$P(^PRCA(430,PRCABN,0),U,8)'=$O(^PRCA(430.3,"AC",112,"")),$P(^PRCA(430,PRCABN,0),U,8)'=$O(^PRCA(430.3,"AC",240,"")) S Y="-1^Invalid status for posting" G Q1   ;PRCA*4.5*353
@@ -58,6 +59,9 @@ DEC(PRCABN,AMT,APR,REA,BDT,PRCAEN) ;Auto decrease from service Bill#,Tran amt,pe
  I "AutoAUTO"'[$E(REA,1,4) S REA="Auto Dec.: "_REA
  S DA=PRCAEN,DIE="^PRCA(433,",DR="41///"_REA D ^DIE
  S AMT=AMT-+$P($G(^PRCA(433,PRCAEN,1)),U,5)
+ ;PRCA*4.5*377 - update Repayment Plan with as a decrease adjustment
+ D UPDBAL^RCRPU1(PRCABN,PRCAEN)
+ ; ;End PRCE*4.5*377
  I PRCAEN,$D(^PRCA(430,"TCSP",PRCABN)) D DECADJ^RCTCSPU(PRCABN,PRCAEN) ;prca*4.5*301 add cs decrease adjustment 5B
  S PRCAAMT=$G(^PRCA(430,PRCABN,7)) I $P(PRCAAMT,U)=0,($P(PRCAAMT,U,2)+$P(PRCAAMT,"^",3)+$P(PRCAAMT,"^",4)+$P(PRCAAMT,"^",5)'=0) D   ;PRCA*4.5*353
  . S PRCATRAN=$$EXEMPT^RCBEUTR2(PRCABN,$P(PRCAAMT,"^",2)_"^"_$P(PRCAAMT,"^",3)_"^^"_$P(PRCAAMT,"^",4)_"^"_$P(PRCAAMT,"^",5),"PRINCIPAL BAL EQUALS ZERO",0,1)

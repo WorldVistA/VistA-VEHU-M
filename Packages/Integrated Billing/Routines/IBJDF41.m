@@ -1,5 +1,5 @@
 IBJDF41 ;ALB/RB - FIRST PARTY FOLLOW-UP REPORT (COMPILE) ;15-APR-00
- ;;2.0;INTEGRATED BILLING;**123,159,204,356,451,473,568,618,651**;21-MAR-94;Build 9
+ ;;2.0;INTEGRATED BILLING;**123,159,204,356,451,473,568,618,651,694**;21-MAR-94;Build 11
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 ST ; - Tasked entry point.
@@ -174,12 +174,15 @@ PATC ; - Set patient eligibilities.
 PATQ Q PAT
  ;
 RP(X) ; - Check if claim/receivable is under a repayment plan.
- ;    Input: X=Bill pointer to file #399/#430
+ ;    Input: X=Bill pointer to file #430
  ;   Output: 0-Not on repay plan, 1-On repay plan, 2-On defaulted plan
- N Z
- S Z=$$REPDATA^RCBECHGA(X,1) I Z="" Q 0
- I '$P(Z,"^",7) Q ("1^"_$P(Z,"^"))
- Q ("2^"_$P(Z,"^"))
+ N RPIEN,Z
+ ; IB*2.0*694
+ S RPIEN=$P($G(^PRCA(430,X,4)),U,5)  ; file 340.5 ien
+ S Z=$$REPDATA(RPIEN,1) I Z="" Q 0
+ I $P(Z,U,9)=5 Q ("2^"_$P(Z,U))  ; IB*2.0*694
+ ;
+ Q ("1^"_$P(Z,U))  ; IB*2.0*694
  ;
 MTRX(X) ; - Return patient's means test and/or RX copay status and most recent
  ;   test dates for both.
@@ -336,3 +339,41 @@ ABBR(SUSP) ;Return abbreviation for suspended bill types IB*2*568/DRF
  I SUSP=11 Q "Disput"
  I SUSP=12 Q "None"
  Q ""
+ ;
+REPDATA(RPIEN,DAYS) ; - Return Repayment Plan information IB*2.0*694
+ ;
+ ; RPIEN - file 340.5 ien
+ ; DAYS  - Number of days over the due date for a payment not 
+ ;         received to be considered defaulted.
+ ;
+ ; Output: String with the following "^" (up-arrow) pieces:
+ ;              1. Repayment Plan Start Date (FM Format)
+ ;              2. Balance (Repayment Plan)
+ ;              3. Monthly Payment Amount
+ ;              4. Due Date (day of the month)
+ ;              5. Last Payment Date
+ ;              6. Last Payment Amount
+ ;              7. Number of Payments Due
+ ;              8. Number of Payments Defaulted
+ ;              9. Plan status (internal)
+ ;         or NULL if either no RPP data was found or plan was paid in full
+ ;
+ N DATA,IENS,LPAMT,LPDT,PDEF,PDUE,RES,STATUS,TMPDT,Z
+ S RES="",IENS=RPIEN_","
+ D GETS^DIQ(340.5,IENS,".04;.06;.07;.11;2*;3*","I","DATA") I '$D(DATA) Q RES
+ S RES=$G(DATA(340.5,IENS,.04,"I"))          ; start date - 340.5/.04
+ S $P(RES,U,2)=$G(DATA(340.5,IENS,.11,"I"))  ; amount owed - 340.5/.11
+ S $P(RES,U,3)=$G(DATA(340.5,IENS,.06,"I"))  ; monthly amount - 340.5/.06
+ S STATUS=$G(DATA(340.5,IENS,.07,"I"))       ; plan status - 340.5/.07
+ S $P(RES,U,4)=28                            ; due date
+ S (LPAMT,LPDT)=0,Z="" F  S Z=$O(DATA(340.53,Z)) Q:Z=""  S TMPDT=+$G(DATA(340.53,Z,.01,"I")) S:TMPDT>LPDT LPDT=TMPDT,LPAMT=+$G(DATA(340.53,Z,1,"I"))
+ I LPDT>0 S $P(RES,U,5)=LPDT,$P(RES,U,6)=LPAMT  ; last payment date & amount
+ S (PDEF,PDUE)=0,Z="" F  S Z=$O(DATA(340.52,Z)) Q:Z=""  D
+ .I +$G(DATA(340.52,Z,1,"I"))=1 Q  ; payment was made
+ .S PDUE=PDUE+1  ; inc. # of payments due
+ .I +$G(DATA(340.52,Z,2,"I"))=1 Q  ; payment forborne
+ .I $$FMDIFF^XLFDT(DT,+$G(DATA(340.52,Z,.01,"I")))'<DAYS S PDEF=PDEF+1  ; inc. # of defaulted payments
+ .Q
+ I PDUE=0 Q ""  ; plan was paid in full
+ S $P(RES,U,7)=PDUE,$P(RES,U,8)=PDEF,$P(RES,U,9)=STATUS  ; #of payments due, # of defaulted payments, & plan status
+ Q RES

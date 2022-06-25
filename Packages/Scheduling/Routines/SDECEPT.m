@@ -1,7 +1,7 @@
-SDECEPT ;SPFO/RT,WTC SCHEDULING ENHANCEMENTS VSE EP API ;Feb 12, 2020@15:22
- ;;5.3;Scheduling;**669,671,694**;Aug 13 1993;Build 61
+SDECEPT ;SPFO/RT,MGD SCHEDULING ENHANCEMENTS VSE EP API ;Aug 24, 2021@17:25
+ ;;5.3;Scheduling;**669,671,694,794**;Aug 13 1993;Build 2
  ;
- ;The API provides Extended Profile Appt info the VS Gui.
+ ;The API provides Extended Profile Appt info the VS GUI.
  ;INPUT - DFN required
  ;        APP appointment date/time required
  Q
@@ -26,10 +26,14 @@ INIT ;
  ...S HLAP0=$G(^SC(CLIEN,"S",ADT,1,HLAPIEN,0))
  Q
  ;
-GETDEM(RET,DFN,ADT) ;
+GETDEM(RET,DFN,ADT,SDAPPTIEN) ;
  ; REQUIRE DFN AND APPOINTMENT DATE TIME
  Q:'$G(DFN)
  Q:'$G(ADT)
+ S SDAPPTIEN=$G(SDAPPTIEN)
+ S SDRET=$$SDEXPST(.SDRET,DFN,ADT,SDAPPTIEN)
+ I +SDRET=-1 D  Q RET
+ . S RET="-1^The detail for the selected record is no longer available in VistA. Select the more recent record for Expanded Entry."
  ;
  S ADT=+ADT   ;strip off extra zeros on time  pwc SD*5.3*694
  D INIT
@@ -40,7 +44,7 @@ GETDEM(RET,DFN,ADT) ;
  S (ENROLC,STAT,OCODE)=""
  ;
  ;PATN=Patient Name - Patient File [0,1]
- ;RSSN=Raw Social Securty Number  - Patient File [0,9]
+ ;RSSN=Raw Social Security Number  - Patient File [0,9]
  ;SSN=Formatted Social Security Number
  ;STAT=Status Patient Appointment Multiple - CURRENT STATUS (2.98,100)
  ;LAB=Date/Time of Labs - PATIENT/APPOINTMENT MULTIPLE [0,3]
@@ -60,9 +64,9 @@ GETDEM(RET,DFN,ADT) ;
  ;OVB=Overbook
  ;PATEN0=Patient Enrollment Clinic - Patient File Enrollment Clinic Multiple [B]
  ;ENROLC=Enrolled in Clinic Yes/No
- ;ERCNUM=Enrolled Clinic Number 
- ;LPNUM=Loop Number 
- ; 
+ ;ERCNUM=Enrolled Clinic Number
+ ;LPNUM=Loop Number
+ ;
  ; -PATIENT FILE GLOBAL LOCATION 0
  I PAT0'="" D
  .S PATN=$P($G(PAT0),U,1)
@@ -125,6 +129,23 @@ GETDEM(RET,DFN,ADT) ;
  ;
  D EXIT
  Q
+ ;
+SDEXPST(SDRET,DFN,ADT,SDAPPTIEN) ;
+ N SDAPPT,SDRTN,SDAPPTST,SDNEXTIEN
+ S SDRTN="" ; Appt can be expanded
+ S SDAPPT="",ADT=+ADT
+ F  S SDAPPT=$O(^SDEC(409.84,"APTDT",DFN,ADT,SDAPPT)) Q:'SDAPPT  D  Q:SDRTN'=""
+ . Q:SDAPPT'=SDAPPTIEN
+ . S SDAPPTST=$P($G(^SDEC(409.84,SDAPPT,0)),U,17)
+ . S SDNEXTIEN=$O(^SDEC(409.84,"APTDT",DFN,ADT,SDAPPT))
+ . ; Current Appt is cancelled and there is another APPT
+ . I "^C^CA^PC^PCA^"[(U_SDAPPTST_U),SDNEXTIEN S SDRTN=-1 Q
+ . ; Current Appt is cancelled & no other Appt
+ . I "^C^CA^PC^PCA^"[(U_SDAPPTST_U),'SDNEXTIEN S SDRTN=0 Q
+ . ; Current Appt is NOT cancelled so there can't be other Appt for same Date/Time
+ . I "^C^CA^PC^PCA^"'[(U_SDAPPTST_U),'SDNEXTIEN S SDRTN=0 Q
+ S SDRET=SDRTN
+ Q SDRET
  ;
 GETEVT(RET,DFN,ADT) ;
  ; REQUIRE DFN AND APPOINTMENT DATE TIME
@@ -307,13 +328,13 @@ GETPTIN(RET,DFN,ADT) ;
  ;RSSN=Raw Social Security Number - Patient File [0,9]
  ;SSN=Formatted Social Security Number
  ;SEX=Male or Female - Patient File [0,2]
- ;MARSIEN=Marital Status IEN - Patient File [0,5] 
+ ;MARSIEN=Marital Status IEN - Patient File [0,5]
  ;MARS=Marital Status - Marital Status File (11) Field .01
  ;RELGPN=Religious Preference IEN - Patient File [0,8]
  ;RELGP=Religious Preference - file 13 field .01 (Name)
- ;PELIGN=Preimary Eligibility IEN - Patient File [.36,1]
- ;PELIG=Primary Eligibility - File 8 field .01 (name) 
- ;POSN=Period of Servic IEN
+ ;PELIGN=Primary Eligibility IEN - Patient File [.36,1]
+ ;PELIG=Primary Eligibility - File 8 field .01 (name)
+ ;POSN=Period of Service IEN
  ;POS=Period of Service - File 21 Field .01 (Name)
  ;SADDR1=Street Address 1 - Patient File [.11,1]
  ;SADDR2=Street Address 2 - Patient File [.11,2]

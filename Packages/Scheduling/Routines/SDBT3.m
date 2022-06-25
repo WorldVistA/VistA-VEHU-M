@@ -1,9 +1,9 @@
-SDBT3 ; ;04/14/20
+SDBT3 ; ;06/24/22
  D DE G BEGIN
 DE S DIE="^SC(",DIC=DIE,DP=44,DL=1,DIEL=0,DU="" K DG,DE,DB Q:$O(^SC(DA,""))=""
- I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,11) S:%]"" DE(6)=% S %=$P(%Z,U,18) S:%]"" DE(1)=%
+ I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,11) S:%]"" DE(6)=% S %=$P(%Z,U,18) S:%]"" DE(1)=% S %=$P(%Z,U,26) S:%]"" DE(10)=% S %=$P(%Z,U,27) S:%]"" DE(11)=%
  I $D(^("SDPROT")) S %Z=^("SDPROT") S %=$P(%Z,U,1) S:%]"" DE(2)=%
- I $D(^("SL")) S %Z=^("SL") S %=$P(%Z,U,1) S:%]"" DE(10)=% S %=$P(%Z,U,2) S:%]"" DE(12)=% S %=$P(%Z,U,5) S:%]"" DE(7)=% S %=$P(%Z,U,6) S:%]"" DE(14)=% S %=$P(%Z,U,7) S:%]"" DE(8)=%
+ I $D(^("SL")) S %Z=^("SL") S %=$P(%Z,U,1) S:%]"" DE(12)=% S %=$P(%Z,U,2) S:%]"" DE(14)=% S %=$P(%Z,U,5) S:%]"" DE(7)=% S %=$P(%Z,U,6) S:%]"" DE(16)=% S %=$P(%Z,U,7) S:%]"" DE(8)=%
  K %Z Q
  ;
 W W !?DL+DL-2,DLB_": "
@@ -122,27 +122,37 @@ M9 I D>0 S DC=DC_D I $D(^SC(DA,"SI",+D,0)) S DE(9)=$P(^(0),U,1)
 R9 D DE
  G A
  ;
-10 S DW="SL;1",DV="RNJ2,0X",DU="",DIFLD=1912,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
+10 S DW="0;26",DV="RS",DU="",DIFLD=20,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
+ S DU="1:YES;0:NO;"
+ S Y="NO"
+ G Y
+X10 Q
+11 S DW="0;27",DV="RS",DU="",DIFLD=21,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
+ S DU="1:YES;0:NO;"
+ S Y="NO"
+ G Y
+X11 Q
+12 S DW="SL;1",DV="RNJ2,0X",DU="",DIFLD=1912,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
  G RE
-X10 K:+X'=X!(X>240)!(X<10)!(X?.E1"."1N.N)!($S('(X#10):0,'(X#15):0,1:1)) X I $D(X) S SDLA=X I $D(^SC(DA,"SL")),+$P(^("SL"),U,6) S SDZ0=$P(^("SL"),U,6),SDZ1=60\SDZ0 I X#SDZ1 D LAPPT^SDUTL
+X12 K:+X'=X!(X>240)!(X<10)!(X?.E1"."1N.N)!($S('(X#10):0,'(X#15):0,1:1)) X I $D(X) S SDLA=X I $D(^SC(DA,"SL")),+$P(^("SL"),U,6) S SDZ0=$P(^("SL"),U,6),SDZ1=60\SDZ0 I X#SDZ1 D LAPPT^SDUTL
  Q
  ;
-11 D:$D(DG)>9 F^DIE17,DE S Y=U,DQ=11 D X11 D:$D(DIEFIRE)#2 FIREREC^DIE17 G A:$D(Y)[0,A:Y=U S X=Y,DIC(0)="F",DW=DQ G OUT^DIE17
-X11 I '$D(SDLA) S SDLA=X
+13 D:$D(DG)>9 F^DIE17,DE S Y=U,DQ=13 D X13 D:$D(DIEFIRE)#2 FIREREC^DIE17 G A:$D(Y)[0,A:Y=U S X=Y,DIC(0)="F",DW=DQ G OUT^DIE17
+X13 I '$D(SDLA) S SDLA=X
  Q
-12 S DW="SL;2",DV="S",DU="",DIFLD=1913,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
+14 S DW="SL;2",DV="S",DU="",DIFLD=1913,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
  S DU="V:YES, VARIABLE LENGTH;"
  G RE
-X12 Q
-13 D:$D(DG)>9 F^DIE17,DE S Y=U,DQ=13 D X13 D:$D(DIEFIRE)#2 FIREREC^DIE17 G A:$D(Y)[0,A:Y=U S X=Y,DIC(0)="F",DW=DQ G OUT^DIE17
-X13 S:+$O(^SC(DA,"ST",0))>0 Y="@99"
+X14 Q
+15 D:$D(DG)>9 F^DIE17,DE S Y=U,DQ=15 D X15 D:$D(DIEFIRE)#2 FIREREC^DIE17 G A:$D(Y)[0,A:Y=U S X=Y,DIC(0)="F",DW=DQ G OUT^DIE17
+X15 S:+$O(^SC(DA,"ST",0))>0 Y="@99"
  Q
-14 S DW="SL;6",DV="RSX",DU="",DIFLD=1917,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
+16 S DW="SL;6",DV="RSX",DU="",DIFLD=1917,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
  S DU="1:60-MIN ;2:30-MIN ;4:15-MIN ;3:20-MIN ;6:10-MIN ;"
  S Y="4"
  G Y
-X14 S ZSI=$S(X=1!(X=2)!(X=3)!(X=4)!(X=6):60/X,1:0),SDLA=$S('$D(^SC(DA,"SL")):0,1:+^("SL")) K:('SDLA)!('ZSI) SDLA,ZSI,X Q:'$D(X)  I SDLA#ZSI>0 X ^DD(44,1917,9.2) Q
+X16 S ZSI=$S(X=1!(X=2)!(X=3)!(X=4)!(X=6):60/X,1:0),SDLA=$S('$D(^SC(DA,"SL")):0,1:+^("SL")) K:('SDLA)!('ZSI) SDLA,ZSI,X Q:'$D(X)  I SDLA#ZSI>0 X ^DD(44,1917,9.2) Q
  Q
  ;
-15 S DQ=16 ;@99
-16 G 0^DIE17
+17 S DQ=18 ;@99
+18 G 0^DIE17

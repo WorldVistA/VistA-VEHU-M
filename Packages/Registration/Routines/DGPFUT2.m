@@ -1,5 +1,5 @@
 DGPFUT2 ;ALB/KCL - PRF UTILITIES CONTINUED ; 2/12/2020
- ;;5.3;Registration;**425,554,650,1005,1028**;Aug 13, 1993;Build 4
+ ;;5.3;Registration;**425,554,650,1005,1028,1054**;Aug 13, 1993;Build 6
  ;
  ; This routine contains generic calls for use throughout DGPF*.
  ;
@@ -219,11 +219,13 @@ BLDTFL(DGDFN,DGTFL) ;build array of Treating Facilities
  S DGI="" F  S DGI=$O(DGOUT(DGI)) Q:DGI=""  D
  . I $P(DGOUT(DGI),U,2)="PI",$P(DGOUT(DGI),U,3)="USVHA" D
  . . S DGSTI=$$IEN^XUAF4($P(DGOUT(DGI),U,4))
- . . Q:DGSTI=""
+ . . ;Q:DGSTI=""
+ . . Q:$$GET1^DIQ(4,DGSTI_",",13)="OTHER"!(+$$STA^XUAF4(DGSTI)=200)!(DGSTI=DGSTATI)
  . . S DGIEN=$O(^DGCN(391.91,"AINST",DGSTI,DGDFN,""))
  . . Q:DGIEN=""
  . . S DGDLT=+$P($G(^DGCN(391.91,DGIEN,0)),U,3)
- . . S:DGSTI'=DGSTATI DGTFL(DGSTI)=DGDLT
+ . . S DGTFL(DGSTI)=DGDLT ;DG*5.3*1054 only setting entries that are VistAs and PI/USHVA records
+ . .; S:DGSTI'=DGSTATI DGTFL(DGSTI)=DGDLT
  Q $S(+$O(DGTFL(0)):1,1:0)
  ;
  ;This subroutine converts the treating facility list returned by $$BLDTFL to

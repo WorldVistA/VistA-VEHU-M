@@ -1,5 +1,5 @@
-DGRP2 ;ALB/MRL,BRM - REGISTRATION SCREEN 2/CONTACT INFORMATION ;06 JUN 88@2300
- ;;5.3;Registration;**415,545,638,677,760,867**;Aug 13, 1993;Build 59
+DGRP2 ;ALB/MRL,BRM,ARF - REGISTRATION SCREEN 2/CONTACT INFORMATION ;06 JUN 88@2300
+ ;;5.3;Registration;**415,545,638,677,760,867,1014**;Aug 13, 1993;Build 42
  ;
  D NEWB
  S DGRPS=2 D H^DGRPU F I=0,.24,57,1010.15 S DGRP(I)=$S($D(^DPT(DFN,I)):^(I),1:"")
@@ -13,7 +13,8 @@ DGRP2 ;ALB/MRL,BRM - REGISTRATION SCREEN 2/CONTACT INFORMATION ;06 JUN 88@2300
  S X=$P(DGRP(57),"^",4),X=$S(X']"":DGRPU,X="X":"NOT APPLICABLE",X=1:"PARA,",X=2:"QUAD,",X=3:"PARA,NON",1:"QUAD,NON"),X=$S("QP"[$E(X):X_"TRAUMATIC",1:X) W !?9,"SCI: ",X
  W ?41,"Mother: ",$S($P(DGRP(.24),"^",2)]"":$E($P(DGRP(.24),"^",2),1,29),1:DGRPU)
  W !,?35,"Mom's Maiden: ",$S($P(DGRP(.24),"^",3)]"":$E($P(DGRP(.24),"^",3),1,29),1:DGRPU)
- W ! S Z=2 D WW^DGRPV W " Previous Care Date      Location of Previous Care",!?4,"------------------      -------------------------" S DGRPX=DGRP(1010.15) I $P(DGRPX,"^",5)'="Y" S X="NONE INDICATED" W !?4,X,?28,X
+ ;W ! S Z=2 D WW^DGRPV W " Previous Care Date      Location of Previous Care",!?4,"------------------      -------------------------" S DGRPX=DGRP(1010.15) I $P(DGRPX,"^",5)'="Y" S X="NONE INDICATED" W !?4,X,?28,X
+ W ! S Z=2 D WW^DGRPV W " Previous Care Date      Location of Previous Care" S DGRPX=DGRP(1010.15) I $P(DGRPX,"^",5)'="Y" S X="NONE INDICATED" W !?4,X,?28,X  ;DG*5.3*1014 ARF remove dashes
  E  F I=1:1:4 S I1=$P(DGRPX,"^",I) X "I I#2 S Y=I1 X:Y]"""" ^DD(""DD"") W !?4,$S(Y]"""":Y,1:DGRPU)" I '(I#2) W ?28,$S($D(^DIC(4,+I1,0)):$P(^(0),"^",1),1:DGRPU)
  W ! S Z=3 D WW^DGRPV W " Ethnicity: " D
  .I '$O(^DPT(DFN,.06,0)) W "UNANSWERED" Q

@@ -1,5 +1,5 @@
 RCDPEFA4 ;AITC/CJE - 1ST PARTY AUTO VS MANUAL DECREASE REPORT CONT.;Jun 06, 2014@19:11:19 ; 6/27/19 10:06am
- ;;4.5;Accounts Receivable;**345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**345,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 LMOUT(INPUT,RCVAUTD,IO) ; Compile and output report to List Manager

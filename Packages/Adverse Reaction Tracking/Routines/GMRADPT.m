@@ -1,5 +1,5 @@
-GMRADPT ;HIRMFO/RM,WAA - UTILITY TO GATHER PATIENT DATA ;Mar 20, 2019@12:38
- ;;4.0;Adverse Reaction Tracking;**2,10,46,52,53**;Mar 29, 1996;Build 306
+GMRADPT ; HIRMFO/RM,WAA - UTILITY TO GATHER PATIENT DATA ;May 11, 2021@12:07:58
+ ;;4.0;Adverse Reaction Tracking;**2,10,46,52,53,63**;Mar 29, 1996;Build 34
 EN1 ; ENTRY TO GATHER PATIENT A/AR DATA
  ;CONTROLLED BY SUPPORTED INTEGRATION AGREEMENT #10099
  ;*BD
@@ -42,7 +42,7 @@ EN2 ; ENTRY TO GATHER PATIENT A/AR DATA
  ;         0 if patient has no known Adverse Reaction
  ;      null if patient has not been asked about Adverse Reaction
  ; GMRAL(PTR) = A^B^C^D^E^F^G^H^I^J^K
- ;    where PTR = Either pointer to 120.8 for local reactions or 
+ ;    where PTR = Either pointer to 120.8 for local reactions or
  ;                'R' appended with pointer to ^XTMP("ORRDI","ART",DFN, for remote reactions
  ;          A = Pointer to Patient file.
  ;          B = Free text of causative agent.
@@ -83,11 +83,16 @@ EN2 ; ENTRY TO GATHER PATIENT A/AR DATA
  ;                  External format;Internal format
  ;              D = date/time of observation in the format:
  ;                  External format;Internal format
+ ; GMRAL(PTR,"H") = S^D
+ ;              S = a severity for this reaction in the format:
+ ;                  External format;Internal format
+ ;              D = date/time of observation in the format:
+ ;                  External format;Internal format
  ; GMRAL(PTR,"ERROR") = D
  ;    where D = date/time entry marked entered in error in the format:
  ;              External format;Internal format
  ;              Note: This will only exist for local reactions
- ;              
+ ;
  ; GMRAL(PTR,"SITE") = SITE
  ;    where SITE = reporting institution in the format:
  ;                 Institution File (#4) Pointer^Station Name^Station Number
@@ -209,6 +214,11 @@ PASS(GMRAREC,GMRAL) ;RETRIEVE LOCAL DATA
  .I $P($G(^GMR(120.8,GMRAREC,"ER")),U)=1 D
  ..S %=$P($G(^GMR(120.8,GMRAREC,"ER")),U,2)
  ..S GMRAL(GMRAREC,"ERROR")=$$EXTERNAL^DILFD(120.8,23,,%)_";"_%
+ I $P(GMRANODE,U,6)="h" D
+ .N SEVR,SEVRDT
+ .S SEVR=$P(GMRANODE,U,8)
+ .S SEVRDT=$P(GMRANODE,U,9)
+ .S GMRAL(GMRAREC,"H")=$$EXTERNAL^DILFD(120.8,8,,SEVR)_";"_SEVR_U_$$EXTERNAL^DILFD(120.8,9,,SEVRDT)_";"_SEVRDT
  I $O(^GMR(120.8,GMRAREC,10,0)) D
  .S GMRAX=0,GMRAY=1 F  S GMRAX=$O(^GMR(120.8,GMRAREC,10,GMRAX)) Q:GMRAX<1  D
  ..S GMRAZ=$G(^GMR(120.8,GMRAREC,10,GMRAX,0))

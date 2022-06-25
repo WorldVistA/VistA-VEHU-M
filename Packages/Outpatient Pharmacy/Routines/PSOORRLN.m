@@ -1,5 +1,5 @@
-PSOORRLN ;BHAM ISC/SJA - returns patient's outpatient meds-new sort ;10/12/06
- ;;7.0;OUTPATIENT PHARMACY;**225,331,381**;DEC 1997;Build 4
+PSOORRLN ;BHAM ISC/SJA - returns patient's outpatient meds-new sort ;Sep 08, 2020@11:48:22
+ ;;7.0;OUTPATIENT PHARMACY;**225,331,381,622**;DEC 1997;Build 44
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^VA(200 supported by DBIA 10060
@@ -21,7 +21,7 @@ OCL ;entry point to return condensed list
  .S ST0=$S(STA<12&($P(RX2,"^",6)<DT):11,1:STA)
  .S STT=$P("ERROR^ACTIVE;1:1^NON-VERIFIED;2:1^REFILL FILL;1:2^HOLD;1:3^NON-VERIFIED;2:1^ACTIVE/SUSP;1:1^^^^^DONE;3:1^EXPIRED;3:2^DISCONTINUED;3:3^DISCONTINUED;3:3^DISCONTINUED;3:3^DISCONTINUED (EDIT);3:6^HOLD;1:3^","^",ST0+2)
  .S ST=$P(STT,";"),GP=$P(STT,";",2)
- .;Status Groups: 1-ACTIVE, 2-PENDING, , 3-DISCONTINUED 
+ .;Status Groups: 1-ACTIVE, 2-PENDING, , 3-DISCONTINUED
  .S DRUG=$P($G(^PSDRUG(+$P(RX0,"^",6),0)),"^")
  .S ^TMP("PSO",$J,GP,ST,DRUG,TFN,0)=IFN_"R;O"_"^"_DRUG_"^^"_$P(RX2,"^",6)_"^"_($P(RX0,"^",9)-TRM)_"^^^"_$P($G(^PSRX(IFN,"OR1")),"^",2)
  .S ^TMP("PSO",$J,GP,ST,DRUG,TFN,"P",0)=$P(RX0,"^",4)_"^"_$P($G(^VA(200,+$P(RX0,"^",4),0)),"^")
@@ -57,7 +57,8 @@ OCL ;entry point to return condensed list
  S PSG=0 F  S PSG=$O(^TMP("PS1",$J,PSG)) Q:'PSG  S PST="" F  S PST=$O(^TMP("PS1",$J,PSG,PST)) Q:PST=""  S PSD="" F  S PSD=$O(^TMP("PS1",$J,PSG,PST,PSD)) Q:PSD=""  S I=0 F  S I=$O(^TMP("PS1",$J,PSG,PST,PSD,I)) Q:'I  D
  .M ^TMP("PS",$J,J)=^TMP("PS1",$J,PSG,PST,PSD,I) S J=J+1
  K ^TMP("PSO",$J),^TMP("PS1",$J)
- D OCL^PSJORRE(DFN,BDT,EDT,.TFN,+$G(VIEW)) D END^PSOORRL1
+ D OCL^PSJORRE(DFN,$G(PSOBDTIN),$G(PSOEDTIN),.TFN,+$G(VIEW))
+ D END^PSOORRL1
  K SDT,SDT1,GP,ST,DRUG,PSG,PST,PSD,EDT,EDT1,BDT,DBT1,X
  Q
 WAIT ; IF PENDING ENTRY STILL BEING BUILT SEE IF IT COMPLETES WITHIN ANOTHER SECOND

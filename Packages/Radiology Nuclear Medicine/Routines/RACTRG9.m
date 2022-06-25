@@ -1,4 +1,4 @@
-RACTRG9 ; ;03/19/19
+RACTRG9 ; ;06/24/22
  ;;
 1 N X,X1,X2 S DIXR=463 D X1(U) K X2 M X2=X D X1("F") K X1 M X1=X
  I $G(X(1))]"" D

@@ -1,5 +1,5 @@
 RCDPEAD3 ;ALB/PJH - AUTO DECREASE ; 6/27/19 2:43pm
- ;;4.5;Accounts Receivable;**345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**345,349**;Mar 20, 1995;Build 44
  ;Per VA Directive 6402, this routine should not be modified.
  ;Read ^IBM(361.1) via Private IA 4051
  ;

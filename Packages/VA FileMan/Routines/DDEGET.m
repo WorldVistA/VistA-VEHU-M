@@ -1,5 +1,5 @@
 DDEGET ;SPFO/RAM - Entity GET Handler ; AUG 1, 2018  12:37
- ;;22.2;VA FileMan;**9,17,18**;Jan 05, 2016;Build 2
+ ;;22.2;VA FileMan;**9,17,18,20**;Jan 05, 2016;Build 2
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -15,11 +15,13 @@ EN(ENTITY,ID,FILTER,MAX,FORMAT,TARGET,ERROR) ; -- Return [list of] data entities
  ;       FILTER("start")   = start date.time of search, for Query  [opt]
  ;       FILTER("stop")    = stop date.time of search, for Query   [opt]
  ;       FILTER("patient") = DFN or DFN;ICN                        [opt]
+ ;       FILTER("init")    = initial value for array subscript     [opt]
  ;
  N DDEY,DDEI,DDER,DSYS,DTYPE,DSTRT,DSTOP,DMAX,DFORM,DDEN,DDEX,DDEZ,DDEQUIT,DDELIST,DLIST
  N DFN,ICN,FILE,QUERY,LIST
  ;
- S DDEY=$G(TARGET,$NA(^TMP("DDE GET",$J))),DDEI=0 K @DDEY
+ S DDEY=$G(TARGET,$NA(^TMP("DDE GET",$J)))
+ S DDEI=$S($G(FILTER("init")):FILTER("init"),1:0) K:'DDEI @DDEY ;p20
  S DDER=$G(ERROR,$NA(^TMP("DDERR",$J))) K @DDER
  S DT=$$DT^XLFDT ;for crossing midnight boundary
  S DSYS=$$SYS,ID=$G(ID)

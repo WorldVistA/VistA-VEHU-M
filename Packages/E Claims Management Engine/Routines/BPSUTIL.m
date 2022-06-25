@@ -1,5 +1,5 @@
 BPSUTIL ;BHAM ISC/FLS/SS - General Utility functions ;3/27/08  13:18
- ;;1.0;E CLAIMS MGMT ENGINE;**1,3,2,5,6,20**;JUN 2004;Build 27
+ ;;1.0;E CLAIMS MGMT ENGINE;**1,3,2,5,6,20,27**;JUN 2004;Build 15
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; ECMEON
@@ -152,3 +152,27 @@ NPIEXTR(SITE) ;
  S STATUS=$$BPSACTV^BPSUTIL(BPSPHARM)
  S NCPDP=$$GET1^DIQ(9002313.56,BPSPHARM_",",.02)
  Q NCPDP_"^"_STATUS
+ ;
+ ; TOUCHED
+ ;   Input:
+ ;      BPS57 - IEN BPS LOG OF TRANSACTIONS file #9002313.57 - required
+ ;   Output:
+ ;      0 - No touch or automated transaction
+ ;      1 - touched or manual transaction
+ ;
+TOUCHED(BPS57) ;
+ ;
+ N RXACTION
+ I $G(BPS57)="" Q 1
+ ;
+ ; Get the RXACTION for the transaction.  This field is also referred
+ ; to as BWHERE throughout the claims submission process.
+ ;
+ S RXACTION=$$GET1^DIQ(9002313.57,BPS57,1201)
+ ;
+ ; Transactions with the below actions are No Touch transactions.
+ ;
+ I ",AREV,CRLB,CRLR,CRLX,CRRL,DC,DE,HLD,OF,PC,PE,PL,PP,RF,RN,RRL,"[(","_RXACTION_",") Q 0
+ ;
+ Q 1
+ ;

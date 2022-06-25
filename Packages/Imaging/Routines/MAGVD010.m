@@ -1,5 +1,5 @@
-MAGVD010 ;WOIFO/BT,NST,MLH - Delete Study By Accession Number - display outputs ; 11 Apr 2012 4:27 PM
- ;;3.0;IMAGING;**118**;Mar 19, 2002;Build 4525;May 01, 2013
+MAGVD010 ;WOIFO/BT,NST,MLH,PML - Delete Study By Accession Number - display outputs ; Apr 03, 2020@11:15:55
+ ;;3.0;IMAGING;**118,231**;Mar 19, 2002;Build 9;May 01, 2013
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -67,7 +67,7 @@ OLD(MAGIX,KT) ; old structure - must build counts from instances
  . S KT("IMAGE",MAGIX)=""
  . S UID=$P($G(^MAG(2005,MAGIX,"SERIESUID")),"^",1) ; series instance UID
  . S:UID'="" KT("SERIES",UID)=""
- . S PARENT=$P($G(^MAG(2005,MAGIX,0)),"^",10)
+ . S PARENT=$P($G(^MAG(2005,MAGIX,0)),"^",10) Q:PARENT=""  ; P231 PMK 4/3/2020
  . S UID=$P($G(^MAG(2005,PARENT,"PACS")),"^",1) ; study instance UID
  . S:UID'="" KT("STUDY",UID)=""
  . Q

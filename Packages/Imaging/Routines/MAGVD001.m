@@ -1,5 +1,5 @@
-MAGVD001 ;WOIFO/BT,NST,DAC - Delete Study By Accession Number ; 03 Dec 2012 11:26 AM
- ;;3.0;IMAGING;**118,138**;Mar 19, 2002;Build 5380;Sep 03, 2013
+MAGVD001 ;WOIFO/BT,NST,DAC,PMK - Delete Study By Accession Number ; Apr 03, 2020@11:14:36
+ ;;3.0;IMAGING;**118,138,231**;Mar 19, 2002;Build 9;Sep 03, 2013
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -50,7 +50,7 @@ GETACC() ; Get Accession Number
  S DIR("A",1)=""
  S DIR("??",1)="By Entering Accession Number, all Studies with this Accession Number"
  S DIR("??",2)="will be deleted."
- S DIR("?")="Enter Accession Number, e.g. GMRC-123, 111231-345, 660-111231-345, or ""^"" to exit."
+ S DIR("?")="Enter Accession Number, e.g. 660-GMR-123, 111231-345, 660-111231-345, or ""^"" to exit."  ; P231 PMK 4/4/2020
  D ^DIR
  S:Y="^" Y=""
  Q Y

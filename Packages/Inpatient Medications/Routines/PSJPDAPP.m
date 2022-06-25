@@ -1,5 +1,5 @@
 PSJPDAPP ;BIR/MHA - SEND APPOINTMENTS TO PADE ;11/27/15
- ;;5.0;INPATIENT MEDICATIONS;**317,389**;16 DEC 97;Build 4
+ ;;5.0;INPATIENT MEDICATIONS;**317,389,415**;16 DEC 97;Build 3
  ;Reference to ^PS(55 is supported by DBIA 2191
  ;Reference to ^ORD(101 supported by DBIA 872
  ;Reference to GETPLIST^SDAMA202 supported by DBIA 3869
@@ -95,7 +95,8 @@ CLARR ;
  S Z=0,L=""
  F  S Z=$O(^PS(58.7,I,"DIV",J,"WCN",Z)) Q:'Z  S X=^PS(58.7,I,"DIV",J,"WCN",Z,0) D:$P(X,"^",3)="Y"
  . S SA=$P(X,"^",2) S:SA SA=$P($G(^PS(58.71,SA,0)),"^")
- . S (Y,P)=$P(X,"^") F  S P=$O(^SC("B",P)) Q:P=""!($E(P,1,$L(Y))'=Y)  D
+ . S Y=$P(X,"^"),P=$E(X,1,$L(Y)-1) F  S P=$O(^SC("B",P)) Q:P=""  D
+ .. Q:($E(P,1,$L(Y))'=Y)  ;p415
  .. S K=$O(^SC("B",P,0)),L=$G(^SC(K,0)) Q:$P(L,"^",3)'="C"  Q:$P(L,"^",15)'=J
  .. S:'$D(PDCLA(I,J,K)) PDCLA(I,J,K)=DTP_$S(SA]"":"^"_SA,1:"")
  Q

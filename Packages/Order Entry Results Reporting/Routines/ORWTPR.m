@@ -1,5 +1,5 @@
-ORWTPR ; SLC/STAFF Personal Preference - Reminders ;07/28/09  10:16
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,173,215,243,280,415,458**;Oct 24, 2000;Build 3
+ORWTPR ;SLC/STAFF - Personal Preference, Reminders ;Apr 05, 2021@09:29:33
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,173,215,243,280,415,458,539**;Oct 24, 2000;Build 41
  ;
 GETREM(VALUES,USER) ; from ORWTPP
  ; get user's reminders
@@ -85,6 +85,26 @@ GETSURR(INFO,USER) ; from ORWTPP
  S INFO=$G(SURR(1))
  Q
  ;
+GETSURRS(INFO,USER) ; from ORWTPP ;TDP - Added for CPRSv32A (*539) surrogate modifications
+ ; get all user's surrogate info
+ N DATA,LST,X
+ K INFO
+ S INFO=""
+ D SUROLIST^XQALSURO(USER,.INFO) ;ICR(DBIA) #2790
+ S LST=0
+ I +INFO>0 D
+ . S X=0 F  S X=$O(INFO(X)) Q:X=""  D
+ .. S DATA=$G(INFO(X))
+ .. I $P(DATA,U,3)=$P(DATA,U,4),$P(DATA,U,3)'="",$P(DATA,U,4)'="" Q
+ .. ;I $P(DATA,U,3)="",$P(DATA,U,4)="" Q
+ .. S LST=LST+1
+ .. S LST(LST)=DATA
+ I +LST'=+INFO D
+ . K INFO
+ . M INFO=LST
+ S INFO(0)=INFO
+ Q
+ ;
 SAVESURR(OK,INFO,USER) ; from ORWTPP
  ; save user's surrogate info
  N START,STOP,SURR,RET
@@ -92,6 +112,11 @@ SAVESURR(OK,INFO,USER) ; from ORWTPP
  S SURR=$P(INFO,U,1)
  S START=$P(INFO,U,2)
  S STOP=$P(INFO,U,3)
+ ;TDP - Patch 539 added next lines for valid surrogate check
+ I +SURR>0,STOP'=0 D
+ . I USER=SURR S OK="0^You cannot specify yourself as your own surrogate!"
+ . I +OK=1 S OK=$$CHKSURRO^ORWTPUA(USER,SURR,START,STOP) ;No surrogate for surrogate
+ I +OK=0 Q
  S RET=$$SAVESURR^ORWTPUA(USER,SURR,START,STOP)
  I 'RET S OK="0^"_RET
  Q
@@ -125,3 +150,30 @@ NOTDESC(TEXT,IEN) ; from RPC
  S TEXT(3)=$P($G(^ORD(100.9,IEN,4)),U)
  S TEXT(4)=""
  Q
+SVSRDFLT(OK,VALUES) ; save surrogate defaults
+ ;
+ S OK=1
+ I $G(VALUES)="" S OK="-1^Input parameter is missing" Q
+ S VALUES=$TR(VALUES,"^",",")
+ I +VALUES=0 S VALUES=0
+ D EN^XPAR("USR","ORQQXQ SURROGATE DEFAULTS",,VALUES,.OK)
+ Q
+ ;
+GTSRDFLT(OK,VALUES) ; retrieve surrogate defaults
+ ;
+ N USER
+ S USER=+$G(VALUES)
+ I USER=0 S USER=DUZ
+ S OK=$$GET^XPAR("ALL","ORQQXQ SURROGATE DEFAULTS",,"Q")
+ I +OK=0 S OK=0
+ I OK["," S OK=$TR(OK,",","^")
+ Q
+VLDSRDFL(X) ; validation code for surrogate defaults
+ ;
+ N X2
+ I +X=1,X'?.1N1","1.2N Q 0
+ I "^1^0^"'[(U_+$P(X,",")_U) Q 0
+ S X2=$P(X,",",2)
+ I +X=0,X2'="" Q 0
+ I +X=1,'((+X2>=1)&(+X2<=30)) Q 0
+ Q 1

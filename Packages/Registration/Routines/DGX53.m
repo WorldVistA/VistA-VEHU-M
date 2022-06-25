@@ -1,4 +1,4 @@
-DGX53 ; ;06/09/22
+DGX53 ; ;06/24/22
  S X=DG(DQ),DIC=DIE
  S ^DGPT(DA(1),"M","AC",$E(X,1,30),DA)=""
  S X=DG(DQ),DIC=DIE

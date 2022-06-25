@@ -1,5 +1,5 @@
 IBCE ;ALB/TMP - 837 EDI TRANSMISSION UTILITIES/NIGHTLY JOB ;22-JAN-96
- ;;2.0;INTEGRATED BILLING;**137,283,296,371,623,659,641**;21-MAR-94;Build 61
+ ;;2.0;INTEGRATED BILLING;**137,283,296,371,623,659,641,650**;21-MAR-94;Build 21
  ;Per VA Directive 6402, this routine should not be modified
 EN ; Run all jobs needed for EDI processing nightly
  ; including transmit bills waiting for extract, batches not sent,
@@ -10,8 +10,12 @@ EN ; Run all jobs needed for EDI processing nightly
  D PURGE^IBCEPTU    ; purge transmission detail and claims status data associated with test transmissions after 60 days
  S IBLAST=$G(^IBA(364.2,"ALAST")),^IBA(364.2,"ALAST")=$$NOW^XLFDT()
  ; Clean up ACOB xref in 364
+ ;JWS;IB*2.0*650v6;if status = A0, don't prematurely close EDI entry, so users can see A0s on ECS report if not acknowledged receipt in FSC.
  S IBZ=0
- F  S IBZ=$O(^IBA(364,"ACOB",IBZ)) Q:'IBZ  S IBZ0=0 F  S IBZ0=$O(^IBA(364,"ACOB",IBZ,IBZ0)) Q:'IBZ0  I '$$COBPOSS^IBCECOB(IBZ0) D UPDEDI^IBCEM(IBZ0,"N",1)
+ F  S IBZ=$O(^IBA(364,"ACOB",IBZ)) Q:'IBZ  S IBZ0=0 F  S IBZ0=$O(^IBA(364,"ACOB",IBZ,IBZ0)) Q:'IBZ0  I '$$COBPOSS^IBCECOB(IBZ0) D
+ . I $P($G(^IBA(364,IBZ0,0)),"^",3)="A0" Q
+ . D UPDEDI^IBCEM(IBZ0,"N",1)
+ . Q
  Q
  ;
 EN1 ; Manual entry point for transmitting EDI bills
@@ -46,7 +50,7 @@ RESUB(IB364,IBRESULT) ; Manually resubmit bill for transmission (ien file 364 = 
  ; added new parameter IBRESULT to see the result of calling this tag
  ; set to 0 initially and 1 if successful
  ; parameter is needed by IBCECSA4 calling routine 
- N DIR,X,Y,IBBTCH,DTOUT,DUOUT,IBIFN,NEW364
+ N DIR,X,Y,IBBTCH,DTOUT,DUOUT,IBIFN,NEW364,IBC364
  S IBRESULT=0  ;WCJ;IB641
  I '$$MGCHK(1) G RESUBQ
  S IBIFN=+$P($G(^IBA(364,+$G(IB364),0)),U,1) I 'IBIFN G RESUBQ
@@ -59,6 +63,14 @@ RESUB(IB364,IBRESULT) ; Manually resubmit bill for transmission (ien file 364 = 
  ;
  ; immediate retransmission of claim
  I Y="I" D  G RESUBQ
+ . ;JWS;IB*2.0*650v4;attempt to prevent duplicates
+ . S IBC364=$$LAST364^IBCEF4(IBIFN)
+ . I IB364'=IBC364,$P($G(^IBA(364,IBC364,0)),U,3)="X"!($D(^IBA(364,"AC",1,IBC364))) D  Q
+ .. S DIR("A",1)="This Claim is already awaiting extract for retransmission.",DIR(0)="EA",DIR("A")="PRESS ENTER TO CONTINUE " W ! D ^DIR K DIR
+ .. Q
+ . I $P($G(^IBA(364,IB364,0)),U,3)="X"!($D(^IBA(364,"AC",1,IB364))) D  Q
+ .. S DIR("A",1)="This Claim is already awaiting extract for retransmission.",DIR(0)="EA",DIR("A")="PRESS ENTER TO CONTINUE " W ! D ^DIR K DIR
+ .. Q
  . ;JWS;IB*2.0*641v9;added 4th parameter passing 1 to indicate 364, field .09 set = 1; not implemented but leaving for knowledge
  . S NEW364=$$ADDTBILL^IBCB1(IBIFN)    ; Add a new transmission record
  . I '$P(NEW364,U,3) D  Q
@@ -93,6 +105,14 @@ RESUB(IB364,IBRESULT) ; Manually resubmit bill for transmission (ien file 364 = 
  . Q
  ;
  ; Later retransmission of claim
+ ;JWS;IB*2.0*650v4;attempt to prevent duplicates
+ S IBC364=$$LAST364^IBCEF4(IBIFN)
+ I IB364'=IBC364,$P($G(^IBA(364,IBC364,0)),U,3)="X"!($D(^IBA(364,"AC",1,IBC364))) D  Q
+ . S DIR("A",1)="This Claim is already awaiting extract for retransmission.",DIR(0)="EA",DIR("A")="PRESS ENTER TO CONTINUE " W ! D ^DIR K DIR
+ . Q
+ I $P($G(^IBA(364,IB364,0)),U,3)="X"!($D(^IBA(364,"AC",1,IB364))) D  Q
+ . S DIR("A",1)="This Claim is already awaiting extract for retransmission.",DIR(0)="EA",DIR("A")="PRESS ENTER TO CONTINUE " W ! D ^DIR K DIR
+ . Q
  D UPDEDI^IBCEM(IB364,"R")      ; update EDI files for old transmission record
  S Y=$$ADDTBILL^IBCB1(IBIFN)    ; Add a new transmission record
  ;JWS;IB*2.0*623v24;add setting resubmission flag

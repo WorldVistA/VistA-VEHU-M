@@ -1,5 +1,5 @@
-ORCHECK ;SLC/MKB-Order checking calls ;06/20/16  05:50
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,56,70,94,141,215,243,293,280,346,357,352,345,311,269,382**;Dec 17, 1997;Build 15
+ORCHECK ;SLC/MKB-Order checking calls ;Dec 30, 2020@10:47
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,56,70,94,141,215,243,293,280,346,357,352,345,311,269,382,545**;Dec 17, 1997;Build 1
  ;;Per VHA Directive 2004-038, this routine should not be modified.
 DISPLAY ; -- DISPLAY event [called from ORCDLG,ORCACT4,ORCMED]
  ;    Expects ORVP, ORNMSP, ORTAB, [ORWARD]
@@ -98,7 +98,7 @@ START(DA) ; -- Returns start date/time
  ;
 DRUG(OI,PTR,IFN) ; -- Returns 6 ^-piece identifier for Dispense Drug
  N ORDD,ORNDF,Y
- I ORDG=+$O(^ORD(100.98,"B","IV RX",0)) S ORDD=$$IV G D1
+ I ORDG=+$O(^ORD(100.98,"B","IV RX",0))!(ORDG=+$O(^ORD(100.98,"B","CI RX",0))) S ORDD=$$IV G D1
  I $G(IFN) S ORDD=$O(^OR(100,IFN,4.5,"ID","DRUG",0)),ORDD=+$G(^OR(100,IFN,4.5,+ORDD,1))
  E  S ORDD=+$G(ORDIALOG($$PTR^ORCD("OR GTX DISPENSE DRUG"),1))
 D1 Q:'ORDD "" S ORNDF=$$ENDCM^PSJORUTL(ORDD)

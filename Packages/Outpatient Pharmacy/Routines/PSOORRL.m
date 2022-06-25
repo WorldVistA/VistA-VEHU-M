@@ -1,5 +1,5 @@
-PSOORRL ;BHAM ISC/SAB - returns patient's outpatient meds ; 7/3/13 4:00pm
- ;;7.0;OUTPATIENT PHARMACY;**4,20,9,34,54,82,124,132,159,214,225,318,558,564**;DEC 1997;Build 6
+PSOORRL ;BHAM ISC/SAB - returns patient's outpatient meds ;Sep 08, 2020@11:47:23
+ ;;7.0;OUTPATIENT PHARMACY;**4,20,9,34,54,82,124,132,159,214,225,318,558,564,622**;DEC 1997;Build 44
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^VA(200 supported by DBIA 10060
@@ -8,11 +8,22 @@ PSOORRL ;BHAM ISC/SAB - returns patient's outpatient meds ; 7/3/13 4:00pm
  ;External reference to ^PS(50.606 supported by DBIA 2174
  ;External reference to OCL^PSJORRE supported by DBIA 2383
  ;External reference to OEL^PSJORRE1 supported by DBIA 2384
-OCL(DFN,BDT,EDT,VIEW) ;entry point to return condensed list
- ; VIEW=0   -  This returns the list as it was returned prior to GUI 27
- ; VIEW=1   -  This returns the list in original view GUI 27
- ; VIEW=2   -  This is the new sort with GUI 27
- ; VIEW=3   -  New sort by Sort by Drug Name/status with GUI 27
+OCL(DFN,BDT,EDT,VIEW,PSOBDTIN,PSOEDTIN) ;entry point to return condensed list
+ ; DFN       -  Pointer to Patient file (#2)
+ ; BDT       -  Beginning Date for Outpatient & Non-VA Meds
+ ; EDT       -  Ending Date for Outpatient & Non-VA Meds
+ ; VIEW=0    -  This returns the list as it was returned prior to GUI 27
+ ; VIEW=1    -  This returns the list in original view GUI 27
+ ; VIEW=2    -  This is the new sort with GUI 27
+ ; VIEW=3    -  New sort by Sort by Drug Name/status with GUI 27
+ ; PSOBDTIN  -  Beginning Date for Inpatient Meds (Optional)
+ ; PSOEDTIN  -  End Date for Inpatient Meds (Optional)
+ ;
+ ; If PSOBDTIN and PSOEDTIN are both not passed in, default to BDT and EDT for backward compatability purposes
+ I '$D(PSOBDTIN),'$D(PSOEDTIN) D
+ . S PSOBDTIN=$G(BDT)
+ . S PSOEDTIN=$G(EDT)
+ ;
  D @$S($G(VIEW)=3:"OCL^PSOORRL3",$G(VIEW)=1:"OCL^PSOORRLO",$G(VIEW)=2:"OCL^PSOORRLN",1:"ST")
  Q
  ;BHW;PSO*7*159;New SD* Variables
@@ -52,7 +63,9 @@ ST N SD,SDT,SDT1
  .S SD=0 F SCH=0:0 S SCH=$O(^PS(52.41,IFN,"SIG",SCH)) Q:'SCH  S SD=SD+1,^TMP("PS",$J,TFN,"SIG",SD,0)=$P(^PS(52.41,IFN,"SIG",SCH,0),"^"),^TMP("PS",$J,TFN,"SIG",0)=SD
  .S (IEN,SD)=1,INST=0 F  S INST=$O(^PS(52.41,IFN,2,INST)) Q:'INST  S (MIG,INST(INST))=^PS(52.41,IFN,2,INST,0),^TMP("PS",$J,TFN,"SIO",0)=SD D
  ..F SG=1:1:$L(MIG," ") S:$L($G(^TMP("PS",$J,TFN,"SIO",IEN,0))_" "_$P(MIG," ",SG))>80 IEN=IEN+1,SD=SD+1,^TMP("PS",$J,TFN,"SIO",0)=SD S ^TMP("PS",$J,TFN,"SIO",IEN,0)=$G(^TMP("PS",$J,TFN,"SIO",IEN,0))_" "_$P(MIG," ",SG)
- D NVA,OCL^PSJORRE(DFN,BDT,EDT,.TFN,+$G(VIEW)),END^PSOORRL1
+ D NVA
+ D OCL^PSJORRE(DFN,$G(PSOBDTIN),$G(PSOEDTIN),.TFN,+$G(VIEW))
+ D END^PSOORRL1
  K SDT,SDT1,EDT,EDT1,BDT,DBT1,X
  Q
 OEL(DFN,RXNUM) ;returns expanded list on specific order

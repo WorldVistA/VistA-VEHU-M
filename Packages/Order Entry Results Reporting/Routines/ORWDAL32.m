@@ -1,5 +1,5 @@
-ORWDAL32 ; SLC/REV - Allergy calls to support windows ;5/31/05  14:14
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,109,190,195,233,243**;Dec 17, 1997;Build 242
+ORWDAL32 ; SLC/REV - Allergy calls to support windows ;May 14, 2021@08:40:46
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,109,190,195,233,243,539**;Dec 17, 1997;Build 41
  ;
 DEF(LST) ; Get dialog data for allergies
  N ILST,I,X S ILST=0
@@ -157,3 +157,90 @@ TRDNAME(NAME,LIST) ;
  .. N J,K S J=$O(^TMP($J,"ORWDAL32","B",I,0)) Q:'J  S K=$$TGTOG^PSNAPIS(I),LIST(J)=K_U_$G(^TMP($J,"ORWDAL32",J,4))
  K ^TMP($J,"ORWDAL32")
  Q
+CHKMEDS(LST,ORDFN,GMRAGNT)  ;Check a newly entered allergy against existing orders
+ N ALST,L,MED,M,AGYLST,ORD,ENT,DFN,ATTEND,MDA,MEDD,MDARRAY,MDARRAY2,FILLID,STATUS,FID
+ S LST=0
+ S STATUS="^DISCONTINUED^DISCONTINUED (EDIT)^CANCELLED^LAPSED^EXPIRED^COMPLETE^"
+ D ACTIVE^ORWPS(.ALST,ORDFN,DUZ,1,0)
+ S L="" K ORD F  S L=$O(ALST(L)) Q:L=""  I $E(ALST(L))="~" D
+ . I STATUS[$P(ALST(L),U,10) Q
+ . S MED=$P(ALST(L),U,9),MEDD=$P(ALST(L),"^",3) I $D(^OR(100,+MED,.1)) D
+ . . S MDA=0 F  S MDA=$O(^OR(100,+MED,.1,MDA)) Q:MDA=""!(MDA'?1N.N)  I $D(^OR(100,+MED,.1,MDA,0)) D
+ . . . S M=^OR(100,+MED,.1,MDA,0),MDARRAY(M,+MED)=MEDD_U_$$FILLID(+MED)
+ I $D(MDARRAY) D
+ . S M="" F  S M=$O(MDARRAY(M)) Q:M=""  I $D(MDARRAY(M)) D
+ . . ;K AGYLST
+ . . ;D ALLERGY^ORWDXC(.AGYLST,ORDFN,"PSI",M)
+ . . ;I $$CHKMEDS2($P(GMRAGNT,U),.AGYLST) D
+ . . ;. S MED="" F  S MED=$O(MDARRAY(M,MED)) Q:MED=""  S MDARRAY2(MED,M)=MDARRAY(M,MED)
+ . . S MED=""  F  S MED=$O(MDARRAY(M,MED)) Q:MED=""  D
+ . . . S FID=$P(MDARRAY(M,MED),U,2) I FID="" S FID="PSI"
+ . . . K AGYLST
+ . . . D ALLERGY^ORWDXC(.AGYLST,ORDFN,FID,"",MED)
+ . . . I $$CHKMEDS2($P(GMRAGNT,U),.AGYLST) S MDARRAY2(MED,M)=$P($G(MDARRAY(M,MED)),U,1)
+ . K MDARRAY
+ I $D(MDARRAY2) D
+ . S MED="" F  S MED=$O(MDARRAY2(MED)) Q:MED=""  D
+ . . S ORD=$P($G(^OR(100,MED,0)),U,4),ENT=$P($G(^OR(100,MED,0)),U,6)
+ . . S M="" F  S M=$O(MDARRAY2(MED,M)) Q:M=""  D
+ . . . S LST=LST+1
+ . . . S LST(LST)=MED_U_M_U_MDARRAY2(MED,M)
+ . . . I ORD]"" S $P(LST(LST),U,4)=ORD_";"_$P(^VA(200,ORD,0),U,1)
+ . . . I ENT]"",ORD'=ENT S $P(LST(LST),U,5)=ENT_";"_$P(^VA(200,ENT,0),U,1)
+ . . . S DFN=$P($G(^OR(100,+MED,0)),U,2),ATTEND=$G(@(U_$P(DFN,";",2)_$P(DFN,";")_",.1041)"))
+ . . . I ATTEND]"",ORD'=ATTEND S $P(LST(LST),U,6)=ATTEND_";"_$P(^VA(200,ATTEND,0),U,1)
+ . K MDARRAY2
+ K ALST,AGYLST
+ Q
+CHKMEDS2(AGNT,AGYLST) ;Scan returned allegy checks against the new allergy agent for a match
+ N MATCH,AGY
+ S MATCH=0,AGY=""
+ F  S AGY=$O(AGYLST(AGY)) Q:AGY=""  I AGYLST(AGY)[AGNT S MATCH=1
+ Q MATCH
+GETPROV(LST,ORNUM,ORBDFN) ;return a list of providers related to a list of orders based on parameter option
+ N CNT,ORBADT,ORBATTD,ORBDUZ,ORBENT,ORBNOTIF,ORBPRIM,ORBTDEV,ORBU,ORDGPMA,ORFORCE,ORN,ORPOSIT,ORRECIP,TEXT,TXT4,VA,VA200,VADM,VAIN,X,XQA
+ K ^XTMP("ORBUSER",$J)
+ ;S ORBUI=1
+ S (CNT,ORBADT)=0
+ S (ORDGPMA,ORFORCE)=""
+ S ORNUM=+$G(ORNUM) Q:ORNUM=0
+ S ORBDFN=+$G(ORBDFN) Q:ORBDFN=0
+ S ORBENT=$$ENTITY^ORB31(ORNUM)
+ D
+ . N DFN
+ . S DFN=ORBDFN
+ . S VA200=""
+ . D OERR^VADPT
+ I ('$L($G(VA("BID"))))!('$L($G(VADM(1)))) Q
+ S ORN=88 ;"NEW ALLERGY ENTERED/ACTIVE MED" notification
+ S ORBPRIM=+$P(VAIN(2),U),ORBATTD=+$P(VAIN(11),U)
+ D TITLE^ORB3
+ I $D(XQA)<10 D GETPROVQ Q
+ S X=0
+ F  S X=$O(XQA(X)) Q:+X=0  D
+ . S ORRECIP=$P($G(^VA(200,X,0)),U,1)
+ . I ORRECIP']"" Q
+ . S CNT=CNT+1
+ . S LST(CNT)=ORRECIP
+ S LST=CNT
+GETPROVQ K ^XTMP("ORBUSER",$J)
+ Q
+SENDALRT(Y,ORIFN,PROVLST) ;Send a group of alerts for instances where a user enters a new allergy impacting an existing med order
+ ;ORIFN indicates the order number for which the alert will be sent
+ ;PROVLST contains a list of additional recipients selected by the user
+ ;  Format: DUZ;VA(200^Provider Name
+ S Y=1
+ N ORBT,ORDFN,A,ORLIST
+ I $G(ORIFN)="" S Y=0 Q
+ S ORDFN=+$P($G(^OR(100,ORIFN,0)),"^",2) I ORDFN="" S Y=0 Q
+ S ORBT=$P($G(^ORD(100.9,88,0)),"^",3)
+ S A="" F  S A=$O(PROVLST(A)) Q:A=""  S ORLIST(+PROVLST(A))=""
+ D EN^ORB3(88,ORDFN,ORIFN,.ORLIST,ORBT,"NEW;"_ORIFN)
+ Q
+FILLID(MED) ;
+ N DGRP,VAL,X
+ S VAL=""
+ S DGRP=$P($G(^OR(100,MED,0)),U,11)
+ S X=$P($P($G(^ORD(100.98,DGRP,0)),U,3)," ")
+ I $L(X) S VAL="PS"_$S(X="NV":"H",X="O":"O",X="UD":"I",1:"I")
+ Q VAL

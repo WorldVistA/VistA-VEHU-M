@@ -1,5 +1,5 @@
 PRCAWREA ;WASH-ISC@ALTOONA,PA/TJK-RE-ESTABLISH BILL ;7/24/96  2:35 PM
-V ;;4.5;Accounts Receivable;**16,49,153,315**;Mar 20, 1995;Build 67
+V ;;4.5;Accounts Receivable;**16,49,153,315,377**;Mar 20, 1995;Build 45
  ;;Per VA Directive 6402, this routine should not be modified.
  ;;Select bill to make active, cancellation, suspended, coll/clos or write-off
  N DA,DIC,DIE,I,PRCABN,PRCATAMT,PRCAEN,PRCA,PRCAWO,PRCAPB,PRCATYPE,PRCATY,X,Y,FMSNUM,FMSAMT,PRCASTAT
@@ -26,6 +26,10 @@ APJ ; Entry point from the ENAP entry point (below) for the Account Profile scre
  S PRCA("SDT")=DT,PRCA("STATUS")=$O(^PRCA(430.3,"AC",102,0)) D UPSTATS^PRCAUT2
  S $P(^PRCA(433,PRCAEN,4,$O(^PRCA(433,PRCAEN,4,0)),0),U,5)=PRCATAMT
  S $P(^PRCA(433,PRCAEN,0),U,4)=2 L -^PRCA(430,PRCABN)
+ ;
+ ;PRCA*4.5*377 - update Repayment Plan with re-establishment of the bill
+ D UPDBAL^RCRPU1(PRCABN,PRCAEN)
+ ;
  W !!,*7,?5,$P(^PRCA(430,PRCABN,0),U,1)," is in the ",$P(^PRCA(430.3,$P(^PRCA(430,PRCABN,0),U,8),0),U,1)," status for $",$P(^PRCA(433,PRCAEN,1),U,5)
  I $P(^PRCA(430,PRCABN,0),U,8)=$O(^PRCA(430.3,"AC",102,"")) D PREPAY^RCBEPAYP(PRCABN)
  I FMSAMT>0,PRCASTAT'=40,'$$ACCK^PRCAACC(PRCABN) D

@@ -1,5 +1,5 @@
 RCDPRPLM ; WISC/RFJ-receipt profile List Manager main routine ;31 Oct 2018 09:14:14
- ;;4.5;Accounts Receivable;**114,148,149,173,196,220,217,321,326,332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**114,148,149,173,196,220,217,321,326,332,375**;Mar 20, 1995;Build 15
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; option: Receipt Processing [RCDP RECEIPT PROCESSING]
@@ -59,6 +59,7 @@ INIT ;EP from ListMan template RCDP RECEIPT PROFILE MENU
  . ;(#.14) EDITED BY [14P:200]
  . S X=RCDPDATA(344.01,RCTRDA,.14,"E") D:$L(X)
  ..  S X=$E($P(X,",",2))_$E(X) D SET(X,RCLINE,54,55)
+ . S:RCDPDATA(344.01,RCTRDA,.29,"I")="D" RCDPDATA(344.01,RCTRDA,.04,"E")=-RCDPDATA(344.01,RCTRDA,.04,"E") ; PRCA*4.5*375 - Use negative amounts when debit
  . D SET($J(RCDPDATA(344.01,RCTRDA,.04,"E"),8,2),RCLINE,62,70)  ; (#.04) PAYMENT AMOUNT [4N]
  . D SET($J(RCDPDATA(344.01,RCTRDA,.05,"E"),8,2),RCLINE,72,80)  ; (#.05) AMOUNT PROCESSED [5N]
  . ;

@@ -1,5 +1,5 @@
-SDEC40 ;ALB/SAT,WTC - VISTA SCHEDULING RPCS ;Feb 12, 2020@15:22
- ;;5.3;Scheduling;**627,665,694**;Aug 13, 1993;Build 61
+SDEC40 ;ALB/SAT,WTC,LEG - VISTA SCHEDULING RPCS ;Feb 12, 2020@15:22
+ ;;5.3;Scheduling;**627,665,694,785**;Aug 13, 1993;Build 14
  ;
  ;  ICR
  ;  ---
@@ -36,7 +36,7 @@ APPTLETR(SDECY,SDECAPID,LT)  ;Print Appointment Letter
  S SDS=^DPT(DFN,"S",SDT,0)
  S SCLT=$S(LT="N":1,LT="P":2,LT="C":3,LT="A":4,1:"2") ;get storage position of LETTER pointer
  S SDLET=$P($G(^SC(SDC,"LTR")),U,SCLT)
- I SDLET="" D ERR^SDECERR($S(SCLT=1:"No-Show",SCLT=2:"Pre-Appointment",SCLT=3:"Clinic Cancellation",1:"Patient Cancellation")_"Letter not defined for Clinic "_$P(^SC(SDC,0),U)_".") Q
+ I SDLET="" D ERR^SDECERR($S(SCLT=1:"No-Show",SCLT=2:"Pre-Appointment",SCLT=3:"Clinic Cancellation",1:"Patient Cancellation")_" Letter not defined for Clinic "_$P(^SC(SDC,0),U)_".") Q  ;LEG 5/17/2021 ; added missing space
  S SDIV=$P(^SC(SDC,0),"^",15),SDIV=$S(SDIV:SDIV,1:$O(^DG(40.8,0)))
  S SDFORM=$P($G(^DG(40.8,SDIV,"LTR")),U,1)
  ; data header
@@ -70,7 +70,8 @@ PRT(DFN,SDC,SD,LT,SDLET,SDFORM) ;
  ;
  S DPTNAME("FILE")=2,DPTNAME("FIELD")=".01",DPTNAME("IENS")=(+A)_","
  S X=$$NAMEFMT^XLFNAME(.DPTNAME,"G","M")
- S SDECI=SDECI+1 S ^TMP("SDEC",$J,SDECI)="Dear "_$S($P(^DPT(+A,0),"^",2)="M":"Mr. ",1:"Ms. ")_X_","_$C(13,10)
+ ;S SDECI=SDECI+1 S ^TMP("SDEC",$J,SDECI)="Dear "_$S($P(^DPT(+A,0),"^",2)="M":"Mr. ",1:"Ms. ")_X_","_$C(13,10)
+ S SDECI=SDECI+1 S ^TMP("SDEC",$J,SDECI)="Dear "_X_","_$C(13,10) ;VSE-693;LEG 5/12/21
  S SDECI=SDECI+1 S ^TMP("SDEC",$J,SDECI)=$C(13,10)
  S SDECI=SDECI+1 S ^TMP("SDEC",$J,SDECI)=$C(13,10)
  ;loop and display initial section of Letter

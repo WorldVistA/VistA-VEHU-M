@@ -1,5 +1,5 @@
 GMRCCCRA ;COG/PB/LB/MJ - Receive HL7 Message for HCP ;3/21/18 09:00
- ;;3.0;CONSULT/REQUEST TRACKING;**99,106,112,123,134,146,158,163**;JUN 1, 2018;Build 18
+ ;;3.0;CONSULT/REQUEST TRACKING;**99,106,112,123,134,146,158,163,173**;JUN 1, 2018;Build 9
  ;
  ;DBIA# Supported Reference
  ;----- --------------------------------
@@ -32,9 +32,11 @@ GMRCCCRA ;COG/PB/LB/MJ - Receive HL7 Message for HCP ;3/21/18 09:00
  ;Patch 158 add code to convert start and end times from eastern to local, code to update the new field 81 in file 123
  ;Patch 163 add code to allow editing of new file 81 in file 123
  ;proposed for CCRA release 8.0 - successfully send Administrative Complete consult notes
+ ;Patch 173 add EDIPI to the PID segment
  ;
 EN(MSG) ;Entry point to routine from GMRC CONSULTS TO CCRA protocol attached to GMRC EVSEND OR
  ;MSG = local array which contains the HL7 segments
+ D NOW^%DTC
  N I,QUIT,MSGTYP,DFN,ORC,GMRCDA,FS,MSGTYP2,MSGTYP3,ACTIEN,FROMSVC,OK,OKFROM,STATUS
  N UCID ;ABV/SCR 12/14/2017 *96*
  S (I,QUIT)=0,I=$O(MSG(I)) Q:'I  S MSG=MSG(I) Q:$E(MSG,1,3)'="MSH"  D  Q:QUIT
@@ -95,7 +97,13 @@ EN(MSG) ;Entry point to routine from GMRC CONSULTS TO CCRA protocol attached to 
  . S ZCNT=ZCNT+1,GMRCM(ZCNT)="PRD|PP|"_PCPN_"|"_$G(PCADDR)_"||"_$G(PCPH)_"||"_+$G(NPI)
  ;PCP code-ends here-
  ;PID segment May be multiple nodes in the return array - make nodes 2-n sub nodes
+ K LOOPER S LOOPER=0 N TGMRCP,TMPGMRCP
+PID ;
+ K PID N GMRCP
  D BLDPID^VAFCQRY(DFN,1,"ALL",.GMRCP,.GMRCHL,ZERR)
+ M TGMRCP=GMRCP
+ D EDIPI^GMRCCCR1(.TMPGMRCP,DFN,.GMRCP)
+ I $L($G(TMPGMRCP(1)))>5 K GMRCP M GMRCP=TMPGMRCP
  S I=0 F  S I=$O(GMRCP(I)) Q:'I  D
  .I I=1 S ZCNT=ZCNT+1,GMRCM(ZCNT)=$TR(GMRCP(I),"""") Q
  .S GMRCM(ZCNT,I)=$TR(GMRCP(I),"""")
@@ -187,6 +195,7 @@ EN(MSG) ;Entry point to routine from GMRC CONSULTS TO CCRA protocol attached to 
  N HL,HLA,GMRCRES,GMRCHLP
  M HL=GMRCHL,HLA("HLS")=GMRCM
  M GMRCHL=^XTMP("GMRCHL7H","MESSAGE")
+ ;D EDIPI^GMRCCCR1(DFN)
  D GENERATE^HLMA(GMRCHL("EID"),"LM",1,.GMRCRES,"",.GMRCHLP)
  Q
 NTE(HL) ;Find Reason for Request for New or Resubmit entries, Find TIU for complete, find Activity Comment for others

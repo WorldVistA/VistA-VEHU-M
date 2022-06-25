@@ -1,5 +1,5 @@
 IBCEPTC3 ;ALB/ESG - EDI PREVIOUSLY TRANSMITTED CLAIMS ACTIONS ;12/19/05
- ;;2.0;INTEGRATED BILLING;**320,547,608,641**;21-MAR-94;Build 61
+ ;;2.0;INTEGRATED BILLING;**320,547,608,641,650**;21-MAR-94;Build 21
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; IB*2.0*547 Variable IBLOC is pre-defined (in IBCEPTC)
@@ -92,7 +92,7 @@ VIEWQ S VALMBCK="R"
 RESUB ; Resubmit selected claims
  N DIR,DIRCTR,DIRLN,DIROUT,DIRUT,DTOUT,DUOUT
  N IB364,IBABORT,IBCLMNO,IBIFN,IBSKCTR,IBFSKIP,IBRSBTST,IBTYPPTC
- N X,Y,Z1
+ N X,Y,Z1,IBC364
  ;/IB*2*608 - vd (US2486) - instituted the following variable to identify a claim as being resubmitted.
  S IBRSBTST=0
  D FULL^VALM1
@@ -131,6 +131,16 @@ RESUB ; Resubmit selected claims
  S IBIFN=0 F  S IBIFN=$O(^TMP("IB_PREV_CLAIM_SELECT",$J,IBIFN)) Q:'IBIFN  S Z1=+$G(^(IBIFN)),IB364=+$G(^(IBIFN,0)) I IB364 D
  . ;
  . I IBTYPPTC="TEST" D
+ .. ;JWS;IB*2.0*650v4;attempt to prevent duplicate - also for test claims
+ .. S IBC364=$$LAST364^IBCEF4(IBIFN)
+ .. I IB364'=IBC364,$P($G(^IBA(364,IBC364,0)),U,3)="X"!$D(^IBA(364,"AC",1,IBC364)) D  Q
+ ... S IBCLMNO=$$GET1^DIQ(399,IBIFN,.01)
+ ... S IBFSKIP=IBFSKIP+1
+ ... S ^TMP("IBSKIPPED",$J,IBCLMNO)=IBIFN
+ .. I $P($G(^IBA(364,IB364,0)),U,3)="X"!$D(^IBA(364,"AC",1,IB364)) D  Q
+ ... S IBCLMNO=$$GET1^DIQ(399,IBIFN,.01)
+ ... S IBFSKIP=IBFSKIP+1
+ ... S ^TMP("IBSKIPPED",$J,IBCLMNO)=IBIFN
  .. S ^TMP("IBEDI_TEST_BATCH",$J,IB364)=""
  .. S ^TMP("IBRESUBMIT",$J,IB364)=""
  .. I Z1 D MARK(IBIFN,"",Z1,IB364,0,.VALMHDR)
@@ -179,9 +189,12 @@ RESUB ; Resubmit selected claims
  S DIR(0)="EA"
  S DIR("A",1)="Selected claims have been resubmitted as "_IBTYPPTC_"."
  I IBFSKIP D
- . S DIR("A",2)="Please note: Some claims were not eligible to be resubmitted as live claims."
- . S DIR("A",3)=" These claims are still indicated as being selected."
- . S DIR("A",4)="The following are the claims that were skipped:"
+ . ;JWS;IB*2.0*650v4;changed message to be a little more generic
+ . S DIR("A",2)="Please note: Some claims were not eligible to be resubmitted."  ;; as live claims."
+ . S DIR("A",3)="The following are the claims that were skipped:"
+ . ;;S DIR("A",2)="Please note: Some claims were not eligible to be resubmitted as live claims."
+ . ;;S DIR("A",3)=" These claims are still indicated as being selected."
+ . ;;S DIR("A",4)="The following are the claims that were skipped:"
  . S (DIRLN,IBCLMNO)="",IBSKCTR=0,DIRCTR=4
  . F  S IBCLMNO=$O(^TMP("IBSKIPPED",$J,IBCLMNO)) Q:IBCLMNO=""  D
  . . S IBSKCTR=IBSKCTR+1 ; Increment # of claims on the display line.
@@ -239,6 +252,8 @@ TXOK(IBIFN) ; Function determines if claim is OK for live resubmission
  S IB364=+$$LAST364^IBCEF4(+$G(IBIFN)) I 'IB364 G TXOKX             ; transmit bill exists
  S IBD=$G(^IBA(364,IB364,0)) I IBD="" G TXOKX
  S IBSTAT=$P(IBD,U,3) I IBSTAT="X" G TXOKX                          ; already awaiting extract
+ ;JWS;IB*2.0*650v4;attempt to prevent duplicates; if there is already a FHIR submission in process (attempt to eliminate duplicates)
+ I $D(^IBA(364,"AC",1,IB364)) G TXOKX
  S OK=1
 TXOKX ;
  Q OK

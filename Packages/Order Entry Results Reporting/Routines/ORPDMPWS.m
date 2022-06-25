@@ -1,5 +1,5 @@
-ORPDMPWS ;ISP/LMT - PDMP Web Service APIs ;Sep 01, 2020@12:52:56
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**519**;Dec 17, 1997;Build 36
+ORPDMPWS ;ISP/LMT - PDMP Web Service APIs ;Nov 04, 2020@14:19:06
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**519,498**;Dec 17, 1997;Build 38
  ;
  ; SAC EXEMPTION 20200131-02 : non-ANSI standard M code
  ;
@@ -202,36 +202,36 @@ REQUESTXML(ORXML,DFN,ORUSER,ORDELEGATEOF,ORINST) ;
  S ORPROV=ORUSER
  I $G(ORDELEGATEOF) S ORPROV=ORDELEGATEOF
  S ORPERSCLASS=$$PERSCLASS(ORPROV)
- S ORXML($$INCLINE)="<X12Code>"_$P(ORPERSCLASS,U,2)_"</X12Code>"
- S ORXML($$INCLINE)="<VACode>"_$P(ORPERSCLASS,U,1)_"</VACode>"
+ S ORXML($$INCLINE)="<X12Code>"_$$SYMENC^MXMLUTL($P(ORPERSCLASS,U,2))_"</X12Code>"
+ S ORXML($$INCLINE)="<VACode>"_$$SYMENC^MXMLUTL($P(ORPERSCLASS,U,1))_"</VACode>"
  S ORNAME=$$GET1^DIQ(200,ORPROV_",",.01)  ; ICR 10060 (supported)
  D NAMECOMP^XLFNAME(.ORNAME)
- S ORXML($$INCLINE)="<FirstName>"_ORNAME("GIVEN")_"</FirstName>"
- S ORXML($$INCLINE)="<LastName>"_ORNAME("FAMILY")_"</LastName>"
- S ORXML($$INCLINE)="<DEANumber>"_$$USERDEA^ORPDMP(ORPROV)_"</DEANumber>"
- S ORXML($$INCLINE)="<NPINumber>"_$$USERNPI^ORPDMP(ORPROV)_"</NPINumber>"
+ S ORXML($$INCLINE)="<FirstName>"_$$SYMENC^MXMLUTL(ORNAME("GIVEN"))_"</FirstName>"
+ S ORXML($$INCLINE)="<LastName>"_$$SYMENC^MXMLUTL(ORNAME("FAMILY"))_"</LastName>"
+ S ORXML($$INCLINE)="<DEANumber>"_$$SYMENC^MXMLUTL($$USERDEA^ORPDMP(ORPROV))_"</DEANumber>"
+ S ORXML($$INCLINE)="<NPINumber>"_$$SYMENC^MXMLUTL($$USERNPI^ORPDMP(ORPROV))_"</NPINumber>"
  S ORXML($$INCLINE)="</Provider>"
  ;
  I ORDELEGATEOF D
  . S ORPERSCLASS=$$PERSCLASS(ORUSER)
  . S ORXML($$INCLINE)="<Delegate>"
- . S ORXML($$INCLINE)="<X12Code>"_$P(ORPERSCLASS,U,2)_"</X12Code>"
- . S ORXML($$INCLINE)="<VACode>"_$P(ORPERSCLASS,U,1)_"</VACode>"
+ . S ORXML($$INCLINE)="<X12Code>"_$$SYMENC^MXMLUTL($P(ORPERSCLASS,U,2))_"</X12Code>"
+ . S ORXML($$INCLINE)="<VACode>"_$$SYMENC^MXMLUTL($P(ORPERSCLASS,U,1))_"</VACode>"
  . K ORNAME
  . S ORNAME=$$GET1^DIQ(200,ORUSER_",",.01)  ; ICR 10060 (supported)
  . D NAMECOMP^XLFNAME(.ORNAME)
- . S ORXML($$INCLINE)="<FirstName>"_ORNAME("GIVEN")_"</FirstName>"
- . S ORXML($$INCLINE)="<LastName>"_ORNAME("FAMILY")_"</LastName>"
+ . S ORXML($$INCLINE)="<FirstName>"_$$SYMENC^MXMLUTL(ORNAME("GIVEN"))_"</FirstName>"
+ . S ORXML($$INCLINE)="<LastName>"_$$SYMENC^MXMLUTL(ORNAME("FAMILY"))_"</LastName>"
  . D GETEMAIL^ORPDMP(.OREMAIL,ORUSER)
- . S ORXML($$INCLINE)="<SystemID>"_OREMAIL_"</SystemID>"
+ . S ORXML($$INCLINE)="<SystemID>"_$$SYMENC^MXMLUTL(OREMAIL)_"</SystemID>"
  . S ORXML($$INCLINE)="</Delegate>"
  ;
  S ORXML($$INCLINE)="<UserLocation>"
- S ORXML($$INCLINE)="<Name>"_$$NAME^XUAF4(ORINST)_"</Name>"
+ S ORXML($$INCLINE)="<Name>"_$$SYMENC^MXMLUTL($$NAME^XUAF4(ORINST))_"</Name>"
  S ORINSTINFO=$$INSTINFO(ORINST)
- S ORXML($$INCLINE)="<DEANumber>"_$P(ORINSTINFO,U,1)_"</DEANumber>"
- S ORXML($$INCLINE)="<NPINumber>"_$P(ORINSTINFO,U,2)_"</NPINumber>"
- S ORXML($$INCLINE)="<StateCode>"_$P($$PADD^XUAF4(ORINST),U,3)_"</StateCode>"
+ S ORXML($$INCLINE)="<DEANumber>"_$$SYMENC^MXMLUTL($P(ORINSTINFO,U,1))_"</DEANumber>"
+ S ORXML($$INCLINE)="<NPINumber>"_$$SYMENC^MXMLUTL($P(ORINSTINFO,U,2))_"</NPINumber>"
+ S ORXML($$INCLINE)="<StateCode>"_$$SYMENC^MXMLUTL($P($$PADD^XUAF4(ORINST),U,3))_"</StateCode>"
  S ORXML($$INCLINE)="</UserLocation>"
  ;
  S ORXML($$INCLINE)="<Patient>"
@@ -239,16 +239,16 @@ REQUESTXML(ORXML,DFN,ORUSER,ORDELEGATEOF,ORINST) ;
  K ORNAME
  S ORNAME=$G(VADM(1))
  D NAMECOMP^XLFNAME(.ORNAME)
- S ORXML($$INCLINE)="<FirstName>"_ORNAME("GIVEN")_"</FirstName>"
- S ORXML($$INCLINE)="<LastName>"_ORNAME("FAMILY")_"</LastName>"
- S ORXML($$INCLINE)="<MiddleName>"_ORNAME("MIDDLE")_"</MiddleName>"
- S ORXML($$INCLINE)="<DOB>"_$TR($$FMTE^XLFDT(+$G(VADM(3)),"7DZ"),"/","-")_"</DOB>"
- S ORXML($$INCLINE)="<GenderCode>"_$P($G(VADM(5)),U,1)_"</GenderCode>"
+ S ORXML($$INCLINE)="<FirstName>"_$$SYMENC^MXMLUTL(ORNAME("GIVEN"))_"</FirstName>"
+ S ORXML($$INCLINE)="<LastName>"_$$SYMENC^MXMLUTL(ORNAME("FAMILY"))_"</LastName>"
+ S ORXML($$INCLINE)="<MiddleName>"_$$SYMENC^MXMLUTL(ORNAME("MIDDLE"))_"</MiddleName>"
+ S ORXML($$INCLINE)="<DOB>"_$$SYMENC^MXMLUTL($TR($$FMTE^XLFDT(+$G(VADM(3)),"7DZ"),"/","-"))_"</DOB>"
+ S ORXML($$INCLINE)="<GenderCode>"_$$SYMENC^MXMLUTL($P($G(VADM(5)),U,1))_"</GenderCode>"
  S ORXML($$INCLINE)="<DFN>"_DFN_"</DFN>"
- S ORXML($$INCLINE)="<StationCode>"_$$STA^XUAF4($$KSP^XUPARAM("INST"))_"</StationCode>"
+ S ORXML($$INCLINE)="<StationCode>"_$$SYMENC^MXMLUTL($$STA^XUAF4($$KSP^XUPARAM("INST")))_"</StationCode>"
  S ORICN=$$GETICN^MPIF001(DFN)
  I ORICN<0 S ORICN=""
- S ORXML($$INCLINE)="<ICN>"_ORICN_"</ICN>"
+ S ORXML($$INCLINE)="<ICN>"_$$SYMENC^MXMLUTL(ORICN)_"</ICN>"
  ;
  S ORXML($$INCLINE)="<Addresses>"
  ;
@@ -256,20 +256,20 @@ REQUESTXML(ORXML,DFN,ORUSER,ORDELEGATEOF,ORINST) ;
  S ORTEMPADD=$S($G(VAPA(9))'="":1,1:0)
  ;
  S ORXML($$INCLINE)="<Address>"
- S ORXML($$INCLINE)="<Street>"_$G(VAPA(1))_"</Street>"
- S ORXML($$INCLINE)="<City>"_$G(VAPA(4))_"</City>"
- S ORXML($$INCLINE)="<StateCode>"_$$GET1^DIQ(5,+$G(VAPA(5))_",",1,"I")_"</StateCode>"
- S ORXML($$INCLINE)="<ZipCode>"_$G(VAPA(6))_"</ZipCode>"
+ S ORXML($$INCLINE)="<Street>"_$$SYMENC^MXMLUTL($G(VAPA(1)))_"</Street>"
+ S ORXML($$INCLINE)="<City>"_$$SYMENC^MXMLUTL($G(VAPA(4)))_"</City>"
+ S ORXML($$INCLINE)="<StateCode>"_$$SYMENC^MXMLUTL($$GET1^DIQ(5,+$G(VAPA(5))_",",1,"I"))_"</StateCode>"
+ S ORXML($$INCLINE)="<ZipCode>"_$$SYMENC^MXMLUTL($G(VAPA(6)))_"</ZipCode>"
  S ORXML($$INCLINE)="<TypeCode>"_$S(ORTEMPADD:"Temporary",1:"Permanent")_"</TypeCode>"
  S ORXML($$INCLINE)="</Address>"
  ;
  ; Residential
  I $G(VAPA(30))'=""!($G(VAPA(33))'="")!($G(VAPA(34))'="")!($G(VAPA(35))'="") D
  . S ORXML($$INCLINE)="<Address>"
- . S ORXML($$INCLINE)="<Street>"_$G(VAPA(30))_"</Street>"
- . S ORXML($$INCLINE)="<City>"_$G(VAPA(33))_"</City>"
- . S ORXML($$INCLINE)="<StateCode>"_$$GET1^DIQ(5,+$G(VAPA(34))_",",1,"I")_"</StateCode>"
- . S ORXML($$INCLINE)="<ZipCode>"_$G(VAPA(35))_"</ZipCode>"
+ . S ORXML($$INCLINE)="<Street>"_$$SYMENC^MXMLUTL($G(VAPA(30)))_"</Street>"
+ . S ORXML($$INCLINE)="<City>"_$$SYMENC^MXMLUTL($G(VAPA(33)))_"</City>"
+ . S ORXML($$INCLINE)="<StateCode>"_$$SYMENC^MXMLUTL($$GET1^DIQ(5,+$G(VAPA(34))_",",1,"I"))_"</StateCode>"
+ . S ORXML($$INCLINE)="<ZipCode>"_$$SYMENC^MXMLUTL($G(VAPA(35)))_"</ZipCode>"
  . S ORXML($$INCLINE)="<TypeCode>Residential</TypeCode>"
  . S ORXML($$INCLINE)="</Address>"
  ;
@@ -280,10 +280,10 @@ REQUESTXML(ORXML,DFN,ORUSER,ORDELEGATEOF,ORINST) ;
  . S VAPA("P")=1
  . D ADD^VADPT
  . S ORXML($$INCLINE)="<Address>"
- . S ORXML($$INCLINE)="<Street>"_$G(VAPA(1))_"</Street>"
- . S ORXML($$INCLINE)="<City>"_$G(VAPA(4))_"</City>"
- . S ORXML($$INCLINE)="<StateCode>"_$$GET1^DIQ(5,+$G(VAPA(5))_",",1,"I")_"</StateCode>"
- . S ORXML($$INCLINE)="<ZipCode>"_$G(VAPA(6))_"</ZipCode>"
+ . S ORXML($$INCLINE)="<Street>"_$$SYMENC^MXMLUTL($G(VAPA(1)))_"</Street>"
+ . S ORXML($$INCLINE)="<City>"_$$SYMENC^MXMLUTL($G(VAPA(4)))_"</City>"
+ . S ORXML($$INCLINE)="<StateCode>"_$$SYMENC^MXMLUTL($$GET1^DIQ(5,+$G(VAPA(5))_",",1,"I"))_"</StateCode>"
+ . S ORXML($$INCLINE)="<ZipCode>"_$$SYMENC^MXMLUTL($G(VAPA(6)))_"</ZipCode>"
  . S ORXML($$INCLINE)="<TypeCode>Permanent</TypeCode>"
  . S ORXML($$INCLINE)="</Address>"
  ;
@@ -292,20 +292,20 @@ REQUESTXML(ORXML,DFN,ORUSER,ORDELEGATEOF,ORINST) ;
  S ORXML($$INCLINE)="<Phones>"
  ;
  S ORXML($$INCLINE)="<Phone>"
- S ORXML($$INCLINE)="<Number>"_$G(VAPA(8))_"</Number>"
+ S ORXML($$INCLINE)="<Number>"_$$SYMENC^MXMLUTL($G(VAPA(8)))_"</Number>"
  S ORXML($$INCLINE)="<TypeCode>Residence</TypeCode>"
  S ORXML($$INCLINE)="</Phone>"
  ;
  I $G(ORTEMPPHONE)'="" D
  . S ORXML($$INCLINE)="<Phone>"
- . S ORXML($$INCLINE)="<Number>"_ORTEMPPHONE_"</Number>"
+ . S ORXML($$INCLINE)="<Number>"_$$SYMENC^MXMLUTL(ORTEMPPHONE)_"</Number>"
  . S ORXML($$INCLINE)="<TypeCode>Temporary</TypeCode>"
  . S ORXML($$INCLINE)="</Phone>"
  ;
  S ORCELL=$$GET1^DIQ(2,DFN_",",.134)
  I ORCELL'="" D
  . S ORXML($$INCLINE)="<Phone>"
- . S ORXML($$INCLINE)="<Number>"_ORCELL_"</Number>"
+ . S ORXML($$INCLINE)="<Number>"_$$SYMENC^MXMLUTL(ORCELL)_"</Number>"
  . S ORXML($$INCLINE)="<TypeCode>Cellular</TypeCode>"
  . S ORXML($$INCLINE)="</Phone>"
  ;
@@ -381,3 +381,4 @@ CHARS(ORTEXT) ;
  I $G(ORELEMENT)="" Q
  S ORRESULT(ORELEMENT)=$G(ORRESULT(ORELEMENT))_ORTEXT
  Q
+ ;

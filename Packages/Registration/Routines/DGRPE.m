@@ -1,5 +1,5 @@
-DGRPE ;ALB/MRL,LBD,BRM,TMK,BAJ,PWC,JAM,JAM,JAM - REGISTRATIONS EDITS ;23 May 2017  1:51 PM
- ;;5.3;Registration;**32,114,139,169,175,247,190,343,397,342,454,415,489,506,244,547,522,528,555,508,451,626,638,624,677,672,702,689,735,688,797,842,865,871,887,941,985,997**;Aug 13, 1993;Build 42
+DGRPE ;ALB/MRL,LBD,BRM,TMK,BAJ,PWC,JAM,JAM,JAM,LEG,ARF - REGISTRATIONS EDITS ;23 May 2017  1:51 PM
+ ;;5.3;Registration;**32,114,139,169,175,247,190,343,397,342,454,415,489,506,244,547,522,528,555,508,451,626,638,624,677,672,702,689,735,688,797,842,865,871,887,941,985,997,1014,1040,1044,1056**;Aug 13, 1993;Build 18
  ;
  ;DGDR contains a string of edits; edit=screen*10+item #
  ;
@@ -26,6 +26,7 @@ DGRPE ;ALB/MRL,LBD,BRM,TMK,BAJ,PWC,JAM,JAM,JAM - REGISTRATIONS EDITS ;23 May 201
  I DGRPS=11,(DGDR["1105,") D EN^DGR111(DFN) ;DG*5.3*871 screen 11 HBP subscreen
  ; DG*5.3*997; jam; Screen 11.5 Caregiver subscreen
  I DGRPS=11.5,(DGDR["1151,") D EN^DGRP11B(DFN)
+ I DGRPS=11.5,(DGDR["1152,") D EN^DGRP1152A(DFN) ;LEG; DG*5.3*1014 ; for CCP screen <11.5.2>
  ;-- Tricare screen #15
  I DGRPS=15 D EDIT^DGRP15,Q Q
  ;
@@ -36,6 +37,8 @@ DGRPE ;ALB/MRL,LBD,BRM,TMK,BAJ,PWC,JAM,JAM,JAM - REGISTRATIONS EDITS ;23 May 201
  D SETDR(DGDR,.DR)
  S (DA,Y)=DFN,DIE="^DPT("
  D ^DIE
+ ; DG*5.3*1040 - Check for timeout in Screen 1.1
+ I DGRPS=1.1,$D(DTOUT),'+$G(DGTMOT) S DGTMOT=1
  ;check for Combat Vet status
  I $G(DGCVFLG)=1,($P($$CVEDT^DGCV(DFN),U,2)']"") D
  . W !!,"**NOTE-Change(s) made in this session deleted the veteran's Combat Vet status!"
@@ -71,16 +74,20 @@ SETFLDS(DGDR) ; Set up fields to edit
  ;JAM; DG*5.3*941 - Tag 108 added for QUES^DGRPU1 (ICR 413) to edit the perm address with the home/office phone numbers since patch 941 removed these fields from the Perm Address edit logic
 108 ;;N FLG S (FLG(1),FLG(2))=1 D EN^DGREGAED(DFN,.FLG);
 109 ;;N FLG S (FLG(1),FLG(2))=1 D EN^DGREGAED(DFN,.FLG);.02;D DR207^DGRPE;7LANGUAGE DATE/TIME;D LANGDEL^DGRPE;D DR109^DGRPE;6;2;K DR(2,2.02),DR(2,2.06);.05;.08;K DIE("NO^");
-111 ;;N FLG S (FLG(1),FLG(2))=1 D EN^DGREGRED(DFN,.FLG);D RESMVQ^DGREGCP1(DFN);
+ ; DG*5.3*1040 - If no timeout from previous field then proceed to next prompt
+111 ;;N FLG S (FLG(1),FLG(2))=1 D EN^DGREGRED(DFN,.FLG);D:'+$G(DGTMOT) RESMVQ^DGREGCP1(DFN);
  ;JAM, DG*5.3*941, Home and Office phone numbers not associated with Perm Address - set flg(1)=0 so we don't edit phone numbers with permanent address
  ;CLT, Copy Permanent Mailing Address to Residential Address ;DG*5.3*941
  ; If Perm address is not null, go to update of address. Otherwise give user option to copy residential address to perm.
  ;  and if address is copied quit, otherwise continue with entering in a perm address. 
 112 ;;S:$G(^DPT(DFN,.11))'="" Y="@30";D DR11^DGRPE S:$G(^DPT(DFN,.11))'="" Y="@31";
-112000 ;;@30;N FLG S FLG(1)=0,FLG(2)=1 D EN^DGREGAED(DFN,.FLG) D PERMMVQ^DGREGCP1(DFN);@31;
-113 ;;.12105TEMP MAILING ADDRESS ACTIVE;S:X="N" Y="@15";S DIE("NO^")="";.1217TEMP MAILING ADDRESS START DATE;.1218TEMP MAILING ADDRESS END DATE;N RET S RET=1 D EN^DGREGTED(DFN,"TEMP",.RET) S:'RET Y=.12105;@15;K DIE("NO^");
+ ; DG*5.3*1040 - If no timeout from previous field then proceed to next prompt
+112000 ;;@30;N FLG S FLG(1)=0,FLG(2)=1 D EN^DGREGAED(DFN,.FLG) D:'+$G(DGTMOT) PERMMVQ^DGREGCP1(DFN);@31;
+113 ;;.12105TEMP MAILING ADDRESS ACTIVE;S:X="N" Y="@15";S DIE("NO^")="";.1217TEMP MAILING ADDRESS START DATE;.1218TEMP MAILING ADDRESS END DATE;N RET S RET=1 D EN^DGREGTED(DFN,"TEMP",.RET) S:'RET&('+$G(DGTMOT)) Y=.12105;@15;K DIE("NO^");
 114 ;;.14105//NO;S:X="N" Y="@111" S:X="Y" DIE("NO^")="";.1417;I X']"" W !?4,$C(7),"But I need a Start Date." S Y=.14105;.1418;D DR111^DGRPE;.141;I '$P($$CAACT^DGRPCADD(DFN),U,2) W !?4,"But I need at least one active category." S Y=.14105;
-114000 ;;K DR(2,2.141);N RET S RET=1 D EN^DGREGTED(DFN,"CONF",.RET) S:'RET Y=.14105;@111;K DIE("NO^");
+ ; DG*5.3*1014;jam; add K ^DIE("NO^") after enty of confidential address so if we loop back to beginning, we can exit
+ ; DG*5.3*1040 - Add check for variable DGTMOT
+114000 ;;K DR(2,2.141);N RET S RET=1 D EN^DGREGTED(DFN,"CONF",.RET) K DIE("NO^") S:'RET&('+$G(DGTMOT)) Y=.14105;@111;K DIE("NO^");
 201 ;;.05;.08;.092;.093;.2401:.2403;57.4//NOT APPLICABLE;
 202 ;;1010.15//NO;S:X'="Y" Y="@22";S DIE("NO^")="";1010.152;I X']"" W !?4,*7,"But I need to know where you were treated most recently." S Y=1010.15;1010.151;1010.154;S:X']"" Y="@22";1010.153;@22;K DIE("NO^");
 203 ;;D DR203^DGRPE;6ETHNICITY;2RACE;K DR(2,2.02),DR(2,2.06);
@@ -128,22 +135,58 @@ SETFLDS(DGDR) ; Set up fields to edit
 606 ;;I $P($G(^DPT(DFN,.361)),U,3)="H" S Y="@6131";.3602//NO;.3603//NO;S Y="@6132";@6131;.3602;.3603;@6132;
 607 ;;.368//NO;.369//NO;I $S('$D(^DPT(DA,.36)):1,$P(^(.36),U,8)="Y"!($P(^(.36),U,9)="Y"):0,1:1) S Y="@614";.37;@614;
 608 ;;S DGPHFLG=0;.531;S:X'="Y" DGX=X,Y="@616";.532///^S X="PENDING";S Y="@6161";@616;S:DGX'="N" Y="@6162";.533///^S X="VAMC";@6161;S DGPHFLG=1;.535///^S X=$$DIV^DGRPLE();@6162;
-AD N DGZ4,DGPC
+AD ; DG*5.3*1014;jam; Replace code below - store data via Fileman and not direct global sets
+ ; Input: DGADD =.21 for copying to NOK
+ ;              =.211 for copying to NOK2
+ ;
+ ;N DGZ4,DGPC
  ; patch DG*5.3*985; jam - NOK - do not copy phone number when copying patient address.
  ; patch DG*5.3*997; jam - copy country/province/postal code
  ;S X=$S($D(^DPT(DA,.11)):^(.11),1:""),DGZ4=$P(X,U,12),DGPHONE=$S($D(^(.13)):$P(^(.13),U,1),1:""),Y=$S($D(^(DGADD)):^(DGADD),1:""),^(DGADD)=$P(Y,U,1)_U_$P(Y,U,2)_U_$P(X,U,1,6)_U_DGPHONE_U_$P(Y,U,10)
- S X=$S($D(^DPT(DA,.11)):^(.11),1:""),DGZ4=$P(X,U,12),Y=$S($D(^(DGADD)):^(DGADD),1:""),^(DGADD)=$P(Y,U,1)_U_$P(Y,U,2)_U_$P(X,U,1,6)_U_$P(Y,U,9)_U_$P(Y,U,10)_U_$P(Y,U,11)_U_$P(X,U,10)_U_$P(X,U,8)_U_$P(X,U,9)
- I DGZ4 S DGPC=$S((DGADD=.33):1,(DGADD=.34):2,(DGADD=.211):3,(DGADD=.331):4,(DGADD=.311):5,(DGADD=.25):6,(DGADD=.21):7,1:0) S:DGPC $P(^DPT(DFN,.22),U,DGPC)=DGZ4
+ ;S X=$S($D(^DPT(DA,.11)):^(.11),1:""),DGZ4=$P(X,U,12),Y=$S($D(^(DGADD)):^(DGADD),1:""),^(DGADD)=$P(Y,U,1)_U_$P(Y,U,2)_U_$P(X,U,1,6)_U_$P(Y,U,9)_U_$P(Y,U,10)_U_$P(Y,U,11)_U_$P(X,U,10)_U_$P(X,U,8)_U_$P(X,U,9)
+ ;I DGZ4 S DGPC=$S((DGADD=.33):1,(DGADD=.34):2,(DGADD=.211):3,(DGADD=.331):4,(DGADD=.311):5,(DGADD=.25):6,(DGADD=.21):7,1:0) S:DGPC $P(^DPT(DFN,.22),U,DGPC)=DGZ4
  ;K DGADD,DGPHONE Q
- K DGADD Q
+ N DGPMA,DGDATA,DGERROR
+ ; get Perm Address
+ S DGPMA=$S($D(^DPT(DFN,.11)):^(.11),1:"")
+ ; set fields for copying Perm address to NOK
+ I DGADD=.21 D
+ . S DGDATA(.221)=$P(DGPMA,U,10)
+ . S DGDATA(.213)=$P(DGPMA,U,1)
+ . S DGDATA(.214)=$P(DGPMA,U,2)
+ . S DGDATA(.215)=$P(DGPMA,U,3)
+ . S DGDATA(.216)=$P(DGPMA,U,4)
+ . S DGDATA(.217)=$P(DGPMA,U,5)
+ . S DGDATA(.218)=$P(DGPMA,U,6)
+ . S DGDATA(.222)=$P(DGPMA,U,8)
+ . S DGDATA(.223)=$P(DGPMA,U,9)
+ ; set fields for copying Perm address to NOK2
+ I DGADD=.211 D
+ . S DGDATA(.2101)=$P(DGPMA,U,10)
+ . S DGDATA(.2193)=$P(DGPMA,U,1)
+ . S DGDATA(.2194)=$P(DGPMA,U,2)
+ . S DGDATA(.2195)=$P(DGPMA,U,3)
+ . S DGDATA(.2196)=$P(DGPMA,U,4)
+ . S DGDATA(.2197)=$P(DGPMA,U,5)
+ . S DGDATA(.2198)=$P(DGPMA,U,6)
+ . S DGDATA(.2102)=$P(DGPMA,U,8)
+ . S DGDATA(.2103)=$P(DGPMA,U,9)
+ I $$UPD^DGENDBS(2,DFN,.DGDATA,.DGERROR)
+ K DGADD
+ Q
+ ;
 DR109 ;Drop through (use same logic as DR203)
 DR203 S DR(2,2.02)=".01RACE;I $P($G(^DIC(10.3,+$P($G(^DPT(DA(1),.02,DA,0)),""^"",2),0)),""^"",2)=""S"" S Y=""@2031"";.02;@2031;"
  S DR(2,2.06)=".01ETHNICITY;I $P($G(^DIC(10.3,+$P($G(^DPT(DA(1),.06,DA,0)),""^"",2),0)),""^"",2)=""S"" S Y=""@2032"";.02;@2032;"
  Q
 DR11 ;clt; DG*5.3*941 - Called from line tag 112 if Perm address is empty
  Q:$G(^DPT(DFN,.115))=""
- ; If Residential Address exists, give user the option of copying residential to permanent address
- W !,"The Patient has no Permanent Mailing Address."
+ ; DG*5.3*1040 - Quit if timeout from previous field
+ Q:$D(DTOUT)
+ Q:+$G(DGTMOT)
+ ;DG*5.3*1056 removed Permanent from the following comment and message
+ ; If Residential Address exists, give user the option of copying residential to mailing address
+ W !,"The Patient has no Mailing Address."
  D RESMVQ^DGREGCP1(DFN)
  Q
 DR111 ; Set DR string for Confidential Address categories
@@ -196,8 +239,8 @@ WARN32(X,DIPA,SEQ,Y) ; Warn if the BOS is changed, then the component will
  ;
 CMP(X) ; Function to determine if service component is valid for
  ; branch of service ien in X   0 = invalid  1 = valid  
- ; Component only valid for ARMY/AIR FORCE/MARINES/COAST GUARD/NOAA/USPHS
- Q $S('$G(X):0,X'>5!(X=9)!(X=10):1,1:0)
+ ; Component only valid for ARMY/AIR FORCE/MARINES/COAST GUARD/NOAA/USPHS/SPACE FORCE
+ Q $S('$G(X):0,X'>5!(X=9)!(X=10)!(X=15):1,1:0)  ;DG*5.3*1044 - added 15 for SPACE FORCE branch of service
  ;
 YN1316(DFN) ;Email address indicator - DG*5.3*865
  N %,RSLT

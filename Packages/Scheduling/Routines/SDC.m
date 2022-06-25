@@ -1,5 +1,5 @@
 SDC ;MAN/GRR,ALB/LDB - CANCEL A CLINIC'S AVAILABILITY ;JAN 15, 2016
- ;;5.3;Scheduling;**15,32,79,132,167,478,487,523,545,627,684,724,758**;Aug 13, 1993;Build 2
+ ;;5.3;Scheduling;**15,32,79,132,167,478,487,523,545,627,684,724,758,780**;Aug 13, 1993;Build 17
  N SDATA,SDCNHDL ; for evt dvr
 SDC1 K SDLT,SDCP S NOAP="" D LO^DGUTL
  S DIC=44,DIC(0)="MEQA",DIC("S")="I $P(^(0),""^"",3)=""C"",'$G(^(""OOS""))",DIC("A")="Select CLINIC NAME: " D ^DIC K DIC("S"),DIC("A") G:'$D(^SC(+Y,"SL")) END^SDC0
@@ -33,12 +33,16 @@ SKIP S ^SC(SC,"SDCAN",FR,0)=FR_"^"_SDHTO
  S ^SC(SC,"S",FR,0)=FR,^("MES")="CANCELLED UNTIL "_X_$S(I?.P:"",1:" ("_I_")") D S S I=^(1),I=I_$J("",%-$L(I)),Y="" I $G(SDDFR)<100,$L(I)<77 S I=I_"    " ;SD*5.3*758 - pad 4 empty spaces needed for blocks < 60 minutes
  F X=0:2:% S DH=$E(I,X+SI+SI),P=$S(X<ST:DH_$E(I,X+1+SI+SI),X=%:$S(Y="[":Y,1:DH)_$E(I,X+1+SI+SI),1:$S(Y="["&(X=ST):"]",1:"X")_"X"),Y=$S(DH="]":"",DH="[":DH,1:Y),I=$E(I,1,X-1+SI+SI)_P_$E(I,X+2+SI+SI,999)
  S:'$F(I,"[") I5=$F(I,"X"),I=$E(I,1,(I5-2))_"["_$E(I,I5,999) K I5
- S DH=0,^(1)=I,FR=FR-.0001 G C ;NAKED REFERENCE - ^SC(IFN,"ST",Date,1)
+ S DH=0,^(1)=I                 ;780
+ D EN^SDTMPHLC(SC,FR,TO,"P",CANREM) ;780
+ S FR=FR-.0001                 ;780 
+ G C ;NAKED REFERENCE - ^SC(IFN,"ST",Date,1)
 S S ^("CAN")=^SC(SC,"ST",SD,1) Q
  ;
 ALL N CANREM
  W !,"Reason for cancellation: " R CANREM:DTIME I $L(CANREM)>160!($L(CANREM)<3) W !,*7,"Reason must be between 3 to 160 characters long",! G ALL
  D S S ^(1)="   "_$E(SD,6,7)_"    **CANCELLED**",FR=SD,TO=SD+.9 ;NAKED REFERENCE - ^SC(IFN,"ST",Date,1)
+ D EN^SDTMPHLC(SC,SD,,"C","**CANCELLED**") ;780
 C S FR=$O(^SC(SC,"S",FR)) I FR<1!(FR'<TO) W !!,"CANCELLED!  " K SDX G CHKEND^SDC0
  N TDH,TMPD,DIE,DR,NODE,SDI
  ; SD*724 - Replace 'I' with 'SDI'

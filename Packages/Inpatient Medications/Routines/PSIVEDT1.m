@@ -1,10 +1,11 @@
-PSIVEDT1 ;BIR/MLM - EDIT IV ORDER (CONT) ;Jul 02, 2018@09:31
- ;;5.0;INPATIENT MEDICATIONS;**3,7,41,47,50,64,58,116,110,111,113,267,279,305,194,373**;16 DEC 97;Build 3
+PSIVEDT1 ;BIR/MLM - EDIT IV ORDER (CONT) ;Oct 28, 2020@10:09:21
+ ;;5.0;INPATIENT MEDICATIONS;**3,7,41,47,50,64,58,116,110,111,113,267,279,305,194,373,411,416**;16 DEC 97;Build 8
  ;
  ; Reference to ^PS(55 is supported by DBIA# 2191.
  ; Reference to ^PS(51.1 is supported by DBIA# 2177.
  ;
 10 ; Start Date
+ I $G(P("APPT")) S P(2)=P("APPT") ;p411 - set Start Date to Visit Date
  D:'P(2)&P("IVRM")!($G(PSJREN)) ENT^PSIVCAL
 A10 I $G(P("RES"))="R" I $G(ON)["P",$P($G(^PS(53.1,+ON,0)),"^",24)="R" D  Q
  . Q:'$G(PSIVRENW)  W !!?5,"This is a Renewal Order. Start Date may not be edited at this point." D PAUSE^VALM1
@@ -146,6 +147,7 @@ NUMLAB2 ; Loop ;*305
  ..S PSJTMPTX=$G(PSJTMPTX)_$S($L($G(PSJTMPTX)):" ",1:"")_$G(^PS(53.45,$G(DUZ),6,TMPLIN,0))
  S PSJTMPTX=$S($G(PSJOVRMX):OPIMSG,1:$G(PSJTMPTX))
  S P("OPI")=PSJTMPTX I (PSJOPILN>0) S P("OPI")=$$ENBCMA^PSJUTL("V")
+ I PSJTMPTX="",PSJOPILN="" S P("OPI")=$$ENBCMA^PSJUTL("V")  ;P416
  Q
  ;
 ORFLDS ; Display OE/RR fields during edit.

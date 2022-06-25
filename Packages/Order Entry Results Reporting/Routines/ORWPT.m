@@ -1,5 +1,5 @@
-ORWPT ;SLC/KCM/REV - Patient Lookup Functions ;Oct 14, 2020@15:28:32
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,149,206,187,190,215,243,280,306,311,441,528,519**;Dec 17, 1997;Build 36
+ORWPT ;SLC/KCM/REV - Patient Lookup Functions ; 12/24/20 1:20pm
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,149,206,187,190,215,243,280,306,311,441,528,519,544**;Dec 17, 1997;Build 1
  ;
  ; Ref. to ^UTILITY via IA 10061
  ; DBIA 10096  ^%ZOSF()
@@ -115,6 +115,7 @@ LAST5(LST,ID) ; Return a list of patients matching A9999 identifiers
  N I,IEN,XREF
  S (I,IEN)=0,XREF=$S($L(ID)=5:"BS5",1:"BS")
  F  S IEN=$O(^DPT(XREF,ID,IEN)) Q:'IEN  D
+ . Q:'$D(^DPT(IEN,0))  ;Added Patch OR*3*544
  . S I=I+1,LST(I)=IEN_U_$P(^DPT(IEN,0),U)_U_$$DOB^DPTLK1(IEN,2)_U_$$SSN^DPTLK1(IEN)  ; DG249
  Q
  ;

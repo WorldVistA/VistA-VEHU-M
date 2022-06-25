@@ -1,4 +1,4 @@
-DGPTXC2 ; ;08/27/14
+DGPTXC2 ; ;06/22/22
  ;;
 1 N X,X1,X2 S DIXR=1147 D X1(U) K X2 M X2=X D X1("F") K X1 M X1=X
  I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
@@ -207,6 +207,76 @@ X15(DION) K X
  S X(2)=$G(@DIEZTMP@("V",45,DIIENS,2,DION),$P($G(^DGPT(DA,0)),U,2))
  S X(3)=$G(@DIEZTMP@("V",45,DIIENS,11,DION),$P($G(^DGPT(DA,0)),U,11))
  S X(4)=$G(@DIEZTMP@("V",45,DIIENS,79.244,DION),$P($G(^DGPT(DA,71)),U,4))
+ S X(5)=$G(@DIEZTMP@("V",45,DIIENS,70,DION),$P($G(^DGPT(DA,70)),U,1))
+ S X=$G(X(1))
+ Q
+16 N X,X1,X2 S DIXR=1238 D X16(U) K X2 M X2=X D X16("F") K X1 M X1=X
+ I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
+ . D KPTFDD^DGPTDDCR(.X,.DA,"D SD14")
+ K X M X=X2 I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
+ . D SPTFDD^DGPTDDCR(.X,.DA,"D SD14")
+ Q
+X16(DION) K X
+ S X(1)=$G(@DIEZTMP@("V",45,DIIENS,.01,DION),$P($G(^DGPT(DA,0)),U,1))
+ S X(2)=$G(@DIEZTMP@("V",45,DIIENS,2,DION),$P($G(^DGPT(DA,0)),U,2))
+ S X(3)=$G(@DIEZTMP@("V",45,DIIENS,11,DION),$P($G(^DGPT(DA,0)),U,11))
+ S X(4)=$G(@DIEZTMP@("V",45,DIIENS,79.245,DION),$P($G(^DGPT(DA,71)),U,5))
+ S X(5)=$G(@DIEZTMP@("V",45,DIIENS,70,DION),$P($G(^DGPT(DA,70)),U,1))
+ S X=$G(X(1))
+ Q
+17 N X,X1,X2 S DIXR=1239 D X17(U) K X2 M X2=X D X17("F") K X1 M X1=X
+ I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
+ . D KPTFDD^DGPTDDCR(.X,.DA,"D SD15")
+ K X M X=X2 I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
+ . D SPTFDD^DGPTDDCR(.X,.DA,"D SD15")
+ Q
+X17(DION) K X
+ S X(1)=$G(@DIEZTMP@("V",45,DIIENS,.01,DION),$P($G(^DGPT(DA,0)),U,1))
+ S X(2)=$G(@DIEZTMP@("V",45,DIIENS,2,DION),$P($G(^DGPT(DA,0)),U,2))
+ S X(3)=$G(@DIEZTMP@("V",45,DIIENS,11,DION),$P($G(^DGPT(DA,0)),U,11))
+ S X(4)=$G(@DIEZTMP@("V",45,DIIENS,79.246,DION),$P($G(^DGPT(DA,71)),U,6))
+ S X(5)=$G(@DIEZTMP@("V",45,DIIENS,70,DION),$P($G(^DGPT(DA,70)),U,1))
+ S X=$G(X(1))
+ Q
+18 N X,X1,X2 S DIXR=1240 D X18(U) K X2 M X2=X D X18("F") K X1 M X1=X
+ I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
+ . D KPTFDD^DGPTDDCR(.X,.DA,"D SD16")
+ K X M X=X2 I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
+ . D SPTFDD^DGPTDDCR(.X,.DA,"D SD16")
+ Q
+X18(DION) K X
+ S X(1)=$G(@DIEZTMP@("V",45,DIIENS,.01,DION),$P($G(^DGPT(DA,0)),U,1))
+ S X(2)=$G(@DIEZTMP@("V",45,DIIENS,2,DION),$P($G(^DGPT(DA,0)),U,2))
+ S X(3)=$G(@DIEZTMP@("V",45,DIIENS,11,DION),$P($G(^DGPT(DA,0)),U,11))
+ S X(4)=$G(@DIEZTMP@("V",45,DIIENS,79.247,DION),$P($G(^DGPT(DA,71)),U,7))
+ S X(5)=$G(@DIEZTMP@("V",45,DIIENS,70,DION),$P($G(^DGPT(DA,70)),U,1))
+ S X=$G(X(1))
+ Q
+19 N X,X1,X2 S DIXR=1241 D X19(U) K X2 M X2=X D X19("F") K X1 M X1=X
+ I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
+ . D KPTFDD^DGPTDDCR(.X,.DA,"D SD17")
+ K X M X=X2 I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
+ . D SPTFDD^DGPTDDCR(.X,.DA,"D SD17")
+ Q
+X19(DION) K X
+ S X(1)=$G(@DIEZTMP@("V",45,DIIENS,.01,DION),$P($G(^DGPT(DA,0)),U,1))
+ S X(2)=$G(@DIEZTMP@("V",45,DIIENS,2,DION),$P($G(^DGPT(DA,0)),U,2))
+ S X(3)=$G(@DIEZTMP@("V",45,DIIENS,11,DION),$P($G(^DGPT(DA,0)),U,11))
+ S X(4)=$G(@DIEZTMP@("V",45,DIIENS,79.248,DION),$P($G(^DGPT(DA,71)),U,8))
+ S X(5)=$G(@DIEZTMP@("V",45,DIIENS,70,DION),$P($G(^DGPT(DA,70)),U,1))
+ S X=$G(X(1))
+ Q
+20 N X,X1,X2 S DIXR=1242 D X20(U) K X2 M X2=X D X20("F") K X1 M X1=X
+ I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
+ . D KPTFDD^DGPTDDCR(.X,.DA,"D SD18")
+ K X M X=X2 I $G(X(1))]"",$G(X(2))]"",$G(X(3))]"",$G(X(4))]"" D
+ . D SPTFDD^DGPTDDCR(.X,.DA,"D SD18")
+ Q
+X20(DION) K X
+ S X(1)=$G(@DIEZTMP@("V",45,DIIENS,.01,DION),$P($G(^DGPT(DA,0)),U,1))
+ S X(2)=$G(@DIEZTMP@("V",45,DIIENS,2,DION),$P($G(^DGPT(DA,0)),U,2))
+ S X(3)=$G(@DIEZTMP@("V",45,DIIENS,11,DION),$P($G(^DGPT(DA,0)),U,11))
+ S X(4)=$G(@DIEZTMP@("V",45,DIIENS,79.249,DION),$P($G(^DGPT(DA,71)),U,9))
  S X(5)=$G(@DIEZTMP@("V",45,DIIENS,70,DION),$P($G(^DGPT(DA,70)),U,1))
  S X=$G(X(1))
  Q

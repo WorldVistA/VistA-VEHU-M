@@ -1,5 +1,5 @@
-DGMTSCR ;ALB/RMO/CAW - Means Test Screen Read Processor ; 8/1/08 1:21pm
- ;;5.3;Registration;**45,688**;Aug 13, 1993;Build 29
+DGMTSCR ;ALB/RMO/CAW,HM - Means Test Screen Read Processor ; 8/1/08 1:21pm
+ ;;5.3;Registration;**45,688,1014**;Aug 13, 1993;Build 42
  ;
  ; Input  -- DGRNG    Range of selectable items
  ;           DGMTACT  Means Test Action
@@ -49,7 +49,9 @@ HLP ;Help display
  I DGMTACT'="VEW" W !,"Enter 'ALL' to edit all available items on the screen."
  W !,"Enter '^N' to jump to a select screen.  Enter '^' to exit."
  W !!,"AVAILABLE SCREENS"
- S I=0 F  S I=$O(DGMTSC(I)) Q:'I  W !,"[",+$$SCR^DGMTSCU(I),"]  ",$P($$SCR^DGMTSCU(I),";",2)
+ S I=0 F  S I=$O(DGMTSC(I)) Q:'I  D
+ .I I=4,DGMTACT'="VEW" Q  ;DG*5.3*1014 do not display screen 4 for help 
+ .W !,"[",+$$SCR^DGMTSCU(I),"]  ",$P($$SCR^DGMTSCU(I),";",2)
  S DGLNE="",DGIOM=$S('IOM:80,1:IOM),$P(DGLNE,"=",(DGIOM-1))=""
  W !,DGLNE S DIR(0)="E" D ^DIR
  Q

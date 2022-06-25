@@ -1,7 +1,9 @@
 SDHL7CON ;MS/TG/MS/PB - TMP HL7 Routine;JULY 05, 2018
- ;;5.3;Scheduling;**704**;May 29, 2018;Build 64
+ ;;5.3;Scheduling;**704,773**;May 29, 2018;Build 9
  ;
  ;  Integration Agreements:
+ ;
+ ;SD*5.3*773 - Removed unused function TMCONV
  Q
  ;
 PARSEQ13 ;Process QBP^Q13 messages from the "TMP VISTA" Subscriber protocol
@@ -10,7 +12,7 @@ PARSEQ13 ;Process QBP^Q13 messages from the "TMP VISTA" Subscriber protocol
  ; variables are properly initialized and will produce a fatal error
  ; if they are missing.
  ;
- ;  The message will be checked to see if it is a valid query.
+ ; The message will be checked to see if it is a valid query.
  ; If not a negative acknowledgement will be sent.  If the query is an
  ; immediate mode or synchronous query, the realtime request manager
  ; is called to handle the query.  This means the query will be
@@ -254,13 +256,6 @@ RTCLIST(SDY,SDPT,SDSDT,SDEDT) ; return patient's "Return to Clinic" appointment 
  . S CNT=CNT+1,@SDY@(CNT)=IEN_U_REQDT_U_CLINID_U_CID_U_PRVID_U_CMTS_U_$G(MRTC)_U_$G(RTCINT)_U_$G(RTCPAR)
  S @SDY=CNT
  Q
-TMCONV(X) ;
- ;convert time to Zulu timezone
- N TZONE,DIFF,UTC,UTC1,UTC2
- S TZONE=$$GET1^DIQ(4.3,"1,",1,"I"),DIFF=$$GET1^DIQ(4.4,$G(TZONE)_",",2,"E")*(-1)
- S UTC=$$FMADD^XLFDT(X,,$G(DIFF),,),UTC2=$$FMTHL7^XLFDT(UTC)
- S UTC1=$E(UTC2,1,4)_"-"_$E(UTC2,5,6)_"-"_$E(UTC2,7,8)_"T"_$E(UTC2,9,10)_":"_$E(UTC2,11,12)_":00.000Z"
- Q UTC1
 PARSESEG(SEG,DATA,HL) ;Generic segment parser
  ;This procedure parses a single HL7 segment and builds an array
  ;subscripted by the field number containing the data for that field.

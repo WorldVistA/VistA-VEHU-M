@@ -1,5 +1,5 @@
 IBCOPR ;WISC/RFJ,BOISE/WRL - print dollar amts for pre-registration ;05 May 97  8:30 AM [7/22/03 11:59am]
- ;;2.0;INTEGRATED BILLING;**75,345,528,664**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**75,345,528,664,668**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;IA - 3336 (IB REFERENCING 433)
@@ -78,7 +78,6 @@ OUT ; select Excel or Report format
  D ^DIR K DIR
  I $D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT) G EXIT
  S IBCNOUT=Y
- S WIDTH=$S(IBCNOUT="E":200,1:132)
  ;
  W !!,"If you selected a long report period it is"
  W !,"recommended that this report be queued."
@@ -139,7 +138,7 @@ PRINT ; Print the report
  I 'IBCNFSUM S SORTBY=$S(IBCNSORT="P":"Patient",IBCNSORT="I":"Insurance",IBCNSORT="B":"Billed Amount",IBCNSORT="C":"Collected Amount",IBCNSORT="D":$S(DATETYPE="B":"Bill ",1:"Collected ")_"Date",IBCNSORT="S":"Source of Information",1:"")
  I IBCNOUT="E" D EXCEL^IBCOPR1
  I IBCNOUT="R" D REPORT^IBCOPR1
- I '$G(IBEX) D PAUSE^VALM1
+ I '$G(IBEX),($E(IOST,1,2)="C-") D PAUSE^VALM1
  ;
 EXIT ; Exit routine
  D ^%ZISC

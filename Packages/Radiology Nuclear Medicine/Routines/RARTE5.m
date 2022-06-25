@@ -1,5 +1,5 @@
-RARTE5 ;HISC/SWM AISC/MJK,RMO-Enter/Edit Outside Reports ;26 Oct 2018 12:49 PM
- ;;5.0;Radiology/Nuclear Medicine;**56,95,97,47,141,124**;Mar 16, 1998;Build 4
+RARTE5 ;HISC/SWM AISC/MJK,RMO-Enter/Edit Outside Reports ; Sep 29, 2021@15:29:13
+ ;;5.0;Radiology/Nuclear Medicine;**56,95,97,47,141,124,184**;Mar 16, 1998;Build 2
  ;Private IA #4793 CREATE^WVRALINK
  ;Controlled IA #3544 ^VA(200
  ;Supported IA #2056 GET1^DIQ
@@ -31,6 +31,8 @@ START S RAFIRST=0 ;=1 for 1st time rpt given "EF" rpt status
 CONTIN ; continue
  S RAXIT=0 D DISPLAY^RARTE6
  I RA18EX=-1 D INCRPT G START
+ ;RA184/KLM - Add warning for anything other than NO CREDIT registered exam (NSR20210806)
+ I $$REGCR() W !!,$C(7),"** WARNING, this case is not registered in an OUTSIDE imaging location. **",! K DIR S DIR(0)="Y",DIR("B")="NO",DIR("A")="Do you want to continue" D ^DIR I Y=0 D INCRPT G START
  ; raprtset is defined in display^rarte6
  S RAPNODE="^RADPT("_RADFN_",""DT"","_RADTI_",""P"","
  S RA7003=@(RAPNODE_RACNI_",0)")
@@ -176,7 +178,7 @@ INCRPT ; Kill extraneous variables to avoid collisions.
  K %,%DT,D,D0,D1,D2,DI,DIC,DIWT,DN,I,J,RAA1,RAA2
  K RABIENS,RABIDAT,RABIREQ,RACN,RACNI,RACT
  K RADATE,RADRS,RADTE,RADTI,RAFIN,RAFIRST,RAI,RALI,RALR,RANME,RAPRC,RARPT
- K RARPTN,RASSN,RAST,RAVW,RASSS,RASSSX,X
+ K RARPTN,RASSN,RAST,RAVW,RASSS,RASSSX,X,Y
  Q
 CCAN(IEN74) ;Check canned report for Outside Reporting
  ; adapted from EN3^RAUTL15
@@ -271,6 +273,10 @@ DELDXPRT ;del any Prim. and Sec. DXs from all cases in printset
  .D KILSEC^RARTE7(70.14,RA1)
  .Q
  Q
+REGCR() ;RA184/KLM - Check credit method of exam's registered location
+ N RAIL S RAIL=$P(^RADPT(RADFN,"DT",RADTI,0),U,4)
+ I $P(^RA(79.1,RAIL,0),U,21)'=2 Q 1
+ Q 0
 INTRO ;
  ;;+--------------------------------------------------------+
  ;;|                                                        |

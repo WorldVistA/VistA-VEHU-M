@@ -1,5 +1,5 @@
 YTXCHGM ;SLC/KCM - MH Exchange, JSON-Fileman Map ; 9/15/2015
- ;;5.01;MENTAL HEALTH;**121,123**;Dec 30, 1994;Build 72
+ ;;5.01;MENTAL HEALTH;**121,123,172**;Dec 30, 1994;Build 10
  ;
 BLDMAP(MAP) ; map file,field to JSON names in .MAP
  K MAP ; ensure rebuild
@@ -66,6 +66,7 @@ MAPLOOP ; file^loopType
  ;;601.83^rule
  ;;601.79^rule:skippedQuestion
  ;;601.93^
+ ;;601.712^
  ;;zzzzz
  ;
  ; Note:  The following fields should not be sent to a site, since
@@ -115,6 +116,7 @@ MAPJSON ;; name^handling^primaryFile:primaryField^refFile1:refField1^...
  ;;"info","scoringTag"^^601.71:91
  ;;"info","scoringRoutine"^^601.71:92
  ;;"info","scoringRevision"^^601.71:93
+ ;;"info","staffOnly"^^601.71:94
  ;;"info","dllVersion"^^601.71:100.01
  ;;"info","dllDate"^t^601.71:100.02
  ;;"info","auxVersion"^^601.71:100.03
@@ -205,5 +207,10 @@ MAPJSON ;; name^handling^primaryFile:primaryField^refFile1:refField1^...
  ;;"report","id"^^601.93:0.01
  ;;"report","instrument"^^601.93:1
  ;;"report","template"^w^601.93:2
+ ;;"spec","specIen"^^601.712:0.001
+ ;;"spec","instrument"^^601.712:0.01
+ ;;"spec","lastUpdate"^t^601.712:0.02
+ ;;"spec","entryChecksum"^^601.712:0.03
+ ;;"spec","entrySpec"^w^601.712:1
  ;;zzzzz
  ;

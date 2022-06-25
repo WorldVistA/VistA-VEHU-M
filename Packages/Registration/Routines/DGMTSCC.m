@@ -1,5 +1,5 @@
-DGMTSCC ;ALB/RMO,CAW,LBD,EG,LMD - Means Test Screen Completion ;03/24/2006
- ;;5.3;Registration;**33,45,130,438,332,433,462,456,610,624,611,890**;Aug 13, 1993;Build 40
+DGMTSCC ;ALB/RMO,CAW,LBD,EG,LMD,HM - Means Test Screen Completion ;03/24/2006
+ ;;5.3;Registration;**33,45,130,438,332,433,462,456,610,624,611,890,1014**;Aug 13, 1993;Build 42
  ;
  ; Input  -- DFN      Patient IEN
  ;           DGMTACT  Means Test Action
@@ -74,7 +74,9 @@ CHK ;Check if means test can be completed
  I DGD']"" W !?3,"Dependent Children section must be completed." S DGERR=1
  I DGD,'$D(DGREL("C")) W !?3,"Dependent Children is 'YES'.  No active children exist." S DGERR=1
  I 'DGD,$D(DGREL("C")) W !?3,"Active children exist.  Dependent Children should be 'YES'." S DGERR=1
- I DGMTYPT=1,'$D(DGREF),DGTYC="M",'DGNWTF W !?3,"A status of ",$$GETNAME^DGMTH(DGMTS)," requires property information." S DGERR=1
+ I DGMTYPT=1,'$D(DGREF),DGTYC="M",'DGNWTF D
+ .;DG*5.3*1014 check if entry point in screen was from edit, add, or complete a means test
+ .I DGMTACT'="EDT"&(DGMTACT'="ADD")&(DGMTACT'="COM") W !?3,"A status of ",$$GETNAME^DGMTH(DGMTS)," requires property information." S DGERR=1
  I DGMTYPT=2,'DGNWTF,DGCAT="E",$$ASKNW^DGMTCOU W !?3,"Patient is in an 'EXEMPT' status and requires property information." S DGERR=1
  I DGDET>DGINT W !?3,"Patient's deductible expenses cannot exceed income." S DGERR=1
  Q:$G(DGERR)
@@ -87,6 +89,7 @@ CHK ;Check if means test can be completed
  Q
  ;
 ADJ ;Adjudicate the means test
+ I DGMTACT="EDT"!(DGMTACT="ADD")!(DGMTACT="COM") Q  ;DG*5.3*1014
  N DIR,Y
  S DIR("?",1)="Since assets exceed the threshold, the "_$S(DGMTYPT=1:"means",1:"copay")_" test can"
  S DIR("?",2)="be sent to adjudication.  If the "_$S(DGMTYPT=1:"means",1:"copay")_" test is not"

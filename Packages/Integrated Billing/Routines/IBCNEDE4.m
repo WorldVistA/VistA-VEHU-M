@@ -1,5 +1,5 @@
 IBCNEDE4 ;AITC/DM - EICD (Electronic Insurance Coverage Discovery) extract;24-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,416,621,602**;21-MAR-94;Build 22
+ ;;2.0;INTEGRATED BILLING;**184,271,416,621,602,668**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; **Program Description**
@@ -11,8 +11,9 @@ IBCNEDE4 ;AITC/DM - EICD (Electronic Insurance Coverage Discovery) extract;24-JU
  ;
  Q
  ;
-EN ; EICD extract entry 
- N CLNC,DATA1,DATA2,DATA5,DFN,EACTIVE,ELG,FRESHDT,IBACTV,IBAPPTDT
+EN ; EICD extract entry
+ ;/vd-IB*2*668 - Added the variable APIEN
+ N APIEN,CLNC,DATA1,DATA2,DATA5,DFN,EACTIVE,ELG,FRESHDT,IBACTV,IBAPPTDT
  N IBBEGDT,IBCSIEN,IBDFNDONE,IBEFF,IBEICDPAY,IBENDDT,IBERR,IBEXP,IBFDA
  N IBFREQ,IBIDX,IBINSNM,IBMSG,IBSDA,IBTASKTOT,IBTOPIEN,IBTQCNT,IBTQIEN
  N IBTQSTAT,IBWK1,IBWK2,IBWKIEN,MAXCNT,OK
@@ -34,8 +35,14 @@ EN ; EICD extract entry
  ; and is nationally and locally active, if not, quietly quit 
  S IBEICDPAY=+$$GET1^DIQ(350.9,"1,",51.31,"I") ; "EICD PAYER"
  I 'IBEICDPAY G ENQQ
- I '($$GET1^DIQ(365.121,"1,"_IBEICDPAY_",",.02,"I")) G ENQQ ; "NATIONAL ACTIVE"
- I '($$GET1^DIQ(365.121,"1,"_IBEICDPAY_",",.03,"I")) G ENQQ ; "LOCAL ACTIVE"
+ ;/vd-IB*2*668 - replaced the following 2 lines of code to obtain the internal
+ ;               identifier for the Payer Application.
+ ;I '($$GET1^DIQ(365.121,"1,"_IBEICDPAY_",",.02,"I")) G ENQQ ; "NATIONAL ACTIVE"
+ ;I '($$GET1^DIQ(365.121,"1,"_IBEICDPAY_",",.03,"I")) G ENQQ ; "LOCAL ACTIVE"
+ S APIEN=$$PYRAPP^IBCNEUT5("EIV",IBEICDPAY)
+ I 'APIEN G ENQQ   ;Need an internal identifier for the Payer Application
+ I '($$GET1^DIQ(365.121,APIEN_","_IBEICDPAY_",",.02,"I")) G ENQQ ; "NATIONALLY ENABLED"
+ I '($$GET1^DIQ(365.121,APIEN_","_IBEICDPAY_",",.03,"I")) G ENQQ ; "LOCALLY ENABLED"
  ;
  ; gather the non-active insurance company names
  ; we will strip all blanks from the names, so dashes ('-') are treated properly for a compare 

@@ -1,94 +1,143 @@
-KMPVCBG ;SP/JML VSM background utility functions ;5/1/2017
- ;;4.0;CAPACITY MANAGEMENT;;3/1/2018;Build 38
+KMPVCBG ;SP/ VSM background utility functions ;5/1/2021
+ ;;4.0;CAPACITY MANAGEMENT;**1,2**;3/1/2018;Build 3
  ;
+ ; Integration Agreements
+ ;  Reference to ^XMD supported by ICR #10070
+ ;  Reference to $$SITE^VASITE supported by ICR #10112
  ;
 MONLIST(KMPVML) ; Return list of configured Monitors
  K KMPVML
- N KMPVMKEY,KMPVIEN
+ N KMPVIEN,KMPVMKEY,KMPVNAME
  S KMPVMKEY=""
  F  S KMPVMKEY=$O(^KMPV(8969,"B",KMPVMKEY)) Q:KMPVMKEY=""  D
  .S KMPVIEN=$O(^KMPV(8969,"B",KMPVMKEY,""))
- .I KMPVIEN>0 S KMPVML(KMPVMKEY)=$P($G(^KMPV(8969,KMPVIEN,0)),"^",3)
+ .I KMPVIEN>0 D
+ ..S KMPVNAME=$$GETVAL^KMPVCCFG(KMPVMKEY,"FULL NAME",8969)
+ ..S KMPVML(KMPVMKEY)=KMPVNAME
  Q
  ;
-STARTMON(KMPVMKEY,KMPVAUTO) ; Schedule transmission task in TaskMan and set ONOFF to ON
+STARTALL ; start all monitors - DON'T MOVE FROM THIS ROUTINE, CALLED BY ZSTU
+ N KMPMKEY
+ S KMPMKEY=""
+ F  S KMPMKEY=$O(^KMPV(8969,"B",KMPMKEY)) Q:KMPMKEY=""  D
+ .D STARTMON(KMPMKEY,1,1)
+ I $$GETVAL^KMPVCCFG("VTCM","VERSION",8969)>2 D CFGMSG^KMPUTLW()
+ E  D CFGMSG()
+ Q
+ ;
+STOPALL ; stop all monitors
+ N KMPMKEY
+ S KMPMKEY=""
+ F  S KMPMKEY=$O(^KMPV(8969,"B",KMPMKEY)) Q:KMPMKEY=""  D
+ .D STOPMON(KMPMKEY,1,1)
+ I $$GETVAL^KMPVCCFG("VTCM","VERSION",8969)>2 D CFGMSG^KMPUTLW()
+ E  D CFGMSG()
+ Q
+ ;
+ALLOW(KMPVMKEY) ;
+ N KMPCALLOW,KMPNALLOW,DIR,Y
+ S KMPCALLOW=$$GETVAL^KMPVCCFG(KMPVMKEY,"ALLOW TEST SYSTEM",8969)
+ S KMPNALLOW=$S(KMPCALLOW="NO":"YES",1:"NO")
+ K DIR S DIR(0)="Y",DIR("B")="No"
+ S DIR("?")="Answer YES to set ALLOW TEST to "_KMPNALLOW_" for "_KMPVMKEY
+ S DIR("A")="Do you want to set ALLOW TEST to "_KMPNALLOW_" for "_KMPVMKEY
+ D ^DIR
+ I $G(Y)=1 D
+ .D SETONE^KMPVCCFG(KMPVMKEY,"ALLOW TEST SYSTEM",KMPNALLOW,.KMPVERR)
+ Q
+ ;
+STARTMON(KMPVMKEY,KMPVAUTO,KMPNOCFG) ; Schedule transmission task in TaskMan and set ONOFF to ON
  N DA,DIE,DIR,DR,DTOUT,DUOUT,X,Y
- N KMPVEARR,KMPVERROR,KMPVNVAL,KMPVOVAL,KMPVRFREQ,KMPVOPT,KMPVSTAT,KMPVSTRT
+ N KMPROUT,KMPRT,KMPRUN,KMPVEARR,KMPVER,KMPVERROR,KMPVRFREQ,KMPVOPT,KMPVSTAT,KMPVSTRT,KMP2QUIT
  ;
  S KMPVAUTO=+$G(KMPVAUTO)
+ S KMPNOCFG=+$G(KMPNOCFG)
+ ; do not start/stop VETCM if not realtime version - there is no legacy version
+ I KMPVMKEY="VETM",$$GETVAL^KMPVCCFG(KMPVMKEY,"VERSION",8969)<3 Q
  ; Do not start monitor in test if ALLOW TEST SYSTEM is set to NO
- I $$PROD^KMPVCCFG()="Test",$$GETVAL^KMPVCCFG(KMPVMKEY,"ALLOW TEST SYSTEM",8969)="NO" D  Q
+ I $$PROD^KMPVCCFG()="test",$$GETVAL^KMPVCCFG(KMPVMKEY,"ALLOW TEST SYSTEM",8969)="NO" D  Q
  .Q:KMPVAUTO=1
  .N DIR S DIR(0)="E"
  .S DIR("A",1)="",DIR("A",2)="Cannot start monitor in test environment"
  .S DIR("A",3)="'ALLOW TEST SYSTEM' is set to 'NO'",DIR("A")="Press any key to continue"
  .D ^DIR
- ;
- S KMPVOVAL=$$GETVAL^KMPVCCFG(KMPVMKEY,"ONOFF",8969)
- W ! K DIR S DIR(0)="Y",DIR("B")="No"
- S DIR("?")="Answer YES to start collecting "_KMPVMKEY_" data"
- S DIR("A")="Do you want to start "_KMPVMKEY_" collection?"
- I 'KMPVAUTO D ^DIR Q:$D(DTOUT)!$D(DUOUT)
+ I 'KMPVAUTO D  D ^DIR Q:$D(DTOUT)!$D(DUOUT)
+ .W ! K DIR S DIR(0)="Y",DIR("B")="No"
+ .S DIR("?")="Answer YES to start collecting "_KMPVMKEY_" data"
+ .S DIR("A")="Do you want to start "_KMPVMKEY_" collection?"
  I ($G(Y)=1)!KMPVAUTO D
+ .S KMPVER=$$GETVAL^KMPVCCFG(KMPVMKEY,"VERSION",8969)
  .N KMPVOPT,KMPVSTRT,KMPVRFREQ,KMPVERROR,KMPVSTAT
- .S KMPVOPT=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN OPTION",8969)
- .S KMPVSTRT=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN SCHEDULE START",8969)
- .S KMPVRFREQ=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN SCHEDULE FREQUENCY",8969)
- .I KMPVSTRT=""!(KMPVRFREQ="") D  Q
- ..Q:KMPVAUTO=1
- ..N DIR S DIR(0)="E"
- ..S DIR("A",1)="",DIR("A",2)="This is not configured correctly to be a repeating task."
- ..S DIR("A",3)="Check VSM Configuration related to this task. Task not started."
- ..S DIR("A")="Press any key to continue."
- ..D ^DIR
+ .I KMPVER<3 D  ; Only needed if reverting to pre-http version
+ ..S KMPVOPT=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN OPTION",8969)
+ ..S KMPVSTRT=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN SCHEDULE START",8969)
+ ..S KMPVRFREQ=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN SCHEDULE FREQUENCY",8969)
+ ..I KMPVSTRT=""!(KMPVRFREQ="") D
+ ...S KMP2QUIT=1
+ ...Q:KMPVAUTO=1
+ ...N DIR S DIR(0)="E"
+ ...S DIR("A",1)="",DIR("A",2)="This is not configured correctly to be a repeating task."
+ ...S DIR("A",3)="Check VSM Configuration related to this task. Task not started."
+ ...S DIR("A")="Press any key to continue."
+ ...D ^DIR
  .;
+ .I KMPVER<3,$G(KMP2QUIT)=1 Q  ;Only needed for pre-https version
  .S KMPVSTAT=$$SETONE^KMPVCCFG(KMPVMKEY,"ONOFF","ON",.KMPVEARR)
- .; If VBEM set ^%ZTSCH("LOGRSRC")=1
- .I KMPVSTAT=0,KMPVMKEY="VBEM" S DIE=8989.3,DA=1,DR="300///YES" D ^DIE
+ .I KMPVSTAT=0 D
+ ..I KMPVMKEY="VBEM" S DIE=8989.3,DA=1,DR="300///YES" D ^DIE
+ ..I KMPVMKEY="VCSM" S ^KMPTMP("KMPD-CPRS")=1
  .; schedule background job 
- .D RESCH^XUTMOPT(KMPVOPT,KMPVSTRT,,KMPVRFREQ,"L",.KMPVERROR)
- .I $G(KMPVERROR)=-1 D  Q
- ..S KMPVSTAT=$$SETONE^KMPVCCFG(KMPVMKEY,"ONOFF","OFF",.KMPVEARR)
- ..Q:KMPVAUTO=1
- ..N DIR S DIR(0)="E"
- ..S DIR("A",1)="",DIR("A",2)="ERROR: "_KMPVMKEY_" BACKGROUND TASK NOT STARTED!",DIR("A")="Press any key to continue."
- ..I KMPVSTAT>0 S DIR("A",3)="Failed to set 'ONOFF' field back to 'OFF'"
- ..D ^DIR
- ;
- S KMPVNVAL=$$GETVAL^KMPVCCFG(KMPVMKEY,"ONOFF",8969)
- I KMPVOVAL'=KMPVNVAL D CFGMSG()
+ .I KMPVER<3  D  ; Only needed if reverting to pre-httpversion
+ ..D RESCH^XUTMOPT(KMPVOPT,KMPVSTRT,,KMPVRFREQ,"L",.KMPVERROR)
+ ..I $G(KMPVERROR)=-1 D  Q
+ ...S KMPVSTAT=$$SETONE^KMPVCCFG(KMPVMKEY,"ONOFF","OFF",.KMPVEARR)
+ ...Q:KMPVAUTO=1
+ ...N DIR S DIR(0)="E"
+ ...S DIR("A",1)="",DIR("A",2)="ERROR: "_KMPVMKEY_" BACKGROUND TASK NOT STARTED!",DIR("A")="Press any key to continue."
+ ...I KMPVSTAT>0 S DIR("A",3)="Failed to set 'ONOFF' field back to 'OFF'"
+ ...D ^DIR
+ .I KMPNOCFG'=1 D
+ ..I $$GETVAL^KMPVCCFG("VTCM","VERSION",8969)>2 D CFGMSG^KMPUTLW()
+ ..E  D CFGMSG()
  Q
  ;
-STOPMON(KMPVMKEY,KMPVAUTO) ;   Un-schedule transmission task in TaskMan and set ONOFF to OFF
+STOPMON(KMPVMKEY,KMPVAUTO,KMPNOCFG) ;   Un-schedule transmission task in TaskMan and set ONOFF to OFF
  N DA,DIE,DIR,DR,DTOUT,DUOUT,X,Y
- N KMPVEARR,KMPVERROR,KMPVNVAL,KMPVOPT,KMPVOVAL,KMPVSTAT
+ N KMPVEARR,KMPVER,KMPVERROR,KMPVOPT,KMPVSTAT
  ;
  S KMPVAUTO=+$G(KMPVAUTO)
- S KMPVOVAL=$$GETVAL^KMPVCCFG(KMPVMKEY,"ONOFF",8969)
- S KMPVOPT=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN OPTION",8969)
- W ! K DIR S DIR(0)="Y",DIR("B")="No"
- S DIR("?")="Answer YES to stop collecting "_KMPVMKEY_" data"
- S DIR("A")="Do you want to stop "_KMPVMKEY_" collection?"
- I 'KMPVAUTO D ^DIR Q:$D(DTOUT)!$D(DUOUT)
+ S KMPNOCFG=+$G(KMPNOCFG)
+ ; do not start/stop VETCM if not realtime version - there is no legacy version
+ I KMPVMKEY="VETM",$$GETVAL^KMPVCCFG(KMPVMKEY,"VERSION",8969)<3 Q
+ I 'KMPVAUTO D  D ^DIR Q:$D(DTOUT)!$D(DUOUT)
+ .W ! K DIR S DIR(0)="Y",DIR("B")="No"
+ .S DIR("?")="Answer YES to stop collecting "_KMPVMKEY_" data"
+ .S DIR("A")="Do you want to stop "_KMPVMKEY_" collection?"
  I ($G(Y)=1)!KMPVAUTO D
  .S KMPVSTAT=$$SETONE^KMPVCCFG(KMPVMKEY,"ONOFF","OFF",.KMPVEARR)
- .; If VBEM set ^%ZTSCH("LOGRSRC")=1
- .I KMPVSTAT=0,KMPVMKEY="VBEM" S DIE=8989.3,DA=1,DR="300///NO" D ^DIE
+ .I KMPVSTAT=0 D
+ ..I KMPVMKEY="VBEM" S DIE=8989.3,DA=1,DR="300///NO" D ^DIE
+ ..I KMPVMKEY="VTCM" K ^KMPTMP("KMPV","VTCM","TEMP")
+ ..I KMPVMKEY="VCSM" S ^KMPTMP("KMPD-CPRS")=""
+ S KMPVER=$$GETVAL^KMPVCCFG(KMPVMKEY,"VERSION",8969)
+ I KMPVER<3 D  ; Only needed if pre-https version
  .; unschedule background job
+ .S KMPVOPT=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN OPTION",8969)
  .D RESCH^XUTMOPT(KMPVOPT,"@",,,.KMPVERROR)
  .I $G(KMPVERROR) D  Q
  ..Q:KMPVAUTO=1
  ..N DIR S DIR(0)="E"
- ..S DIR("A",1)="",DIR("A",2)="ERROR: "_KMPVMKEY_" BACKGROUND TASK NOT STOPPED!",DIR("A")="Press any key to continue."
+ ..S DIR("A",1)="",DIR("A",2)="ERROR: "_KMPVMKEY_" BACKGROUND TASK NOT REMOVED!",DIR("A")="Press any key to continue."
  ..S DIR("A",3)=$G(KMPVERROR)
  ..D ^DIR
- S KMPVNVAL=$$GETVAL^KMPVCCFG(KMPVMKEY,"ONOFF",8969)
- I KMPVOVAL'=KMPVNVAL D CFGMSG()
+ I KMPNOCFG'=1 D
+ .I KMPVER>2 D CFGMSG^KMPUTLW()
+ .E  D CFGMSG()
  Q
  ;
-RESCH(KMPVMKEY,KMPVERR) ; Reschedule transmission task in TaskMan
+RESCH(KMPVMKEY,KMPVERR) ; Reschedule transmission task in TaskMan - V2
  K KMPVERR
- N KMPVOPT,KMPVSTRT,KMPVRFREQ,KMPVERROR
+ N KMPVERROR,KMPVOPT,KMPVRFREQ,KMPVSTRT
  S KMPVOPT=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN OPTION",8969)
  S KMPVSTRT=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN SCHEDULE START",8969)
  S KMPVRFREQ=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN SCHEDULE FREQUENCY",8969)
@@ -100,7 +149,8 @@ RESCH(KMPVMKEY,KMPVERR) ; Reschedule transmission task in TaskMan
  .I KMPVSTAT'=0 S KMPVERR(3)=$P(KMPVSTAT,"^",2),KMPVERR(4)="Failed to reset 'ONOFF' to 'OFF' after rescheduling failure."
  Q
  ;
-DESCH(KMPVMKEY,KMPVERR) ; De-schedule transmission task in TaskMan
+DESCH(KMPVMKEY,KMPVERR) ; De-schedule transmission task in TaskMan - V2
+ N KMPVERROR,KMPVOPT
  S KMPVOPT=$$GETVAL^KMPVCCFG(KMPVMKEY,"TASKMAN OPTION",8969)
  D RESCH^XUTMOPT(KMPVOPT,"@",,,.KMPVERROR)
  I $D(KMPVERROR) D
@@ -108,34 +158,88 @@ DESCH(KMPVMKEY,KMPVERR) ; De-schedule transmission task in TaskMan
  .S KMPVERR(2)=KMPVERROR
  Q
  ;
-CANMESS(MTYPE,KMPVMKEY,KMPVSITE,KMPVD) ; Repeatable, configured informational mail messages
- N KMPVEMAIL,KMPVPROD,KMPVTEXT,XMSUB,XMTEXT,XMY,XMZ
- S KMPVPROD=$$PROD^KMPVCCFG()
+PURGEDLY(KMPVMKEY) ; Purge any data older than VSM CONFIURATION file specifies
+ N KMPDDAT1,KMPDID,KMPDSUB,KMPI,KMPID,KMPSINF,KMPTEXT,KMPVCURH,KMPVDAY,KMPVH,KMPVKEEP,KMPVNODE
+ S KMPVH="",KMPVCURH=+$H,KMPVKEEP=$$GETVAL^KMPVCCFG(KMPVMKEY,"DAYS TO KEEP DATA",8969)
+ D GETENV^%ZOSV S KMPVNODE=$P(Y,U,3)_":"_$P($P(Y,U,4),":",2)
+ Q:$$ISBENODE^KMPVCCFG(KMPVNODE)=0
+ S KMPSINF=$$SITEINFO^KMPVCCFG(),KMPI=2
+ ; always kill the TRANSMIT node
+ K ^KMPTMP("KMPV",KMPVMKEY,"TRANSMIT")
+ ; kill daily
+ F  S KMPVH=$O(^KMPTMP("KMPV",KMPVMKEY,"DLY",KMPVH)) Q:KMPVH=""  D
+ .I (KMPVCURH-KMPVH)>KMPVKEEP D
+ ..K ^KMPTMP("KMPV",KMPVMKEY,"DLY",KMPVH)
+ ..S KMPTEXT(KMPI)=KMPVMKEY_" DLY node for "_$ZD(KMPVH),KMPI=KMPI+1
+ ; kill retry
+ F  S KMPVH=$O(^KMPTMP("KMPV",KMPVMKEY,"RETRY",KMPVNODE,KMPVH)) Q:KMPVH=""  D
+ .I (KMPVCURH-KMPVH)>KMPVKEEP D
+ ..K ^KMPTMP("KMPV",KMPVMKEY,"RETRY",KMPVNODE,KMPVH)
+ ..S KMPTEXT(KMPI)=KMPVMKEY_" RETRY node for "_$ZD(KMPVH)_" on node "_KMPVNODE,KMPI=KMPI+1
+ ; kill COMPRESS node for VBEM 
+ I KMPVMKEY="VBEM" D
+ .S KMPVH=""
+ .F  S KMPVH=$O(^KMPTMP("KMPV",KMPVMKEY,"COMPRESS",KMPVNODE,KMPVH)) Q:KMPVH=""  D
+ ..I (KMPVCURH-KMPVH)>KMPVKEEP D
+ ...K ^KMPTMP("KMPV",KMPVMKEY,"COMPRESS",KMPVNODE,KMPVH)
+ ...S KMPTEXT(KMPI)=KMPVMKEY_" COMPRESS node for "_$ZD(KMPVH)_" on node "_KMPVNODE,KMPI=KMPI+1
+ ; check for old VCSM data
+ I KMPVMKEY="VCSM" D
+ .S KMPDSUB=""
+ .F  S KMPDSUB=$O(^KMPTMP("KMPDT",KMPDSUB)) Q:KMPDSUB=""  D
+ ..S KMPDID=""
+ ..F  S KMPDID=$O(^KMPTMP("KMPDT",KMPDSUB,KMPDID)) Q:KMPDID=""  D
+ ...S KMPDDAT1=$G(^KMPTMP("KMPDT",KMPDSUB,KMPDID))
+ ...S KMPVDAY=$P($P(KMPDDAT1,U),",",1)
+ ...I (KMPVCURH-KMPVDAY)>KMPVKEEP D
+ ....K ^KMPTMP("KMPDT",KMPDSUB,KMPDID)
+ ....S KMPTEXT(KMPI)=KMPVMKEY_" Coversheet data for "_KMPVDAY
+ ....I $G(KMPTEXT(KMPI+1))="" S KMPTEXT(KMPI+1)=KMPDSUB_"**"_KMPDID_"**"_KMPDDAT1
+ ....S KMPTEXT(KMPI+2)=KMPDSUB_"**"_KMPDID_"**"_KMPDDAT1
+ I $D(KMPTEXT) D
+ .S KMPTEXT("SUBJECT")="VSM ALERT: Data deletion at "_$P(KMPSINF,"^")
+ .S KMPTEXT(1)="Purging data older than DAYS TO KEEP DATA"
+ .D INFOMSG^KMPUTLW(.KMPTEXT)
+ Q
  ;
+KMPVTSK(KMPVNSP) ; CHECK CREATE OR RESUME KMPVRUN TASK IN CACHE TASKMGR
+ D TASK^KMPTASK($G(KMPVNSP))
+ Q
+ ;
+ROUTCHK(KMPROUT) ; Check to see if routine is running
+ N KMPRS,KMPRUN
+ S KMPRUN=0
+ S KMPRS=##class(%ResultSet).%New("%SYS.ProcessQuery:SS")
+ D KMPRS.Execute(1)
+ F  Q:'KMPRS.Next()!(KMPRUN=1)  I KMPRS.Routine=KMPROUT S KMPRUN=1
+ Q KMPRUN
+ ;
+CANMESS(MTYPE,KMPVMKEY,KMPVSITE,KMPVD) ; Repeatable, configured informational mail messages --- legacy
+ N KMPVEMAIL,KMPVTEXT,XMSUB,XMY
  I MTYPE="JOBLATE" D
  .S KMPVTEXT($J,1)="Daily "_KMPVMKEY_" job behind for "_$P(KMPVSITE,"^",2)
  .S KMPVTEXT($J,2)="Number of days behind: "_KMPVD
  .S KMPVTEXT($J,3)="Message date: "_$ZD(+$H)
- .S XMSUB=KMPVMKEY_" DAILY JOB NOT RUN: "_$P(KMPVSITE,"^",2)_"  Production="_KMPVPROD
+ .S XMSUB=KMPVMKEY_" DAILY JOB NOT RUN: "_$P(KMPVSITE,"^",2)_" Production="_$$PROD^KMPVCCFG
  I MTYPE="DELETE" D
  .S KMPVTEXT($J,1)="Purging "_KMPVMKEY_" data for "_$P(KMPVSITE,"^",2)
  .S KMPVTEXT($J,2)="Data purged for: "_KMPVD
  .S KMPVTEXT($J,3)="Message date: "_$ZD(+$H)
- .S XMSUB=KMPVMKEY_" PURGING DATA -- NOT TRANSMITTED: "_$P(KMPVSITE,"^",2)_"  Production="_KMPVPROD
+ .S XMSUB=KMPVMKEY_" PURGING DATA -- NOT TRANSMITTED: "_$P(KMPVSITE,"^",2)_" Production="_$$PROD^KMPVCCFG
  I MTYPE="TRANWARN" D
  .S KMPVTEXT($J,1)="Data transmissions of "_KMPVMKEY_" data late for "_$P(KMPVSITE,"^",2)
  .S KMPVTEXT($J,2)="Message date: "_$ZD(+$H)
- .S XMSUB=KMPVMKEY_" Late Transmission Warning: "_$P(KMPVSITE,"^",2)_"  Production="_KMPVPROD
+ .S XMSUB=KMPVMKEY_" Late Transmission Warning: "_$P(KMPVSITE,"^",2)_" Production="_$$PROD^KMPVCCFG
  I MTYPE="FAILTRAN" D
  .S KMPVTEXT($J,1)="Failed transmission for "_$P(KMPVSITE,"^",2)
  .S KMPVTEXT($J,2)="Collection date: "_KMPVD
  .S KMPVTEXT($J,3)="Message date: "_$ZD(+$H)
- .S XMSUB=KMPVMKEY_" FAILED "_KMPVMKEY_" TRANSMISSION: "_$P(KMPVSITE,"^",2)_"  "_KMPVD_"  Production="_KMPVPROD
+ .S XMSUB=KMPVMKEY_" FAILED "_KMPVMKEY_" TRANSMISSION: "_$P(KMPVSITE,"^",2)_" "_KMPVD_" Production="_$$PROD^KMPVCCFG
  I MTYPE="KILL" D
  .S KMPVTEXT($J,1)="All data deleted at "_$P(KMPVSITE,"^",2)_" for "_KMPVMKEY
  .S KMPVTEXT($J,2)="Username: "_$$USERNAME^KMPVCCFG(DUZ)
  .S KMPVTEXT($J,3)="Message date: "_$ZD(+$H)
- .S XMSUB="EMERGENCY DATA DELETION AT "_$P(KMPVSITE,"^",2)_"  "_KMPVMKEY_"  Production="_KMPVPROD
+ .S XMSUB="EMERGENCY DATA DELETION AT "_$P(KMPVSITE,"^",2)_" "_KMPVMKEY_" Production="_$$PROD^KMPVCCFG
  Q:$D(XMSUB)=""
  S XMTEXT="KMPVTEXT("_$J_","
  S KMPVEMAIL=$$GETVAL^KMPVCCFG(KMPVMKEY,"NATIONAL SUPPORT EMAIL ADDRESS",8969) I KMPVEMAIL'="" S XMY(KMPVEMAIL)=""
@@ -143,7 +247,7 @@ CANMESS(MTYPE,KMPVMKEY,KMPVSITE,KMPVD) ; Repeatable, configured informational ma
  D ^XMD
  Q
  ;
-SUPMSG(KMPVTEXT) ;  Send email to local/national support mail groups
+SUPMSG(KMPVTEXT) ; Send email to local/national support mail groups ---- legacy
  N KMPVEMAIL,KMPVPROD,XMSUB,XMTEXT,XMY,XMZ
  S KMPVPROD=$$PROD^KMPVCCFG()
  ;
@@ -156,7 +260,7 @@ SUPMSG(KMPVTEXT) ;  Send email to local/national support mail groups
  D ^XMD
  Q
  ;
-DBAMSG(KMPVTEXT) ;  Send email to national support mail groups
+DBAMSG(KMPVTEXT) ; Send email to national support mail groups --- legacy
  N KMPVEMAIL,KMPVPROD,XMSUB,XMTEXT,XMY,XMZ
  S KMPVPROD=$$PROD^KMPVCCFG()
  ;
@@ -168,7 +272,7 @@ DBAMSG(KMPVTEXT) ;  Send email to national support mail groups
  D ^XMD
  Q
  ;
-CFGMSG(KMPVRQNAM) ;  Send configuration data to update Location Table at National VSM Database
+CFGMSG(KMPVRQNAM) ; Send configuration data to update Location Table at National VSM Database --- legacy
  N KMPVDOM,KMPVEMAIL,KMPVLN,KMPVMKEY,KMPVPROD,KMPVSINF,KMPVSITE,KMPVUP,KMPVUPCFG,XMSUB,XMTEXT,XMY,XMZ
  S KMPVPROD=$$PROD^KMPVCCFG()
  ;
@@ -190,82 +294,3 @@ CFGMSG(KMPVRQNAM) ;  Send configuration data to update Location Table at Nationa
  .S KMPVEMAIL=$$GETVAL^KMPVCCFG(KMPVMKEY,"VSM CFG EMAIL ADDRESS",8969) I KMPVEMAIL'="" S XMY(KMPVEMAIL)=""
  D ^XMD
  Q
- ;
-PURGEDLY(KMPVMKEY) ; Purge any data older than VSM CONFIURATION file specifies
- N KMPVCURH,KMPVH,KMPVKEEP
- S KMPVH="",KMPVCURH=+$H,KMPVKEEP=$$GETVAL^KMPVCCFG(KMPVMKEY,"DAYS TO KEEP DATA",8969)
- F  S KMPVH=$O(^KMPTMP("KMPV",KMPVMKEY,"DLY",KMPVH)) Q:KMPVH=""  D
- .I (KMPVCURH-KMPVH)>KMPVKEEP K ^KMPTMP("KMPV",KMPVMKEY,"DLY",KMPVH)
- Q
- ;
-KMPVTSK(KMPVNSP) ; CHECK CREATE OR RESUME KMPVRUN TASK IN CACHE TASKMGR
- N I,KMPVMSG,KMPVNSPE,KMPVROLS,KMPVTASK,KMPVTFLG,KMPVTSK,KMPVTSKS
- ;
- ; Start: only in KMPVCBG version - comment out for ZSTU
- S KMPVROLS=$ROLES
- I (KMPVROLS'["%All")&(KMPVROLS'["%Manager") D  Q
- .W !,"You must have either the %Manager or the %All Role",!
- ; End: only in KMPV version ----
- ;
- I '$D(KMPVNSP)||'##Class(%SYS.Namespace).Exists(KMPVNSP) S KMPVNSP=$ZDEFNSP
- S KMPVTSK="KMPVRUN"
- I KMPVNSP'=$ZDEFNSP S KMPVTSK=KMPVTSK_"_"_KMPVNSP
- S KMPVMSG="CHECKING KMPV SETUP IN "_KMPVNSP_" NAMESPACE..."
- W !,KMPVMSG,!!
- DO ##class(%SYS.System).WriteToConsoleLog("ZSTU: "_KMPVMSG,0,0)
- ; Start: only in ZSTU version - comment out for KMPVCBG
- ;I '$$EXIST^%R("KMPVRUN",KMPVNSP) D  Q "VSMRUN Check Complete... No Routine."
- ;.S KMPVMSG(1)="KMPVRUN routine does not exist in "_KMPVNSP_" namespace."
- ;.S KMPVMSG(2)="Please verify that patch KMPV*1.0*0 has been successfully installed."
- ;.F I=1:1:2 W !,KMPVMSG(I) DO ##class(%SYS.System).WriteToConsoleLog("ZSTU: "_KMPVMSG(I),0,0)
- ;.W !
- ; End: only in ZSTU version ----
- S KMPVTFLG=0
- S KMPVTSKS=##class(%ResultSet).%New("%SYS.TaskSuper.TaskListDetail")
- S KMPVSTAT=KMPVTSKS.Execute()
- D DisplayError^%apiOBJ(KMPVSTAT)
- while KMPVTSKS.Next() {
- if (KMPVTSKS.GetDataByName("Task Name")=KMPVTSK) {
-        set KMPVTID=KMPVTSKS.GetDataByName("ID")
-        set KMPVTRUN=KMPVTSKS.GetDataByName("Next Scheduled Date")_" at "_KMPVTSKS.GetDataByName("Next Scheduled Time")
-        if KMPVTSKS.GetDataByName("Suspended")'="" {
-                do ##class(%SYS.Task).Resume(KMPVTID)
-                S KMPVMSG=KMPVTSK_" Task #"_KMPVTID_" Exists and Resumed to Run at "_KMPVTRUN
-        } Else {
-                S KMPVMSG=KMPVTSK_" Task #"_KMPVTID_" Exists and Scheduled to Run at "_KMPVTRUN
-                }
-        set KMPVTFLG=1
-        W !,KMPVMSG
-        DO ##class(%SYS.System).WriteToConsoleLog("ZSTU: "_KMPVMSG,0,0)
-        quit
-                }
- }
- ;
- ;create task if it doesn't exist
- I 'KMPVTFLG D
- .S KMPVTASK=##Class(%SYS.Task).%New()
- .S KMPVTASK.Name=KMPVTSK
- .S KMPVTASK.Description = "Start VSM Collection Drivers"
- .S KMPVTASK.NameSpace=KMPVNSP
- .S KMPVTASK.TaskClass="%SYS.Task.RunLegacyTask"
- .S KMPVTASK.Settings=$lb("ExecuteCode","D RUN^KMPVRUN")
- .S KMPVTASK.RunAsUser = "_SYSTEM"
- .S KMPVTASK.Priority=0
- .S KMPVTASK.StartDate = $p($h,",",1)+1
- .S KMPVTASK.DailyFrequency=0 ;task.DailyFrequencyDisplayToLogical("Once")
- .S KMPVTASK.DailyFrequencyTime=""
- .S KMPVTASK.DailyIncrement=""
- .S KMPVTASK.DailyStartTime=60
- .S KMPVTASK.Expires=0
- .S KMPVTASK.DailyEndTime=""
- .S KMPVTASK.RescheduleOnStart=1
- .S KMPVSTAT=KMPVTASK.%Save()
- .I $System.Status.IsError(KMPVSTAT) D  Q
- ..S KMPVMSG(1)="Error #"_$System.Status.GetErrorCodes(KMPVSTAT)
- ..S KMPVMSG(2)=$System.Status.GetOneStatusText(KMPVSTAT,1)
- ..S KMPVMSG(3)="Failed to Create and Schedule Task "_KMPVTSK_" in Cache Task Manager"
- ..F I=1:1:3 W !,KMPVMSG(I) DO ##class(%SYS.System).WriteToConsoleLog("ZSTU: "_KMPVMSG(I),0,1)
- .S KMPVMSG="Created and scheduled Task "_KMPVTSK_" in Cache Task Manager"
- .W !,KMPVMSG DO ##class(%SYS.System).WriteToConsoleLog("ZSTU: "_KMPVMSG,0,0)
- Q
- ;

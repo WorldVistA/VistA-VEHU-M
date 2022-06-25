@@ -1,5 +1,5 @@
 PSOORFI1 ;BIR/SAB - finish OP orders from OE/RR continued ; 10/23/15 4:14pm
- ;;7.0;OUTPATIENT PHARMACY;**7,15,23,27,32,44,51,46,71,90,108,131,152,186,210,222,258,260,225,391,408,444,467,505**;DEC 1997;Build 39
+ ;;7.0;OUTPATIENT PHARMACY;**7,15,23,27,32,44,51,46,71,90,108,131,152,186,210,222,258,260,225,391,408,444,467,505,617**;DEC 1997;Build 110
  ;Ref. ^PS(50.7 supp. DBIA 2223
  ;Ref. ^PSDRUG( supp. DBIA 221
  ;Ref. L^PSSLOCK supp. DBIA 2789
@@ -43,7 +43,7 @@ DS ;
  D DIN^PSONFI(PSODRUG("OI"),$S($D(PSODRUG("IEN")):PSODRUG("IEN"),1:"")) ;Setup for N/F & DIN indicator
  ; pso*7*467 - add display of erx information if the rx came from eRx
  N ERXIEN
- S ERXIEN=$$CHKERX^PSOERXU1(OR0) I ERXIEN D DERX1^PSOERXU1($NA(^TMP("PSOPO",$J)),ERXIEN,"",.IEN)
+ S ERXIEN=$$CHKERX^PSOERXU1(OR0) I ERXIEN D DERX1^PSOERXU1($NA(^TMP("PSOPO",$J)),ERXIEN,"",.IEN,"P")
  ; pso*7*467 - end eRx enhancement
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="*(1) Orderable Item: "_$P(^PS(50.7,PSODRUG("OI"),0),"^")_" "_$P(^PS(50.606,$P(^(0),"^",2),0),"^")_NFIO
  S:NFIO["<DIN>" NFIO=IEN_","_($L(^TMP("PSOPO",$J,IEN,0))-4)
@@ -96,6 +96,13 @@ PST D DOSE^PSOORFI4 K PSOINSFL
  D USER^PSOORFI2($P(OR0,"^",4))
  S $P(RN," ",35)=" ",IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="   Entry By: "_USER1_$E(RN,$L(USER1)+1,35)
  S Y=$P(OR0,"^",12) X ^DD("DD") S ^TMP("PSOPO",$J,IEN,0)=^TMP("PSOPO",$J,IEN,0)_"Entry Date: "_$E($P(OR0,"^",12),4,5)_"/"_$E($P(OR0,"^",12),6,7)_"/"_$E($P(OR0,"^",12),2,3)_" "_$P(Y,"@",2) K RN
+ ; DEA compliance note for eRx CS prescriptions
+ N ERXIEN S ERXIEN=$$ERXIEN^PSOERXUT($G(ORD)_"P")
+ I ERXIEN,$$GET1^DIQ(52.49,ERXIEN,95.1,"I") D
+ . S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)=""
+ . S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="This prescription meets the requirements of the Drug Enforcement Administration"
+ . S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="(DEA) electronic prescribing for controlled substances rules (21 CFR Parts 1300,"
+ . S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="1304, 1306, & 1311)."
  I $P(OR0,"^",24) S PSOACT=$S($D(^XUSEC("PSDRPH",DUZ)):"DEFX",$D(^XUSEC("PSORPH",DUZ)):"F",$P($G(PSOPAR),"^",2):"F",1:"") D
  .K PSOCSP S PSOCSP("NAME")=$G(PSODRUG("NAME")) M PSOCSP("DOSE")=PSONEW("DOSE"),PSOCSP("DOSE ORDERED")=PSONEW("DOSE ORDERED")
  .S PSOCSP("# OF REFILLS")=PSONEW("# OF REFILLS") ;track original data for dig. orders
