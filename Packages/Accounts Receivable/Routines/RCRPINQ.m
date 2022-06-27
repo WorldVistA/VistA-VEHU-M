@@ -1,5 +1,5 @@
 RCRPINQ ;EDE/YMG - REPAYMENT PLAN INQUIRY; 12/10/2020
- ;;4.5;Accounts Receivable;**377,381,388**;Mar 20, 1995;Build 13
+ ;;4.5;Accounts Receivable;**377,381,388,378**;Mar 20, 1995;Build 54
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -252,7 +252,7 @@ PRTAUDT(RPIEN,LN) ; print audit log
  ;
  ; returns next line # or 0 for user exit
  ;
- N TMP,TMPDT,TMPIEN
+ N TMP,TMPDT,TMPIEN,RCRSN,RCRSNCD,RCRSNTX
  S LN=$$WRTLN($$CJ^XLFSTR("Audit Log",80),LN) Q:'LN 0
  S LN=$$WRTLN($$LJ^XLFSTR("",80,"-"),LN) Q:'LN 0
  S LN=$$WRTLN("   Date            User                 Type         Comment",LN) Q:'LN 0
@@ -260,7 +260,9 @@ PRTAUDT(RPIEN,LN) ; print audit log
  S TMPDT=0 F  S TMPDT=$O(^RCRP(340.5,RPIEN,4,"B",TMPDT)) Q:'TMPDT  D  Q:'LN
  .S TMPIEN="" F  S TMPIEN=+$O(^RCRP(340.5,RPIEN,4,"B",TMPDT,TMPIEN)) Q:'TMPIEN  D  Q:'LN
  ..S TMP=$G(^RCRP(340.5,RPIEN,4,TMPIEN,0)) Q:TMP=""
- ..S LN=$$WRTLN($$LJ^XLFSTR($$FMTE^XLFDT($P(TMP,U),"5DZ"),12)_$$LJ^XLFSTR($E($$EXTERNAL^DILFD(340.54,2,"",$P(TMP,U,3)),1,30),28)_$$LJ^XLFSTR($$EXTERNAL^DILFD(340.54,1,"",$P(TMP,U,2)),13)_$$EXTERNAL^DILFD(340.54,3,"",$P(TMP,U,4)),LN)
+ ..S RCRSNCD=$P(TMP,U,4),RCRSNTX=$P(TMP,U,5)
+ ..S RCRSN=$S(RCRSNCD'="":$$EXTERNAL^DILFD(340.54,3,"",RCRSNCD),1:RCRSNTX)
+ ..S LN=$$WRTLN($$LJ^XLFSTR($$FMTE^XLFDT($P(TMP,U),"5DZ"),12)_$$LJ^XLFSTR($E($$EXTERNAL^DILFD(340.54,2,"",$P(TMP,U,3)),1,30),28)_$$LJ^XLFSTR($$EXTERNAL^DILFD(340.54,1,"",$P(TMP,U,2)),13)_RCRSN,LN)
  ..Q
  .Q
  I $E(IOST,1,2)["C-",'$D(ZTQUEUED),LN>(IOSL-3) S LN=$$NEWPG()

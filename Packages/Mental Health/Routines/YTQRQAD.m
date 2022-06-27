@@ -1,19 +1,16 @@
 YTQRQAD ;SLC/KCM - RESTful Calls for Instrument Admin ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,158,181**;Dec 30, 1994;Build 39
+ ;;5.01;MENTAL HEALTH;**130,141,158,181,187,199**;Dec 30, 1994;Build 18
  ;
- ; External Reference    ICR#
- ; ------------------   -----
- ; ^DIC(3.1)             1234
- ; ^DIC(49)             10093
- ; ^DPT                 10035
- ; ^VA(200)             10060
- ; ^VA(200,"AUSER")      4868
- ; DIQ                   2056
- ; XLFNAME               3065
- ; XLFSTR               10104
- ; XQCHK                10078
- ; TFL^VAFCTFU2          4648 (private IA)
- ;
+ ; Reference to ^DIC(3.1) in ICR #1234
+ ; Reference to ^DIC(49) in ICR #10093
+ ; Reference to ^DPT in ICR #10035
+ ; Reference to ^VA(200) in ICR #10060
+ ; Reference to ^VA(200,"AUSER") in ICR #4868
+ ; Reference to DIQ in ICR #2056
+ ; Reference to XLFNAME in ICR #3065
+ ; Reference to XLFSTR in ICR #10104
+ ; Reference to XQCHK in ICR #10078
+ ; Reference to TFL^VAFCFTU2 in ICR #4648
  ;
  ;; -- GETs  all return M object that is transformed to JSON
  ;; -- POSTs all return a path to the created/updated object
@@ -116,7 +113,7 @@ VARYAUDC(ASMT) ; modify the AUDC based on patient sex in ^TMP("YTQ-JSON",$J)
  . S ^TMP("YTQ-JSON",$J,I,0)=X1_"4 or more"_X2,DONE=1
  Q
 PERSONS(ARGS,RESULTS) ; GET /api/mha/persons/:match
- N ROOT,LROOT,NM,IEN,SEQ,PREVNM,QUAL
+ N ROOT,LROOT,NM,IEN,SEQ,PREVNM,QUAL,REQCSGN
  S ROOT=$$UP^XLFSTR($G(ARGS("match"))),LROOT=$L(ROOT),SEQ=0,PREVNM=""
  S NM=ROOT F  S NM=$O(^VA(200,"AUSER",NM)) Q:NM=""  Q:$E(NM,1,LROOT)'=ROOT  D
  . S IEN=0 F  S IEN=$O(^VA(200,"AUSER",NM,IEN)) Q:'IEN  D
@@ -174,6 +171,9 @@ GINSTD(ARGS,RESULTS) ;Get Instrument Description
  S I=0 F  S I=$O(YSDATA(I)) Q:I=""  D
  . S XX=YSDATA(I),VAR=$P(XX,"="),VAL=$P(XX,"=",2)
  . Q:VAR=""
+ . S:VAR="LAST EDIT DATE" VAL=$P($$FMTE^XLFDT(VAL,2),"@")
+ . I VAR="ENTRY DATE" D
+ .. N X,Y,%DT S X=VAL D ^%DT S VAL=$$FMTE^XLFDT(Y,2)
  . S YSAR(VAR)=VAL
  F VAR="PRINT TITLE^Print Title","VERSION^Version","AUTHOR^Author","PUBLISHER^Publisher","COPYRIGHT TEXT^Copyright","PUBLICATION DATE^Publication Date" D
  . D SETVAR("Clinical Features",VAR)
@@ -183,6 +183,13 @@ GINSTD(ARGS,RESULTS) ;Get Instrument Description
  . D SETVAR("Technical Features",VAR)
  F VAR="LAST EDITED BY^Last Edited By","LAST EDIT DATE^Last Edit Date","IS NATIONAL TEST^National Test","LICENSE CURRENT^Requires License","IS LEGACY^Is Legacy Instrument","SUBMIT TO NATIONAL DB^Submit to National DB" D
  . D SETVAR("Technical Features",VAR)
+ ;
+ ;F VAR="PRINT TITLE^Print Title","VERSION^Version","AUTHOR^Author","PUBLISHER^Publisher","COPYRIGHT TEXT^Copyright","PUBLICATION DATE^Publication Date" D
+ ;. D SETVAR("Clinical Features",VAR)
+ ;F VAR="REFERENCE^Reference","PURPOSE^Purpose","NORM SAMPLE^Norm Sample","TARGET POPULATION^Target Population" D
+ ;. D SETVAR("Clinical Features",VAR)
+ ;F VAR="A PRIVILEGE^Administrative Privilege","LICENSE CURRENT^Requires License" D
+ ;. D SETVAR("Technical Features",VAR)
  K RESULTS M RESULTS=JSONAR Q
  Q
 SETVAR(XCAT,VAR) ;Set JSON array values for Instrument Description - Requires YSAR to be set

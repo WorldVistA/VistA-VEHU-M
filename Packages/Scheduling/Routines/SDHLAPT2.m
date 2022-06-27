@@ -1,5 +1,5 @@
 SDHLAPT2 ;MS/PB - VISTA SCHEDULING RPCS ;Nov 14, 2014
- ;;5.3;Scheduling;**704,773**;Nov 14, 2018;Build 9
+ ;;5.3;Scheduling;**704,773,810**;Nov 14, 2018;Build 3
  ;
  Q
 AIL ;
@@ -75,12 +75,18 @@ CHKCAN(PAT,CLINIC,DATE) ; check to see if the appointment in 44 is canceled corr
  .K DIK,DA
  Q
  ;
-JSONTFM(DTTM,INST) ;Convert XML/JSON external time to FM format in local timezone. If zulu time, apply timezone difference. 2020-08-28T17:00:00.000Z
+JSONTFM(DTTM,INST) ;Convert XML/JSON external time to FM format in local timezone. If zulu time, apply timezone difference.
+ ;Inputs:
+ ; DTTM = Date with time in JSON format
+ ; INST = Institution
+ ;Output:
+ ; Date and time in FileMan format with zulu difference applied if indicated
  N DIFF,DATE,TM,SDT,ZULU,TZINST
- S ZULU=DTTM["Z"
- S TZINST=$$CHKINST^SDTMPHLA(INST)
- S DATE=$P(DTTM,"T"),DATE=$TR(DATE,"-",""),DATE=DATE-17000000
- S TM=$P(DTTM,"T",2),TM=$P(TM,"."),TM=$TR(TM,":",""),TM=+TM
- S DIFF=0 I ZULU S DIFF=$P($$UTC^DIUTC(DATE_"."_TM,,TZINST,,1),"^",3)
- S SDT=$$FMADD^XLFDT(DATE_"."_TM,,$G(DIFF),0)
- Q SDT
+ S ZULU=DTTM["Z" ;is this zulu time?
+ S TZINST=$$CHKINST^SDTMPHLA(INST) ;get correct institution
+ S DATE=$P(DTTM,"T"),DATE=$TR(DATE,"-",""),DATE=DATE-17000000 ;get date
+ S TM=$P(DTTM,"T",2),TM=$P(TM,"."),TM=$TR(TM,":",""),TM=+("."_TM) ;get time
+ I TM=0 S TM=".000001" ;Add 1 second to avoid midnight problem
+ S DIFF=0 I ZULU S DIFF=$P($$UTC^DIUTC(DATE_TM,,TZINST,,1),"^",3) ;if zulu compute tz difference
+ S SDT=$$FMADD^XLFDT(DATE_TM,,$G(DIFF),0) ;add tz difference
+ Q +$E(SDT,1,13) ;get rid of 1 second and trailing zeroes

@@ -1,5 +1,5 @@
 SDEC40 ;ALB/SAT,WTC,LEG - VISTA SCHEDULING RPCS ;Feb 12, 2020@15:22
- ;;5.3;Scheduling;**627,665,694,785**;Aug 13, 1993;Build 14
+ ;;5.3;Scheduling;**627,665,694,785,813**;Aug 13, 1993;Build 6
  ;
  ;  ICR
  ;  ---
@@ -20,7 +20,7 @@ APPTLETR(SDECY,SDECAPID,LT)  ;Print Appointment Letter
  ; SDECAPPT = Pointer to appointment in SDEC APPOINTMENT file 409.84
  ; LT       = Letter type - "N"=No Show; "P"=Pre-Appointment; "A"=Cancelled by Patient; "C"=Cancelled by Clinic
  ; Called by SDEC PRINT APPT LETTER remote procedure
- N SDECI,SDECNOD,SDECTMP,DFN,IN,RES,SCLT,SDC,SDLET,SDS,SDT,X1,X2,Y
+ N SDECI,SDECNOD,SDECTMP,DFN,IN,RES,SCLT,SDC,SDLET,SDS,SDT,X1,X2,Y,TIMEZONE
  N SDIV,SDFORM,SDNAM,SDSSN,VAPA
  S SDECI=0
  K ^TMP("SDEC",$J)
@@ -93,11 +93,12 @@ FORM ;S:$D(SDX) X=SDX S SDHX=X D DW^%DTC S DOW=X,X=SDHX X ^DD("FUNC",2,1) S SDT0
  ;
  ;  Change display time for noon and midnight from 12:00 PM to 12:00 Noon and 12:00 Midnight
  ;
+ S TIMEZONE=$$TIMEZONEDATA^SDESUTIL($G(SDC)),TIMEZONE=$P($G(TIMEZONE),U)
  S:$D(SDX) X=SDX S SDHX=X D DW^%DTC S DOW=X,X=SDHX ;
  I $P(X,".",2)=12!($P(X,".",2)=24) S X="12:00 "_$S($P(X,".",2)=12:"N",1:"M") ;
  E  X ^DD("FUNC",2,1) ;
  S SDT0=X,SDDAT=$P("JAN^FEB^MAR^APR^MAY^JUN^JUL^AUG^SEP^OCT^NOV^DEC","^",$E(SDHX,4,5))_" "_+$E(SDHX,6,7)_", "_(1700+$E(SDHX,1,3))
- I '$D(B) S SDECI=SDECI+1 S ^TMP("SDEC",$J,SDECI)="     Date/Time: "_DOW_"  "_$J(SDDAT,12)_$S('$D(B)&$D(SDC):$J(SDT0,9),1:"")_$C(13,10)
+ I '$D(B) S SDECI=SDECI+1 S ^TMP("SDEC",$J,SDECI)="     Date/Time: "_DOW_"  "_$J(SDDAT,12)_$S('$D(B)&$D(SDC):$J(SDT0,9),1:"")_" "_TIMEZONE_$C(13,10)
  I '$D(B),$D(SDC) D
  .S SDECI=SDECI+1 S ^TMP("SDEC",$J,SDECI)="    "_SDCL_$C(13,10)
  ; get default provider if defined for a given clinic, print it on the

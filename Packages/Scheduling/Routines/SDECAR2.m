@@ -1,5 +1,5 @@
 SDECAR2 ;ALB/SAT/JSM,WTC,LAB - VISTA SCHEDULING RPCS ;Apr 10, 2020@15:22
- ;;5.3;Scheduling;**627,642,658,671,686,694,745,799**;Aug 13, 1993;Build 7
+ ;;5.3;Scheduling;**627,642,658,671,686,694,745,799,805**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -22,43 +22,33 @@ ARSET(RET,INP) ;Appointment Request Set
  ;  INP(10) = (text)     Provider name  - NAME field in NEW PERSON file200
  ;  INP(11) = (date)     Desired Date of appointment in external format.
  ;  INP(12) = (text)     comment must be 1-60 characters.
- ;  INP(13) = (text)     ENROLLMENT PRIORITY - Valid Values are:
- ;                                             GROUP 1
- ;                                             GROUP 2
- ;                                             GROUP 3
- ;                                             GROUP 4
- ;                                             GROUP 5
- ;                                             GROUP 6
- ;                                             GROUP 7
- ;                                             GROUP 8
+ ;  INP(13) = (text)     ENROLLMENT PRIORITY - Valid Values:  GROUP 1-8
  ;  INP(14) = (text)     MULTIPLE APPOINTMENT RTC      NO; YES
  ;  INP(15) = (integer)  MULT APPT RTC INTERVAL integer between 1-365
  ;  INP(16) = (integer)  MULT APPT NUMBER integer between 1-100
  ;  INP(17) = Patient Contacts separated by ::
- ;            Each :: piece has the following ~~ pieces:
- ;            1) = (date)    DATE ENTERED external date/time
- ;            2) = (text)    PC ENTERED BY USER ID or NAME - Pointer toNEW PERSON file or NAME
- ;            4) = (optional) ACTION - valid values are:
- ;                             CALLED
- ;                             MESSAGE LEFT
- ;                             LETTER
- ;            5) = (optional) PATIENT PHONE Free-Text 4-20 characters
- ;            6) = NOT USED (optional) Comment 1-160 characters
+ ;  Each :: piece has the following ~~ pieces:
+ ;  1) = (date)    DATE ENTERED external date/time
+ ;  2) = (text)    PC ENTERED BY USER ID or NAME - Pointer toNEW PERSON file or NAME
+ ;  4) = (optional) ACTION - valid values are:
+ ;  CALLED;MESSAGE LEFT;LETTER
+ ;  5) = (optional) PATIENT PHONE Free-Text 4-20 characters
+ ;  6) = NOT USED (optional) Comment 1-160 characters
  ;  INP(18) = (optional) SERVICE CONNECTED PRIORITY valid values are NO YES
  ;  INP(19) = (optional) SERVICE CONNECTED PERCENTAGE = numeric 0-100
  ;  INP(20) = (optional) MRTC calculated preferred dates separated by pipe |:
- ;                       Each date can be in external format with no time.
+ ;  Each date can be in external format with no time.
  ;  INP(21) = (optional) CLINIC STOP pointer to CLINIC STOP file 40.7
- ;                       used to populate the REQ SERVICE/SPECIALTY field in 409.85
+ ;  used to populate the REQ SERVICE/SPECIALTY field in 409.85
  ;  INP(22) = (optional) Appointment Type ID pointer to APPOINTMENT TYPE file 409.1
  ;  INP(23) = (optional) Patient Status
- ;                          N = NEW
- ;                          E = ESTABLISHED
+ ;  N = NEW
+ ;  E = ESTABLISHED
  ;  INP(24) = (optional) MULT APPTS MADE
- ;                    list of child pointers to SDEC APPOINTMENT and/orSDEC APPT REQUEST files separated by pipe
- ;                    each pipe piece contains the following ~ pieces:
- ;                1. Appointment Id pointer to SDEC APPOINTMENT file 409.84
- ;                2. Request Id pointer to SDEC APPT REQUEST file 409.85
+ ;  list of child pointers to SDEC APPOINTMENT and/orSDEC APPT REQUEST files separated by pipe
+ ;  each pipe piece contains the following ~ pieces:
+ ;  1. Appointment Id pointer to SDEC APPOINTMENT file 409.84
+ ;  2. Request Id pointer to SDEC APPT REQUEST file 409.85
  ;  INP(25) = (optional) PARENT REQUEST pointer to SDEC APPT REQUEST file 409.85
  ;  INP(26) = (optional) NLT (No later than) [CPRS RTC REQUIREMENT]
  ;  INP(27) = (optional) PREREQ (Prerequisites) [CPRS RTC REQUIREMENT]
@@ -69,7 +59,7 @@ ARSET(RET,INP) ;Appointment Request Set
  N DFN,MI,ARAPTYP,ARIEN,ARORIGDT,ARORIGDTI,ARINST,ARINSTI,ARTYPE,ARTEAM,ARPOS,ARSRVSP,ARCLIN
  N ARUSER,ARPRIO,ARREQBY,ARPROV,ARDAPTDT,ARCOMM,AREESTAT,AREDT,ARQUIT
  N FNUM,FDA,ARNEW,ARRET,ARMSG,ARDATA,ARERR,ARHOSN,AUDF,SDREC
- N ARMAI,ARMAN,ARMAR,ARPARENT,ARPATTEL,ARENPRI,ARSTOP,ARSVCCON,ARSVCCOP
+ N ARMAI,ARMAN,ARMAR,ARPARENT,ARPATTEL,ARENPRI,ARSTOP,ARSVCCON,ARSVCCOP,PIDHIEN,PIDCHECK
  N VAOSGUID ; wtc patch 686 3/21/18 added for VAOS requests
  S (ARQUIT,AUDF)=0
  S FNUM=$$FNUM^SDECAR
@@ -172,6 +162,7 @@ ARSET(RET,INP) ;Appointment Request Set
  . I +ARMAR,$G(ARMAN)'="" S @FDA@(43)=ARMAN
  . S:$G(INP(23))'="" @FDA@(.02)=$S(INP(23)="N":"N",INP(23)="NEW":"N",INP(23)="E":"E",INP(23)="ESTABLISHED":"E",1:"")
  . S:+ARPARENT @FDA@(43.8)=+ARPARENT
+ . S @FDA@(49)=0 ; setting initial appt req PID change allowed field to no. 
  E  D
  . S ARIEN=ARIEN_"," ; Append the comma for both
  . K ARDATA,ARERR
@@ -208,6 +199,17 @@ ARSET(RET,INP) ;Appointment Request Set
  . S:+ARPARENT @FDA@(43.8)=+ARPARENT
  ; Only call UPDATE^DIE if there are any array entries in FDA
  D:$D(FDA)>9 UPDATE^DIE("","FDA","ARRET","ARMSG")
+ ; Add PID History entry for appt req
+ I $G(ARIEN) S AREQIEN=$G(ARIEN) I '$G(ARIEN) S AREQIEN=$G(ARRET(1))
+ I $G(ARDAPTDT) D
+ .S ARRET=$G(ARRET(1))
+ .I $G(ARIEN) S ARRET=ARIEN S ARRET=$TR(ARRET,",","") S PIDCHECK=$$LASTPIDCHECK(ARRET,ARDAPTDT)
+ .I $G(PIDCHECK)=0 Q
+ .S ARUSER=$$GET1^DIQ(200,ARUSER,.01,"E")
+ .S FDA(409.854,"+1,"_ARRET_",",.01)=$$NOW^XLFDT
+ .S FDA(409.854,"+1,"_ARRET_",",1)=ARDAPTDT
+ .S FDA(409.854,"+1,"_ARRET_",",2)=ARUSER
+ .D UPDATE^DIE(,"FDA","PIDHIEN","ERR") K FDA
  I $D(ARMSG) D
  . F MI=1:1:$G(ARMSG("DIERR")) S RET=RET_"-1^"_$G(ARMSG("DIERR",MI,"TEXT",1))_$C(30)
  . S RET=RET_$C(31)
@@ -222,6 +224,12 @@ ARSET(RET,INP) ;Appointment Request Set
  E  S RET=RET_+ARIEN_U_$C(30,31)
  Q
  ;
+LASTPIDCHECK(AREQIEN,ARDAPTDT) ; checking to see if the last PID in the PID HISTORY multiple is different from incoming value
+ N LASTPIDIEN,LASTPID
+ S LASTPIDIEN=$O(^SDEC(409.85,AREQIEN,10,"A"),-1)
+ S LASTPID=$$GET1^DIQ(409.854,LASTPIDIEN_","_AREQIEN_",",1,"I")
+ I LASTPID=ARDAPTDT Q 0
+ Q 1
 FDAPRER(FDA,ARPRER,ARIEN) ;Setup the FDA array for the PREREQUISITE multiple (#48)
  N ASEQ,DELIM,PC,PR
  Q:$G(ARPRER)=""
@@ -271,9 +279,9 @@ AR433(ARIEN,SDEC) ;set MULT APPTS MADE
  ;INPUT:
  ;  ARIEN  = (required) pointer to SDEC APPT REQUEST file 409.85
  ;  SDEC   = (required) child pointers to SDEC APPOINTMENT and SDEC APPTREQUEST file separated by pipe
- ;                    each pipe piece contains the following ~ pieces:
- ;                1. Appointment Id pointer to SDEC APPOINTMENT file 409.84
- ;                2. Request Id pointer to SDEC APPT REQUEST file 409.85
+ ;  each pipe piece contains the following ~ pieces:
+ ;  1. Appointment Id pointer to SDEC APPOINTMENT file 409.84
+ ;  2. Request Id pointer to SDEC APPT REQUEST file 409.85
  N SDAPP,SDFDA,SDI,SDIEN
  S ARIEN=$G(ARIEN)
  Q:'$D(^SDEC(409.85,ARIEN,0))
@@ -291,7 +299,7 @@ AR433(ARIEN,SDEC) ;set MULT APPTS MADE
  Q
 AR433D(SDEC) ;delete MULT APPTS MADE
  ;INPUT:
- ;  SDEC   = (required) pointers to SDEC APPOINTMENT file 409.84 separated by pipe
+ ;SDEC   = (required) pointers to SDEC APPOINTMENT file 409.84 separated by pipe
  N ARIEN,DFN,DIEN,SDAPP,SDFDA,SDI,SDJ,SDTYP
  S SDEC=$G(SDEC)
  F SDI=1:1:$L(SDEC,"|") D
@@ -313,7 +321,7 @@ AR435(SDDT,ARIEN) ;set dates into MRTC CALC PREF DATES multiple field 43.5
  ;INPUT:
  ; ARIEN - Requested date ID pointer to SDEC REQUESTED APPT file 409.85
  ; SDDT  - MRTC calculated preferred dates separated by pipe |:
- ;         Each date can be in external format with no time.
+ ; Each date can be in external format with no time.
  N SDI,SDJ,SDFDA,X,Y,%DT
  F SDI=1:1:$L(SDDT,"|") D
  .S %DT="" S X=$P($P(SDDT,"|",SDI),"@",1) D ^%DT S SDJ=Y
@@ -338,9 +346,7 @@ AR23(INP17,ARI) ;Patient Contacts
  F ARI1=1:1:$L(INP17,"::") D
  .S STR17=$P(INP17,"::",ARI1)
  .K FDA
- . ;
  . ;  Change date conversion to deal with midnight.  5/29/18 wtc patch 694
- . ;
  . S ARASD=$P($P(STR17,"~~",1),":",1,2),ARASD=$$NETTOFM^SDECDATE(ARASD,"Y") ;
  .I (ARASD=-1)!(ARASD="") Q
  .S ARDT=$P($P(STR17,"~~",1),":",1,2)

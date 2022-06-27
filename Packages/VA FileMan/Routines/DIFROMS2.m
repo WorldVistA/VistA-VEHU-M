@@ -1,5 +1,5 @@
-DIFROMS2 ;SFISC/DCL/TKW - INSTALL DD FROM SOURCE ARRAY ;4SEP2016
- ;;22.2;VA FileMan;**3,5,14,19**;Jan 05, 2016;Build 2
+DIFROMS2 ;SFISC/DCL/TKW - INSTALL DD FROM SOURCE ARRAY ; Nov 09, 2021@09:47:24
+ ;;22.2;VA FileMan;**3,5,14,19,21**;Jan 05, 2016;Build 4
  ;;Per VA Directive 6402, this routine should not be modified.
  ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
  ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
@@ -72,8 +72,9 @@ FILE ;
  .F  S DIFRFLD=$O(@DIFRSA@("^DD",DIFRFILE,DIFRD,DIFRFLD)) Q:DIFRFLD'>0  D
  ..K ^DD(DIFRD,DIFRFLD,21),^(23)
  ..S DIFRX=0
- ..F  S DIFRX=$O(@DIFRSA@("^DD",DIFRFILE,DIFRD,DIFRFLD,1,DIFRX)) Q:DIFRX'>0  D
- ...K ^DD(DIFRD,DIFRFLD,1,DIFRX,"%D")
+ ..F  S DIFRX=$O(@DIFRSA@("^DD",DIFRFILE,DIFRD,DIFRFLD,1,DIFRX)) Q:DIFRX'>0  D  ;check cross ref.
+ ...K ^DD(DIFRD,DIFRFLD,1,DIFRX,"%D") ;kill Description
+ ...S Z=0 F  S Z=$O(^DD(DIFRD,DIFRFLD,1,DIFRX,Z)) Q:'Z  I Z'=1,Z'=2 K ^(Z) ;p21 kill spill over cross ref. code
 FULL I DIFRFDD F DIFRX="^DIC","^DD" D  ;FULL DEFINITION
  .N X
  .I DIFRX="^DIC",$G(^DIC(DIFRFILE,0))]"" S X=$P(^(0),"^",3,9) ;REMEMBER NODES 3 &4 (LAST^COUNT)

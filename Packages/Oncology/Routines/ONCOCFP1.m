@@ -1,5 +1,5 @@
 ONCOCFP1 ;HINES OIFO/RVD - [PT Automatic Casefinding-PTF Search 1] ;09/10/15
- ;;2.2;ONCOLOGY;**7,10,13**;Jul 31, 2013;Build 7
+ ;;2.2;ONCOLOGY;**7,10,13,14**;Jul 31, 2013;Build 8
  ;
  ; rvd - 0403/12 p56. Use ICD API (#3990) instead of direct global call
 L10 ;
@@ -7,9 +7,9 @@ L10 ;
  ;List of ICD10
  W !?3,"*** COMPREHENSIVE ICD-10-CM Casefinding Code List for Reportable Tumors ***"
  W !
- W !?3,"C00._- C43._,C4A._,C45._,C48._,C49._,C96._  Malignant neoplasms"
- W !?3,"            (excluding category C44), stated or presumed to be primary "
- W !?3,"            (of specified site) and certain specified histologies"
+ W !?3,"C00._,C1_,C2_,C3_,C40._, C43._,C4A._,C45._,C48._,C49._,C5_,C6_,C7_,C8_,C9_"
+ W !?3,"  Malignant neoplasms (excluding category C44), stated or presumed to be "
+ W !?3,"         primary (of specified site) and certain specified histologies"
  W !?3,"C44.00_, C44.09   Unspecified/other malignant neoplasm of skin of lip"
  W !?3,"C44.10_, C44.19_  Unspecified/other malignant neoplasm of skin of eyelid"
  W !?3,"C44.13_         Sebaceous cell carcinoma of skin of eyelid, including canthus"
@@ -61,6 +61,8 @@ L10 ;
  W !?3,"R87.61_, R87.62_  Abnormal findings on cytological/histological examination"
  W !?3,"                   of female genital organs Note: see 'must collect' list for"
  W !?3,"                   R87.614 and R87.624"
+ W !?3,"Z85._  Personal history of malignant neoplasm"
+ W !?3,"Z86._  Personal history of in-situ neoplasm"
  w !
  w !?3,"****New ICD-10-CM codes (Effective Date: 10/1/2020)****",!
  W !?3,"D72.110         Idiopathic hypereosinophilic syndrome [HES]"
@@ -80,10 +82,16 @@ IC10 ;Search for ICD10 codes
 FD10 ;Check for valid ICD10 CM code for Oncology.
  ;I (SBCIND="YES"),($E(IC10)="C") S CI10=1 Q
  ;I (SBCIND="NO"),($E(IC10)="C") D  Q
- I ($E(IC10,1,6)="D47.Z2")!($E(IC10,1,4)="D09.") S CI10=0 Q
- I ($E(IC10,1,4)="C00.")!($E(IC10,1,4)="C43.")!($E(IC10,1,4)="C4A.") S CI10=1 Q
+ I ((IC10="D44.0")!(IC10="D44.1")!(IC10="D44.10")!(IC10="D44.11")!(IC10="D44.12")) S CI10=0 Q
+ I ((IC10="D44.2")!(IC10="D44.6")!(IC10="D44.7")!(IC10="D44.9")) S CI10=0 Q
+ I ((IC10="D35.0")!(IC10="D35.1")!(IC10="D35.5")!(IC10="D35.9")) S CI10=0 Q
+ I ($E(IC10,1,2)="C0")!($E(IC10,1,4)="C43.")!($E(IC10,1,4)="C4A.")!($E(IC10,1,4)="C40.") S CI10=1 Q
  I ($E(IC10,1,4)="C45.")!($E(IC10,1,4)="C48.")!($E(IC10,1,4)="C49.")!($E(IC10,1,4)="C96.") S CI10=1 Q
+ I ($E(IC10,1,4)="C46.")!($E(IC10,1,4)="C47.") S CI10=1 Q
+ I ($E(IC10,1,4)="C41.")!($E(IC10,1,4)="C42.") S CI10=1 Q
+ I ($E(IC10,1,6)="C44.13")!($E(IC10,1,4)="C46.") S CI10=1 Q
  I ($E(IC10,1,6)="C44.00")!($E(IC10,1,6)="C44.09") S CI10=1 Q
+ I ($E(IC10,1,6)="C44.10")!($E(IC10,1,6)="C44.19") S CI10=1 Q
  I ($E(IC10,1,6)="C44.20")!($E(IC10,1,6)="C44.29") S CI10=1 Q
  I ($E(IC10,1,6)="C44.30")!($E(IC10,1,6)="C44.39") S CI10=1 Q
  I ($E(IC10,1,6)="C44.40")!($E(IC10,1,6)="C44.49") S CI10=1 Q
@@ -92,18 +100,40 @@ FD10 ;Check for valid ICD10 CM code for Oncology.
  I ($E(IC10,1,6)="C44.70")!($E(IC10,1,6)="C44.79") S CI10=1 Q
  I ($E(IC10,1,6)="C44.80")!($E(IC10,1,6)="C44.89") S CI10=1 Q
  I ($E(IC10,1,6)="C44.90")!($E(IC10,1,6)="C44.99") S CI10=1 Q
+ I ($E(IC10,1,2)="C5")!($E(IC10,1,2)="C6") S CI10=1 Q
+ I ($E(IC10,1,2)="C7")!($E(IC10,1,2)="C8") S CI10=1 Q
+ I ($E(IC10,1,2)="C9")!($E(IC10,1,2)="C1") S CI10=1 Q
+ I ($E(IC10,1,2)="C2")!($E(IC10,1,2)="C3") S CI10=1 Q
+ I ($E(IC10,1,3)="C40")!($E(IC10,1,2)="C0") S CI10=1 Q
+ I ($E(IC10,1,4)="D00.")!($E(IC10,1,4)="D01.") S CI10=1 Q
+ I ($E(IC10,1,4)="D02.")!($E(IC10,1,4)="D03.") S CI10=1 Q
+ I ($E(IC10,1,4)="D04.")!($E(IC10,1,4)="D05.") S CI10=1 Q
+ I ($E(IC10,1,4)="D06.")!($E(IC10,1,4)="D07.") S CI10=1 Q
+ I ($E(IC10,1,4)="D09.")!($E(IC10,1,6)="D47.Z1") S CI10=1 Q
+ I ($E(IC10,1,3)="D32")!($E(IC10,1,6)="D18.02") S CI10=1 Q
+ I ($E(IC10,1,3)="D42")!($E(IC10,1,3)="D33") S CI10=1 Q
+ I ($E(IC10,1,3)="D45")!($E(IC10,1,4)="D43.") S CI10=1 Q
  I ($E(IC10,1,5)="D47.Z")!($E(IC10,1,5)="D47.1") S CI10=1 Q
  I ($E(IC10,1,5)="D47.3")!($E(IC10,1,5)="D47.4") S CI10=1 Q
  I ((IC10="D18.02")!(IC10="D35.2")!(IC10="D35.3")!(IC10="D35.4")!(IC10="D45")) S CI10=1 Q
+ I ($E(IC10,1,4)="D35.")!($E(IC10,1,4)="D44.") S CI10=1 Q
  I ((IC10="D72.110")!(IC10="D72.111")!(IC10="D72.118")!(IC10="D72.119")) S CI10=1 Q
  I ((IC10="D47.Z")!(IC10="D47.Z1")!(IC10="D47.Z9")!(IC10="D44.3")!(IC10="D44.4")!(IC10="D44.5")) S CI10=1 Q
  I ((IC10="D47.1")!(IC10="D47.3")!(IC10="D47.4")!(IC10="D47.02")!(IC10="D47.9")!(IC10="D49.6")!(IC10="D49.7")) S CI10=1 Q
  I ((IC10="R85.614")!(IC10="R87.614")!(IC10="R87.624")) S CI10=1 Q
- I ($E(IC10)="D"),(($E(IC10,2,7)>00)&($E(IC10,2,7)<09.9999)) S CI10=1 Q
+ ;I ($E(IC10)="D"),(($E(IC10,2,7)>00)&($E(IC10,2,7)<09.9999)) S CI10=1 Q
  I ($E(IC10)="D"),(($E(IC10,2,7)>31.9999)&($E(IC10,2,7)<33.9999)) S CI10=1 Q
  I ($E(IC10)="D"),(($E(IC10,2,7)>35.2000)&($E(IC10,2,7)<35.4001)) S CI10=1 Q
  I ($E(IC10)="D"),(($E(IC10,2,7)>41.9999)&($E(IC10,2,7)<43.9999)) S CI10=1 Q
  I ($E(IC10)="D"),(($E(IC10,2,7)>45.9999)&($E(IC10,2,7)<46.9999)) S CI10=1 Q
+ I ($E(IC10)="Z"),((IC10="Z85")!($E(IC10,1,5)="Z85.0")) S CI10=1 Q
+ I ($E(IC10)="Z"),(($E(IC10,1,5)="Z85.1")!($E(IC10,1,5)="Z85.2")) S CI10=1 Q
+ I ($E(IC10)="Z"),(($E(IC10,1,5)="Z85.3")!($E(IC10,1,5)="Z85.4")) S CI10=1 Q
+ I ($E(IC10)="Z"),(($E(IC10,1,5)="Z85.5")!($E(IC10,1,5)="Z85.6")) S CI10=1 Q
+ I ($E(IC10)="Z"),(($E(IC10,1,5)="Z85.7")!($E(IC10,1,5)="Z85.8")) S CI10=1 Q
+ I ($E(IC10)="Z"),(($E(IC10,1,5)="Z85.9")!($E(IC10,1,5)="Z86.0")) S CI10=1 Q
+ I ($E(IC10)="Z"),(($E(IC10,1,6)="Z86.00")!($E(IC10,1,6)="Z86.01")) S CI10=1 Q
+ I ($E(IC10)="Z"),($E(IC10,1,6)="Z86.03") S CI10=1 Q
  Q
  ;
 EX ;KILL variables

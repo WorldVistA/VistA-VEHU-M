@@ -1,5 +1,5 @@
 ONCSCHMU ;HINES OIFO/RTK - Utilities for NAACCR 2018+ ;08/01/19
- ;;2.2;ONCOLOGY;**10,13**;Jul 31, 2013;Build 7
+ ;;2.2;ONCOLOGY;**10,13,14**;Jul 31, 2013;Build 8
  ;
  Q
  ;
@@ -144,4 +144,11 @@ ACCRED ;Code to calculate/automatically set COC ACCREDITED FLAG (#7033) field
  .N ONCCOC S ONCCOC=$P($G(^ONCO(165.5,DA,0)),U,4)
  .I ((ONCCOC>1)&(ONCCOC<10)) S $P(^ONCO(165.5,DA,"NCR18B"),"^",10)=1 ;ANALYTIC, class of case 10-22 (iens in 165.3 of 2-9)
  .I (ONCCOC=1)!(ONCCOC=24)!((ONCCOC>9)&(ONCCOC<23)) S $P(^ONCO(165.5,DA,"NCR18B"),"^",10)=2 ;NON-ANALYTIC, class of case 30-43,99,00 (iens 10-22,1,24)
+ Q
+ ;
+SET38001 ;code to set SCHEMA ID DESCRIPTION (#3800.1) field and display schema
+ S ONCGRIEN=$O(^ONCO(164.44,"C",ONCSCMA,"")) I ONCGRIEN="" Q
+ S ONCSKNM=$O(^ONCO(164.44,ONCGRIEN,1,"B",ONCSCMA,""))
+ W !!?4,"Schema: ",$P($G(^ONCO(164.44,ONCGRIEN,1,ONCSKNM,0)),U,1),"-",$E($P($G(^ONCO(164.44,ONCGRIEN,1,ONCSKNM,0)),U,2),1,40),!!," - - - - - - - - - - - - - - - - - - - - - - - - - - - - -",!!
+ S $P(^ONCO(165.5,DA,"SSD5"),"^",6)=$P($G(^ONCO(164.44,ONCGRIEN,1,ONCSKNM,0)),U,1)_": "_$E($P($G(^ONCO(164.44,ONCGRIEN,1,ONCSKNM,0)),U,2),1,60)
  Q

@@ -1,5 +1,5 @@
-SDESBLKANDMOVE1 ;ALB/MGD/TAW - BLOCK AND MOVE CONT. ;Dec 06, 2021
- ;;5.3;Scheduling;**800,801**;Aug 13, 1993;Build 13
+SDESBLKANDMOVE1 ;ALB/MGD/TAW - BLOCK AND MOVE CONT. ;Jan 21, 2022
+ ;;5.3;Scheduling;**800,801,803,804**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
 TOOVBCHECK(SDTOCLIEN,TODTFM,APPTARY,FN,SDECAPPTIENS,POP,SDAPPT,OVB) ; Check if new appt will be considered an overbook
@@ -41,8 +41,14 @@ BLOCK(SDSTDATE,SDSTTIME,SDENDTIME,SDORGCLIEN,SDDATA44SL,TIMESCALE) ; Logic copie
  S %=$P(SDDATA44SL,U,3),STARTDAY=$S($L(%):%,1:8) D NOW^%DTC S SDTIME=%
  S (CANREM,I)="BLOCK AND MOVE"
  S SD=SDSTDATE
+ ; If Start Time = midnight set to 0001 to pass TC
+ I $E(SDSTTIME,1,2)=24 S SDSTTIME="0001"
+ I +SDSTTIME=0 S SDSTTIME="0001"
  S X=SDSTTIME_"0000",X=$E(X,1,4) D TC
  S FR=Y,ST=%
+ ; If End Time = midnight set to 2359 to pass TC
+ I $E(SDENDTIME,1,2)=24 S SDENDTIME=2359
+ I +SDENDTIME=0 S SDENDTIME=2359
  S X=SDENDTIME_"0000",X=$E(X,1,4) D TC
  S SDHTO=X,TO=Y,SDDFR=TO-FR
  I '$D(^SC(SC,"SDCAN",0)) S ^SC(SC,"SDCAN",0)="^44.05D^"_FR_"^1" G SKIP
@@ -123,3 +129,58 @@ IDTIMESLOT(CLIEN,MAXSLOTS,CLINID) ;
  F  S SDINDX=$O(SDSEGMENTS(CLIEN,CLINID,"SCHEDULE",SDINDX)) Q:'SDINDX!(SDINDX>=+SDINDXEND)  D  Q:POP
  .I $P(SDSEGMENTS(CLIEN,CLINID,"SCHEDULE",SDINDX),U,2)>MAXSLOTS S POP=1
  Q POP
+ ;
+CHKAVAILABILITY(RES,CLIEN,APPTDTNET,CLINID,MOVE2DATE) ;Check the Clinic Resource and Appt Dt for slot availability
+ ; RES - Clinic resource of the new appointment
+ ; CLIEN - IEN of clinic being evaluated
+ ; APPTDTNET - Appointment date/time in external format
+ ; CLINID - F = From clinic, T = To clinic
+ ; MOVE2DAT - The original appt date/tm or the new appt date/tm in FM format
+ ;
+ N RET,TEXT,I,DATA,SLOTS,CNT,EVALSTRT,EVALSTOP,APPTSTRT,APPTEND,EAPPTDATA
+ S SLOTS="",CNT=0
+ S EVALSTRT=+SDSEGMENTS(CLIEN,CLINID,"EVALUATE")
+ S EVALSTOP=+$P(SDSEGMENTS(CLIEN,CLINID,"EVALUATE"),U,2)
+ K ^TMP("SDEC57",$J)
+ D APPSLOTS^SDEC57(.RET,RES,APPTDTNET,APPTDTNET)
+ S TEXT=$G(^TMP("SDEC57",$J,"APPSLOTS",1))
+ I $P(TEXT,"^",1)=-1 D  Q
+ .S POP=1 D ERRLOG^SDESJSON(.SDAPPT,52,$P(TEXT,"^",2))
+ I CLINID="T",TEXT="" S POP=1 D ERRLOG^SDESJSON(.SDAPPT,124,"Destination clinic is not open on this date") Q
+ ;
+ ;DATA = fm dt ^ fm time ^ ^# of slots
+ S I=0
+ F  S I=$O(^TMP("SDEC57",$J,"APPSLOTS",I)) Q:I=""  D  Q:POP
+ .S DATA=^TMP("SDEC57",$J,"APPSLOTS",I)
+ .S DATA=$$CTRL^XMXUTIL1(DATA)
+ .I +$P(DATA,"^",2)<EVALSTRT Q
+ .I +$P(DATA,"^",2)>=EVALSTOP Q
+ .S SLOTS=$P(DATA,"^",4)
+ .Q:SLOTS=""  ; Appears APPSLOTS^SDEC57 puts a "" to represent the period after the end of clinic availability
+ .I CLINID="F" D  ; ### check order of next 2 lines
+ ..I SLOTS'="0",SLOTS'="1",SLOTS'="*" S POP=1 D ERRLOG^SDESJSON(.SDAPPT,124,"appointment currently overbooked") Q
+ ..;If orig appt slot is overbook, no B&M
+ ..I +$P(DATA,U,2)=+$$PADFMTIME^SDESUTIL($P(FROMDTFM,".",2)) D
+ ...I SLOTS'=0,SLOTS'="*" S POP=1 D ERRLOG^SDESJSON(.SDAPPT,124,"appointment currently overbooked")
+ .I CLINID="T" D  Q:POP
+ ..I SLOTS'>0 S POP=1 D ERRLOG^SDESJSON(.SDAPPT,124,"Destination clinic has no availability") Q
+ ; Check for existing appts in clinic based on Start/End time of appt
+ Q:POP
+ N TIME,IEN
+ S TIME=$$PADLENGTH^SDESUTIL(EVALSTOP,"0",4,"F")
+ S TIME=$P(MOVE2DATE,".",1)_"."_TIME
+ F  S TIME=$O(^SDEC(409.84,"ARSRC",RES,+TIME),-1) Q:TIME'[$P(MOVE2DATE,".",1)  D  Q:POP
+ .S IEN=""
+ .F  S IEN=$O(^SDEC(409.84,"ARSRC",RES,TIME,IEN)) Q:'IEN  D  Q:POP
+ ..Q:IEN=APPTIEN
+ ..S EAPPTDATA=$G(^SDEC(409.84,IEN,0))
+ ..Q:EAPPTDATA=""
+ ..; Skip cancelled appts
+ ..I $P(EAPPTDATA,U,17)'=""&("C^CA^PC^PCA^"["^"_$P(EAPPTDATA,U,17)_"^") Q
+ ..S APPTSTRT=$E($P($P(EAPPTDATA,"^",1),".",2)_"0000",1,4)
+ ..S APPTEND=$E($P($P(EAPPTDATA,"^",2),".",2)_"0000",1,4)
+ ..; The Appt start time > EVALUATE start time
+ ..I APPTSTRT>EVALSTRT S POP=1 D ERRLOG^SDESJSON(.SDAPPT,124,"Existing scheduling conflict") Q
+ ..; If any existing appt has a partial overlap within our EVALUATE Start/End - can't B&M
+ ..I APPTEND>EVALSTRT,APPTEND<EVALSTOP S POP=1 D ERRLOG^SDESJSON(.SDAPPT,124,"Existing scheduling conflict") Q
+ Q

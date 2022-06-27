@@ -33602,11 +33602,11 @@ ZWR
 ^YTT(601.72,8549,1,1,0)="CLINICAL MONITORING"
 ^YTT(601.72,8549,2)="2436^1^15015^0^0^Y"
 ^YTT(601.72,8550,0)=8550
-^YTT(601.72,8550,1,0)="^^3^3^3220624"
+^YTT(601.72,8550,1,0)="^^3^3^3220626"
 ^YTT(601.72,8550,1,1,0)="SPECIAL NURSING|"
 ^YTT(601.72,8550,1,2,0)="In order to code this item ""yes,"" the person must receive either tube feeding only,|"
 ^YTT(601.72,8550,1,3,0)="or a combination of other special treatment (2 in Q13) and clinical monitoring (2 in Q14)"
-^YTT(601.72,8550,2)="2436^1^15016^0^0^N"
+^YTT(601.72,8550,2)="2436^1^15016^0^0^Y"
 ^YTT(601.72,8551,0)=8551
 ^YTT(601.72,8551,1,0)="^^1^1^3220624"
 ^YTT(601.72,8551,1,1,0)="NEUROMUSCULAR DIAGNOSIS"

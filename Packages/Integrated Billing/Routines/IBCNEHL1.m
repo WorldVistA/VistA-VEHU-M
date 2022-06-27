@@ -1,5 +1,5 @@
-IBCNEHL1 ;DAOU/ALA - HL7 Process Incoming RPI Messages ;26-JUN-2002
- ;;2.0;INTEGRATED BILLING;**300,345,416,444,438,497,506,549,593,601,595,621,631,668,687**;21-MAR-94;Build 88
+IBCNEHL1 ;DAOU/ALA - HL7 Process Incoming RPI Messages ; 26-JUN-2002
+ ;;2.0;INTEGRATED BILLING;**300,345,416,444,438,497,506,549,593,601,595,621,631,668,687,702**;21-MAR-94;Build 53
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -27,10 +27,14 @@ IBCNEHL1 ;DAOU/ALA - HL7 Process Incoming RPI Messages ;26-JUN-2002
  ;    RIEN     - Response Record IEN
  ;    SEG      - HL7 Segment Name
  ;
- ;IB*2*621/TAZ - Added to insure the routine is called via entry point EN with the event type.
+ ; IB*2*621/TAZ - Added EVENTYP to control type of event processing.
+ ;
+ ; *** With IB*702, the code in the tag AUTOFIL was moved to another routine.
+ ; *** Therefore, modifications from IB*631 and IB*687 are no longer found in this routine.
+ ;
+ ; IB*2*621/TAZ - Added to insure the routine is called via entry point EN with the event type.
  Q  ;No direct entry to routine. Call label EN with parameter
  ;
- ;IB*2*621/TAZ - Added EVENTYP to control type of event processing.
 EN(EVENTYP) ;Entry Point
  ;EVENTYP=1 > EICD Identification Response (RPI^IO4)
  ;EVENTYP=2 > Normal 271 Response (RPI^IO1) 
@@ -143,6 +147,10 @@ EN(EVENTYP) ;Entry Point
  . I IIVSTAT="V" S FDA(365.185,IENS,1.04)=3  ;Ambiguous
  . D FILE^DIE("","FDA"),CLEAN^DILF
  ;
+ ; IB*702/DTG start set auto eiv user name
+ N IBEIVUSR
+ S IBEIVUSR="AUTOUPDATE,IBEIV"
+ ; IB*702/DTG end set auto eiv user name
  S AUTO=$$AUTOUPD(RIEN)
  I $G(ACK)'="AE",$G(ERACT)="",$G(ERTXT)="",'$D(ERROR),+AUTO D  Q
  .D:$P(AUTO,U,3)'="" AUTOFIL($P(AUTO,U,2),$P(AUTO,U,3),$P(AUTO,U,6))
@@ -154,127 +162,16 @@ ENX ;
  Q
  ;
  ;=================================================================
+ ; IB*702/DTG start move body of AUTOFIL to IBCNEHL5 for SAC space size.
 AUTOFIL(DFN,IEN312,ISSUB) ;Finish processing the response message - file directly into patient insurance
  ;
- N BUFF,DATA,ERROR,IENS,MIL,OKAY,PREL,RDATA0,RDATA1,RDATA5,RDATA13,RSTYPE,TQN,TSTAMP,XX  ;IB*2*497 (vd)
- ;
- Q:$G(RIEN)=""
- S TSTAMP=$$NOW^XLFDT(),IENS=IEN312_","_DFN_","
- S RDATA0=$G(^IBCN(365,RIEN,0)),RDATA1=$G(^IBCN(365,RIEN,1)),RDATA5=$G(^IBCN(365,RIEN,5))
- S RDATA13=$G(^IBCN(365,RIEN,13))     ;IB*2*497 (vd)
- S TQN=$P(RDATA0,U,5),RSTYPE=$P(RDATA0,U,10)
- ;\Beginning IB*2*549 - Modified the following lines
- S XX=$$GET1^DIQ(2.312,IENS,7.01,"I")
- I ISSUB,XX="" S DATA(2.312,IENS,7.01)=$P(RDATA13,U)  ;Name
- S XX=$$GET1^DIQ(2.312,IENS,3.01,"I")
- I XX="" S DATA(2.312,IENS,3.01)=$P(RDATA1,U,2)       ;DOB
- S XX=$$GET1^DIQ(2.312,IENS,3.05,"I")
- I XX="" S DATA(2.312,IENS,3.05)=$P(RDATA1,U,3)       ;SSN
- S XX=$$GET1^DIQ(2.312,IENS,6,"I")
- I ISSUB,XX="" S DATA(2.312,IENS,6)=$P(RDATA1,U,8)    ;Whose insurance
- ;pt. relationship (365,8.01) IB*2*497 code from 365,8.01 needs evaluation & possible conversion
- S PREL=$$GET1^DIQ(365,RIEN,8.01)
- S XX=$$GET1^DIQ(2.312,IENS,4.03,"I")
- I ISSUB,XX="",PREL'="" D
- . S DATA(2.312,IENS,4.03)=$$PREL^IBCNEHLU(2.312,4.03,PREL)
- ;\End of IB*2*549 changes.
- ;IB*2*595/DM moved the setting of fields 1.03 through 1.06 plus 1.09
- ;IB*2*595/DM persist the original Source of Information
- ;note: external values are used to populate DATA
- I $$GET1^DIQ(2.312,IENS,1.09,"I")="" D
- . S XX=$$GET1^DIQ(365.1,TQN_",1,",3.02)
- . I XX="" S XX="eIV"
- . S DATA(2.312,IENS,1.09)=XX
- ;
- ;Set Subscriber address Fields if none of the fields are currently defined
- ;\Beginning IB*2*549 - Modified the following lines
- S XX=$$GET1^DIQ(2.312,IENS,3.06,"I")      ;Current Ins Street Line 1
- I XX="" D
- . S XX=$$GET1^DIQ(2.312,IENS,3.07,"I")    ;Current Ins Street Line 2
- . Q:XX'=""
- . S XX=$$GET1^DIQ(2.312,IENS,3.08,"I")    ;Current Ins City
- . Q:XX'=""
- . S XX=$$GET1^DIQ(2.312,IENS,3.09,"I")    ;Current Ins State
- . Q:XX'=""
- . S XX=$$GET1^DIQ(2.312,IENS,3.1,"I")     ;Current Ins Zip
- . Q:XX'=""
- . S XX=$$GET1^DIQ(2.312,IENS,3.13,"I")    ;Current Ins Country
- . Q:XX'=""
- . S XX=$$GET1^DIQ(2.312,IENS,3.14,"I")    ;Current Ins Country Subdivision
- . Q:XX'=""
- . S DATA(2.312,IENS,3.06)=$P(RDATA5,U)    ;Street line 1
- . S DATA(2.312,IENS,3.07)=$P(RDATA5,U,2)  ;Street line 2
- . S DATA(2.312,IENS,3.08)=$P(RDATA5,U,3)  ;City
- . S DATA(2.312,IENS,3.09)=$P(RDATA5,U,4)  ;State
- . S DATA(2.312,IENS,3.1)=$P(RDATA5,U,5)   ;Zip
- . S DATA(2.312,IENS,3.13)=$P(RDATA5,U,6)  ;Country
- . S DATA(2.312,IENS,3.14)=$P(RDATA5,U,7)  ;Country subdivision
- ;\End of IB*2*549 changes.
- ;
- L +^DPT(DFN,.312,IEN312):15 I '$T D LCKERR^IBCNEHL3 D FIL Q
- I $D(DATA) D FILE^DIE("ET","DATA","ERROR") ;IB*2*595/DM make sure DATA has data  
- I $D(ERROR) D WARN^IBCNEHL3 K ERROR D FIL G AUTOFILX
- ;IB*2*595/DM set auto-update fields
- ;the EIV AUTO-UPDATE flag is now located in the IIV Response file
- ;set eIV auto-update field separately because of the trigger on field 1.05
- ;S DATA(2.312,IENS,4.04)="YES"
- K DATA
- S DATA(2.312,IENS,1.03)=TSTAMP                ;Date last verified
- S DATA(2.312,IENS,1.04)="AUTOUPDATE,IBEIV"    ;Last verified by ; Edit with 595 was null
- S DATA(2.312,IENS,1.05)=TSTAMP                ;Date last edited
- S DATA(2.312,IENS,1.06)="AUTOUPDATE,IBEIV"    ;Last edited by ; Edit with 595 was null
- D FILE^DIE("ET","DATA","ERROR")
- I $D(ERROR) D WARN^IBCNEHL3 G AUTOFILX
- ;IB*2*595/DM set the insurance record IEN in the IIV Response file
- ;to track which policy was updated based on the response
- D UPDIREC^IBCNEHL3(RIEN,IEN312)
- ;IB*2*595/DM set the EIV AUTO-UPDATE in the response file to signal auto-update
- K DATA
- S DATA(365,RIEN_",",.13)="YES"
- D FILE^DIE("ET","DATA")
- ;
- S ERFLG=$$GRPFILE(DFN,IEN312,RIEN,1)
- I $G(ERFLG) G AUTOFILX  ;IB*2*497 file data at 2.312, 9, 10 & 11 subfiles; if error is produced update buffer entry & then quit processing
- ;file new EB data
- S ERFLG=$$EBFILE(DFN,IEN312,RIEN,1)
- ;bail out if something went wrong during filing of EB data
- I $G(ERFLG) G AUTOFILX
- ;update insurance record ien in transmission queue
- D UPDIREC^IBCNEHL3(RIEN,IEN312)
- ;For an original response, set the Transmission Queue Status to 'Response Received' &
- ;update remaining retries to comm failure (5)
- I $G(RSTYPE)="O" D SST^IBCNEUT2(TQN,3),RSTA^IBCNEUT7(TQN)
- ;update buffer file entry so only stub remains & status is changed
- S BUFF=+$P($G(^IBCN(365,RIEN,0)),U,4)
- I BUFF D
- .D STATUS^IBCNBEE(BUFF,"A",0,0,0) ;update buffer entry's status to accepted
- .D DELDATA^IBCNBED(BUFF) ;delete buffer's insurance/patient data
- ;
- ;IB*2*631/vd - Start of new code for filing data to #355.36 file.
- N BUFF,ERROR,FDA,WE
- S WE=$$GET1^DIQ(365.1,TQN_",",.1,"I")
- S BUFF=$$GET1^DIQ(365,RIEN_",",.04,"I")
- S FDA(355.36,"+1,",.01)=$$NOW^XLFDT    ;Date Processed
- S FDA(355.36,"+1,",.02)=$S("^5^6^"[(U_WE_U):3,"^1^2^3^"[(U_WE_U):1,1:"")   ;"WE" Should never be 4 or 7 at this point
- S FDA(355.36,"+1,",.03)=$$GET1^DIQ(365.1,TQN_",",3.02,"I")   ;Source of Information
- S FDA(355.36,"+1,",.04)=$$GET1^DIQ(365,RIEN_",",.13,"I")     ;EIV Auto-Update
- S FDA(355.36,"+1,",.05)=TQN            ;EIV Inquiry
- S FDA(355.36,"+1,",.06)=RIEN           ;IV Response
- S FDA(355.36,"+1,",.07)=BUFF           ;Buffer
- S FDA(355.36,"+1,",.08)=WE             ;Source of Request (Which Extract)
- D UPDATE^DIE("","FDA",,"ERROR")
- I $D(ERROR) D
- . D MSG003^IBCNEMS1(.IBMSG,.ERROR,TQN,RIEN,BUFF)
- . D MSG^IBCNEUT5($$MGRP^IBCNEUT5(),"eIV Problem: Error writing to the CREATION TO PROCESSING TRACKING File (#355.36)","IBMSG(")
- ;IB*2*631/vd - End of new code.
- ;
- ;IB*687/TAZ - File Auto Updated policy in INTERFACILITY INSURANCE UPDATE File (#365.19)
- ; IBCNBAR added a field the param list when calling LOC^IBCNIUF. For consistency we added a 'null'.
- D LOC^IBCNIUF(DFN,$$GET1^DIQ(2.312,IEN312_","_DFN_",",.01,"I"),IEN312,$$GET1^DIQ(365,RIEN_",",.13,"I"),"",$$GET1^DIQ(365.1,TQN_",",3.02,"E"),"")
+ ; IB*702/DTG moved autofil to IBCNEHL5 due to routine file size
+ I $G(RIEN)="" G AUTOFILX
+ D AUTOFIL^IBCNEHL5(DFN,IEN312,ISSUB)
  ;
 AUTOFILX ;
- L -^DPT(DFN,.312,IEN312)
  Q
+ ; IB*702/DTG end move body of AUTOFIL to IBCNEHL5 for SAC space size.
  ;
 GRPFILE(DFN,IEN312,RIEN,AFLG) ;ib*2*497 file data at node 12 & at subfiles 2.312,9, 10 & 11
  ;DFN - file 2 ien
@@ -337,7 +234,7 @@ AUTOUPD(RIEN) ;
  S RES=0
  I +$G(RIEN)'>0 Q RES          ;Invalid ien for file 365
  ;IB*2*595/DM if entry is missing from #200, file in buffer
- I '$$FIND1^DIC(200,,"M","AUTOUPDATE,IBEIV") Q RES
+ I '$$FIND1^DIC(200,,"M",IBEIVUSR) Q RES  ; IB*702/DTG change user name ("AUTOUPDATE,IBEIV") to use var.
  ;
  ;IB*2*549 - Moved up the next 5 lines. Originally, these lines were
  ;             directly after line 'I $G(IIVSTAT)'=1 Q RES'

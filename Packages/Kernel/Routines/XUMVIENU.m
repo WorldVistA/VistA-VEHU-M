@@ -1,5 +1,5 @@
 XUMVIENU ;MVI/CKN,MKO - Master Veteran Index Enrich New Person ; 1/26/21 3:10pm
- ;;8.0;KERNEL;**711,724,744**;Jul 10, 1995;Build 1
+ ;;8.0;KERNEL;**711,724,744,767**;Jul 10, 1995;Build 1
  ;Per VA Directive 6402, this routine should not be modified.
  ;**711,Story 977838 (mko/ckn): New routine
  ;Entry point: UPDATE^XUMVIENU(XURET,.XUARR,XUFLAG)
@@ -8,7 +8,7 @@ XUMVIENU ;MVI/CKN,MKO - Master Veteran Index Enrich New Person ; 1/26/21 3:10pm
  ; Input:
  ;   XUARR(subscript)=value to update
  ;   XUFLAG = "A" : if RPC is being called to add a record to the New Person file
- ;            "U" : if RPC is being called to edit an existing New Person file record.
+ ;   "U" : if RPC is being called to edit an existing New Person file record.
  ;
  ; Return Parameter:
  ;   On success:
@@ -18,7 +18,6 @@ XUMVIENU ;MVI/CKN,MKO - Master Veteran Index Enrich New Person ; 1/26/21 3:10pm
  ;     DUZ^-1^errorMessage
  ;       Returned if entry was edited, but some data was not valid and could
  ;       not be filed.
- ;
  ;   On failure:
  ;     -1^errorMessage
  ;       Returned for example if required data was not passed, entry could
@@ -33,8 +32,8 @@ UPDATE(XURET,XUARR,XUFLAG) ;RPC to enrich New Pperson file entry
  Q
  ;
 PROC(XURET,XUARR,XUFLAG) ;Main code for RPC
- N FDA,OLDTDATE,XUDUZ
- K XURET
+ N FDA,OLDTDATE,XUDUZ,XURSET
+ K XURET S XURSET=0
  ;
  ;Check inputs
  S XURET=$$CHKINPUT(.XUARR,.XUFLAG)
@@ -46,6 +45,7 @@ PROC(XURET,XUARR,XUFLAG) ;Main code for RPC
  . ;Call entry point to add the record
  . D:$G(XUARR("SubjectOrgan"))=""!($G(XUARR("SubjectOrganID"))="") SUBJDEF(.XUARR)
  . S XUDUZ=$$ADDUSER^XUMVINPA(.XUARR)
+ . I $P(XUDUZ,"^",3)'=1 S XUFLAG="U",XURSET=1 ;**767 found exists already so process as update
  . I XUDUZ<0 S XURET=XUDUZ ;If error, we'll return -1^errorMessage
  . E  I $P(XUDUZ,U,3)=1 S XUDUZ=+XUDUZ ;If record was added, set XUDUZ to new IEN
  . E  S XURET=+XUDUZ ;If record was found, not added, we'll just return DUZ -- no edit will take place
@@ -57,13 +57,12 @@ PROC(XURET,XUARR,XUFLAG) ;Main code for RPC
  . S:XUDUZ'>0 XURET="-1^User with NPI "_XUARR("NPI")_" not found."
  ;
  ;If add or lookup above set XURET, we're done
- Q:XURET]""
+ I XURET]""&(XUFLAG="A") Q
  ;
  ;**744 - VAMPI-8213 (ckn)
  ;If update is from PPMS/PIE and if New Person have Primary Menu,
  ;then no update as this is a Dual Provider.
- I $G(XUFLAG)="U",($G(XUARR("WHO"))="200PIEV"),($P($G(^VA(200,+XUDUZ,201)),"^")'="") S XURET="-1^Provider has a Primary Menu, no update." Q
- ;**744 - VAMPI-8213 (ckn)
+ I $G(XUFLAG)="U",($G(XUARR("WHO"))="200PIEV"),($P($G(^VA(200,+XUDUZ,201)),"^")'="") S XURET="-1^Provider has a Primary Menu, no update." Q  ;**744 - VAMPI-8213 (ckn)
  ;If update is from PPMS/PIE and if CPRS TAB multiple field have any other
  ;values than "NVA", then no update as this is a Dual Provider.
  N QCPFLG,TABIEN S QCPFLG=0
@@ -98,7 +97,7 @@ PROC(XURET,XUARR,XUFLAG) ;Main code for RPC
  I $G(XUARR("WHO"))="200PIEV" D CPRSNVA^XUMVIEU1(XUDUZ,.XUARR,OLDTDATE)
  ;
  ;If Termination Date was added or deleted, remove or add Security keys PROVIDER and XUORES
- D SECKEYS(XUDUZ,OLDTDATE,.XURET)
+ D SECKEYS(XUDUZ,OLDTDATE,.XURET,XURSET) ;**767 OR if ADD is now UPDATE XURSET=1
  ;
  ;File the Person Class data
  D PERSCLAS(XUDUZ,.XUARR,.XURET)
@@ -157,12 +156,13 @@ TERMDATE(FDA,XURES) ;Remove Termination Date from FDA if it's in the future,
  . K FDA(200,IENS,9.2)
  Q
  ;
-SECKEYS(XUDUZ,OLDTDATE,XURET) ;Add or remove Security Keys PROVIDER and XUORES
+SECKEYS(XUDUZ,OLDTDATE,XURET,XURSET) ;Add or remove Security Keys PROVIDER and XUORES
  ;based on whether Termination Date is deleted or created
+ ;**767 OR if ADD is now UPDATE XURSET=1
  N KEY,KEYIEN,NEWTDATE
  S XUDUZ=+$G(XUDUZ),OLDTDATE=$G(OLDTDATE)
  S NEWTDATE=$P($G(^VA(200,XUDUZ,0)),U,11)
- Q:$G(OLDTDATE)=NEWTDATE
+ Q:$G(OLDTDATE)=NEWTDATE&(XURSET=0)
  ;
  F KEY="PROVIDER","XUORES" D
  . S KEYIEN=$O(^DIC(19.1,"B",KEY,0)) Q:KEYIEN'>0
@@ -172,15 +172,17 @@ SECKEYS(XUDUZ,OLDTDATE,XURET) ;Add or remove Security Keys PROVIDER and XUORES
  .. S DA=$O(^VA(200,XUDUZ,51,"B",KEYIEN,0)) Q:DA'>0
  .. S DA(1)=XUDUZ,DIK="^VA(200,"_XUDUZ_",51,"
  .. D ^DIK
- . E  I OLDTDATE]"",NEWTDATE="" D
- .. ;Add the key
- .. ;**724,Story 1209890 (mko): The #.01 of the KEYS multiple is DINUM'd, so pass IEN(1).
- .. ;  Also, GIVEN BY (#1) and DATE GIVEN (#2) are triggered by the #.01.
- .. N IENS,FDA,IEN
- .. Q:$O(^VA(200,XUDUZ,51,"B",KEYIEN,0))
- .. S IENS="+1,"_XUDUZ_","
- .. S (FDA(200.051,IENS,.01),IEN(1))=KEYIEN
- .. D UPDATER(.FDA,"",.XURET,.IEN)
+ .I OLDTDATE]"",NEWTDATE="" D ADDKEY(XUDUZ,KEYIEN)
+ .I XURSET=1 D ADDKEY(XUDUZ,KEYIEN)
+ Q
+ADDKEY(XUDUZ,KEYIEN) ;Add the key
+ ;**724,Story 1209890 (mko): The #.01 of the KEYS multiple is DINUM'd, so pass IEN(1)
+ ;  Also, GIVEN BY (#1) and DATE GIVEN (#2) are triggered by the #.01.
+ N IENS,FDA,IEN
+ Q:$O(^VA(200,XUDUZ,51,"B",KEYIEN,0))
+ S IENS="+1,"_XUDUZ_","
+ S (FDA(200.051,IENS,.01),IEN(1))=KEYIEN
+ D UPDATER(.FDA,"",.XURET,.IEN)
  Q
  ;
 PERSCLAS(XUDUZ,XUARR,XURET) ;Update PERSON CLASS multiple
@@ -220,7 +222,7 @@ ISPCACTV(XUDUZ,SUBIEN) ;Is the Person Class active?
 NEWDEA(XUDUZ,XUARR,XURET) ;Update DEA NUMBERS File #8991.9
  ;and the NEW PERSON File NEW DEA #'s multiple
  N CNT,DEA,DIERR,DIHELP,DIMSG,FDA,IEN,IENS,NDEAIEN,XUERR
- N STR1,STR2,STR3,CITY,STATE,ZIP
+ N STR1,STR2,STR3,CITY,STATE,ZIP,ADDR
  ;
  ;Get address parts
  D:$D(XUARR("ADDRESS DATA"))#2

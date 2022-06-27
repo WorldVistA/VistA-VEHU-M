@@ -1,5 +1,5 @@
 SDHL7APT ;MS/TG,PH - TMP HL7 Routine;AUG 17, 2018
- ;;5.3;Scheduling;**704,714,754,773,780**;AUG 17, 2018;Build 17
+ ;;5.3;Scheduling;**704,714,754,773,780,798,810**;AUG 17, 2018;Build 3
  ;
  ;  Integration Agreements:
  Q
@@ -22,7 +22,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ; Output:
  ;          Positive (AA) or negative acknowledgement (AE - with appropriate error text)
  ;    
- ;
  ;  Integration Agreements: NONE
  ;
  N MSGROOT,DATAROOT,QRY,XMT,ERR,RNAME,IX
@@ -52,7 +51,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  N APPTYPE,AILNTE,DFN,RET,CNT,PID,PV1,RGS,AIS,AIG,AISNTE,OVB,OFFSET,AIP,RTCID,AIPNTE,INP,SETID,EXTIME,SCHNTE,SCH,SDMTC,QRYDFN,MSGCONID,LST,MYRESULT,HLA,PTIEN,SCPER,ATYPIEN
  N AIGNTE,AIL,AILNTE,ARSETE,CURDTTM,ERROR,FLMNFMT,EESTAT,GRPCNT,GRPNO,OBX,PREVSEG,PTIEN,SCHDFN,SCPERC,SDDDT,SDECATID,SDUSER,CHILD,MSAHDR,SDECTYP
  N SDECCR,SDECEND,SDECLEN,SDECNOTE,SDECRES,SDECSTART,SDECY,SDEKG,SDEL,SDID,SDLAB,SDMRTC,SDPARENT,SDCHILD,SDECAPTID,SDECDATE,FIRST
- N SDREQBY,SDSVCP,SDSVCPR,SDECCR,INTRA,SDXRAY,SEGTYPE,INST,INSTIEN,FLMNFMT2,SDAPTYP,SETID,SITE,STA,STATUS,STOP,PROVIEN,ERRCND,ERRSND,ERRTXT,URL,MSH,SDECNOT
+ N SDREQBY,SDSVCP,SDSVCPR,SDECCR,INTRA,SDXRAY,SEGTYPE,INST,FLMNFMT2,SDAPTYP,SETID,STA,STATUS,STOP,PROVIEN,ERRCND,ERRSND,ERRTXT,URL,MSH,SDECNOT
  ;
  S (MSGCONID,SCHDFN)=""
  S CNT=1,SETID=1,PREVSEG="",GRPCNT=0,PTIEN="",ERRTXT="",ERRSND=""
@@ -87,7 +86,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ;
  S MSAHDR="MSA^1^^100^AE^"
  I +ERR D  Q
- .;S ERR="MSA^1^^100^AE^"_$E(ERRTXT,1,50)
  .S ERR=$G(MSAHDR)_$E(ERRTXT,1,50)
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
@@ -127,7 +125,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  K DFN
  S (DFN,INP(2))=$$GETDFN^MPIF001(MSGARY("MPI"))
  I $P(DFN,U,2)="NO ICN"!($P(DFN,U,2)="ICN NOT IN DATABASE") D  Q
- .;S ERR="MSA^1^^100^AE^PATIENT ICN NOT FOUND"
  .S ERR=$G(MSAHDR)_"PATIENT ICN NOT FOUND"
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
@@ -137,7 +134,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  I $P($G(SDAPTYP),"|",1)="C"!($P($G(SDAPTYP),"|",1)="R") D CHKCON^SDHLAPT2(DFN,SDAPTYP) I $G(STOPME)=1 Q
  ;
  I $G(SDCL)="" D  Q
- .;S ERR="MSA^1^^100^AE^CLINIC ID IS NULL",STOPME=1
  .S ERR=$G(MSAHDR)_"CLINIC ID IS NULL",STOPME=1
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
@@ -147,7 +143,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ;
  I '$D(^SC($G(SDCL),0)) D  Q
  .Q:$G(AIL(1,3,1,4))'=$P(^DIC(4,$$KSP^XUPARAM("INST"),99),"^")
- .;S ERR="MSA^1^^100^AE^NOT A CLINIC AT THIS SITE "_$G(SDCL)
  .S ERR=$G(MSAHDR)_"NOT A CLINIC AT THIS SITE "_$G(SDCL)
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
@@ -156,7 +151,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  S STOPME=0
  I $G(SDCL2)>0 D
  .Q:$G(AIL(2,3,1,4))'=$P(^DIC(4,$$KSP^XUPARAM("INST"),99),"^")
- .;I '$D(^SC($G(SDCL2),0)) S ERR="MSA^1^^100^AE^NOT A CLINIC AT THIS SITE "_$G(SDCL2),STOPME=1 D SENDERR^SDHL7APU(ERR)
  .I '$D(^SC($G(SDCL2),0)) S ERR=$G(MSAHDR)_"NOT A CLINIC AT THIS SITE "_$G(SDCL2),STOPME=1 D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
  Q:$G(STOPME)=1
@@ -166,7 +160,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ;IF a regular appt, not rtc or consult check to see if the appointment is in 409.85
  I $P(SDAPTYP,"|",1)="A" D
  .Q:$$UPPER^SDUL1(MSGARY("HL7EVENT"))'="S12"
- .S:INP(3)="" INP(3)=DT S RTN=0 D ARSET^SDHLAPT1(.RTN,.INP) S:$P($G(RTN),U,2) SDAPTYP="A|"_$P($G(RTN),U,2)
+ .S:INP(3)="" INP(3)=DT S RTN=0 D ARSET^SDECAR2(.RTN,.INP) S:$P($G(RTN),U,2) SDAPTYP="A|"_$P($G(RTN),U,2)      ;810- SDECAR2 routine should be used instead of SDHLAPT1 version of ARSET
  I $G(SDMTC)=1 D CHKCHILD^SDHL7APU ; if multi check to see if the child order is in 409.85, if not add it
  ;714 - PB get the division associated with the clinic and pass to the function to convert utc to local time
  N TMPSTART,D1,D2
@@ -213,7 +207,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  S LEN=0,ERRSND=0,ERRTXT="",MSGROOT="SDTMPHL"
  K @MSGROOT
  ; Loop to send RGS>1 groups to remote facilities. Abort entire SIU if any facility returns AE from remote.
- ;N INTRA
  F GRPNO=2:1:GRPCNT D  Q:+ERRSND
  .K @MSGROOT
  .S CNT=1,INTRA=0
@@ -235,7 +228,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .K TMPARR
  .M TMPARR=AIL(GRPNO)
  .I $D(TMPARR) D
- ..S INSTIEN=$G(TMPARR(3,1,4))
+ ..S STA=$G(TMPARR(3,1,4)) S STA=$$GETSTA^SDHL7APU(STA)
  ..S CNT=CNT+1,@MSGROOT@(CNT)=$$BLDSEG^SDHL7UL(.TMPARR,.HL),LEN=LEN+$L(@MSGROOT@(CNT))
  .K TMPARR
  .M TMPARR=AILNTE(GRPNO)
@@ -251,8 +244,8 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .I $G(INTRA)=1 D NEWTIME^SDHLAPT2
  .N HLRESLT,X
  .I $G(INTRA)=0 D
- ..I '$$CHKLL^HLUTIL($G(INSTIEN)) D  Q
- ...S ERRSND=1,ERRTXT=$E("Invalid Link assoc with institution: "_$G(INSTIEN),1,48)
+ ..I '$$CHKLL^HLUTIL($G(STA)) D  Q
+ ...S ERRSND=1,ERRTXT=$E("Invalid Link assoc with institution: "_$G(STA),1,48)
  ..Q
  .K HLA,HLEVN
  .N MC,HLFS,HLCS,IXX
@@ -272,13 +265,12 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ..D:$G(INTRA)=0 INIT^HLFNC2("SD TMP S15 SERVER EVENT DRIVER",.HL)
  ..D:$G(INTRA)=1 INIT^HLFNC2("SD TMP SEND CANCEL INTRA",.HL) ;if intra
  ..Q
- .S SITE=INSTIEN,STA=$$STA^XUAF4(SITE)
- .S:$G(STA)="" STA=+$G(AIL(2,3,1,4))
+ .I $G(STA)="" S STA=$G(AIL(2,3,1,4)),STA=$$GETSTA^SDHL7APU(STA)
  .D LINK^HLUTIL3(STA,.SDLINK,"I")
  .S SDLINK=$O(SDLINK(0))
  .I SDLINK="" D  Q
  ..Q:$G(INTRA)=1
- ..S ERRSND=1,ERRTXT=$E("Message link undefined for facility: "_$G(INSTIEN),1,48)
+ ..S ERRSND=1,ERRTXT=$E("Message link undefined for facility: "_$G(STA),1,48)
  ..Q 
  .S SDLINK=SDLINK(SDLINK)
  .I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S12" D
@@ -299,7 +291,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ..I $G(INTRA)=1 D GENERATE^HLMA("SD TMP SEND CANCEL INTRA","LM",1,.OROK) S HLMTIEN=+OROK  ;GENERATE   /SD IFS EVENT DRIVER/////SD TMP S12 CLIENT SUBSCRIBER
  ..Q
  .I 'HLMTIEN D  Q
- ..S ERRSND=1,ERRTXT=$E("Message sent to remote facility unsuccessful: "_$G(INSTIEN),1,48)
+ ..S ERRSND=1,ERRTXT=$E("Message sent to remote facility unsuccessful: "_$G(STA),1,48)
  ..Q
  .K @MSGROOT
  .;Process response
@@ -315,7 +307,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .Q
  ;
  I +ERRSND D  Q
- .;S ERR="MSA^1^^100^AE^"_ERRTXT
  .S ERR=$G(MSAHDR)_ERRTXT
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
@@ -324,8 +315,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  D INIT^HLFNC2(EIN,.HL)
  S HL("FS")="|",HL("ECH")="^~\&"
  S (SDSVCP,SDSVCPR,SDEKG,SDXRAY,SDLAB,SDECCR,SDECY,SDID,APPTYPE,EESTAT,SDEL)="",SDCL=$G(AIL(1,3,1,1))
- ;S SDECRES=$$RESLKUP^SDHL7APU(SDCL)
- ;S:$G(RET1) SDECRES=RET1
  S SDECRES=$$RESLKUP^SDHL7APU($G(SDCL))
  S SDECRES=SDECRES,OVB=1
  S (SDMRTC,MSGARY("SDMRTC"))=$S($G(SDMRTC)=1:"TRUE",1:"FALSE"),SDLAB="",PROVIEN=MSGARY("PROVIEN")
@@ -362,13 +351,9 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .I $L(ERRTXT) S ERRCND=9999
  .S DUZ(2)=$G(STA)
  .I $G(SUCCESS)>0 D
- ..;N SWITCH S SWITCH=1 S:$P($G(SDAPTYP),"|",2)=SDPARENT SWITCH=2
- ..;N INPA S INPA(1)=$P(SDAPTYP,"|",2),INPA(2)=$S($G(SWITCH)=1:"SA",$G(SWITCH)=2:"MC",1:"SA"),INPA(3)=$G(DUZ),DUZ(2)=$G(STA) ;INP(1) is the IEN of the PARENT order
  ..N INPA S INPA(1)=$P(SDAPTYP,"|",2),INPA(2)="SA",INPA(3)=$G(DUZ),DUZ(2)=$G(STA) ;INP(1) is the IEN of the PARENT order
  ..S INPA(4)=$$FMTE^XLFDT(DT)
  ..N RET D ARCLOSE^SDECAR(.RET,.INPA) ; Dispositions the order.
- ..;S $P(^SDEC(409.85,$P($G(SDAPTYP),"|",2),0),"^",5)="APPT"
- ..;N RTN S INP(24)=$G(SDAPT)_"~"_$G(SDCHILD) D ARSET^SDECAR2(.RTN,.INP) ;Update files for RTC orders.
  ..I $G(SDPARENT)'="" N CLOSEOUT S CLOSEOUT=0 I $G(RTCID)>0 S:$G(RTCID)=$P($G(^SDEC(409.85,+$G(SDPARENT),3)),"^",3) CLOSEOUT=1
  ..I $G(CLOSEOUT)=1 D   ;if this is the last child close out the parent and all child orders
  ...N INP S INP(1)=+SDPARENT,INP(2)="SA",INP(3)=$G(DUZ),DUZ(2)=$G(STA)
@@ -391,7 +376,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .S:$G(SDUSER)="" SDUSER=.5
  .S %DT="RXT",X=SDECSTART D ^%DT S STARTDT=Y
  .S SDECAPTID=$$GETAPP^SDHLAPT1(DFN,SDECRES,STARTDT)
- .;S SDECCR=$G(MSGARY("CANCODE"))
  .S DUZ=$G(MSGARY("DUZ"))
  .S:$G(DUZ)="" DUZ=.5
  .S:$G(DUZ(2))="" DUZ(2)=$G(MSGARY("HLTHISSITE"))
@@ -399,14 +383,11 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .S ERRTXT=$P($G(^TMP("SDEC",$J,2)),"^")
  .I +$L(ERRTXT)>0 S ERRCND=9999
  .D CHKCAN^SDHLAPT2(DFN,SDCL,STARTDT)
- .;N SDECDA S SDECDA=$G(AIL(1,4))
- .;S:$G(SDECDA)'="" $P(^SDEC(409.85,SDECDA,0),"^",5)="RTC"
  ;
  I +ERRCND D
  .S ERRTXT=$$ERRLKP^SDHL7APU(ERRTXT)
  .Q 
  S ERRTXT=$$STRIP^SDHL7APU(ERRTXT)
- ;S HIT=0,EXTIME=""
  ;
  ;****BUILD THE RESPONSE MSA
  K @MSGROOT

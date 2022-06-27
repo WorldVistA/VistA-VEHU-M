@@ -1,5 +1,5 @@
 SDTMPHLC ;TMP/DRF - TMP HL7 Routine;May 29, 2018
- ;;5.3;Scheduling;**780**;SEP 26, 2018;Build 17
+ ;;5.3;Scheduling;**780,806,798**;SEP 26, 2018;Build 12
  Q
  ;
 EN(CLINID,NCDATE,NCSTOP,FUNCTION,COMMENT) ;Entry to the routine to build an HL7 message
@@ -20,8 +20,7 @@ EN(CLINID,NCDATE,NCSTOP,FUNCTION,COMMENT) ;Entry to the routine to build an HL7 
  S (SSTOP,PSTOP,STOP)=0
  I FUNCTION["C" S APTTM=$P(NCDATE,".",1)_".0"
  I FUNCTION["P" S APTTM=NCDATE
- S RTN=0,CAN=0          ;CAN=0 BLOCK DAYS/HOURS
- ;I FUNCTION["U" S CAN=1 ;CAN=1 CANCEL BLOCKED DAYS/HORS
+ S RTN=0,CAN=0  ;CAN=0 BLOCK DAYS/HOURS
  S CLINODE=$G(^SC(CLINID,0))
  S PSTOP=$P(CLINODE,"^",7),SSTOP=$P(CLINODE,"^",18)
  ;If both stop codes are null, stop the check, we know it is not a tele health clinic
@@ -80,7 +79,7 @@ PID(DFN,SEQ,SEG) ;
  ; set the address into PID-11
  D SETAD^HLOAPI4(.SEG,.ADDRESS,11)
  Q
-PD1 ; Not needed right now
+PD1      ; Not needed right now
  Q
 PV1(DFN,SEQ,SEG) ;
  N FAC
@@ -103,8 +102,7 @@ SCH(DFN,SEQ,SEG,ANODE,SNODE)  ; update for new appointments
  N APTSTATUS,CONNM,END,ENTEREDBY,PREMAIL,SCHED,SCHEMAIL,STATUS,TMUNITS
  S TMUNITS="M"
  S LENGTH=$S(FUNCTION["C":1440,FUNCTION["P":$$FMDIFF^XLFDT(NCSTOP,NCDATE,2)/60,1:0)
- I FUNCTION["C" S START=$$FMTHL7^XLFDT(NCDATE),START=$E(START,1,4)_"-"_$E(START,5,6)_"-"_$E(START,7,8)_"T00:00:00.000"
- I FUNCTION["P" S START=$$TMCNVL(NCDATE)
+ S START=$$TMCONV(NCDATE,$$INST(CLINID))
  S:$G(CNODE)>0 CONNM=$P(^GMR(123.5,$P(^GMR(123,CNODE,0),"^",5),0),"^")
  S (PROVID,PROVNM,PREMAIL)=""
  S STATUS("ID")=$S(FUNCTION["U":"RCD",1:"NCD"),STATUS("TEXT")=COMMENT,STATUS("SYSTEM")=44
@@ -124,15 +122,15 @@ SCH(DFN,SEQ,SEG,ANODE,SNODE)  ; update for new appointments
  D SET^HLOAPI(.SEG,$G(SCHEMAIL),21,4,1)  ;Field 21, scheduling clerk's email
  D SETCE^HLOAPI4(.SEG,.STATUS,25)  ; Field 25, current status of the appointment
  Q
-PV2 ; Not needed right now
+PV2      ; Not needed right now
  Q
-OBX1 ; Not needed right now
+OBX1     ; Not needed right now
  Q
-OBX2 ; Not needed right now
+OBX2     ; Not needed right now
  Q
-OBX3 ; Not needed right now
+OBX3     ; Not needed right now
  Q
-OBX4 ; Not needed right now
+OBX4     ; Not needed right now
  Q
 RGS1(FLAG,SEQ,SEG) ; At least one RGS segment is required
  N GRP
@@ -160,31 +158,56 @@ AIL1(CLINID,SEQ,SEG) ;
  D SET^HLOAPI(.SEG,SEQ,1)
  D SET^HLOAPI(.SEG,CODE,2)
  D SETCE^HLOAPI4(.SEG,.LOC,4)
- ;S START=$$FMTHL7^XLFDT(NCDATE),START=$E(START,1,4)_"-"_$E(START,5,6)_"-"_$E(START,7,8)
- I FUNCTION["C" D SET^HLOAPI(.SEG,$P(START,"T")_"T00:00:00.000",6) ;ORIG START DATE JSON FMT
- I FUNCTION["P" D SET^HLOAPI(.SEG,START,6) ;ORIG START DATE JSON FMT
+ D SET^HLOAPI(.SEG,START,6) ;ORIG START DATE JSON FMT
  D SET^HLOAPI(.SEG,LENGTH,9) ;DURATION IN MINUTES
  D SET^HLOAPI(.SEG,"M",10) ;M = MINUTES
  K LOC,CODE
  Q
-TMCNVL(X) ;convert FileMan local time to JSON local time format: YYYY-MM-DDTHH:MM:00.000
- ;No "Z" on time because it is local, not Zulu
+TMCONV(X,INST) ;Uses division/institution to determine tz instead of mailman files / 773
+ ;convert FileMan local time to Zulu timezone in JSON format: YYYY-MM-DDTHH:MM:00.000Z
  ;Inputs:
  ; X = Time
+ ; INST = Institution
  ;Output:
- ; Local Time in JSON format
+ ; Zulu Time in JSON format
  N OFFSET,UTC,UTC1,UTC2
- S UTC=$$FMTHL7^XLFDT(X)
- S UTC1=$E(UTC,1,4)_"-"_$E(UTC,5,6)_"-"_$E(UTC,7,8)_"T"_$E(UTC,9,10)_":"_$E(UTC,11,12)_":00.000"
- Q UTC1
+ I X#1=0 S X=X+.000001 ;Add 1 second if midnight to avoid midnight problem in DIUTC. The second is not included in UTC2
+ S OFFSET=$P($$UTC^DIUTC(X,,$G(INST),,1),"^",3)
+ S UTC=$$FMADD^XLFDT(X,,-$G(OFFSET),,),UTC1=$$FMTHL7^XLFDT(UTC)
+ S UTC2=$E(UTC1,1,4)_"-"_$E(UTC1,5,6)_"-"_$E(UTC1,7,8)_"T"_$E(UTC1,9,10)_":"_$E(UTC1,11,12)_":00.000Z"
+ Q UTC2
+INST(CLNC) ;Derives the institution value for the clinic
+ ;Inputs:
+ ; CLNC = Clinic IEN from the Hospital Location (#44) file
+ ;Output:
+ ; INST = Institution IEN from the Institution (#4) file. Null indicates an error.
+ I CLNC="" Q ""
+ N DIV,INST,MCD0,NEWINST,TZ
+ S MCD0=$G(^SC(CLNC,0))
+ I MCD0="" Q ""  ;No entry in the Hospital Location (#44) file
+ S INST=$P(MCD0,U,4)
+ I INST S TZ=$P($G(^DIC(4,INST,8)),U,1) I TZ Q INST
+ S DIV=$P(MCD0,U,15) I 'DIV Q ""
+ S INST=$P($G(^DG(40.8,DIV,0)),U,7)
+ S NEWINST=$$CHKINST(INST)
+ Q NEWINST
 CHKCLIN(X) ; check to see if this is a primary or secondary stop code for a tele health clinic
  I $G(X)'>0 S STOP=0 Q STOP
  S STOP=0
  N TEST,I,CODE,X1,X2
  S X2=0
- S X1=$$GET1^DIQ(40.7,X_",",1,"I"),X2=$O(^SD(40.6,"B",X1,""))
+ S X1=$$GET1^DIQ(40.7,X_",",1,"I") I X1="" Q STOP
+ S X2=$O(^SD(40.6,"B",X1,""))
  S:$G(X2)>0 STOP=1
  Q STOP
+CHKINST(INST) ;Derives the parent institution if the passed-in institution does not have a time zone
+ I 'INST Q ""
+ N TZ,AS
+ S TZ=$P($G(^DIC(4,INST,8)),U,1) I TZ Q INST
+ S AS=$O(^DIC(4,INST,7,"B",2,"")) I AS S INST=$P(^DIC(4,INST,7,AS,0),U,2)
+ I INST S TZ=$P($G(^DIC(4,INST,8)),U,1)
+ I TZ Q INST
+ Q ""  ;Never found an institution with a timezone
 STATUS(X) ; a $Select to convert code to text too many characters in a single line. returns the text version of the appointment code
  S X1=""
  I $G(X)="" Q X1
@@ -198,3 +221,12 @@ STATUS(X) ; a $Select to convert code to text too many characters in a single li
  S:X="NT" X1="NO ACTION TAKEN"
  S:X="S" X1="SCHEDULED"
  Q X1
+SEND(SC,DT,PATTERN) ;Send a transaction from SDBUILD - SD*5.3*806
+ ;SC = Clinic
+ ;DT = Date
+ ;PATTERN = New pattern being recorded
+ N OLDPAT
+ S OLDPAT=$P($G(^SC(SC,"ST",DT,1)),"[",2)
+ I OLDPAT="",$P(PATTERN,"[",2)]"" D EN^SDTMPHLC(SC,DT,,"UC","RESTORED BY SDBUILD") Q  ;No appointments previously available, send unblock transaction
+ I OLDPAT]"",$P(PATTERN,"[",2)="" D EN^SDTMPHLC(SC,DT,,"C","NO APPOINTMENT AVAILABILITY") Q  ;Appointments previously available, now none - send block transaction
+ Q  ;Change neither creates or deletes all availability, so no transaction sent

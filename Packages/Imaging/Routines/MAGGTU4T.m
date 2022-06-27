@@ -1,5 +1,5 @@
-MAGGTU4T ;WOIFO/SG/NST/JSL/DAC - VERSION CONTROL (TELEREADER) ; Sep 03, 2020@08:48:44
- ;;3.0;IMAGING;**93,94,106,117,122,127,182,219,242,281**;Mar 19, 2002;Build 2
+MAGGTU4T ;WOIFO/SG/NST/JSL/DAC - VERSION CONTROL (TELEREADER) ; Jan 28, 2022@08:48:44
+ ;;3.0;IMAGING;**93,94,106,117,122,127,182,219,242,281,292**;Mar 19, 2002;Build 9
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -23,9 +23,9 @@ CLVERCT ;***** VERSION CONTROL TABLE FOR THE TELEREADER CLIENTS
  ;;==================================================================
  ;;| Version |Build|Seq #|                Comment                   |
  ;;|---------+-----+------------------------------------------------|
+ ;;| 3.0.292 |   3 |  ?? | Feb 2022                                 |
  ;;| 3.0.281 |   1 |  64 | Sep 2020                                 |
  ;;| 3.0.242 |   2 |  63 | Jan 2020                                 |
- ;;| 3.0.219 |   2 |  62 | Jan 2019                                 |
  ;;==================================================================
  ;
  ; Each row of the version control table contains the version and
@@ -36,6 +36,8 @@ CLVERCT ;***** VERSION CONTROL TABLE FOR THE TELEREADER CLIENTS
  ; order of patch sequential numbers is recommended.
  ;
  ; NOTE:
+ ;  Patch 292 removed support for
+ ;        - Patch 219
  ;  Patch 281 removed support for
  ;        - Patch 182
  ;  Patch 242 removed support for

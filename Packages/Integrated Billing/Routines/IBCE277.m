@@ -1,5 +1,5 @@
 IBCE277 ;ALB/TMP - 277 EDI CLAIM STATUS MESSAGE PROCESSING ;15-JUL-98
- ;;2.0;INTEGRATED BILLING;**137,155,368,403,650**;21-MAR-94;Build 21
+ ;;2.0;INTEGRATED BILLING;**137,155,368,403,650,665**;21-MAR-94;Build 28
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  Q
  ; MESSAGE HEADER DATA STRING =
@@ -203,7 +203,8 @@ ENDREC(TYPE) ; finish processing of the record
  ; file raw data
  S ^TMP("IBMSG",$J,ENTITY,IBCLM,"D",TYPE,$O(^TMP("IBMSG",$J,ENTITY,IBCLM,"D",TYPE,""),-1)+1)="##RAW DATA: "_IBD
  ; update line count
- S IBD("LINE")=$G(IBD("LINE"))+L
+ ;;JWS;IB*2.0*665;EBILL-2164;was adding L, should have been setting it =
+ S IBD("LINE")=L
  Q
  ;
 GETBILL(CLAIM) ; Extract transmission #

@@ -1,27 +1,34 @@
-SDESGETREGA ;ALB/LAB - SD*5.3*799 Get registration info JSON format ; Sep 28, 2021@08:40
- ;;5.3;SCHEDULING;**799**;AUG 13, 1993;Build 7
+SDESGETREGA ;ALB/LAB,TAW,MGD,LAB,KML - Get registration info JSON format ; March 7, 2022
+ ;;5.3;SCHEDULING;**799,804,805,809,814**;AUG 13, 1993;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
- ; Reference to ^DPT(         In ICRs #7030,7029,1476,10035
- ;
+ ; Reference to PATIENT in ICR #7030
+ ; Reference to PATIENT in ICR #7029
+ ; Reference to PATIENT in ICR #1476
+ ; Reference to PATIENT in ICR #10035
+ ; Reference to SCHEDULED ADMISSION in ICR #4425
  Q
  ;
-GETREGA(SDECY,DFN) ;return basic reg info/demographics for given patient in JSON format
- ;Input Parmater:
+GETREGA(SDECY,DFN,SDEAS) ;return basic reg info/demographics for given patient in JSON format
+ ;Input Parameter:
  ;   DFN - Patient ID - Pointer to PATIENT file
+ ; SDEAS - [optional] Enterprise Appointment Scheduling (EAS) Tracking Number associated to an appointment.
  ;Returns:
- ; json formated output (need to add)
- NEW POP,SDINFO,SDDFN,SDPATARR,SDDEMO,PRACE,PRACEN,PETH,PETHN,SDMHP,SDPCP,GAF,GAFR,SDZIP
+ ; json formatted output (need to add)
+ NEW POP,SDINFO,SDDFN,SDPATARR,SDDEMO,PRACE,PRACEN,PETH,PETHN,SDMHP,SDPCP,GAF,GAFR,SDZIP,PREREGTIM
  S POP=0
  D VALIDATE D:POP BUILDER Q:POP
  D GETREG
  D BUILDER
  Q
  ;
-VALIDATE ;validate input Parmater
+VALIDATE ;validate input Parameter
  I +DFN=0 S POP=1 D ERRLOG^SDESJSON(.SDINFO,1) Q
  I '$D(^DPT(DFN,0)) S POP=1 D ERRLOG^SDESJSON(.SDINFO,2)
+ S SDEAS=$G(SDEAS,"")
+ I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
+ I +SDEAS=-1 S POP=1 D ERRLOG^SDESJSON(.SDINFO,142)
  Q
  ;
 BUILDER ;Convert data to JSON
@@ -33,8 +40,9 @@ BUILDER ;Convert data to JSON
 ASSIGNVALS ;assign values to be used to build output
  ; assign data values
  ;
- S SDDFN=DFN_","
- D GETS^DIQ(2,SDDFN,".1;.116;.1219;.1151;.1152;.1153;.1154;.1155;.1156;.1173;.1223","E","SDPATARR")
+ N PREREGTIMIEN
+ S SDDFN=DFN_",",PREREGTIM=""
+ D GETS^DIQ(2,SDDFN,".1;.116;.2203;.2207;.331;.332;.333;.334;.335;.336;.337;.338;.339;.1219;.1151;.1152;.1153;.1154;.1155;.1156;.1173;.1223;.2201;.33011","E","SDPATARR")
  D PDEMO^SDECU3(.SDDEMO,DFN)
  D RACELST^SDECU2(DFN,.PRACE,.PRACEN)
  D ETH^SDECU2(DFN,.PETH,.PETHN)   ;get ethnicity
@@ -44,6 +52,9 @@ ASSIGNVALS ;assign values to be used to build output
  S GAFR=""
  S:GAF="" GAF=-1
  S $P(GAFR,"|",1)=$S(+GAF:"New GAF Required",1:"No new GAF required")
+ S PREREGTIMIEN=$O(^DGS(41.41,"B",DFN,"A"),-1)
+ I PREREGTIMIEN'="" D
+ . S PREREGTIM=$$FMTISO^SDAMUTDT($$GET1^DIQ(41.41,PREREGTIMIEN_",",1,"I"))
  Q
  ;
 GETREG ;
@@ -54,15 +65,16 @@ GETREG ;
  ;
  S SDINFO("Patient","Name")=SDDEMO("NAME")
  S SDINFO("Patient","SocialSecurityNumber")=SDDEMO("SSN")
- S SDINFO("Patient","DateOfBirth")=SDDEMO("DOB")
- S SDINFO("Patient","Race")=$G(PRACE)
- S SDINFO("Patient","RaceName")=$G(PRACEN)
- S SDINFO("Patient","Ethnicity")=$G(PETH)
- S SDINFO("Patient","EthnicityName")=$G(PETHN)
+ S SDINFO("Patient","DateOfBirth")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,DFN_",",.03,"I")) ;vse-2500  IA 10035
+ S SDINFO("Patient","Race","IEN")=$G(PRACE)
+ S SDINFO("Patient","Race","Name")=$G(PRACEN)
+ S SDINFO("Patient","Ethnicity","IEN")=$G(PETH)
+ S SDINFO("Patient","Ethnicity","Name")=$G(PETHN)
  S SDINFO("Patient","Sex")=SDDEMO("GENDER")
  S SDINFO("Patient","Security")=$$PTSEC^SDECUTL(DFN)
  S SDINFO("Patient","Marital")=SDDEMO("PMARITAL")
  S SDINFO("Patient","Religion")=SDDEMO("PRELIGION")
+ S SDINFO("Patient","TimeStamp")=PREREGTIM
  ;
  ;health information
  ;
@@ -71,7 +83,8 @@ GETREG ;
  S SDINFO("Patient","ServiceConnectedPercentage")=SDDEMO("SVCCONNP")
  S SDINFO("Patient","Ward")=$G(SDPATARR(2,SDDFN,.1,"E"))
  S SDINFO("Patient","HealthRecordNumber")=SDDEMO("HRN")
-  ;
+ S SDINFO("Patient","MentalHealthProvider")=$P(SDMHP,"^",2)
+ ;
  ;flags
  ;
  S SDINFO("Patient","FugitiveFlag")=SDDEMO("PF_FFF")
@@ -93,67 +106,81 @@ GETREG ;
  ;
  ;mail address information
  ;
- S SDINFO("Patient","MailStreet1")=SDDEMO("PADDRES1")
- S SDINFO("Patient","MailStreet2")=SDDEMO("PADDRES2")
- S SDINFO("Patient","MailStreet3")=SDDEMO("PADDRES3")
- S SDINFO("Patient","MailCity")=SDDEMO("PCITY")
- S SDINFO("Patient","MailState")=SDDEMO("PSTATE")
- S SDINFO("Patient","MailCounty")=SDDEMO("PCOUNTY")
- S SDINFO("Patient","MailCountry")=SDDEMO("PCOUNTRY")
- S SDINFO("Patient","MailCountryName")=$G(SDPATARR(2,SDDFN,.1173,"E"))
- S SDZIP=SDDEMO("PZIP+4")
- S:SDZIP="" SDZIP=$G(SDPATARR(2,SDDFN,.116,"E"))
- S SDINFO("Patient","MailZip")=SDZIP
+ S SDINFO("Patient","MailingAddress","Street1")=SDDEMO("PADDRES1")
+ S SDINFO("Patient","MailingAddress","Street2")=SDDEMO("PADDRES2")
+ S SDINFO("Patient","MailingAddress","Street3")=SDDEMO("PADDRES3")
+ S SDINFO("Patient","MailingAddress","City")=SDDEMO("PCITY")
+ S SDINFO("Patient","MailingAddress","State")=SDDEMO("PSTATE")
+ S SDINFO("Patient","MailingAddress","County")=SDDEMO("PCOUNTY")
+ S SDINFO("Patient","MailingAddress","Country")=SDDEMO("PCOUNTRY")
+ S SDINFO("Patient","MailingAddress","CountryName")=$G(SDPATARR(2,SDDFN,.1173,"E"))
+ S SDINFO("Patient","MailingAddress","Zip4")=SDDEMO("PZIP+4")
+ S SDINFO("Patient","MailingAddress","Zip")=$G(SDPATARR(2,SDDFN,.116,"E"))
  S SDINFO("Patient","AddressIndicator")=SDDEMO("BADADD")
  ;
  ;Residential Address Info
  ;
- S SDINFO("Patient","MentalHealthProvider")=$P(SDMHP,"^",2)
- S SDINFO("Patient","ResidentialAddress1")=$G(SDPATARR(2,SDDFN,.1151,"E"))
- S SDINFO("Patient","ResidentialAddress2")=$G(SDPATARR(2,SDDFN,.1152,"E"))
- S SDINFO("Patient","ResidentialAddress3")=$G(SDPATARR(2,SDDFN,.1153,"E"))
- S SDINFO("Patient","ResidentialCity")=$G(SDPATARR(2,SDDFN,.1154,"E"))
- S SDINFO("Patient","ResidentialState")=$G(SDPATARR(2,SDDFN,.1155,"E"))
- S SDINFO("Patient","ResidentialZip")=$G(SDPATARR(2,SDDFN,.1156,"E"))
+ S SDINFO("Patient","ResidentialAddress","Address1")=$G(SDPATARR(2,SDDFN,.1151,"E"))
+ S SDINFO("Patient","ResidentialAddress","Address2")=$G(SDPATARR(2,SDDFN,.1152,"E"))
+ S SDINFO("Patient","ResidentialAddress","Address3")=$G(SDPATARR(2,SDDFN,.1153,"E"))
+ S SDINFO("Patient","ResidentialAddress","City")=$G(SDPATARR(2,SDDFN,.1154,"E"))
+ S SDINFO("Patient","ResidentialAddress","State")=$G(SDPATARR(2,SDDFN,.1155,"E"))
+ S SDINFO("Patient","ResidentialAddress","Zip4")=$G(SDPATARR(2,SDDFN,.1156,"E"))
+ ;S SDINFO("Patient","ResidentialAddress","Zip")=$G(SDPATARR(2,SDDFN,.1156,"E"))
  ;
- ;Temp Adress information
+ ;Temp Address information
  ;
- S SDINFO("Patient","TempAddress1")=SDDEMO("PTADDRESS1")
- S SDINFO("Patient","TempAddress2")=SDDEMO("PTADDRESS2")
- S SDINFO("Patient","TempAddress3")=SDDEMO("PTADDRESS3")
- S SDINFO("Patient","TempCity")=SDDEMO("PTCITY")
- S SDINFO("Patient","TempState")=SDDEMO("PTSTATE")
- S SDINFO("Patient","TempZip")=SDDEMO("PTZIP")
- S SDINFO("Patient","TempZip4")=SDDEMO("PTZIP+4")
- S SDINFO("Patient","TempCountry")=SDDEMO("PTCOUNTRY")
- S SDINFO("Patient","TempCountryName")=$G(SDPATARR(2,SDDFN,.1223,"E"))
- S SDINFO("Patient","TempCounty")=SDDEMO("PTCOUNTY")
- S SDINFO("Patient","TempAddressStart")=SDDEMO("PTSTART")
- S SDINFO("Patient","TempAddressEnd")=SDDEMO("PTEND")
- S SDINFO("Patient","TempPhone")=$G(SDPATARR(2,SDDFN,.1219,"E"))
+ S SDINFO("Patient","TemporaryAddress","Address1")=SDDEMO("PTADDRESS1")
+ S SDINFO("Patient","TemporaryAddress","Address2")=SDDEMO("PTADDRESS2")
+ S SDINFO("Patient","TemporaryAddress","Address3")=SDDEMO("PTADDRESS3")
+ S SDINFO("Patient","TemporaryAddress","City")=SDDEMO("PTCITY")
+ S SDINFO("Patient","TemporaryAddress","State")=SDDEMO("PTSTATE")
+ S SDINFO("Patient","TemporaryAddress","Zip")=SDDEMO("PTZIP")
+ S SDINFO("Patient","TemporaryAddress","Zip4")=SDDEMO("PTZIP+4")
+ S SDINFO("Patient","TemporaryAddress","Country")=SDDEMO("PTCOUNTRY")
+ S SDINFO("Patient","TemporaryAddress","CountryName")=$G(SDPATARR(2,SDDFN,.1223,"E"))
+ S SDINFO("Patient","TemporaryAddress","County")=SDDEMO("PTCOUNTY")
+ S SDINFO("Patient","TemporaryAddressStart")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,DFN_",",.1217,"I")) ;vse-2500  IA 7019
+ S SDINFO("Patient","TemporaryAddressEnd")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,DFN_",",.1218,"I")) ;vse-2500  IA 7019
+ S SDINFO("Patient","TemporaryPhone")=$G(SDPATARR(2,SDDFN,.1219,"E"))
  ;
  ;Primary Next Of Kin Information
  ;
- S SDINFO("Patient","PrimaryNextOfKin")=SDDEMO("NOK")
- S SDINFO("Patient","PrimaryNextOfKinPhone")=SDDEMO("KPHONE")
- S SDINFO("Patient","PrimaryNextOfKinAddress")=SDDEMO("KSTREET")
- S SDINFO("Patient","PrimaryNextOfKinCity")=SDDEMO("KCITY")
- S SDINFO("Patient","PrimaryNextOfKinState")=SDDEMO("KSTATE")
- S SDINFO("Patient","PrimaryNextOfKinZip")=SDDEMO("KZIP")
- S SDINFO("Patient","PrimaryNextOfKinStreet2")=SDDEMO("KSTREET2")
- S SDINFO("Patient","PrimaryyNextOfKinStreet3")=SDDEMO("KSTREET3")
+ S SDINFO("Patient","PrimaryNextOfKin","Name")=SDDEMO("NOK")
+ S SDINFO("Patient","PrimaryNextOfKin","Relationship")=SDDEMO("KREL")
+ S SDINFO("Patient","PrimaryNextOfKin","Phone")=SDDEMO("KPHONE")
+ S SDINFO("Patient","PrimaryNextOfKin","Address","Address")=SDDEMO("KSTREET")
+ S SDINFO("Patient","PrimaryNextOfKin","Address","City")=SDDEMO("KCITY")
+ S SDINFO("Patient","PrimaryNextOfKin","Address","State")=SDDEMO("KSTATE")
+ S SDINFO("Patient","PrimaryNextOfKin","Address","Zip")=SDDEMO("KZIP")
+ S SDINFO("Patient","PrimaryNextOfKin","Address","street2")=SDDEMO("KSTREET2")
+ S SDINFO("Patient","PrimaryyNextOfKin","Address","Street3")=SDDEMO("KSTREET3")
+ S SDINFO("Patient","PrimaryNextOfKin","Address","Zip4")=$G(SDPATARR(2,SDDFN,.2207,"E"))
  ;
  ;Secondary Next of Kin Information
  ;
- S SDINFO("Patient","SecondaryNextOfKin")=SDDEMO("NOK2")
- S SDINFO("Patient","SecondaryNextOfKinName")=SDDEMO("K2NAME")
- S SDINFO("Patient","SecondaryNextOfKinRelationship")=SDDEMO("K2REL")
- S SDINFO("Patient","SecondaryNextOfKinPhone")=SDDEMO("K2PHONE")
- S SDINFO("Patient","SecondaryNextOfKinStreet")=SDDEMO("K2STREET")
- S SDINFO("Patient","SecondaryNextOfKinStreet2")=SDDEMO("K2STREET2")
- S SDINFO("Patient","SecondaryNextOfKinStreet3")=SDDEMO("K2STREET3")
- S SDINFO("Patient","SecondaryNextOfKinCity")=SDDEMO("K2CITY")
- S SDINFO("Patient","SecondaryNextOfKinState")=SDDEMO("K2STATE")
- S SDINFO("Patient","SecondaryNextOfKinZip")=SDDEMO("K2ZIP")
- Q
+ S SDINFO("Patient","SecondaryNextOfKin","Name")=SDDEMO("K2NAME")
+ S SDINFO("Patient","SecondaryNextOfKin","Relationship")=SDDEMO("K2REL")
+ S SDINFO("Patient","SecondaryNextOfKin","Phone")=SDDEMO("K2PHONE")
+ S SDINFO("Patient","SecondaryNextOfKin","Address","Street")=SDDEMO("K2STREET")
+ S SDINFO("Patient","SecondaryNextOfKin","Address","Street2")=SDDEMO("K2STREET2")
+ S SDINFO("Patient","SecondaryNextOfKin","Address","Street3")=SDDEMO("K2STREET3")
+ S SDINFO("Patient","SecondaryNextOfKin","Address","City")=SDDEMO("K2CITY")
+ S SDINFO("Patient","SecondaryNextOfKin","Address","State")=SDDEMO("K2STATE")
+ S SDINFO("Patient","SecondaryNextOfKin","Address","Zip")=SDDEMO("K2ZIP")
+ S SDINFO("Patient","SecondaryNextOfKin","Address","Zip4")=$G(SDPATARR(2,SDDFN,.2203,"E"))
  ;
+ ; Emergency Contact
+ ;
+ S SDINFO("Patient","EmergencyContact","Name")=$G(SDPATARR(2,SDDFN,.331,"E"))
+ S SDINFO("Patient","EmergencyContact","Relationship")=$G(SDPATARR(2,SDDFN,.332,"E"))
+ S SDINFO("Patient","EmergencyContact","Phone")=$G(SDPATARR(2,SDDFN,.339,"E"))
+ S SDINFO("Patient","EmergencyContact","WorkPhone")=$G(SDPATARR(2,SDDFN,.33011,"E"))
+ S SDINFO("Patient","EmergencyContact","Address","Street")=$G(SDPATARR(2,SDDFN,.333,"E"))
+ S SDINFO("Patient","EmergencyContact","Address","Street2")=$G(SDPATARR(2,SDDFN,.334,"E"))
+ S SDINFO("Patient","EmergencyContact","Address","Street3")=$G(SDPATARR(2,SDDFN,.335,"E"))
+ S SDINFO("Patient","EmergencyContact","Address","City")=$G(SDPATARR(2,SDDFN,.336,"E"))
+ S SDINFO("Patient","EmergencyContact","Address","State")=$G(SDPATARR(2,SDDFN,.337,"E"))
+ S SDINFO("Patient","EmergencyContact","Address","Zip")=$G(SDPATARR(2,SDDFN,.338,"E"))
+ S SDINFO("Patient","EmergencyContact","Address","Zip4")=$G(SDPATARR(2,SDDFN,.2201,"E"))
+ Q

@@ -1,5 +1,5 @@
 VPRSDAP ;SLC/MKB -- SDA Pharmacy utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,24,14**;Sep 01, 2011;Build 38
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,24,14,28**;Sep 01, 2011;Build 6
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -24,6 +24,7 @@ VPRSDAP ;SLC/MKB -- SDA Pharmacy utilities ;10/25/18  15:29
  ; PSS52P7                       4550
  ; PSSUTLA1                      3373
  ; PSXOPUTL                      2200
+ ; XLFSTR                       10104
  ;
 PS1(IEN) ; -- set up single medication
  ; Returns ORIFN, ORPK, PSTYPE & VPRPS=^TMP
@@ -35,7 +36,22 @@ PS1(IEN) ; -- set up single medication
  S PSTYPE=$S(X="N":"N","RS"[X:"O",$$IV:"V",1:"I") K VPRATE
  D:ORPK OEL^PSOORRL(DFN,ORPK_";"_CLS)
  S VPRPS=$NA(^TMP("PS",$J))
+ ; ck Status field
+ S X=$P($G(@VPRPS@(0)),U,6) D
+ . S:X="DISCONTINUE" X="DISCONTINUED"
+ . I X["/" S:X["/PARK" X=$P(X,"/") S:X["/SUSP" X="SUSPENDED"
+ S $P(@VPRPS@(0),U,6)=X
  Q
+ ;
+OI(IEN) ; -- return orderable item for order IEN in the format
+ ;    ifn ^ [name] ^ pkg id
+ N Y S Y=""
+ I $P($G(^OR(100,IEN,.1,0)),U,4)>1 D  ;use PSOI from api if multiple
+ . N X,I S X=$P($G(@VPRPS@(0)),U)
+ . S I=0 F  S I=$O(^OR(100,IEN,.1,"B",I)) Q:I<1  Q:$P($G(^ORD(101.43,I,0)),U)[X
+ . S:I Y=I_U_X_U_$P($G(^ORD(101.43,I,0)),U,2)
+ I 'Y S Y=$$OI^ORX8(IEN) ;first/only
+ Q Y
  ;
 SCHEDULE() ; -- return schedule name ^ type ^ admin times ^ #min
  ; Expects ORIFN, IEN from VPR DOSAGE STEP
@@ -52,24 +68,16 @@ SCHEDULE() ; -- return schedule name ^ type ^ admin times ^ #min
  S I=0 F  S I=$O(^TMP("VPRX",$J,"SCH",I)) Q:I<1  I $L(ADM),$G(^(I,1))=ADM S $P(Y,U,4)=$G(^(2))
  Q Y
  ;
-CODE(MED,FILE) ; -- convert MED=ien^name to national code
- ; Reset MED = code^name^system for RxNorm or VUID
- N Y S MED=$G(MED),FILE=+$G(FILE)
- S Y=$$CODE^VPRSDA(+MED,FILE,"RXN")
- I Y="" S Y=$$VUID^VPRD(+MED,FILE) S:$L(Y) Y=Y_U_$P(MED,U,2)_"^VHAT"
- S:$L(Y) MED=Y ;reset to nat'l code string
- Q
- ;
 LOC(DFN,ID) ; -- return Hosp Location for order
  N X,Y,FN
  S DFN=+$G(DFN),ID=$G(ID) I 'DFN!'ID Q ""
  I '$L($T(LOC^PSSUTLA1)) Q ""
  S X=$$LOC^PSSUTLA1(DFN,ID),FN=+$P(X,U,3)
- I FN=44 Q +X
- I FN=42 Q +$G(^DIC(42,+X,44))
+ I X,FN=44 Q +X
+ I X,FN=42 Q +$G(^DIC(42,+X,44))
  Q ""
  ;
-IMO(X,PS) ; -- return 1, 0, or null if IMO location X
+IMO(X,PS) ; -- return true, false, or null if IMO location X
  N Y S Y=""
  I $G(PS)'="I",$G(PS)'="V" Q ""
  S Y=$S($P($G(^SC(+$G(X),0)),U,25):"true",1:"false")
@@ -82,17 +90,16 @@ PSRX(RX) ; -- get RX info for extension properties
  I RX["S" D PEN^PSO5241(DFN,"VPRXP",+RX) Q
  Q:RX'["R"  ;Rx file
  D RX^PSO52API(DFN,"VPRX",+RX,,3)
- ; VPRX52=$NA(^TMP($J,"VPRX",DFN,+RX))
  ; get IB data too
  D RX^PSO52API(DFN,"VPRXIB",+RX,,"I^O")
  M @VPRX52=^TMP($J,"VPRXIB",DFN,+RX) K ^TMP($J,"VPRXIB",DFN,+RX)
  Q
  ;
-ROUTING(RX) ; -- get the Routing value
+ROUTING(RX) ; -- get the Routing value [not in use]
  N X,Y S (X,Y)="",RX=$G(RX)
  I $G(ORPK)["R" S X=$P($G(@VPRPS@("RXN",0)),U,3)
  I $G(ORPK)["S" S X=$P($G(@VPRX52P@(19)),U)
- S:$L(X) Y=$S(X="M":"MAIL",X="W":"WINDOW",X="C":"ADMINISTERED IN CLINIC",1:"")
+ S:$L(X) Y=$S(X="M":"MAIL",X="W":"WINDOW",X="C":"ADMINISTERED IN CLINIC",X="P":"PARK",1:"")
  Q Y
  ;
 GETFILLS ; -- build DLIST(#)=#^data of fills, where data is
@@ -162,11 +169,21 @@ NDF(DRUG) ; -- return VA Drug Product info for DRUG (#50 ien)
  I 'DATA S DATA=DRUG_U_$G(@VPRVAP@(.01))_"^VA50"
  Q
  ;
+CODE(MED,FILE) ; -- convert MED=ien^name to national code
+ ; Reset MED = code^name^system for RxNorm or VUID
+ N Y S MED=$G(MED),FILE=+$G(FILE)
+ S Y=$$CODE^VPRSDA(+MED,FILE,"RXN")
+ I Y="" S Y=$$VUID^VPRD(+MED,FILE) S:$L(Y) Y=Y_U_$P(MED,U,2)_"^VHAT"
+ S:$L(Y) MED=Y ;reset to nat'l code string
+ Q
+ ;
 DOSES(IEN) ; -- build DLIST(n)=instance of Dose Instructions
- N DA,I
+ N DA,I S IEN=+$G(IEN)
  S DA=0 F  S DA=$O(^OR(100,IEN,4.5,"ID","INSTR",DA)) Q:DA<1  D
  . S I=+$P($G(^OR(100,IEN,4.5,DA,0)),U,3)
  . S:I DLIST(I)=I
+ ; look for NVA w/schedule (dose not required)
+ I '$O(DLIST(0)),$G(PSTYPE)="N",$O(^OR(100,IEN,4.5,"ID","SCHEDULE",0)) S DLIST(1)=1
  Q
  ;
 BCMA(IEN,MAX) ; -- get list of most recent administrations for order

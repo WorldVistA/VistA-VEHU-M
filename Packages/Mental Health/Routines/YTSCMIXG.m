@@ -1,5 +1,5 @@
 YTSCMIXG ;SLC/KCM - Score Case Mix Level ; 11/03/2020
- ;;5.01;MENTAL HEALTH;**174**;DEC 30,1994;Build 6
+ ;;5.01;MENTAL HEALTH;**174,187**;DEC 30,1994;Build 74
  ;
 DLLSTR(YSDATA,YS,YSMODE) ; main tag for both scores and report text
  ;.YSDATA(1)=[DATA]
@@ -26,15 +26,15 @@ SCORE(YSDATA) ; iterate through answers and calculate score
  S I=2 F  S I=$O(YSDATA(I)) Q:'I  D
  . S QID=$P(YSDATA(I),U),CID=$P(YSDATA(I),U,3)
  . S QSTN(QID)=$$GET1^DIQ(601.75,CID_",",4,"I")
- S LEVEL="",ADLD=0 ; count ADL dependencies
- I QSTN(8535)>1 S ADLD=ADLD+1 ; Q1 Dependency: 2-4 Dressing
- I QSTN(8536)>1 S ADLD=ADLD+1 ; Q2 Dependency: 2-3 Grooming
- I QSTN(8537)>3 S ADLD=ADLD+1 ; Q3 Dependency: 4-5 Bathing
- I QSTN(8538)>1 S ADLD=ADLD+1 ; Q4 Dependency: 2-4 Eating
- I QSTN(8539)>1 S ADLD=ADLD+1 ; Q5 Dependency: 2-3 Bed Mobility*
- I QSTN(8540)>1 S ADLD=ADLD+1 ; Q6 Dependency: 2-4 Transferring*
- I QSTN(8541)>1 S ADLD=ADLD+1 ; Q7 Dependency: 2-4 Walking
- I QSTN(8544)>0 S ADLD=ADLD+1 ;Q10 Dependency: 1-7 Toileting*
+ S ADLD=0 ; count ADL dependencies
+ I $G(QSTN(8535))>1 S ADLD=ADLD+1 ; Q1 Dependency: 2-4 Dressing
+ I $G(QSTN(8536))>1 S ADLD=ADLD+1 ; Q2 Dependency: 2-3 Grooming
+ I $G(QSTN(8537))>3 S ADLD=ADLD+1 ; Q3 Dependency: 4-5 Bathing
+ I $G(QSTN(8538))>1 S ADLD=ADLD+1 ; Q4 Dependency: 2-4 Eating
+ I $G(QSTN(8539))>1 S ADLD=ADLD+1 ; Q5 Dependency: 2-3 Bed Mobility*
+ I $G(QSTN(8540))>1 S ADLD=ADLD+1 ; Q6 Dependency: 2-4 Transferring*
+ I $G(QSTN(8541))>1 S ADLD=ADLD+1 ; Q7 Dependency: 2-4 Walking
+ I $G(QSTN(8544))>0 S ADLD=ADLD+1 ;Q10 Dependency: 1-7 Toileting*
  S ADL=$S(ADLD<4:"Low",((ADLD>3)&(ADLD<7)):"Medium",ADLD>6:"High")
  S LVL=$$LEVEL(.QSTN,ADL,ADLD)
  ; store the scores as numeric as required by MH RESULTS
@@ -45,27 +45,40 @@ SCORE(YSDATA) ; iterate through answers and calculate score
  S ^TMP($J,"YSCOR",3)=ADLNM_"="_ADLD
  Q
 LEVEL(QSTN,ADL,ADLD) ; Return Case Mix Level given questions(.QSTN) and ADL score
- N LEVEL S LEVEL=""
- ; B: special nursing / treatment (8547=Special Tx, 8549=Clinical Monitoring)
- I (QSTN(8547)=1)!((QSTN(8547)=2)&(QSTN(8549)>0)) D  I $L(LEVEL) Q LEVEL
- . I ADL="Low" S LEVEL="C"
- . I ADL="Medium" S LEVEL="F"
- . I ADL="High" S LEVEL="K"
- ; C: behavioral consideration for low & medium (8542=Behavior)
- I ADL="Low",(QSTN(8542)>1) S LEVEL="B" Q LEVEL
- I ADL="Medium",(QSTN(8542)>1) S LEVEL="E" Q LEVEL
- ; E: high ADL without special nursing (8538=Eating, 8542=Behavior)
- I ADL="High" D  I $L(LEVEL) Q LEVEL
- . I QSTN(8538)<3,(QSTN(8542)<2) S LEVEL="G" Q
- . I QSTN(8538)<3,(QSTN(8542)>1) S LEVEL="H" Q
- . I QSTN(8538)>2,(QSTN(8542)<2),'$$NEUROICD S LEVEL="I" Q
- . I QSTN(8538)>2,((QSTN(8542)>1)!$$NEUROICD) S LEVEL="J" Q
+ N Q4,Q5,Q6,Q8,Q10,Q13,Q14,Q15
+ S Q4=$G(QSTN(8538))   ; Eating
+ S Q5=$G(QSTN(8539))   ; Bed Mobility
+ S Q6=$G(QSTN(8540))   ; Transferring
+ S Q8=$G(QSTN(8542))   ; Behavior
+ S Q10=$G(QSTN(8544))  ; Toileting
+ S Q13=$G(QSTN(8547))  ; Special Treatments
+ S Q14=$G(QSTN(8549))  ; Clinical Monitoring
+ S Q15=$G(QSTN(8550))  ; Special Nursing
+ ;
+ ; B: special nursing with tubefeedsing or treatments & monitoring
+ N SPNURS S SPNURS=0
+ I Q15>0,((Q13=1)!((Q13=2)&(Q14=2))) S SPNURS=1
+ I SPNURS,(ADL="Low") Q "C"
+ I SPNURS,(ADL="Medium") Q "F"
+ I SPNURS,(ADL="High") Q "K"
+ ;
+ ; C: behavioral consideration for low & medium
+ I ADL="Low",(Q8>1) Q "B"
+ I ADL="Medium",(Q8>1) Q "E"
+ ;
  ; D: low and medium ADL without special nursing or behavior
- I ADLD<7 D  I $L(LEVEL) Q LEVEL
- . I ADLD<3,(QSTN(8539)<2),(QSTN(8540)<2),(QSTN(8544)<1) S LEVEL="L" Q
- . I ADLD<4,(QSTN(8539)>1)!(QSTN(8540)>1)!(QSTN(8544)>0) S LEVEL="A" Q
- . I ADLD>3,(ADLD<7) S LEVEL="D" Q
- Q LEVEL
+ ; (Q5=Bed Mobility, Q6=Transferring, Q10=Toileting, Q8=Behavior)
+ N CRIT S CRIT=0 I (Q5>1)!(Q6>1)!(Q10>0) S CRIT=1
+ I ADLD<3,(Q8<2),'CRIT Q "L"
+ I ADL="Low",(Q8<2) Q "A"
+ I ADL="Medium",(Q8<2) Q "D"
+ ;
+ ; E: high ADL without special nursing (Q4=Eating, Q8=Behavior)
+ I ADLD>6,(Q4<3),(Q8<2) Q "G"
+ I ADLD>6,(Q4<3),(Q8>1) Q "H"
+ I ADLD>6,(Q4>2),(Q8<3),'$$NEUROICD Q "I"
+ I ADLD>6,(Q4>2),((Q8>2)!$$NEUROICD) Q "J"
+ Q ""
  ;
 NEUROICD() ; Return 1 if any applicable neurodiagnoses present
  ; expects QSTN from LEVEL
@@ -89,7 +102,7 @@ REPORT(YSDATA,YS) ; add textual scores to report
  S I=0 F  S I=$O(^TMP($J,"YSCOR",I)) Q:'I  D
  . I $P(^TMP($J,"YSCOR",I),"=")=LVLNM S LVL=$P(^TMP($J,"YSCOR",I),"=",2)
  . I $P(^TMP($J,"YSCOR",I),"=")=ADLNM S ADLD=$P(^TMP($J,"YSCOR",I),"=",2)
- S ADL=$S((ADLD>0)&(ADLD<4):"Low",((ADLD>3)&(ADLD<7)):"Medium",ADLD>6:"High",1:"Unknown")
+ S ADL=$S(((+ADLD=ADLD)&(ADLD<4)):"Low",((ADLD>3)&(ADLD<7)):"Medium",ADLD>6:"High",1:"Unknown")
  S LVL=$S(LVL>0:$C(LVL+64),1:"Unknown")
  S STXT="               Case Mix Level: "_LVL_"|                ADL Category: "_ADL_" |"
  S QTXT="",SPTX=""  ; question text & special treatments (Q13a)
@@ -101,7 +114,7 @@ REPORT(YSDATA,YS) ; add textual scores to report
  . S LEG=$P(^YTT(601.75,CID,0),U,2)               ; legacy value (score)
  . S CTXT=$TR(^YTT(601.75,CID,1),"?",".")         ; choice text as stmt
  . I $E(CTXT,1,2)="* " S CTXT=$E(CTXT,3,$L(CTXT)) ; * already added to LEG
- . I $L(CTXT)>70 S CTXT=$$WRAP(CTXT,70)           ; wrap longer choices
+ . I $L(CTXT)>69 S CTXT=$$WRAP(CTXT,68)           ; wrap longer choices
  . ; mark dependencies
  . I QID<8543,(QID'=8537),(LEG>1) S LEG="*"_LEG   ; Q1-Q8, except Q3
  . I QID=8537,(LEG>3) S LEG="*"_LEG               ; Q3  (bathing)
@@ -111,7 +124,7 @@ REPORT(YSDATA,YS) ; add textual scores to report
  . S QTXT(NUM)=$P($T(QUESTIONS+NUM),";;",2)_"    "_LEG_"  "_CTXT
  I $L(SPTX) D                                     ; add special tx if any
  . S SPTX="One or more TX such as: "_SPTX
- . I $L(SPTX)>70 S SPTX=$$WRAP(SPTX,70)
+ . I $L(SPTX)>69 S SPTX=$$WRAP(SPTX,68)
  . S QTXT(13)=QTXT(13)_$P(SPTX,"One or more TX such as:",2)
  F I=1:1:14 S QTXT=QTXT_QTXT(I)                   ; make one string
  S I=$O(YSDATA(""),-1)+1

@@ -1,5 +1,5 @@
 ONCSCHMG ;HINES OIFO/RTK - Grade, Discriminator, Stage Help and Utlts ;06/11/18
- ;;2.2;ONCOLOGY;**10,12,13**;Jul 31, 2013;Build 7
+ ;;2.2;ONCOLOGY;**10,12,13,14**;Jul 31, 2013;Build 8
  ;
  ;
 HLP ;Help for Grade fields
@@ -78,9 +78,7 @@ SSDDSP ;
  Q
 SCMDSP ;Display of Schema Discriminators
  D ^ONCSCHMA I ONCSCMA=0 Q
- S ONCGRIEN=$O(^ONCO(164.44,"C",ONCSCMA,"")) I ONCGRIEN="" Q
- S ONCSKNM=$O(^ONCO(164.44,ONCGRIEN,1,"B",ONCSCMA,""))
- W !!?4,"Schema: ",$P($G(^ONCO(164.44,ONCGRIEN,1,ONCSKNM,0)),U,1),"-",$E($P($G(^ONCO(164.44,ONCGRIEN,1,ONCSKNM,0)),U,2),1,40),!!," - - - - - - - - - - - - - - - - - - - - - - - - - - - - -",!!
+ D SET38001^ONCSCHMU ;code moved to ONCSCHMU to display & set field #3800.1
  Q
  ;
 AJCCHP ;Help for AJCC TNM fields (Clin, Path, Post Therapy)

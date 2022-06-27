@@ -1,5 +1,6 @@
-SDESAPPTDATA ;;ALB/TAW - VISTA Appointment data getter ;May 26, 2021@15:22
- ;;5.3;Scheduling;**788**;Aug 13, 1993;Build 6
+SDESAPPTDATA ;ALB/TAW/RRM - VISTA Appointment data getter ;May 26, 2021@15:22
+ ;;5.3;Scheduling;**788,814**;Aug 13, 1993;Build 11
+ ;;Per VHA Directive 6402, this routine should not be modified
  Q
  ; The intention of this rtn is to return a unique set of data from the Appointment
  ;File (409.84) for a specifc IEN.
@@ -20,7 +21,7 @@ SUMMARY(APPTDATA,IEN) ;
  N DATETIME,NUM,STATPOINTER,CLINICARY,STAT,CLINICDATA
  K APPTDATA
  S FN=409.84,IENS=IEN_",",OVERBOOK=0
- D GETS^DIQ(FN,IEN,".01;.02;.03;.04;.05;.06;.07;.14;.17;.18;1;3","IE","APPTARY","SDMSG")
+ D GETS^DIQ(FN,IEN,".01;.02;.03;.04;.05;.06;.07;.14;.17;.18;1;3;100","IE","APPTARY","SDMSG") ;SD,814-Added 100 for the EAS Tracking Number
  S APPTDATA("StartTime")=$G(APPTARY(FN,IENS,.01,"E"))
  S APPTDATA("StartTimeFM")=$G(APPTARY(FN,IENS,.01,"I"))
  S STIME=$G(APPTARY(FN,IENS,.01,"I"))
@@ -39,6 +40,7 @@ SUMMARY(APPTDATA,IEN) ;
  S DATETIME=$G(APPTARY(FN,IENS,.14,"E"))
  S APPTDATA("CheckOut")=$$FMTE^XLFDT(DATETIME)
  S APPTDATA("Status")=$G(APPTARY(FN,IENS,.17,"E"))
+ S APPTDATA("EASTrackingNumber")=$G(APPTARY(FN,IENS,100,"I")) ;SD,814-Retrieve EAS Tracking Number
  ;
  ;Always sent these Resource / Clinic data elements
  S APPTDATA("Clinic","IsOverbook")=0

@@ -1,7 +1,8 @@
-IBCNIUH1 ;AITC/TAZ - IIU RECEIVE AND PROCESS INSURANCE TRANSMISSIONS;04/06/21 12:46p.m.
- ;;2.0;INTEGRATED BILLING;**687**;21-MAR-94;Build 88
+IBCNIUH1 ;AITC/TAZ - IIU RECEIVE AND PROCESS INSURANCE TRANSMISSIONS ; 04/06/21 12:46p.m.
+ ;;2.0;INTEGRATED BILLING;**687,702**;21-MAR-94;Build 53
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
+ ; ICR #2171 for the usage of $$IEN^XUAF4
  Q
  ;
  ;**Program Description**
@@ -33,7 +34,6 @@ REC ;Receive data from remote system
  D RECEIVE
  I $G(IIUERR)!ERFLG G RECX
  ;
- ;Get the receiving STATUS of the IIU entry being evaluated
  D GETSTAT
  I IIUERR G RECX
  ;
@@ -65,7 +65,8 @@ RECEIVE ;Entry Point
  . ;Message Segment
  . I SEG="MSH" D  Q
  . . ;SITE will get stored during the processing of the PID segment
- . . S SITE=$P($G(IBSEG(4)),HLCMP)
+ . . ;IB*702/CKB - get the IEN not the Site number of Sending/Originating VAMC
+ . . S SITE=$$IEN^XUAF4($P($G(IBSEG(4)),HLCMP))
  . ;
  . ;Patient Segment
  . I SEG="PID" D  Q
@@ -251,7 +252,8 @@ STATV ;If the last event date is greater then the site parameter IIU RECENT VISI
  ; set RECEIVER STATUS to "V" VISITED TOO LONG AGO
  N IBS,IIUDAYS,LV,SITE
  ; Get current site
- S IBS=$P($$SITE^VASITE,U,3)
+ ;IB*702 CKB - get the IEN not the Site number of Receiving VAMC
+ S IBS=$$IEN^XUAF4($P($$SITE^VASITE,U,3))
  ; Get last visit
  I $$TFL^IBCNIUF(PATDFN,.SITE,"R") S LV=$P(SITE(IBS),U,3)
  ; If no last visit, set error and quit

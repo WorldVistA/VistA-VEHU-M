@@ -1,5 +1,5 @@
-RCRPU  ;EDE/SAB-REPAYMENT PLAN UTILITIES;11/16/2020  8:40 AM
- ;;4.5;Accounts Receivable;**377,381,388**;Mar 20, 1995;Build 13
+RCRPU  ;EDE/SAB - REPAYMENT PLAN UTILITIES;11/16/2020  8:40 AM
+ ;;4.5;Accounts Receivable;**377,381,388,378**;Mar 20, 1995;Build 54
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -185,7 +185,7 @@ CORRECT(RCTYPE) ;Are you sure this is correct?
  W !
  Q Y
  ;
-GETDET(RCBLCH,RCTOT,RCDBTR) ;Finish Gathering the details and File
+GETDET(RCBLCH,RCTOT,RCDBTR,RCAUTO) ;Finish Gathering the details and File
  ;
  ; RCBLCH - list of bills in plan.
  ; RCTOT - Amount due from selected bills
@@ -211,14 +211,14 @@ GETDET(RCBLCH,RCTOT,RCDBTR) ;Finish Gathering the details and File
  ;Set the day of the month a payment is due to the 28th
  S RCDAY=28
  S RCSVFLG=$$RPDIS($P(RCDBTR,U,2),RCPLN,RCSTDT,RCCRDT,RCTOT)
- I 'RCSVFLG D  Q
+ I 'RCSVFLG D  Q 0
  . W !,"Repayment Plan not Saved.",!
  . D PAUSE
  ;
  ;Save the plan
- S RCSVFLG=$$SAVEPLAN(+RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT)
+ S RCSVFLG=$$SAVEPLAN(+RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT,RCAUTO)
  ;
- Q
+ Q RCSVFLG
  ;
 RPDIS(RCDBTR,RCPLN,RCSTDT,RCCRDT,RCTOT) ;Display Repayment Plan
  ;
@@ -322,7 +322,7 @@ SUPAPPR(RCDBTR,RCTXTFLG) ;  Confirm Supervisor approval, file Debtor Comment for
  ;
  N DIR,X,Y,RCPROMPT
  S RCTYPE=$G(RCTYPE)
- S DIR(0)="Y",DIR("B")="YES"
+ S DIR(0)="Y"
  I RCTXTFLG=1 S DIR("A")="Has your Supervisor approved this amount? (Y/N) "
  I RCTXTFLG=2 S DIR("A")="Has your Supervisor approved the number of payments? (Y/N) "
  D ^DIR
@@ -330,13 +330,13 @@ SUPAPPR(RCDBTR,RCTXTFLG) ;  Confirm Supervisor approval, file Debtor Comment for
  ;
  Q 1
  ;
-SAVEPLAN(RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT) ; Save the repayment plan details
+SAVEPLAN(RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT,RCAUTO) ; Save the repayment plan details
  ;
- N FDA,FDAIEN,IENS,LIEN,RCRPIEN,RCSUB,RCRPIEN
+ N FDA,FDAIEN,IENS,LIEN,RCRPIEN,RCSUB,RCRPIEN,RCIEN
  ;
  ;Lock the file to grab the Next IEN to construct the RPP ID before filing.
  ;
- L +^RCRP(340.5):5 I '$T W !,"Another user is creating a Repayment Plan.  Please try again later." Q
+ L +^RCRP(340.5):5 I '$T W !,"Another user is creating a Repayment Plan.  Please try again later."  L -^RCRP(340.5) Q -1
  S RCIEN=$P($G(^RCRP(340.5,0)),U,3)+1,RCIEN="000000"_RCIEN
  ;
  S RCRPID=RCRPID_$E(RCIEN,$L(RCIEN)-5,$L(RCIEN))
@@ -350,6 +350,7 @@ SAVEPLAN(RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT) ; Save the repayment pla
  S FDA(340.5,IENS,.07)=1              ;Status (NEW on creation)
  S FDA(340.5,IENS,.08)=RCCRDT         ;Status Date
  S FDA(340.5,IENS,.11)=RCTOT          ;Total amount due in plan.
+ S FDA(340.5,IENS,.12)=RCAUTO         ;Auto-add bills PRCA*4.5*378
  S FDA(340.5,IENS,.13)=RCTOT          ;Store total as original amount as well
  S FDA(340.5,IENS,.14)=$P(RCPLN,U,2)  ;Store Length as original # payments as well
  ;
@@ -360,11 +361,11 @@ SAVEPLAN(RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT) ; Save the repayment pla
  S RCRPIEN=FDAIEN(1)
  ;
  ;Update the Audit Log
- D UPDAUDIT(RCRPIEN,RCCRDT,"N","N")
+ D UPDAUDIT^RCRPU2(RCRPIEN,RCCRDT,"N","N")
  ;
  ;Update Audit Log with Supervisor Approvals, if any.
- D:$G(^TMP("RCRPP",$J,"SUP25")) UPDAUDIT(RCRPIEN,RCCRDT,"N","SA")
- D:$G(^TMP("RCRPP",$J,"SUP36")) UPDAUDIT(RCRPIEN,RCCRDT,"N","SM")
+ D:$G(^TMP("RCRPP",$J,"SUP25")) UPDAUDIT^RCRPU2(RCRPIEN,RCCRDT,"N","SA")
+ D:$G(^TMP("RCRPP",$J,"SUP36")) UPDAUDIT^RCRPU2(RCRPIEN,RCCRDT,"N","SM")
  ;
  ;Update the Schedule Node
  S RCSUB=0
@@ -382,9 +383,13 @@ SAVEPLAN(RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT) ; Save the repayment pla
  ;
  ;PRCA*4.5*381
  ;If bills referral to CS was detected, updated AT CS field (#1.04)
- I $D(^TMP("RCRPP",$J,"CS")) D UPDATCS^RCRPU2(RCRPIEN,1) ; removed 3rd hard coded parameter, ",1", added by 378
+ I $D(^TMP("RCRPP",$J,"CS")) D UPDATCS^RCRPU2(RCRPIEN,1,1)
  ;
  W !,"The Repayment Plan "_RCRPID_" has been established.",!!
+ ;
+ ;Update the Metrics File
+ D UPDMET^RCSTATU(1.07,1)
+ ;
  D PAUSE
  ;
  Q 1
@@ -421,28 +426,6 @@ REMBILL(RCRPIEN,RCBILLDA) ; remove bill from sub-file 340.5
  S DA(1)=RCRPIEN
  S DIK="^RCRP(340.5,"_DA(1)_",6,"
  D ^DIK
- Q
- ;
-UPDAUDIT(RCRPIEN,RCCHGDT,RCTYPE,RCCMMNT) ; Update the Audit Log for the Plan
- ;
- ;INPUT - RCRPIEN - IEN of the repayment plan to update
- ;        RCCHGDT - date of the change
- ;        RCCTYPE - RCTYPE (N)ew, (E)dit, or (C)lose
- ;        RCCMMNT - Code for the reason
- ;                NULL - No comment needed for Type
- ;                   N - New Plan
- ;                   T - Terms Adjustment
- ;                   F - Forbearance Granted
- ;                   S - System Termination
- ;                   D - Defaulted for Non Payment (manual Default)
- ;                   A - Administratively Closed (manual non default closing)
- ;
- N DLAYGO,DD,DO,DIC,DA,X,Y
- S RCCMMNT=$G(RCCMMNT)
- S DLAYGO=340.5,DA(1)=RCRPIEN,DIC(0)="L",DIC="^RCRP(340.5,"_DA(1)_",4,",X=RCCHGDT
- S DIC("DR")="1///"_RCTYPE_";2///"_DUZ
- S:RCCMMNT'="" DIC("DR")=DIC("DR")_";3///"_RCCMMNT
- D FILE^DICN
  Q
  ;
 BLDPLN(RCSTDT,RCLEN,RCSTFLG) ; Build the Payment Schedule

@@ -1,5 +1,5 @@
 DDEG ;SPFO/RAM,MKB - Entity GET Extract ; AUG 1, 2018  12:37
- ;;22.2;VA FileMan;**9,16,17,18,20**;Jan 05, 2016;Build 2
+ ;;22.2;VA FileMan;**9,16,17,18,20,21**;Jan 05, 2016;Build 4
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -227,7 +227,7 @@ L1 ; find appropriate records and process
  ;
 LIST2 ; -- list of values in SUBFILE (from LIST)
  N IENS,C,TAG,SCREEN,FMT,XFRM,ENTITY,DLIST,SEQ,IEN1,VALUE,ERR
- S IENS=","_IEN,C=","
+ S IENS=","_IEN,C=",",ENTITY="" ;p21 initialize ENTITY
  S TAG=$P(ITM1,U,2),SCREEN=$G(^DDE(+DIENTY,1,+ITM,1.1))
  ;
  D ITMPROC I $G(DDEOUT)!$G(DDEQUIT) K DDEOUT Q

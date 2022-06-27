@@ -1,5 +1,5 @@
-SDESCLINICSET2 ;ALB/TAW - CLINIC CREATE AND UPDATE ;Sep 27, 2021
- ;;5.3;Scheduling;**799**;Aug 13, 1993;Build 7
+SDESCLINICSET2 ;ALB/TAW/MGD - CLINIC CREATE AND UPDATE ;Apr 06, 2022
+ ;;5.3;Scheduling;**799,813**;Aug 13, 1993;Build 6
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; ICR:
@@ -41,6 +41,9 @@ SAVE(POP,SDIEN,FDA,SDCLINIC,PROVIDER,DIAGNOSIS,SPECIALINSTRUCT,PRIVLIAGEDUSER) ;
  . F MI=1:1:$G(CLINMSG("DIERR")) D ERRLOG^SDESCLINICSET(48,$G(CLINMSG("DIERR",MI,"TEXT",1)))
  ;
  S IEN=$S(+SDIEN:+SDIEN,1:CLINRET(1))
+ ; Add entry to SDEC RESOURCE (#409.831) file VSE-2769
+ D SDRES(IEN)
+ ;
  I $D(PROVIDER) D PROVIDER
  I $D(DIAGNOSIS) D DIAGNOSIS
  I $D(SPECIALINSTRUCT) D INSTRUCTION
@@ -84,7 +87,7 @@ DIAGNOSIS ;Diagnosis multiple in field 44.11
  ..D UPDATE^DIE("","SDFDA") K SDFDA
  Q
  ;
-INSTRUCTION  ;Special intructions multiple in field 44.03
+INSTRUCTION  ;Special instructions multiple in field 44.03
  N SDFDA,KEY,DATA,SIIEN
  S KEY=""
  F  S KEY=$O(SPECIALINSTRUCT(KEY)) Q:KEY=""  D
@@ -99,7 +102,7 @@ INSTRUCTION  ;Special intructions multiple in field 44.03
  ..D UPDATE^DIE("","SDFDA") K SDFDA
  Q
  ;
-PRIVUSERS ;Privliaged user multiple 44.04
+PRIVUSERS ;Privileged user multiple 44.04
  N KEY,ACTION,PRIVUSER,PUSR44IEN,SDECFDA,SDECMSG,SDECIEN
  S KEY=""
  F  S KEY=$O(PRIVLIAGEDUSER(KEY)) Q:KEY=""  D
@@ -131,12 +134,12 @@ VALIDATEPROV(SDPROVIDER,PROVIDER,IEN) ;
  .S PROV=$O(^VA(200,"B",$E(PROV,1,30),""),-1)
  .I PROV="" D ERRLOG^SDESCLINICSET(54) Q
  .D SETPROV
- .; Only 1 provider allowed to be flagged as defualt / default removal
- I DEFAULTCNT>1 D ERRLOG^SDESCLINICSET(52,"Only 1 provider can be set as defalut") Q
- I DEFAULTCNT2>1 D ERRLOG^SDESCLINICSET(52,"Only 1 defalut provider removal is allowed") Q
+ .; Only 1 provider allowed to be flagged as default / default removal
+ I DEFAULTCNT>1 D ERRLOG^SDESCLINICSET(52,"Only 1 provider can be set as default") Q
+ I DEFAULTCNT2>1 D ERRLOG^SDESCLINICSET(52,"Only 1 default provider removal is allowed") Q
  ;If adding a default, make sure the current default is being removed
  I DEFAULTNEW,DEFAULT,DEFAULT'=DEFAULTNEW D
- .; If current defalut is not identified to have its defalut flag removed then send error
+ .; If current default is not identified to have its default flag removed then send error
  .I DEFAULT'=DEFAULTREMOVE D ERRLOG^SDESCLINICSET(120)
  Q
 SETPROV ;
@@ -165,12 +168,12 @@ VALIDATEDIAG(SDDIAG,DIAGNOSIS,IEN) ;
  .S DIAG=+$$CODEN^ICDEX(DIAG,80)
  .I DIAG=-1 D ERRLOG^SDESCLINICSET(85) Q
  .D SETDIAG
- ; Only 1 diag allowed to be flagged as defualt / default removal
- I DEFAULTCNT>1 D ERRLOG^SDESCLINICSET(52,"Only 1 diagnosis can be set as defalut") Q
- I DEFAULTCNT2>1 D ERRLOG^SDESCLINICSET(52,"Only 1 defalut diagnosis removal is allowed") Q
+ ; Only 1 diag allowed to be flagged as default / default removal
+ I DEFAULTCNT>1 D ERRLOG^SDESCLINICSET(52,"Only 1 diagnosis can be set as default") Q
+ I DEFAULTCNT2>1 D ERRLOG^SDESCLINICSET(52,"Only 1 default diagnosis removal is allowed") Q
  ;If adding a default, make sure the current default is being removed
  I DEFAULTNEW,DEFAULT,DEFAULT'=DEFAULTNEW D
- .; If current defalut is not identified to have its defalut flag removed then send error
+ .; If current default is not identified to have its default flag removed then send error
  .I DEFAULT'=DEFAULTREMOVE D ERRLOG^SDESCLINICSET(121)
  Q
 SETDIAG ;
@@ -217,3 +220,23 @@ VALIDATESI(SDSPECINSTRU,SPECIALINSTRUCT) ;
  ;
 YNTOBOOL(VAR) ;convert a Y/N input param to 1 or 0
  Q $S(VAR="Y":1,VAR="N":0,1:VAR)
+ ;
+SDRES(SDCL) ;add clinic resource
+ N ABBR,SDDATA,SDDI,SDFDA,SDFOUND,SDI,SDNOD,SDRT,SDFIELDS
+ S SDFOUND=0
+ S SDI="" F  S SDI=$O(^SDEC(409.831,"ALOC",SDCL,SDI)) Q:SDI=""  D  Q:SDFOUND=1
+ .S SDNOD=$G(^SDEC(409.831,SDI,0))
+ .S SDRT=$P(SDNOD,U,11)
+ .I $P(SDRT,";",2)="SC(",$P(SDRT,";",1)=SDCL S SDFOUND=1
+ S SDI=$S(SDFOUND=1:SDI,1:"+1")
+ S SDFIELDS=".01;1;1917"   ;alb/sat 658 - add field 1
+ D GETS^DIQ(44,SDCL_",",SDFIELDS,"IE","SDDATA")
+ S SDFDA(409.831,SDI_",",.01)=SDDATA(44,SDCL_",",.01,"E")
+ S SDDI=SDDATA(44,SDCL_",",1917,"E") S SDFDA(409.831,SDI_",",.03)=$E(SDDI,1,2)
+ S ABBR=SDDATA(44,SDCL_",",1,"E") S:ABBR'="" SDFDA(409.831,SDI_",",.011)=ABBR   ;alb/sat 658 - add abbreviation
+ S SDFDA(409.831,SDI_",",.04)=SDCL
+ S SDFDA(409.831,SDI_",",.012)=SDCL_";SC("
+ S SDFDA(409.831,SDI_",",.015)=$E($$NOW^XLFDT,1,12)
+ S SDFDA(409.831,SDI_",",.016)=DUZ
+ D UPDATE^DIE("","SDFDA")
+ Q

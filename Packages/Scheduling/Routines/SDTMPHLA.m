@@ -1,5 +1,5 @@
 SDTMPHLA ;MS/PB - TMP HL7 Routine;May 29, 2018
- ;;5.3;Scheduling;**704,733,773,780**;SEP 26, 2018;Build 17
+ ;;5.3;Scheduling;**704,733,773,780,798**;SEP 26, 2018;Build 12
  Q
  ;
 EN(DFN,APTTM) ; Entry to the routine to build an HL7 message
@@ -216,6 +216,7 @@ TMCONV(X,INST) ;Uses division/institution to determine tz instead of mailman fil
  ;Output:
  ; Zulu Time in JSON format
  N OFFSET,UTC,UTC1,UTC2
+ I X#1=0 S X=X+.000001 ;Add 1 second if midnight to avoid midnight problem in DIUTC. The second is not included in UTC2
  S OFFSET=$P($$UTC^DIUTC(X,,$G(INST),,1),"^",3)
  S UTC=$$FMADD^XLFDT(X,,-$G(OFFSET),,),UTC1=$$FMTHL7^XLFDT(UTC)
  S UTC2=$E(UTC1,1,4)_"-"_$E(UTC1,5,6)_"-"_$E(UTC1,7,8)_"T"_$E(UTC1,9,10)_":"_$E(UTC1,11,12)_":00.000Z"

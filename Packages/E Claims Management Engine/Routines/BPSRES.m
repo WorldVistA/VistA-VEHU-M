@@ -1,5 +1,5 @@
 BPSRES ;BHAM ISC/BEE - ECME SCREEN RESUBMIT W/EDITS ;3/12/08  14:01
- ;;1.0;E CLAIMS MGMT ENGINE;**3,5,7,8,10,11,20,21,23,24**;JUN 2004;Build 43
+ ;;1.0;E CLAIMS MGMT ENGINE;**3,5,7,8,10,11,20,21,23,24,30**;JUN 2004;Build 19
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to $$RXRLDT^PSOBPSUT supported by DBIA 4701
@@ -192,8 +192,8 @@ PROMPTS(BP59,BP02,BPRXIEN,BPRXR,BPCOB,BPDOSDT,BPSECOND,BPADDLTXT) ;
  K X,DIC,Y
  ;
  ; If there is a pending reject on the Pharmacists Worklist, or there
- ; is a resolved or unresolved reject 79 or 88, then only display
- ; Submission Clarification Codes and do not allow enter/edit. (BPS*1*21)
+ ; is a resolved or unresolved reject 79 or 88 or 943, then only display
+ ; Submission Clarification Codes and do not allow enter/edit.
  ;
  I $$BPSKIP(BPRXIEN,BPRXR) D  G P1
  . F BP35401=1:1:3 I @("BPCLCD"_BP35401) D
@@ -392,7 +392,7 @@ BPSKIP(BPSRX,BPSFILL) ; Determine whether to skip the enter/edit of Submission C
  ;
  I $$FIND^PSOREJUT(BPSRX,BPSFILL) Q 1
  ;
- ; If there are any closed/resolved 79/88 rejects for this Rx/Fill,
+ ; If there are any closed/resolved 79/88/943 rejects for this Rx/Fill,
  ; pull the latest detected date/time.
  ; If there has not been any ECME activity since that date/time, then
  ; disallow the edit of Submission Clarification Codes, Quit with 1.
@@ -405,8 +405,8 @@ BPSKIP(BPSRX,BPSFILL) ; Determine whether to skip the enter/edit of Submission C
  . ; If a reject is not for the current fill, skip this one.
  . I $$GET1^DIQ(52.25,BPSREJECT_","_BPSRX,5)'=BPSFILL Q
  . ;
- . ; If not a 79 or 88, skip this one.
- . I ",79,88,"'[(","_$$GET1^DIQ(52.25,BPSREJECT_","_BPSRX,.01)_",") Q
+ . ; If not a 79 or 88 or 943, skip this one.
+ . I ",79,88,943,"'[(","_$$GET1^DIQ(52.25,BPSREJECT_","_BPSRX,.01)_",") Q
  . ;
  . ; Pull DATE/TIME DETECTED.  If the date/time is later than
  . ; BPS7988DATE, then reset BPS7988DATE to that date/time.

@@ -1,5 +1,5 @@
-XUMF04H ;BP/RAM - INSTITUTION Handler ;09/10/2020
- ;;8.0;KERNEL;**549,678,698,723,735**;Jul 10, 1995;Build 4
+XUMF04H ;BP/RAM - INSTITUTION Handler ; Apr 22, 2022@05:57:29
+ ;;8.0;KERNEL;**549,678,698,723,735,769**;Jul 10, 1995;Build 5
  ;;Per VA Directive 6402, this routine should not be modified
  ; This routine handles Institution Master File HL7 messages.
  ;
@@ -256,7 +256,7 @@ REPLY ; -- master file response
  S ^TMP("HLA",$J,1)=X
  ;
  S HLP("PRIORITY")="I"
- D GENACK^HLMA1(HL("EID"),HLMTIENS,HL("EIDS"),"GM",1,.HLRESLT)
+ D GENACK^HLMA1(HL("EID"),$G(HLMTIENS),HL("EIDS"),"GM",1,.HLRESLT)
  ;
  ; check for error
  I ($P($G(HLRESLT),U,3)'="") D  Q

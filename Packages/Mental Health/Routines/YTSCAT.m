@@ -1,5 +1,5 @@
 YTSCAT ;SLC/KCM - CAT Scoring and Reporting ; 6/30/2021
- ;;5.01;MENTAL HEALTH;**182**;DEC 30,1994;Build 13
+ ;;5.01;MENTAL HEALTH;**182,199**;DEC 30,1994;Build 18
  ;
 DLLSTR(YSDATA,YS,YSMODE) ; main tag for both scores and report text
  ;.YSDATA(1)=[DATA]
@@ -49,7 +49,8 @@ REPORT(YSDATA,YS) ; add textual scores to report
  N I,TTYP,TREE,SCORTXT,ANSTXT,TSTTXT,ALLANS
  S SCORTXT="",ANSTXT="",TSTTXT="",ALLANS=1
  D WP2JSON(.YSDATA,.TREE)
- S I=0 F  S I=$O(TREE("report","tests",I)) Q:'I  S TTYP=TREE("report","tests",I,"type") D
+ S I=0 F  S I=$O(TREE("report","tests",I)) Q:'I  D
+ . S TTYP=$$LOW^XLFSTR(TREE("report","tests",I,"type"))
  . S TSTTXT=TSTTXT_$S($L(TSTTXT):", ",1:"")_$$FULLNAME(TTYP)
  . S SCORTXT=SCORTXT_"| |   "_$$FULLNAME(TTYP)
  . I TTYP="mdd" D ADDSCORE(I,"diag^conf")
@@ -62,6 +63,8 @@ REPORT(YSDATA,YS) ; add textual scores to report
  . I TTYP="a/adhd" D ADDSCORE(I,"cate^seve^prec")
  . I TTYP="sdoh" D ADDSCORE(I,"cate^seve^prec")
  . I TTYP="ss" D ADDSCORE(I,"cate^seve^prec")
+ . I TTYP="ptsd-dx" D ADDSCORE(I,"diag^prob")
+ . I TTYP="ptsd-e" D ADDSCORE(I,"cate^seve^prec")
  . I $D(TREE("report","tests",I,"items"))>1 S ALLANS=0 D QA4TEST(I)
  ;
  I ALLANS D QA4ALL
@@ -114,6 +117,7 @@ ADDLN(TXT) ; add a line of text
  S SCORTXT=$G(SCORTXT)_TXT
  Q
 FULLNAME(TTYP) ; return full name for a CAT Test Type
+ S TTYP=$$LOW^XLFSTR(TTYP)
  I TTYP="mdd" Q "Major Depressive Disorder"
  I TTYP="dep" Q "Depression"
  I TTYP="anx" Q "Anxiety Disorder"
@@ -124,9 +128,12 @@ FULLNAME(TTYP) ; return full name for a CAT Test Type
  I TTYP="a/adhd" Q "Adult ADHD"
  I TTYP="sdoh" Q "Social Determinants of Health"
  I TTYP="ss" Q "Suicide Scale"
+ I TTYP="ptsd-dx" Q "PTSD-Diagnosis"
+ I TTYP="ptsd-e" Q "PTSD-Expanded"
  Q "Unknown Test"
  ;
 INSNAME(TTYP) ; return full name for a CAT Test Type
+ S TTYP=$$LOW^XLFSTR(TTYP)
  I TTYP="mdd" Q "CAD-MDD"
  I TTYP="dep" Q "CAT-DEP"
  I TTYP="anx" Q "CAT-ANX"
@@ -137,6 +144,8 @@ INSNAME(TTYP) ; return full name for a CAT Test Type
  I TTYP="a/adhd" Q "CAT-ADHD"
  I TTYP="sdoh" Q "CAT-SDOH"
  I TTYP="ss" Q "CAT-SS"
+ I TTYP="ptsd-dx" Q "CAD-PTSD-DX"
+ I TTYP="ptsd-e" Q "CAT-PTSD-E"
  Q "Unknown Test"
  ;
 WP2JSON(YSDATA,TREE) ; put YSDATA answer into M-subscript format

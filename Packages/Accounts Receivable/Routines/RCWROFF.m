@@ -1,5 +1,5 @@
-RCWROFF ;WISC/RFJ-write off, terminated ;1 Feb 2000
- ;;4.5;Accounts Receivable;**168,204,309,301,307,315,377,381,391**;Mar 20, 1995;Build 10
+RCWROFF ;WISC/RFJ - write off, terminated ;1 Feb 2000
+ ;;4.5;Accounts Receivable;**168,204,309,301,307,315,377,381,391,378**;Mar 20, 1995;Build 54
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -85,7 +85,7 @@ MAIN(RCTRTYPE,RCDRSTRG) ;  main subroutine to process a waiver, termination, sus
  ;  rctrtype = transaction type^description, example 10^waiver
  ;  rcdrstrg = dr string used when calling die
  I '$G(GOTBILL) N RCBILLDA  ;PRCA*4.5*315 Pass in RCBILLDA
- N BALANCE,DR,RCTRANDA,Y
+ N BALANCE,DR,RCTRANDA,Y,RCSPFLG
  F  D  Q:RCBILLDA<1!($G(GOTBILL))
  .   K RCTRANDA  ;do not leave around in for loop
  .   ;  select a bill
@@ -135,8 +135,10 @@ MAIN(RCTRTYPE,RCDRSTRG) ;  main subroutine to process a waiver, termination, sus
  .   D PROCESS^RCBEUTRA(RCTRANDA)
  .   ;
  .   ;PRCA*4.5*377
+ .   S RCSPFLG=2
+ .   S:+RCTRTYPE=47 RCSPFLG=1
  .   ;  Update any active repayment plan the bill may be attached to
- .   D UPDBAL^RCRPU1(RCBILLDA,RCTRANDA,1)   ;PRCA*4.5*381 - Add suspend flag.
+ .   D UPDBAL^RCRPU1(RCBILLDA,RCTRANDA,RCSPFLG)   ;PRCA*4.5*381 - Add suspend flag.
  .   ;
  .   ;  create fms write off document, if not accrued and not suspended (47) transaction
  .   I '$$ACCK^PRCAACC(RCBILLDA),$P($G(^PRCA(433,RCTRANDA,1)),"^",2)'=47 D FMSDOC(RCTRANDA)

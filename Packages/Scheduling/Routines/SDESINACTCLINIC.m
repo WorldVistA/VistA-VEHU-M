@@ -1,5 +1,5 @@
-SDESINACTCLINIC ;ALB/ANU - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;SEP 29, 2021@14:39
- ;;5.3;Scheduling;**799**;Aug 13, 1993;Build 7
+SDESINACTCLINIC ;ALB/ANU,MG - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;JAN 07, 2022@15:22
+ ;;5.3;Scheduling;**799,805**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -7,8 +7,9 @@ SDESINACTCLINIC ;ALB/ANU - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;SEP 2
  ;Reference to $$GETS^DIQ,$$GETS1^DIQ in ICR #2056
  Q
  ;
-JSONINACTCLN(SDCINJSON,SDCLINICIEN) ;Inactivate Clinic
+JSONINACTCLN(SDCINJSON,SDCLINICIEN,SDEAS) ;Inactivate Clinic
  ;INPUT - SDCLINICIEN (Clinic IEN)
+ ; SDEAS - [optional] Enterprise Appointment Scheduling (EAS) Tracking Number associated to an appointment.
  ;RETURN PARMETER:
  ; Status
  ;
@@ -30,6 +31,9 @@ VALIDATE ; validate incoming parameters
  . ;create error message - Clinic Name/Clinic IEN not found
  . D ERRLOG^SDESJSON(.SDCINREC,80)
  . S ERRPOP=1
+ S SDEAS=$G(SDEAS,"")
+ I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
+ I +SDEAS=-1 D ERRLOG^SDESJSON(.SDCINREC,142) S ERRPOP=1
  Q
  ;
 BLDJSON ;

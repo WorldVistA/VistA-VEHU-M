@@ -1,5 +1,5 @@
-IBCNEDST ;ALB/YMG - HL7 Registration Message Statistics ;07-MAR-2013
- ;;2.0;INTEGRATED BILLING;**497,506,549,595,659,664,668**;21-MAR-94;Build 28
+IBCNEDST ;ALB/YMG - HL7 Registration Message Statistics ; 07-MAR-2013
+ ;;2.0;INTEGRATED BILLING;**497,506,549,595,659,664,668,702**;21-MAR-94;Build 53
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -80,6 +80,14 @@ RESPINFO(DTTM,MCAUTO) ; get data from IIV Response file (file 365)
  ; also returns MCAUTO - # of eIV responses from the Medicare payer that were auto-updated
  ;
  N AUTOUPD,DATE,DFN,EBIEN,IEN,INSNAMES,INSTYPE,INQP,POLICY,PAYER,PAYERWNR,PYRNAME,SECINS,Z
+ ; IB*2.0*702/DTG- start Added number of outgoing EICD (A1) 270 transactions.
+ ;                      Number of outgoing EICD-triggered (A2) 270 transactions.
+ ;                      Number of outgoing MBI Request 270 transactions.
+ ;                      Number of incoming MBI positive responses that indicated as having returned the MBI (%).
+ N IB1P,IB2D,IB3IEN,IBA1,IBA2,IB40,IBTQ,IBTYP,IBQRY,IBAT1,IBAT2,IBSID,IBMBI,IBMBS
+ S (IB1P,IB2D,IB3IEN,IBA1,IBA2,IB40,IBAT1,IBAT2,IBMBI,IBMBS)=""
+ S DSTATPA=$G(DSTATPA),DSTATI=$G(DSTATI)
+ ; IB*2.0*702/DTG - end Added
  S SECINS=0
  S PAYERWNR=$P($G(^IBE(350.9,1,51)),U,25) ; get Medicare payer ien from IB site parameters
  ;
@@ -107,11 +115,38 @@ RESPINFO(DTTM,MCAUTO) ; get data from IIV Response file (file 365)
  .....I $$GET1^DIQ(365.02,EBIEN_","_IEN_",",.02)'="R" Q
  .....S PYRNAME=$E($P($G(^IBCN(365,IEN,2,EBIEN,3)),U,3),1,30) ; grab first 30 chars to compare to 36/.01
  .....I PYRNAME'="",'$D(INSNAMES(PYRNAME)) S SECINS=SECINS+1
- .....Q
- ....Q
- ...Q
- ..Q
- .Q
+ . ; IB*2.0*702/DTG- start Added number of outgoing EICD (A1) 270 transactions. number of outgoing EICD-triggered (A2) 270 transactions
+ . ;                   number of outgoing MBI Request 270 transactions
+ . I $G(DSTATI)=1 D  ;<
+ . . S IB1P="" F  S IB1P=$O(^IBCN(365,"AD",DATE,IB1P)) Q:IB1P=""  S IB2D="" D  ;<
+ . . . F  S IB2D=$O(^IBCN(365,"AD",DATE,IB1P,IB2D)) Q:IB2D=""  S IB3IEN="" D  ;<
+ . . . . F  S IB3IEN=$O(^IBCN(365,"AD",DATE,IB1P,IB2D,IB3IEN)) Q:IB3IEN=""  D  ;<
+ . . . . . S IENS=IB3IEN_"," K IB40 D GETS^DIQ(365,IENS,"13.02;.05;.1","IE","IB40")
+ . . . . . I $G(IB40(365,IENS,.1,"I"))'="O" Q
+ . . . . . S IBSID=$G(IB40(365,IENS,13.02,"I"))
+ . . . . . S IBTQ=$G(IB40(365,IENS,.05,"I"))
+ . . . . . S IBTYP=$$GET1^DIQ(365.1,IBTQ_",",.1,"I"),IBQRY=$$GET1^DIQ(365.1,IBTQ_",",.11,"I")
+ . . . . . ; IBMBI - Number of incoming MBI positive responses that indicated as having returned the MBI (%)
+ . . . . . I IBTYP=7&(IBSID'="") S IBMBI=$G(IBMBI)+1 Q
+ ;
+ I $G(DSTATI)=1 D  ;<
+ . S DATE=DTTM-0.000001 F  S DATE=$O(^IBCN(365,"AE",DATE)) Q:DATE=""  D  ;<
+ . . S IB3IEN="" F  S IB3IEN=$O(^IBCN(365,"AE",DATE,IB3IEN)) Q:IB3IEN=""  D  ;<
+ . . . S IENS=IB3IEN_"," K IB40 D GETS^DIQ(365,IENS,"13.02;.05;.1","IE","IB40")
+ . . . I $G(IB40(365,IENS,.1,"I"))'="O" Q
+ . . . S IBSID=$G(IB40(365,IENS,13.02,"I"))
+ . . . S IBTQ=$G(IB40(365,IENS,.05,"I"))
+ . . . S IBTYP=$$GET1^DIQ(365.1,IBTQ_",",.1,"I"),IBQRY=$$GET1^DIQ(365.1,IBTQ_",",.11,"I")
+ . . . ;  IBA1 - Number of outgoing EICD (A1) 270 transactions
+ . . . ;  IBA2 - Number of outgoing EICD-triggered (A2) 270 transactions
+ . . . ; IBMBS - Number of outgoing MBI Request 270 transactions
+ . . . I IBTYP=7 S IBMBS=$G(IBMBS)+1 Q
+ . . . I IBTYP=4 S:IBQRY="I" IBA1=$G(IBA1)+1 S:IBQRY="V" IBA2=$G(IBA2)+1
+ . . ; IB*2.0*702/DTG - end Added
+ ;
+ ; IB*2.0*702/DTG - start Added
+ I $G(DSTATI)=1 S DSTAT3=+$G(IBA1)_DSTATPA_+$G(IBA2)_DSTATPA_+$G(IBMBS)_DSTATPA_+$G(IBMBI)
+ ; IB*2.0*702/DTG - end Added
  ;
  ; Number of 270 inquiries pending receipt of 271 responses
  S (INQP,IEN)=0 F  S IEN=$O(^IBCN(365,"AC",2,IEN)) Q:'IEN  D   ; Transmitted status = 2

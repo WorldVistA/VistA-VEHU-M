@@ -1,5 +1,7 @@
-SDUNC ;MAN/GRR - RESTORE CLINIC AVAILABILITY ; 24 JUL 2003  10:08 am
- ;;5.3;Scheduling;**79,303,380,452,780**;Aug 13, 1993;Build 17
+SDUNC ;ALB/MGD - RESTORE CLINIC AVAILABILITY ;Apr 12, 2022
+ ;;5.3;Scheduling;**79,303,380,452,780,806,814**;Aug 13, 1993;Build 11
+ ;;Per VHA Directive 6402, this routine should not be modified
+ ;
  D DT^DICRW S DIC=44,DIC(0)="MEQA",DIC("S")="I $P(^(0),""^"",3)=""C"",'$G(^(""OOS""))",DIC("A")="Select CLINIC NAME: " D ^DIC K DIC("S"),DIC("A") Q:"^"[X  G:Y<0 SDUNC Q:'$D(^SC(+Y,"SL"))
  S SC=+Y,SL=^("SL") ;NAKED REFERENCE - ^SC(IFN,"SL")
  N SDRES S SDRES=$$CLNCK^SDUTL2(SC,1)
@@ -10,7 +12,7 @@ SDUNC ;MAN/GRR - RESTORE CLINIC AVAILABILITY ; 24 JUL 2003  10:08 am
  I $S('$D(SDIN):0,'SDIN:0,SDIN>CDATE:0,SDRE'>CDATE&(SDRE):0,1:1) W !,*7,"Clinic is inactive ",$S(SDRE:"from ",1:"as of "),SDIN1,$S(SDRE:" to "_SDRE1,1:"") G SDUNC
  K SDIN,SDIN1,SDRE,SDRE1 G:'$D(^SC(SC,"ST",SD,1)) NOWAY
  I $D(^SC(SC,"ST",SD,1)),^(1)'["CANCELLED"&(^(1)'["X") G NOWAY
- I $D(^SC(SC,"ST",SD,9)) I $D(^SC(SC,"OST",SD,1)) D FIX Q:^SC(SC,"ST",SD,1)["X"&('$D(SDFR1))  S ^SC(SC,"ST",SD,1)=HOLD K:^(1)'["X" ^SC(SC,"ST",SD,"CAN") W !,"RESTORED!",*7 D TMPP,CHK Q
+ I $D(^SC(SC,"ST",SD,9)) I $D(^SC(SC,"OST",SD,1)) D FIX Q:"^"[$G(X)  Q:^SC(SC,"ST",SD,1)["X"&('$D(SDFR1))  S ^SC(SC,"ST",SD,1)=HOLD K:^(1)'["X" ^SC(SC,"ST",SD,"CAN") W !,"RESTORED!",*7 D CHK Q
  I $D(^SC(SC,"ST",SD,9)),'$D(^SC(SC,"OST",SD,1)) G ERRM^SDUNC1
  D B I '$D(DH) G NOPAT
  Q:^SC(SC,"ST",SD,1)["X"&('$D(SDFR1))  S ^SC(SC,"ST",SD,0)=SD,^SC(SC,"ST",SD,1)=DH G N

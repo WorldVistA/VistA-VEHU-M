@@ -1,5 +1,5 @@
 VPRSDAV ;SLC/MKB -- SDA Visit utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**20,26,27**;Sep 01, 2011;Build 10
+ ;;1.0;VIRTUAL PATIENT RECORD;**20,26,27,28**;Sep 01, 2011;Build 6
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -82,11 +82,11 @@ VDEL ; -- old V file Entry Action: I ID["~" D VDEL^VPRSDAV
  S DTYPE=$O(^DDE("B","VPR VFILE DELETE",0))
  Q
  ;
-DEL1 ; -- ID Action for Vfile Delete entities
- ; Returns VPR0 or DDEOUT
- N SEQ S SEQ=+$G(FILTER("sequence")) I SEQ D
- . S VPR0=$G(^XTMP("VPR-"_SEQ,+$G(DIEN),0))
- I $G(VPR0)="" S DDEOUT=1
+DEL1 ; -- ID Action for Vfile Delete entities, returns VPR0=data
+ N SEQ,VST S VPR0=""
+ S SEQ=+$G(FILTER("sequence")) I SEQ D
+ . S VPR0=$G(^XTMP("VPR-"_SEQ,+$G(DIEN),0)) Q:$L(VPR0)
+ . S VST=$P($G(^XTMP("VPR-"_SEQ,+$G(DIEN))),U,5) S:VST VPR0="^^"_VST
  Q
  ;
 VAIP ; -- get admission info & Visit# [ID Action]
@@ -96,7 +96,7 @@ VAIP ; -- get admission info & Visit# [ID Action]
  ;        VPRVST = Visit#
  ;         VPRCA = Current Adm# (or 0)
  ;          DIEN = Movement#
- N VAERR,VADMVT K VAIP
+ N VAERR,VADMVT K VAIP,VAINDT
  S DIEN=$G(DIEN),DFN=+$G(DFN)
  S VPRVST=+$P(DIEN,"~",2),DIEN=+DIEN
  S:'DFN DFN=+$P($G(^DGPM(DIEN,0)),U,3)
@@ -266,7 +266,7 @@ APPT1(VPRID) ; -- get ^TMP node for single appt, returns VPRAPPT
  I '$D(^TMP($J,"SDAMA301",DFN)) D
  . N VPRX,VPRNUM
  . S VPRX(1)=VPRDT_";"_VPRDT,VPRX(4)=DFN
- . S VPRX("FLDS")="1;2;3;10;11;12",VPRX("SORT")="P"
+ . S VPRX("FLDS")="1;2;3;5;8;9;10;11;12;18;22",VPRX("SORT")="P"
  . S VPRNUM=$$SDAPI^SDAMA301(.VPRX)
  S VPRAPPT=$G(^TMP($J,"SDAMA301",DFN,VPRDT))
  S:VPRAPPT="" VPRAPPT=VPRDT_U_$P($G(^DPT(DFN,"S",VPRDT,0)),U,1,2) ;DDEOUT=1

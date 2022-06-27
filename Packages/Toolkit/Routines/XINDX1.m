@@ -1,5 +1,5 @@
 XINDX1 ;ISC/REL,GRK,RWF - ERROR ROUTINE ;08/05/08  13:59
- ;;7.3;TOOLKIT;**20,61,66,68,110,121,128,133,140,149,151**;Apr 25, 1995;Build 1
+ ;;7.3;TOOLKIT;**20,61,66,68,110,121,128,133,140,149,151,153**;Apr 25, 1995;Build 3
  ; Per VHA Directive 2004-038, this routine should not be modified.
  G A
 E(ERR) ;
@@ -16,6 +16,7 @@ B I $P(%1,";",3)]"" D  Q:%1]""  ;Don't flag kernel doing kernel.
  S %=$G(^UTILITY($J,1,RTN,"E",0))+1,^(0)=%,^(%)=TXT_$C(9)_ERTX
  Q
  ;p149 change error 65 from S to W
+ ;p153 add error 66 - ICR reference
  ;F = Fatal, S = Standard, W = Warning, I = Info
  ;;exclude rtn;error text
 ERROR ;
@@ -83,4 +84,5 @@ ERROR ;
 62 ;;;S - First line of routine violates the SAC.
 63 ;;;F - GO or DO mismatch from block structure (M45).
 64 ;;;F - Cache Object doesn't exist.
-65 ;;X,Z,DI,DD,KMP;W - Vendor specific code is restricted.
+65 ;;X,Z,DI,DD,KMP;W - Vendor specific code is restricted.]
+66 ;;;S - Incorrect format for ICR Reference

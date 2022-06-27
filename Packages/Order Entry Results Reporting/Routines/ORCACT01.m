@@ -1,5 +1,5 @@
 ORCACT01 ;SLC/MKB-Validate order actions cont ;Oct 20, 2020@22:36:08
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**94,116,134,141,163,187,190,213,243,306,374,350,397,377,498**;Dec 17, 1997;Build 38
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**94,116,134,141,163,187,190,213,243,306,374,350,397,377,498,580**;Dec 17, 1997;Build 4
  ;
  ;External reference to $$ORCOPY^PSOORCPY supported by ICR 6719
  ;
@@ -10,6 +10,7 @@ ES ; -- sign [on chart]
  . S X=$$DISABLED^ORCACT0 I X S ERROR=$P(X,U,2) Q
  I ACTION="OC",$G(DG)="NV RX" S:MEDPARM<2 ERROR="You are not authorized to release non-VA med orders!" Q
  S X=$P(ORA0,U,4) I X=3 S:ACTSTS'=11&(ACTSTS'=10) ERROR="This order does not require a signature!" Q
+ I X=5 S ERROR="This order has been canceled!" Q  ;p580
  I X'=2 S ERROR="This order has been signed!" Q
  N ORCS D CSVALUE^ORDEA(.ORCS,+IFN)
  I DG="O RX",ACTION="RS",$G(NATR)="I",ORCS=1 S ERROR="Controlled Substance outpatient meds may not be released without a clinician's signature!" Q

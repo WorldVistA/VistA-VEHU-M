@@ -1,4 +1,4 @@
-DGPTX13 ; ;06/24/22
+DGPTX13 ; ;06/26/22
  D DE G BEGIN
 DE S DIE="^DPT(D0,.02,",DIC=DIE,DP=2.02,DL=3,DIEL=1,DU="" K DG,DE,DB Q:$O(^DPT(D0,.02,DA,""))=""
  I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,1) S:%]"" DE(1)=% S %=$P(%Z,U,2) S:%]"" DE(3)=%
@@ -55,11 +55,15 @@ C1 G C1S:$D(DE(1))[0 K DB
  K ^DPT(DA(1),.02,"B",$E(X,1,30),DA)
  S X=DE(1),DIC=DIE
  ;
+ S X=DE(1),DIC=DIE
+ D EVENT^IVMPLOG($G(DA(1)))
 C1S S X="" G:DG(DQ)=X C1F1 K DB
  S X=DG(DQ),DIC=DIE
  S ^DPT(DA(1),.02,"B",$E(X,1,30),DA)=""
  S X=DG(DQ),DIC=DIE
  X ^DD(2.02,.01,1,2,1.3) I X S X=DIV S Y(1)=$S($D(^DPT(D0,.02,D1,0)):^(0),1:"") S X=$P(Y(1),U,2),X=X S DIU=X K Y S X=DIV S X=+$O(^DIC(10.3,"C","S",0)) S:X=0 X="" X ^DD(2.02,.01,1,2,1.4)
+ S X=DG(DQ),DIC=DIE
+ D EVENT^IVMPLOG($G(DA(1)))
 C1F1 N X,X1,X2 S DIXR=389 D C1X1(U) K X2 M X2=X D C1X1("O") K X1 M X1=X
  D
  . D FC^DGFCPROT(.DA,2.02,.01,"KILL",$H,$G(DUZ),.X,.X1,.X2,$G(XQY0)) Q

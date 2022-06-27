@@ -1,5 +1,5 @@
 PSOORED1 ;ISC-BHAM/SAB - edit orders from backdoor ; 10/12/18 5:13am
- ;;7.0;OUTPATIENT PHARMACY;**5,23,46,78,114,117,131,146,223,148,244,249,268,206,313,444,422,457**;DEC 1997;Build 116
+ ;;7.0;OUTPATIENT PHARMACY;**5,23,46,78,114,117,131,146,223,148,244,249,268,206,313,444,422,457,649**;DEC 1997;Build 1
  ;External reference ^PS(55 supported by DBIA 2228
  ;External reference ^PS(50.7 supported by DBIA 2223
  ;
@@ -116,8 +116,12 @@ QTY S PSORENW("QTY")=$S($G(PSORENW("QTY")):PSORENW("QTY"),1:$P(PSORENW("RX0"),"^
 RFN S PSORENW("# OF REFILLS")=$S($D(CLOZPAT):0,$G(PSORENW("# OF REFILLS")):PSORENW("# OF REFILLS"),1:$P(PSORENW("RX0"),"^",9))
  S (PSOID,Y,PSORENW("FILL DATE"),PSORENW("ISSUE DATE"))=DT
  ;
- ; - Maintenance Rx Fill Date is set with Next Possible Fill from Titration Rx
- I $G(PSOMTFLG),$P($G(PSORENW("RX3")),"^",2)>DT S PSORENW("FILL DATE")=$P(PSORENW("RX3"),"^",2)
+ ; - Titration to Maintenance Rx 
+ I $G(PSOMTFLG) D
+ . ; Copying ISSUE DATE from Titatrion Rx
+ . S (PSOID,PSORENW("ISSUE DATE"))=$P(PSORENW("RX0"),"^",13)
+ . ; Fill Date is set with Next Possible Fill from Titration Rx
+ . I $P($G(PSORENW("RX3")),"^",2)>DT S PSORENW("FILL DATE")=$P(PSORENW("RX3"),"^",2)
  ;
  S:PSORENW("CLINIC") PSORX("CLINIC")=$P(^SC(+PSORENW("CLINIC"),0),"^")
  S PSORENW("PATIENT STATUS")=$S($G(PSORENW("PATIENT STATUS")):PSORENW("PATIENT STATUS"),'$P(PSORENW("RX0"),"^",3):$G(^PS(55,PSORENW("PSODFN"),"PS")),1:$P(PSORENW("RX0"),"^",3))

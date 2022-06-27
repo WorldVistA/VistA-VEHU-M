@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MAIL GROUP
 ZWR
-^XMB(3.8,0)="MAIL GROUP^3.8^462^438"
+^XMB(3.8,0)="MAIL GROUP^3.8^463^439"
 ^XMB(3.8,1,0)="YS PSYCHTEST^PR^^^^0"
 ^XMB(3.8,1,1,0)="^3.81P^^0"
 ^XMB(3.8,1,2,0)="^^1^1^2921113^^"
@@ -721,7 +721,7 @@ ZWR
 ^XMB(3.8,84,2,1,0)="Incident Reporting V2.0 mailgroup"
 ^XMB(3.8,84,2,2,0)="|"
 ^XMB(3.8,84,3)=1999
-^XMB(3.8,85,0)="MAIL ERRORS^PU^n^2184^3220624^"
+^XMB(3.8,85,0)="MAIL ERRORS^PU^n^2187^3220626^"
 ^XMB(3.8,85,1,0)="^3.81P^4^4"
 ^XMB(3.8,85,1,1,0)=11247
 ^XMB(3.8,85,1,2,0)=10119
@@ -2786,7 +2786,7 @@ ZWR
 ^XMB(3.8,312,0)="GEC2 NATIONAL ROLLUP^PU^y^^^^10000000020"
 ^XMB(3.8,312,3)=10000000020
 ^XMB(3.8,312,6,0)="^3.812^^0"
-^XMB(3.8,313,0)="NEW USER^PU^n^1237^3220624"
+^XMB(3.8,313,0)="NEW USER^PU^n^1240^3220626"
 ^XMB(3.8,313,1,0)="^3.81P^1^1"
 ^XMB(3.8,313,1,1,0)=10000000020
 ^XMB(3.8,313,1,"B",10000000020,1)=""
@@ -3154,7 +3154,7 @@ ZWR
 ^XMB(3.8,373,6,0)="^3.812^1^1"
 ^XMB(3.8,373,6,1,0)="G.PATCHES@FHIE.INV.DOMAIN.GOV"
 ^XMB(3.8,373,6,"B","G.PATCHES@FHIE.INV.DOMAIN.GOV",1)=""
-^XMB(3.8,374,0)="AUTORENEWAL^PU^y^^^^10000000216"
+^XMB(3.8,374,0)="AUTORENEWAL^PU^y^1^3220626^^10000000216"
 ^XMB(3.8,374,2,0)="^^4^4^3090713^"
 ^XMB(3.8,374,2,1,0)="This mail group contains the list of users that will received messages "
 ^XMB(3.8,374,2,2,0)="related to the auto-renewal process. The auto-renewal process is "
@@ -3668,6 +3668,13 @@ ZWR
 ^XMB(3.8,461,3)=1
 ^XMB(3.8,462,0)="GMRCCCRA TIU NOTIFICATIONS^PU^y"
 ^XMB(3.8,462,3)=1
+^XMB(3.8,463,0)="RC REPAY PLAN EXTERNAL^PR^n^^^^.5"
+^XMB(3.8,463,2,0)="^^4^4^3210615^"
+^XMB(3.8,463,2,1,0)="This Mail Group will contain the external email addresses for everyone "
+^XMB(3.8,463,2,2,0)="who may need to receive alerts or messages from the Repayment Plan "
+^XMB(3.8,463,2,3,0)="Nightly Process.  Mail sent using this group must not contain any PII "
+^XMB(3.8,463,2,4,0)="or PHI."
+^XMB(3.8,463,3)=1
 ^XMB(3.8,"AB",.5,120,1)=""
 ^XMB(3.8,"AB",.5,372,1)=""
 ^XMB(3.8,"AB",.5,428,1)=""
@@ -4341,6 +4348,7 @@ ZWR
 ^XMB(3.8,"AC",.5,455)=""
 ^XMB(3.8,"AC",.5,460)=""
 ^XMB(3.8,"AC",.5,461)=""
+^XMB(3.8,"AC",.5,463)=""
 ^XMB(3.8,"AC",1,228)=""
 ^XMB(3.8,"AC",1,343)=""
 ^XMB(3.8,"AC",1,347)=""
@@ -4900,6 +4908,7 @@ ZWR
 ^XMB(3.8,"B","RADNTRT",443)=""
 ^XMB(3.8,"B","RC AR DATA COLLECTOR",207)=""
 ^XMB(3.8,"B","RC RC REFERRALS",170)=""
+^XMB(3.8,"B","RC REPAY PLAN EXTERNAL",463)=""
 ^XMB(3.8,"B","RC REPAY PLANS",238)=""
 ^XMB(3.8,"B","RCCPC STATEMENTS",166)=""
 ^XMB(3.8,"B","RCDP PAYMENTS",208)=""

@@ -1,5 +1,5 @@
 IBCE837I ;EDE/JWS - OUTPUT FOR 837 FHIR TRANSMISSION ;5/23/18 10:48am
- ;;2.0;INTEGRATED BILLING;**623,641,650**;23-MAY-18;Build 21
+ ;;2.0;INTEGRATED BILLING;**623,641,650,665**;23-MAY-18;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 RES(RES) ;Set resource name correctly
@@ -57,6 +57,8 @@ GET(RESULT,ARG) ;RPC - EDICLAIMS; get list of claims to transmit
  S IBX="" F  S IBX=$O(@IBGBL@(IBX)) Q:'IBX  D  I $G(MCNT)>19999 Q
  . S IBTEST=$$GET1^DIQ(364,IBX_",",.07,"I")
  . S IBXIEN=+$G(^IBA(364,IBX,0)),IBNF=""
+ . ;JWS;IB*2.0*665v17;EBILL-2241;11/2/21;found at Miami; again at Miami 12/3/21 (similar at Tongus, Orlando, West Palm) - bad entry in 364 file
+ . I IBXIEN=0 D REMCLM1(IBX) Q
  . S IB0=$G(^DGCR(399,IBXIEN,0))
  . S IBTXST=$$TXMT^IBCEF4(IBXIEN,.IBNOTX,IBNF)
  . ;JWS;IB*2.0*623v25;if claim is invalid to send, remove from 'AC' index
@@ -113,6 +115,8 @@ UP ;increment CT
 SETCLM(IBIEN,IBQ,RSUB) ; set the FHIR 837 claim for submission
  N DA,D0,DR,DIE,DIC
  S DA=IBIEN I DA="" Q
+ ;JWS;IB*2.0*665v17;EBILL-2241;11/2/21;found at Miami; again at Miami 12/3/21 (similar at Tongus, Orlando, West Palm) - bad entry in 364 file
+ I $P($G(^IBA(364,DA,0)),"^")="" Q
  I '$$PROD^XUPROD(1) S IBQ="MCT"  ; if on a non-production server, send to test queue.
  ;JWS;IB*2.0*623v24;added field .10 to 364 file entry if a resubmission
  S DR=".09////1"_$S(IBQ="MCT":";.07////1",1:";.07////0")_$S($G(RSUB)=1:";.1////1",1:""),DIE="^IBA(364,"
@@ -144,6 +148,14 @@ REMCLM(IB364) ; clear the FHIR 837 claim for submission
  S DA=IB364 I DA="" Q
  S DR=".03////Z;.09////2",DIE="^IBA(364,"
  D ^DIE
+ Q
+ ;
+REMCLM1(IB364) ;;JWS;IB*2.0*665v17;EBILL-2241;11/2/21;found at Miami; again at Miami 12/3/21 (similar at Tongus, Orlando, West Palm) - bad entry in 364 file 
+ ;remove bad 364 entry
+ N DA,D0,DR,DIE,DIC,DIK
+ I +IB364=0 Q
+ S DA=IB364
+ S DIK="^IBA(364," D ^DIK
  Q
  ;
  ;JWS;IB*2.0*641v13

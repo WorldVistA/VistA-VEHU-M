@@ -1,5 +1,5 @@
 RCRPSTR ;EDE/YMG - REPAYMENT PLAN STATUS REPORT; 11/30/2020
- ;;4.5;Accounts Receivable;**381,390,396**;Mar 20, 1995;Build 3
+ ;;4.5;Accounts Receivable;**381,390,396,378**;Mar 20, 1995;Build 54
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -89,24 +89,25 @@ ASKSTAT() ; display "which statuses" prompt
  ;
  N RES,SEL,STOP,STSTR
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
- S STSTR="NCLD  SP"
- S DIR(0)="SAO^A:All;N:New;C:Current;L:Late;D:Delinquent;P:Paid in Full;S:Closed;U:Continue;Q:Quit"
+ S STSTR="NCLDFTSP"
+ S DIR(0)="SAO^A:All;N:New;C:Current;L:Late;D:Delinquent;P:Paid in Full;S:Closed;F:Defaulted;T:Terminated;U:Continue;Q:Quit"
  S DIR("A",1)=""
  S DIR("A",2)="Statuses available:"
  S DIR("A",3)="  (A)ll, (N)ew, (C)urrent, (L)ate, (D)elinquent, (P)aid in Full, Clo(S)ed,"
- S DIR("A",4)=""
- S DIR("A",5)="Statuses currently selected: None"
- S DIR("A",6)=""
+ S DIR("A",4)="         De(F)aulted, (T)erminated,"
+ S DIR("A",5)=""
+ S DIR("A",6)="Statuses currently selected: None"
+ S DIR("A",7)=""
  S DIR("A")="Select Status to add, Enter to continue or (Q)uit? "
  S (RES,SEL)="",STOP=0 F  D  Q:STOP
- .I SEL'="" S DIR("A",5)="Statuses currently selected: "_SEL
+ .I SEL'="" S DIR("A",6)="Statuses currently selected: "_SEL
  .D ^DIR
  .I Y="" S STOP=1 Q    ;User is ready to enter the days.
  .I $D(DUOUT)!$D(DIROUT) S RES=-1,STOP=1 Q   ;User issued exit command, leave utilitystandard time out or ^ escape
  .I $D(DIRUT)!$D(DTOUT) S STOP=1 Q   ;standard time out or ^ escape
  .I Y="A" D  Q     ;User selected all available statuses for report
- ..S RES="1,2,3,4,7,8"
- ..S SEL="New,Current,Late,Delinquent,Paid in Full,Closed"
+ ..S RES="1,2,3,4,7,8,5,6"
+ ..S SEL="New,Current,Late,Delinquent,Paid in Full,Closed,Defaulted,Terminated"
  ..S STOP=1
  .I Y="Q" S RES=-1,STOP=1 Q
  .I Y="U" S STOP=1 Q
@@ -114,7 +115,7 @@ ASKSTAT() ; display "which statuses" prompt
  ..S RES=RES_$S(RES'="":","_($F(STSTR,Y)-1),1:$F(STSTR,Y)-1)
  ..S SEL=SEL_$S(SEL'="":", "_Y(0),1:Y(0))
  ..Q
- .I $L(RES,",")=6 S STOP=1  ; all statuses selected - we're done
+ .I $L(RES,",")=8 S STOP=1  ; all statuses selected - we're done
  .Q
  Q $S(RES="":-1,1:RES)
  ;
@@ -159,7 +160,7 @@ GETDATA(RPIEN,CNT) ; fetch data and put it into ^TMP global
  ; RPIEN - file 340.5 ien
  ; CNT   - sequential # of ^TMP entry to create
  ;
- N AMNT,DAYS,DEBTOR,N0,SSN,TMPSTR,Z,ORPLNDT
+ N AMNT,DAYS,DEBTOR,N0,SSN,TMPSTR,Z,ORPLNDT,AMTPM,RMNOPY
  I RPIEN'>0!(CNT'>0) Q
  S N0=^RCRP(340.5,RPIEN,0)                   ; 0-node in file 340.5
  S DEBTOR=$P(N0,U,2)                         ; pointer to file 340
@@ -168,11 +169,13 @@ GETDATA(RPIEN,CNT) ; fetch data and put it into ^TMP global
  S SSN=$$SSN^RCFN01(DEBTOR)                  ; debtor SSN
  S AMNT=+$P(N0,U,11)-$$PMNTS^RCRPINQ(RPIEN)  ; amount owed
  S DAYS=$$FMDIFF^XLFDT(DT,$P(N0,U,8))        ; days in status
+ S AMTPM=$P(N0,U,6)                          ; amount per month payment
+ S RMNOPY=AMNT\AMTPM+$S(AMNT#AMTPM:1,1:0)    ; remaining # payments
  ; each entry is: debtor name ^ ssn ^ repayment plan ID ^ status (internal) ^ status date ^ days in status ^ last payment date ^ # of payments ^
  ;                remaining balance ^ at CS? ^ # of forbearances
  S TMPSTR=NAME_U_SSN_U_$P(N0,U)_U_ORPLNDT_U_$P(N0,U,7)_U_$P(N0,U,8)_U_DAYS
  S TMPSTR=TMPSTR_U_$O(^RCRP(340.5,RPIEN,3,"B",""),-1) ; last payment date
- S TMPSTR=TMPSTR_U_$P(N0,U,5)_U_AMNT_U_$P($G(^RCRP(340.5,RPIEN,1)),U,4)_U_$P(N0,U,9)
+ S TMPSTR=TMPSTR_U_RMNOPY_U_AMNT_U_$P($G(^RCRP(340.5,RPIEN,1)),U,4)_U_$P(N0,U,9)
  ; add a new entry to ^TMP global
  S ^TMP("RCRPSTR",$J,CNT)=TMPSTR
  S Z=$S(SORT="N":NAME,SORT="S":$$EXTERNAL^DILFD(340.5,.07,,$P(N0,U,7)),1:AMNT) Q:Z=""
@@ -242,7 +245,7 @@ FLTRSTR() ; returns "Filtered by" string to print
  I $P(FILTER,U)="N" S STR=STR_"Debtor name (from "_$P(FILTER,U,2)_" to "_$P(FILTER,U,3)_")"
  I $P(FILTER,U)="S" D
  .S STR=STR_"Status ("
- .F Z=1:1:$L($P(FILTER,U,2),",") S STR=STR_$S(Z>1:", ",1:"")_$$EXTERNAL^DILFD(340.5,.07,,Z)
+ .F Z=1:1:$L($P(FILTER,U,2),",") S STR=STR_$S(Z>1:", ",1:"")_$$EXTERNAL^DILFD(340.5,.07,,$P($P(FILTER,U,2),",",Z))  ; PRCA*4.5*378
  .S STR=STR_"), at least "_$P(FILTER,U,3)_" days in status"
  .Q 
  Q STR

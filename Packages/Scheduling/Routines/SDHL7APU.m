@@ -1,5 +1,5 @@
 SDHL7APU ;MS/TG,PH - TMP HL7 Routine;OCT 16, 2018
- ;;5.3;Scheduling;**704,714,773,780**;AUG 17, 2018;Build 17
+ ;;5.3;Scheduling;**704,714,773,780,798,810**;AUG 17, 2018;Build 3
  ;
  ;  Integration Agreements:
  Q
@@ -126,16 +126,15 @@ CHKCHILD ;
  I $P($G(SDAPTYP),"|",1)="R" D  ; if rtc check to see if the child is actually a parent
  .I $G(SDPARENT)="" S:$G(SCH(24,1,1))'="" SDPARENT=$G(SCH(24,1,1))
  .I $G(SDPARENT)="" S:$G(SCH(23,1,1))'="" SDPARENT=$G(SCH(23,1,1))
- .;I $G(SDCHILD)=$G(SDPARENT) 
  .S:$G(SDPARENT)>0 MTC=$P($G(^SDEC(409.85,+$G(SDPARENT),3)),"^",3),SDMRTC=$S(MTC>0:"1",1:0)
- .Q:$G(MTC)=0  ; Not a multi RTC
+ .Q:+$G(MTC)=0  ; Not a multi RTC
  .S:$G(SDCL)>0 RTCCLIN=$P(^SDEC(409.85,$G(SDPARENT),0),"^",9)
  .S DUZ=$G(MSGARY("DUZ"))
  .Q:$G(RTCCLIN)'=SDCL
  .N X12,X13 S (X12,X13)=0 F  S X12=$O(^SDEC(409.85,$G(SDPARENT),2,X12)) Q:X12'>0  S X13=X12
  .Q:$G(X13)=MTC!($G(X13)>MTC)
  .I $G(MTC)>0 F I=1:1:MTC Q:I>MTC  D
- ..S:INP(3)="" INP(3)=DT S INP(25)=SDPARENT,INP(6)=$P(^SDEC(409.85,SDPARENT,0),"^",9),RTN=0
+ ..S:$G(INP(3))="" INP(3)=DT S INP(25)=SDPARENT,INP(6)=$P(^SDEC(409.85,SDPARENT,0),"^",9),RTN=0
  ..S INP(5)="RTC",INP(1)="",INP(14)="YES",INP(15)=$P($G(^SDEC(409.85,SDPARENT,3)),"^",2),INP(16)=I
  ..D ARSET^SDHLAPT1(.RTN,.INP)
  ..I I=1 S:$P($G(RTN),"^",2)>0 FCHILD=$P(RTN,"^",2)
@@ -243,7 +242,7 @@ INP ; set up the INP array for calling ARSET^SDECAR2 to update the RTC orders
  S:$G(SDMRTC)'="" INP(14)=$S(SDMRTC=1:"YES",SDMRTC=0:"NO",1:"")
  ;I $G(SDPARENT)'="" S SDPARENT=$G(MSGARY("SDPARENT"))
  I +$G(SDPARENT)>0 S NODE3=$G(^SDEC(409.85,+SDPARENT,3)),INTV=$P(NODE3,"^",2)
- S INP(1)=$P(SDAPTYP,"|") ;If a new RTC order this will be null so it will be added to the file. If this is not null, an update happens
+ S INP(1)=$P(SDAPTYP,"|",2)    ;If a new RTC order this will be null so it will be added.    810-change 1st piece to use 2nd piece.  IEN for file (#409.85)
  S INP(2)=$G(DFN)
  D NOW^%DTC S NOW=$$HTFM^XLFDT($H),INP(3)=$$FMTE^XLFDT(NOW)
  ;NEEDS THE TEXT INSTITUTION NAME
@@ -413,6 +412,9 @@ APPTYPE(CL) ;Determines APPTYPE by STOP CODES associated with CLINIC (SD*5.3*780
  S SC0=$G(^SC(CL,0)),SCSPTR=$P(SC0,U,18),SCS=$$GET1^DIQ(40.7,$G(SCSPTR)_",",1,"I")
  I SCS>443,SCS<448 Q 1
  Q 0
+GETSTA(STA) ;Return Parent STA or self if No parent
+ N PSTA S:($E(STA,4,5)="A")!($E(STA,4,5)="B") STA=+STA S PSTA=+$P($$PRNT^XUAF4(STA),U,2)
+ Q $S(PSTA:PSTA,1:STA)
 ERRS ;
  ;;already has appt at^Patient already has an appt at that datetime
  ;;already has appt at^Patient already has an appt

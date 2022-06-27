@@ -1,5 +1,5 @@
 YTQRQAD2 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181**;Dec 30, 1994;Build 39
+ ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181,199**;Dec 30, 1994;Build 18
  ;
 SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  ; loop through DATA to create ANS array, then YSDATA array
@@ -31,24 +31,26 @@ SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  D SAVEALL^YTQAPI17(.YSDATA,.ANS)
  I YSDATA(1)'="[DATA]" D SETERROR^YTQRUTL(500,"Answers not saved") Q ""
  ; create a note if this was patient-entered
- N ASMT,CPLT,PTENT
+ N ASMT,CPLT,PTENT,LSTASMT,PNOT
  S ASMT=DATA("assignmentId")
+ S LSTASMT=$G(DATA("lastAssignment"))
  S CPLT=$S(DATA("complete")="true":"Y",1:"N")
  S PTENT=($G(^XTMP("YTQASMT-SET-"_ASMT,1,"entryMode"))="patient")
  I (CPLT="Y"),PTENT D NOTE4PT^YTQRQAD3(ADMIN)
  ; update the assignment with adminId, remove completed admins/assignments
- N NODE,REMAIN
- S NODE="YTQASMT-SET-"_ASMT,REMAIN=0
- S I=0 F  S I=$O(^XTMP(NODE,1,"instruments",I)) Q:'I  D
- . I ^XTMP(NODE,1,"instruments",I,"id")=DATA("instrumentId") D  QUIT
+ N NOD,REMAIN
+ S NOD="YTQASMT-SET-"_ASMT,REMAIN=0
+ S I=0 F  S I=$O(^XTMP(NOD,1,"instruments",I)) Q:'I  D
+ . I ^XTMP(NOD,1,"instruments",I,"id")=DATA("instrumentId") D  QUIT
  . . ; remove instrument if complete and staff-entered
- . . I 'PTENT,(CPLT="Y") K ^XTMP(NODE,1,"instruments",I) QUIT
- . . ;I CPLT="Y" K ^XTMP(NODE,1,"instruments",I) QUIT  ; patient-entered (may need to keep)
- . . S ^XTMP(NODE,1,"instruments",I,"adminId")=ADMIN
- . . S ^XTMP(NODE,1,"instruments",I,"complete")=DATA("complete")
+ . . I 'PTENT,(CPLT="Y") K ^XTMP(NOD,1,"instruments",I) QUIT
+ . . ;I CPLT="Y" K ^XTMP(NOD,1,"instruments",I) QUIT  ; patient-entered (may need to keep)
+ . . S ^XTMP(NOD,1,"instruments",I,"adminId")=ADMIN
+ . . S ^XTMP(NOD,1,"instruments",I,"complete")=DATA("complete")
  . . I CPLT'="Y" S REMAIN=1
- . I $G(^XTMP(NODE,1,"instruments",I,"complete"))'="true" S REMAIN=1
- I 'REMAIN D DELASMT1^YTQRQAD1(ASMT)
+ . I $G(^XTMP(NOD,1,"instruments",I,"complete"))'="true" S REMAIN=1
+ I LSTASMT="Yes",$D(^XTMP(NOD,2)) S PNOT=$$FILPNOT^YTQRQAD8(ASMT)
+ I 'REMAIN,'$D(^XTMP(NOD,2)) D DELASMT1^YTQRQAD1(ASMT)  ;Added check for consolidated progress note node 2. If exists, ASMT deleted in YTQRQAD8
  Q "/api/mha/instrument/admin/"_ADMIN ; was erroneously /ys/mha/admin/
  ;
 SETADM(DATA,NUM) ; return the id for new/updated admin

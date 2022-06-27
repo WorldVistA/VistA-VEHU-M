@@ -1,5 +1,5 @@
 IBCE277S ;ALB/JRA - Create MailMan message from 277STAT data array
- ;;2.0;INTEGRATED BILLING;**650**;17-Jul-18;Build 21
+ ;;2.0;INTEGRATED BILLING;**650,665**;17-Jul-18;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -7,9 +7,10 @@ POST(RESULT,ARG) ;Entry point to create MailMan message from ARG array
  ; Input: ARG
  N FLDNAM,FLDVAL,GLBO,MSGARY,BADCLM,BADLN,OCC
  S GLBO="^TMP(""IBCE277J"",$J,""OUT"")" K @GLBO
- ;JWS;IB*2.0*650;STOP 277STAT FHIR PROCESSING (I.E. KILL SWITCH)
- G QUIT
- ;
+ ;;WCJ;IB*2.0*665;KILL THE KILL SWITCH
+ ;;JWS;IB*2.0*650;STOP 277STAT FHIR PROCESSING (I.E. KILL SWITCH)
+ ;;G QUIT
+ ;S SUBJ="MCT"
  I $D(ARG)'>1 D  Q
  . S @GLBO@("Status")="0^ARG parameter is missing or has bad format"
  . D ENCODE^XLFJSONE(GLBO,"RESULT") S RESULT(1)="["_RESULT(1)_"]"
@@ -71,7 +72,7 @@ MAIL ;Assemble 277STAT MailMan message and create/send
  . I NODE["LN10" D PARSE(NODE,.LN) Q
  . S LN=$$SETMSG(MSGARY(NODE),LN)
  Q:BADCLM]""!(BADLN)
- S SUBJ="MCH 277STAT "_BILL
+ S SUBJ="MCH 277STAT "_$S(BILL["-":$P(BILL,"-",2),1:BILL)
  S LN=$$SETMSG("99^$",LN),LN=$$SETMSG("NNNN",LN)
  D SENDMSG^XMXAPI(DUZ,SUBJ,"MSG",.XMTO)
  Q
@@ -96,7 +97,7 @@ QUIT ; kill switch
  S @GLBO@("Status")="0^277STAT FHIR process turned off...i.e. Kill Switch"
  D ENCODE^XLFJSONE(GLBO,"RESULT") S RESULT(1)="["_RESULT(1)_"]"
  Q
- ; 
+ ;
 MAPFLD ;RPC_field_name (limit 45 char)^Array_node
  ;;HeaderData_1_ReturnMessageId^HDR
  ;;HeaderData_2_X12ProprietaryFlag^HDR
