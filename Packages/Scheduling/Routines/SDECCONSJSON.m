@@ -1,5 +1,5 @@
-SDECCONSJSON ;ALB/LAB/ANU/MGD - VISTA SCHEDULING RPCS ;APR 12, 2021@14:39
- ;;5.3;Scheduling;**784,785,788**;Aug 13, 1993;Build 6
+SDECCONSJSON ;ALB/ANU,MGD,LAB - VISTA SCHEDULING RPCS ;MAR 31, 2022@14:39
+ ;;5.3;Scheduling;**784,785,788,805,807,813**;Aug 13, 1993;Build 6
  ;
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
@@ -32,6 +32,9 @@ JSONCONSLIST(SDCONJSON,DFN) ;Return a list of ACTIVE or PENDING CONSULTS for pat
  ; (15)    # of Phone contacts
  ; (16)    Date of Last Letter
  ; (17)    Covid Priority 
+ ; Number of Email Contacts
+ ; Number of Text Contacts
+ ; Number of Secure messages contact
  ;
  N ACTIVE,PENDING,ERRPOP,ERRMSG,SDECI,SDTMP,SDCONSREC,ERR
  S SDECI=$G(SDECI,0),ERR=""
@@ -73,7 +76,7 @@ JSONSELCONS ;selection all open consults - those consults in PENDING and ACTIVE 
  Q
  ;
 BLDCONSULTREC ;Build a consult record for every consult
- N SDCLIEN,SDCLNAME,SDCONLET,SDSTOP,STOP,SIEN,SDTOSVCI,SDCONSARR,SDARRERR
+ N SDCLIEN,SDCLNAME,SDCONLET,SDSTOP,STOP,SIEN,SDTOSVCI,SDCONSARR,SDARRERR,CANCHANGEPID,PID
  D GETS^DIQ(123,SDCONSID,".01;.05;1;2;3;5;10;13;14;17","IE","SDCONSARR","SDARRERR")
  S SDECI=SDECI+1
  S SDCONSREC("Consult",SDECI,"ConsultIEN")=SDCONSID
@@ -91,12 +94,21 @@ BLDCONSULTREC ;Build a consult record for every consult
  S SDCONSREC("Consult",SDECI,"ProviderName")=$G(SDCONSARR(123,SDCONSID_",",10,"E"))
  S SDCONSREC("Consult",SDECI,"ServiceRenderedAs")=$G(SDCONSARR(123,SDCONSID_",",14,"E"))
  S SDCONSREC("Consult",SDECI,"ProhibitedClinicFlag")=$S($$GET1^DIQ(44,+SDCLIEN_",",2500,"I")="Y":1,1:0)
- S SDCONSREC("Consult",SDECI,"ClinicIndicatedDate")=$G(SDCONSARR(123,SDCONSID_",",17,"I"))
+ I $D(^SDEC(409.87,"B",SDCONSID)) D
+ .S PID=$$GETPID(SDCONSID)
+ .S SDCONSREC("Consult",SDECI,"ClinicIndicatedDate")=PID
+ I '$D(^SDEC(409.87,"B",SDCONSID)) D
+ .S SDCONSREC("Consult",SDECI,"ClinicIndicatedDate")=$G(SDCONSARR(123,SDCONSID_",",17,"I"))
  S SDCONLET=$$CALLCON^SDECAR1A(DFN,SDCONSID) ; # OF CALLS MADE^DATE LAST LETTER SENT
  K SDECALL,SDECLET ; Returned from call to $$CALLCON^SDECAR1A
  S SDCONSREC("Consult",SDECI,"NumberOfPhoneContact")=$P(SDCONLET,U,1)
  S SDCONSREC("Consult",SDECI,"DateOfLastLetter")=$P(SDCONLET,U,2)
+ S SDCONSREC("Consult",SDECI,"NumberOfEmailContact")=$P(SDCONLET,U,3) ;813
+ S SDCONSREC("Consult",SDECI,"NumberOfTextContact")=$P(SDCONLET,U,4) ;813
+ S SDCONSREC("Consult",SDECI,"NumberOfSecureMessage")=$P(SDCONLET,U,5) ;813
  S SDCONSREC("Consult",SDECI,"CovidPriority")=$$PRIORITY^SDEC51(SDCONSID) ; Get Covid priority
+ S CANCHANGEPID=$$CONSCANCELCHECK(SDCONSID,DFN)
+ S SDCONSREC("Consult",SDECI,"CanEditPid")=CANCHANGEPID
  ;build stop code list
  S SDSTOP="",STOP=""
  S SDTOSVCI=$G(SDCONSARR(123,SDCONSID_",",1,"I"))
@@ -107,7 +119,21 @@ BLDCONSULTREC ;Build a consult record for every consult
  ..E  S SDSTOP=SDSTOP_"|"_STOP
  S SDCONSREC("Consult",SDECI,"AssociateStopCode")=SDSTOP
  Q
- ; 
+ ;
+GETPID(SDCONSID) ;
+ N CHIEN,CHSIEN,OLDESTPID
+ S CHIEN=$O(^SDEC(409.87,"B",SDCONSID,0))
+ S CHSIEN=$O(^SDEC(409.87,CHIEN,1,9999999),-1)
+ S OLDESTPID=$$GET1^DIQ(409.871,CHSIEN_","_CHIEN_",",1,"I")
+ Q OLDESTPID
+CONSCANCELCHECK(SDCONSID,DFN) ;looking for most recent appt linked to this consult and checking if cancelled by patient or clinic
+ N FOUND,APPTIEN,CANCHANGE
+ S APPTIEN="",FOUND=0,CANCHANGE=0
+ F  S APPTIEN=$O(^SDEC(409.84,"CPAT",DFN,APPTIEN),-1) Q:'APPTIEN!(FOUND=1)  D
+ .I $P($$GET1^DIQ(409.84,APPTIEN,.22,"I"),";")=SDCONSID S FOUND=1 D
+ ..I $$GET1^DIQ(409.84,APPTIEN,.17,"I")="PC" S CANCHANGE=1
+ ..I $$GET1^DIQ(409.84,APPTIEN,.1,"I")=1 S CANCHANGE=1
+ Q CANCHANGE
 BLDJSON ;
  D ENCODE^SDESJSON(.SDCONSREC,.SDCONJSON,.ERR)
  K SDCONSREC
@@ -135,6 +161,9 @@ JSONCONSLIST1(SDCONJSON,SDCONSID) ;Return a single ACTIVE or PENDING CONSULT for
  ; (15)    # of Phone contacts
  ; (16)    Date of Last Letter
  ; (17)    Covid Priority 
+ ; Number of Email Contacts
+ ; Number of Text Contacts
+ ; Number of Secure messages contact
  ;
  N ACTIVE,PENDING,ERRPOP,ERRMSG,SDECI,SDTMP,SDCONSREC,DFN,ERR
  S SDECI=$G(SDECI,0),ERR=""

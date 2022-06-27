@@ -1,9 +1,9 @@
 YTQRUTL ;SLC/KCM - RESTful API Utilities ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,158**;Dec 30, 1994;Build 38
+ ;;5.01;MENTAL HEALTH;**130,158,187**;Dec 30, 1994;Build 74
  ;
  ; External Reference    ICR#
  ; ------------------   -----
- ; VPRJSON               6411
+ ; XLFJSON               6682
  ; XLFSTR               10104
  ; XLFUTL                2622
  ; XWBLIB                2238
@@ -71,7 +71,7 @@ PARSHTTP(HTTPREQ,YTQRREQT,JSONBODY) ; parse out header and body of HTTP HTTPREQ
  Q 
 PARSJSON(JSONBODY,YTQRTREE) ; parse JSON request into M tree structure
  N ERRORS
- D DECODE^VPRJSON("JSONBODY","YTQRTREE","ERRORS")
+ D DECODE^XLFJSON("JSONBODY","YTQRTREE","ERRORS")
  I $D(ERRORS)>0 D SETERROR(400,$G(ERRORS(1)))
  Q
 MATCH(TAG,CALL,ARGS) ; evaluate paths listed in TAG until match found (else 404)
@@ -133,7 +133,7 @@ RESPONSE(YTQRRSLT,LOCATION) ; build HTTPRSP based results or error
 JSONRSP(ROOT,HTTPRSP) ; encode response tree or error info as JSON
  N ERRORS
  K HTTPRSP
- D ENCODE^VPRJSON(ROOT,"HTTPRSP","ERRORS")
+ D ENCODE^XLFJSON(ROOT,"HTTPRSP","ERRORS")
  I $D(ERRORS)>0 D SETERROR(400,"Unable to encode HTTPRSP: "_$G(ERRORS(1)))
  Q
 ADDHDR(DEST,SIZE,LOCATION) ; add header values to response

@@ -1,5 +1,5 @@
-SDECAR4 ;ALB/TAW - VISTA SCHEDULING RPCS ;June 4, 2021@13:40
- ;;5.3;Scheduling;**784,785,788**;Aug 13, 1993;Build 6
+SDECAR4 ;ALB/TAW,LAB - VISTA SCHEDULING RPCS ;Mar 22, 2022@11:02
+ ;;5.3;Scheduling;**784,785,788,805,813**;Aug 13, 1993;Build 6
  ;;Per VHA Directive 2004-038, this routine should not be modified
  ; Reference to ^DPT(DFN,0) in ICR #10035
  ;
@@ -41,14 +41,14 @@ ARGETIEN(RET,ARIEN) ;Appt Req GET for speific appt IEN
 ARGETPAT(RET,DFN) ;Appt Req GET.
  ; SDEC PATIENT APP REQ GET
  ;   ARGETPAT^SDEC1
- ; 
+ ;
  ; RPC Description:
- ;   Get appointment request details.  This is similar to SDEC ARGET but it 
+ ;   Get appointment request details.  This is similar to SDEC ARGET but it
  ;   only returns Appt request specific data.
- ; 
+ ;
  ; INPUT
  ;   DFN : [R] Patient ID pointer to PATIENT File (#2)
- ; 
+ ;
  ; OUTPUT
  ;   See RPC file
  N FILT,APPT,COUNT
@@ -109,7 +109,7 @@ BUILDREC ; Build an output record
  N ARINST,ARINSTNM,ARTYPE,VAOSGUID,ARSTOP,ARSTOPN,ARCLIEN,ARCLNAME,APPTYPE,ARUSER,ARUSRNM
  N AREDT,ARPRIO,ARENPRI,ARREQBY,ARPROV,ARPROVNM,ARSDOA,ARSDOA,ARDAM,ARCLERK,ARCLERKN,ARASD,ARSDOA
  N ARCLERK,ARCLERKN,ARDAM,ARSVCCON,ARDAPTDT,ARCOMM,ARMAR,ARMAI,ARMAN,ARPC,ARDISPD,ARDISPU,ARDISPUN
- N APPTPTRS,CHILDREN,ARMRTC,SDPARENT,SDMTRC
+ N APPTPTRS,CHILDREN,ARMRTC,SDPARENT,SDMTRC,CANCHANGEPID
  S ARORIGDT=ARDATA(FNUM,ARIEN_",",1,"I")
  S ARSTAT=ARDATA(FNUM,ARIEN_",",23,"I")
  S DFN=ARDATA(FNUM,ARIEN_",",.01,"I")
@@ -157,6 +157,7 @@ BUILDREC ; Build an output record
  S CHILDREN=$$CHILDREN^SDECAR1A(ARIEN)
  S ARMRTC=$$MRTC^SDECAR(ARIEN)
  S SDPARENT=ARDATA(FNUM,ARIEN_",",43.8,"I")
+ S CANCHANGEPID=ARDATA(409.85,ARIEN_",",49,"I")
  ;Build string of RTC dates
  S (SDI,SDMTRC)=""
  F  S SDI=$O(ARDATA(409.851,SDI)) Q:SDI=""  S SDMTRC=$S(SDMTRC'="":SDMTRC_"|",1:"")_ARDATA(409.851,SDI,.01,"E")
@@ -231,6 +232,7 @@ BUILDREC ; Build an output record
  S APPT("ApptReq",COUNT,"CountOfRTCs")=ARMRTC  ;Count of nodes in 43.3 sub file
  S APPT("ApptReq",COUNT,"ReqAppointmentTypeI")=APPTYPE
  S APPT("ApptReq",COUNT,"PatientStatusE")=SDPS
+ S APPT("ApptReq",COUNT,"CanEditPid")=CANCHANGEPID
  S SUBCNT=0
  F I=1:1:$L(APPTPTRS,"|") D
  .S VAR=$P(APPTPTRS,"|",I)
@@ -245,6 +247,9 @@ BUILDREC ; Build an output record
  ;
  S APPT("ApptReq",COUNT,"ParentRequestI")=SDPARENT
  S APPT("ApptReq",COUNT,"NumberOfCalls")=$P(CALLLETTER,"^",1)
+ S APPT("ApptReq",COUNT,"NumberOfEmailContact")=$P(CALLLETTER,U,3)
+ S APPT("ApptReq",COUNT,"NumberOfTextContact")=$P(CALLLETTER,U,4)
+ S APPT("ApptReq",COUNT,"NumberOfSecureMessage")=$P(CALLLETTER,U,5)
  S APPT("ApptReq",COUNT,"DateOfLastLetterSent")=$P(CALLLETTER,"^",2)
  Q
  ;

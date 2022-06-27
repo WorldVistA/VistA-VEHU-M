@@ -1,14 +1,12 @@
 YTQRQAD3 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181**;Dec 30, 1994;Build 39
+ ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181,187,199**;Dec 30, 1994;Build 18
  ;
- ; External Reference    ICR#
- ; ------------------   -----
- ; ^VA(200)             10060
- ; DIQ                   2056
- ; TIUCNSLT              5546
- ; TIUPUTU               3351
- ; TIUSRVA               5541
- ; XLFSTR               10104
+ ; Reference to ^VA(200) in ICR #10060
+ ; Reference to DIQ in ICR #2056
+ ; Reference to TIUCNSLT in ICR #5546
+ ; Reference to TIUPUTU in ICR #3351
+ ; Reference to TIUSRVA in ICR #5541
+ ; Reference to XLFSTR in ICR #10104
  ;
 REPORT(ARGS,RESULTS) ; build report object identified by ARGS("adminId")
  N ADMIN S ADMIN=+$G(ARGS("adminId"))
@@ -18,8 +16,11 @@ REPORT(ARGS,RESULTS) ; build report object identified by ARGS("adminId")
  Q
 REPORT1(ADMIN,REPORT,TYPE) ; fill in the report text for ADMIN
  N I,REPORT,COMMS,II,CRLF,BCNT,BARR
+ N RM
+ S RM=79
+ I $G(TYPE)'="NOTE" S RM=512
  S CRLF=$C(10)
- D BLDRPT^YTQRRPT(.REPORT,ADMIN)
+ D BLDRPT^YTQRRPT(.REPORT,ADMIN,RM)
  S BCNT=0 K BARR
  S I=0 F  S I=$O(REPORT(I)) Q:+I=0  D
  . I $TR(REPORT(I)," ")'="" D  Q 
@@ -30,7 +31,7 @@ REPORT1(ADMIN,REPORT,TYPE) ; fill in the report text for ADMIN
  . S I="" F  S I=$O(BARR(I)) Q:I=""  D
  .. K REPORT(I)
  S RESULTS("text")=$G(REPORT(1))_CRLF
- D WRAPTLT^YTQRRPT(.REPORT,79)  ;Added existing call so web Note display matches CPRS - WYSIWYG
+ D WRAPTLT^YTQRRPT(.REPORT,RM)  ;Added existing call so web Note display matches CPRS - WYSIWYG
  S I=1 F  S I=$O(REPORT(I)) Q:'I  S RESULTS("text","\",I-1)=REPORT(I)_CRLF
  D GETCOM(.COMMS,ADMIN)
  I $G(TYPE)'="NOTE",$D(COMMS) D
@@ -71,8 +72,9 @@ GETNOTE(ARGS,RESULTS) ; build note object based on ARGS("adminId")
  Q
 SETNOTE(ARGS,DATA) ; save note in DATA("text") using ARGS("adminId")
  ;Expects DATA to be in the format returned from BLDRPT^YTQRRPT - The RPC most likely does not do that.
- N YS,YSDATA,ADMIN,CONSULT,WRP
+ N YS,YSDATA,ADMIN,CONSULT,WRP,ASGN,LSTASGN,PNOT,AGPROG
  S ADMIN=$G(DATA("adminId"))
+ S LSTASGN=$G(DATA("lastAssignment"))
  I ADMIN="" D SETERROR^YTQRUTL(404,"Admin not sent: "_ADMIN) QUIT ""
  I '$D(^YTT(601.84,ADMIN,0)) D SETERROR^YTQRUTL(404,"Admin not found: "_ADMIN) QUIT ""
  I $$ALWNOTE(ADMIN)'="true" QUIT "/api/mha/instrument/note/0"
@@ -82,12 +84,18 @@ SETNOTE(ARGS,DATA) ; save note in DATA("text") using ARGS("adminId")
  D WRAP(.YS,79)  ;reformat lines to 79 max chars
  S YS("AD")=ADMIN
  ;D WRAPTLT^YTQRRPT(.YS,79)  ;Reformat lines in case user edited progress note
- I +$G(DATA("cosigner")) D  I $G(YTQRERRS) QUIT ""
+ I +$G(DATA("cosigner")) D  I $G(YTQRERRS) QUIT "/api/mha/instrument/note/0"
  . N YSCSGN S YSCSGN=DATA("cosigner")
  . S YS("COSIGNER")=YSCSGN
  . I $$REQCSGN(ADMIN,YSCSGN)="true" D  ; cosigner can't require cosigner
  . . S YSCSGN=$$GET1^DIQ(200,YSCSGN_",",.01)
- . . D SETERROR^YTQRUTL(500,YSCSGN_" not allowed to cosign.")
+ . . D SETERROR^YTQRUTL(403,YSCSGN_" not allowed to cosign.")
+ S ASGN=$G(DATA("assignmentId"))
+ S AGPROG=$D(^XTMP("YTQASMT-SET-"_ASGN,2))
+ ;assignmentID sent in, lastAssignment=Yes/No, $D of aggregate Progress Note
+ I +ASGN'=0,(LSTASGN'="Yes") D SAVPNOT^YTQRQAD8(ASGN,ADMIN,CONSULT,$G(DATA("cosigner")),.YS) Q "/api/mha/instrument/note/1"  ;Dummy 1 instead of Note IEN
+ I +ASGN'=0,(LSTASGN="Yes"),AGPROG S PNOT=$$FILPNOT^YTQRQAD8(ASGN,ADMIN,CONSULT,.DATA,.YS) Q "/api/mha/instrument/note/"_PNOT
+ ;Either assignmentId not sent (older version of GUI) or single instrument=no aggregate progress note, file individual instrument progress note
  I CONSULT S YS("CON")=CONSULT D CCREATE^YTQCONS(.YSDATA,.YS) I 1
  E  D PCREATE^YTQTIU(.YSDATA,.YS)
  I YSDATA(1)'="[DATA]" D SETERROR^YTQRUTL(500,"Note not saved") Q ""

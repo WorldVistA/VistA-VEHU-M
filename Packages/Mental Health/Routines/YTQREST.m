@@ -1,14 +1,15 @@
 YTQREST ;SLC/KCM - RESTful API front controller ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**158,178,182,181**;Dec 30, 1994;Build 39
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199**;Dec 30, 1994;Build 18
  ;
  ; .HTTPREQ: HTTP-formatted request and JSON body (if present)
  ; .HTTPRSP: HTTP-formatted response and JSON body (if present)
  ;
 QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;GET /api/mha/getconn/ GETCONN^YTQREST
+ ;;GET /api/mha/dtime/ GETDTIM^YTQREST
  ;;GET /api/mha/patient/:dfn/identifiers PID^YTQRQAD
  ;;GET /api/mha/persons/:match PERSONS^YTQRQAD
- ;;GET /api/mha/users/:match USERS^YTQRQAD
+ ;;GET /api/mha/users/:match/:adminId USERS^YTQRQAD
  ;;GET /api/mha/instruments/active LSTALL^YTQRQAD
  ;;GET /api/mha/instruments/cprs LSTCPRS^YTQRQAD
  ;;GET /api/mha/instrument/:instrumentName GETSPEC^YTQRQAD
@@ -26,13 +27,14 @@ QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;GET /api/mha/instrument/report/:adminId?1.N REPORT^YTQRQAD3
  ;;GET /api/mha/instrument/note/:adminId?1.N GETNOTE^YTQRQAD3
  ;;POST /api/mha/instrument/note SETNOTE^YTQRQAD3
+ ;;DELETE /api/mha/instrument/mhadmin/:adminId?1.N DELMHAD^YTQRQAD1
  ;;GET /api/mha/permission/cosign/:adminId/:userId ALWCSGN^YTQRQAD3
  ;;GET /api/mha/instrument/list/:dfn?1.N GETLIST^YTQRQAD4
  ;;GET /api/mha/location/list/:locmatch GETLOCS^YTQRQAD4
  ;;GET /api/mha/category/list GETCATA^YTQRQAD4
- ;;GET /api/mha/assignment/list/:dfn?1.N ASMTID5^YTQRQAD4
- ;;GET /api/mha/consult/list/:dfn?1.N GETCONS^YTQRQAD4
- ;;GET /api/mha/assignment/staff/:assignmentId?1.N ASMTSTAF^YTQRQAD4
+ ;;GET /api/mha/assignment/list/:dfn?1.N ASMTLST^YTQRQAD4
+ ;;GET /api/mha/consult/list/:dfn?1.N GETCONS^YTQRQAD7
+ ;;GET /api/mha/assignment/staff/:assignmentId?1.N ASMTSTAF^YTQRQAD7
  ;;GET /api/mha/assignmentparam/pref GETASMTP^YTQRQAD7
  ;;POST /api/mha/assignmentparam/pref SETASMTP^YTQRQAD7
  ;;GET /api/mha/instrument/lists/fav/userfav GETIFAV^YTQRQAD7
@@ -45,6 +47,8 @@ QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;POST /api/mha/instrumentgraph/prefs SETGRAPH^YTQRQAD7
  ;;GET /api/mha/specialgraph/rptpref GETSPCLG^YTQRQAD7
  ;;POST /api/mha/specialgraph/rptpref SETSPCLG^YTQRQAD7
+ ;;GET /api/mha/reports/rptpref GETRPT^YTQRQAD7
+ ;;POST /api/mha/reports/rptpref SETRPT^YTQRQAD7
  ;;GET /api/mha/instrument/description/:instrumentName GINSTD^YTQRQAD
  ;;GET /api/mha/assignment/cat/:assignmentId?1.N GCATINFO^YTQRCAT
  ;;POST /api/mha/assignment/cat/:assignmentId?1.N PCATINFO^YTQRCAT
@@ -83,9 +87,17 @@ ASI(HTTPRSP,HTTPREQ) ; addiction severity index resources
 GETCONN(ARGS,RESULTS) ;Respond to the connection check
  N DATAOUT,ERRARY,JSONOUT
  K ^TMP("YTQ-JSON",$J)
- S DATAOUT("connection","status")="OK"_U_181
+ S DATAOUT("connection","status")="OK"
  S DATAOUT("connection","datetime")=$$HTE^XLFDT($H,2)
- D ENCODE^VPRJSON("DATAOUT","JSONOUT","ERRARY")
+ D ENCODE^XLFJSON("DATAOUT","JSONOUT","ERRARY")
+ S ^TMP("YTQ-JSON",$J,1,0)=JSONOUT(1)
+ S RESULTS=$NA(^TMP("YTQ-JSON",$J))
+ Q
+GETDTIM(ARGS,RESULTS) ;Return user DTIME timeout
+ N DATAOUT,ERRARY,JSONOUT
+ K ^TMP("YTQ-JSON",$J)
+ S DATAOUT("timeout","dtime")=$G(DTIME)
+ D ENCODE^XLFJSON("DATAOUT","JSONOUT","ERRARY")
  S ^TMP("YTQ-JSON",$J,1,0)=JSONOUT(1)
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q

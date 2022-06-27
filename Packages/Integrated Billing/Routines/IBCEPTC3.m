@@ -1,10 +1,11 @@
 IBCEPTC3 ;ALB/ESG - EDI PREVIOUSLY TRANSMITTED CLAIMS ACTIONS ;12/19/05
- ;;2.0;INTEGRATED BILLING;**320,547,608,641,650**;21-MAR-94;Build 21
+ ;;2.0;INTEGRATED BILLING;**320,547,608,641,650,665**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; IB*2.0*547 Variable IBLOC is pre-defined (in IBCEPTC)
  ; IB*2.0*608 (vd) provided the ability to identify those claims that are resubmitted
  ;                 and those that are skipped. (US2486)
+ ; IB*2.0*665 added SELALL and removed the protocol that calls SELBATCH rendering it toothless
  Q
  ;
 SELECT ; Select claims to resubmit
@@ -19,6 +20,7 @@ SELECT ; Select claims to resubmit
  S VALMBCK="R"
  Q
  ;
+ ;WCJ;IB665;no changes to the tag but no longer call it - removed the protocol from the worklist since each claim is in its only batch
 SELBATCH ; Select a batch to resubmit 
  ; Assumes IBSORT is defined
  N DIC,DIR,X,Y,Z,IBQ,IBZ,IBI,IBDX,IBASK,IBOK,IBY,DTOUT,DUOUT
@@ -54,17 +56,74 @@ SELBATCH ; Select a batch to resubmit
 SELBQ S VALMBCK="R"
  Q
  ;
-MARK(IBIFN,IBZ,IBQ,IBI,IBASK,VALMHDR) ; Mark claim as selected for resubmit
+ ;WCJ;IB*2.0*665; new PROTOCOL and new tag to SELECT/DE SELECT ALL
+SELALL ;
+ N IBIFN,IBZ,IBI,IBQ,DIR,VALMY,X,Y,IBCNT,IBSTOP,IBSUCCESS
+ ;
+ ; check if any were already selected.  if so, allow to deselect all.
+ S IBSTOP=0
+ I $G(^TMP("IB_PREV_CLAIM_SELECT",$J)) D  Q:IBSTOP
+ . S IBCNT=^TMP("IB_PREV_CLAIM_SELECT",$J)
+ . S DIR(0)="YA",DIR("B")="Yes"
+ . S DIR("A",1)=IBCNT_" claims were previously selected."
+ . S DIR("A")="Deselect those "_IBCNT_"? "
+ . I IBCNT=1 S DIR("A",1)=IBCNT_" claim was previously selected.",DIR("A")="Deselect the "_IBCNT_"? "
+ . W ! D ^DIR K DIR
+ . I Y'=1 Q  ; stop since they don't want to deselect all
+ . S VALMBCK="R",IBSTOP=1
+ . S IBZ=0 F IBCNT=0:1 S IBZ=$O(^TMP("IB_PREV_CLAIM_SELECT",$J,IBZ)) Q:'IBZ  D
+ .. S IBQ=$G(^TMP("IB_PREV_CLAIM_SELECT",$J,IBZ))
+ .. S IBI=$G(^TMP("IB_PREV_CLAIM_SELECT",$J,IBZ,0))
+ .. S IBIFN=$S(IBLOC:IBI,1:+$G(^IBA(364,IBI,0)))
+ .. I 'IBIFN S IBCNT=IBCNT-1 Q
+ .. D MARK(IBIFN,IBZ,IBQ,IBI,0,.VALMHDR,2)
+ .. Q
+ . S DIR(0)="EA"
+ . S DIR("A",1)=IBCNT_" claims were de-selected."
+ . I IBCNT=1 S DIR("A",1)=IBCNT_" claim was de-selected."
+ . S DIR("A")="Press return to continue "
+ . W ! D ^DIR K DIR
+ ;
+ ; select all
+ S IBZ=0 F IBCNT=0:1 S IBZ=$O(^TMP("IB_PREV_CLAIM_LIST_DX",$J,IBZ)) Q:'IBZ  D
+ . S IBQ=$G(^TMP("IB_PREV_CLAIM_LIST_DX",$J,IBZ)),IBI=+$P(IBQ,U,2),IBQ=+IBQ
+ . S IBIFN=$S(IBLOC:IBI,1:+$G(^IBA(364,IBI,0)))
+ . I 'IBIFN S IBCNT=IBCNT-1 Q
+ . Q:'IBIFN
+ . D MARK(IBIFN,IBZ,IBQ,IBI,1,.VALMHDR,1,.IBSUCCESS)
+ . I '$G(IBSUCCESS) S IBCNT=IBCNT-1 Q
+ ;
+ ; display how may were just selected
+ S DIR(0)="EA"
+ S DIR("A",1)=IBCNT_" claims were selected."
+ I IBCNT=1 S DIR("A",1)=IBCNT_" claim was selected."
+ S DIR("A")="Press return to continue "
+ W ! D ^DIR K DIR
+ S VALMBCK="R"
+ Q
+ ;
+ ;WCJ;IB665;Added parameters IBSELALL and IBSUCCESS to be used by SELALL tag added above.
+MARK(IBIFN,IBZ,IBQ,IBI,IBASK,VALMHDR,IBSELALL,IBSUCCESS) ; Mark claim as selected for resubmit
+ ; IBSELALL 1=MARK 2=UNMARK - This parameter is set when calling from SELALL tag 
+ ; IBSUCCESS return 1 if successfully marked/unmarked an individual record.  The calling tag needed to keep track of how many it marked or unmarked.
  ; Returns VALMHDR killed if any selections/de-selections made
+ S IBSUCCESS=0
  N DIR,X,Y
- I $D(^TMP("IB_PREV_CLAIM_SELECT",$J,IBIFN)) D  Q
+ I $G(IBSELALL)'=1,$D(^TMP("IB_PREV_CLAIM_SELECT",$J,IBIFN)) D  Q
  . S Y=1
  . I IBASK D
- .. S DIR(0)="YA",DIR("B")="No",DIR("A",1)="Claim "_$P($G(^DGCR(399,IBIFN,0)),U)_" for entry # "_IBZ_" has already been selected",DIR("A")="Do you want to de-select it?: " W ! D ^DIR K DIR
- . I Y=1 K ^TMP("IB_PREV_CLAIM_SELECT",$J,IBIFN) S $E(^TMP("IB_PREV_CLAIM_LIST",$J,IBQ,0),6)=" ",^TMP("IB_PREV_CLAIM_SELECT",$J)=^TMP("IB_PREV_CLAIM_SELECT",$J)-1 K VALMHDR
+ .. S DIR(0)="YA",DIR("B")="No"
+ .. S DIR("A",1)="Claim "_$P($G(^DGCR(399,IBIFN,0)),U)_" for entry # "_IBZ_" has already been selected",DIR("A")="Do you want to de-select it?: "
+ .. W ! D ^DIR K DIR
+ . I Y=1 D
+ .. K ^TMP("IB_PREV_CLAIM_SELECT",$J,IBIFN)
+ .. S $E(^TMP("IB_PREV_CLAIM_LIST",$J,IBQ,0),6)=" ",^TMP("IB_PREV_CLAIM_SELECT",$J)=^TMP("IB_PREV_CLAIM_SELECT",$J)-1
+ .. K VALMHDR S IBSUCCESS=1
  ;
+ Q:$D(^TMP("IB_PREV_CLAIM_SELECT",$J,IBIFN))
  S ^TMP("IB_PREV_CLAIM_SELECT",$J,IBIFN)=IBQ,^TMP("IB_PREV_CLAIM_SELECT",$J,IBIFN,0)=IBI,^TMP("IB_PREV_CLAIM_SELECT",$J)=$G(^TMP("IB_PREV_CLAIM_SELECT",$J))+1
  S $E(^TMP("IB_PREV_CLAIM_LIST",$J,IBQ,0),6)="*" K VALMHDR
+ S IBSUCCESS=1
  Q
  ;
 VIEW ; View claims selected
@@ -75,7 +134,7 @@ VIEW ; View claims selected
  W @IOF
  S (IBQUIT,IBCT)=0
  W !,+^TMP("IB_PREV_CLAIM_SELECT",$J)," claims selected:"
- S Z="" F  S Z=$O(^TMP("IB_PREV_CLAIM_SELECT",$J,Z)) Q:'Z  S Z0=+$G(^(Z)) D
+ S Z="" F  S Z=$O(^TMP("IB_PREV_CLAIM_SELECT",$J,Z)) Q:'Z  S Z0=+$G(^(Z)) D  Q:IBQUIT
  . Q:'$D(^TMP("IB_PREV_CLAIM_LIST",$J,Z0,0))
  . S IBCT=IBCT+1
  . I '(IBCT#15) S IBQUIT=0 D  Q:IBQUIT

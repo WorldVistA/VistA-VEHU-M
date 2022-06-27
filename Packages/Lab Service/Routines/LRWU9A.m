@@ -1,5 +1,5 @@
 LRWU9A ;HPS/DSK - TOOL TO DETECT, FIX, AND REPORT BAD DATA NAMES ;Apr 11, 2019@16:00
- ;;5.2;LAB SERVICE;**519,543,549**;Sep 27, 1994;Build 1
+ ;;5.2;LAB SERVICE;**519,543,549,554**;Sep 27, 1994;Build 13
  ;
  ;Reference to ^DD(63.04 supported by DBIA #7053
  ;Reference to ^ORD(101.43 supported by DBIA #2843
@@ -115,7 +115,7 @@ MAIL ;
  ;
 LRORG ;
  ; LR*5.2*549 Check for missing Organism zero node or null organism pointer
- N LRDFN,LRDTM,LRSEQ,LRSQ
+ N LRDFN,LRDTM,LRSEQ,LRSQ,LRDATA
  K ^TMP("LR ORG CHECK")
  S LRSPACE="                                     "
  S LRDFN=0,LRSEQ=7
@@ -149,3 +149,17 @@ MAILORG ;
  D SENDMSG^XMXAPI(DUZ,LRMSUB,LRMTEXT,.LRMY,.LRMIN,"","")
  Q
  ;
+LRHOWDY ;
+ ;LR*5.2*554 Purge 69.87 records older than 9 years old
+ N LRPDT,LRSTDT,LRDA,DA,DIK,LRUID
+ ;SET PURGE DATE TO 9 YEARS AGO
+ S LRPDT=DT-90000,LRUID=""
+ F  S LRUID=$O(^LRHY(69.87,"B",LRUID)) Q:LRUID=""  D
+ . ;Loop thru just in case there could ever have been multiple records for a UID
+ . S LRDA=0 F  S LRDA=$O(^LRHY(69.87,"B",LRUID,LRDA)) Q:'LRDA  D
+ . . S LRSTDT=$P($G(^LRHY(69.87,LRDA,2)),".") ;INITIAL SCAN TIME
+ . . I 'LRSTDT S LRSTDT=$P($G(^LRHY(69.87,LRDA,8)),".") ;COLLECTION TIME
+ . . I 'LRSTDT S LRSTDT=$P($G(^LRHY(69.87,LRDA,4)),".") ;TIME LABEL PRINTED
+ . . I LRSTDT'<LRPDT Q
+ . . S DIK="^LRHY(69.87,",DA=LRDA D ^DIK
+ Q

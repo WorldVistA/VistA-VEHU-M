@@ -1,5 +1,5 @@
-IBJPI ;DAOU/BHS - IBJP eIV SITE PARAMETERS SCREEN ;01-APR-2015
- ;;2.0;INTEGRATED BILLING;**184,271,316,416,438,479,506,528,549,601,621,659,668,687**;21-MAR-94;Build 88
+IBJPI ;DAOU/BHS - IBJP eIV SITE PARAMETERS SCREEN ; 01-APR-2015
+ ;;2.0;INTEGRATED BILLING;**184,271,316,416,438,479,506,528,549,601,621,659,668,687,702**;21-MAR-94;Build 53
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;/vd-IB*2*668 - Removed the SSVI logic introduced with IB*2*528 in its entirety within VistA.
@@ -72,6 +72,9 @@ BLDGENE(SLINE,ELINE) ; Build the General Editable Parameters Section
  ;/vd-IB*2*687 - Added the following 3 lines.
  S STRTLN=ELINE
  S ELINE=$$SET("             IIU Enabled: ",$$GET1^DIQ(350.9,"1,",53.02),ELINE,1)
+ ;IB*702/TAZ - Added display for EIV NO GRP NUM A/U
+ S ELINE=STRTLN
+ S ELINE=$$SET(" eIV No Group # Auto-Update: ",$$GET1^DIQ(350.9,"1,",51.34),ELINE,41)
  ;
  Q
  ;

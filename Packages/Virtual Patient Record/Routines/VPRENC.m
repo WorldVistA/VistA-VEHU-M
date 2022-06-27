@@ -1,19 +1,25 @@
 VPRENC ;SLC/MKB -- VistA Encounter updates ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**19,20,26,25,27**;Sep 01, 2011;Build 10
+ ;;1.0;VIRTUAL PATIENT RECORD;**19,20,26,25,27,28**;Sep 01, 2011;Build 6
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Collect all visit changes in (NOW = time last modified):
  ;^XTMP("VPRPX",0) = DT+2 ^ DT ^ VPR ENCOUNTERS
- ;^XTMP("VPRPX", visit~dfn) =  NOW ^ id ^ 1 if new during session
- ;^XTMP("VPRPX", visit~dfn, "SUB", ien) = 1 if new during session
+ ;^XTMP("VPRPX", visit~dfn) =  NOW ^ ID ^ NEW ^ VTYP
+ ;^XTMP("VPRPX", visit~dfn, "SUB", ien) = NEW
  ;^XTMP("VPRPX", visit~dfn, "SUB", ien, 0) = BEFORE 0-node, if deleted
  ;^XTMP("VPRPX", "DOC", ien) = NOW ^ id [^ visit ^ @/1, if amended]
  ;^XTMP("VPRPX", "DOC", ien, 0) = BEFORE 0-node, if deleted
  ;^XTMP("VPRPX", "AVST"/"ADOC", NOW, ien) = ""
  ;
+ ; where:
+ ; NOW  = time last modified
+ ; ID   = record id as 'ien;file#'
+ ; NEW  = 1 if new during session
+ ; VTYP = 1 if visit type in V CPT was deleted (else null)
+ ;
 PX ; -- PXK VISIT DATA EVENT protocol listener
  Q:'$P($G(^VPR(1,0)),U,2)  ;monitoring disabled
- N VST,PX0A,PX0B,DFN,VSTX,VPRPX,X,NOW,NEW,ID,SUB,DA
+ N VST,PX0A,PX0B,DFN,VSTX,VPRPX,X,NOW,NEW,ID,SUB,DA,ACT,VTYP
  S VST=+$O(^TMP("PXKCO",$J,0)) Q:VST<1
  S PX0A=$G(^TMP("PXKCO",$J,VST,"VST",VST,0,"AFTER")),PX0B=$G(^("BEFORE"))
  S DFN=$S($L(PX0A):+$P(PX0A,U,5),1:+$P(PX0B,U,5)) Q:DFN<1
@@ -24,32 +30,36 @@ PX ; -- PXK VISIT DATA EVENT protocol listener
  L +@VPRPX@(VSTX):5 ;I'$T
  ;
  ; Visit file
- S X=$G(@VPRPX@(VSTX)),NOW=+X,ID=$P(X,U,2),NEW=$P(X,U,3)
- K:NOW @VPRPX@("AVST",NOW,VSTX) ;reset clock
+ S X=$G(@VPRPX@(VSTX)),NOW=+X,ID=$P(X,U,2),NEW=$P(X,U,3),VTYP=$P(X,U,4)
+ K:NOW @VPRPX@("AVST",NOW,VSTX)      ;reset clock
  I ID="" S ID=VST_";9000010"
  S NOW=$$NOW^XLFDT,@VPRPX@("AVST",NOW,VSTX)=""
  S:PX0B="" NEW=1
- S @VPRPX@(VSTX)=NOW_U_ID_U_NEW
+ S @VPRPX@(VSTX)=NOW_U_ID_U_NEW_U_VTYP
  ;
  ; V-files
- F SUB="IMM","XAM","POV","HF","CPT" D  ;"PED","SK"
+ F SUB="IMM","ICR","XAM","POV","HF","CPT" D  ;"PED","SK"
  . S DA=0 F  S DA=$O(^TMP("PXKCO",$J,VST,SUB,DA)) Q:DA<1  D
- .. Q:'$$DIFF(.NEW)                 ;not changed
- .. I SUB="HF" Q:$$NAME(SUB,DA)=""  ;not Hx
- .. I SUB="CPT" Q:$$DUP(DA)         ;duplicate code
- .. S @VPRPX@(VSTX,SUB,DA)=$G(NEW)
- .. I $G(^TMP("PXKCO",$J,VST,SUB,DA,0,"AFTER"))="" S X=$G(^("BEFORE")) S:$L(X) @VPRPX@(VSTX,SUB,DA,0)=X
+ .. S ACT=$$DIFF(SUB,DA) Q:'ACT      ;not changed
+ .. I SUB="HF" Q:$$NAME(SUB,DA)=""   ;not Hx
+ .. I SUB="CPT" D  Q:$$DUP(DA)       ;duplicate code
+ ... Q:$P($G(^TMP("PXKCO",$J,VST,SUB,DA,0,"BEFORE")),U)'?1"992"2N
+ ... S:ACT<1 $P(@VPRPX@(VSTX),U,4)=1 ;visit type deleted
+ .. S NEW=$G(@VPRPX@(VSTX,SUB,DA)) S:ACT=2 NEW=1
+ .. S @VPRPX@(VSTX,SUB,DA)=NEW       ;new
+ .. S X=$G(^TMP("PXKCO",$J,VST,SUB,DA,0,"AFTER")) S:'X X=$G(^("BEFORE")) S:$L(X) @VPRPX@(VSTX,SUB,DA,0)=X
 PXQ ; done
  L -@VPRPX@(VSTX)
- I '$G(@VPRPX@("ZTSK")) D NEWTSK ;QUE(7)
+ I '$G(@VPRPX@("ZTSK")) D NEWTSK     ;QUE(7)
  Q
  ;
-DIFF(ACT) ; -- returns 1 or 0 if changed, ACT=1 if new
+DIFF(NM,IEN) ; -- returns 0/1 if un/changed, 2 if new, -1 if deleted
  N NODE,AFTER,BEFORE,DIFF
- S DIFF=0,ACT=$G(@VPRPX@(VSTX,SUB,DA))
- F NODE=0,12,13,811 D  Q:DIFF
- . S AFTER=$G(^TMP("PXKCO",$J,VST,SUB,DA,NODE,"AFTER")),BEFORE=$G(^("BEFORE"))
- . I BEFORE'=AFTER S DIFF=1 S:(NODE=0)&(BEFORE="") ACT=1 ;new
+ S DIFF=0 F NODE=0,12,13,811 D  Q:DIFF
+ . S AFTER=$G(^TMP("PXKCO",$J,VST,NM,IEN,NODE,"AFTER")),BEFORE=$G(^("BEFORE"))
+ . Q:BEFORE=AFTER  S DIFF=1
+ . S:(NODE=0)&(BEFORE="") DIFF=2     ;new
+ . S:(NODE=0)&(AFTER="") DIFF=-1     ;deleted
  Q DIFF
  ;
 EDP(IEN) ; -- EDP Log file #230 AVPR index
@@ -124,8 +134,10 @@ TASK ; -- post an encounter update
  .. I V0=""!($P(V0,U,5)'=DFN) D  Q      ;deleted or replaced:
  ... I $P(X0,U,3) D KILL Q              ; not in HS, just kill XTMP
  ... D DELALL                           ; else send delete to HS
+ .. ; post Encounter to HS
  .. S VID=$P(X0,U,2) S:VID="" VID=VST_";9000010"
- .. D POST^VPRHS(DFN,"Encounter",VID)
+ .. K VPRSQ D POST^VPRHS(DFN,"Encounter",VID,,,.VPRSQ)
+ .. I $G(VPRSQ),$P(X0,U,4) D SAVST(VPRSQ,"U",1) ;VType deleted
 TV .. ; post related v-file records next
  .. S VFL="" F  S VFL=$O(@VPRPX@(VSTX,VFL)) Q:VFL=""  D
  ... S VDA=0 F  S VDA=$O(@VPRPX@(VSTX,VFL,VDA)) Q:VDA<1  D
@@ -175,11 +187,11 @@ SAVE(NUM,DA) ; -- save data for V-file record [from TV,DELALL] in
  S ^XTMP("VPR-"_NUM,DA)=DFN_U_$P(VNM,U)_U_VID_"^D^"_VST
  S X=$G(@VPRPX@(VSTX,VFL,DA,0)) S:$L(X) ^XTMP("VPR-"_NUM,DA,0)=X
  Q
-SAVST(NUM) ; -- save visit [from DELALL] in ^XTMP
- Q:'$G(NUM)  Q:'$G(VST)
+SAVST(NUM,ACT,TYP) ; -- save visit in ^XTMP [from TASK,DELALL]
+ Q:'$G(NUM)  Q:'$G(VST)  S ACT=$G(ACT,"D")
  S:'$G(VPRD14) VPRD14=$$FMADD^XLFDT(DT,14)
  S ^XTMP("VPR-"_NUM,0)=VPRD14_U_DT_"^Deleted visit for AVPR"
- S ^XTMP("VPR-"_NUM,VST)=DFN_"^Encounter^"_VST_";9000010^D^"_VST
+ S ^XTMP("VPR-"_NUM,VST)=DFN_"^Encounter^"_VST_";9000010^"_ACT_U_U_$G(TYP)
  Q
  ;
 DOC ; -- process Document VDA [from TASK]
@@ -229,6 +241,7 @@ NAME(X,DA) ; -- return container name for V-files
  . I $$C19(NM) S Y="Vaccination^9000010.23" Q
  . ;S Y="HealthConcern^9000010.23"
  I X="IMM" S Y="Vaccination^9000010.11"
+ I X="ICR" S Y="Vaccination^9000010.707"
  I X="XAM" S Y="PhysicalExam^9000010.13"
  I X="POV" S Y="Diagnosis^9000010.07"
  I X="CPT" S Y="Procedure^9000010.18"
@@ -273,7 +286,7 @@ NODE(NAME,DA,NUM) ; -- return global node
  Q Y
  ;
 DUP(DA) ; -- duplicate CPT record?
- N VCPT,NODE,CPT,PKG,Y,IEN,IMM,SYS
+ N VCPT,NODE,CPT,PKG,Y,IEN,GBL,IMM,SYS
  M VCPT=^TMP("PXKCO",$J,VST,SUB,DA)
  S NODE=$S($G(VCPT(0,"AFTER")):"AFTER",1:"BEFORE")
  ; skip eval/mgt codes
@@ -281,11 +294,12 @@ DUP(DA) ; -- duplicate CPT record?
  ; skip Surgery (duplicates)
  S PKG=+$P($G(VCPT(812,NODE)),U,2) I PKG,$P($G(^DIC(9.4,PKG,0)),U,2)="SR" Q 1
  ; skip V IMMUNIZATIONS codes
- S (Y,IEN)=0 F  S IEN=$O(^TMP("PXKCO",$J,VST,"IMM",IEN)) Q:IEN<1  D  Q:Y
+ S GBL="^AUTTIMM",(Y,IEN)=0
+ F  S IEN=$O(^TMP("PXKCO",$J,VST,"IMM",IEN)) Q:IEN<1  D  Q:Y
  . S NODE=$S($G(^TMP("PXKCO",$J,VST,"IMM",IEN,0,"AFTER")):"AFTER",1:"BEFORE")
  . S IMM=+$G(^TMP("PXKCO",$J,VST,"IMM",IEN,0,NODE))
- . S SYS=+$O(^AUTTIMM(IMM,3,"B","CPT",0))
- . S:SYS Y=+$O(^AUTTIMM(IMM,3,SYS,1,"B",CPT,0))
+ . S SYS=+$O(@GBL@(IMM,3,"B","CPT",0))
+ . S:SYS Y=+$O(@GBL@(IMM,3,SYS,1,"B",CPT,0))
  I Y Q 1
  ; else ok/not dup
  Q 0

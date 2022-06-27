@@ -1,5 +1,5 @@
 BPSRPC02 ;AITC/PD - ECME TAS RPC - Extract Txn Data;7/30/2018
- ;;1.0;E CLAIMS MGMT ENGINE;**27**;JUN 2004;Build 15
+ ;;1.0;E CLAIMS MGMT ENGINE;**27,31**;JUN 2004;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -206,7 +206,9 @@ EXTRACT(RESULT,ARGS) ; RPC: BPS TAS CLAIM DATA EXTRACT
  I BPSSTATUS="E PAYABLE" S RESP1="Payable"
  I BPSSTATUS="E REJECTED" S RESP1="Rejected"
  I BPSSTATUS["REVERSAL" S RESP1="Reversal"
- I BPSSTATUS="E UNSTRANDED" S RESP1="Unstranded"
+ I BPSSTATUS["UNSTRANDED" D
+ . S RESP1="Unstranded"
+ . S BPSTMP("Touched")=1
  I RESP1="" S RESP1="Other"
  S BPSTMP("TransactionType")=RESP1
  ;

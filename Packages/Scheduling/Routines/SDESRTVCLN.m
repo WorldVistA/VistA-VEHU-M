@@ -1,5 +1,5 @@
-SDESRTVCLN ;ALB/ANU - Get Clinic Info based on Clinic IEN ;SEP 20, 2021@14:39
- ;;5.3;Scheduling;**799**;Aug 13, 1993;Build 7
+SDESRTVCLN ;ALB/ANU,MGD - Get Clinic Info based on Clinic IEN ;FEB 09, 2022@10:50
+ ;;5.3;Scheduling;**799,805,807,813**;Aug 13, 1993;Build 6
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -7,8 +7,9 @@ SDESRTVCLN ;ALB/ANU - Get Clinic Info based on Clinic IEN ;SEP 20, 2021@14:39
  ;Reference to $$GETS^DIQ,$$GETS1^DIQ in ICR #2056
  Q
  ;
-JSONCLNINFO(SDCLNJSON,SDCLNIEN) ;Get Clinic info
+JSONCLNINFO(SDCLNJSON,SDCLNIEN,SDEAS) ;Get Clinic info
  ;INPUT - SDCLNIEN (Clinic IEN)
+ ;      - SDEAS [optional] - Enterprise Appointment Scheduling (EAS) Tracking Number associated to an appointment.
  ;RETURN PARMETER:
  ; Clinic information from HOSPITAL LOCAITON (#44) File. Data is delimited by carat (^).
  ; Field List:
@@ -71,7 +72,10 @@ VALIDATE ; validate incoming parameters
  I SDCLNIEN="" D ERRLOG^SDESJSON(.SDCLNSREC,18) S ERRPOP=1 Q
  I SDCLNIEN'="" D
  .I '$D(^SC(SDCLNIEN,0)) D ERRLOG^SDESJSON(.SDCLNSREC,19) S ERRPOP=1
- ;
+ ;validate EAS
+ S SDEAS=$G(SDEAS,"")
+ I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
+ I +SDEAS=-1 D ERRLOG^SDESJSON(.SDCLNSREC,142) S ERRPOP=1
  Q
  ;
 BLDJSON ;
@@ -81,11 +85,11 @@ BLDJSON ;
  ;
 BLDCLNREC ;Build a list of Providers
  ;
- N SDFIELDS,SDDATA,SDMSG,SDX,SDC
+ N SDFIELDS,SDDATA,SDMSG,SDX,SDC,TIMEZONE
  S SDFIELDS=".01;1;3.5;8;9;10;60;61;62;2502;2507;2802;99;2000;2000.5;2508;2509;2510;2511;25;2801;30;2001;2002;1918.5;2503;2500;1916;1918;20;21;1912;1913;1917"
  D GETS^DIQ(44,SDCLNIEN_",",SDFIELDS,"IE","SDDATA","SDMSG")
  S SDECI=SDECI+1
- S SDCLNSREC("Cinic","Name")=$G(SDDATA(44,SDCLNIEN_",",.01,"E")) ;Clinic Name
+ S SDCLNSREC("Clinic","Name")=$G(SDDATA(44,SDCLNIEN_",",.01,"E")) ;Clinic Name
  S SDCLNSREC("Clinic","Abbreviation")=$G(SDDATA(44,SDCLNIEN_",",1,"E")) ;Clinic Abbreviation
  S SDCLNSREC("Clinic","PatientFriendlyName")=$G(SDDATA(44,SDCLNIEN_",",60,"E")) ;Patient Friendly Name
  S SDCLNSREC("Clinic","MeetsAtThisFacility")=$G(SDDATA(44,SDCLNIEN_",",2504,"E")) ;Clinic meets at this facility?
@@ -122,6 +126,8 @@ BLDCLNREC ;Build a list of Providers
  S SDCLNSREC("Clinic","LengthOfAppt")=$G(SDDATA(44,SDCLNIEN_",",1912,"E")) ;LENGTH OF APP'T
  S SDCLNSREC("Clinic","VariableApptLength")=$G(SDDATA(44,SDCLNIEN_",",1913,"E")) ;VARIABLE APP'NTMENT LENGTH
  S SDCLNSREC("Clinic","IncrementsPerHr")=$G(SDDATA(44,SDCLNIEN_",",1917,"E")) ;DISPLAY INCREMENTS PER HOUR
+ S TIMEZONE=$$TIMEZONEDATA^SDESUTIL($G(SDCLNIEN)),TIMEZONE=$P($G(TIMEZONE),U)
+ S SDCLNSREC("Clinic","Timezone")=TIMEZONE
  ; Special Instructions Multiple
  S SDX="",SDC=0
  S SDFIELDS="1910*"

@@ -1,5 +1,5 @@
-RCRPU1 ;EDE/SAB-REPAYMENT PLAN UTILITIES;12/11/2020  8:40 AM
- ;;4.5;Accounts Receivable;**377,381**;Mar 20, 1995;Build 28
+RCRPU1 ;EDE/SAB - REPAYMENT PLAN UTILITIES;12/11/2020  8:40 AM
+ ;;4.5;Accounts Receivable;**377,381,378**;Mar 20, 1995;Build 54
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -25,14 +25,42 @@ GETRSN() ;  Get the reason the plan was closed.
  I $D(DTOUT)!$D(DUOUT)!($G(Y)="") Q -1
  Q Y
  ;
-UPDSTAT(RCRPIEN,RCSTATUS) ; Update the status of the plan
+UPDSTAT(RCRPIEN,RCNWSTAT) ; Update the status of the plan
  ;INPUT - RCRPIEN:  IEN of the Repayment Plan
  ;        RCSTATUS: The Status to update to.
  ;
- N DA,DR,DIE,X,Y
+ N DA,DR,DIE,X,Y,RCSTTXT,RCCRDT,RCCURST,RCFIELD
+ ;
+ S RCCURST=$$GET1^DIQ(340.5,RCRPIEN_",",.07,"I")  ;retrieve the current status
+ ; 
  S DA=RCRPIEN,DIE="^RCRP(340.5,"
- S DR=".07///"_RCSTATUS_";.08///"_$$DT^XLFDT
+ S RCCRDT=$$DT^XLFDT
+ S DR=".07///"_RCNWSTAT_";.08///"_RCCRDT
  D ^DIE
+ ;
+ ;Update the Metrics File if the new status is not NEW
+ ;
+ I RCNWSTAT>1 D
+ . ;Initialize the TMP array.
+ . D BLDSTARY^RCRPNP
+ . ;
+ . ; Update the Metrics
+ . S RCFIELD=$G(^TMP($J,"RPPFLDNO",RCCURST,RCNWSTAT))
+ . D:+RCFIELD UPDMET^RCSTATU(RCFIELD,1)
+ . K ^TMP($J,"RPPFLDNO")
+ ;
+ ;Update the Audit Log with a Status comment
+ S RCSTTXT=$$GET1^DIQ(340.5,RCRPIEN_",",.07,"E")
+ D UPDAUDIT^RCRPU2(RCRPIEN,RCCRDT,"S","",RCSTTXT)
+ ;
+ ;Clear the Term Length Exceeded Flag if the Plan is Closed, Terminated, or Paid In Full
+ I RCNWSTAT>5 D UPDRVW^RCRPU2(RCRPIEN,0)
+ ;
+ ;Clear the Default and Delinquent Flags if the Plan is Closed or Paid in Full
+ I RCNWSTAT>6 D
+ . D UPDPRDL^RCRPNP(RCRPIEN,0)
+ . D UPDPRDF^RCRPNP(RCRPIEN,0)
+ ;
  Q
  ;
 RMBILL(RCIEN) ; Remove the Repayment Plan info from the bills in the plan
@@ -116,15 +144,18 @@ UPDPAID(RCIEN,RCCMP) ; Update the Paid flag in the payments.
  ;       RCCMP - # payments completed.
  ;
  N DR,DIE,DA,X,Y
- N RCI,RCPD,RCPDFLG
+ N RCI,RCPD,RCPDFLG,RCFBFLG,RCCNT
  ;
- F RCI=1:1:RCCMP D
- . S RCPD=$G(^RCRP(340.5,RCIEN,2,RCI,0)),RCPDFLG=$P(RCPD,U,2)
- . I 'RCPDFLG D
+ S RCCNT=0
+ F RCI=0:1 Q:RCCNT>RCCMP  D
+ . S RCPD=$G(^RCRP(340.5,RCIEN,2,RCI,0)),RCPDFLG=$P(RCPD,U,2),RCFBFLG=$P(RCPD,U,3)
+ . I RCPDFLG S RCCNT=RCCNT+1 Q
+ . I 'RCPDFLG,'RCFBFLG D
  . . S DR="1////1"
  . . S DA(1)=RCIEN,DA=RCI
  . . S DIE="^RCRP(340.5,"_DA(1)_",2,"
  . . D ^DIE
+ . . S RCCNT=RCCNT+1   ;Increment the # of months counter update
  Q
  ;
 UPDBAL(RCBILLDA,RCTRANDA,RCSPFLG) ; Update the Plan Amount Owed (#.11) in the AR
@@ -146,8 +177,8 @@ UPDBAL(RCBILLDA,RCTRANDA,RCSPFLG) ; Update the Plan Amount Owed (#.11) in the AR
  S RCTRTYPE=$$GET1^DIQ(433,RCTRANDA_",",12,"I")
  Q:RCTRTYPE=""
  ;
- ; remove bill from RPP if transaction type is "charge suspended"
- I RCTRTYPE=47 D 
+ ; remove bill from RPP if action caused by any write off transaction type (Termination/Suspension/et al)
+ I RCSPFLG>0 D 
  . D REMBILL^RCRPU(RCIEN,RCBILLDA)  ; REMOVE BILL FROM PLAN
  . D RMVPLN(RCBILLDA,0)               ; REMOVE PLAN FROM BILL,but don't file close transaction.
  ;
@@ -191,11 +222,11 @@ UPDBAL(RCBILLDA,RCTRANDA,RCSPFLG) ; Update the Plan Amount Owed (#.11) in the AR
  S RCPYMNTS=$$PMNTS^RCRPINQ(RCIEN)
  I (RCRMBAL-RCPYMNTS)'>0 D
  . D PAID(RCIEN,RCSPFLG)
- . I RCSPFLG D TRAN^RCRPU(RCBILLDA,0,68)      ; file transaction if the bill which closed the plan was suspended.
+ . I RCSPFLG=1 D TRAN^RCRPU(RCBILLDA,0,68)      ; file transaction if the bill which closed the plan was suspended.
  ;
  Q
  ;
-UPDPAO(RCIEN,RCAMT) ; Update the terms of the plan.
+UPDPAO(RCIEN,RCAMT) ; Update the PLAN AMOUNT OWE3D field
  ;
  N DR,DIE,DA,X,Y
  S DR=".11////"_RCAMT
@@ -205,7 +236,7 @@ UPDPAO(RCIEN,RCAMT) ; Update the terms of the plan.
  ;
 PAID(RCIEN,RCSPFLG) ; Repayment Plan is paid in full, update the status to PAID IN FULL and attempt to remove plan information from bills in plan.
  ;
- N RCI,RCBILLDA
+ N RCI,RCBILLDA,RCSTAT
  ;
  ;Update the plan status to Paid in Full. If not suspended
  I '+RCSPFLG D
@@ -213,10 +244,20 @@ PAID(RCIEN,RCSPFLG) ; Repayment Plan is paid in full, update the status to PAID 
  . I '$D(ZTQUEUED) W !!,"This repayment plan has been closed and is PAID IN FULL.",!!
  ;
  ;Update the plan status to Closed because remaining bill(s) suspended AND exit.
- I RCSPFLG D  Q
+ I RCSPFLG=1 D  Q
  . D UPDSTAT(RCIEN,7)
- . D UPDAUDIT^RCRPU(RCIEN,$$DT^XLFDT,"C","A")   ; AUDIT LOG
- . ;I '$D(ZTQUEUED) W !!,"This repayment plan has been CLOSED.",!!
+ . D UPDAUDIT^RCRPU2(RCIEN,$$DT^XLFDT,"C","A")   ; AUDIT LOG
+ . I '$D(ZTQUEUED) W !!,"This repayment plan has been CLOSED.",!!
+ ;
+ ;Update the status caused by other types of Bill Termination
+ I RCSPFLG=2 D
+ . S RCPYFLG=$D(^RCRP(340.5,RCIEN,3))  ; check to see if any payments associated with the plan
+ . S RCSTAT=7                          ; set the status to closed
+ . S:RCPYFLG>9 RCSTAT=8                ; reset status to Paid in Full if any payments associated with the terminated transaction
+ . D UPDSTAT(RCIEN,RCSTAT)
+ . D:RCPYFLG>9 UPDAUDIT^RCRPU2(RCIEN,$$DT^XLFDT,"C","A")   ; Update Audit Log with a close entry if plan is closed and not paid in full.
+ . I (RCPYFLG>9),'$D(ZTQUEUED) W !!,"This repayment plan has been CLOSED.",!! Q
+ . I '$D(ZTQUEUED) W !!,"This repayment plan has been closed and is PAID IN FULL.",!!
  ;
  ;Remove the Plan info from the bills is the Bill is at a 0 balance, or is Suspended, Terminated or written off.
  S RCI=0
@@ -243,20 +284,51 @@ RMVPLN(RCBILLDA,RCNOCLS) ;Remove the Plan info from a bill and file a Close Plan
  D:RCNOCLS TRAN^RCRPU(RCBILLDA,0,68)
  Q
  ;
+AUTOADD(DEF) ; display "allow bills to be auto-added?" prompt PRCA*4.5*378
+ ;
+ ; DEF - default value (1 = YES, 0 = NO, "" = no default)
+ ;
+ ; returns 1 for Yes, 0 for No, -1 for no selection
+ ;
+ N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
+ S DIR(0)="Y" I $G(DEF)'="" S DIR("B")=$S(DEF:"YES",1:"NO")
+ S DIR("A")="Allow bills to be auto-added to the repayment plan? (Y/N)"
+ D ^DIR I $D(DIRUT)!$D(DTOUT)!$D(DUOUT)!$D(DIROUT) Q -1
+ Q Y
+ ;
+UPDAUTO(RCIEN,RCAUTO) ; Update "auto-add bills" flag. PRCA*4.5*378
+ ;
+ ; RCIEN - file 340.5 ien
+ ; RCAUTO - new value for field 340.5/.12 (internal)
+ ;
+ N DR,DIE,DA,X,Y
+ S DR=".12////"_RCAUTO,DIE="^RCRP(340.5,",DA=RCIEN
+ D ^DIE
+ ;
+ ;Update the Audit Log
+ D UPDAUDIT^RCRPU2(RCIEN,$$DT^XLFDT,"S","","AUTO ADD")
+ Q
+ ;
 STATUS(RCRPIEN) ; Returns the current status of the plan.
  ;
- N RCD0,RCFRDT,RCSTAT,RCLSTDT,RCSTATDT,RCCURDT,RCDIFF
+ N RCD0,RCFRDT,RCSTAT,RCLSTDT,RCSTATDT,RCCURDT,RCDIFF,RCOLDST
  ;
  S RCD0=$G(^RCRP(340.5,RCRPIEN,0))
  S RCFRDT=$P(RCD0,U,4)
- S RCSTAT=$P(RCD0,U,7)
+ S (RCSTAT,RCOLDST)=$P(RCD0,U,7)
  S RCSTATDT=$P(RCD0,U,8)
  S RCCURDT=$$DT^XLFDT                  ;Get current date
  I RCSTAT=5,RCCURDT>RCSTATDT Q 6       ;plan is defaulted, set new status to terminate and exit.
  I RCSTAT>5 Q RCSTAT                   ;Plan is closed
  I RCSTAT=1,RCCURDT<RCFRDT Q 1         ;Plan hasn't started yet.  Status stays New
  S RCLSTDT=$$GETNXTPY^RCRPU(RCRPIEN)   ;get the date of the next payment due
- I RCLSTDT="" Q 8                      ;No payments left, plan is Paid in Full.
+ I RCLSTDT="" D  Q 8                   ;No payments left, plan is Paid in Full. Update Delinquent/Default flags if necessary.
+ . D UPDPRDL^RCRPNP(RCRPIEN,0)
+ . D UPDPRDF^RCRPNP(RCRPIEN,0)
+ ;
  S RCDIFF=$$FMDIFF^XLFDT(RCCURDT,RCLSTDT,1)
  S RCSTAT=$S(RCDIFF>90:5,RCDIFF>30:4,RCDIFF>0:3,1:2)
+ I RCOLDST=4,RCSTAT'=4 D UPDPRDL^RCRPNP(RCRPIEN,0)
+ I RCOLDST=5,RCSTAT<5 D UPDPRDF^RCRPNP(RCRPIEN,0)
  Q RCSTAT
+ ;

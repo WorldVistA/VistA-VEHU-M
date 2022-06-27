@@ -1,47 +1,93 @@
-SDESPATRPC ;;ALB/TAW - PATIENT RPCS ;July 27, 2021@13:07
- ;;5.3;Scheduling;**792**;Aug 13, 1993;Build 9
+SDESPATRPC ;ALB/TAW,MGD,RJT - PATIENT RPCS ;APR 14, 2022
+ ;;5.3;Scheduling;**792,804,805,807,809,814**;Aug 13, 1993;Build 11
  ;
- ;  IRC #
+ ; Reference to ^IBA(355.33 in ICR #6891
  ;
  Q
-INSURVERIFYREQ(RETURN,DFN) ;
+ ;
+INSURINDICATORS(RETURN,DFNS) ;
+ Q:$D(DFNS)=0
+ N INDICATORS,SDINDEX,HASDFNERRORS,PTDFN,SDINDEX,SDCNT
+ S SDINDEX="",SDCNT=0
+ F  S SDINDEX=$O(DFNS(SDINDEX)) Q:(SDINDEX="")!(SDCNT>100)  D
+ .S SDCNT=SDCNT+1
+ .S PTDFN=DFNS(SDINDEX)
+ .S INDICATORS("NeedInsuranceVerification",SDINDEX,"DFN")=PTDFN
+ .I SDCNT>100 D
+ ..S INDICATORS("NeedInsuranceVerification",SDINDEX,"Errors")="Max number of records allowed is 100"
+ .Q:SDCNT>100
+ .N DFNERRORS
+ .S HASDFNERRORS=$$VALIDATEDFN(.DFNERRORS,PTDFN)
+ .I HASDFNERRORS D
+ ..S INDICATORS("NeedInsuranceVerification",SDINDEX,"Errors")="DFN Error"
+ ..S INDICATORS("NeedInsuranceVerification",SDINDEX,"YesNo")=""
+ .I 'HASDFNERRORS D
+ ..N FLG
+ ..D NEEDVERIFY(.FLG,PTDFN,180,90)
+ ..S INDICATORS("NeedInsuranceVerification",SDINDEX,"YesNo")=FLG
+ D BUILDJSON(.RETURN,.INDICATORS)
+ Q
+ ;
+VALIDATEDFN(ERRORS,PDFN) ;
+ N ERRORFLAG
+ I PDFN="" S ERRORFLAG=1 D ERRLOG^SDESJSON(.ERRORS,1)
+ I PDFN'="",'$D(^DPT(PDFN,0)) S ERRORFLAG=1 D ERRLOG^SDESJSON(.ERRORS,2)
+ Q $D(ERRORFLAG)
+ ;
+BUILDJSON(JSONRETURN,INPUT) ;
+ N JSONERROR
+ S JSONERROR=""
+ D ENCODE^XLFJSON("INPUT","JSONRETURN","JSONERROR")
+ Q
+ ;
+INSURVERIFYREQ(RETURN,DFN,SDEAS) ;
  N POP,SDPAT,FLG,SDPAT
  S (FLG,POP)=0
  I $G(DFN)="" S POP=1 D ERRLOG^SDESJSON(.SDPAT,1)
  I $G(DFN)'="",'$D(^DPT(DFN,0)) S POP=1 D ERRLOG^SDESJSON(.SDPAT,2)
+ S SDEAS=$G(SDEAS,"")
+ I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
+ I +SDEAS=-1 S POP=1 D ERRLOG^SDESJSON(.SDPAT,142)
  I 'POP D NEEDVERIFY(.FLG,DFN,180,90) S SDPAT("NeedInsuranceVerification","YesNo")=FLG
  D BUILDER
  Q
 NEEDVERIFY(NEEDVERIFY,DFN,LASTVERFWINDOW,NOCOVWINDOW) ;
  ; LASTVERFWINDOW - How many days in the past to look for a Last Verified Date
- ; NOCOVWINDOW    - How many days in the past to loof for a No Coverage Date
+ ; NOCOVWINDOW    - How many days in the past to look for a No Coverage Date
  ;
  ; Return
  ;  1 = Verification needed (Default)
  ;  0 = Has active insurance or verification started
- N IENS,SDMSG,PATDATA,BILLPATDATA,NOCOVDT,COVBYHI,SUBIEN,XDT,TMPDT
- S NEEDVERIFY=1,SUBIEN=""
+ N IENS,SDMSG,PATDATA,BILLPATDATA,NOCOVDT,COVBYHI,SUBIEN,XDT,TMPDT,INDEXEND,IBAIEN,IBADATA
+ S NEEDVERIFY=1
  ;Check the Insurance Verification Processor file
  ; The assumption is that once verification is complete all
  ; references to the patient are removed.
- I $D(^IBA(355.33,"C",DFN)) S NEEDVERIFY=0 Q
+ S IBAIEN=""
+ S INDEXEND=$$FMADD^XLFDT(DT,-LASTVERFWINDOW)
+ F  S IBAIEN=$O(^IBA(355.33,"C",DFN,IBAIEN)) Q:IBAIEN=""  D
+ . K IBADATA
+ . Q:$$GET1^DIQ(355.33,IBAIEN,.01,"I")<INDEXEND
+ . I $$GET1^DIQ(355.33,IBAIEN,.04,"I")="E" S NEEDVERIFY=0  ;Entered - verification has started
+ I NEEDVERIFY=0 Q  ;Verification not needed
+ ;
  ;Check the Insurance Types (sub file .321) of the Patient File (#2)
  S SUBIEN=0
  F  S SUBIEN=$O(^DPT(DFN,.312,SUBIEN)) Q:SUBIEN=""!(NEEDVERIFY=0)!('SUBIEN)  D
  .S IENS=SUBIEN_","_DFN_","
  .K PATDATA
  .D GETS^DIQ(2.312,IENS,"1.03;3","I","PATDATA","SDMSG")
- .;Check the Insurance Experiation Data is active
+ .;Check the Insurance Expiration Data is active
  .S TMPDT=PATDATA(2.312,IENS,3,"I")
- .I 'TMPDT!(+TMPDT<DT) Q
+ .I +TMPDT,(+TMPDT'>DT) Q  ;term date of today is inactive coverage
  .;Check the Date Last Verified
  .S TMPDT=$P(PATDATA(2.312,IENS,1.03,"I"),".")
  .I TMPDT D
  ..S XDT=$$FMADD^XLFDT(DT,-LASTVERFWINDOW)
- ..I XDT<TMPDT S NEEDVERIFY=0  ;_"^File 2 last verified. Insur Cnt="_IENS_" Last Verify="_TMPDT_" Expir Dt"_TMPDT
- Q:'NEEDVERIFY
+ ..I XDT<TMPDT S NEEDVERIFY=0
+ I NEEDVERIFY=0 Q  ;Verification not needed
  ;
- ;If no insurance on file then check the Covered by Health Insurance
+ ;If no insurance or unknown on file then check the Covered by Health Insurance date
  D GETS^DIQ(2,DFN,".3192","I","PATDATA","SDMSG")
  S COVBYHI=PATDATA(2,DFN_",",.3192,"I")
  I COVBYHI="N"!(COVBYHI="U") D
@@ -49,7 +95,7 @@ NEEDVERIFY(NEEDVERIFY,DFN,LASTVERFWINDOW,NOCOVWINDOW) ;
  .S NOCOVDT=$G(BILLPATDATA(354,DFN_",",60,"I"))
  .I NOCOVDT D
  ..S XDT=$$FMADD^XLFDT(DT,-NOCOVWINDOW)
- ..I XDT<NOCOVDT S NEEDVERIFY=0 ;_"^Coverd by Health Insur = "_COVBYHI_" No Cov Dt="_NOCOVDT
+ ..I XDT<NOCOVDT S NEEDVERIFY=0
  Q
  ;
 BUILDER ;Convert data to JSON

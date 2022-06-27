@@ -1,34 +1,23 @@
 DIUTL ;GFT/GFT - TIMSON'S UTILITIES;24JAN2013
- ;;22.2;VA FileMan;**10,19,19999**;Jan 05, 2016;Build 2
+ ;;22.2;VA FileMan;**10,19,21**;Jan 05, 2016;Build 4
  ;;Per VA Directive 6402, this routine should not be modified.
  ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
  ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
  ;;Licensed under the terms of the Apache License, Version 2.0.
- ;;GFT;**76,999,1003,1004,1023,1055,1057,1058,1059,1060**
- ; *19999* Keep MSC fileman changes and add updates based on patch 19
- ;
-TRIME(Y) ;
- F  Q:$E(Y,$L(Y))'=" "  S Y=$E(Y,1,$L(Y)-1) ;IF STORED BY $EXTRACT, TRIM TRAILING SPACES
- Q Y
- ;
- ;
-PLUS(Y) ;
- S:Y'<0 Y="+"_Y
- Q Y
  ;
  ;
 NAKED(DIUTLREF) ;The argument is evaluated and returned, while keeping the naked reference as it was!
  N DIUTLNKD ;THIS WILL BE THE NAME OF THE NAKED
- I 0 ;X "I $ZREFERENCE=""""" I  S DIUTLNKD="^TMP(""DI DUMMY"",0)"
+ X "I $ZREFERENCE=""""" I  S DIUTLNKD="^TMP(""DI DUMMY"",0)"
  E  S DIUTLNKD=$NA(^(0))
  X "S DIUTLREF="_DIUTLREF
  D  Q DIUTLREF
  .I $D(@DIUTLNKD)
  ;
  ;
-DATE(Y) ;**CCO/NI   RETURN A DATE   22.2 CHANGED THIS BACK
- I Y X ^DD("DD")
- Q Y
+DATE(Y) ;**CCO/NI   RETURN A DATE
+ ;I Y X ^DD("DD")
+ Q $$FMTE^DILIBF(Y,"1U")
  ;
  ;
 NOWINT() ;INTERNAL VERSION OF NOW
@@ -88,19 +77,19 @@ CHKPT(DIFILE,DIDA,DIUTLMSG,DIFLG) ;check if any entries points to this entry(DID
  ;ICR #6876
  Q:$G(DIUTLMSG)=""!'$G(DIFILE)!'$G(DIDA)
  Q:$G(^DIC(DIFILE,0))=""
- K ^TMP($J)
+ K @DIUTLMSG,^TMP("DIUTL",$J)  ;p21
  N C,GFTIEN,GFTRCR,I,J,L,PUT,X,Y
- S @DIUTLMSG@(0)=0,DIFLG=$G(DIFLG)
- D DEPEND^DIDGFTPT(DIFILE,DIDA,,"M1")
+ S @DIUTLMSG@(0)=0,DIFLG=$G(DIFLG),X=$NA(^TMP("DIUTL",$J))
+ D DEPEND^DIDGFTPT(DIFILE,DIDA,X,"M1")
  S X=$$GET1^DIQ(DIFILE,DIDA,.01) I X="" S X="NON-EXISTENT ENTRY # "_DIDA
  S I=0
- F  S I=$O(^TMP($J,DIFILE,DIDA,I)) Q:'I  D  Q:'$D(I)
+ F  S I=$O(^TMP("DIUTL",$J,DIFILE,DIDA,I)) Q:'I  D  Q:'$D(I)
  .S Y=$P($G(^DIC(I,0)),U),J=0
- .F  S J=$O(^TMP($J,DIFILE,DIDA,I,J)) Q:'J  D
+ .F  S J=$O(^TMP("DIUTL",$J,DIFILE,DIDA,I,J)) Q:'J  D
  ..I 'DIFLG S C=@DIUTLMSG@(0)+1,@DIUTLMSG@(0)=C,@DIUTLMSG@(C)="Entry "_J_" in "_Y_" ("_I_") refers to it." Q
  ..S L=""
- ..F  S L=$O(^TMP($J,DIFILE,DIDA,I,J,L)) Q:L=""  S C=@DIUTLMSG@(0)+1,@DIUTLMSG@(0)=C,@DIUTLMSG@(I,J,$P(L,","),$P(L,",",2))=""
+ ..F  S L=$O(^TMP("DIUTL",$J,DIFILE,DIDA,I,J,L)) Q:L=""  S C=@DIUTLMSG@(0)+1,@DIUTLMSG@(0)=C,@DIUTLMSG@(I,J,$P(L,","),$P(L,",",2))=""
  ..Q
  .Q
- K ^TMP($J)
+ K ^TMP("DIUTL",$J)
  Q

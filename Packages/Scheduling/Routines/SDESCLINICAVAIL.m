@@ -1,5 +1,5 @@
-SDESCLINICAVAIL ;ALB/RRM - VISTA SCHEDULING RPCS GET CLINIC AVAILABILITY ; Oct 07, 2021@16:32
- ;;5.3;Scheduling;**800**;Aug 13, 1993;Build 23
+SDESCLINICAVAIL ;ALB/RRM,MGD,KML - VISTA SCHEDULING RPCS GET CLINIC AVAILABILITY ; March 5, 2022
+ ;;5.3;Scheduling;**800,805,809**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;Global References    Supported by ICR#     Type
@@ -14,18 +14,19 @@ SDESCLINICAVAIL ;ALB/RRM - VISTA SCHEDULING RPCS GET CLINIC AVAILABILITY ; Oct 0
  ;
  Q  ;No Direct Call
  ;
-GETCLAVAILABLTY(RETURN,CLINICIEN,SDESSTART,SDESENDDATE) ;Called from RPC: SDES GET CLINIC AVAILABILITY
+GETCLAVAILABLTY(RETURN,CLINICIEN,SDESSTART,SDESENDDATE,SDEAS) ;Called from RPC: SDES GET CLINIC AVAILABILITY
  ; This RPC returns available appointment slots within a given timeframe for a given clinic in JSON format.
  ; Input:
- ;   RETURN      [required] -  This is where the retrieve data  is stored in JSON format
- ;   CLINICIEN   [required] -  The Internal Entry Number (IEN) from the HOSPITAL LOCATION File #44
- ;   SDESSTART   [required] -  The Start Date mm/dd/yyyy in external format to search from
- ;   SDESENDDATE [required] -  The End Date  mm/dd/yyyy in external format to search to
+ ; RETURN      [required] - This is where the retrieve data  is stored in JSON format
+ ; CLINICIEN   [required] - The Internal Entry Number (IEN) from the HOSPITAL LOCATION File #44
+ ; SDESSTART   [required] - The Start Date of search in ISO8601 format CCYY-MM-DD
+ ; SDESENDDATE [required] - The End Date of search in ISO8601 format CCYY-MM-DD
+ ; SDEAS [optional] - Enterprise Appointment Scheduling (EAS) Tracking Number associated to an appointment.
  ;
  N SDGETCLAVL,SDCLNAME,ERROR,SDCLRESIEN,SDTMPARY
  S ERROR=0
  K RETURN,SDGETCLAVL ;always clear returned data array to ensure a new array of data are returned
- D VALINPUT ;validate input parameters
+ D VALIDATEINPUT ;validate input parameters
  I 'ERROR D
  . K SDTMPARY
  . S SDTMPARY=$NA(^TMP($J,"CLNCAVAIL"))
@@ -37,7 +38,7 @@ GETCLAVAILABLTY(RETURN,CLINICIEN,SDESSTART,SDESENDDATE) ;Called from RPC: SDES G
  K SDGETCLAVL
  Q
  ;
-VALINPUT   ;validate input parameters
+VALIDATEINPUT   ;validate input parameters
  N SDERR,EFLAG,SFLAG
  S (SFLAG,EFLAG)=0
  ;validate CLINIC IEN
@@ -51,7 +52,7 @@ VALINPUT   ;validate input parameters
  ;validate start date
  I $G(SDESSTART)=""  D ERRLOG^SDESJSON(.SDGETCLAVL,9) S ERROR=1 ;missing begin date
  I +$G(SDESSTART)>0 D
- . S SDESSTART=$$EX2INTDT($P(SDESSTART,"@",1)) ;convert external format to internal format
+ . S SDESSTART=$$ISOTFM^SDAMUTDT($P(SDESSTART,"T",1)) ;convert external format to internal format
  . S SFLAG=1
  . I +SDESSTART<1  D ERRLOG^SDESJSON(.SDGETCLAVL,11) S ERROR=1  Q  ;invalid begin date
  . I +SDESSTART<DT D ERRLOG^SDESJSON(.SDGETCLAVL,52,"Start Date cannot be in the past") S ERROR=1  Q  ;start date cannot be in the past
@@ -59,21 +60,19 @@ VALINPUT   ;validate input parameters
  ;validate end date
  I $G(SDESENDDATE)=""  D ERRLOG^SDESJSON(.SDGETCLAVL,10) S ERROR=1 ;missing end date
  I +$G(SDESENDDATE)>0 D
- . S SDESENDDATE=$$EX2INTDT($P(SDESENDDATE,"@",1)) ;convert external format to internal format
+ . S SDESENDDATE=$$ISOTFM^SDAMUTDT($P(SDESENDDATE,"T",1)) ;convert external format to internal format
  . S EFLAG=1
  . I +SDESENDDATE<1 D ERRLOG^SDESJSON(.SDGETCLAVL,12) S ERROR=1 Q  ;invalid end date
  . I +SDESENDDATE<+SDESSTART D ERRLOG^SDESJSON(.SDGETCLAVL,13) S ERROR=1  Q  ;end date cannot be in the past
  E  D ERRLOG^SDESJSON(.SDGETCLAVL,12) S ERROR=1 ;invalid end date
  I SFLAG,EFLAG D
  . I SDESSTART=SDESENDDATE D ERRLOG^SDESJSON(.SDGETCLAVL,52,"Start and End Date cannot be less than a day") S ERROR=1
+ ; validate EAS
+ S SDEAS=$G(SDEAS,"")
+ I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
+ I +SDEAS=-1 D ERRLOG^SDESJSON(.SDGETCLAVL,142) S ERROR=1
  Q
  ;
-EX2INTDT(X) ; Receives date in external format, returns internal format
- N %DT,Y
- I ($L(X," ")=2),(X?1.2N1P1.2N1P1.2N1" "1.2N.E) S X=$TR(X," ","@")
- S %DT="TSP" D ^%DT
- Q Y
-  ;
 BUILDDATA ;retrieve clinic availability data
  N SDP1,SDP2,SDP3,SDP4,SDSTRTDT,SDENDDT,SDSLOTS,SDSTOPTM,SDSTRTTM,SDTOTAL,II
  I $O(@SDTMPARY@(""))="" D ERRLOG^SDESJSON(.SDGETCLAVL,126) Q
@@ -84,8 +83,8 @@ BUILDDATA ;retrieve clinic availability data
  . S SDP3=+$P(@SDTMPARY@(II),U,4) ;open slots available
  . S SDP4=$P(@SDTMPARY@(II),U,5) ;access type  (1=available, 2=not available, 3=cancelled)
  . ;
- . S SDSTRTDT=$P(SDP1,".") ;start date - remove the time
- . S SDENDDT=$P(SDP2,".") ;end date - remove the time
+ . S SDSTRTDT=$$FMTISO^SDAMUTDT($P(SDP1,".")) ;start date - remove the time
+ . ;S SDENDDT=$P(SDP2,".") ;end date - remove the time
  . S SDSTRTTM=$E($P(SDP1_"0000",".",2),1,4) ;start time
  . S SDSTOPTM=$E($P(SDP2_"0000",".",2),1,4) ;stop time
  . S SDSLOTS=$P(@SDTMPARY@(II),U,4)

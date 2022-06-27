@@ -1,19 +1,20 @@
-SDESCLNSETAVAIL ;ALB/TAW/MGD - SET CLINIC AVAILABILITY ;OCT 11, 2021@12:25
- ;;5.3;Scheduling;**800**;Aug 13, 1993;Build 23
+SDESCLNSETAVAIL ;ALB/TAW/MGD,KML - SET CLINIC AVAILABILITY ;Feb 24, 2022
+ ;;5.3;Scheduling;**800,803,805,809**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
-SETCLINAVAIL(RETURN,SDCLINIC,DATES,TIMES,SLOTS) ;INICSET2(.POP,SDIEN,.FDA,.SDCLINIC,.PROVIDER,.DIAGNOSIS,.SPECIALINSTRUCT,.PRIVLIAGEDUSER)
+SETCLINAVAIL(RETURN,SDCLINIC,DATES,TIMES,SLOTS,SDEAS) ;INICSET2(.POP,SDIEN,.FDA,.SDCLINIC,.PROVIDER,.DIAGNOSIS,.SPECIALINSTRUCT,.PRIVLIAGEDUSER)
  ; Input:
  ; SDCLIN - [REQ] Name or IEN from file 44
- ; DATES - [REQ] String of dates in external or FM format separated by a ;
+ ; DATES - [REQ] String of dates in ISO8601 or FM format separated by a ;
  ; TIMES - [REQ] String of time frames in military format separated by a ;
  ;   ex: 0700-1030;1030-1400
  ; SLOTS - [REQ] String of integers separated by a ;
  ;  The number of TIMES and SLOTS must match
+ ; SDEAS - [Optional] - Enterprise Appointment Scheduling (EAS) Tracking Number
  ;
  N POP,SDAVAIL,I,SDDOWNUM,DOWNUM,EOF,SDTOTALSLOTS,SDDISPPERHR,SDCLINSTARTHR,SDSOH,SLT,IEN,SDCLINDATA,SDSLOTS,SDTIME,SDDATE,TMPINDX
- N SDRETURN
- S (POP,SDTOTALSLOTS)=0
+ N SDRETURN,APPTCNT
+ S (POP,SDTOTALSLOTS,APPTCNT)=0
  D VALIDATE
  I 'POP D CREATE(SDCLINIC,SDCLINSTARTHR,SLT,SDDOWNUM)
  I 'POP S SDRETURN("ClinicAvailability","Create")="Pattern Filed"
@@ -30,18 +31,19 @@ VALIDATE ;
  D GETS^DIQ(44,IEN,"1912;1914;1917;1918.5","IE","SDCLINDATA","SDMSG")
  S SLT=$G(SDCLINDATA(44,IEN,1912,"I"))
  S SDDISPPERHR=$G(SDCLINDATA(44,IEN,1917,"I"))
- S SDCLINSTARTHR=$G(SDCLINDATA(44,IEN,1914,"I"))
+ S SDCLINSTARTHR=$G(SDCLINDATA(44,IEN,1914,"I"),"")
+ I SDCLINSTARTHR="" S SDCLINSTARTHR=8
  ;
  N STARTTIME,ENDTIME,TMPTIMES
  S TIMES=$G(TIMES)
  S SLOTS=$G(SLOTS)
- I $L(TIMES,";")'=$L(SLOTS,";") D ERRLOG(52,"Times and slots mismatch") Q
  I TIMES="" D ERRLOG(52,"Times are missing")
  I SLOTS="" D ERRLOG(52,"Slots are missing")
+ I 'POP,$L(TIMES,";")'=$L(SLOTS,";") D ERRLOG(52,"Times and slots mismatch")
  ;
- I $P(DATES,"9999999",2)'="" D ERRLOG(52,"Indefinite answer must be last") Q
+ I $P(DATES,"9999999",2)'="" D ERRLOG(52,"Indefinite date indicator must be last") Q
  ;
- F I=1:1:$L(TIMES,";") D  Q:POP
+ F I=1:1:$L(TIMES,";") Q:POP  D
  .S SDTIME=$P(TIMES,";",I)
  .I SDTIME'?4N1"-"4N D ERRLOG(52,"Invalid time format") Q
  .I $P(SDTIME,"-",2)>2400 D ERRLOG(52,"Invalid time format") Q
@@ -73,31 +75,49 @@ VALIDATE ;
  .S TIMES(STARTTIME)=SDTIME_"^"_SDSLOTS
  .S SDTOTALSLOTS=SDTOTALSLOTS+SDSLOTS
  ;
- I $D(TIMES)'>1 D ERRLOG(52,"No valid time segments passed in")
+ I 'POP,$D(TIMES)'>1 D ERRLOG(52,"No valid time segments passed in")
  ;Can't start prior to clinic opening
  I 'POP,+$O(TIMES(""))<(SDCLINSTARTHR*100) D ERRLOG(52,"Appointments can not start prior to clinic opening")
  ;
  S DATES=$G(DATES)
  S SDDATE=$P(DATES,";",1)
- I SDDATE="" D ERRLOG(9)
+ I SDDATE="" D ERRLOG(45)
  I SDDATE'="" D
- .I SDDATE'?7N S SDDATE=$$NETTOFM^SDECDATE(SDDATE,"N","N")
- .I SDDATE'?7N D ERRLOG(11) Q
+ .I SDDATE'?7N S SDDATE=$$ISOTFM^SDAMUTDT(SDDATE)  ;vse-2396
+ .I SDDATE'?7N D ERRLOG(46) Q
  .I SDDATE<DT D ERRLOG(71) Q
  .S SDDOWNUM=$$DOW^XLFDT(SDDATE,1),DATES(SDDATE)=""
+ .D GETAPPT
  ;
- I $D(DATES)'>1 D ERRLOG(52,"No valid dates passed in") Q
+ I 'POP,$D(DATES)'>1 D ERRLOG(52,"No valid dates passed in") Q
  ;
  S EOF=0
  F I=2:1:$L(DATES,";") D  Q:EOF
  .S SDDATE=$P(DATES,";",I)
  .Q:'SDDATE
  .I SDDATE=9999999 S DATES(SDDATE)="",EOF=1 Q  ;Indefinitely
- .I SDDATE'?7N S SDDATE=$$NETTOFM^SDECDATE(SDDATE,"N","N")
- .I SDDATE'?7N D ERRLOG(11) Q
+ .I SDDATE'?7N S SDDATE=$$ISOTFM^SDAMUTDT(SDDATE)  ;vse-2396
+ .I SDDATE'?7N D ERRLOG(46) Q
  .I SDDATE<DT D ERRLOG(71)
  .I SDDOWNUM'=$$DOW^XLFDT(SDDATE,1) D ERRLOG(52,"Schedule days do not match") S EOF=1
  .S DATES(SDDATE)=""
+ .D GETAPPT
+ I $D(SDRETURN("ClinicAvailability","Appt")) D ERRLOG(52,"Pending appointments must be cancelled")
+ ;
+ S SDEAS=$G(SDEAS,"")
+ I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
+ I +SDEAS=-1 D ERRLOG(142)
+ Q
+GETAPPT ;Check if there are any open appts for this date
+ N JSON,SDESERR,A,X
+ S X=""
+ D APPTBYCLINIC^SDESAPPT(.JSON,SDCLINIC,SDDATE_"@0001",SDDATE_"@2359")
+ ;D DECODE^XLFJSON("JSON","A","SDESERR") ;removed the decode 
+ ;Remove any canceled appt
+ F  S X=$O(JSON("Appt",X)) Q:'X  D
+ .I $P(JSON("Appt",X,"Status"),"CANCELLED",2)'="" Q
+ .S APPTCNT=APPTCNT+1
+ .M SDRETURN("ClinicAvailability","Appt",APPTCNT)=A("Appt",X)
  Q
 CHECKDURATION(T1,T2,SLT) ;Ensure the appointment lengths align with the time segment
  N H1,H2,M1,M2,SDL,SD1

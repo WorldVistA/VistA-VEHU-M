@@ -1,5 +1,5 @@
-SDESAPTREQSET   ;ALB/TAW - APPOINTMENT REQUEST CREATE / UPDATE ;Aug 18, 2021
- ;;5.3;Scheduling;**794,799**;Aug 13, 1993;Build 7
+SDESAPTREQSET   ;ALB/TAW,MGD,KML - APPOINTMENT REQUEST CREATE / UPDATE ;Feb 18, 2022
+ ;;5.3;Scheduling;**794,799,805,809**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -7,36 +7,37 @@ SDESAPTREQSET   ;ALB/TAW - APPOINTMENT REQUEST CREATE / UPDATE ;Aug 18, 2021
  ;
  ; The parameter list for each RPC must be kept in sync.  This includes in the Remote Procedure file definition.
  ;
-ARSET(RETURN,ARIEN,DFN,AREDT,ARINST,ARTYPE,ARCLIN,ARUSER,ARREQBY,ARPROV,ARDAPTDT,ARCOMM,ARENPRI,ARMAR,ARMAI,AMRAN,ARPATCONT,ARSVCCON,ARSVCCOP,MRTCPREFDT,ARSTOP,ARAPTYP,ARPATSTAT,MULTIAPTMADE,ARPARENT,ARNLT,ARPRER,ARORDN,VAOSGUID,EASTRCKNGNMBR) ;
+ARSET(RETURN,ARIEN,DFN,AREDT,ARINST,ARTYPE,ARCLIN,ARUSER,ARREQBY,ARPROV,ARDAPTDT,ARCOMM,ARENPRI,ARMAR,ARMAI,ARMAN,ARPATCONT,ARSVCCON,ARSVCCOP,MRTCPREFDT,ARSTOP,ARAPTYP,ARPATSTAT,MULTIAPTMADE,ARPARENT,ARNLT,ARPRER,ARORDN,VAOSGUID,EASTRCKNGNMBR) ;
  ; INP - Input parameters array
  ;  ARIEN     = (integer)  IEN point to SDEC APPT REQUEST file 409.85.
  ;                       If null, a new entry will be added
  ;  DFN       = (text)     DFN Pointer to the PATIENT file 2
- ;  AREDT     = (date)     Originating Date/time in external date formt
- ;  ARINST    = (text)     Institution name NAME field from the INSTITUTION file
- ;  ARTYPE    = (text)     Appointment Request Type
+ ;  AREDT     = (date)     DATE/TIME ENTERED (#409.85,9.5) in ISO8601 date/time format
+ ;                         to include offset (e.g. CCYY-MM-DDTHH:MM-NNNN)
+ ;  ARINST    = (text)     Institution name from the INSTITUTION file
+ ;  ARTYPE    = (text)     Appointment Request Type - 5 types: APPT, MOBILE, W2VA, RTC, and VETERAN
  ;  ARCLIN    = (text)     REQ Specific Clinic name - NAME field in file 44
  ;  ARUSER    = (text)     Originating User name  - NAME field in NEW PERSON file 200
  ;  ARREQBY   = (text)     Request By - 'PROVIDER' or 'PATIENT'
  ;  ARPROV    = (text)     Provider name  - NAME field in NEW PERSON file 200
- ;  ARDAPTDT  = (date)     Desired Date of appointment in external format.
+ ;  ARDAPTDT  = (date)     Desired Date of appointment in ISO8601 date format (e.g. CCYY-MM-DD)
  ;  ARCOMM    = (text)     Comment must be 1-60 characters.
  ;  ARENPRI   = (text)     ENROLLMENT PRIORITY - Valid Values are "GROUP 1" through "GROUP 8"
  ;  ARMAR     = (text)     MULTIPLE APPOINTMENT RTC      NO; YES
  ;  ARMAI     = (integer)  MULT APPT RTC INTERVAL integer between 1-365
- ;  AMRAN     = (integer)  MULT APPT NUMBER integer between 1-100
+ ;  ARMAN     = (integer)  MULT APPT NUMBER integer between 1-100
  ;  ARPATCONT = Patient Contacts separated by ::
  ;            Each :: piece has the following ~~ pieces:
- ;            1) = (date)    DATE ENTERED external date/time
+ ;            1) = (date)    DATE ENTERED (#409.8544,.01) in ISO8601 date/time format including offset
  ;            2) = (text)    PC ENTERED BY USER ID or NAME - Pointer toNEW PERSON file or NAME
  ;            4) = (optional) ACTION - valid values are:
- ;                             CALLED, MESSAGE LEFT or LETTER
+ ;                           "C"alled, "M"essage left or "L"etter
  ;            5) = (optional) PATIENT PHONE Free-Text 4-20 characters
  ;            6) = NOT USED (optional) Comment 1-160 characters
  ;  ARSVCCON  = (optional) SERVICE CONNECTED PRIORITY valid values are NO YES
  ;  ARSVCCOP  = (optional) SERVICE CONNECTED PERCENTAGE = numeric 0-100
- ;  MRTCPREFDT = (optional) MRTC calculated preferred dates separated by pipe |:
- ;                       Each date can be in external format with no time.
+ ;  MRTCPREFDT = (optional) MRTC calculated preferred dates separated by pipe "|"
+ ;               dates are in IS08601 date format (no time)  e.g., CCYY-MM-DD  ;vse-2396
  ;  ARSTOP    = (optional) CLINIC STOP pointer to CLINIC STOP file 40.7
  ;                       used to populate the REQ SERVICE/SPECIALTY field in 409.85
  ;  ARAPTYP   = (optional) Appointment Type ID pointer to APPOINTMENT TYPE file 409.1
@@ -54,7 +55,7 @@ ARSET(RETURN,ARIEN,DFN,AREDT,ARINST,ARTYPE,ARCLIN,ARUSER,ARREQBY,ARPROV,ARDAPTDT
  ;  EASTRCKNGNMBR = (optional) Enterprise Appointment Scheduling Tracking Number associated to an appointment.
  ;
  N POP,SDAPTREQ,X,Y,%DT,ARORIGDT,ARORIGDTI,FNUM,ARINSTI,ARTEAM,ARPOS,ARSRVSP,MI
- N ARPRIO,AREESTAT,FDA,ARNEW,ARRET,ARMSG,ARDATA,ARERR,ARHOSN,AUDF,SDREC,ARMAN,ARPATTEL
+ N ARPRIO,AREESTAT,FDA,ARNEW,ARRET,ARMSG,ARDATA,ARERR,ARHOSN,AUDF,SDREC,ARPATTEL
  ;
  D VALIDATE
  I 'POP D
@@ -81,7 +82,7 @@ VALIDATE ;
  ;Originating Dt/Tm
  S AREDT=$G(AREDT,"")
  I ARIEN="",AREDT="" S POP=1 D ERRLOG^SDESJSON(.SDAPTREQ,48)
- I AREDT'="" S AREDT=$$NETTOFM^SDECDATE($P(AREDT,":",1,2),$S(AREDT["@":"Y",1:"N"))
+ I AREDT'="" S AREDT=$$CALLDT(AREDT)  ; vse-2396
  I AREDT=-1 S POP=1 D ERRLOG^SDESJSON(.SDAPTREQ,49)
  S ARORIGDT=$P(AREDT,".",1)
  ;Instution name
@@ -103,7 +104,7 @@ VALIDATE ;
  S ARUSER=$G(ARUSER,"")
  I ARUSER'="",'+ARUSER S ARUSER=$O(^VA(200,"B",ARUSER,0))
  I ARUSER="" S ARUSER=DUZ
- ;Reqested by
+ ;Requested by
  S ARREQBY=$G(ARREQBY,"")
  I ARREQBY'="" D
  .S ARREQBY=$S(ARREQBY="PATIENT":2,ARREQBY="PROVIDER":1,1:"")
@@ -116,7 +117,7 @@ VALIDATE ;
  S ARPRIO=""
  I ARIEN="",ARDAPTDT="" S POP=1 D ERRLOG^SDESJSON(.SDAPTREQ,57)
  I ARDAPTDT'="" D
- .S ARDAPTDT=$$CALLDT($P($G(ARDAPTDT),"@",1))
+ .S ARDAPTDT=$$CALLDT(ARDAPTDT)  ;vse-2396
  .I ARDAPTDT=-1 S ARDAPTDT="",POP=1 D ERRLOG^SDESJSON(.SDAPTREQ,58) Q
  .I ARIEN="",ARDAPTDT<DT S POP=1 D ERRLOG^SDESJSON(.SDAPTREQ,59) Q  ;Only validate on Create
  .S ARPRIO=$S(ARDAPTDT=$P($$NOW^XLFDT,".",1):"A",1:"F") ;Priority ASAP or Future
@@ -133,16 +134,12 @@ VALIDATE ;
  S ARMAI=$G(ARMAI,"")
  ;Multi Apt numbers
  S ARMAN=$G(ARMAN,"")
- ;Patient Contaccts
- ;
  ;Serv Connect Prio
  S ARSVCCON=$G(ARSVCCON,"")
  S:ARSVCCON'="" ARSVCCON=$S(ARSVCCON="YES":1,1:0)
  ;Serv Connect %
  S ARSVCCOP=$G(ARSVCCOP,"")
  I ARSVCCOP'="" S:(+ARSVCCOP<0)!(+ARSVCCOP>100) ARSVCCOP=""
- ;MRTC calc pref dates
- ;
  ;Clinic Stop Code
  S ARSTOP=$G(ARSTOP,"")
  I ARIEN="",ARCLIN="",ARSTOP="" S POP=1 D ERRLOG^SDESJSON(.SDAPTREQ,63)
@@ -153,8 +150,6 @@ VALIDATE ;
  ;Patient Status
  S ARPATSTAT=$G(ARPATSTAT,"")
  I ARPATSTAT'="" S ARPATSTAT=$S(ARPATSTAT="N":"N",ARPATSTAT="NEW":"N",ARPATSTAT="E":"E",ARPATSTAT="ESTABLISHED":"E",1:"")
- ;Multi Apt Made
- ;
  ;Parent Request
  S ARPARENT=+$G(ARPARENT,"")
  I +ARPARENT,'$D(^SDEC(409.85,+ARPARENT,0)) S ARPARENT=""
@@ -174,7 +169,9 @@ VALIDATE ;
  ;VAOS ID
  S VAOSGUID=$G(VAOSGUID,"")
  ;validate EAS Tracking Number
- S EASTRCKNGNMBR=$TR($E($G(EASTRCKNGNMBR),1,30),"^"," ")
+ S EASTRCKNGNMBR=$TR($G(EASTRCKNGNMBR),"^"," ")
+ I $L(EASTRCKNGNMBR) S EASTRCKNGNMBR=$$EASVALIDATE^SDESUTIL(EASTRCKNGNMBR)
+ I +EASTRCKNGNMBR=-1 S POP=1 D ERRLOG^SDESJSON(.SDAPTREQ,142)
  Q
  ;
 CREATE ;Build FDA array to creat a new entry in 409.85
@@ -194,6 +191,7 @@ CREATE ;Build FDA array to creat a new entry in 409.85
  S:$G(ARENPRI)'="" @FDA@(10.5)=ARENPRI
  S:$G(ARREQBY)'="" @FDA@(11)=ARREQBY
  S:$G(ARPROV)'="" @FDA@(12)=+ARPROV
+ S:$G(ARDAPTDT)'="" @FDA@(13)=ARDAPTDT
  S:$G(ARSVCCOP)'="" @FDA@(14)=ARSVCCOP
  S:$G(ARSVCCON)'="" @FDA@(15)=+ARSVCCON
  S:$G(ARDAPTDT)'="" @FDA@(22)=ARDAPTDT
@@ -292,7 +290,7 @@ ARAUD(ARIEN,ARCLIN,ARSTOP,DATE,USER) ;populate VS AUDIT multiple field 45
  ; ARCLIN  - (optional) pointer to HOSPITAL LOCATION file 44
  ; ARSTOP  - (optional) pointer to CLINIC STOP file
  ; DATE    - (optional) date/time in fileman format
- N SDFDA,SDP,SDPN
+ N SDFDA,SDP,SDPN,ERRARRY
  S ARIEN=$G(ARIEN) Q:ARIEN=""
  S ARCLIN=$G(ARCLIN)
  S ARSTOP=$G(ARSTOP)
@@ -304,7 +302,7 @@ ARAUD(ARIEN,ARCLIN,ARSTOP,DATE,USER) ;populate VS AUDIT multiple field 45
  S SDFDA(409.8545,"+1,"_ARIEN_",",1)=USER
  S:ARCLIN'="" SDFDA(409.8545,"+1,"_ARIEN_",",2)=ARCLIN
  S:ARSTOP'="" SDFDA(409.8545,"+1,"_ARIEN_",",3)=ARSTOP
- D UPDATE^DIE("","SDFDA")
+ D UPDATE^DIE("","SDFDA",,"ERRARRY")
  Q
  ;
 AR433(ARIEN,SDEC) ;set MULT APPTS MADE
@@ -314,7 +312,7 @@ AR433(ARIEN,SDEC) ;set MULT APPTS MADE
  ;                    each pipe piece contains the following ~ pieces:
  ;                1. Appointment Id pointer to SDEC APPOINTMENT file 409.84
  ;                2. Request Id pointer to SDEC APPT REQUEST file 409.85
- N SDAPP,SDFDA,SDI,SDIEN
+ N SDAPP,SDFDA,SDI,SDIEN,ERRARRY
  S ARIEN=$G(ARIEN)
  Q:'$D(^SDEC(409.85,ARIEN,0))
  S SDEC=$G(SDEC)
@@ -327,26 +325,26 @@ AR433(ARIEN,SDEC) ;set MULT APPTS MADE
  .S SDIEN=$S(SDIEN'="":SDIEN,1:"+1")
  .I $D(^SDEC(409.85,+$P(SDAPP,"~",2),0)) S SDFDA(409.852,SDIEN_","_ARIEN_",",.01)=+$P(SDAPP,"~",2)
  .I $D(^SDEC(409.84,+$P(SDAPP,"~",1),0)) S SDFDA(409.852,SDIEN_","_ARIEN_",",.02)=+$P(SDAPP,"~",1)
- .D:$D(SDFDA) UPDATE^DIE("","SDFDA")
+ .D:$D(SDFDA) UPDATE^DIE("","SDFDA",,"ERRARRY")
  Q
  ;
 AR435(SDDT,ARIEN) ;set dates into MRTC CALC PREF DATES multiple field 43.5
  ;INPUT:
  ; ARIEN - Requested date ID pointer to SDEC REQUESTED APPT file 409.85
- ; SDDT  - MRTC calculated preferred dates separated by pipe |:
+ ; SDDT  - MRTC calculated preferred dates separated by pipe |
  ;         Each date can be in external format with no time.
- N SDI,SDJ,SDFDA,TMPDT
+ N SDI,SDJ,SDFDA,TMPDT,ERRARRY
  F SDI=1:1:$L(SDDT,"|") D
  .S TMPDT=$P($P(SDDT,"|",SDI),"@",1)
  .S SDJ=$$CALLDT(TMPDT)
  .Q:SDJ=-1
  .Q:$O(^SDEC(409.85,ARIEN,5,"B",SDJ,0))   ;don't add duplicates
  .S SDFDA(409.851,"+1,"_ARIEN_",",.01)=SDJ
- .D UPDATE^DIE("","SDFDA")
+ .D UPDATE^DIE("","SDFDA",,"ERRARRY")
  Q
  ;
 AR23(INP17,ARI) ;Patient Contacts
- N STR17,ARASD,ARASDH,ARDATA1,ARERR1,ARI1,ARIENS,ARIENS1,ARRET1,FDA,ARMSG1
+ N STR17,ARASDH,ARDATA1,ARERR1,ARI1,ARIENS,ARIENS1,ARRET1,FDA,ARMSG1
  N ARDT,ARUSR
  S ARIENS=ARI_","
  F ARI1=1:1:$L(INP17,"::") D
@@ -355,10 +353,9 @@ AR23(INP17,ARI) ;Patient Contacts
  .;
  .;  Change date conversion to deal with midnight.  5/29/18 wtc patch 694
  .;
- .S ARASD=$P($P(STR17,"~~",1),":",1,2)
- .S ARASD=$$NETTOFM^SDECDATE(ARASD,"Y")
- .I (ARASD=-1)!(ARASD="") Q
  .S ARDT=$P($P(STR17,"~~",1),":",1,2)
+ .S ARDT=$$CALLDT(ARDT) ;VSE-2396
+ .I (ARDT=-1)!(ARDT="") Q
  .S ARASDH=""
  .S ARIENS1=$S(ARASDH'="":ARASDH,1:"+1")_","_ARIENS
  .S FDA=$NA(FDA(409.8544,ARIENS1))
@@ -373,12 +370,10 @@ AR23(INP17,ARI) ;Patient Contacts
  ..I $P(STR17,"~~",2)'="" S ARUSR=$P(STR17,"~~",2) S @FDA@(2)=$S(ARUSR="":"@",+ARUSR:$P($G(^VA(200,ARUSR,0)),U,1),1:ARUSR)     ;PC ENTERED BY USER
  ..I $P(STR17,"~~",4)'="" S @FDA@(3)=$P(STR17,"~~",4)     ;ACTION  C=Called; M=Message Left; L=LETTER
  ..I $P(STR17,"~~",5)'="" S @FDA@(4)=$P(STR17,"~~",5)     ;PATIENT PHONE
- .D:$D(@FDA) UPDATE^DIE("E","FDA","ARRET1","ARMSG1")
+ .D:$D(@FDA) UPDATE^DIE("E","FDA",,"ARMSG1")
  Q
 CALLDT(X) ;
- N Y,%DT
- S %DT="" D ^%DT
- Q Y
+ Q $$ISOTFM^SDAMUTDT(X)  ;VSE-2396
  ;
 BUILDER ;Convert data to JSON
  N JSONERR

@@ -1,6 +1,5 @@
 SDECAR ;ALB/SAT,MGD - VISTA SCHEDULING RPCS ;Apr 10, 2020@15:22
- ;;5.3;Scheduling;**627,642,671,745,792,797**;Aug 13, 1993;Build 8
- ;;Per VHA Directive 6402, this routine should not be modified
+ ;;5.3;Scheduling;**627,642,671,745,792,797,805**;Aug 13, 1993;Build 9
  ;
  Q
  ;
@@ -47,6 +46,7 @@ ARCLOSE(RET,INP) ;Appointment Request Close
  S @ARFDA@(20)=ARDISPBY
  S @ARFDA@(21)=ARDISP
  S @ARFDA@(23)="C"
+ I $G(INP(5))'="" S @ARFDA@(22)=$$NETTOFM^SDECDATE($G(INP(5)),"N","N")
  D UPDATE^DIE("","ARFDA","ARRET","ARMSG")
  I $D(ARMSG("DIERR")) D
  . F MI=1:1:$G(ARMSG("DIERR")) S RET=RET_"-1^"_$G(ARMSG("DIERR",MI,"TEXT",1))_$C(30)

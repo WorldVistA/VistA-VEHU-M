@@ -1,10 +1,12 @@
 DGCOL ;ALB/MRL,ARF,RN - COLLATERAL PATIENT ENTRY-EDIT ; 04 MAY 87
- ;;5.3;Registration;**2,23,32,993,1023,1027**;Aug 13, 1993;Build 70
+ ;;5.3;Registration;**2,23,32,993,1023,1027,1052**;Aug 13, 1993;Build 7
 1 K DFN W !! S DGDIR=$S($D(DGDIR):DGDIR,1:1),DIC="^DPT(",DIC(0)="AEQML",DIC("DR")=".03;.09;.02;.3601;1901///^S X=""N"";391///^S X=""COLLATERAL"";.361///^S X=""COLLATERAL OF VET."";.323///^S X=""OTHER NON-VETERANS"";"
  S DLAYGO=2 D ^DIC I Y'>0 S DGDIR=0 K DLAYGO G Q
  S DFN=+Y,DGVET=$S('$D(^DPT(DFN,"VET")):0,^("VET")="Y":1,1:0) I '$P(Y,"^",3),DGVET,'DGDIR G Q
 EN S DGDIR=$S($D(DGDIR):DGDIR,1:0) G Q:'$D(DFN),VET:DGVET
  S DGELG=$S('$D(^DPT(DFN,.36)):1,'$D(^DIC(8,+^(.36),0)):1,$P(^(0),"^",9)'=13:0,1:1),DGPS=$S('$D(^DPT(DFN,.32)):1,'$D(^DIC(21,+$P(^(.32),"^",3),0)):1,$P(^(0),"^",1)'["OTHER NON-VET":0,1:1) G:('DGELG!'DGPS) ECPS K DGELG,DGPS D EN^DGRPD
+ N DGEANS S DGEANS=$$WARNING
+ I $G(DGEANS)'=1 G 1
  I $D(DGRPOUT) K DGRPOUT G 1
  S (Y,DA)=DFN,DR="[DGCOLLATERAL]",DGNOCOL=0,DIE="^DPT(" D ^DIE G Q:DGNOCOL!'$D(^DPT(DFN,0)) I '$D(DGCOLV) W !!,"COLLATERAL VETERAN SPONSOR NAME IS UNSPECIFIED!!",*7 G EN
  S DGAD=$S($D(^DPT(DFN,.11)):$P(^(.11),"^",1,12),1:""),DGAD1=$S($D(^DPT(+DGCOLV,.11)):$P(^(.11),"^",1,12),1:""),C=0 W !!,"APPLICANT ADDRESS DATA",?45,"SPONSOR ADDRESS DATA",!,"----------------------",?45,"--------------------"
@@ -61,3 +63,12 @@ VET W !!,*7,"Patient is a veteran and therefore should not be classified utilizi
 ECPS K DGELG,DGPS W !!,*7,"Patient already has an eligibility code or period of service on file and",!,"therefore should not be classified using this option.  If this veteran",!,"has Other Entitled Eligibilities, please insure that the"
  W " appropriate",!,"APPOINTMENT TYPE is selected at the time you make the appointment."
 Q K %,Y,DGVET,DIE,DIC,DGCOLV,DR,X,I,DGNOCOL,DA,AD,C,P,D,DGADD,I1,DGAD,DGAD1,DGADED,DGPHON G:DGDIR 1 K DGDIR S:$D(DFN) Y=DFN Q
+WARNING() ;Add WARNING message to notify user of possible patient identity edits
+ W !!,?25,"**WARNING!!**"
+ W !!,"The edits you are about to make may potentially change the identity of"
+ W !,"this patient. Please verify that you have selected the correct patient"
+ W !,"and ensure that supporting documentation exists for these changes."
+ N DIR,Y
+ S DIR(0)="Y",DIR("A")="Do you wish to continue and save your edits"
+ S DIR("B")="NO" D ^DIR
+ Q Y

@@ -1,5 +1,5 @@
 DGPFUT2 ;ALB/KCL - PRF UTILITIES CONTINUED ; 2/12/2020
- ;;5.3;Registration;**425,554,650,1005,1028,1054**;Aug 13, 1993;Build 6
+ ;;5.3;Registration;**425,554,650,1005,1028,1054,1069**;Aug 13, 1993;Build 3
  ;
  ; This routine contains generic calls for use throughout DGPF*.
  ;
@@ -218,6 +218,13 @@ BLDTFL(DGDFN,DGTFL) ;build array of Treating Facilities
  D TFL^VAFCTFU2(.DGOUT,DGKEY)
  S DGI="" F  S DGI=$O(DGOUT(DGI)) Q:DGI=""  D
  . I $P(DGOUT(DGI),U,2)="PI",$P(DGOUT(DGI),U,3)="USVHA" D
+ . . I $P(DGOUT(DGI),U,4)="200CRNR" D
+ . . . S DGSTI=$$IEN^XUAF4($P(DGOUT(DGI),U,4))
+ . . . S DGIEN=$O(^DGCN(391.91,"AINST",DGSTI,DGDFN,""))
+ . . . Q:DGIEN=""
+ . . . S DGDLT=+$P($G(^DGCN(391.91,DGIEN,0)),U,3)
+ . . . S DGTFL(DGSTI)=DGDLT
+ . . . Q
  . . S DGSTI=$$IEN^XUAF4($P(DGOUT(DGI),U,4))
  . . ;Q:DGSTI=""
  . . Q:$$GET1^DIQ(4,DGSTI_",",13)="OTHER"!(+$$STA^XUAF4(DGSTI)=200)!(DGSTI=DGSTATI)

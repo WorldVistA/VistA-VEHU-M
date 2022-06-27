@@ -1,5 +1,5 @@
 PSOEXDT ;BHAM ISC/SAB - set exp. date and determine rx status ; 10/24/92 13:24
- ;;7.0;OUTPATIENT PHARMACY;**23,73,222,486,574,621**;DEC 1997;Build 13
+ ;;7.0;OUTPATIENT PHARMACY;**23,73,222,486,574,621,649**;DEC 1997;Build 1
  ;
  ;External reference ^PS(55 supported by DBIA 2228
  ;External reference ^PSDRUG( supported by DBIA 221
@@ -17,6 +17,7 @@ A ;
  . S:%?.N %=$P($G(^PS(53,+%,0)),"^") I %["AUTH ABS" S X2=5
 DT I X1']"" S X1=DT,X2=-1  ;486 End
  D C^%DTC S EX=$P(X,".") I +$G(PSORXED("RX1")),+$G(PSORXED("RX1"))>EX S EX=+$G(PSORXED("RX1"))
+ ;
  ;If Calculated Rx Exp. Date is before Rx Fill Date (No Clozapine/No refills), reset to Fill Date + Days Supply
  I '$D(CLOZPAT),'RFLS,$$RXFLDT^PSOBPSUT(J,0)>EX D
  . S EX=$$FMADD^XLFDT($$RXFLDT^PSOBPSUT(J,0),DYS)
@@ -24,7 +25,17 @@ DT I X1']"" S X1=DT,X2=-1  ;486 End
  . . S EX=$$FMADD^XLFDT(ISSDT,$S($G(CS):184,1:366))
  . I (EX<$$RXFLDT^PSOBPSUT(J,0)) D
  . . S EX=$$RXFLDT^PSOBPSUT(J,0)
- S $P(^PSRX(J,2),"^",6)=EX,RX2=^(2)
+ ;
+ ; Updating calculated Expiration Date field on file #52 and "P"/"A" x-ref on file #55 (if different)
+ I $G(EX)'="",EX'=$P($G(^PSRX(J,2)),"^",6) D
+ . N PATIEN,OLDEXDT
+ . S PATIEN=+$$GET1^DIQ(52,J,2,"I")
+ . S OLDEXDT=$$GET1^DIQ(52,J,26,"I")
+ . I OLDEXDT'="" K ^PS(55,PATIEN,"P","A",OLDEXDT,J)
+ . S $P(^PSRX(J,2),"^",6)=EX
+ . S ^PS(55,PATIEN,"P","A",EX,J)=""
+ ;
+ S RX2=$G(^PSRX(J,2))
  S Y=$S($D(^PSRX(J,2)):^(2),1:""),X="" F ZII=1:1:10 S X=X_$P(Y,"^",ZII)_"^"
  K EX,X1,X2,DYS,RFLS,CS,PSODEA,DEA,ISSDT Q
 STAT ;

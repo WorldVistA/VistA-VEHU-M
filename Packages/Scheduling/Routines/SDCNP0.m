@@ -1,5 +1,5 @@
-SDCNP0 ;ALB/LDB - CANCEL APPT. FOR A PATIENT ;MAR 15, 2017
- ;;5.3;Scheduling;**132,167,478,517,572,592,627,658,801**;Aug 13, 1993;Build 13
+SDCNP0 ;ALB/LDB,ANU - CANCEL APPT. FOR A PATIENT ;MAR 15, 2017
+ ;;5.3;Scheduling;**132,167,478,517,572,592,627,658,801,803,804**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Reference/ICR
  ; ^VALM1 - 10116
@@ -21,6 +21,8 @@ DEL1 F J=1:1 S SDDH=$P(APP,",",J) Q:SDDH']""  S SDDI=$P(SDDH,"-"),SDDM=$P(SDDH,"
  G:SDERR WH1 G NOPE^SDCNP1
 BEGD S (SD,S)=$P(^UTILITY($J,"SDCNP",A1),"^",1),I=$P(^UTILITY($J,"SDCNP",A1),"^",2)
  S SL=^SC(I,"SL"),X=$P(SL,U,3),STARTDAY=$S($L(X):X,1:8),SB=STARTDAY-1/100,X=$P(SL,U,6),HSI=$S(X:X,1:4),SI=$S(X="":4,X<3:4,X:X,1:4),STR="#@!$* XXWVUTSRQPONMLKJIHGFEDCBA0123456789jklmnopqrstuvwxyz",SDDIF=$S(HSI<3:8/HSI,1:2) K Y
+ ; SD*5.3*803 - Check if Check In Date exists and not allow cancel
+ I $P($G(^SC(+$P(^UTILITY($J,"SDCNP",A1),U,2),"S",+^UTILITY($J,"SDCNP",A1),1,+$$FIND^SDAM2(.DFN,+^UTILITY($J,"SDCNP",A1),+$P(^(A1),U,2)),"C")),U,1) W !,*7,">>> Appointment #",A1," has a check in date and cannot be cancelled." Q 
  I $$CODT^SDCOU(DFN,+^UTILITY($J,"SDCNP",A1),+$P(^(A1),U,2)) W !,*7,">>> Appointment #",A1," has a check out date and cannot be cancelled." Q
  D PROT^SDCNP1A Q:SDPRT=1  D CAN S $P(^UTILITY($J,"SDCNP",A1),"^",4)="*** JUST CANCELLED ***" Q
 CAN Q:$P(^UTILITY($J,"SDCNP",A1),"^",4)["JUST CANCELLED"  S CNT=CNT+1,DIV=$S($P(^SC(I,0),"^",15)]"":" "_$P(^(0),"^",15),1:" 1") I $D(^DPT("ASDPSD","C",DIV,I,S,DFN)) K ^(DFN)
@@ -82,6 +84,12 @@ SDEC(DFN,S,SDCLI,SDWH,SDSCR,SDREM,SDNOW,SDDUZ,SDF) ;update SDEC APPOINTMENT   /a
  N SDECAPPT
  S SDECAPPT=$$APPTGET^SDECUTL(DFN,S,SDCLI)
  D:+SDECAPPT SDECCAN^SDEC08(SDECAPPT,SDWH,SDSCR,SDREM,SDNOW,$S($G(SDDUZ)'="":SDDUZ,1:DUZ),"0"_$G(SDF,0))  ;alb/jsm 658 add flag to indicate called from SDAM APPT CANCEL
+ ; SD*5.3*804 - Move deletion of VVSID to after Appointment Cancellation
+ N SDECIENS,SDECFDA,SDECMSG
+ S SDECIENS=SDECAPPT_","
+ S SDECFDA(409.84,SDECIENS,2)="@"
+ K SDECMSG
+ D FILE^DIE("","SDECFDA","SDECMSG")
  Q
  ;end addition/modification  /alb/sat  SD/627
  ;

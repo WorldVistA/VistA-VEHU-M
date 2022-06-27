@@ -1,18 +1,18 @@
-SDECPRVSRCHJSON ;ALB/LAB - Get Providers based on Search String ;SEP 09, 2021@14:39
- ;;5.3;Scheduling;**797,800**;Aug 13, 1993;Build 23
+SDECPRVSRCHJSON ;ALB/LAB,TAW - Get Providers based on Search String ;DEC 17, 2021
+ ;;5.3;Scheduling;**797,800,804**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
- ;Reference to $$GETS^DIQ,$$GETS1^DIQ in ICR #2056  
+ ;Reference to $$GETS^DIQ,$$GETS1^DIQ in ICR #2056
  Q
  ;
 JSONPRVLIST(SDPRVJSON,SDSRCHSTR) ;Search PROVIDERS and get data needed to make VIDEO VISIT SERVICE (VVS) Appointment
  ;INPUT - SDSRCHSTR (Search String)
  ;RETURN PARMETER:
- ; List of Providers from NEW PERSON (#200) File. Data is delimited by carat (^). 
+ ; List of Providers from NEW PERSON (#200) File. Data is delimited by carat (^).
  ; Field List:
- ; (1)     Provider Name 
+ ; (1)     Provider Name
  ; (2)     Provider IEN
  ; (3)     Primary Phone
  ; (4)     Email Address
@@ -36,7 +36,7 @@ INIT ; initialize values needed
  .S PROVIDERNAME=$O(^VA(200,"B",PROVIDERNAME),-1)
  S ERRPOP=0,SDECI=0,ERRMSG=""
  Q
- ; 
+ ;
 VALIDATE ; validate incoming parameters
  I $L(SDSRCHSTR)<2 D
  . ;create error message - Search String must be at least 2 characters
@@ -56,7 +56,7 @@ BLDPRVREC ;Build a list of Providers
  .I SDECI>49 Q
  .S (VVSPROVIDER,PROVIDERIEN)=""
  .F  S PROVIDERIEN=$O(^VA(200,"B",PROVIDERNAME,PROVIDERIEN)) Q:PROVIDERIEN=""  D
- ..S TERMDATE=$$GET1^DIQ(200,PROVIDERIEN,9.2,"E")
+ ..S TERMDATE=$$GET1^DIQ(200,PROVIDERIEN,9.2,"I")
  ..S SDPOP=0
  ..I TERMDATE'="" D
  ... S:TERMDATE<DT SDPOP=1

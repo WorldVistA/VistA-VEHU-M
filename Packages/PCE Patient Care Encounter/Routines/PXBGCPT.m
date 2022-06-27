@@ -1,7 +1,7 @@
-PXBGCPT ;ISL/JVS,PKR - GATHER CPT ;04/11/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**73,149,124,211,229**;Aug 12, 1996;Build 1
+PXBGCPT ;ISL/JVS,PKR - GATHER CPT ; Mar 24, 2022@23:05
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**73,149,124,211,229,230**;Aug 12, 1996;Build 4
  ;
- ; Reference to $$CPT^ICPTCOD supported by ICR# 1995
+ ; Reference to $$CPT^ICPTCOD in ICR #1995
  ;
 CPT(VISIT) ;--Gather the entries in the V CPT file
  ;
@@ -17,7 +17,7 @@ A ;--Set array with CPT codes and associated modifiers
  .K VAUGHN,EDATA
  .S IENS=IEN_","
  .D GETS^DIQ(9000010.18,IENS,FIELDS,"EI","VAUGHN")
- .S CPT=$G(VAUGHN(9000010.18,IENS,".01","E"))
+ .S CPT=$G(VAUGHN(9000010.18,IENS,".01","I")) ;PX*1.0*230 - Change to Internal to correct duplicate encounter issue
  .S QUANTITY=$G(VAUGHN(9000010.18,IENS,".16","E"))
  .S EVENTDT=$G(VAUGHN(9000010.18,IENS,"1201","I"))
  .I EVENTDT="" S EVENTDT=$P(^AUPNVSIT(VISIT,0),U,1)

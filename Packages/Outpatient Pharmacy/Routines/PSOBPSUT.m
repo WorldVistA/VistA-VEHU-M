@@ -1,5 +1,5 @@
 PSOBPSUT ;BIRM/MFR - BPS (ECME) Utilities ;07 Jun 2005  8:39 PM
- ;;7.0;OUTPATIENT PHARMACY;**148,247,260,281,287,289,358,385,403,408,512,630**;DEC 1997;Build 26
+ ;;7.0;OUTPATIENT PHARMACY;**148,247,260,281,287,289,358,385,403,408,512,630,562**;DEC 1997;Build 19
  ;Reference to $$ECMEON^BPSUTIL supported by IA 4410
  ;Reference to IBSEND^BPSECMP2 supported by IA 4411
  ;Reference to $$STATUS^BPSOSRX supported by IA 4412
@@ -240,7 +240,7 @@ MANREL(RX,RFL,PID) ; ePharmacy Manual Rx Release
  I $$PSOET^PSOREJP3(RX,RFL) W ! Q "^"
  ; Checking for REJECTS before proceeding to Rx Release
  I $$FIND^PSOREJUT(RX,RFL) D  I ACTION="Q"!(ACTION="^") W ! Q "^"
- . S ACTION=$$HDLG^PSOREJU1(RX,RFL,"79,88","ED","OIQ","Q")
+ . S ACTION=$$HDLG^PSOREJU1(RX,RFL,"79,88,943","ED","OIQ","Q")
  ; - ePharmacy switch is OFF
  I '$$ECMEON^BPSUTIL($$RXSITE^PSOBPSUT(RX,RFL)) Q ""
  ; - Not an ePharmacy Rx
@@ -253,7 +253,7 @@ MANREL(RX,RFL,PID) ; ePharmacy Manual Rx Release
  . I $G(PSOTRIC) D:ACTION=2 TRIC
  ; - Checking for OPEN/UNRESOLVED 3rd. Party Payer Rejects (After possible NDC edit)
  I $$FIND^PSOREJUT(RX,RFL) D  I ACTION="Q"!(ACTION="^") W ! Q "^"
- . S ACTION=$$HDLG^PSOREJU1(RX,RFL,"79,88","ED","OIQ","Q")
+ . S ACTION=$$HDLG^PSOREJU1(RX,RFL,"79,88,943","ED","OIQ","Q")
  I $G(PSOTRIC),$$STATUS^PSOBPSUT(RX,RFL)["IN PROGRESS" D TRIC Q "^"
  Q ""
  ;

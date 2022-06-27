@@ -1,5 +1,5 @@
 IBCE837H ;EDE/JWS - OUTPUT FOR 837 FHIR TRANSMISSION ;5/23/18 10:48am
- ;;2.0;INTEGRATED BILLING;**623,641,650**;23-MAY-18;Build 21
+ ;;2.0;INTEGRATED BILLING;**623,641,650,665**;23-MAY-18;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 GET(RESULT,ARG) ;get claim data for TAS Core 837
@@ -58,7 +58,11 @@ GET(RESULT,ARG) ;get claim data for TAS Core 837
  .. I X4=1 S X0=$TR(X0," ","")
  .. S X0=$$UP^XLFSTR(X0)
  .. ;JWS;IB*2.0*623;problem with embedded " in data
- .. I $F(X0,"""") S X0=$TR(X0,"""","'")  ;S X0=$$ESC^XLFJSONE(X0)
+ .. I $F(X0,"""") S X0=$TR(X0,"""","'")
+ .. ;JWS;8/17/21;IB*2.0*665;potential problem with embedded $c(13) in data
+ .. I $F(X0,$C(13)) S X0=$TR(X0,$C(13),"")
+ .. ;JWS;8/9/21;IB*2.0*665;DE7410;embedded backslash '\' causing VistaLink/FHIR Server issue
+ .. I $F(X0,"\") S X0=$$ESC^XLFJSONE(X0)
  .. I RES'="*" D  Q
  ... S DATA1="^TMP($J,""FHIR837"","""_RES_""")"
  ... D SET^IBCE837L(RES,X1,X4,FIELD,X0)

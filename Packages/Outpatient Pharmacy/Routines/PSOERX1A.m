@@ -1,5 +1,5 @@
 PSOERX1A ;ALB/BWF - eRx Utilities/RPC's ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**467,527,508,551,581,617**;DEC 1997;Build 110
+ ;;7.0;OUTPATIENT PHARMACY;**467,527,508,551,581,617,669**;DEC 1997;Build 3
  ;
  Q
  ; select an item
@@ -155,7 +155,7 @@ EDIT(EDTYP,SBN) ;
  ; edit provider
 VPROV ;
  N EXPRVIEN,VAPRVIEN,MANVAL,PRVDAT,EXPRNAME,EXPRLNAM,EXPRFNAM,PSOIENS,ERXMMFLG
- N EXPRIENS,SELPRV,QUIT,VAPNM,NEWPIEN,VANPI,MTYPE,RESTYPE,ERXSTAT,NEWVAL
+ N EXPRIENS,SELPRV,QUIT,VAPNM,NEWPIEN,VANPI,MTYPE,RESTYPE,ERXSTAT,NEWVAL,DONE
  S PSOIENS=PSOIEN_","
  S VAPNM=$$GET1^DIQ(52.49,PSOIEN,2.3,"E")
  S EXPRVIEN=$$GET1^DIQ(52.49,PSOIEN,2.1,"I")
@@ -175,9 +175,17 @@ VPROV ;
  .I MANVAL S DIR("A",1)="This provider has already been validated."
  .S DIR("B")="NO" D ^DIR
  .Q:'Y
- .S DIC=200,DIC("A")="Select PROVIDER NAME: ",DIC(0)="AEMQ",DIC("S")="I $$CHKPRV2^PSOERX1A(Y)" D ^DIC
+ .S DONE=0
+ .F  D  Q:DONE  Q:Y<1
+ ..S DIC=200,DIC("A")="Select PROVIDER NAME: ",DIC(0)="AEMQ",DIC("S")="I $$CHKPRV2^PSOERX1A(Y)" D ^DIC
+ ..Q:Y<1
+ ..S NEWPIEN=$P(Y,U)
+ ..L +^VA(200,NEWPIEN):1 I '$T D
+ ...N ERXPRV S ERXPRV=$$GET1^DIQ(200,NEWPIEN,31)
+ ...I ERXPRV'="" W $C(7),!!,"Provider is being edited by ",ERXPRV,! Q
+ ...W $C(7),!!,"Provider is being edited by an unknown user or has been deleted"
+ ..E  S DONE=1 L -^VA(200,NEWPIEN)
  .Q:Y<1
- .S NEWPIEN=$P(Y,U) K Y
  .S ERXMMFLG=$$PRVWARN("EP",PSOIEN,NEWPIEN) I 'ERXMMFLG D PAUSE^PSOERXUT Q
  .S DIR(0)="Y",DIR("A")="Would you like to use this provider"
  .S DIR("A",1)="You have selected provider: "_$$GET1^DIQ(200,NEWPIEN,.01,"E")
@@ -198,9 +206,15 @@ VPROV ;
  ..I MTYPE="RE" D UPDSTAT^PSOERXU1(PSOIEN,"RXW")
  ..I MTYPE="CX" D UPDSTAT^PSOERXU1(PSOIEN,"CXI")
  ; for now, only list providers that are authorized to write med orders and whose dea is not expired
+VPROV1 ;
  S DIC=200,DIC("A")="Select PROVIDER NAME: ",DIC(0)="AEMQ",DIC("S")="I $$CHKPRV2^PSOERX1A(Y)" D ^DIC
  Q:Y<1
  S SELPRV=$P(Y,U)
+ L +^VA(200,SELPRV):1 I '$T D  G VPROV1
+ .N ERXPRV S ERXPRV=$$GET1^DIQ(200,SELPRV,31)
+ .I ERXPRV'="" W $C(7),!!,"Provider is being edited by ",ERXPRV,! Q
+ .W $C(7),!!,"Provider is being edited by an unknown user or has been deleted"
+ L -^VA(200,SELPRV)
  S ERXMMFLG=$$PRVWARN("EP",PSOIEN,SELPRV) I 'ERXMMFLG  D PAUSE^PSOERXUT Q
  S DIR(0)="Y",DIR("A")="Would you like to use this provider"
  S DIR("A",1)="You have selected provider: "_$$GET1^DIQ(200,SELPRV,.01,"E")

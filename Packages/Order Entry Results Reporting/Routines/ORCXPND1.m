@@ -1,5 +1,5 @@
 ORCXPND1 ; SLC/MKB - Expanded Display cont ;May 3, 2021@21:00
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**26,67,75,89,92,94,148,159,188,172,215,243,280,340,306,350,423,514,527,539,513**;Dec 17, 1997;Build 5
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**26,67,75,89,92,94,148,159,188,172,215,243,280,340,306,350,423,514,527,539,513,585**;Dec 17, 1997;Build 2
  ;
  ; External References
  ;   DBIA  2387  ^LAB(60
@@ -92,7 +92,9 @@ LABS ; -- Laboratory [RESULTS ONLY for ID=OE order #]
  .... D:$D(IOUON) SETVIDEO^ORCXPND(LCNT,1,70,IOUON,IOUOFF)
  ... I TST S XT=TEST(SS,IVDT,TST),CCNT=0 I +XT D
  .... S NAME=$S($L($P(^LAB(60,+XT,0),U))>25:$S($L($P($G(^(.1)),U)):$P(^(.1),U),1:$E($P(^(0),U),1,25)),1:$E($P(^(0),U),1,25))
- .... S LINE=$$S(1,CCNT,NAME)_$$S(25,CCNT,$J($P(XT,U,2),20))_$$S(31,CCNT,$S($L($P(XT,U,3)):$P(XT,U,3),1:""))_$$S(48,CCNT,$P(XT,U,4))_$$S(58,CCNT,$J($P(XT,U,5),15))
+ .... ;OR*3.0*585: Adjusted spacing in line below - $$S(24... instead of $$S(25...
+ .... ;            and add " " before $$S(31
+ .... S LINE=$$S(1,CCNT,NAME)_$$S(24,CCNT,$J($P(XT,U,2),20))_" "_$$S(31,CCNT,$S($L($P(XT,U,3)):$P(XT,U,3),1:""))_$$S(48,CCNT,$P(XT,U,4))_$$S(58,CCNT,$J($P(XT,U,5),15))
  .... D SETLINE(LINE,.LCNT)
  .... I $P(XT,U,20) S ^TMP("ORPLS",$J,$P(XT,U,20))=""
  .... I $L($P(XT,U,3)),$D(IOINHI) D SETVIDEO^ORCXPND(LCNT,26,8,IOINHI,IOINORM)

@@ -1,5 +1,5 @@
-IBCNEQU ;DAOU/BHS - eIV REQUEST ELECTRONIC INSURANCE INQUIRY ;24-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,416,438,497,582,601,631,668**;21-MAR-94;Build 28
+IBCNEQU ;DAOU/BHS - eIV REQUEST ELECTRONIC INSURANCE INQUIRY ; 24-JUN-2002
+ ;;2.0;INTEGRATED BILLING;**184,271,416,438,497,582,601,631,668,702**;21-MAR-94;Build 53
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; eIV - Insurance Verification Interface
@@ -43,22 +43,27 @@ HELP ; -- help code
  D FULL^VALM1
  W @IOF
  W !,"When requesting an Electronic Insurance Inquiry..." ; IB*2*601/DM
- W !,"This screen lists all eligible (non-Medicaid) Insurance policies"
- W !,"for the patient.  Selecting an entry in this list creates an Insurance Buffer"
- W !,"entry with Source 'eIV' and Override Freshness Flag 'Yes'.  Setting this flag"
- W !,"is designed to force the eIV extract to attempt to create an insurance"
- W !,"inquiry based on this entry."
+ W !,"This screen lists all eligible (non-Medicaid) Insurance policies for the"
+ W !,"patient. Selecting an entry here creates an Insurance Buffer entry with Source"
+ W !,"'eIV' and Override Freshness Flag 'Yes'. Setting this flag is designed to force"
+ W !,"the eIV extract to attempt to create an insurance inquiry based on this entry."
  W !!,"Entries with an asterisk (*) preceding the Insurance Co name already exist in"
  W !,"the Insurance Buffer with the exact same name, the exact same Group Number,"
- W !,"and the Override Freshness Flag set to 'Yes'.  Selecting an entry with an"
- W !,"asterisk (*) will create a duplicate entry in the Insurance Buffer file for"
- W !,"the patient."
+ W !,"and the Override Freshness Flag set to 'Yes'."
  ; IB*2*601/DM
  W !!,"When requesting a MBI lookup..."
- W !,"Policies will be listed as described above for electronic insurance inquiry,"
- W !,"however, no special 'checks' will be made."
- W !,"The MBI request will be initiated immediately, regardless of policies above."
- D PAUSE^VALM1
+ W !,"Policies will be listed as described above for electronic insurance inquiry;"
+ W !,"however, no special 'checks' will be made. The MBI request will be initiated "
+ W !,"immediately, regardless of policies above and resulting buffer entry will have"
+ W !,"source 'Medicare'."
+ ; IB*2*702/TAZ - Added following lines
+ W !!,"When initiating an EICD Request..."
+ W !,"An EICD request will be initiated if the following conditions are met:"
+ W !," - The patient does not have active insurance on file."
+ W !," - The patient does not have an eligibility exclusion."
+ W !," - There have been no other recent EICD requests."
+ W !
+ ;
  S VALMBCK="R"
  Q
  ;

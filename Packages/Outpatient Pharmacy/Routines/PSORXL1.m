@@ -1,5 +1,5 @@
 PSORXL1 ;BIR/SAB - action to be taken on prescriptions ; 6/2/20 2:41pm
- ;;7.0;OUTPATIENT PHARMACY;**36,46,148,260,274,287,289,358,251,385,403,409,482,604**;DEC 1997;Build 2
+ ;;7.0;OUTPATIENT PHARMACY;**36,46,148,260,274,287,289,358,251,385,403,409,482,604,562**;DEC 1997;Build 19
  ;External reference to $$DS^PSSDSAPI supported by DBIA 5424
 S S SPPL="",PPL1=1 S:'$G(PPL) PPL=$G(PSORX("PSOL",PPL1)) G:$G(PPL)']"" D1
 S1 F PI=1:1 Q:$P(PPL,",",PI)=""  S DA=$P(PPL,",",PI) D
@@ -111,7 +111,7 @@ ECME ; - Looks for DUR/79 REJECTS and send Mail Rx's to ECME that have not been 
  . I $G(RXPR(PSORX)) Q
  . S PSOACT="",BWH=$S(PSORF:"RF",1:"OF")
  . I $$FIND^PSOREJUT(PSORX,PSORF) D  I PSOACT="Q" D RMV(PSORX,.PPL) Q
- . . S PSOACT=$$HDLG^PSOREJU1(PSORX,PSORF,"79,88",BWH,"OIQ","Q")
+ . . S PSOACT=$$HDLG^PSOREJU1(PSORX,PSORF,"79,88,943",BWH,"OIQ","Q")
  Q 
 RMV(RX,PPL) ; Remove the Rx from the label print queue
  N XPPL,I

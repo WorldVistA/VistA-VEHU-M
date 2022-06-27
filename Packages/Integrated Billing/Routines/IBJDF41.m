@@ -1,5 +1,5 @@
 IBJDF41 ;ALB/RB - FIRST PARTY FOLLOW-UP REPORT (COMPILE) ;15-APR-00
- ;;2.0;INTEGRATED BILLING;**123,159,204,356,451,473,568,618,651,694**;21-MAR-94;Build 11
+ ;;2.0;INTEGRATED BILLING;**123,159,204,356,451,473,568,618,651,694,705**;21-MAR-94;Build 8
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 ST ; - Tasked entry point.
@@ -64,7 +64,7 @@ PROC ; - Process data for report(s).
  . S IBBA=IBBA+$P(IBN,U,X)
  . S:X=1 IBPA=+IBN S:X=2 IBINT=$P(IBN,U,2) S:X=3 IBADM=$P(IBN,U,3)
  ;
- I '$G(IBEXCEL) D EN^IBJDF43 I IBRPT="S" Q  ;   Get summary stats.
+ I '$G(IBEXCEL) D EN^IBJDF43 I IBRPT="S"!(IBRPT="O") Q  ;   Get summary stats.
  ;
  I IBSAM,IBBA<IBSAM Q
  ;

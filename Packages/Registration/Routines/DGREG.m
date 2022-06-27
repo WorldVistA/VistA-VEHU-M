@@ -1,5 +1,5 @@
-DGREG ;ALB/JDS,MRL/PJR/PHH,ARF,RN-REGISTER PATIENT ; 3/28/14 12:38pm
- ;;5.3;Registration;**1,32,108,147,149,182,245,250,513,425,533,574,563,624,658,864,886,915,926,1024,993,1040,1027,1045**;Aug 13, 1993;Build 15
+DGREG ;ALB/JDS,MRL/PJR/PHH,ARF,RN,JAM-REGISTER PATIENT ; 3/28/14 12:38pm
+ ;;5.3;Registration;**1,32,108,147,149,182,245,250,513,425,533,574,563,624,658,864,886,915,926,1024,993,1040,1027,1045,1067**;Aug 13, 1993;Build 23
  ; 
 START ;
 EN D LO^DGUTL S DGCLPR=""
@@ -185,18 +185,31 @@ REASON(Y,XQY0) ; DG*5.3*1027 - Screen logic/Input Transform for field .15 (REGIS
  ; Input:  Y - Entry to be checked
  ;         XQYO - String containing the option that is being run (may be null when accessing the field from Fileman)
  ; Returns:  TRUE if the entry Y is valid
- ; Supported ICRs
- ; #3356  -  XQY0          ; Kernel Variable
+ ;
+ ; Supported ICRs:
+ ; Reference to variable XQY0 supported by ICR #3356          ; Kernel Variable
+ ; Reference to $$GET^XPAR supported by ICR #2263
+ ; Reference to $$GET1^DIQ() supported by ICR #2056
  ;
  ; Check the entry in the 408.43 (PATIENT REGISTRATION ONLY REASON) dictionary
  I '$D(^DG(408.43,Y,0)) Q 0
  ; Entries with AVAILABILITY field = 3 are not valid
  I $P(^DG(408.43,Y,0),U,2)=3 Q 0
+ ; DG*5.3*1067 - For Reg Only Reasons added in patch 1067, screen them out until the date/time in XPAR parameter DG PATCH DG*5.3*1067 ACTIVE is reached
+ N DGREASON,DGACTTS
+ S DGREASON=$$GET1^DIQ(408.43,Y_",",.01)
+ I DGREASON="CLINICAL EVALUATION"!(DGREASON="4TH MISSION")!(DGREASON="HUD-VASH")!(DGREASON="IMMUNIZATIONS") D  I $$NOW^XLFDT()<DGACTTS Q 0
+ . ; Get the timestamp stored in the parameter
+ . S DGACTTS=$$GET^XPAR("PKG","DG PATCH DG*5.3*1067 ACTIVE",1)
  ; Handle the condition where not within a Vista option or in Programmer mode, default to 0
  I $G(XQY0)=""!($P($G(XQY0),U,1)="XUPROGMODE") N DGRET S DGRET=0 D  Q DGRET
  . ; If direct call to DG COLLATERAL, Only entries with AVAILABILITY field = 2 (COLLATERAL) are valid (variable DR set in ^DGCOL)
  . I $G(DR)="[DGCOLLATERAL]" I $P(^DG(408.43,Y,0),U,2)=2 S DGRET=1
  ; XQY0 is defined and is not Programmer mode:
+ ; DG*5.3*1067; If non-Veteran, do not allow CLINICAL EVALUATION
+ N DGVET
+ S DGVET=$$VET1^DGENPTA($G(DFN))
+ I 'DGVET,DGREASON="CLINICAL EVALUATION" Q 0
  ; If not in DG COLLATERAL PATIENT option, all other entries are valid
  I $P(XQY0,U,1)'="DG COLLATERAL PATIENT" Q 1
  ; Otherwise, in DG COLLATERAL PATIENT option, only entries with AVAILABILITY field = 2 (COLLATERAL) are valid

@@ -1,5 +1,5 @@
 VPRSDAQ ;SLC/MKB -- SDA queries ;11/8/18  14:11
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,20,26,25,27**;Sep 01, 2011;Build 10
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,20,26,25,27,28**;Sep 01, 2011;Build 6
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -243,7 +243,7 @@ CPT ; -- V CPT (Procedures)
 POV ; -- V POV (Diagnosis)
  N FNUM S FNUM=9000010.07 G PXRM
  ;
-IMMS ; -- Immunizations
+IMMS ; -- V Immunizations
  N FNUM S FNUM=9000010.11 G PXRM
  ;
 PXRM ; -- Search PXRM index
@@ -255,6 +255,18 @@ PXRM ; -- Search PXRM index
  .. I FNUM=9000010.18,'$$VCPT^VPRSDAV(ID) Q
  .. S VPRN=VPRN+1,DLIST(VPRN)=ID
  K ^TMP("VPRPX",$J)
+ Q
+ ;
+ICR ; -- V Imm Contraindications/Refusals
+ N ROOT,INDX,DATE,IDT,DA,TMP,VPRN S VPRN=0
+ ; find records in ^PXRMINDX, sort by date
+ S ROOT="^PXRMINDX(9000010.707,""PCI"","_DFN,INDX=ROOT_")",ROOT=ROOT_","
+ F  S INDX=$Q(@INDX) Q:INDX'[ROOT  D
+ . S DATE=$QS(INDX,6) Q:DATE<DSTRT  Q:DATE>DSTOP
+ . S DA=$QS(INDX,8),IDT=9999999-DATE,TMP(IDT,DA)=""
+ ; return [DMAX] entries
+ S IDT=0 F  S IDT=$O(TMP(IDT)) Q:IDT<1  D  Q:VPRN'<DMAX
+ . S DA=0 F  S DA=$O(TMP(IDT,DA)) Q:DA<1  S VPRN=VPRN+1,DLIST(VPRN)=DA
  Q
  ;
 HFCVR ; -- V Health Factors, for COVID Vaccination Refusal
@@ -313,7 +325,7 @@ VITALS ; -- GMR Vital Measurements
 APPTS ; -- Appointments
  N VPRX,VPRNUM,VPRDT,VPRN
  S VPRX(1)=DSTRT_";"_DSTOP,VPRX(4)=DFN
- S VPRX("FLDS")="1;2;3;10;11;12;22",VPRX("SORT")="P"
+ S VPRX("FLDS")="1;2;3;5;8;9;10;11;12;18;22",VPRX("SORT")="P"
  ; appointments
  S VPRX(3)="R;I;NS;NSR;NT" ;no cancelled appt's
  S VPRNUM=$$SDAPI^SDAMA301(.VPRX),(VPRDT,VPRN)=0

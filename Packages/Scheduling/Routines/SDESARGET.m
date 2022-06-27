@@ -1,5 +1,5 @@
-SDESARGET ;ALB/BLB - VISTA SCHEDULING RPCS ;June 4, 2021@13:40
- ;;5.3;Scheduling;**794,799**;Aug 13, 1993;Build 7
+SDESARGET ;ALB/BLB,MGD,KML,LAB - VISTA SCHEDULING RPCS ;March 23, 2022
+ ;;5.3;Scheduling;**794,799,805,809,813**;Aug 13, 1993;Build 6
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Reference to ^DPT(DFN,0) in ICR #10035
  ;
@@ -13,17 +13,23 @@ SDESARGET ;ALB/BLB - VISTA SCHEDULING RPCS ;June 4, 2021@13:40
  ; The ARGETPAT and ARGETPATJSON entry points must be kept in sync when passing in
  ; new parameters
  ;
-ARGETPATJSON(RET,DFN) ;Entry point to return JSON
+ ; VSE-2500 - dates and date/times that get returned will be in ISO8601 format (e.g., CCYY-MM-DD, CCYY-MM-DDTHH:MM-timezone offset)
+ ; since the data is retrieved from file 409.85, any date/times that are returned will be system time
+ ;
+ARGETPATJSON(RET,DFN,SDEAS) ;Entry point to return JSON
  ;  SDEC GET PATIENT APPT REQ JSON
  ;      ARGETPATJSON^SDEC1
  N FILT,APPT,ERR,JSONFLG,JSONERR,COPUNT
  S JSONFLG=1,JSONERR=""
+ S SDEAS=$G(SDEAS,"")
+ I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
+ I +SDEAS=-1 D ERRLOG^SDESJSON(.APPT,142),BUILDJSON Q
  D JSONEP
  I '$D(APPT("Error")),'$D(APPT("ApptReq")) S APPT("ApptReq")=""  ;No appt req for this patient
  D BUILDJSON
  Q
  ;
-ARGETIENJSON(RET,ARIEN) ;Appt Req GET for speific appt IEN
+ARGETIENJSON(RET,ARIEN,SDEAS) ;Appt Req GET for speific appt IEN
  ;  SDEC GET PAT APPT REQ BY IEN
  ;      ARGETIEN^SDEC1
  N FILT,APPT,COUNT,FNUM,DFN,ARDATA,JSONFLG,JSONERR
@@ -31,6 +37,9 @@ ARGETIENJSON(RET,ARIEN) ;Appt Req GET for speific appt IEN
  D INIT
  S ARIEN=$G(ARIEN)
  I ARIEN="" D ERRLOG^SDESJSON(.APPT,3)
+ S SDEAS=$G(SDEAS,"")
+ I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
+ I +SDEAS=-1 D ERRLOG^SDESJSON(.APPT,142),BUILDJSON Q
  S FNUM=$$FNUM^SDECAR
  I ARIEN'="",('$D(^SDEC(409.85,ARIEN))) S ARIEN="" D ERRLOG^SDESJSON(.APPT,4)
  I ARIEN D GETS^DIQ(FNUM,ARIEN,"**","IE","ARDATA","ARMSG")  ;Get data for all field for this appt req
@@ -88,13 +97,13 @@ VALIDIEN() ;Validate the appointment request
  ;
 BUILDREC(ARDATA) ; Build an output record
  ; Input - ARDATA = array containing data from SDEC APPT REQUEST file (#409.85)
- N ARSTAT,DFN,SDPS,SDCLY,ARORIGDT,SDI,STR,SDCL,CALLLETTER,I,X,VAR,SUBCNT,SDECLET,SDECALL
+ N DFN,SDPS,SDCLY,ARORIGDT,SDI,STR,SDCL,CALLLETTER,I,X,VAR,SUBCNT,SDECLET,SDECALL
  N ARINST,ARINSTNM,ARTYPE,VAOSGUID,ARSTOP,ARSTOPN,ARCLIEN,ARCLNAME,APPTYPE,ARUSER,ARUSRNM
- N AREDT,ARPRIO,ARENPRI,ARREQBY,ARPROV,ARPROVNM,ARSDOA,ARSDOA,ARDAM,ARCLERK,ARCLERKN,ARASD,ARSDOA
+ N AREDT,ARPRIO,ARENPRI,ARREQBY,ARPROV,ARPROVNM,ARCLERK,ARCLERKN,ARSDOA
  N ARCLERK,ARCLERKN,ARDAM,ARSVCCON,ARDAPTDT,ARCOMM,ARMAR,ARMAI,ARMAN,ARPC,ARDISPD,ARDISPU,ARDISPUN
- N APPTPTRS,CHILDREN,ARMRTC,SDPARENT,SDMTRC,AREAS
+ N APPTPTRS,CHILDREN,ARMRTC,SDPARENT,SDMRTC,AREAS
  N I,L,ZZ
- S ARORIGDT=ARDATA(FNUM,ARIEN_",",1,"I")
+ S ARORIGDT=$$FMTISO^SDAMUTDT(ARDATA(FNUM,ARIEN_",",1,"I")) ;vse-2500  CREATE DATE
  S ARSTAT=ARDATA(FNUM,ARIEN_",",23,"I")
  S DFN=ARDATA(FNUM,ARIEN_",",.01,"I")
  S SDPS=ARDATA(FNUM,ARIEN_",",.02,"E")
@@ -109,33 +118,25 @@ BUILDREC(ARDATA) ; Build an output record
  S APPTYPE=ARDATA(FNUM,ARIEN_",",8.7,"I")
  S ARUSER=ARDATA(FNUM,ARIEN_",",9,"I")
  S ARUSRNM=ARDATA(FNUM,ARIEN_",",9,"E")
- S AREDT=$G(ARDATA(FNUM,ARIEN_",",9.5,"E"))   ;53
+ S AREDT=$G(ARDATA(FNUM,ARIEN_",",9.5,"I"))  ;DATE/TIME ENTERED
  S ARPRIO=ARDATA(FNUM,ARIEN_",",10,"I")
- S ARENPRI=ARDATA(FNUM,ARIEN_",",10.5,"E")   ;msc/sat
+ S ARENPRI=ARDATA(FNUM,ARIEN_",",10.5,"E")
  S ARREQBY=ARDATA(FNUM,ARIEN_",",11,"I")
  S ARPROV=ARDATA(FNUM,ARIEN_",",12,"I")
  S ARPROVNM=ARDATA(FNUM,ARIEN_",",12,"E")
- S ARSDOA=ARDATA(FNUM,ARIEN_",",13,"I")      ;scheduled date of appt
- ;  Change date/time conversion so midnight is handled properly.  wtc/pwc 694 1/7/2020
- ;
- S ARSDOA=$$FMTONET^SDECDATE(ARSDOA,"N") ;
- S ARDAM=ARDATA(FNUM,ARIEN_",",13.1,"E")     ;date appt. made
+ S ARSDOA=$$FMTISO^SDAMUTDT(ARDATA(FNUM,ARIEN_",",13,"I"))      ;vse-2500 SCHEDULED DATE OF APPT
+ S ARDAM=$$FMTISO^SDAMUTDT(ARDATA(FNUM,ARIEN_",",13.1,"I"))    ;vse-2500  DATE APPT. MADE
  S ARCLERK=ARDATA(FNUM,ARIEN_",",13.7,"I")   ;appt clerk ien
  S ARCLERKN=ARDATA(FNUM,ARIEN_",",13.7,"E")   ;appt clerk name
- S ARASD=""
- S:ARSDOA'="" $P(ARASD,"~~",1)=ARSDOA
- S:ARCLERK'="" $P(ARASD,"~~",12)=ARCLERK
- S:ARCLERKN'="" $P(ARASD,"~~",13)=ARCLERKN
- S:ARDAM'="" $P(ARASD,"~~",17)=ARDAM
  S ARSVCCON=ARDATA(FNUM,ARIEN_",",15,"E")
- S ARDAPTDT=ARDATA(FNUM,ARIEN_",",22,"I")
+ S ARDAPTDT=$$FMTISO^SDAMUTDT(ARDATA(FNUM,ARIEN_",",22,"I")) ;vse-2500  CID/PREFERRED DATE OF APPT
  ;VSE-1218; start process mult lines of comments
  S ARCOMM=ARDATA(FNUM,ARIEN_",",25,"I")
  S ARMAR=ARDATA(409.85,ARIEN_",",41,"E")
  S ARMAI=ARDATA(409.85,ARIEN_",",42,"E")
  S ARMAN=ARDATA(409.85,ARIEN_",",43,"E")
- S ARPC=$$WLPC^SDECAR1A(.ARDATA,ARIEN)
- S ARDISPD=ARDATA(FNUM,ARIEN_",",19,"E")
+ S ARPC=$$WLPC(.ARDATA,ARIEN)
+ S ARDISPD=$$FMTISO^SDAMUTDT(ARDATA(FNUM,ARIEN_",",19,"I"))  ;vse-2500 DATE DISPOSITIONED
  S ARDISPU=ARDATA(FNUM,ARIEN_",",20,"I")
  S ARDISPUN=ARDATA(FNUM,ARIEN_",",20,"E")
  S AREAS=ARDATA(FNUM,ARIEN_",",100,"E")   ; EAS tracking number added with patch SD*5.3*799
@@ -144,8 +145,9 @@ BUILDREC(ARDATA) ; Build an output record
  S ARMRTC=$$MRTC^SDECAR(ARIEN)
  S SDPARENT=ARDATA(FNUM,ARIEN_",",43.8,"I")
  ;Build string of RTC dates
- S (SDI,SDMTRC)=""
- F  S SDI=$O(ARDATA(409.851,SDI)) Q:SDI=""  S SDMTRC=$S(SDMTRC'="":SDMTRC_"|",1:"")_ARDATA(409.851,SDI,.01,"E")
+ S (SDI,SDMRTC)=""
+ F  S SDI=$O(ARDATA(409.851,SDI)) Q:SDI=""  D
+ .S SDMRTC=$S(SDMRTC'="":SDMRTC_"|",1:"")_$$FMTISO^SDAMUTDT(ARDATA(409.851,SDI,.01,"I")) ;vse-2500 MRTC CALC PREF DATES
  ;# OF CALLS MADE AND DATE LAST LETTER SENT
  S CALLLETTER=$$CALLET^SDECAR1A(DFN,ARIEN)
  ;
@@ -153,7 +155,7 @@ BUILDREC(ARDATA) ; Build an output record
  ;
  S APPT("ApptReq",COUNT,"PatientIEN")=DFN
  S APPT("ApptReq",COUNT,"ApptReqIEN")=ARIEN
- S APPT("ApptReq",COUNT,"CreateDateI")=ARORIGDT
+ S APPT("ApptReq",COUNT,"CreateDateE")=ARORIGDT
  S APPT("ApptReq",COUNT,"InstitutionI")=ARINST
  S APPT("ApptReq",COUNT,"InstitutionE")=ARINSTNM
  S APPT("ApptReq",COUNT,"RequestTypeI")=ARTYPE
@@ -165,7 +167,7 @@ BUILDREC(ARDATA) ; Build an output record
  S APPT("ApptReq",COUNT,"RequestedByI")=ARREQBY
  S APPT("ApptReq",COUNT,"ProviderI")=ARPROV
  S APPT("ApptReq",COUNT,"ProviderE")=ARPROVNM
- S APPT("ApptReq",COUNT,"CidPreferredDateOfApptI")=ARDAPTDT
+ S APPT("ApptReq",COUNT,"CidPreferredDateOfApptE")=ARDAPTDT
  S APPT("ApptReq",COUNT,"CommentsE")=ARCOMM
  S APPT("ApptReq",COUNT,"EnrollmentPriorityE")=ARENPRI
  S APPT("ApptReq",COUNT,"MultipleAppointmentRtcE")=ARMAR
@@ -177,7 +179,7 @@ BUILDREC(ARDATA) ; Build an output record
  .S VAR=$P(ARPC,"::",I)
  .Q:VAR=""
  .S SUBCNT=SUBCNT+1
- .S APPT("ApptReq",COUNT,"PatientContact",SUBCNT,"DateEnteredI")=$P(VAR,"~~",1)
+ .S APPT("ApptReq",COUNT,"PatientContact",SUBCNT,"DateEnteredE")=$P(VAR,"~~",1)
  .S APPT("ApptReq",COUNT,"PatientContact",SUBCNT,"EnteredByUserI")=$P(VAR,"~~",2)
  .S APPT("ApptReq",COUNT,"PatientContact",SUBCNT,"EnteredByUserE")=$P(VAR,"~~",3)
  .S APPT("ApptReq",COUNT,"PatientContact",SUBCNT,"ActionE")=$P(VAR,"~~",4)
@@ -189,15 +191,15 @@ BUILDREC(ARDATA) ; Build an output record
  S APPT("ApptReq",COUNT,"DispositionedByI")=ARDISPU
  S APPT("ApptReq",COUNT,"DispositionedByE")=ARDISPUN
  S APPT("ApptReq",COUNT,"ServiceConnectedPriorityE")=ARSVCCON
- S APPT("ApptReq",COUNT,"DateTimeEnteredE")=AREDT
+ S APPT("ApptReq",COUNT,"DateTimeEnteredE")=$$FMTISO^SDAMUTDT(AREDT)  ;vse-2500
  S SUBCNT=0
- F I=1:1:$L(SDMTRC,"|") D
- .S:$P(SDMTRC,"|",I)'="" APPT("ApptReq",COUNT,"MRTCCalcPrefDates",$I(SUBCNT),"Date")=$P(SDMTRC,"|",I)
+ F I=1:1:$L(SDMRTC,"|") D
+ .S:$P(SDMRTC,"|",I)'="" APPT("ApptReq",COUNT,"MRTCCalcPrefDates",$I(SUBCNT),"Date")=$P(SDMRTC,"|",I)
  I '$D(APPT("ApptReq",COUNT,"MRTCCalcPrefDates")) S APPT("ApptReq",COUNT,"MRTCCalcPrefDates")=""
  ;
  S APPT("ApptReq",COUNT,"ReqServiceSpecialtyI")=ARSTOP
  S APPT("ApptReq",COUNT,"ReqServiceSpecialtyE")=ARSTOPN
- S APPT("ApptReq",COUNT,"ScheduledDateOfApptI")=ARSDOA
+ S APPT("ApptReq",COUNT,"ScheduledDateOfApptE")=ARSDOA
  S APPT("ApptReq",COUNT,"ApptClerkI")=ARCLERK
  S APPT("ApptReq",COUNT,"ApptClerkE")=ARCLERKN
  S APPT("ApptReq",COUNT,"DateApptMadeE")=ARDAM
@@ -219,6 +221,9 @@ BUILDREC(ARDATA) ; Build an output record
  S APPT("ApptReq",COUNT,"ParentRequestI")=SDPARENT
  S APPT("ApptReq",COUNT,"NumberOfCalls")=$P(CALLLETTER,"^",1)
  S APPT("ApptReq",COUNT,"DateOfLastLetterSent")=$P(CALLLETTER,"^",2)
+ S APPT("ApptReq",COUNT,"NumberOfEmailContact")=$P(CALLLETTER,"^",3)
+ S APPT("ApptReq",COUNT,"NumberOfTextContact")=$P(CALLLETTER,"^",4)
+ S APPT("ApptReq",COUNT,"NumberOfSecureMessage")=$P(CALLLETTER,"^",5)
  Q
  ;
 BUILDJSON ;Convert to JSON
@@ -226,6 +231,20 @@ BUILDJSON ;Convert to JSON
  D ENCODE^SDESJSON(.APPT,.RET,.JSONERR)
  K ^TMP("SDECAR4",$J)
  Q
+ ;
+WLPC(ARDATA,ASDIEN) ;
+ N PC,PC1,PCIEN
+ S PC=""
+ S PCIEN="" F  S PCIEN=$O(ARDATA(409.8544,PCIEN)) Q:PCIEN=""  D
+ .Q:$P(PCIEN,",",2)'=ASDIEN
+ .S PC1=""
+ .S $P(PC1,"~~",1)=$$FMTISO^SDAMUTDT(ARDATA(409.8544,PCIEN,.01,"I"))    ;vse-2500 DATE ENTERED
+ .S $P(PC1,"~~",2)=ARDATA(409.8544,PCIEN,2,"I")      ;PC ENTERED BY USER IEN
+ .S $P(PC1,"~~",3)=ARDATA(409.8544,PCIEN,2,"E")      ;PC ENTERED BY USER NAME
+ .S $P(PC1,"~~",4)=ARDATA(409.8544,PCIEN,3,"E")      ;ACTION
+ .S $P(PC1,"~~",5)=ARDATA(409.8544,PCIEN,4,"E")      ;PATIENT PHONE
+ .S PC=$S(PC'="":PC_"::",1:"")_PC1
+ Q PC
  ;
 EXIT ; Any special logic needed for a successful completion
  N SDTMP,COUNT

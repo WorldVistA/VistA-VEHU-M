@@ -1,5 +1,5 @@
-SDEC50 ;ALB/SAT/JSM,TAW - VISTA SCHEDULING RPCS ;JUL 19,2021@12:54
- ;;5.3;Scheduling;**627,658,665,672,722,723,737,694,745,790,792**;Aug 13, 1993;Build 9
+SDEC50 ;ALB/SAT/JSM,TAW,LAB,BLB - VISTA SCHEDULING RPCS ;FEB 14,2022@12:15
+ ;;5.3;Scheduling;**627,658,665,672,722,723,737,694,745,790,792,803,809**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 2004-038, this routine should not be modified
  ;
  ;  ICR
@@ -35,21 +35,19 @@ FAPPTGET(SDECY,DFN,SDBEG,SDEND,SDANC) ; GET Future appointments for given patien
  ; 11. Cancel/noshow date 
  ;"T00020DFN^T00020CLINIC_IEN^T00030CLINIC_NAME^T00020APPT_DATE^T00020STATUS^T00100ANCTXT^T00030SDLNK^T00030IEN^T00030APPTYPE_IEN^T00030APPTYPE_NAME^T00030CANDATE"   ;sat 658 IEN ;sat 672 APPTYPE ;pwc/lab 745 SDLNK/CANDATE
  ; Caught Exception Return:
- ;  A single entry in the Global Array in the format "-1^<error text>"
- ;  "T00020RETURNCODE^T00100TEXT"
  ; Unexpected Exception Return:
  ;  Handled by the RPC Broker.
  ;  M errors are trapped by the use of M and Kernel error handling.
  ;  The RPC execution stops and the RPC Broker sends the error generated text back to the client.
  ;
  N IEN,SDANCT,SDCL,SDCLN,SDCONS,SDATA,SDDT,SDST,SDT,X,Y,%DT,SDSTDT,SDSTSTR ;745 lab
- N SDTMP,SDTYP,SDTYPN,SDNOD,SDRES,SDNOD2,SDLNK,PRECHINSTEP ;alb/sat 672 ;*zeb 723 5/2/19 
+ N SDTMP,SDTYP,SDTYPN,SDNOD,SDRES,SDNOD2,SDLNK,PRECHINSTEP,TIMEZONE ;alb/sat 672 ;*zeb 723 5/2/19 
  S SDECI=0
  K ^TMP("SDEC50",$J)
  S SDECY="^TMP(""SDEC50"","_$J_")"
  ; data header
  S SDTMP="T00020DFN^T00020CLINIC_IEN^T00030CLINIC_NAME^T00020APPT_DATE^T00020STATUS^T00100ANCTXT"
- S SDTMP=SDTMP_"^T00030SDLNK^T00030IEN^T00030APPTYPE_IEN^T00030APPTYPE_NAME^T00030CANDATE^T00030PRECKNCOMPLETE"   ;sat 658 IEN ;sat 672 APPTYPE ;pwc/lab 745 SDLNK/CANDATE
+ S SDTMP=SDTMP_"^T00030SDLNK^T00030IEN^T00030APPTYPE_IEN^T00030APPTYPE_NAME^T00030CANDATE^T00030PRECKNCOMPLETE^T00030TIMEZONE"   ;sat 658 IEN ;sat 672 APPTYPE ;pwc/lab 745 SDLNK/CANDATE
  S @SDECY@(0)=SDTMP_$C(30)
  ;validate Patient (required)
  I '+DFN D ERR1^SDECERR(-1,"Invalid Patient ID.",.SDECI,SDECY) Q
@@ -92,7 +90,8 @@ FAPPTGET(SDECY,DFN,SDBEG,SDEND,SDANC) ; GET Future appointments for given patien
  .. S SDNOD2=$G(^SDEC(409.84,IEN,2)),SDLNK=""
  .. S SDLNK=$S(SDNOD2="":"",1:$P(SDNOD2,U,1))  ;pwc *745 ptr link files
  .. S PRECHINSTEP=$$LASTCKNSTEP^SDESCKNSTEP(IEN)
- .. S SDECI=SDECI+1 S @SDECY@(SDECI)=DFN_U_SDCL_U_SDCLN_U_SDDT_U_SDST_U_SDANCT_U_SDLNK_U_IEN_U_SDTYP_U_SDTYPN_U_SDSTDT_U_PRECHINSTEP_$C(30) ; pwc/lab *745 SDLNK/SDSTDT
+ .. S TIMEZONE=$$TIMEZONEDATA^SDESUTIL(SDCL),TIMEZONE=$P($G(TIMEZONE),U)
+ .. S SDECI=SDECI+1 S @SDECY@(SDECI)=DFN_U_SDCL_U_SDCLN_U_SDDT_U_SDST_U_SDANCT_U_SDLNK_U_IEN_U_SDTYP_U_SDTYPN_U_SDSTDT_U_PRECHINSTEP_U_TIMEZONE_$C(30) ; pwc/lab *745 SDLNK/SDSTDT
  S @SDECY@(SDECI)=@SDECY@(SDECI)_$C(31)
  Q
  ;
@@ -122,14 +121,16 @@ APPTSTS(APPTIEN,APPTNOD,CLINIEN) ;Get current status for an entry in the SDEC AP
  . . S CXLRSNTP=$P($G(^SD(409.2,CXLRSN,0)),U,2)
  . . I CXLRSNTP="C" S STS="CANCELLED BY CLINIC" Q
  . . I CXLRSNTP="P" S STS="CANCELLED BY PATIENT" Q
- . . ;only reasons that can be either are left, check pt file status -- could be overlaid after cancel
  . . S CXLSTS=$$GET1^DIQ(2.98,SDT_","_DFN_",",100)
  . . I CXLSTS["CANCELLED" S STS=CXLSTS Q
- . . S STS="CANCELLED BY CLINIC" ;must specify clinic or patient, default to clinic if information is lost
+ . . S STS="CANCELLED BY CLINIC" ;default to clinic if information is lost
  . S STS="NO-SHOW",STSDT=$P(APPTNOD,U,23) ;745 lab STSDT
- ; -- inpatient?
  ; WTC 722 3/22/19
  I STS=""!($P(APPTNOD,U,17)="I"),$$INP^SDAM2(DFN,SDT)="I" S STS=$S($P(APPTNOD,U,12)="":"INPATIENT",$P($G(^DPT(DFN,"S",SDT,0)),U,2)="PC":"CANCELLED BY PATIENT",1:"CANCELLED BY CLINIC") ; WTC 722 3/27/2019
+ N SDNEXTIEN
+ S SDNEXTIEN=$O(^SDEC(409.84,"APTDT",DFN,SDT,APPTIEN))
+ I +$G(SDNEXTIEN),($P(APPTNOD,U,17)="I"),($P(APPTNOD,U,12)'="") S STS="INPATIENT/CANCELLED"
+ Q:STS="INPATIENT/CANCELLED" STS
  S VAINDT=SDT D ADM^VADPT2 ;ADM^VADPT2 assumes VAINDT and returns in VADMVT
  I STS["INPATIENT",$S('VADMVT:1,'$P(^DG(43,1,0),U,21):0,1:$P($G(^DIC(42,+$P($G(^DGPM(VADMVT,0)),U,6),0)),U,3)="D") S STS=""
  ; -- determine ci/co indicator
@@ -138,8 +139,7 @@ APPTSTS(APPTIEN,APPTNOD,CLINIEN) ;Get current status for an entry in the SDEC AP
  I CHKIO="NO ACTION TAKEN",CLINIEN'="" D  ;
  . N SDECD2 S SDECD2=$$FIND^SDAM2(DFN,SDT,CLINIEN) I SDECD2,$P($G(^SC(CLINIEN,"S",SDT,1,SDECD2,"C")),U,1)'="" S CHKIO="CHECKED IN" ;
  S:STS="" STS=CHKIO
- ;If status is NO ACTION TAKEN, check if cancelled in Patient file (by SDCANCEL),  wtc 11/4/2019 737
- ;Changed to if status not cancelled, check if cancelled in Patient file.  wtc 1/17/2020 737
+ ;If NO ACTION TAKEN, If cancelled in Patient(by SDCANCEL),  wtc 11/4/2019 737
  I STS'["CANCELLED" D  ;
  . I $P($G(^DPT(DFN,"S",SDT,0)),U,1)'=CLINIEN Q  ;If appointment does not match, leave status alone.
  . S STS=$S($P($G(^DPT(DFN,"S",SDT,0)),U,2)="PC":"CANCELLED BY PATIENT",$P($G(^DPT(DFN,"S",SDT,0)),U,2)="C":"CANCELLED BY CLINIC",1:STS) ;
@@ -234,7 +234,7 @@ PCSTGET(SDECY,DFN,SDCL,SDBEG,SDEND)  ;GET patient clinic status for a clinic for
  I '$D(^SC(SDCL,0)) D ERR1^SDECERR(-1,"Invalid Clinic ID.",SDECI,SDECY) Q
  ;check times
  I $G(SDBEG)'="" S %DT="" S X=$P(SDBEG,"@",1) D ^%DT S SDBEG=Y I Y=-1 S SDBEG=""
- S:$G(SDBEG)="" SDBEG=$P($$FMADD^XLFDT($$NOW^XLFDT,-730),".",1)
+ S:$G(SDBEG)="" SDBEG=$P($$FMADD^XLFDT($$NOW^XLFDT,-1095),".",1)
  I $G(SDEND)'="" S %DT="" S X=$P(SDEND,"@",1) D ^%DT S SDEND=Y I Y=-1 S SDEND=""   ;alb/sat 665 - remove Q
  S:$G(SDEND)="" SDEND=$P($$NOW^XLFDT,".",1)
  S STOP=$$CLSTOP(SDCL)   ;get stop code number  alb/jsm 658 updated to use new CLSTOP call

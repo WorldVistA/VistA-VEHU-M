@@ -1,5 +1,5 @@
 VPRSDAG ;SLC/MKB -- SDA GMR utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**27**;Sep 01, 2011;Build 10
+ ;;1.0;VIRTUAL PATIENT RECORD;**27,28**;Sep 01, 2011;Build 6
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -14,7 +14,7 @@ VPRSDAG ;SLC/MKB -- SDA GMR utilities ;10/25/18  15:29
  ; LEXTRAN                       4912
  ; RMIMRP                        4745
  ; TIULQ                         2693
- ; XLFNAME                       3065
+ ; XLFDT                        10103
  ;
 PROB1(IEN) ; -- get info for single problem [ID Action]
  I '$G(^AUPNPROB(IEN,0)) S DDEOUT=1 Q
@@ -40,10 +40,11 @@ PROBCMT(IEN) ; -- return list of comments in
  Q
  ;
 DELETED(IEN,FLD) ; -- return 1 or 0, if FLD value was recently deleted
- N LAST,I,X,Y
+ N LAST,I,X,Y,WK2
  S IEN=+$G(IEN),FLD=+$G(FLD),Y=0
- S LAST=+$O(^GMPL(125.8,"AD",IEN,0)),I=0
- F  S I=$O(^GMPL(125.8,"AD",IEN,LAST,I)) Q:I<1  D  Q:Y
+ S WK2=9999999-$$FMADD^XLFDT(DT,-14) ;Inv 2 weeks ago
+ S LAST=+$O(^GMPL(125.8,"AD",IEN,0)) Q:LAST>WK2 Y
+ S I=0 F  S I=$O(^GMPL(125.8,"AD",IEN,LAST,I)) Q:I<1  D  Q:Y
  . S X=$G(^GMPL(125.8,I,0))
  . I $P(X,U,2)=FLD,$L($P(X,U,5)),$P(X,U,6)="" S Y=1 Q
  Q Y

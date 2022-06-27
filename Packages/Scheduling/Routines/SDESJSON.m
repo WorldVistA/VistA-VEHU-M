@@ -1,5 +1,5 @@
-SDESJSON ;ALB/MGD/ANU,TAW - VISTA SCHEDULING JSON UTILITIES ;Sep 30, 2021
- ;;5.3;Scheduling;**788,794,797,799,800,801**Aug 13, 1993;Build 6;Build 13
+SDESJSON ;ALB/MGD,ANU,TAW,KML,BLB - VISTA SCHEDULING JSON UTILITIES ;March 18, 2022
+ ;;5.3;Scheduling;**788,794,797,799,800,801,803,805,807,809,813,814**;Aug 13, 1993;Build 11;Build 2
  ;;Per VHA Directive 6402, this routine should not be modified
  Q
  ; This routine documents the entry points for the new ??? GUI.
@@ -90,7 +90,7 @@ ERRTXT ;
  ;;38^No status sent
  ;;39^Status is less than 3 characters or greater than 30 characters
  ;;40^Missing check-in step ID
- ;;41^Status must contain characters
+ ;;41^Status can not begin with a punctuation must contain letters
  ;;42^Missing Disposition
  ;;43^Invalid Disposition
  ;;44^Invalid user
@@ -179,5 +179,54 @@ ERRTXT ;
  ;;127^Missing User
  ;;128^Missing Cancellation Reason
  ;;129^Invalid Cancellation Reason
- ;;130^Missing VPID
+ ;;130^Missing SECID
+ ;;131^Invalid Recall Reminders Provider ID
+ ;;132^Invalid Recall Reminders Appointment Type ID
+ ;;133^Invalid Recall Date
+ ;;134^Error updating RECALL REMINDERS file
+ ;;135^The provider assigned to this recall reminder is assigned a security key which you do not have. Please contact your recall coordinator.
+ ;;136^Error deleting RECALL REMINDERS entry
+ ;;137^Missing Recall Reminders Provider ID
+ ;;138^Invalid Fasting Value
+ ;;139^Missing Recall Reminders Appointment Type ID
+ ;;140^Missing Recall Date
+ ;;141^Missing Fasting value
+ ;;142^Invalid EAS Tracking Number
+ ;;143^Invalid Patient Eligibility
+ ;;144^Invalid Cancel Appointment Date/Time
+ ;;145^Invalid Xray Date/Time
+ ;;146^Invalid EKG Date/Time
+ ;;147^Invalid Lab Date/Time
+ ;;148^Invalid Purpose of Visit
+ ;;149^Missing Purpose of Visit
+ ;;150^Invalid Collateral Visit
+ ;;151^Missing Scheduling Request Type
+ ;;152^Invalid Scheduling Request Type
+ ;;153^Invalid Next Available Appt Indicator
+ ;;154^Missing Next Available Appt Indicator
+ ;;155^Invalid Follow up Visit
+ ;;156^Invalid SECID
+ ;;157^Missing Request Date Of Appointment
+ ;;158^Invalid Request Date Of Appointment
+ ;;159^Missing Patient Indication Date
+ ;;160^Invalid Patient Indication Date
+ ;;161^Start Time is Invalid or Missing
+ ;;162^End Time is Invalid or Missing
+ ;;163^Cancel Date is Invalid
+ ;;164^Cancel Date is Missing
+ ;;165^Missing Appointment Start Date and Time
+ ;;166^Invalid Appointment Start Date and Time
+ ;;167^Missing Appointment End Date and Time
+ ;;168^Invalid Appointment End Date and Time
+ ;;169^File #409.84 Appointment Array Not Defined. Cannot File Appointments.
+ ;;170^File #44 Appointment Array Not Defined. Cannot File Appointments.
+ ;;171^File #2 Appointment Array Not Defined. Cannot File Appointments.
+ ;;172^Appointment already exists at this Date/Time.
+ ;;173^Error occurred during the filing of one or more appointments. No appointments filed.
+ ;;174^Another user is working with this patient's record.  Please try again later.
+ ;;175^Appointment Already Exists in File #44 for this Date and Time.
+ ;;176^Appointment Already Exists in File #2 for this Date and Time.
+ ;;177^Appointment date too far in the future for this clinic.
+ ;;178^Invalid WALK-IN indicator.
+ ;;179^Invalid parent request.
  Q

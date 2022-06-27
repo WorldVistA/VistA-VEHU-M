@@ -1,5 +1,5 @@
-RARTE5 ;HISC/SWM AISC/MJK,RMO-Enter/Edit Outside Reports ; Sep 29, 2021@15:29:13
- ;;5.0;Radiology/Nuclear Medicine;**56,95,97,47,141,124,184**;Mar 16, 1998;Build 2
+RARTE5 ;HISC/SWM AISC/MJK,RMO - Enter/Edit Outside Reports ; Jan 05, 2022@09:33:58
+ ;;5.0;Radiology/Nuclear Medicine;**56,95,97,47,141,124,184,186**;Mar 16, 1998;Build 1
  ;Private IA #4793 CREATE^WVRALINK
  ;Controlled IA #3544 ^VA(200
  ;Supported IA #2056 GET1^DIQ
@@ -20,7 +20,18 @@ RARTE5 ;HISC/SWM AISC/MJK,RMO-Enter/Edit Outside Reports ; Sep 29, 2021@15:29:13
 START S RAFIRST=0 ;=1 for 1st time rpt given "EF" rpt status
  K RAVER,RAX S (RAVW,RAX)="",RAREPORT=1 D ^RACNLU G Q1:"^"[X
  ; RACNLU defines RADFN, RADTI, RACNI, RARPT
- S RASUBY0=Y(0) ; save value of y(0)
+ S RASUBY0=Y(0) ; save value of Y(0)
+ ;// begin RA*5.0*186 mods //
+ ;Note: Y(0) = zero node of the case from the EXAMINATIONS (#70.03) multiple
+ I +$P(Y(0),U,2)=0 D  GOTO START
+ .NEW ACCESSION S ACCESSION=$P(Y(0),U,31)
+ .S:ACCESSION="" ACCESSION=$E(RADTE,4,7)_$E(RADTE,2,3)_"-"_+Y(0)
+ .W !!,"Warning: This case: '"_ACCESSION_"' is missing a procedure.",!
+ .Q
+ I $$BROAD($P(Y(0),U,2))=1 D  GOTO START
+ .W !!,"Broad procedures are not allowed with Outside Reports.",!
+ .Q
+ ;// end RA*5.0*186 mods //
  N RASSAN,RACNDSP S RASSAN=$P(RASUBY0,U,31)
  S RACNDSP=$S((RASSAN'=""):RASSAN,1:$P(RASUBY0,U,1))
  G:$P(^RA(72,+RAST,0),"^",3)>0 CONTIN
@@ -277,6 +288,13 @@ REGCR() ;RA184/KLM - Check credit method of exam's registered location
  N RAIL S RAIL=$P(^RADPT(RADFN,"DT",RADTI,0),U,4)
  I $P(^RA(79.1,RAIL,0),U,21)'=2 Q 1
  Q 0
+ ;
+BROAD(RAY) ;A strict check if the procedure associated with this report
+ ;is a 'BROAD' procedure.
+ ;input: 'RAY' = IEN of the procedure (filel #71)
+ ;returns: one if 'BROAD'; else zero
+ Q $S($P($G(^RAMIS(71,RAY,0)),U,6)="B":1,1:0)
+ ;
 INTRO ;
  ;;+--------------------------------------------------------+
  ;;|                                                        |

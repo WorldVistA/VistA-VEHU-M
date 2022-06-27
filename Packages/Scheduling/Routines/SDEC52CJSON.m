@@ -1,5 +1,5 @@
-SDEC52CJSON ;ALB/BLB,TAW - VISTA SCHEDULING RPCS ;JUL 23, 2021@10:48
- ;;5.3;Scheduling;**784,785,788,790,799**;Aug 13, 1993;Build 7
+SDEC52CJSON ;ALB/BLB,TAW,LAB - VISTA SCHEDULING RPCS ;MAR 23, 2022@16:45
+ ;;5.3;Scheduling;**784,785,788,790,799,813**;Aug 13, 1993;Build 6
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;Reference is made to ICR #10035
@@ -31,6 +31,9 @@ RECGETJSON(SDECY,DFN) ;Return a list of OPEN recall appointment types for patien
  ; (18)    Similar Patient Data
  ; (19)    Number of Call Attempts
  ; (20)    Recall Reminders Letter Date
+ ;         Number of Email Contacts
+ ;         Number of Text Contacts
+ ;         Number of Secure Messages
  ;
  N SDRECALL,IEN,NUM,ERR,IENS,SDESJSONERR
  S DFN=$G(DFN),SDESJSONERR=0
@@ -81,6 +84,9 @@ PATDATA(DFN,IEN) ;
  S SDREC=$$RECALL^SDECAR1A(DFN,IEN)
  S SDRECALL("Recall",NUM,"NumberOfCallAttempts")=$P(SDREC,U)
  S SDRECALL("Recall",NUM,"RecallRemindersLetterDate")=$P(SDREC,U,2)
+ S SDRECALL("Recall",NUM,"NumberOfEmailContact")=$P(SDREC,U,3)
+ S SDRECALL("Recall",NUM,"NumberOfTextContact")=$P(SDREC,U,4)
+ S SDRECALL("Recall",NUM,"NumberOfSecureMessage")=$P(SDREC,U,5)
  Q
  ;
 BUILDER ;
@@ -112,6 +118,9 @@ RECGETONEJSON(SDECY,IEN) ;Return a single OPEN recall appointment type in JSON f
  ; (18)    Similar Patient Data
  ; (19)    Number of Call Attempts
  ; (20)    Recall Reminders Letter Date
+ ;         Number of Email Contacts
+ ;         Number of Text Contacts
+ ;         Number of Secure Messages
  ;
  N ERR,NUM,F,IENS,ACCESION,COMM,FASTING,RRAPPTYP,RRPROVIEN,PROVNAME,CLINIEN,SDTMP,NUM,SDECI,DFN,SDESJSONERR
  N CLINNAME,APPTLEN,DATE,DATE1,DAPTDT,DATE2,DATE3,MSGTYP,GAF,SENSITIVE,SIMILAR,SDREC,CPHONE,CLET,SDRECALL
@@ -165,4 +174,7 @@ PATDATAONEJSON(IEN) ;
  S SDREC=$$RECALL^SDECAR1A(DFN,IEN)
  S SDRECALL("Recall",NUM,"NumberOfCallAttempts")=$P(SDREC,U)
  S SDRECALL("Recall",NUM,"RecallRemindersLetterDate")=$P(SDREC,U,2)
+ S SDRECALL("Recall",NUM,"NumberOfEmailContact")=$P(SDREC,U,3)
+ S SDRECALL("Recall",NUM,"NumberOfTextContact")=$P(SDREC,U,4)
+ S SDRECALL("Recall",NUM,"NumberOfSecureMessage")=$P(SDREC,U,5)
  Q

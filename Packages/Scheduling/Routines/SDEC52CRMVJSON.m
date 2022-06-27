@@ -1,5 +1,5 @@
-SDEC52CRMVJSON ;ALB/BLB,LEG - VIA RECALL REMINDER REMOVE FILE (#403.56) ;APR 14, 2021@10:48
- ;;5.3;Scheduling;**790,799**;Aug 13, 1993;Build 7
+SDEC52CRMVJSON ;ALB/BLB,LEG,LAB - VIA RECALL REMINDER REMOVE FILE (#403.56) ;MAR 23, 2022@10:48
+ ;;5.3;Scheduling;**790,799,813**;Aug 13, 1993;Build 6
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;Reference is made to ICR #10035
@@ -30,6 +30,9 @@ RECGETJSON(SDECY,DFN) ;Return a list of REMOVED recall appointment types for pat
  ; (18)    Similar Patient Data
  ; (19)    Number of Call Attempts
  ; (20)    Recall Reminders Letter Date
+ ;         Number of Email Contacts
+ ;         Number of Text Contacts
+ ;         Number of Secure Messages
  ;
  N SDRECALLRMV,IEN,NUM,ERR,IENS,SDESJSONERR
  S DFN=$G(DFN),SDESJSONERR=0
@@ -80,6 +83,9 @@ PATDATA(DFN,IEN) ;
  S SDREC=$$RECALL^SDECAR1A(DFN,IEN)
  S SDRECALLRMV("Recall",NUM,"NumberOfCallAttempts")=$P(SDREC,U)
  S SDRECALLRMV("Recall",NUM,"RecallRemindersLetterDate")=$P(SDREC,U,2)
+ S SDRECALLRMV("Recall",NUM,"NumberOfEmailContact")=$P(SDREC,U,3)
+ S SDRECALLRMV("Recall",NUM,"NumberOfTextContact")=$P(SDREC,U,4)
+ S SDRECALLRMV("Recall",NUM,"NumberOfSecureMessages")=$P(SDREC,U,5)
  Q
  ;
 BUILDER ;
@@ -172,4 +178,7 @@ PATDATAONEJSON(IEN) ;
  S SDREC=$$RECALL^SDECAR1A(DFN,IEN)
  S SDRECALLRMV("Recall",NUM,"NumberOfCallAttempts")=$P(SDREC,U)
  S SDRECALLRMV("Recall",NUM,"RecallRemindersLetterDate")=$P(SDREC,U,2)
+ S SDRECALLRMV("Recall",NUM,"NumberOfEmailContact")=$P(SDREC,U,3)
+ S SDRECALLRMV("Recall",NUM,"NumberOfTextContact")=$P(SDREC,U,4)
+ S SDRECALLRMV("Recall",NUM,"NumberOfSecureMessages")=$P(SDREC,U,5)
  Q

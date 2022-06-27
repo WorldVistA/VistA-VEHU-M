@@ -1,17 +1,11 @@
 YTQRQAD1 ;SLC/KCM - RESTful Calls to handle MHA assignments ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,178,182,181**;Dec 30, 1994;Build 39
+ ;;5.01;MENTAL HEALTH;**130,141,178,182,181,187,199**;Dec 30, 1994;Build 18
  ;
- ; External Reference    ICR#
- ; ------------------   -----
- ; VADPT                10061
- ; XLFDT                10103
- ; XLFSTR               10104
- ; 
- ; Routine ICR
- ; Name                                      ICR#
- ; -------------------------------------    -----
- ; SUPPORTED PARAMETER TOOL ENTRY POINTS    2263
- ; ORQQCN API supported                     1671
+ ; Reference to VADPT in ICR #10061
+ ; Reference to XLFDT in ICR #10103
+ ; Reference to XLFSTR in ICR #10104
+ ; Reference to XPDMENU in ICR #1157
+ ; Reference to XQCHK in ICR #10078
  ;
 ASMTBYID(ARGS,RESULTS) ; get assignment identified by assignmentId
  N ASMT,ADMIN,TEST,I
@@ -54,8 +48,8 @@ PROGRESS(ADMIN,TEST,ASMTID) ; return the progress for an administration
  Q $S(QTOT>0:$P(((QANS/QTOT)*100)+.5,"."),1:0)
  ;
 NEWASMT(ARGS,DATA) ; save assignment, return /api/mha/assignment/{assignmentId}
- N I,DFN,ORDBY,VA,VADM,VAERR,I,SETID,FOUND,PID,PTNAME,EXPIRE,CONS
- N RETSTAT
+ N I,DFN,ORDBY,VA,VADM,VAERR,SETID,FOUND,PID,PTNAME,EXPIRE,CONS
+ N RETSTAT,REPLACE
  S DFN=+$G(DATA("patient","dfn"))
  S ORDBY=+$G(DATA("orderedBy"))
  S CONS=+$G(DATA("consult"))
@@ -69,6 +63,11 @@ NEWASMT(ARGS,DATA) ; save assignment, return /api/mha/assignment/{assignmentId}
  ; get instrument Admin Date
  S DATA("adminDate")=$G(DATA("adminDate"))  ;Ensure adminDate is set
  I $G(DATA("consult"))=""!($G(DATA("consult"))="null") K DATA("consult")
+ S DATA("appSrc")=$G(DATA("appSrc"))
+ S FOUND=""
+ S I=0 F  S I=$O(DATA("instruments",I)) Q:I=""!FOUND  D
+ . I $G(DATA("instruments",I,"replace"))]"" D
+ .. S REPLACE=DATA("instruments",I,"replace") M DATA(2)=^XTMP("YTQASMT-SET-"_REPLACE,2) S FOUND=1
  ; look up IEN for each instrument in the assignment
  S RETSTAT=$$FILASGN(.ARGS,.DATA,"","NEW")
  Q RETSTAT
@@ -122,28 +121,13 @@ FILASGN(ARGS,DATA,SETID,TYPE) ;File the Assignment Data
  . ;Kill any changes of omission before merging
  . I '$D(DATA("consult")) K ^XTMP(PREFIX_SETID,1,"consult")  ;Removed Consult
  . I '$D(DATA("adminDate")) K ^XTMP(PREFIX_SETID,1,"adminDate")  ;Removed admin date
- . I $G(^XTMP(PREFIX_SETID,1,"entryMode"))="staff",$G(DATA("entryMode"))'="staff" S DATA("entryMode")="staff"  ;Patch1
- . I $D(DATA("consult")) D CHKCONS(.DATA)  ;Patch1
  . I '$D(^XTMP(PREFIX_SETID,1,"instruments")) S YSTAT="500^ERROR"
+ I $D(DATA(2,"PNOTE")) M ^XTMP(PREFIX_SETID,2)=DATA(2) K DATA(2)
  I YSTAT'="" D  Q ""
  . I $P(YSTAT,U)'>300 Q
  . D SETERROR^YTQRUTL($P(YSTAT,U),$P(YSTAT,U,2))
  M ^XTMP(PREFIX_SETID,1)=DATA
  Q "/api/mha/assignment/"_SETID
- ;
-CHKCONS(DATA)   ; Get list of patient consults; Patch1
- N TYPE,RV,CONS,YSSTAT,HIT,NOCONS,IEN,XDATA
- S YSSTAT="5,6,8,9,15"  ;Pending, Active, Scheduled, Partial Results, Renewed
- K ^TMP("ORQQCN",$J)
- S DFN=+$G(DATA("patient","dfn")) Q:DFN=0
- D LIST^ORQQCN(.RV,DFN,,,,YSSTAT)  ;DBIA 1671 ORQQCN LIST
- S HIT="",NOCONS=""
- S IEN=0 F  S IEN=$O(^TMP("ORQQCN",$J,"CS",IEN)) Q:'IEN!NOCONS  D
- .S XDATA=^TMP("ORQQCN",$J,"CS",IEN,0)
- .I XDATA["PATIENT DOES NOT HAVE ANY" S NOCONS=1 K DATA("consult") Q
- .I IEN=DATA("consult") S HIT=1
- I HIT="" K DATA("consult")  ;bad Consult data
- Q
  ;
 DELASMT(ARGS) ; delete the assignment identified in ARGS("assignmentId")
  D DELASMT1(ARGS("assignmentId"))
@@ -181,7 +165,7 @@ DELASMT1(ASMT,TRS) ; delete the assignment given the assignment number
 DELIDX(ASMT,DFN,ORDBY) ; return true if able to remove "AC", "AD" indexes
  N VA,VADM,VAERR,PID,LNAME,INVDT
  D DEM^VADPT I $G(VAERR) D SETERROR^YTQRUTL(400,"Missing Pt Info") QUIT 0
- S PID=VA("BID"),LNAME=$P(VADM(1),",")
+ S PID=VA("BID"),LNAME=$P(VADM(1),",")  ;VA("BID")=last 4 SSN
  K ^XTMP("YTQASMT-INDEX","AD",DFN,ORDBY,ASMT)
  S INVDT=0 F  S INVDT=$O(^XTMP("YTQASMT-INDEX","AC",PID,LNAME,INVDT)) Q:'INVDT  D
  . I ^XTMP("YTQASMT-INDEX","AC",PID,LNAME,INVDT)=ASMT D
@@ -189,20 +173,24 @@ DELIDX(ASMT,DFN,ORDBY) ; return true if able to remove "AC", "AD" indexes
  Q 1
  ;
 DELTEST(ARGS) ; remove an instrument from an assignment
- N ASMT,TEST,TSLIST,II
+ N ASMT,TEST,TSLIST,II,DELFASGN
  S ASMT=$G(ARGS("assignmentId"))
- I $D(^XTMP("YTQASMT-SET-"_ASMT))<10 D SETERROR^YTQRUTL("Assignment not found") QUIT
+ S DELFASGN=$G(ARGS("delfrmassign"))  ;Flag to Delete Instrument from Assignment
+ S:DELFASGN'="NO" DELFASGN="YES"  ;Default is Delete from Assignment
+ I $D(^XTMP("YTQASMT-SET-"_ASMT))<10 D SETERROR^YTQRUTL(404,"Assignment not found") QUIT
  S TSLIST=$G(ARGS("instrument")) I '$L(TSLIST) D SETERROR^YTQRUTL(404,"Instrument for deletion not sent") QUIT
  F II=1:1:$L(TSLIST,",") D
  . S TEST=$P(TSLIST,",",II)
  . Q:TEST=""
  . I +TEST=TEST S TEST=$P($G(^YTT(601.71,TEST,0)),U) ; use instrument name
  . I '$L(TEST) D SETERROR^YTQRUTL(404,"Instrument not found") QUIT
- . D RMVTEST(ASMT,TEST,1)
+ . D RMVTEST(ASMT,TEST,1,DELFASGN)
  Q "/api/mha/assignment/"_ASMT_"/"_TSLIST_"/OK"
-RMVTEST(ASMT,TEST,DELADMIN) ; remove test from assignment, delete assignment if empty
+RMVTEST(ASMT,TEST,DELADMIN,DELFASGN) ; remove test from assignment, delete assignment if empty
  ;Delete MH ADMINISTRATION if DELADMIN=1.
+ ;Do Not Delete Instrument from Assignment if DELFASGN="NO". Used for 0 days restart instruments that need to be restarted same day.
  N I,NODE,IARR
+ S DELFASGN=$G(DELFASGN) S:DELFASGN'="NO" DELFASGN="YES"  ;Default is to delete from Assignment
  S DELADMIN=$G(DELADMIN)
  D AINSTS^YTQRQAD7(ASMT,.IARR)  ;Get Delete status of instruments for an Assignment
  S NODE="YTQASMT-SET-"_ASMT
@@ -211,43 +199,31 @@ RMVTEST(ASMT,TEST,DELADMIN) ; remove test from assignment, delete assignment if 
  . . ;I DELADMIN=1,(IARR(I)'=0),($D(IARR(I,"ADMINID"))) D
  . . I DELADMIN=1,($D(IARR(I,"ADMINID"))) D  ;Not Interview, Not Ordering OK
  . . . D DELADMIN(IARR(I,"ADMINID"))
- . . K ^XTMP(NODE,1,"instruments",I)
+ . . I DELFASGN="YES" K ^XTMP(NODE,1,"instruments",I)
+ . . I DELFASGN="NO" D
+ . . . S ^XTMP(NODE,1,"instruments",I,"adminId")="null"
+ . . . S ^XTMP(NODE,1,"instruments",I,"complete")="false"
+ . . . S ^XTMP(NODE,1,"instruments",I,"progress")=0
  I $D(^XTMP(NODE,1,"instruments"))<10 D DELASMT1(ASMT)
  Q
  ;
-UPDIDX ; Update AC and AD indexes to synch with expired assignments
- N PID,LNAME,INVDT,ASMT,DFN,ORDBY,CURTM,ORIGTM
- S CURTM=$$NOW^XLFDT
- S PID="" F  S PID=$O(^XTMP("YTQASMT-INDEX","AC",PID)) Q:'$L(PID)  D
- . S LNAME="" F  S LNAME=$O(^XTMP("YTQASMT-INDEX","AC",PID,LNAME)) Q:'$L(LNAME)  D
- . . S INVDT=0 F  S INVDT=$O(^XTMP("YTQASMT-INDEX","AC",PID,LNAME,INVDT)) Q:'INVDT  D
- . . . S ASMT=^XTMP("YTQASMT-INDEX","AC",PID,LNAME,INVDT)
- . . . I '$D(^XTMP("YTQASMT-SET-"_ASMT,0)) D
- . . . . K ^XTMP("YTQASMT-INDEX","AC",PID,LNAME,INVDT)
- . . . . S ORIGTM=9999999-INVDT
- . . . . W !,"removed AC:  "_ASMT,?20,PID_"  "_LNAME,?40,$$FMDIFF^XLFDT(CURTM,ORIGTM,1)_" days"
- S DFN=0 F  S DFN=$O(^XTMP("YTQASMT-INDEX","AD",DFN)) Q:'DFN  D
- . S ORDBY=0 F  S ORDBY=$O(^XTMP("YTQASMT-INDEX","AD",DFN,ORDBY)) Q:'ORDBY  D
- . . S ASMT=0 F  S ASMT=$O(^XTMP("YTQASMT-INDEX","AD",DFN,ORDBY,ASMT)) Q:'ASMT  D
- . . . I '$D(^XTMP("YTQASMT-SET-"_ASMT,0)) D
- . . . . S ORIGTM=^XTMP("YTQASMT-INDEX","AD",DFN,ORDBY,ASMT)
- . . . . K ^XTMP("YTQASMT-INDEX","AD",DFN,ORDBY,ASMT)
- . . . . W !,"removed AD:  "_ASMT,?20,DFN_"  "_ORDBY,?40,$$FMDIFF^XLFDT(CURTM,ORIGTM,1)_" days"
- Q
-CHKIDX ; Check assignments to make sure the indexes are present
- N SET,ASMT,DFN,ORDBY,VA,VADM,VAERR,PID,LNAME,INVDT,FOUND
- S SET="YTQASMT-SET-" F  S SET=$O(^XTMP(SET)) Q:$E(SET,1,12)'="YTQASMT-SET-"  D
- . S ASMT=$P(SET,"-",3)
- . S DFN=^XTMP(SET,1,"patient","dfn")
- . S ORDBY=^XTMP(SET,1,"orderedBy")
- . I '$D(^XTMP("YTQASMT-INDEX","AD",DFN,ORDBY,ASMT)) D
- . . W !,"Assignment "_ASMT_" missing AD index."
- . D DEM^VADPT I $G(VAERR) Q
- . S PID=VA("BID"),LNAME=$P(VADM(1),","),FOUND=0
- . S INVDT=0 F  S INVDT=$O(^XTMP("YTQASMT-INDEX","AC",PID,LNAME,INVDT)) Q:'INVDT  D  Q:FOUND
- . . I ^XTMP("YTQASMT-INDEX","AC",PID,LNAME,INVDT)=ASMT S FOUND=1
- . I 'FOUND W !,"Assignment "_ASMT_" missing AC index."
- Q
+DELMHAD(ARGS,DATA) ;Delete Completed MH Admin
+ N MGR,ADMINID,X0
+ S MGR=$$ISMGR
+ S ADMINID=$G(ARGS("adminId"))
+ I ADMINID="" D SETERROR^YTQRUTL(404,"Admin ID Missing") Q "/api/mha/instrument/mhadmin/ERROR"
+ I '$D(^YTT(601.84,ADMINID)) D SETERROR^YTQRUTL(404,"Admin ID not found") Q "/api/mha/instrument/mhadmin/ERROR"
+ S X0=^YTT(601.84,ADMINID,0)
+ ;I MGR!(DUZ=$P(X0,U,6))!(DUZ=$P(X0,U,7)) D DELADMIN(ADMINID) I 1
+ I MGR D DELADMIN(ADMINID) I 1
+ E  D SETERROR^YTQRUTL(404,"Deletion not allowed:  insufficient privilege") Q "/api/mha/instrument/mhadmin/ERROR"
+ Q "/api/mha/instrument/mhadmin/OK"
+ISMGR() ; return 1 if admin access to admins
+ N YSMENU,YSPRIV
+ S YSMENU=$$LKOPT^XPDMENU("YSMANAGER") Q:'YSMENU 0
+ S YSPRIV=$$ACCESS^XQCHK(DUZ,YSMENU)
+ Q +YSPRIV>0
+ ;
 ADMEXPD(ADMIN,TEST) ; return 1 if incomplete admin has expired
  QUIT:'ADMIN 0
  N X0,YSNOW,YSDOW,OFFSET,SAVED,RESTRT

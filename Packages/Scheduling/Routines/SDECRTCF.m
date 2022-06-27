@@ -1,5 +1,5 @@
-SDECRTCF ;ALB/WTC,LAB - Clean-up of Pending RTC orders with closed SDEC Appt Requests ;May 24, 2021@10:51
- ;;5.3;Scheduling;**745,785**;Aug 13, 1993;Build 14
+SDECRTCF ;ALB/WTC,LAB - Clean-up of Pending RTC orders with closed SDEC Appt Requests ;Dec 01, 2021@12:00
+ ;;5.3;Scheduling;**745,785,803**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 2004-038, this routine should not be modified
  ;
  ;  Close RTC orders in CPRS if the corresponding order in Appointment Request file (#409.85) was closed (appointment made) or otherwise dispositioned.
@@ -135,8 +135,9 @@ LOOP(SDSDT,SDEDT) ;
  .. . S SKIPFLG=SKIPFLG+1
  .. . S SKIP(SDIEN,SKIPFLG)="Skipped child request." ;  Skip if child request
  .. ;
- .. Q:SKIPFLG  ;skip if any errors 
- .. S ORDIS=$S(SDDISP="SA":0,SDDISP="MC":0,1:1) ;
+ .. Q:SKIPFLG  ;skip if any errors
+ .. ;S ORDIS=$S(SDDISP="SA":0,SDDISP="MC":0,1:1) ;
+ .. S ORDIS=$S(SDDISP=3:0,SDDISP=9:0,SDDISP="REMOVED/SCHEDULED-ASSIGNED":0,SDDISP="MRTC PARENT CLOSED":0,1:1)
  .. ;
  .. K VADM S DFN=SDPATIENT D DEM^VADPT ; ICR #10061
  .. ;

@@ -1,5 +1,5 @@
-VADPT1 ;ALB/MRL,MJK,ERC,TDM,CLT - PATIENT VARIABLES ;05 May 2017  1:41 PM
- ;;5.3;Registration;**415,489,516,614,688,754,887,941,1059**;Aug 13, 1993;Build 6
+VADPT1 ;ALB/MRL,MJK,ERC,TDM,CLT,ARF - PATIENT VARIABLES ;05 May 2017  1:41 PM
+ ;;5.3;Registration;**415,489,516,614,688,754,887,941,1059,1067**;Aug 13, 1993;Build 23
  ;
 1 ;Demographic [DEM]
  N W,Z,NODE
@@ -196,6 +196,9 @@ Q3 K VABEG,VAEND,VAZIP4 Q
  S @VAV@($P(VAS,"^",7))="",@VAV@($P(VAS,"^",8))=$P(VAX,"^",9),VAX(2)=8
  F I=1,2 S VAX(2)=VAX(2)+1,@VAV@($P(VAS,"^",VAX(2)))=$P(VAX,"^",I)
  I "^.311^.25"[("^"_VAX(1)_"^") S @VAV@($P(VAS,"^",10))=""
+ ;DG*5.3*1067 store the RELATION TYPE field, from the PATIENT CONTACT RELATION file(#12.11)file, into node 10
+ ;and move RELATIONSHIP TO PATIENT to node 12 only for the Emergency Contacts, Next of Kins, and Designees options.
+ I (+VAOA("A")'=5)&(+VAOA("A")'=6) S @VAV@($P(VAS,"^",10))=$$GET1^DIQ(12.11,$P(VAX,"^",15)_",",.02),@VAV@($P(VAS,"^",12))=$P(VAX,"^",2)
  S VAZ=@VAV@($P(VAS,"^",5)) I VAZ,$D(^DIC(5,+VAZ,0)) S VAZ(1)=$P(^(0),"^",1),@VAV@($P(VAS,"^",5))=VAZ_"^"_VAZ(1)
  S VAZIP4=$P($G(^DPT(DFN,.22)),U,VAOA("A"))
  S @VAV@($P(VAS,U,11))=VAZIP4_$S('$G(VAZIP4):"",($L(VAZIP4)=5):U_VAZIP4,1:U_$E(VAZIP4,1,5)_"-"_$E(VAZIP4,6,9))

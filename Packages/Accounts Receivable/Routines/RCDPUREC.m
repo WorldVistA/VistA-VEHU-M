@@ -1,5 +1,5 @@
 RCDPUREC ;WISC/RFJ - receipt utilities ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**114,148,169,173,208,222,293,298,321,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**114,148,169,173,208,222,293,298,321,326,380**;Mar 20, 1995;Build 14
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -11,8 +11,9 @@ ADDRECT(TRANDATE,RCDEPTDA,PAYTYPDA) ;  add a receipt
  N DA,DATA,RCDPFLAG,RECEIPT,TYPE
  ;  if a receipt has already been added for this transmission date
  ;  and deposit number, do not add a new one
- S DA=0 F  S DA=$O(^RCY(344,"AD",+RCDEPTDA,DA)) Q:'DA  S DATA=$G(^RCY(344,DA,0)) I $P($P(DATA,"^",3),".")=TRANDATE,$P(DATA,"^",4)=PAYTYPDA S RCDPFLAG=1 Q
- I $G(RCDPFLAG) Q DA
+ ; PRCA*4.5*380 - Removed to allow for duplicate deposit number/date records
+ ;S DA=0 F  S DA=$O(^RCY(344,"AD",+RCDEPTDA,DA)) Q:'DA  S DATA=$G(^RCY(344,DA,0)) I $P($P(DATA,"^",3),".")=TRANDATE,$P(DATA,"^",4)=PAYTYPDA S RCDPFLAG=1 Q
+ ;I $G(RCDPFLAG) Q DA
  ;
  Q $$BLDRCPT(TRANDATE,RCDEPTDA,PAYTYPDA)
  ;
@@ -107,9 +108,8 @@ SELRECT(ADDNEW,RCDEPTDA) ;  select a receipt
  .   S DIC("A")="Select RECEIPT (or add a new one): "
  .   S DIC(0)="QEALM",DLAYGO=344
  .   S DIC("DR")="S RCREQ=0;.02////"_DUZ_";.03///NOW;.14////1;@4;.04"_$S(RCDE:"////"_$$LBEVENT^RCDPEU(),1:"")
- .   ; Next line use EFT picker utility instead of .17 in DR string - PRCA*4.5*326
- .   ; Do not delete DIC("W") from the DR string. It has a role in ^DIC flow if an EFT is not picked.
- .   S DIC("DR")=DIC("DR")_";S RCLB=$$EDILBEV^RCDPEU(+X) S:'RCLB Y=""@6"";I $G(RCDEPTDA) S Y=$S('RCDE:""@8"",1:""@6"");W !,RC2 S RCREQ=1,DIC(""W"")="""";D EFT344^RCDPEU2(""   AR BATCH PAYMENT EFT RECORD: "",DA);S Y=""@99"""
+ .   ; Next line added D DICW^RCDPEM3 - PRCA*4.5*326
+ .   S DIC("DR")=DIC("DR")_";S RCLB=$$EDILBEV^RCDPEU(+X) S:'RCLB Y=""@6"";I $G(RCDEPTDA) S Y=$S('RCDE:""@8"",1:""@6"");W !,RC2 S RCREQ=1,DIC(""W"")=""D DICW^RCDPEM3"";.17;S Y=""@99"""
  .   S DIC("DR")=DIC("DR")_";@6;.06"_$S($G(RCDEPTDA):"////"_RCDEPTDA,1:"")_";S:'RCDE Y=""@99"";.17////"_+RCDE_";S Y=""@99"";@8;W *7,!,RC1 S Y=""@4"";@99"
  .   S DIC("DR")=DIC("DR")_";"
  D ^DIC
@@ -327,6 +327,8 @@ G1 S Y=$$ASKEFT^RCDPEU2(RCPROMPT,RCSCREEN)
  ; END - PRCA*4.5*326
  Q Y
  ;
+ ; END - PRCA*4.5*326
+ ;
 EFTKEY() ;Check if user has UNMATCH EFT key
  ; Input: None
  ; Returns; 1 if user owns RCDPEPP key ; otherwise 0.
@@ -353,9 +355,3 @@ PAUSE ; Pause screen till user hits enter
  N DIR,X,Y
  S DIR(0)="EA",DIR("A")="Press return: " D ^DIR
  Q
- ;
-DIC19 ;
- S G="^DIC(19)" F  S G=$Q(@G) Q:'$P(G,"^DIC(",2)=19  I @G["IDP" W !,G,!,@G
- ;
- Q
- ;

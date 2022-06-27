@@ -1,5 +1,5 @@
 PSXRPPL2 ;BIR/WPB - Print From Suspense Utilities ;06/10/08
- ;;2.0;CMOP;**65,69,73,74,79,81,83,87,91**;11 Apr 97;Build 33
+ ;;2.0;CMOP;**65,69,73,74,79,81,83,87,91,92**;11 Apr 97;Build 19
  ;Reference to ^PSRX( supported by DBIA #1977
  ;Reference to ^PS(52.5, supported by DBIA #1978
  ;Reference to ^PSSLOCK  supported by DBIA #2789
@@ -58,7 +58,7 @@ CHKDFN(THRDT) ;
  . . . . . I $$PATCH^XPDUTL("PSO*7.0*148") D
  . . . . . . I $$RETRX^PSOBPSUT(RX,RFL),SDT>DT Q
  . . . . . . I $$DOUBLE^PSXRPPL1(RX,RFL) Q
- . . . . . . I $$FIND^PSOREJUT(RX,RFL,,"79,88",,1) Q
+ . . . . . . I $$FIND^PSOREJUT(RX,RFL,,"79,88,943",,1) Q
  . . . . . . ;
  . . . . . . ; If TRI/CVA and the Rx already has a closed eT/eC
  . . . . . . ; pseudo-reject, then do not send another claim.
@@ -67,7 +67,7 @@ CHKDFN(THRDT) ;
  . . . . . . . D LOG^BPSOSL($$IEN59^BPSOSRX(RX,RFL),$T(+0)_"-CHKDFN, $$TRICVANB returned 1")  ; ICR #4412,6764
  . . . . . . ;
  . . . . . . I '$$RETRX^PSOBPSUT(RX,RFL),$$ECMESTAT(RX,RFL) Q
- . . . . . . I $$PATCH^XPDUTL("PSO*7.0*289"),'$$DUR(RX,RFL),'$$DSH(REC) Q
+ . . . . . . I $$PATCH^XPDUTL("PSO*7.0*289"),'$$DUR(RX,RFL),'$$DSH(REC,1) Q
  . . . . . . ;
  . . . . . . ; ECMESND^PSOBPSU1 initiates the claim submission process.
  . . . . . . ;
@@ -93,12 +93,12 @@ EPHARM ; - ePharmacy checks for third party billing
  ;
  ; If CMOP is still processing the previous fill ($$DOUBLE), or if the
  ; RE-TRANSMIT flag is 'Yes' and the send date is in the future, or if
- ; this prescription has an unresolved 79,88, or RRR reject, then
+ ; this prescription has an unresolved 79,88,943, or RRR reject, then
  ; Set EPHQT to 1 and Quit.  This Rx/Fill will not be sent to CMOP.
  ;
  I $$DOUBLE^PSXRPPL1(RXN,RFL) S EPHQT=1 Q
  I $$RETRX^PSOBPSUT(RXN,RFL),SDT>DT S EPHQT=1 Q
- I $$FIND^PSOREJUT(RXN,RFL,,"79,88",,1) S EPHQT=1 Q
+ I $$FIND^PSOREJUT(RXN,RFL,,"79,88,943",,1) S EPHQT=1 Q
  ;
  ; $$TRISTA performs checks specific to TRICARE/CHAMPVA.  If the claim
  ; was rejected or is still "IN PROGRESS", or if it is non-billable,
@@ -111,6 +111,13 @@ EPHARM ; - ePharmacy checks for third party billing
  ; ^TMP("PSXEPHIN") array and quit.
  ;
  I $$STATUS^PSOBPSUT(RXN,RFL)="IN PROGRESS" D EPH Q
+ ;
+ ; If this Prescription violates the 3/4 supply (i.e. if it is too soon
+ ; to refill), then Set EPHQT to 1 and Quit.  This Rx/Fill will not be
+ ; sent to CMOP.
+ ;
+ I $$PATCH^XPDUTL("PSO*7.0*289"),'$$DSH(REC,0) D  S EPHQT=1 Q
+ . D LOG^BPSOSL($$IEN59^BPSOSRX(RXN,RFL),$T(+0)_"-EPHARM, Failed DSH")  ; ICR #4412,6764
  ;
  ; If there is a host reject for this Rx/Fill, then add this Rx to the
  ; ^TMP("PSXEPHIN") array and quit.
@@ -165,11 +172,13 @@ ECMESTAT(RX,RFL) ;
  ; DSH determines whether a prescription has a 3/4 days supply hold
  ; condition.
  ;   Input: REC = Pointer to Suspense file (#52.5)
+ ;          ACT = 1 or 0, indicating whether an entry should be made
+ ;                in the activity log if the 3/4 logic is bypassed.
  ;   Returns: 1 or 0
  ;     1 (one) if 3/4 of days supply has elapsed.
  ;     0 (zero) if 3/4 of days supply has not elapsed.
  ;
-DSH(REC) ;ePharmacy API to check for 3/4 days supply hold
+DSH(REC,ACT) ;ePharmacy API to check for 3/4 days supply hold
  ;
  N COMM,DA,DAYSSUP,DIE,DR,DSHDT,DSHOLD
  N PREVRX,PSARR,PSINSUR,PSXCOMMENT,RFL,RXIEN,SDT,SFN,SHDT
@@ -187,6 +196,7 @@ DSH(REC) ;ePharmacy API to check for 3/4 days supply hold
  ; 1 after adding a comment to the Activity Log.
  ;
  I $$FLAG^PSOBPSU4(RXIEN,RFL)="YES" D  Q DSHOLD  ; ICR #7212
+ . I '$G(ACT) Q
  . S PSXCOMMENT="3/4 Day Supply logic bypassed during CMOP processing"
  . D RXACT^PSOBPSU2(RXIEN,RFL,PSXCOMMENT,"S",DUZ)
  . Q

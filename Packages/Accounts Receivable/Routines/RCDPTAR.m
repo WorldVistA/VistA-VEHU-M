@@ -1,5 +1,5 @@
 RCDPTAR ;ALB/TJB - EFT TRANSACTION AUDIT REPORT ;1/02/15
- ;;4.5;Accounts Receivable;**303,321,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**303,321,326,380**;Mar 20, 1995;Build 14
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -12,7 +12,7 @@ RCDPTAR ;ALB/TJB - EFT TRANSACTION AUDIT REPORT ;1/02/15
 EN ; Main entry point for this report
  ; Ask Summary or Detail output
  ;
- N DIR,X,Y,DUOUT,DTOUT,DIRUT,DIROUT,RCREP
+ N DIR,DIRUT,DIROUT,DTOUT,DUOUT,RCREP,RCREP2,X,Y
  W !
  S DIR(0)="SOA^S:Summary Information Only;D:Detail Report"
  S DIR("A")="(S)ummary or (D)etail Report format? "
@@ -21,9 +21,31 @@ EN ; Main entry point for this report
  I $D(DTOUT)!$D(DUOUT)!(Y="") Q
  S RCREP=Y
  ;
- I RCREP="S" D SUM^RCDPTAR1
+ ; PRCA*4.5*380 - Ask if display sum. rpt. by Dep. Date or Dep. Num.
+ S RCREP2=0
+ S:RCREP="S" RCREP2=$$ASKSUM2()
+ Q:RCREP2=-1
+ ;
+ I RCREP="S",RCREP2=1 D SUM^RCDPTAR1
+ I RCREP="S",RCREP2=2 D SUM2^RCDPTAR1
  I RCREP="D" D DET
  Q
+ ;
+ ; PRCA*4.5*380 - New Subroutine added
+ASKSUM2() ; Ask the user if they want to display the summary report by Deposit Date
+ ; or by Deposit Number
+ ; Input:   None
+ ; Returns: -1 - User quit or timed out
+ ;           1 - Display Summary report by Deposit Date
+ ;           2 - Display Summary report by Deposit Number
+ N DIR,DIRUT,DIROUT,DTOUT,DUOUT,X,Y
+ S DIR(0)="SOA^EFTS:EFTS by Date;DATE:Deposit Number"
+ S DIR("A")="(E)FTs by Date or (D)eposit? "
+ S DIR("B")="DEPOSIT"
+ D ^DIR
+ I $D(DTOUT)!$D(DUOUT) Q -1
+ I $E(Y,1)="E" Q 1
+ Q 2
  ;
 DET ; Entry point for detailed report
  ; Input: variable RCREP defined and equal to "D"

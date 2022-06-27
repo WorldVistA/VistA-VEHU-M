@@ -1,5 +1,5 @@
-RCRPADD ;EDE/SAB-REPAYMENT PLAN FORBEARBANCE;03/31/2021  8:40 AM
- ;;4.5;Accounts Receivable;**381,388**;Mar 20, 1995;Build 13
+RCRPADD ;EDE/YMG - REPAYMENT PLAN FORBEARBANCE;03/31/2021  8:40 AM
+ ;;4.5;Accounts Receivable;**381,388,378**;Mar 20, 1995;Build 54
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -168,6 +168,7 @@ ADDNEW(RPIEN) ; Ask the user for the bills to add.
  . D UPDBILL^RCRPU(RPIEN,RCBILLDA)
  . ; Add Plan to the Bill
  . D ADDPLAN^RCRPU(RPIEN,RCBILLDA,RCACTDT)
+ . D UPDMET^RCSTATU(1.01,1)
  ;
  ; Update the Total balance Owed.
  S RCPLNBL=RCTOT+RCORBAL
@@ -184,8 +185,8 @@ ADDNEW(RPIEN) ; Ask the user for the bills to add.
  .  D ADJSCHED^RCRPENTR(RPIEN,RCNOMN,RCNWMN)
  ;
  ;Update Audit Log
- I RCSPFLG<1 D UPDAUDIT^RCRPU(RPIEN,$$DT^XLFDT,"A","")
- I RCSPFLG=1 D UPDAUDIT^RCRPU(RPIEN,$$DT^XLFDT,"A","SM")
+ I RCSPFLG<1 D UPDAUDIT^RCRPU2(RPIEN,$$DT^XLFDT,"A","")
+ I RCSPFLG=1 D UPDAUDIT^RCRPU2(RPIEN,$$DT^XLFDT,"A","SM")
  ;
  W !,"Bills successfully added to the Plan.",!
  ;

@@ -1,5 +1,5 @@
 YTQRQAD6 ;SLC/LLB - Determine High Risk Flagging ; 07/15/2020
- ;;5.01;MENTAL HEALTH;**158,181**;Dec 30, 1994;Build 39
+ ;;5.01;MENTAL HEALTH;**158,181,187**;Dec 30, 1994;Build 74
  ;
  ; The assumption is made that variable DFN will exist prior to calling this routine.
  ;
@@ -14,6 +14,7 @@ FLAG(DFN,INST,HRR,PR) ; ROUTINE to calculate Positive response and High Risk fla
  ;            I9 Positive I9 question
  ;            Y1,2,3,n. Comma delimited list of question numbers. A yes to any is HR
  ;            YA Yes to any question
+ ;            G3^0,5^1,q^n. Comma delimited list of question#^Value for question response Greater Than Value
  ;            T#p Can be added to any HRR parameter where # is a positive integer and
  ;                p is the time period M months, W weeks, D day. This will be treated as
  ;                the most recent administration of the instrument but only if the 
@@ -43,10 +44,15 @@ FLAG(DFN,INST,HRR,PR) ; ROUTINE to calculate Positive response and High Risk fla
  Q
  ;
 FLAG2 ;
- N X,YSHRT
+ N X,YSHRT,CURFLG,AGE
  S ADMID=$O(^PXRMINDX(601.84,"PI",DFN,INSTIEN,DATE,"")) ;IEN to file 601.84
  ; NOTE: The ARC index is only updated for completed administrations.
  ; A separate check for Administration COMPLETE is not necessary
+ S CURFLG=$P(^YTT(601.84,ADMID,0),U,14)
+ I CURFLG=0!(CURFLG=9) Q  ;Flag already set to 'none' or 'expired'
+ ;Any PR/HR flag older than 90 days should be set to 'expired'
+ I $$FMDIFF^XLFDT($$HTFM^XLFDT($H),DATE)>90 D  Q
+ . S YSFLAG=9 D SETFLAG
  I $P(^YTT(601.84,ADMID,0),U,14)'="" Q  ; Flag already set don't recalculate
  D QUEST(ADMID,INST) ; Retrieve questions and patient answers and set them into ^TMP("YSQA",$J,INST,CNT)
  D SCORES ; Get scores for assessment
@@ -68,6 +74,8 @@ FLAG2 ;
  . I $E(YSHRT,1)="A" D ATAG
  . I YSFLAG>1 Q  ; High Risk flag already set
  . I $E(YSHRT,1,2)="I9" D I9TAG ;Check for HR solely on I9 question
+ . I YSFLAG>1 Q  ;High Risk flag already set
+ . I $E(YSHRT,1)="G" D GTTAG
  K ^TMP("YSQA",$J) ; Cleanup ^TMP file
  D SETFLAG Q
  ;
@@ -165,6 +173,23 @@ I9TAG ;
  . . . E  S YSFLAG=2
  Q
  ;
+GTTAG ; specific question with a score > that passed in with the GT# parameter.
+ ; If any of the comma delimited question#>value, then YSFLAG=2 for HIGH RISK
+ N MIN,AID,TEMP,QID,CHOICEID,LEG
+ N QARR,I,PR
+ S YSFLAG=0
+ S TEMP=$E(YSHRT,2,$L(YSHRT))
+ F I=1:1:$L(TEMP,",") D
+ . S PR=$P(TEMP,",",I)
+ . S AID=$P(PR,U) Q:AID=""  ;If definition malformed
+ . S QARR(AID)=$P(PR,U,2)  ;QARR(Ques#)=Greater Than value
+ S MIN=$E(YSHRT,2,$L(YSHRT))
+ S AID=""
+ F  S AID=$O(QARR(AID)) Q:AID=""  D
+ . S TEMP=$G(^TMP("YSQA",$J,INST,AID)) Q:TEMP=""
+ . S LEG=$P(TEMP,U,3)
+ . I LEG>QARR(AID) S YSFLAG=2
+ Q
 SETFLAG ; Set YSFLAG into the MH ADMISISTRATION file (#601.84)
  N XXX,YSFDA
  S XXX=ADMID_","
@@ -257,6 +282,23 @@ PTSD5I9 ; PC-PTSD-5+19
  N INST,HRR,PR
  S INST="PC-PTSD-5+I9"
  S HRR="I9"
+ S PR=""
+ D FLAG(DFN,INST,HRR,PR)
+ Q
+ ;
+BDI2 ; BDI2 Instrument
+ ; High Risk: Question 9 > 0
+ N INST,HRR,PR
+ S INST="BDI2"
+ S HRR="G9^0"
+ S PR=""
+ D FLAG(DFN,INST,HRR,PR)
+ Q
+CCSA ; CCSA-DSM5 Instrument
+ ; High Risk: Question 9 > 0
+ N INST,HRR,PR
+ S INST="CCSA-DSM5"
+ S HRR="G11^0"
  S PR=""
  D FLAG(DFN,INST,HRR,PR)
  Q

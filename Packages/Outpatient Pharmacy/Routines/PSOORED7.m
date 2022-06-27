@@ -1,5 +1,5 @@
 PSOORED7 ;ISC-BHAM/MFR - edit orders from backdoor con't ;03/06/95 10:24
- ;;7.0;OUTPATIENT PHARMACY;**148,247,281,289,358,385,584,611,624**;DEC 1997;Build 9
+ ;;7.0;OUTPATIENT PHARMACY;**148,247,281,289,358,385,584,611,624,562**;DEC 1997;Build 19
  ;called from psooredt. cmop edit checks.
  ;Reference to file #50 supported by IA 221
  ;Reference to $$ECMEON^BPSUTIL supported by IA 4410
@@ -66,7 +66,7 @@ RESUB ; Resubmits 3rd party claim in case of an edit (Original)
  . . ; Quit if there is an unresolved TRICARE/CHAMPVA non-billable reject code, PSO*7*358
  . . I $$PSOET^PSOREJP3(RX,0) S X="Q" Q
  . . ;- Checking/Handling DUR/79 Rejects
- . . I $$FIND^PSOREJUT(RX,0) S X=$$HDLG^PSOREJU1(RX,0,"79,88","ED","IOQ","Q")
+ . . I $$FIND^PSOREJUT(RX,0) S X=$$HDLG^PSOREJU1(RX,0,"79,88,943","ED","IOQ","Q")
  Q
  ;
 CHANGED(RX,PRIOR) ; - Check if fields have changed and should for 3rd Party Claim resubmission

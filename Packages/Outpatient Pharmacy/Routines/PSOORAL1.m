@@ -1,5 +1,5 @@
 PSOORAL1 ;BHAM ISC/SAB - Build Listman activity logs ; 12/4/07 12:25pm
- ;;7.0;OUTPATIENT PHARMACY;**71,156,148,247,240,287,354,367,408,482,508,551**;DEC 1997;Build 37
+ ;;7.0;OUTPATIENT PHARMACY;**71,156,148,247,240,287,354,367,408,482,508,551,562**;DEC 1997;Build 19
  N RX0,VALMCNT K DIR,DTOUT,DUOUT,DIRUT,^TMP("PSOAL",$J) S DA=$P(PSOLST(ORN),"^",2),RX0=^PSRX(DA,0),J=DA,RX2=$G(^(2)),R3=$G(^(3)),CMOP=$O(^PSRX(DA,4,0))
  S IEN=0,DIR(0)="LO^1:"_$S(CMOP:10,1:9),DIR("A",1)=" ",DIR("A",2)="Select Activity Log by  number",DIR("A",3)="1.  Refill    2.  Partial     3.  Activity   4.  Labels      5.  Copay"
  S DIR("A")=$S(CMOP:"6.  ECME      7.  SPMP        8.  eRx Log    9.  CMOP Events 10.  All Logs    ",1:"6.  ECME      7.  SPMP        8.  eRx Log    9.  All Logs")
@@ -268,7 +268,7 @@ DISPREJ  ;
  . S VAR=$G(^PSRX(DA,"REJ",REJ,0))
  . S RFT=+$P(VAR,"^",4)
  . S SEQ=SEQ+1,X=SEQ,$E(X,4)=$$FMTE^XLFDT($P(VAR,"^",2),2),$E(X,22)=$S(RFT:"REFILL "_RFT,1:"ORIGINAL")
- . S $E(X,32)=$S(+VAR=79:"REFILL TOO SOON",+VAR=88:"DUR",1:$E($$EXP^PSOREJP1($P(VAR,"^",1)),1,15))  ;can't + default because values can be 07, 08, etc.
+ . S $E(X,32)=$S(+VAR=79:"REFILL TOO SOON",+VAR=88!(+VAR=943):"DUR",1:$E($$EXP^PSOREJP1($P(VAR,"^",1)),1,15))  ;can't + default because values can be 07, 08, etc.
  . S $E(X,48)=$S($P(VAR,"^",5):"RESOLVED",1:"UNRESOLVED")
  . S:$P(VAR,"^",6) $E(X,59)=$$FMTE^XLFDT($P(VAR,"^",6),2)
  . S IEN=IEN+1,^TMP(PRI,$J,IEN,0)=X

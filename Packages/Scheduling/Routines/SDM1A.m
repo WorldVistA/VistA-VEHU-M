@@ -1,5 +1,5 @@
 SDM1A ;SF/GFT,ALB/TMP,MS/PB - MAKE APPOINTMENT ;JUN 29, 2017
- ;;5.3;Scheduling;**26,94,155,206,168,223,241,263,327,478,446,544,621,622,627,658,665,650,704,694,775,792**;Aug 13, 1993;Build 9
+ ;;5.3;Scheduling;**26,94,155,206,168,223,241,263,327,478,446,544,621,622,627,658,665,650,704,694,775,792,809**;Aug 13, 1993;Build 10
  ;
 OK I $D(SDMLT) D ^SDM4 Q:X="^"!(SDMADE=2)
  S ^SC(SC,"ST",$P(SD,"."),1)=S,^DPT(DFN,"S",SD,0)=SC,^SC(SC,"S",SD,0)=SD S:'$D(^DPT(DFN,"S",0)) ^(0)="^2.98P^^" S:'$D(^SC(SC,"S",0)) ^(0)="^44.001DA^^" L -^SC(SC,"ST",$P(SD,"."),1)
@@ -307,6 +307,7 @@ SDWLA(DFN,SD,SDSC,SDDATE,SDAPTYP,SDECANS)  ;add SDEC APPT REQUEST entry  ;alb/sa
  S INP(1)=SDARIEN
  S INP(2)="REMOVED/SCHEDULED-ASSIGNED"
  S INP(3)=DUZ
- S INP(4)=$P(SD,".",1)
+ ;S INP(4)=$P(SD,".",1) ;SD_53_809 - commenting this code since this is not the correct disposition date
+ S INP(4)=$$NETTOFM^SDECDATE($P($G(SDECINP(3)),"@"),"N","N") ;SD_53_809 - date of disposition should be the same to the create date
  D ARCLOSE1^SDEC(.SDWLRET,.INP)
  Q SDARIEN
