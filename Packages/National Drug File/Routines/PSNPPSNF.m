@@ -247,7 +247,7 @@ REJCHK(FILE) ; check if the file has been rejected & finalized
  S PSI=$O(^PS(57.23,1,4,"G",$P(FILE,";"),""),-1) I 'PSI Q "0^0"
  I PSI S LSTD=$G(^PS(57.23,1,4,"G",$P(FILE,";"),PSI)),NFILE=FILE_";"_LSTD
  I $D(^PS(57.23,1,6,"B",NFILE)) D  Q PSI_"^"_LSTD
- .W !!,"WARNING: File has been rejected and finalized. Install is not allowed for it." D
+ .W !!,"WARNING: File has been rejected and finalized. Install is not allowed for it." ; *10003 small typo
  .W !,?9,"Installation STOPPED"
  Q "0^0"
  ;

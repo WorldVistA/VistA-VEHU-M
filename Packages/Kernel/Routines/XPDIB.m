@@ -1,15 +1,14 @@
 XPDIB ;SFISC/RSD - Backup installed Package ;12:29 PM  16 Oct 2000
- ;;8.0;KERNEL;**10,58,108,178,713,738,750,755**;Jul 10, 1995;Build 6
+ ;;8.0;KERNEL;**10,58,108,178,713,738**;Jul 10, 1995;Build 5
  ;Per VHA Directive 2004-038, this routine should not be modified.
 EN ;
  ;p713 - added support to create Build from Transport Global to create a backup
  N DIR,DIRUT,DUOUT,XPDA,XPDBLD,XPDTCNT,XPDH,XPDH1,XPDHD,XPDFMSG,XPDI,XPDIDVT,XPDMP,XPDNM,XPDPKG,XPDQUIT,XPDST
- N XPDT,XPDTB,XPDSBJ,XPDTYP,XPDVER,X,Y,Y0,%,XPDIB
- ;S %="I '$P(^(0),U,9),$D(^XPD(9.7,""ASP"",Y,1,Y)),$D(^XTMP(""XPDI"",Y))",XPDST=$$LOOK^XPDI1(%)
- S %="I $E($P(^(0),U),$L($P(^(0),U)))'=""b"",'$P(^(0),U,9),$D(^XPD(9.7,""ASP"",Y,1,Y)),$D(^XTMP(""XPDI"",Y))",XPDST=$$LOOK^XPDI1(%) ;p755 can't backup a backup
+ N XPDT,XPDTB,XPDSBJ,XPDTYP,XPDVER,X,Y,Y0,%
+ S %="I '$P(^(0),U,9),$D(^XPD(9.7,""ASP"",Y,1,Y)),$D(^XTMP(""XPDI"",Y))",XPDST=$$LOOK^XPDI1(%)
  Q:'XPDST!$D(XPDQUIT)
- ;XPDST=starting install ien, XPDNM=install name, XPDBLD=build #, XPDPKG=package file pointer, XPDT(#)=Install file #^Install file name  XPDIB=flag to not write errors
- S XPDIB=1 D BLDV(XPDST)
+ ;XPDST=starting install ien, XPDNM=install name, XPDBLD=build #, XPDPKG=package file pointer, XPDT(#)=Install file #^Install file name
+ D BLDV(XPDST)
  S XPDTCNT=$O(XPDT("DA"),-1) ;XPDTCNT=# of installs
  I XPDTYP>1 W !!,"This is a Global Package and cannot be backed up.",!! Q  ;p738
  ;multi-package reset name to include all builds
@@ -25,7 +24,6 @@ EN ;
  ;Build or Routines
  S DIR(0)="S^B:Build (including Routines);R:Routines Only",DIR("A")="Backup Type",DIR("B")="B"
  S DIR("?")="Backup the entire Build(routines, files, options, protocols, templates, etc.) or just the Routines." ;p738
- S DIR("??")="^D HELP^XPDIB" ;p750
  D ^DIR G:$D(DIRUT) QUIT
  ;R=routine Packman msg
  I Y="R" D ROUTINE G QUIT
@@ -96,7 +94,7 @@ BLD(XPDST,XPDMP) ;XPDST=Install #,XPDMP=master build or first Install # of multi
  ;XPDFREF is a documented variable for use in PRE-TRANSPORTATION routine
  S XPDVER="",XPDGREF="^XTMP(""XPDT"","_+XPDA_",""TEMP"")"
  ;from XPDT, transport build
- F X="DD^XPDTC","KRN^XPDTC","QUES^XPDTC","INT^XPDTC","BLD^XPDTC" D @X ;p755 don't check for errors $D(XPDERR)
+ F X="DD^XPDTC","KRN^XPDTC","QUES^XPDTC","INT^XPDTC","BLD^XPDTC" D @X Q:$D(XPDERR)
  Q XPDA
  ;
 BLDV(XPDA) ;variable setup for BLD, XPDA=Install #
@@ -108,10 +106,9 @@ BLDV(XPDA) ;variable setup for BLD, XPDA=Install #
  ;XPDTP to build Packman message
 PM(XPDA) ;build MailMan message
  N DIFROM,XCNP,DIF,XMSUB,XMDUZ,XMDISPI,XMZ
- S DIFROM=1,XMDUZ=+DUZ,XMSUB=XPDSBJ ;p738
+ S DIFROM=1,XMDUZ=+DUZ,XMSUB=XPDSBJ_". Build" ;p738
  K ^TMP("XMP",$J)  ;create message text for Packman
  D WARN("^TMP(""XMP"",$J)",1),KD^XPDTP
- Q:$D(DTOUT)!$D(DUOUT)
  W !!,"Message sent",!
  Q
  ;
@@ -180,10 +177,4 @@ WARN(X,Y) ;create warning message in array X starting at Y ;p738
  ;
 QUIT ;unlock Install # XPDST
  D QUIT^XPDI1(XPDST)
- Q
- ;
-HELP ;Help (DIR("??")) for DIR (Build/Routine) read ;p750
- W !," Enter 'B' to create a backup of this Build. A new Build will be created using",!,"the same Build name with a 'b' appended to the end. This new Build will be used"
- W !,"to create a KIDS backup of routines, files, options, protocols, templates, etc.",!,"If this backup is a single build, a Packman email is created.  If it is a multi-package a Host File is created."
- W !," Enter 'R' to create a Packman email of only the routines."
  Q
