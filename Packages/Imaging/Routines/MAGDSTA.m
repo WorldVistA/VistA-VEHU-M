@@ -1,5 +1,5 @@
-MAGDSTA ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Aug 25, 2020@14:11:48
- ;;3.0;IMAGING;**231**;5-May-2007;Build 9
+MAGDSTA ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Feb 15, 2022@10:53:46
+ ;;3.0;IMAGING;**231,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -142,7 +142,7 @@ INITSTT(RUNNUMBER) ; initialize the statistics
  Q
  ;
  ;;VISTA STUDIES PROCESSED
- ;;VISTA STUDIES WITHOUT IMAGES
+ ;;VISTA STUDIES WITHOUT DICOM IMAGES
  ;;LEGACY STUDIES PROCESSED
  ;;LEGACY SERIES COUNT
  ;;LEGACY IMAGE COUNT

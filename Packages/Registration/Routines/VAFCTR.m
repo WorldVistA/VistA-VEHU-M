@@ -1,5 +1,5 @@
 VAFCTR ;BIR/CMC,ERC,PTD-Monitoring fields for MPI/PD via DG field monitoring ; 1/31/17 11:04am
- ;;5.3;Registration;**575,648,653,712,876,902,926,937,944,967,1059**;Aug 13, 1993;Build 6
+ ;;5.3;Registration;**575,648,653,712,876,902,926,937,944,967,1059,1071**;Aug 13, 1993;Build 4
  Q  ; quit if called from the top
  ;
 MPIPD ; protocol entry point for monitoring fields via DG field monitoring
@@ -33,6 +33,10 @@ MPIPD ; protocol entry point for monitoring fields via DG field monitoring
  ;
  ;**1059 STORY VAMPI-11114, VAMPI-11118, VAMPI-11120, VAMPI-11121 (jfw)
  ;   .025   SEXUAL ORIENTATION - .01 of the multiple
+ ;**1071 STORY VAMPI-13755 (jfw) - Additional SO Fields in multiple
+ ;          .02 STATUS
+ ;          .03 DATE CREATED
+ ;          .04 DATE LAST UPDATED          
  ;   .2406  PRONOUN            - .01 of the multiple
  ;   .0251  SEXUAL ORIENTATION DESCRIPTION
  ;   .1151  RESIDENTIAL ADDRESS [LINE 1]
@@ -52,7 +56,8 @@ MPIPD ; protocol entry point for monitoring fields via DG field monitoring
  S DGFIELD=$G(DGFIELD)
  ;I DGFIELD'=.01&(DGFIELD'=994)&(DGFIELD'=.525)&(DGFIELD'=.0906)&(DGFIELD'=.121)&(DGFIELD'=.133)&(DGFIELD'=.134)&(DGFIELD'=391)&(DGFIELD'=1901)&(DGFIELD'=.323)&(DGFIELD'=.024) Q
  ;**902 MVI_4735 (jfw) Add 4 new fields to list (Break apart long If line above)
- S MVIRSLT=(DGFIELD'=.01)&(DGFIELD'=994)&(DGFIELD'=.525)&(DGFIELD'=.0906)&(DGFIELD'=.121)&(DGFIELD'=.133)
+ S MVIRSLT=(DGFIELD'=.01)&(DGFIELD'=.02)&(DGFIELD'=.03)&(DGFIELD'=.04)&(DGFIELD'=994)&(DGFIELD'=.525)
+ S MVIRSLT=MVIRSLT&(DGFIELD'=.0906)&(DGFIELD'=.121)&(DGFIELD'=.133)
  S MVIRSLT=MVIRSLT&(DGFIELD'=.134)&(DGFIELD'=391)&(DGFIELD'=1901)&(DGFIELD'=.323)&(DGFIELD'=.024)
  S MVIRSLT=MVIRSLT&(DGFIELD'=.352)&(DGFIELD'=.353)&(DGFIELD'=.354)&(DGFIELD'=.355)&(DGFIELD'=.357)
  S MVIRSLT=MVIRSLT&(DGFIELD'=.2405)&(DGFIELD'=.0931)&(DGFIELD'=.0932)&(DGFIELD'=2)&(DGFIELD'=.0251)
@@ -75,7 +80,7 @@ MPIPD ; protocol entry point for monitoring fields via DG field monitoring
  I DGFILE=2.01 S VAFCF="1;" D AVAFC^VAFCDD01(DGDA(1)) ;ALIAS
  I DGFILE=2.02 S VAFCF="2.02,.01;" D AVAFC^VAFCDD01(DGDA(1)) ;RACE INFORMATION
  I DGFILE=2.06 S VAFCF="2.06,.01;" D AVAFC^VAFCDD01(DGDA(1)) ;ETHNICITY INFORMATION
- I DGFILE=2.025 S VAFCF="2.025,.01;" D AVAFC^VAFCDD01(DGDA(1)) ;SEXUAL ORIENTATION
+ I DGFILE=2.025 S VAFCF="2.025,"_DGFIELD_";" D AVAFC^VAFCDD01(DGDA(1)) ;SEXUAL ORIENTATION
  I DGFILE=2.2406 S VAFCF="2.2406,.01;" D AVAFC^VAFCDD01(DGDA(1)) ;PRONOUN
  ;Process field for different File **967 (jfw)
  I DGFILE=38.1 S VAFCF="38.1,2;" D AVAFC^VAFCDD01(DGDA)  ;Sensitivity Info 

@@ -1,5 +1,5 @@
-MAGDSTA7 ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Jun 16, 2020@08:35:42
- ;;3.0;IMAGING;**231**;MAR 19, 2002;Build 9;Feb 27, 2015
+MAGDSTA7 ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Mar 04, 2022@13:42:59
+ ;;3.0;IMAGING;**231,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -122,8 +122,11 @@ NUMBER() ; use GMRCIEN to find completed studies
  . Q
  Q STOP
  ;
-CONLKUP1(GMRCIEN) ;
- N ACNUMB,DFN,EXAMDATE,I,MAGIENLIST
+CONLKUP1(GMRCIEN) ; check consult
+ N ACNUMB,DFN,EXAMDATE,I,ORDERINGFACILITY,MAGIENLIST
+ ;
+ S ORDERINGFACILITY=$$GET1^DIQ(123,GMRCIEN,.05,"I")
+ I $$CHECKDIV^MAGDSTAB()="Y",ORDERINGFACILITY'=DIVISION Q 0  ; not this division
  ;
  S ACNUMB=$$GMRCACN^MAGDFCNV(GMRCIEN) ; legacy or site-specific
  S EXAMDATE=$$GET1^DIQ(123,GMRCIEN,.01,"I")

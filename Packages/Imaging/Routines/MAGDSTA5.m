@@ -1,5 +1,5 @@
-MAGDSTA5 ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Apr 03, 2020@09:11:18
- ;;3.0;IMAGING;**231**;MAR 19, 2002;Build 9;Feb 27, 2015
+MAGDSTA5 ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Mar 08, 2022@08:59:51
+ ;;3.0;IMAGING;**231,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -112,11 +112,18 @@ NUMBER() ; use ^RARPT ien
  Q STOP
  ;
 RADLKUP1(RARPT1) ; lookup one radiology exam
- N ACNUMB,DFN,EXAMDATE,MAGIEN,MAGIENLIST,RARPT0,RARPT3
+ N ACNUMB,DFN,EXAMDATE,HOSPDIV,MAGIEN,MAGIENLIST,RADPT0,RADTI,RARPT0,RARPT3
  ;
  S RARPT0=$G(^RARPT(RARPT1,0))
  S ACNUMB=$P(RARPT0,"^",1),DFN=$P(RARPT0,"^",2)
  S EXAMDATE=$P(RARPT0,"^",3)
+ ;
+ ; check DIVISION
+ S RADTI=$$RADTI(EXAMDATE)
+ S RADPT0=$G(^RADPT(DFN,"DT",RADTI,0))
+ S HOSPDIV=$P(RADPT0,"^",3) ; HOSPITAL DIVISION
+ I $$CHECKDIV^MAGDSTAB()="Y",HOSPDIV'=DIVISION Q 0 ; not the user's division
+ ;
  ; lookup legacy 2005 image group pointers
  S RARPT3=0
  F  S RARPT3=$O(^RARPT(RARPT1,2005,RARPT3)) Q:'RARPT3  D
@@ -140,4 +147,4 @@ SETDATES(DATEBEG,DATESTOP,BEGDATE,ENDDATE,DIRECTION) ; get date range
  Q
  ;
 RADTI(RADTI) ; convert a reverse date to a FM date and vice versa
- Q 9999999.9999-RADTI
+ Q 9999999.9999-RADTI ; 9's complement conversion

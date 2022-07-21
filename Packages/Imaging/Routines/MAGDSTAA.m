@@ -1,5 +1,5 @@
-MAGDSTAA ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Jul 15, 2021@11:48:10
- ;;3.0;IMAGING;**231,306**;5-May-2007;Build 1
+MAGDSTAA ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Feb 15, 2022@10:50:34
+ ;;3.0;IMAGING;**231,306,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -31,7 +31,7 @@ LOOKUP(DFN,STUDYDATE,STUDYIEN,ACNUMB,MAGIENLIST) ; called by MAGDSTA5 and MAGDST
  ; MAGIENLIST --- array of MAGIEN pointers
  ; VISTAUIDFLAG - flag to indicate that an acn query failed
  ;
- N ERROR,EXAMDATE,I,IMAGES,IMAGECOUNT,MAGGLIST,MAGIEN,SSN
+ N ERROR,EXAMDATE,I,IMAGECOUNT,MAGGLIST,MAGIEN,NONDICOM,SSN
  N PACS,RUNTIME,SERIESCOUNT,PACSSTUDYUID,VISTASTUDYUID,VISTA,X
  ;
  D STTINC("VISTA STUDIES PROCESSED",1)
@@ -46,7 +46,7 @@ LOOKUP(DFN,STUDYDATE,STUDYIEN,ACNUMB,MAGIENLIST) ; called by MAGDSTA5 and MAGDST
  I $$SUSPEND(HOURS) Q 1  ; stop
  I $Y>(IOSL-6) W !! D HEADER(1)
  ;
- S (IMAGECOUNT,SERIESCOUNT)=0,IMAGES="NONE"
+ S NONDICOM=0,IMAGES="NONE"
  W !,$J(STUDYIEN,8),?11,ACNUMB,?30,$P($$FMTE^XLFDT(STUDYDATE,"2Z"),"@",1)
  ; lookup legacy 2005 image group pointers
  K ^TMP("MAG",$J,"UIDS") ; remove the list of UIDs for the VistA study
@@ -54,11 +54,13 @@ LOOKUP(DFN,STUDYDATE,STUDYIEN,ACNUMB,MAGIENLIST) ; called by MAGDSTA5 and MAGDST
  F I=1:1 S MAGIEN=$O(MAGIENLIST(MAGIEN)) Q:MAGIEN=""  D
  . W:I>1 ! W ?40,$J(MAGIEN,8)
  . D LEGACY^MAGDSTA8(MAGIEN,.SERIESCOUNT,.IMAGECOUNT) ; count images in all groups
- . S IMAGES="LEGACY"
  . I SERIESCOUNT W ?52,$J(SERIESCOUNT,5)
  . E  D
  . . I IMAGECOUNT W ?52,$J("",5) ; same as previous series, don't show count
- . . E  W ?55,"non-DICOM" ; not DICOM, maybe TGA, JPEG, PDF, etc.
+ . . E  D
+ . . . W ?55,"non-DICOM" ; not DICOM, maybe TGA, JPEG, PDF, etc.
+ . . . S NONDICOM=1
+ . . . Q
  . . Q
  . I IMAGECOUNT W ?59,$J(IMAGECOUNT,5)
  . D STTINC("LEGACY STUDIES PROCESSED",1)
@@ -74,7 +76,6 @@ LOOKUP(DFN,STUDYDATE,STUDYIEN,ACNUMB,MAGIENLIST) ; called by MAGDSTA5 and MAGDST
  ; look up in new sop class database (P34)
  D NEWSOPDB^MAGDSTA8(ACNUMB,.SERIESCOUNT,.IMAGECOUNT)
  I IMAGECOUNT>0 D
- . S IMAGES="NEW SOP"
  . W:$D(MAGIENLIST) ! W ?41,"NEW SOP",?52,$J(SERIESCOUNT,5),?59,$J(IMAGECOUNT,5)
  . D STTINC("NEW SOP CLASS STUDIES PROCESSED",1)
  . D STTINC("NEW SOP CLASS SERIES COUNT",SERIESCOUNT)
@@ -91,9 +92,9 @@ LOOKUP(DFN,STUDYDATE,STUDYIEN,ACNUMB,MAGIENLIST) ; called by MAGDSTA5 and MAGDST
  S SSN=$$GET1^DIQ(2,DFN,.09,"E") ; P306 PMK 06/11/2021 use last 4 of SSN to make query unique
  S ERROR=$$FINDSUID^MAGDSTAB(ACNUMB,SSN,.PACSSTUDYUID,.SERIESCOUNT,.IMAGECOUNT)
  ;
- I IMAGES="NONE" D  ; no images on file in VistA
- . W ?46,"--",?55,"--",?62,"--"
- . D STTINC("VISTA STUDIES WITHOUT IMAGES",1)
+ I VISTA("IMAGE COUNT")=0 D  ; no DICOM images on file in VistA
+ . I NONDICOM=0 W ?46,"--",?55,"--",?62,"--"
+ . D STTINC("VISTA STUDIES WITHOUT DICOM IMAGES",1)
  . Q
  E  I '$D(PACSSTUDYUID) D
  . ; perform queries using the VistA Study Instance UID to get the image and series counts

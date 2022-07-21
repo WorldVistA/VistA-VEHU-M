@@ -1,5 +1,5 @@
-MAGDSTD1 ; OI&T-Clin3/DWM,WOIFO/PMK - accession lookup, including new sops; Jul 31, 2020@12:02:53
- ;;3.0;Support;**231**;11/13/2018;Build 9
+MAGDSTD1 ;OI&T-CLIN-THREE/DWM,WOIFO/PMK - accession lookup, including new sops; Feb 15, 2022@10:52:41
+ ;;3.0;Support;**231,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -27,6 +27,7 @@ MAGDSTD1 ; OI&T-Clin3/DWM,WOIFO/PMK - accession lookup, including new sops; Jul 
  ;
  F  S ACNUMB=$$GETACC^MAGVD001() Q:ACNUMB=""  D
  . ; -- get image data --
+ . S ACNUMB=$$UP^MAGDFCNV(ACNUMB)
  . D GIBYACC^MAGVD007(.OUT,ACNUMB,.MAGARR)
  . I OUT<0 W !!,$P(OUT,SSEP,2) Q
  . I '$D(MAGARR) D  Q
@@ -107,6 +108,7 @@ SHOWINFO(ACNUMB,MAGARR) ;
  . F  S EXTENSION=$O(FILETYPE(EXTENSION)) Q:EXTENSION=""  D
  . . W !,EXTENSION,": ",$G(FILETYPE(EXTENSION))
  . . Q
+ . I $D(STYSERKT("DELETED")) W !,"*** Image Group Deleted ***" ; P305 PMK 12/09/2021
  . W !
  . Q
  Q

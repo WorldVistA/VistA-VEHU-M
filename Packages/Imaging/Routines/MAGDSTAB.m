@@ -1,5 +1,5 @@
-MAGDSTAB ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Jun 11, 2021@10:30:25
- ;;3.0;IMAGING;**231,306**;5-May-2007;Build 1
+MAGDSTAB ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Mar 04, 2022@14:35:44
+ ;;3.0;IMAGING;**231,306,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -49,10 +49,16 @@ FINDSUID(ACNUMB,SSN,PACSSTUDYUID,SERIESCOUNT,IMAGECOUNT) ; get study instance ui
  . S ^TMP("MAG",$J,"Q/R QUERY",QRSTACK,"ACCESSION NUMBER")=$S($L(ACNUMB,"-")<3:$$ANPREFIX_ACNUMB,1:ACNUMB)
  . Q
  E  S ^TMP("MAG",$J,"Q/R QUERY",QRSTACK,"ACCESSION NUMBER")=ACNUMB
- ; P306 PMK 06/11/2021 - add last four digits of SSN (MRN) to PATIENT ID to make query unique
- ;   when there are multiple studies with same accession because of PACS merges
- S L=$L(SSN) ; length of SSN=9; MRN may have a different length
- S ^TMP("MAG",$J,"Q/R QUERY",QRSTACK,"PATIENT ID")="*"_$E(SSN,L-3,L) ; * + last four digits
+ ;
+ ; P305 PMK 11/17/2021 - make last four digits optional
+ ; 
+ I $$ACNLAST4="Y" D  ; default is NO
+ . ; P306 PMK 06/11/2021 - add last four digits of SSN (MRN) to PATIENT ID to make query unique
+ . ;   when there are multiple studies with same accession because of PACS merges
+ . S L=$L(SSN) ; length of SSN=9; MRN may have a different length
+ . S ^TMP("MAG",$J,"Q/R QUERY",QRSTACK,"PATIENT ID")="*"_$E(SSN,L-3,L) ; * + last four digits
+ . Q
+ ;
  S ^TMP("MAG",$J,"Q/R QUERY",QRSTACK,"QUERY USER APPLICATION")=$$QRSCP^MAGDSTA8
  S ^TMP("MAG",$J,"Q/R QUERY",QRSTACK,"QUERY LEVEL")="STUDY"
  S ^TMP("MAG",$J,"Q/R QUERY",QRSTACK,"ROOT")="STUDY"
@@ -109,6 +115,25 @@ PARM ; set query/retrieve site parameters
  S DEFAULT=$$DASHES
  I $$YESNO^MAGDSTQ("Include dashes in the DICOM Patient Identifier?",DEFAULT,.X)<0 Q
  S $P(^MAG(2006.1,IEN,7),"^",4)=$E(X)
+ ;
+ ; get the patient identifier last 4 or no last 4
+ S DEFAULT=$$ACNLAST4
+ I $$YESNO^MAGDSTQ("Use LAST 4 in the PID with Accession Number in the automatic query?",DEFAULT,.X)<0 Q
+ S $P(^MAG(2006.1,IEN,7),"^",7)=$E(X)
+ ;
+ ; get the check study division switch
+ N HELP
+ S HELP(1)="If there are VistA Imaging file servers at other divisions, answer ""Y""."
+ S HELP(2)="  Then only studies for this division will be processed,"
+ S HELP(3)="  and those for the other divisions will be ignored."
+ S HELP(4)=""
+ S HELP(5)="If there is only one VistA Imaging file server for all divisions, answer ""N""."
+ S HELP(6)="  Then all the studies will be processed."
+ S DEFAULT=$$CHECKDIV
+ I $$YESNO^MAGDSTQ("Select only studies for the current division for auto compare/retrieve?",DEFAULT,.X,.HELP)<0 Q 
+ S $P(^MAG(2006.1,IEN,8),"^",1)=$E(X)
+ ;
+ D CONTINUE^MAGDSTQ
  Q
  ;
 ANPREFIX() ; Get the value of the accession number prefix
@@ -118,7 +143,20 @@ ANPREFIX() ; Get the value of the accession number prefix
  Q $$GET1^DIQ(2006.1,IEN,206)
  ;
 DASHES() ; Get the value of the patient identifier dashes
- N IEN
+ N IEN,KSITPAR
  S KSITEPAR=$$KSP^XUPARAM("INST")
  S IEN=$O(^MAG(2006.1,"B",KSITEPAR,""))
- Q $E($$GET1^DIQ(2006.1,IEN,207),1)
+ Q $$GET1^DIQ(2006.1,IEN,207,"I")
+ ;
+ACNLAST4() ; Get the value of the last 4 query key
+ N IEN,KSITEPAR
+ S KSITEPAR=$$KSP^XUPARAM("INST")
+ S IEN=$O(^MAG(2006.1,"B",KSITEPAR,""))
+ Q $$GET1^DIQ(2006.1,IEN,210,"I")
+ ;
+CHECKDIV() ; Get the value of the check study division switch
+ N IEN,KSITEPAR
+ S KSITEPAR=$$KSP^XUPARAM("INST")
+ S IEN=$O(^MAG(2006.1,"B",KSITEPAR,""))
+ Q $$GET1^DIQ(2006.1,IEN,211,"I")
+ ;

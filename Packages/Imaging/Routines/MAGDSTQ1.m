@@ -1,5 +1,5 @@
-MAGDSTQ1 ;WOIFO/PMK - Study Tracker - Query/Retrieve user ; Sep 16, 2020@09:53:32
- ;;3.0;IMAGING;**231**;MAR 19, 2002;Build 9;OCT 28, 2009
+MAGDSTQ1 ;WOIFO/PMK - Study Tracker - Query/Retrieve user ; Feb 15, 2022@10:52:44
+ ;;3.0;IMAGING;**231,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -66,7 +66,8 @@ GETMODE() ; get the patient lookup CLIENT for manual Q/R client
  N HELP,X
  S PATLKUPMODE=$G(^TMP("MAG",$J,"Q/R PARAM","PATIENT LOOKUP MODE"),"<undef>")
  I PATLKUPMODE="<undef>" D
- . I $$YESNO^MAGDSTQ("Use VistA Patient identification information for PACS Query/Retrieve?","n",.X,.HELP)<0 Q:""
+ . I '$$VISTA^MAGDSTQ,'$D(^TMP("MAG",$J,"DICOM RPC USER")) S PATLKUPMODE="MANUAL" Q  ; On gateway w/o RPCs
+ . I $$YESNO^MAGDSTQ("Use VistA Patient identification information for PACS Query/Retrieve?","y",.X,.HELP)<0 Q:""
  . S PATLKUPMODE=$S(X="YES":"VISTA",1:"MANUAL")
  . S ^TMP("MAG",$J,"Q/R PARAM","PATIENT LOOKUP MODE")=PATLKUPMODE
  . I PATLKUPMODE="VISTA" D

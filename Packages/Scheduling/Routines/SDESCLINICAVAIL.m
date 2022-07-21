@@ -1,16 +1,12 @@
-SDESCLINICAVAIL ;ALB/RRM,MGD,KML - VISTA SCHEDULING RPCS GET CLINIC AVAILABILITY ; March 5, 2022
- ;;5.3;Scheduling;**800,805,809**;Aug 13, 1993;Build 10
+SDESCLINICAVAIL ;ALB/RRM,KML,MGD - VISTA SCHEDULING RPCS GET CLINIC AVAILABILITY ; May 2, 2022
+ ;;5.3;Scheduling;**800,805,809,816**;Aug 13, 1993;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
- ;Global References    Supported by ICR#     Type
- ;-----------------    -----------------     ----------
- ; ^TMP($J             SACC 2.3.2.5.1
- ;
- ;External References
- ;-------------------
- ; ^%DT                10003                 Supported
- ; $$FIND1^DIC          2051                 Supported
- ; $$GET1^DIQ           2056                 Supported
+ ; External References
+ ; -------------------
+ ; Reference to ^%DT        in ICR #10003
+ ; Reference to $$FIND1^DIC in ICR #2051
+ ; Reference to $$GET1^DIQ  in ICR #2056
  ;
  Q  ;No Direct Call
  ;
@@ -90,7 +86,10 @@ BUILDDATA ;retrieve clinic availability data
  . S SDSLOTS=$P(@SDTMPARY@(II),U,4)
  . S SDSLOTS=$S(SDSLOTS=" ":"",1:SDSLOTS)
  . S SDSLOTS=$S(SDP4=2:"",SDP4=3:"X",1:SDSLOTS)
- . S SDGETCLAVL($J,"SDESCLINICAVAIL",II)=SDSTRTDT_U_SDSTRTTM_U_SDSTOPTM_U_SDSLOTS
+ . S SDGETCLAVL("ClinAvail",II,"Date")=SDSTRTDT
+ . S SDGETCLAVL("ClinAvail",II,"BeginTime")=SDSTRTTM
+ . S SDGETCLAVL("ClinAvail",II,"EndTime")=SDSTOPTM
+ . S SDGETCLAVL("ClinAvail",II,"SlotsAvail")=SDSLOTS
  Q
  ;
 BUILDJSON ;Convert data to JSON

@@ -1,5 +1,5 @@
-MAGDSTA8 ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Sep 18, 2020@14:34:24
- ;;3.0;IMAGING;**231**;MAR 19, 2002;Build 9
+MAGDSTA8 ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Feb 15, 2022@10:50:15
+ ;;3.0;IMAGING;**231,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -52,53 +52,130 @@ NEWSOPDB(ACNUMB,SERIESCOUNT,IMAGECOUNT) ; look for UIDs in the P34 database for 
  ; 1) the Attribute On File field is not checked at all.
  ; 2) for the Procedure Reference file (#2005.61), there has to be a pointer to the Patient
  ;    Reference file (#2005.6) and the patient id type in file #2005.6 needs to be "DFN".
- ; 3) for the Image Study file (#2005.62), the study must be "accessible"
- ; 4) for the Image Series file (#2006.63), the series must be  "accessible"
- ; 5) for the SOP Instance file ("2006.64), the SOP instance must be "accessible"
+ ; 3) for the Image Study file (#2005.62), the study must be "accessible" and AOF
+ ; 4) for the Image Series file (#2006.63), the series must be  "accessible" and AOF
+ ; 5) for the SOP Instance file ("2006.64), the SOP instance must be "accessible" and AOF
  ;
  ; Rules 1, 2, and 3 are from the logic in ADD1STD^MAGDQR74
  ; Rules 4 and 5 are from the logic in STYSERKT^MAGVD010
  ;  
- N I,INACCESSIBLE,PATREFDATA,PATREFIX,PROCIX,MAGD0,RETURN
- N STATUS,STUDYIX,VISTASTUDYUID,SERIESIX,SERIESUID,SOPIX,SOPUID,X
+ N PROCIX,SERIESDATA0,SERIESIX,SERIESUID,STUDYDATA0,STUDYIX
+ N SOPDATA0,SOPIX,SOPUID,VISTASTUDYUID
+ ;
  S (SERIESCOUNT,IMAGECOUNT)=0 ; want series/image counts for this accession number
  I $G(ACNUMB)="" Q  ; invoked without an accession number
+ ;
  S PROCIX="" ; procedure level indexed by accession number
  F  S PROCIX=$O(^MAGV(2005.61,"B",ACNUMB,PROCIX)) Q:'PROCIX  D
- . ; see ADD1STD^MAGDQR74 for logic
- . S X=$G(^MAGV(2005.61,PROCIX,6))
- . S PATREFIX=$P(X,"^",1)
- . I 'PATREFIX Q  ; Quit if there is no Patient Reference
- . S PATREFDATA=$G(^MAGV(2005.6,PATREFIX,0))
- . I $P(PATREFDATA,"^",3)'="D" Q  ; Quit if Patient ID Type is not DFN
- . S MAGD0=$P(PATREFDATA,"^",1) ; DFN
- . I MAGD0="" Q  ; no DFN
+ . I $$PROBLEM61(PROCIX) Q  ; patient not available - quit
+ . ;
  . S STUDYIX="" ; study level
  . F  S STUDYIX=$O(^MAGV(2005.62,"C",PROCIX,STUDYIX)) Q:'STUDYIX  D
- . . S X=$G(^MAGV(2005.62,STUDYIX,5)) ; see ADD1STD^MAGDQR74 for logic
- . . S INACCESSIBLE=$P(X,"^",2) I INACCESSIBLE="I" Q  ; study marked inaccessible 
- . . S VISTASTUDYUID=$P(^MAGV(2005.62,STUDYIX,0),"^",1)
+ . . I $$PROBLEM62(STUDYIX) Q  ; study not available - quit
+ . . S STUDYDATA0=$G(^MAGV(2005.62,STUDYIX,0))
+ . . S VISTASTUDYUID=$P(STUDYDATA0,"^",1)
  . . S ^(0)=($G(^TMP("MAG",$J,"UIDS","VISTA",0))+1)_" ; new sop class db study count" ; increment study count
- . . ; see STYSERKT^MAGVD010 for logic
+ . . ;
  . . S SERIESIX="" ; series level
  . . F  S SERIESIX=$O(^MAGV(2005.63,"C",STUDYIX,SERIESIX)) Q:'SERIESIX  D
- . . . ; If the Series has been deleted don't count - quit
- . . . S STATUS=$G(^MAGV(2005.63,SERIESIX,9))
- . . . I STATUS'="A" Q  ; series not accessible, probably deleted - quit
- . . . S SERIESUID=$P(^MAGV(2005.63,SERIESIX,0),"^",1)
+ . . . I $$PROBLEM63(SERIESIX) Q  ; if the series is not available, don't count it - quit
+ . . . S SERIESDATA0=$G(^MAGV(2005.63,SERIESIX,0))
+ . . . S SERIESUID=$P(SERIESDATA0,"^",1)
  . . . D SERIES(VISTASTUDYUID,SERIESUID,.SERIESCOUNT)
+ . . . ;
  . . . S SOPIX="" ; sop instance level
  . . . F  S SOPIX=$O(^MAGV(2005.64,"C",SERIESIX,SOPIX)) Q:'SOPIX  D
- . . . . ; If the SOP Instance has been deleted don't count - quit
- . . . . S STATUS=$G(^MAGV(2005.64,SOPIX,11))
- . . . . I STATUS'="A" Q  ; SOP instance not accessible, probably deleted - quit
- . . . . S SOPUID=$P(^MAGV(2005.64,SOPIX,0),"^",1)
- . . . . D IMAGE(VISTASTUDYUID,SERIESUID,SOPUID,.IMAGECOUNT)
+ . . . . I $$PROBLEM64(SOPIX) Q  ; if the sop instance is not available, don't count it - quit
+ . . . . S SOPDATA0=^MAGV(2005.64,SOPIX,0)
+ . . . . S SOPUID=$P(SOPDATA0,"^",1)
+ . . . . ;
+ . . . . S IMAGEIX="" ; image instance level
+ . . . . F  S IMAGEIX=$O(^MAGV(2005.65,"C",SOPIX,IMAGEIX)) Q:'IMAGEIX  D
+ . . . . . I $$PROBLEM65(IMAGEIX) Q  ; if the original image is not available, don't count it - quit
+ . . . . . D IMAGE(VISTASTUDYUID,SERIESUID,SOPUID,.IMAGECOUNT)
+ . . . . . Q
  . . . . Q
  . . . Q
  . . Q
  . Q
  Q
+ ;
+PROBLEM61(PROCIX) ; check both file 2005.6 and 2005.61
+ N ARTIFACTONFILE,DFN,PATREFDATA,PATREFIX,PROCREFDATA0,PROCREFDATA6,RETURN,STATUS,STUDYIX
+ S RETURN=1 D
+ . ; check IMAGING PROCEDURE REFERNCE file 
+ . S PROCREFDATA0=$G(^MAGV(2005.61,PROCIX,0))
+ . S STATUS=$P(PROCREFDATA0,"^",5) I STATUS'="A" Q  ; imaging procedure not accessible
+ . S ARTIFACTONFILE=$P(PROCREFDATA0,"^",6) I 'ARTIFACTONFILE Q  ; artifact not on file 
+ . S PROCREFDATA6=$G(^MAGV(2005.61,PROCIX,6))
+ . S PATREFIX=$P(PROCREFDATA6,"^",1) I 'PATREFIX Q  ; No Patient Reference
+ . ;
+ . ; check IMAGING PATIENT REFERENCE file
+ . S PATREFDATA=$G(^MAGV(2005.6,PATREFIX,0))
+ . S DFN=$P(PATREFDATA,"^",1) I DFN="" Q  ; no DFN
+ . I $P(PATREFDATA,"^",3)'="D" Q  ; Quit if Patient ID Type is not DFN
+ . S ARTIFACTONFILE=$P(PATREFDATA,"^",4) I 'ARTIFACTONFILE Q  ; artifact not on file
+ . S STATUS=$P(PATREFDATA,"^",5) I STATUS'="A" Q  ; patient not accessible
+ . ;
+ . ; check that there is at least one good study
+ . S STUDYIX="" ; study level
+ . F  S STUDYIX=$O(^MAGV(2005.62,"C",PROCIX,STUDYIX)) Q:'STUDYIX  D
+ . . I $$PROBLEM62^MAGDSTA8(STUDYIX) Q  ; study not available - quit
+ . . S RETURN=0
+ . . Q
+ . Q
+ Q RETURN ; 0=OK, no problem, 1=fails, not available
+ ;
+PROBLEM62(STUDYIX) ; check file 2005.62
+ N ARTIFACTONFILE,RETURN,STATUS,STUDYDATA5,STUDYDATA6
+ S RETURN=1 D
+ . ; check IMAGE STUDY file
+ . S STUDYDATA5=$G(^MAGV(2005.62,STUDYIX,5))
+ . S STATUS=$P(STUDYDATA5,"^",2) I STATUS'="A" Q  ; study not accessible
+ . S STUDYDATA6=$G(^MAGV(2005.62,STUDYIX,6))
+ . S ARTIFACTONFILE=$P(STUDYDATA6,"^",2) I 'ARTIFACTONFILE Q  ; artifact not on file
+ . S RETURN=0
+ . Q
+ Q RETURN ; 0=OK, no problem, 1=fails, not available
+ ;
+PROBLEM63(SERIESIX) ; check file 2005.63
+ N ARTIFACTONFILE,RETURN,SERIESDATA6,SERIESDATA9,STATUS
+ S RETURN=1 D
+ . ; check IMAGE SERIES file
+ . S SERIESDATA6=$G(^MAGV(2005.63,SERIESIX,6))
+ . S ARTIFACTONFILE=$P(SERIESDATA6,"^",2) I 'ARTIFACTONFILE Q  ; artifact not on file
+ . S SERIESDATA9=$G(^MAGV(2005.63,SERIESIX,9))
+ . S STATUS=$P(SERIESDATA9,"^",1) I STATUS'="A" Q  ; series not accessible
+ . S RETURN=0
+ . Q
+ Q RETURN ; 0=OK, no problem, 1=fails, not available
+ ;
+PROBLEM64(SOPIX) ; check file 2005.64
+ N ARTIFACTONFILE,RETURN,SOPDATA6,SOPDATA11,STATUS
+ S RETURN=1 D
+ . ; check IMAGE SOP INSTANCE file
+ . S SOPDATA6=$G(^MAGV(2005.64,SOPIX,6))
+ . S ARTIFACTONFILE=$P(SOPDATA6,"^",2) I 'ARTIFACTONFILE Q  ; artifact not on file
+ . S SOPDATA11=$G(^MAGV(2005.64,SOPIX,11))
+ . S STATUS=$P(SOPDATA11,"^",1) I STATUS'="A" Q  ; SOP instance not accessible
+ . S RETURN=0
+ . Q
+ Q RETURN ; 0=OK, no problem, 1=fails, not available
+ ;
+PROBLEM65(IMAGEIX) ; check file 2005.65
+ N ARTIFACTIX,DELETED,IMAGEDATA0,IMAGEDATA1,IMAGEDATA4,ORIGINAL,RETURN,STATUS
+ S RETURN=1 D
+ . ; check IMAGE INSTANCE file
+ . S IMAGEDATA0=$G(^MAGV(2005.65,IMAGEIX,0))
+ . S ARTIFACTIX=$P(IMAGEDATA0,"^",2) I 'ARTIFACTIX="" Q  ; no artifact reference
+ . S IMAGEDATA1=$G(^MAGV(2005.65,IMAGEIX,1))
+ . S ORIGINAL=$P(IMAGEDATA1,"^",2) I 'ORIGINAL Q  ; only want original DICOM object
+ . S STATUS=$P(IMAGEDATA1,"^",5) I STATUS'="A" Q  ; image not accessible
+ . S IMAGEDATA4=$G(^MAGV(2005.65,IMAGEIX,4))
+ . S DELETED=$P(IMAGEDATA4,"^",1,3) I DELETED'="",DELETED'="^^" Q  ; deleted image
+ . S RETURN=0
+ . Q
+ Q RETURN ; 0=OK, no problem, 1=fails, not available
  ;
 SERIES(VISTASTUDYUID,SERIESUID,SERIESCOUNT) ; increment series counters
  I '$D(^TMP("MAG",$J,"UIDS","VISTA",VISTASTUDYUID,SERIESUID)) D

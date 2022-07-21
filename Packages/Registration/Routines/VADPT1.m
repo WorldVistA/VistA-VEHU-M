@@ -1,5 +1,5 @@
 VADPT1 ;ALB/MRL,MJK,ERC,TDM,CLT,ARF - PATIENT VARIABLES ;05 May 2017  1:41 PM
- ;;5.3;Registration;**415,489,516,614,688,754,887,941,1059,1067**;Aug 13, 1993;Build 23
+ ;;5.3;Registration;**415,489,516,614,688,754,887,941,1059,1067,1071**;Aug 13, 1993;Build 4
  ;
 1 ;Demographic [DEM]
  N W,Z,NODE
@@ -66,12 +66,16 @@ VADPT1 ;ALB/MRL,MJK,ERC,TDM,CLT,ARF - PATIENT VARIABLES ;05 May 2017  1:41 PM
  ;
  ; Preferred Name [14 - NM]
  ;**1059 Adding Sexual Orientation, Sexual Orientation Description, Pronoun, Pronoun Description, SIGI [14 - SOGI]
- N SOC,CNTR,PRO,SIGI,SIGIN
+ ;**1071 VAMPI-13755 (jfw) - Display Additional SO Info
+ N SOC,CNTR,PRO,SIGI,SIGIN,VAREF
  S @VAV@($P(VAS,"^",14))=""
  ;Sexual Orientation #.025 multiple
  S CNTR=1,X=0 F  S X=$O(^DPT(DFN,.025,X)) Q:'X!(X="")  D
- .S SOC=$G(^DPT(DFN,.025,X,0))
- .S @VAV@($P(VAS,"^",14),1,CNTR)=$G(^DG(47.77,SOC,0)),CNTR=CNTR+1 ;NAME ^ CODE
+ .N VASOI D GETS^DIQ(2.025,X_","_DFN,"*","EI","VASOI")
+ .;External^Internal values: SO, Status, Date Created, Date Last Updated, TIU Document
+ .S VAREF="VASOI(2.025,"""_X_","_DFN_","")",@VAV@($P(VAS,"^",14),1,CNTR)=$P($G(^DG(47.77,@VAREF@(.01,"I"),0)),"^",1,2)
+ .N VAI F VAI=.02,.03,.04,.05 S @VAV@($P(VAS,"^",14),1,CNTR,(VAI*100-1))=@VAREF@(VAI,"E")_"^"_@VAREF@(VAI,"I")
+ .S CNTR=CNTR+1
  S @VAV@($P(VAS,"^",14),1)=CNTR-1
  ;Sexual Orientatin Description #.241
  S @VAV@($P(VAS,"^",14),2)=$P($G(^DPT(DFN,.241)),"^")

@@ -1,5 +1,5 @@
-TIUFWRAP ;SPFO/AJB - Evaluate & Clean File #8927 ;Sep 17, 2021@13:08:10
- ;;1.0;TEXT INTEGRATION UTILITIES;**338**;Jun 20, 1997;Build 9
+TIUFWRAP ;SPFO/AJB - Evaluate & Clean File #8927 ;04/06/22  12:5
+ ;;1.0;TEXT INTEGRATION UTILITIES;**338,254**;Jun 20, 1997;Build 9
  ;
  Q
  ;
@@ -7,9 +7,11 @@ EN ; main entry
  N ANS,BU,C,OUTPUT,POP,X,Y
  D HOME^%ZIS,PREP^XGF W IOCUON
  D BACKUP^TIUFWRAP1(.BU,0) ; save a copy of #8927 in ^XTMP
+ S OUTPUT=$NA(^TMP($J,"OUTPUT")) K @OUTPUT
  S ANS="" F  D  Q:ANS'=""
  . N BROKEN,LONG,NOFLD,NOOBJ,UNLINKED
- . S (BROKEN,LONG,NOFLD,NOOBJ,UNLINKED)=0
+ . F X="BROKEN","LONG","NOFLD","NOOBJ","UNLINKED" D
+ . . S @X@("COUNT")=0,@X=$NA(^TMP($J,X)) K ^TMP($J,X) ; reset counts, set temp global, clean temp global
  . D DISPLAY^TIUFWRAP2("INFO")
  . N DIR S DIR=$S(+BU:"SA^B:BACKUP;V:VIEW;P:PRINT;E:EMAIL;R:RESTORE;U:UPDATE;H:HELP;Q:QUIT",1:"SA^B:BACKUP;V:VIEW;P:PRINT;E:EMAIL;U:UPDATE;H:HELP;Q:QUIT")
  . N PROMPT S PROMPT=$S(+BU:"VIEW, PRINT, EMAIL, RESTORE or UPDATE File #8927? ",1:"BACKUP, VIEW, PRINT, EMAIL or UPDATE File #8927? ")
@@ -18,36 +20,40 @@ EN ; main entry
  . I ANS="R" D RESTORE^TIUFWRAP1 S ANS="" Q
  . I ANS="U" D UPDATE^TIUFWRAP1(BU) S ANS="" Q
  . I ANS="H" D HELP^TIUFWRAP2 S ANS="" Q
- . I '$D(OUTPUT) W !!,"Analyzing File #8927..." D
+ . I '$D(@OUTPUT) W !!,"Analyzing File #8927..." D
  . . D GATHER^TIUFWRAP1(0,0) I $D(LONG)=1,$D(UNLINKED)=1,$D(BROKEN)=1,$D(NOFLD)=1 W !!,"No issues found...",! I $$FMR^TIUFWRAP2("EA","Press <Enter> to continue.")
- . . D PREPOUT^TIUFWRAP1(.LONG,.OUTPUT,LONG_" Entries With Lines >80 Characters")
- . . D PREPOUT^TIUFWRAP1(.UNLINKED,.OUTPUT,UNLINKED_" Entries With No Items, Pointers, or Text")
- . . D PREPOUT^TIUFWRAP1(.BROKEN,.OUTPUT,BROKEN_" Entries With Broken Fields/Objects")
- . . D PREPOUT^TIUFWRAP1(.NOFLD,.OUTPUT,NOFLD_" Entries With Missing Fields from #8927.1")
- . . D PREPOUT^TIUFWRAP1(.NOOBJ,.OUTPUT,NOOBJ_" Entries With Missing Objects from #8925.1")
+ . . D PREPOUT^TIUFWRAP1(.LONG,.OUTPUT,LONG("COUNT")_" Entries With Lines >80 Characters")
+ . . D PREPOUT^TIUFWRAP1(.UNLINKED,.OUTPUT,UNLINKED("COUNT")_" Entries With No Items, Pointers, or Text")
+ . . D PREPOUT^TIUFWRAP1(.BROKEN,.OUTPUT,BROKEN("COUNT")_" Entries With Broken Fields/Objects")
+ . . D PREPOUT^TIUFWRAP1(.NOFLD,.OUTPUT,NOFLD("COUNT")_" Entries With Broken/Missing Fields from #8927.1")
+ . . D PREPOUT^TIUFWRAP1(.NOOBJ,.OUTPUT,NOOBJ("COUNT")_" Entries With Missing Objects from #8925.1")
  . I ANS="V" D VIEW^TIUFWRAP1 S ANS="" Q
  . I ANS="P" D PRINT^TIUFWRAP1 S ANS="" Q
  . I ANS="E" D EMAIL^TIUFWRAP1 S ANS="" Q
  D CLEAN^XGF W !!
+ K @OUTPUT
  Q
  ;
 EE(IEN,LEVEL,PATH,LOD) ; evaluate entry
  N NODE,NODE0,TYPE
  S NODE0=$G(^TIU(8927,IEN,0))       ; zero node
  S TYPE=$P(NODE0,U,3)               ; type
+ S:LEVEL=0 PATH=""                  ; reset path
  S $P(PATH,U,(LEVEL+1))=$P(NODE0,U) ; set path for traversing GUI Editor
  F NODE=10,2 D  ; items=10, boilerplate text=2
- . N CNT,DATA,ITEM ; DATA
+ . N CNT,DATA,ITEM
  . S (CNT,ITEM)=0 F  S ITEM=$O(^TIU(8927,IEN,NODE,ITEM)) Q:'+ITEM  D
  . . I NODE=10 S CNT=CNT+1 ; increment count only for items
  . . I CNT=1 S LEVEL=LEVEL+1 ; only increment LEVEL once/ien
  . . ; value=item ien or value=line of boilerplate text
  . . N VALUE S VALUE=^TIU(8927,IEN,NODE,ITEM,0),VALUE=$S(NODE=2:VALUE,1:$P(VALUE,U,2)) ; item ien is 2nd piece of 0 node
+ . . I NODE=10,'VALUE D:+UPDATE  Q
+ . . . K ^TIU(8927,IEN,10,ITEM),^TIU(8927,IEN,10,"B",ITEM) ; remove broken item
  . . ;
  . . I NODE=10,'$$EE(VALUE,LEVEL,.PATH,LOD) D  Q  ; item not linked
  . . . S PATH=$P(PATH,U,1,(LEVEL+1)) ; final path
- . . . I +UPDATE D DEL(IEN,ITEM,VALUE),EE(IEN,LEVEL,.PATH,LOD) Q  ; remove item and re-check entry
- . . . S:'$D(UNLINKED(VALUE)) UNLINKED=$G(UNLINKED)+1 S UNLINKED(VALUE,"PATH")=PATH
+ . . . I +UPDATE D DEL(IEN,ITEM,VALUE) Q  ; remove item and re-check entry
+ . . . S:'$D(@UNLINKED@(VALUE)) UNLINKED("COUNT")=$G(UNLINKED("COUNT"))+1 S @UNLINKED@(VALUE,"PATH")=PATH
  . . I NODE=10 Q  ; nothing more to do for items
  . . ;
  . . ; boilerplate text actions
@@ -55,18 +61,20 @@ EE(IEN,LEVEL,PATH,LOD) ; evaluate entry
  . . . S PATH=$P(PATH,U,1,(LEVEL+1)) ; final path
  . . . N BENT S BENT=$$BROKEN(VALUE) ; broken entry?
  . . . I +BENT D  ; keep track of broken entries
- . . . . S:'$D(BROKEN(IEN)) BROKEN=$G(BROKEN)+1,BROKEN(IEN,"PATH")=PATH
- . . . . S:$G(BROKEN(IEN,"NODE"))'[ITEM BROKEN(IEN,"NODE")=$S($G(BROKEN(IEN,"NODE"))="":ITEM,1:$G(BROKEN(IEN,"NODE"))_U_ITEM)
+ . . . . S:'$D(@BROKEN@(IEN)) BROKEN("COUNT")=$G(BROKEN("COUNT"))+1,@BROKEN@(IEN,"PATH")=PATH
+ . . . . S:$G(@BROKEN@(IEN,"NODE"))'[ITEM @BROKEN@(IEN,"NODE")=$S($G(@BROKEN@(IEN,"NODE"))="":ITEM,1:@BROKEN@(IEN,"NODE")_U_ITEM)
  . . . I '+BENT D CHKOF(VALUE) ; check object/fields for non-broken entries
  . . . I '$$EX80(VALUE) Q  ; exceed 80 characters after resolving fields? also checking for missing fields from #8927.1
  . . . I $L(VALUE)'>80 Q  ; length ok
  . . . I '$$MERGE(VALUE) Q  ; merge criteria?
  . . . I '$$NXTLINE(IEN,ITEM) Q  ; ok to merge with next line?
- . . . S:'$D(LONG(IEN)) LONG=$G(LONG)+1,LONG(IEN,"PATH")=PATH
- . . . S LONG(IEN,"NODE")=$S($G(LONG(IEN,"NODE"))="":ITEM,1:$G(LONG(IEN,"NODE"))_U_ITEM)
+ . . . S:'$D(@LONG@(IEN)) LONG("COUNT")=$G(LONG("COUNT"))+1,@LONG@(IEN,"PATH")=PATH
+ . . . S @LONG@(IEN,"NODE")=$S($G(@LONG@(IEN,"NODE"))="":ITEM,1:$G(@LONG@(IEN,"NODE"))_U_ITEM)
+ . . ;
  . . ; update actions for boilerplate text
  . . I $$BROKEN(VALUE) D FBF(IEN,ITEM,.VALUE) S VALUE=^TIU(8927,IEN,NODE,ITEM,0) ; fix broken fields & reset value
  . . S VALUE=$$CLEAN(VALUE) ; clean the line of text
+ . . ;
  . . N LAST S LAST=+$O(DATA(8927,IEN,NODE,""),-1) ; get last line of new data
  . . S LAST=LAST+1 ; increment
  . . S DATA(8927,IEN,NODE,LAST,0)=VALUE ; save the line for update
@@ -103,7 +111,7 @@ FBF(IEN,NODE,LINE) ; fix broken fields/objects
  . . S FNAME=FNAME_$P(NL,"}") ; grab first piece of next line (name was wrapped?)
  . . S CL=CL_$P(NL,"}")_"}" ; set the current line with the bracket
  . . S NL=$P(NL,"}",2,999) ; remove first piece from next line and get everything else
- . . I $$BROKEN(CL) Q  ; !('+$O(^TIU(8927.1,"B",FNAME,""))) Q  ; quit if the line is still broken or the field doesn't exist
+ . . I $$BROKEN(CL) Q  ; quit if the line is still broken or the field doesn't exist
  . . S ^TIU(8927,IEN,2,NODE,0)=CL ; set current line
  . . S ^TIU(8927,IEN,2,$O(^TIU(8927,IEN,2,NODE)),0)=NL ; set next line
  . . S CONT=0 ; don't continue, all done
@@ -119,8 +127,8 @@ FBF(IEN,NODE,LINE) ; fix broken fields/objects
  . S NL=$P(NL,"|",2,999) ; remove first piece from next line and get everything else
  . I $$BROKEN(CL) Q  ; sad
  . I '$$CHKOBJ(ONAME,"B") D  ; couldn't find the object name
- . . S:'$D(NOOBJ(IEN)) NOOBJ=+$G(NOOBJ)+1,NOOBJ(IEN,"PATH")=$P($G(PATH),U,1,LEVEL+1)
- . . S:$G(NOOBJ(IEN,"NODE"))'[ITEM NOOBJ(IEN,"NODE")=$S($G(NOOBJ(IEN,"NODE"))="":ITEM,1:$G(NOOBJ(IEN,"NODE"))_U_ITEM)
+ . . S:'$D(@NOOBJ@(IEN)) NOOBJ("COUNT")=+$G(NOOBJ("COUNT"))+1,@NOOBJ@(IEN,"PATH")=$P($G(PATH),U,1,LEVEL+1)
+ . . S:$G(@NOOBJ@(IEN,"NODE"))'[ITEM @NOOBJ@(IEN,"NODE")=$S($G(@NOOBJ@(IEN,"NODE"))="":ITEM,1:$G(@NOOBJ@(IEN,"NODE"))_U_ITEM)
  . S ^TIU(8927,IEN,2,NODE,0)=CL ; set current line
  . S:+$O(^TIU(8927,IEN,2,NODE)) ^TIU(8927,IEN,2,$O(^TIU(8927,IEN,2,NODE)),0)=NL ; set next line
  Q
@@ -130,12 +138,16 @@ CHKOF(DATA) ; check the object/fields in a non-broken line
  I DATA'["FLD:",(DATA'["|") Q
  I DATA["|" F NUM=2:1:$L(DATA,"|") D:'(NUM#2)  ; check objects
  . N ONAME S ONAME=$P(DATA,"|",NUM) I $$CHKOBJ(ONAME,"B") Q  ; object exists
- . S:'$D(NOOBJ(IEN)) NOOBJ=+$G(NOOBJ)+1,NOOBJ(IEN,"PATH")=$P($G(PATH),U,1,LEVEL+1)
- . S:$G(NOOBJ(IEN,"NODE"))'[ITEM NOOBJ(IEN,"NODE")=$S($G(NOOBJ(IEN,"NODE"))="":ITEM,1:$G(NOOBJ(IEN,"NODE"))_U_ITEM)
+ . S:'$D(@NOOBJ@(IEN)) NOOBJ("COUNT")=+$G(NOOBJ("COUNT"))+1,@NOOBJ@(IEN,"PATH")=$P($G(PATH),U,1,LEVEL+1)
+ . S:$G(@NOOBJ@(IEN,"NODE"))'[ITEM @NOOBJ@(IEN,"NODE")=$S($G(@NOOBJ@(IEN,"NODE"))="":ITEM,1:$G(@NOOBJ@(IEN,"NODE"))_U_ITEM)
  I DATA["{FLD:" F NUM=2:1:$L(DATA,"{FLD:") D  ; check fields
- . N FNAME S FNAME=$P($P(DATA,"{FLD:",NUM),"}") I $O(^TIU(8927.1,"B",FNAME,"")) Q
- . S:'$D(NOFLD(IEN)) NOFLD=+$G(NOFLD)+1,NOFLD(IEN,"PATH")=$P($G(PATH),U,1,LEVEL+1)
- . S:$G(NOFLD(IEN,"NODE"))'[ITEM NOFLD(IEN,"NODE")=$S($G(NOFLD(IEN,"NODE"))="":ITEM,1:$G(NOFLD(IEN,"NODE"))_U_ITEM)
+ . N FNAME S FNAME=$P($P(DATA,"{FLD:",NUM),"}")
+ . I FNAME="" D  Q
+ . . S:'$D(@NOFLD@(IEN)) NOFLD("COUNT")=$G(NOFLD("COUNT"))+1,@NOFLD@(IEN,"PATH")=PATH
+ . . S @NOFLD@(IEN,"NODE")=$S($G(@NOFLD@(IEN,"NODE"))="":ITEM,1:$G(@NOFLD@(IEN,"NODE"))_U_ITEM)
+ . I $O(^TIU(8927.1,"B",FNAME,"")) Q
+ . S:'$D(@NOFLD@(IEN)) NOFLD("COUNT")=+$G(NOFLD("COUNT"))+1,@NOFLD@(IEN,"PATH")=$P($G(PATH),U,1,LEVEL+1)
+ . S:$G(@NOFLD@(IEN,"NODE"))'[ITEM @NOFLD@(IEN,"NODE")=$S($G(@NOFLD@(IEN,"NODE"))="":ITEM,1:$G(@NOFLD@(IEN,"NODE"))_U_ITEM)
  Q
  ;
 CHKOBJ(NAME,XREF) ; check if object exists
@@ -174,10 +186,10 @@ EX80(DATA)  ; checks field(s) length
  Q:DATA'["{FLD:" 1 ; no field
  N FLD,LENGTH,RESULT S LENGTH=$L(DATA),RESULT=1
  F FLD=2:1:$L(DATA,"{FLD:") D
- . N FIEN,FNAME S FNAME=$P($P(DATA,"{FLD:",FLD),"}"),FIEN=$O(^TIU(8927.1,"B",FNAME,""))
+ . N FIEN,FNAME S FNAME=$P($P(DATA,"{FLD:",FLD),"}") Q:FNAME=""  S FIEN=$O(^TIU(8927.1,"B",FNAME,""))
  . I 'FIEN D  Q  ; field name missing from 8927.1
- . . S:'$D(NOFLD(IEN)) NOFLD=+$G(NOFLD)+1,NOFLD(IEN,"PATH")=$P($G(PATH),U,1,LEVEL+1)
- . . S:$G(NOFLD(IEN,"NODE"))'[ITEM NOFLD(IEN,"NODE")=$S($G(NOFLD(IEN,"NODE"))="":ITEM,1:$G(NOFLD(IEN,"NODE"))_U_ITEM)
+ . . S:'$D(@NOFLD@(IEN)) NOFLD("COUNT")=+$G(NOFLD("COUNT"))+1,@NOFLD@(IEN,"PATH")=$P($G(PATH),U,1,LEVEL+1)
+ . . S:$G(@NOFLD@(IEN,"NODE"))'[ITEM @NOFLD@(IEN,"NODE")=$S($G(@NOFLD@(IEN,"NODE"))="":ITEM,1:$G(@NOFLD@(IEN,"NODE"))_U_ITEM)
  . N NODE0 S NODE0=$G(^TIU(8927.1,FIEN,0))
  . S LENGTH=LENGTH-($L(FNAME)+6) ; subtract the length of the name and brackets
  . N MAXLEN ; maximum length

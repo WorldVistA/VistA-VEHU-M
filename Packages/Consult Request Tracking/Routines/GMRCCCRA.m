@@ -1,5 +1,5 @@
 GMRCCCRA ;COG/PB/LB/MJ - Receive HL7 Message for HCP ;3/21/18 09:00
- ;;3.0;CONSULT/REQUEST TRACKING;**99,106,112,123,134,146,158,163,173**;JUN 1, 2018;Build 9
+ ;;3.0;CONSULT/REQUEST TRACKING;**99,106,112,123,134,146,158,163,173,190**;JUN 1, 2018;Build 13
  ;
  ;DBIA# Supported Reference
  ;----- --------------------------------
@@ -33,10 +33,10 @@ GMRCCCRA ;COG/PB/LB/MJ - Receive HL7 Message for HCP ;3/21/18 09:00
  ;Patch 163 add code to allow editing of new file 81 in file 123
  ;proposed for CCRA release 8.0 - successfully send Administrative Complete consult notes
  ;Patch 173 add EDIPI to the PID segment
+ ;Patch 190 adds a check for a discontinue comment in the Order file, field 65 if Order file, field 64 is null.
  ;
 EN(MSG) ;Entry point to routine from GMRC CONSULTS TO CCRA protocol attached to GMRC EVSEND OR
  ;MSG = local array which contains the HL7 segments
- D NOW^%DTC
  N I,QUIT,MSGTYP,DFN,ORC,GMRCDA,FS,MSGTYP2,MSGTYP3,ACTIEN,FROMSVC,OK,OKFROM,STATUS
  N UCID ;ABV/SCR 12/14/2017 *96*
  S (I,QUIT)=0,I=$O(MSG(I)) Q:'I  S MSG=MSG(I) Q:$E(MSG,1,3)'="MSH"  D  Q:QUIT
@@ -255,10 +255,12 @@ NTE(HL) ;Find Reason for Request for New or Resubmit entries, Find TIU for compl
  .D AUTHDTTM
  .S ZCNT=ZCNT+1,GMRCM(ZCNT)="NTE|"_NTECNT_"|L|Activity Comment"
  .S ORIEN=$G(@GDATA@(.03,"I")) I 'ORIEN Q
- .S CMT=$$GET1^DIQ(100,ORIEN_",",64),CMT=$$TRIM^XLFSTR($G(CMT))
+ .S CMT=$$GET1^DIQ(100,ORIEN_",",64)
+ .I $G(CMT)="" S CMT=$$GET1^DIQ(100,ORIEN_",",65) ;Patch 190 - PB if field 64 is null check field 65
+ .I $G(CMT)'="" S CMT=$$TRIM^XLFSTR($G(CMT))
  .S CMT=$TR($G(CMT),$C(13,10,10),$C(10,10))
  .D HL7TXT^GMRCHL7P(.CMT,.HL,"\")
- .S CMT=$$TIUC^GMRCCCR1(CMT)
+ .S:$G(CMT)'="" CMT=$$TIUC^GMRCCCR1(CMT) ;Patch 190 - PB if the comment is null, don't call the control character screen API
  .S ZCNT=ZCNT+1,GMRCM(ZCNT)="NTE|2||"_CMT
  .Q
  N ACT,ACTD,ACTIEN,Q,UPDATE81

@@ -1,6 +1,5 @@
 SDCCRSEN ;CCRA/LB,PB - Appointment retrieval API;APR 4, 2019
- ;;5.3;Scheduling;**707,730,735,764,768,741,795**;APR 4, 2019;Build 34
- ;;Per VA directive 6402, this routine should not be modified.
+ ;;5.3;Scheduling;**707,730,735,764,768,741,795,808**;APR 4, 2019;Build 41
  Q
  ; Documented API's and Integration Agreements
  ; ----------------------------------------------
@@ -13,6 +12,7 @@ SDCCRSEN ;CCRA/LB,PB - Appointment retrieval API;APR 4, 2019
  ; Patch 764 changed the SDECEND and SDECSTART times to send them in external format
  ; Patch 741 stopped sending a NAK for inactive clinic status and VistA messages for a successful appointment
  ; Patch 795 added code to lookup up COM CARE-OTEHR-DIVISIONID clinics and to check for the clinic to be non-count
+ ; Patch 808 adds code to use the Related Hospital Location file in the Request Services File (#123.5) to lookup of the clinic for the appointment
 EN() ;Primary entry routine for HL7 based CCRA scheduling processing.
  ;Will take all scheduling messages through this one point.
  N FS,CS,RS,ES,SS,MID,HLQUIT,HLNODE,USER,USERMAIL,NAKMSG,ICN,MSH
@@ -64,8 +64,8 @@ MAKE ;MAKE APPOINTMENT: "S12"="SCHEDULE"
  .S ABORT="1^Patient already has an appointment at that datetime.",QUIT=1
  .D MESSAGE^SDCCRCOR(MID,.ABORT) Q
  Q:$G(QUIT)=1
- S SDECSTART=$P(SDECSTART,".",1)_"."_$E($P(SDECSTART,".",2),1,4)
- S SDECSTART=$$FMTE^XLFDT(SDECSTART,2)
+ ;S:$G(SDECSTART)["@" SDECSTART=$P(SDECSTART,".",1)_"."_$E($P(SDECSTART,".",2),1,4)
+ ;S SDECSTART=$$FMTE^XLFDT(SDECSTART,2)
  S SDECNOTE="HSRM, PID="_$G(CID)_" PER CONSULT, PROVIDER "_$G(PROV)
  D:QUIT=0 APPADD^SDEC07(.SDECY,SDECSTART,SDECEND,SDDFN,SDECRES,SDECLEN,$G(SDECNOTE),,,,,,,,,SDAPTYP,,,SDCL,,,,,1,,"") ;ADD NEW APPOINTMENT
  ;735 - PB Check to see if the appointment was made.
@@ -74,11 +74,17 @@ MAKE ;MAKE APPOINTMENT: "S12"="SCHEDULE"
  .D MESSAGE^SDCCRCOR(MID,.ABORT)
  .D:$P($G(^TMP("SDEC07",$J,3)),"^",2)'["PENDING or ACTIVE" ANAK^SDCCRCOR($P($G(ABORT),"^",2),$G(USERMAIL),$G(ICN),$G(DFN),$G(APTTM),$G(CONID))
  Q
-CANCEL ;CANCEL APPOINTMENT: "S15"="CANCEL" 
- S SDECLEN=$P(^SC(SDCL,"SL"),"^",1),SDECAPTID=0
+CANCEL ;CANCEL APPOINTMENT: "S15"="CANCEL"
+ ; patch 808 - PB compare the clinic in the Patient file appointment multiple. if it matches good, otherwise use the clinic from the appointment multiple to cancel the appointment
  S:$G(DFN)>0 SDDFN=DFN
- S:$G(SDECLEN)'>0 SDECLEN=15
  S BASEDT=$$NETTOFM^SDECDATE(SDECSTART,"Y")
+ I $D(^DPT(DFN,"S",$G(BASEDT)))  N SDCL2 S SDCL2=$P(^DPT(DFN,"S",$G(BASEDT),0),"^",1)
+ I $G(SDCL2)>0 D
+ .I $G(SDCL2)'=SDCL D
+ ..S SDCL=SDCL2,SRVNAMEX=$P(^SC(SDCL,0),"^")
+ ..N SDRES S SDRES=$O(^SDEC(409.831,"B",$G(SRVNAMEX),"")) S:$G(SDRES)>0 SDECRES=$G(SDRES)
+ S SDECLEN=$P(^SC(SDCL,"SL"),"^",1),SDECAPTID=0
+ S:$G(SDECLEN)'>0 SDECLEN=15
  S:$G(SDDFN)>0 SDECAPTID=$$APPTGET^SDECUTL(SDDFN,BASEDT,SDCL,SDECRES)
  I $G(SDECAPTID)'>0 D
  .S ABORT="1^NO APPOINTMENT was found to mark as CANCELED for the PATIENT on "_$G(SDECSTART)_" for consult, "_CONSULTID
@@ -93,18 +99,34 @@ CANCEL ;CANCEL APPOINTMENT: "S15"="CANCEL"
  .D MESSAGE^SDCCRCOR(MID,.ABORT)
  .D ANAK^SDCCRCOR($P($G(ABORT),"^",2),$G(USERMAIL),$G(ICN),$G(DFN),$G(APTTM),$G(CONID))
  Q
-NOSHOW ;NOSHOW APPOINTMENT: "S26"="NOSHOW" 
- S SDECLEN=$P(^SC(SDCL,"SL"),"^",1),SDECAPTID=0
- S:$G(DFN)>0 SDDFN=DFN
- S:$G(SDECLEN)'>0 SDECLEN=15
+NOSHOW ;NOSHOW APPOINTMENT: "S26"="NOSHOW"
+ ;S SDECLEN=$P(^SC(SDCL,"SL"),"^",1),SDECAPTID=0
+ ;S:$G(DFN)>0 SDDFN=DFN
+ ;S:$G(SDECLEN)'>0 SDECLEN=15
  ;check if appointment exists
- ;Retrieve SDECAPTID pointer to SDEC APPOINTMENT file
+ ; patch 808 - PB compare the clinic in the Patient file appointment multiple. if it matches good, otherwise use the clinic from the appointment multiple to cancel the appointment
+ S:$G(DFN)>0 SDDFN=DFN
  S BASEDT=$$NETTOFM^SDECDATE(SDECSTART,"Y")
- S SDECAPTID=$$APPTGET^SDECUTL(SDDFN,BASEDT,SDCL,SDECRES)
+ I $D(^DPT(DFN,"S",$G(BASEDT)))  N SDCL2 S SDCL2=$P(^DPT(DFN,"S",$G(BASEDT),0),"^",1)
+ I $G(SDCL2)>0 D
+ .I $G(SDCL2)'=SDCL D
+ ..S SDCL=SDCL2,SRVNAMEX=$P(^SC(SDCL,0),"^")
+ ..N SDRES S SDRES=$O(^SDEC(409.831,"B",$G(SRVNAMEX),"")) S:$G(SDRES)>0 SDECRES=$G(SDRES)
+ S SDECLEN=$P(^SC(SDCL,"SL"),"^",1),SDECAPTID=0
+ S:$G(SDECLEN)'>0 SDECLEN=15
+ S:$G(SDDFN)>0 SDECAPTID=$$APPTGET^SDECUTL(SDDFN,BASEDT,SDCL,SDECRES)
+ ;Retrieve SDECAPTID pointer to SDEC APPOINTMENT file
+ ;S BASEDT=$$NETTOFM^SDECDATE(SDECSTART,"Y")
+ ;S SDECAPTID=$$APPTGET^SDECUTL(SDDFN,BASEDT,SDCL,SDECRES)
  I $G(SDECAPTID)'>0 D
  .S ABORT="1^NO APPOINTMENT was found to mark as NO SHOW for the PATIENT on "_$G(SDECSTART)_" for consult, "_CONSULTID
  .S QUIT=1
  I +$G(ABORT)=1 D MESSAGE^SDCCRCOR(MID,ABORT) Q
+ ; patch 808 - PB compare the clinic in the Patient file appointment multiple. if it matches good, otherwise use the clinic from the appointment multiple to mark the appointment as no show 
+ N SDCL2 S SDCL2=$P(^DPT(DFN,"S",$G(BASEDT),0),"^",1)
+ I SDCL2'=SDCL D
+ .S SDCL=SDCL2,SRVNAMEX=$P(^SC(SDCL,0),"^")
+ .N SDRES S SDRES=$O(^SDEC(409.831,"B",$G(SRVNAMEX),"")) S:$G(SDRES)>0 SDECRES=$G(SDRES)
  D:QUIT=0 NOSHOW^SDEC31(.SDECY,SDECAPTID,1,$G(MSGARY("USER")),$G(SDECDATE))
  ;735 - PB Check to see if the appointment was made.
  I +$G(^TMP("SDEC",$J,2))>0 Q
@@ -193,7 +215,12 @@ PV1(PV1,MSGARY,HDRTIME,ABORT) ;PV1 segment
  S CID=$$GET1^DIQ(123,$G(CONSULTID)_",",17,"E") S:$G(CID)'="" CID=$P($$FMTE^XLFDT(CID,1),"@",1)
  S SDECRESA=$$GET1^DIQ(123,$G(CONSULTID)_",",1,"I"),(CONTITLE,SRVNAME)=$$GET1^DIQ(123,$G(CONSULTID)_",",1,"E")
  I $G(SRVNAME)'["COMMUNITY CARE" S (NAKMSG,ERR1)="Not a Community Care Consult",ABORT="2^"_ERR1 Q
- S SDCL=$$CHECKLST($G(SRVNAME))
+ ; patch 808 - PB lookup the clinic in the Related Hospital Location multiple in the Request Services file (#123.5), gets the last clinic in the list
+ I $G(^GMR(123.5,SDECRESA,123.4,0))'="" D
+ .N T1,T2,T3
+ .S (T1,T2)=0 F  S T1=$O(^GMR(123.5,SDECRESA,123.4,T1)) Q:T1'>0  S T2=$P($G(^GMR(123.5,SDECRESA,123.4,T1,0)),"^")
+ .S:$$GET1^DIQ(44,T2_",",.01,"E")["COM CARE-" SDCL=T2,SRVNAMEX=$$GET1^DIQ(44,T2_",",.01,"E")
+ I $G(SDCL)'>0 S SDCL=$$CHECKLST($G(SRVNAME))
  I $G(SDCL)=0 S QUIT=1 Q 0
  I SDCL>0&($$GET1^DIQ(44,$G(SDCL)_",",2502,"E")'="YES") S (NAKMSG,ERROR)=SRVNAME_" NOT A NON COUNT CLINIC FOR CONSULT ID: "_CONSULTID,ERR1=ERROR,ABORT="2^"_ERR1 Q
  I $G(SDCL)'>0 S (NAKMSG,ERROR)=" NO MATCH FOR "_SRVNAMEX_" PV1-19 CONSULT ID:"_CONSULTID,ERR1=ERROR,ABORT="2^"_ERR1 Q  ;WE NEED AN ERR HERE FOR PV1(19)

@@ -1,5 +1,5 @@
-MAGDSTV1 ;WOIFO/PMK - Study Tracker - VistA Query/Retrieve user ; Sep 15, 2020@17:09:32
- ;;3.0;IMAGING;**231**;Mar 19, 2002;Build 9;Feb 27, 2015
+MAGDSTV1 ;WOIFO/PMK - Study Tracker - VistA Query/Retrieve user ; Apr 25, 2022@09:21:50
+ ;;3.0;IMAGING;**231,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -32,7 +32,14 @@ SOPUIDR ; Called from batch retrieve for a SOP Instance Retrieval
  N BATCHQR
  S BATCHQR=1
  K ^XTMP(MAGXTMP,HOSTNAME,$J,"AUTOMATIC")
- D ENTRY("R",0) ; don't show retrieve results
+ ;
+ S ^TMP("MAG",$J,"Q/R QUERY",QRSTACK,"ACCESSION NUMBER")=ACNUMB
+ ;
+ ; indicate if the retrieve monitor is running - P305 PMK 03/15/2022
+ I $$ENABLED^MAGDSTV1 S ^TMP("MAG",$J,"Q/R QUERY",QRSTACK,"RETRIEVE MONITOR")="YES"
+ E  S ^TMP("MAG",$J,"Q/R QUERY",QRSTACK,"RETRIEVE MONITOR")="NO"
+ ;
+ D ENTRY("R") ; don't show retrieve results
  Q
  ;
  ;
@@ -172,3 +179,8 @@ KILL ; truncate the DICOM VISTA Q/R REQUEST QUEUE file (#2006.541)
  . Q
  E  W !!,"The DICOM VISTA Q/R REQUEST QUEUE file has not been truncated."
  Q
+ ;
+ENABLED() ; check if monitor is active - P305 PMK 03/15/2022
+ L +^MAGDRMON:0 ; automatic retrieve monitor is active
+ L -^MAGDRMON ; automatic retrieve monitor is not active
+ Q '$T

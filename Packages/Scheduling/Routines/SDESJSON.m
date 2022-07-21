@@ -1,5 +1,5 @@
-SDESJSON ;ALB/MGD,ANU,TAW,KML,BLB - VISTA SCHEDULING JSON UTILITIES ;March 18, 2022
- ;;5.3;Scheduling;**788,794,797,799,800,801,803,805,807,809,813,814**;Aug 13, 1993;Build 11;Build 2
+SDESJSON ;ALB/MGD,ANU,TAW,KML,BLB,BWF - VISTA SCHEDULING JSON UTILITIES ;April 25, 2022
+ ;;5.3;Scheduling;**788,794,797,799,800,801,803,805,807,809,813,814,815,816**;Aug 13, 1993;Build 3;Build 2
  ;;Per VHA Directive 6402, this routine should not be modified
  Q
  ; This routine documents the entry points for the new ??? GUI.
@@ -17,6 +17,10 @@ ENCODE(SDESINP,SDESOUT,SDESERR) ;
  D ENCODE^XLFJSON("SDESINP","SDESOUT","SDESERR")
  Q
  ;
+ ; Error codes are located in the SDES ERROR CODES file #409.93
+ ; Please do not duplicate error text. Use due diligence and look for
+ ; the appropriate error prior to adding new entries.
+ ;
 ERRLOG(SDESIN,SDESERRNUM,SDESOPTMSG,SDESRINFO) ;
  ; Input:     SDESIN = Required: Array name with related data to be logged
  ;        SDESERRNUM = Required: Error # to return
@@ -32,9 +36,9 @@ ERRLOG(SDESIN,SDESERRNUM,SDESOPTMSG,SDESRINFO) ;
  Q
  ;
 ERRLKUP(SDNUM,SDESOPTMSG,SDESRINFO) ;
- N SDERRMSG
- S SDERRMSG=$T(ERRTXT+SDNUM+1)
- S SDERRMSG=$P(SDERRMSG,U,2)
+ N SDERRMSG,SDERRIEN
+ S SDERRIEN=$O(^SDEC(409.93,"B",SDNUM,0))
+ S SDERRMSG=$$GET1^DIQ(409.93,SDERRIEN,1,"E")
  I SDERRMSG="" S SDERRMSG="Invalid Error Number."
  I $G(SDESOPTMSG)'="" D
  . ;Strip off $C(30) and $c(31) that are part of non JSON error text
@@ -45,188 +49,3 @@ ERRLKUP(SDNUM,SDESOPTMSG,SDESRINFO) ;
  ; Add optional Debug info
  I SDESRINFO'="" S SDERRMSG=SDERRMSG_" Debug: "_SDESRINFO
  Q SDERRMSG
- ;
- ; Standard Error Messages. Add additional errors as needed.
- ; Limit new error messages to 30 characters.
-ERRTXT ;
- ;;0^No Error Number Provided
- ;;1^Missing Patient ID
- ;;2^Invalid Patient ID
- ;;3^Missing Appointment Request ID
- ;;4^Invalid Appointment Request ID
- ;;5^Missing Consult Request ID
- ;;6^Invalid Consult Request ID
- ;;7^No Recalls for this patient
- ;;8^No Consults for patient
- ;;9^Missing begin date
- ;;10^Missing end date
- ;;11^Invalid begin date
- ;;12^Invalid end date
- ;;13^End date prior to begin date
- ;;14^Missing Appointment ID
- ;;15^Invalid Appointment ID
- ;;16^Missing Recall ID
- ;;17^Invalid Recall ID
- ;;18^Missing Clinic ID
- ;;19^Invalid Clinic ID
- ;;20^Clinic not defined
- ;;21^Missing Check In Date
- ;;22^Invalid Check In Date
- ;;23^Missing Check Out Date
- ;;24^Invalid Check Out Date
- ;;25^Missing begin date/time
- ;;26^Missing end date/time
- ;;27^Invalid begin date/time
- ;;28^Invalid end date/time
- ;;29^End date/time prior to begin date/time
- ;;30^No status match found
- ;;31^Appointment status is cancelled
- ;;32^Duplicate status entry
- ;;33^No statuses available
- ;;34^Status not created
- ;;35^Status not updated
- ;;36^Status not set
- ;;37^Status not found
- ;;38^No status sent
- ;;39^Status is less than 3 characters or greater than 30 characters
- ;;40^Missing check-in step ID
- ;;41^Status can not begin with a punctuation must contain letters
- ;;42^Missing Disposition
- ;;43^Invalid Disposition
- ;;44^Invalid user
- ;;45^Missing date
- ;;46^Invalid date
- ;;47^Failed create/update
- ;;48^Missing Origination date/time
- ;;49^Invalid Origination date/time
- ;;50^Missing Clinic name
- ;;51^Invalid Clinic Name
- ;;52^Error
- ;;53^Missing Provider ID
- ;;54^Invalid Provider ID
- ;;55^Invalid Disposition Date
- ;;56^Missing Disposition Date
- ;;57^Missing Desired Date Of Appointment
- ;;58^Invalid Desired Date Of Appointment
- ;;59^Desired Date of Appt can not be in the past
- ;;60^Missing Appointment Request Type
- ;;61^Invalid Appointment Request Type
- ;;62^Missing Requested By
- ;;63^Clinic Name or Clinic Stop is required
- ;;64^Search String length is less than 2 characters
- ;;65^No Providers found that match Search String
- ;;66^Patient IEN cannot be blank
- ;;67^Clinic IEN cannot be blank
- ;;68^No VVS information found
- ;;69^Missing Clinic Resource ID
- ;;70^Invalid Clinic Resource ID
- ;;71^Date can not be in the past
- ;;72^Date can not be in the future
- ;;73^Missing Clinic Resource
- ;;74^Current appt time span is greater than new appt time span
- ;;75^No available appointment slots
- ;;76^Missing Appointment date/time
- ;;77^Invalid Appointment date/time
- ;;78^Appointment must be in a scheduled state
- ;;79^Slots for Block & Move not identifiable
- ;;80^Clinic Name/Clinic IEN not found
- ;;81^Error in inactivating Clinic
- ;;82^Invalid Letter
- ;;83^Invalid Default appointment type
- ;;84^Missing Diagnosis code
- ;;85^Invalid Diagnosis code
- ;;86^Invalid Privileged user
- ;;87^Invalid Clinic meets at this facility
- ;;88^Missing Allow direct patient scheduling
- ;;89^Invalid Allow direct patient scheduling
- ;;90^Missing Display clinic appt to patient
- ;;91^Invalid Display clinic appt to patient
- ;;92^Missing Service
- ;;93^Invalid Service
- ;;94^Missing Non-count clinic
- ;;95^Invalid Non-count clinic
- ;;96^Missing Division
- ;;97^Invalid Division
- ;;98^Missing Stop Code
- ;;99^Invalid Stop Code
- ;;100^Invalid Require action profile
- ;;101^Invalid Ask for check in/out time
- ;;102^Invalid Default to PC practitioner
- ;;103^Invalid Workload validation at checkout
- ;;104^Missing Allowable consecutive no-shows
- ;;105^Invalid Allowable consecutive no-shows
- ;;106^Missing Max number days for future booking
- ;;107^Invalid Max number days for future booking
- ;;108^Missing Credit stop code
- ;;109^Invalid Credit stop code
- ;;110^Invalid Principal clinic
- ;;111^Missing Overbook/day max
- ;;112^Invalid Overbook/day max
- ;;113^Invalid E-Checkin
- ;;114^Invalid Pre-Checkin
- ;;115^Missing Length of appointment
- ;;116^Invalid Length of appointment
- ;;117^Missing Display increments per hour
- ;;118^Invalid Display increments per hour
- ;;119^Invalid Hour clinic display begins
- ;;120^Current default provider must be removed prior to setting new default
- ;;121^Current default diagnosis must be removed prior to setting new default
- ;;122^Invalid Administer inpatient meds
- ;;123^Invalid Require x-ray films
- ;;124^Can't Block & Move
- ;;125^Invalid number of Appointment slots
- ;;126^Availability is not defined for this clinic
- ;;127^Missing User
- ;;128^Missing Cancellation Reason
- ;;129^Invalid Cancellation Reason
- ;;130^Missing SECID
- ;;131^Invalid Recall Reminders Provider ID
- ;;132^Invalid Recall Reminders Appointment Type ID
- ;;133^Invalid Recall Date
- ;;134^Error updating RECALL REMINDERS file
- ;;135^The provider assigned to this recall reminder is assigned a security key which you do not have. Please contact your recall coordinator.
- ;;136^Error deleting RECALL REMINDERS entry
- ;;137^Missing Recall Reminders Provider ID
- ;;138^Invalid Fasting Value
- ;;139^Missing Recall Reminders Appointment Type ID
- ;;140^Missing Recall Date
- ;;141^Missing Fasting value
- ;;142^Invalid EAS Tracking Number
- ;;143^Invalid Patient Eligibility
- ;;144^Invalid Cancel Appointment Date/Time
- ;;145^Invalid Xray Date/Time
- ;;146^Invalid EKG Date/Time
- ;;147^Invalid Lab Date/Time
- ;;148^Invalid Purpose of Visit
- ;;149^Missing Purpose of Visit
- ;;150^Invalid Collateral Visit
- ;;151^Missing Scheduling Request Type
- ;;152^Invalid Scheduling Request Type
- ;;153^Invalid Next Available Appt Indicator
- ;;154^Missing Next Available Appt Indicator
- ;;155^Invalid Follow up Visit
- ;;156^Invalid SECID
- ;;157^Missing Request Date Of Appointment
- ;;158^Invalid Request Date Of Appointment
- ;;159^Missing Patient Indication Date
- ;;160^Invalid Patient Indication Date
- ;;161^Start Time is Invalid or Missing
- ;;162^End Time is Invalid or Missing
- ;;163^Cancel Date is Invalid
- ;;164^Cancel Date is Missing
- ;;165^Missing Appointment Start Date and Time
- ;;166^Invalid Appointment Start Date and Time
- ;;167^Missing Appointment End Date and Time
- ;;168^Invalid Appointment End Date and Time
- ;;169^File #409.84 Appointment Array Not Defined. Cannot File Appointments.
- ;;170^File #44 Appointment Array Not Defined. Cannot File Appointments.
- ;;171^File #2 Appointment Array Not Defined. Cannot File Appointments.
- ;;172^Appointment already exists at this Date/Time.
- ;;173^Error occurred during the filing of one or more appointments. No appointments filed.
- ;;174^Another user is working with this patient's record.  Please try again later.
- ;;175^Appointment Already Exists in File #44 for this Date and Time.
- ;;176^Appointment Already Exists in File #2 for this Date and Time.
- ;;177^Appointment date too far in the future for this clinic.
- ;;178^Invalid WALK-IN indicator.
- ;;179^Invalid parent request.
- Q

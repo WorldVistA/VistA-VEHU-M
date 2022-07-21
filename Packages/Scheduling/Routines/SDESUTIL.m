@@ -1,5 +1,5 @@
-SDESUTIL ;ALB/MGD/TAW,KML - SDES Utilities ;April 22, 2022
- ;;5.3;Scheduling;**801,804,805,814**;Aug 13, 1993;Build 11
+SDESUTIL ;ALB/MGD/TAW,KML,LAB - SDES Utilities ;April 22, 2022
+ ;;5.3;Scheduling;**801,804,805,814,816**;Aug 13, 1993;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to INSTITUTION in #2251
@@ -98,7 +98,7 @@ TIMEZONEDATA(CLINICIEN) ;Get timezone and offsets
  ;    If clinic is not passed, use default Facility/Institution
  ; Output:
  ;   Returns TimeZone Name ^ TimeZone IEN ^ TimeZone Exception ^ Offset for Standard Time ^ Offset for DST or SUMMER ^
- N SDINST,SDDIV,SDTIMEZONEE,SDTIMEZONEI,TIMEZONEEXECPT,X,POP,TIMEFRAMEARY,OFFSET,OFFSETDSTSUM,DSTSUM,RETURN,TIMEFRAMEIEN
+ N SDINST,SDDIV,SDTIMEZONEE,SDTIMEZONEI,TIMEZONEEXECPT,X,POP,TIMEFRAMEARY,OFFSET,OFFSETDSTSUM,DSTSUM,RETURN,TIMEFRAMEIEN,SDMSG
  S (POP,SDINST,DSTSUM)="",(OFFSET,OFFSETDSTSUM)=-9999
  I $G(CLINICIEN) D
  .S SDDIV=$$GET1^DIQ(44,CLINICIEN_",",3.5,"I")

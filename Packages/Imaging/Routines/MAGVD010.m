@@ -1,5 +1,5 @@
-MAGVD010 ;WOIFO/BT,NST,MLH,PML - Delete Study By Accession Number - display outputs ; Apr 03, 2020@11:15:55
- ;;3.0;IMAGING;**118,231**;Mar 19, 2002;Build 9;May 01, 2013
+MAGVD010 ;WOIFO/BT,NST,MLH,PML,PMK - Delete Study By Accession Number - display outputs ; Feb 15, 2022@10:24:32
+ ;;3.0;IMAGING;**118,231,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -44,24 +44,33 @@ STYSERKT(KT,SUBARY) ; count all the studies & series referenced by a subarray no
  Q
 NEW(STYIX,KT) ; new structure - can build counts directly from structure
  Q:'STYIX
+ ; the PROBLEM6n functions were added in P305 - PMK 12/01/2021
  N SERIX
  S KT("STUDY")=$G(KT("STUDY"))+1
  S SERIX=""
  F  S SERIX=$O(^MAGV(2005.63,"C",STYIX,SERIX)) Q:'SERIX  D
+ . I $$PROBLEM63^MAGDSTA8(SERIX) Q  ; if the series is not available, don't count it - quit
  . N SOPIX
  . ; If Series deleted don't count - quit
- . Q:$G(^MAGV(2005.63,SERIX,9))'="A"
+ . ; Q:$G(^MAGV(2005.63,SERIX,9))'="A"
  . S KT("SERIES")=$G(KT("SERIES"))+1
  . S SOPIX=""
  . F  S SOPIX=$O(^MAGV(2005.64,"C",SERIX,SOPIX)) Q:'SOPIX  D
  . . ; If SOP deleted don't count - quit
- . . Q:$G(^MAGV(2005.64,SOPIX,11))'="A"
- . . S KT("IMAGE")=$G(KT("IMAGE"))+1
+ . . ; Q:$G(^MAGV(2005.64,SOPIX,11))'="A"
+ . . I $$PROBLEM64^MAGDSTA8(SOPIX) Q  ; if the sop instance is not available, don't count it - quit"
+ . . N IMAGEIX
+ . . S IMAGEIX=""
+ . . F  S IMAGEIX=$O(^MAGV(2005.65,"C",SOPIX,IMAGEIX)) Q:'IMAGEIX  D
+ . . . I $$PROBLEM65^MAGDSTA8(IMAGEIX) Q  ; if the original image is not available, don't count it - quit
+ . . . S KT("IMAGE")=$G(KT("IMAGE"))+1
+ . . . Q
  . . Q
  . Q
  Q
 OLD(MAGIX,KT) ; old structure - must build counts from instances
  Q:'$G(MAGIX)
+ I '$D(^MAG(2005,MAGIX)) S KT("DELETED")="" Q  ; deleted study - P231 PMK 12.09/2021
  N PARENT,UID,CHILD,CHILDIX
  I '$D(^MAG(2005,MAGIX,1)) D  Q  ; child
  . S KT("IMAGE",MAGIX)=""

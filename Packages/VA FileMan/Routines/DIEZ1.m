@@ -1,5 +1,5 @@
-DIEZ1 ;SFISC/GFT - COMPILE INPUT TEMPLATE ; Dec 06, 2021@13:18:15
- ;;22.2;VA FileMan;**21**;Jan 05, 2016;Build 4
+DIEZ1 ;SFISC/GFT - COMPILE INPUT TEMPLATE ; May 05, 2022@06:38:17
+ ;;22.2;VA FileMan;**21,22**;Jan 05, 2016;Build 1
  ;;Per VA Directive 6402, this routine should not be modified.
  ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
  ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
@@ -43,7 +43,7 @@ TEXT ;;
  ;;T G M^DIE17:DV,^DIE3:DV["V",X:X'?.ANP
  ;; I DV["t" D  G UNIQ ;EXTENSIBLE DATA TYPES ;p21
  ;; .X $S($D(DB(DQ)):$$VALEXTS^DIETLIBF(DP,DIFLD),1:$$VALEXT^DIETLIBF(DP,DIFLD)) K DIPA
- ;; I DV["S" D SET G V:'DDER K DDER G X
+ ;; I DV["S" D SET^DIED G V:'DDER K DDER G X ;p22
  ;;P I DV["P" S DIC=U_DU,DIC(0)=$E("EN",$D(DB(DQ))+1)_"M"_$E("L",DV'["'") S:DIC(0)["L" DLAYGO=+$P(DV,"P",2) G:DV["*" AST^DIED D NOSCR^DIED S X=+Y,DIC=DIE G X:X<0
  ;; G V:DV'["N" D D I $L($P(X,"."))>24 K X G Z
  ;; I $P(DQ(DQ),U,5)'["$",X?.1"-".N.1".".N,$P(DQ(DQ),U,5,99)["+X'=X" S X=+X

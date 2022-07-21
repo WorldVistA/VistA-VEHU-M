@@ -1,14 +1,15 @@
 TIUCCRHL7P1 ; CCRA/PB - TIU CCRA HL7 Msg Processing; January 6, 2006
- ;;1.0;TEXT INTEGRATION UTILITIES;**337,344,348**;Jun 20, 1997;Build 18
+ ;;1.0;TEXT INTEGRATION UTILITIES;**337,344,348,349**;Jun 20, 1997;Build 19
  ;
  ;PB - Patch 344 to modify how the note and addendum text is formatted
- ;
+ ;PB - Patch 348 modification to parse the note text from NTE segments rather than the OBX segment
+ ;PB - Patch 349 modification to parse and file the consult factor from the note and file as a comment with the consult
  ;NOTES FROM NOV 10: Need to loop thru the XTMP("TIUHL7" temp global and if the last character is 
  ;$C(160), remove it. 
  Q
 PROCMSG ;
  N DFN,DUZ,MSGID,TIU,TIUDA,TIUDPRM,TIUDT,TIUERR,TIUI,TIUJ,TIUMSG,TIUELS,STOP,TIUIEN,NOTEDATE,NOTENUM
- N TIUEMAIL,TIUNAME,TIUTMP,TIUFS,TIUCS,TIURS,TIUES,TIUSS,TIUZ,VNUM,MSGTEXT,ADDENDUM
+ N TIUEMAIL,TIUNAME,TIUTMP,TIUFS,TIUCS,TIURS,TIUES,TIUSS,TIUZ,VNUM,MSGTEXT,ADDENDUM,CFNOTE
  S ADDENDUM=""
  ;
  ; remove HL7 message entries7 days or older
@@ -105,6 +106,8 @@ PROCMSG ;
  ..I $G(TIUZ("TEXT",XCNTX,0))["Original CCP Note Date (mm/dd/yyyy):" S NOTEDATE=$P(TIUZ("TEXT",XCNTX,0),":",2)
  ..I $G(TIUZ("TEXT",XCNTX,0))["CCPN Number:" S NOTENUM=$P(TIUZ("TEXT",XCNTX,0),":",2)
  ..I $G(TIUZ("TEXT",XCNTX,0))'=""&($L(TIUZ("TEXT",XCNTX,0))>80) D SPLIT(TIUZ("TEXT",XCNTX,0),XCNTX)
+ ..;patch 349, PB - Feb 15, 2022 - modifications to capture the Consult Factor text to be filed as a comment with the consult
+ ..I $G(TIUZ("TEXT",XCNTX,0))["CF#:" S CFNOTE=$G(TIUZ("TEXT",XCNTX,0))
  ..S XCNTX=XCNTX+1
  I '$D(@TIUNAME@(7)) D
  .D:$G(ADDENDUM)="" WORD

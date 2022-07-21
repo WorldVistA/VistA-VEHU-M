@@ -1,5 +1,5 @@
-VAFCPTED ;ISA/RJS,Zoltan-EDIT EXISTING PATIENT ;8/9/21  13:59
- ;;5.3;Registration;**149,333,756,837,974,1059**;Aug 13, 1993;Build 6
+VAFCPTED ;ISA/RJS,Zoltan-EDIT EXISTING PATIENT ;4/15/22  16:30
+ ;;5.3;Registration;**149,333,756,837,974,1059,1071**;Aug 13, 1993;Build 4
  ;
 EDIT(DGDFN,ARRAY,STRNGDR) ;-- Edits existing patient
  ;Input:
@@ -43,8 +43,8 @@ LOAD ; -- Loads fields to patient file
  . N NAME
  . M NAME=@ARRAY@(1.01)
  . D UPDNC(DGDFN,.NAME)
- I FLD=.025 D UPDSEXOR Q  ;**1059, VAMPI-11114 (dri) file sexual orientation
- I FLD=.2406 D UPDPRON Q  ;**1059, VAMPI-11118 (dri) file pronoun
+ I FLD=.025 D UPDSEXOR(ARRAY,DGDFN,.RGER) Q  ;**1059, VAMPI-11114 (dri) file sexual orientation
+ I FLD=.2406 D UPDPRON(ARRAY,DGDFN,.RGER) Q  ;**1059, VAMPI-11118 (dri) file pronoun
  S DA=DGDFN,DIE="^DPT("
  I $G(@ARRAY@(FLD))="" Q
  I $G(@ARRAY@(FLD))["@" S @ARRAY@(FLD)="@"
@@ -177,14 +177,34 @@ GETFLAG() ;Get the value of the name components flag
  I $T(GETFLAG^MPIFNAMC)]"" Q $$GETFLAG^MPIFNAMC
  Q 0
  ;
-UPDSEXOR ;**1059, VAMPI-11114 (dri) update Sexual Orientation multiple
+UPDSEXOR(ARRAY,DGDFN,RGER) ;**1059, VAMPI-11114 (dri) compare incoming sexual orientation multiple with existing and add/update
+ ;**1071 VAMPI-13755 (dri) - include status, date created, date last updated to compare and file
+ ;  Input:
+ ;    ARRAY = ARAY(2)
+ ;    ARAY(2,.025,n) = sexual orientation code ^ status ^ date created ^ date last update
+ ;    DGDFN = patient's dfn
+ ;
+ ;  Example:
+ ;    ARAY(2,.025,1)="CND^I^3220128^3220128"
+ ;    ARAY(2,.025,2)="DTK^E^3220128^3220128"
+ ;    ARAY(2,.025,3)="OTH^A^3220128^3220128"
+ ;
  N CUR,FDA,I,INC,SOCODE,SOIEN,VAFCERR
  I $G(@ARRAY@(.025,1))["@" S @ARRAY@(.025,1)="@" ;change "@" to @, since no so's received in obx's delete all so's at the vista
- I $G(@ARRAY@(.025,1))'="@" S I=0 F  S I=$O(@ARRAY@(.025,I)) Q:'I  S SOCODE=$P($G(@ARRAY@(.025,I)),"^",1) I SOCODE'="",(SOCODE'["@"),(SOCODE'="""""") S INC(SOCODE)=I ;incoming values
- S I=0 F  S I=$O(^DPT(DGDFN,.025,I)) Q:'I  S SOIEN=+$P($G(^(I,0)),"^",1),SOCODE=$P($G(^DG(47.77,SOIEN,0)),"^",2) I SOCODE'="" S CUR(SOCODE)=I ;current/local vista so's
+ I $G(@ARRAY@(.025,1))'="@" S I=0 F  S I=$O(@ARRAY@(.025,I)) Q:'I  S SOCODE=$P($G(@ARRAY@(.025,I)),"^",1) I SOCODE'="",(SOCODE'["@"),(SOCODE'="""""") S INC(SOCODE)=I ;incoming so's
+ S I=0 F  S I=$O(^DPT(DGDFN,.025,I)) Q:'I  S SOIEN=+$P($G(^(I,0)),"^",1),SOCODE=$P($G(^DG(47.77,SOIEN,0)),"^",2) I SOCODE'="" S CUR(SOCODE)=I ;current so's at vista
  ;
- ;loop through incoming so's and add if not in vista
- S SOCODE="" F  S SOCODE=$O(INC(SOCODE)) Q:SOCODE=""  I '$D(CUR(SOCODE)) S FDA(2.025,"+"_INC(SOCODE)_","_DGDFN_",",.01)=SOCODE
+ ;loop through incoming sexual orientations and add/update
+ S SOCODE="" F  S SOCODE=$O(INC(SOCODE)) Q:SOCODE=""  D
+ .I '$D(CUR(SOCODE)) D  Q  ;an add to vista
+ ..F I=1:1:4 S FDA(2.025,"+"_INC(SOCODE)_","_DGDFN_",",I*.01)=$P($G(@ARRAY@(.025,INC(SOCODE))),"^",I)
+ ..S FDA(2.025,"+"_INC(SOCODE)_","_DGDFN_",",.06)="R" ;since this entry is new to vista and via hl7 it came from somewhere else, type of update is 'R'emote
+ .;
+ .I $D(CUR(SOCODE)) D  ;an update to vista if something changed
+ ..F I=2:1:4 I $P($G(@ARRAY@(.025,INC(SOCODE))),"^",I)'=$P($G(^DPT(DGDFN,.025,CUR(SOCODE),0)),"^",I) D
+ ...S FDA(2.025,CUR(SOCODE)_","_DGDFN_",",I*.01)=$P($G(@ARRAY@(.025,INC(SOCODE))),"^",I)
+ ...;S FDA(2.025,CUR(SOCODE)_","_DGDFN_",",.05)="@"
+ ...S FDA(2.025,CUR(SOCODE)_","_DGDFN_",",.06)="R" ;since this entry is being modified via hl7 it came from somewhere else, note is deleted and type of update is 'R'emote
  ;
  ;loop through vista and delete if not in incoming so's
  S SOCODE="" F  S SOCODE=$O(CUR(SOCODE)) Q:SOCODE=""  I '$D(INC(SOCODE)) S FDA(2.025,CUR(SOCODE)_","_DGDFN_",",.01)="@"
@@ -192,16 +212,25 @@ UPDSEXOR ;**1059, VAMPI-11114 (dri) update Sexual Orientation multiple
  I $D(FDA) D UPDATE^DIE("E","FDA",,"VAFCERR") I $G(VAFCERR("DIERR",1,"TEXT",1))'="" S RGER="-1^"_VAFCERR("DIERR",1,"TEXT",1)
  Q
  ;
-UPDPRON ;**1059, VAMPI-11118 (dri) update Pronoun multiple
- N CUR,FDA,I,INC,PRCODE,PRIEN,VAFCERR
- I $G(@ARRAY@(.2406,1))["@" S @ARRAY@(.2406,1)="@" ;change "@" to @, since no so's received in obx's delete all so's at the vista
- I $G(@ARRAY@(.2406,1))'="@" S I=0 F  S I=$O(@ARRAY@(.2406,I)) Q:'I  S PRCODE=$P($G(@ARRAY@(.2406,I)),"^",1) I PRCODE'="",(PRCODE'["@"),(PRCODE'="""""") S INC(PRCODE)=I ;incoming values
- S I=0 F  S I=$O(^DPT(DGDFN,.2406,I)) Q:'I  S PRIEN=+$P($G(^(I,0)),"^",1),PRCODE=$P($G(^DG(47.78,PRIEN,0)),"^",2) I PRCODE'="" S CUR(PRCODE)=I ;current/local vista so's
+UPDPRON(ARRAY,DGDFN,RGER) ;**1059, VAMPI-11118 (dri) compare incoming pronoun multiple with existing and add/update
+ ;  Input:
+ ;    ARRAY = ARAY(2)
+ ;    ARAY(2,.2406,n) = pronoun code
+ ;    DGDFN = patient's dfn
  ;
- ;loop through incoming so's and add if not in vista
+ ;  Example:
+ ;    ARAY(2,.2406,1)="OTH"
+ ;    ARAY(2,.2406,2)="PTN"
+ ;
+ N CUR,FDA,I,INC,PRCODE,PRIEN,VAFCERR
+ I $G(@ARRAY@(.2406,1))["@" S @ARRAY@(.2406,1)="@" ;change "@" to @, since no pronouns received in obx's delete all pronouns at the vista
+ I $G(@ARRAY@(.2406,1))'="@" S I=0 F  S I=$O(@ARRAY@(.2406,I)) Q:'I  S PRCODE=$P($G(@ARRAY@(.2406,I)),"^",1) I PRCODE'="",(PRCODE'["@"),(PRCODE'="""""") S INC(PRCODE)=I ;incoming pronouns
+ S I=0 F  S I=$O(^DPT(DGDFN,.2406,I)) Q:'I  S PRIEN=+$P($G(^(I,0)),"^",1),PRCODE=$P($G(^DG(47.78,PRIEN,0)),"^",2) I PRCODE'="" S CUR(PRCODE)=I ;current pronouns at vista
+ ;
+ ;loop through incoming pronoun's and add if not in vista
  S PRCODE="" F  S PRCODE=$O(INC(PRCODE)) Q:PRCODE=""  I '$D(CUR(PRCODE)) S FDA(2.2406,"+"_INC(PRCODE)_","_DGDFN_",",.01)=PRCODE
  ;
- ;loop through vista and delete if not in incoming so's
+ ;loop through vista and delete if not in incoming pronouns
  S PRCODE="" F  S PRCODE=$O(CUR(PRCODE)) Q:PRCODE=""  I '$D(INC(PRCODE)) S FDA(2.2406,CUR(PRCODE)_","_DGDFN_",",.01)="@"
  ;
  I $D(FDA) D UPDATE^DIE("E","FDA",,"VAFCERR") I $G(VAFCERR("DIERR",1,"TEXT",1))'="" S RGER="-1^"_VAFCERR("DIERR",1,"TEXT",1)

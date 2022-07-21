@@ -1,5 +1,5 @@
-TIUFWRAP2 ;SPFO/AJB - Clean File #8927 ;Sep 17, 2021@13:08:19
- ;;1.0;TEXT INTEGRATION UTILITIES;**338**;Jun 20, 1997;Build 9
+TIUFWRAP2 ;SPFO/AJB - Clean File #8927 ;04/06/22  12:50
+ ;;1.0;TEXT INTEGRATION UTILITIES;**338,254**;Jun 20, 1997;Build 9
  ;
  Q
  ;
@@ -19,7 +19,7 @@ PRINT(LOC) ; print output
  D:$E(IOST,1,2)="C-" CLS
  F  D  Q:(LOC="")!(END=U)
  . W:'+FIRST ! S FIRST=0
- . D BRK:$Y+4>IOSL Q:END=U  W @LOC S LOC=$Q(@LOC)
+ . D BRK:$Y+4>IOSL Q:END=U  W @LOC S LOC=$Q(@LOC) S:'(LOC[ROOT) LOC=""
  Q:END=U
  I $E(IOST,1,2)="C-" S END=U D FMR("EA","Press <Enter> to continue ")
  Q

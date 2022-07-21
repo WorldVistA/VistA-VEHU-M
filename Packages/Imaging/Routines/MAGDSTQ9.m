@@ -1,5 +1,5 @@
-MAGDSTQ9 ;WOIFO/PMK - Study Tracker - Query/Retrieve user ; Sep 28, 2019@16:44:07
- ;;3.0;IMAGING;**231*;Mar 19, 2002;Build 9;Mar 29, 2017
+MAGDSTQ9 ;WOIFO/PMK - Study Tracker - Query/Retrieve user ; Feb 15, 2022@10:23:02
+ ;;3.0;IMAGING;**231,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -16,6 +16,10 @@ MAGDSTQ9 ;WOIFO/PMK - Study Tracker - Query/Retrieve user ; Sep 28, 2019@16:44:0
  ;; +---------------------------------------------------------------+
  ;;
  ;
+ ; Supported IA #2056 reference $$GET1^DIQ function call
+ ; Supported IA #10090 to read LOCATION file (#4)
+ ;
+ ;
  ; Select the DICOM Service Class Provider
  ; 
  ; Modeled after PICKSCP^MAGDACU on the DICOM Gateway
@@ -31,6 +35,7 @@ PICKSCP(DEFAULT,SCPTYPE) ; Pick the SCP for the site
  . F  S MAGIEN=$O(^MAG(2006.587,"B",USERAPP,MAGIEN)) Q:MAGIEN=""  D
  . . S NEXT=^MAG(2006.587,MAGIEN,0)
  . . S LOCATION=$P(NEXT,"^",7)
+ . . S LOCATION=$$GET1^DIQ(4,LOCATION,99,"E") ; compare station numbers
  . . I LOCATION'=STATNUMB Q  ; ignore entries for other locations
  . . S MAGSCPTYPE=$P(NEXT,"^",9)
  . . I SCPTYPE'="",SCPTYPE'=MAGSCPTYPE Q  ; skip entries for other types

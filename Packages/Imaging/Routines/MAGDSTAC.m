@@ -1,5 +1,5 @@
-MAGDSTAC ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Sep 18, 2020@14:25:39
- ;;3.0;IMAGING;**231**;5-May-2007;Build 9
+MAGDSTAC ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Feb 15, 2022@10:52:31
+ ;;3.0;IMAGING;**231,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -168,8 +168,8 @@ RETRIEVE(PACSSTUDYUID) ; primary retrieve capability for studies with some missi
  . Q
  S VISTASERIESUID=0,(VISTAIMAGECOUNT,VISTASERIESCOUNT)=0
  F  S VISTASERIESUID=$O(^TMP("MAG",$J,"UIDS","VISTA SERIES UID",VISTASERIESUID)) Q:VISTASERIESUID=""  D
- . S VISTASERIESCOUNT=VISTASERIESCOUNT+1
- . S VISTAIMAGECOUNT=VISTAIMAGECOUNT+^TMP("MAG",$J,"UIDS","VISTA SERIES UID",VISTASERIESUID,"IMAGE COUNT")
+ . S VISTASERIESCOUNT=VISTASERIESCOUNT+1 ; $G added in next line in P305 - PMK 11/22/2021
+ . S VISTAIMAGECOUNT=VISTAIMAGECOUNT+$G(^TMP("MAG",$J,"UIDS","VISTA SERIES UID",VISTASERIESUID,"IMAGE COUNT"))
  . Q
  ;
  ;
@@ -177,20 +177,31 @@ RETRIEVE(PACSSTUDYUID) ; primary retrieve capability for studies with some missi
  . D QRSTATUS^MAGDSTAA("No DICOM objects on PACS to retrieve")
  . Q
  ;
- ; check for additional images on VistA - sugested by Lisa Hulslander, Philips
+ ; check for additional images on VistA - suggested by Lisa Hulslander, Philips
  I VISTASERIESCOUNT>PACSSERIESCOUNT,VISTAIMAGECOUNT>PACSIMAGECOUNT D  Q 0
  . D QRSTATUS^MAGDSTAA("VistA has more series and images than PACS")
  . Q
  ;
  I VISTASERIESCOUNT=PACSSERIESCOUNT,VISTAIMAGECOUNT=PACSIMAGECOUNT D  Q 0
- . D QRSTATUS^MAGDSTAA("No DICOM objects need to be retrieved from PACS")
+ . D QRSTATUS^MAGDSTAA("VistA has same series and images as PACS")
  . Q
  ;
- I VISTASERIESCOUNT>PACSSERIESCOUNT D
- . D QRSTATUS^MAGDSTAA("VistA has more series than PACS")
+ I VISTASERIESCOUNT>PACSSERIESCOUNT,VISTAIMAGECOUNT=PACSIMAGECOUNT D  Q 0
+ . D QRSTATUS^MAGDSTAA("VistA has more series but same images as PACS")
  . Q
- I VISTAIMAGECOUNT>PACSIMAGECOUNT D
+ ;
+ ; this test was added in P305 - PMK 11/09/2021 
+ I VISTASERIESCOUNT=PACSSERIESCOUNT,VISTAIMAGECOUNT>PACSIMAGECOUNT D  Q 0
+ . D QRSTATUS^MAGDSTAA("VistA has same series but more images than PACS")
+ . Q
+ ;
+ I VISTAIMAGECOUNT>PACSIMAGECOUNT D  Q 0 ; QUIT added in P305 - PMK 11/09/2021
  . D QRSTATUS^MAGDSTAA("VistA has more images than PACS")
+ . Q
+ ;
+ ; this test was added in P305 - PMK 11/09/2021 
+ I VISTAIMAGECOUNT=PACSIMAGECOUNT D  Q 0
+ . D QRSTATUS^MAGDSTAA("VistA has the same images as PACS")
  . Q
  ;
  ; retrieve any missing images 

@@ -1,5 +1,5 @@
-MAGDSTA1 ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Jul 19, 2021@08:27:46
- ;;3.0;IMAGING;**231,306**;5-May-2007;Build 1
+MAGDSTA1 ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Mar 08, 2022@07:55:07
+ ;;3.0;IMAGING;**231,306,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -29,7 +29,7 @@ MAGDSTA1 ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Jul 19, 
 ENTRY(MENUOPTION) ; Entry point from main menu
  N ACNUMB,BATCHSIZE,BEGDATE,DFN,ENDDATE,HOSTNAME,HOURS,IMAGINGSERVICE,OPTION,QRSCP,QRSTACK
  N MAGIOM,MAGXTMP,RUNTIME,SCANMODE,SORTORDER,STARTIEN,STARTTIME,STATUS,STUDYDATE,STUDYIEN
- N CONSULTSERVICES,DEFAULT,DONE,ERROR,I,LASTRUN,OK,QUESTION,QUIT,SERVICES,X,ZTDESC
+ N CONSULTSERVICES,DEFAULT,DIVISION,DONE,ERROR,I,LASTRUN,OK,QUESTION,QUIT,SERVICES,X,ZTDESC
  ;
  N $ETRAP,$ESTACK S $ETRAP="D ERROR^MAGDSTA"
  ;
@@ -38,6 +38,15 @@ ENTRY(MENUOPTION) ; Entry point from main menu
  S IMAGINGSERVICE=$G(^TMP("MAG",$J,"BATCH Q/R","IMAGING SERVICE"))
  S QRSTACK="AUTOMATIC"
  S HOSTNAME=$$HOSTNAME^MAGDFCNV
+  I $$CHECKDIV^MAGDSTAB()="" D  Q
+ . W !!,"*** Use the PARM option to set Check Study Division switch ***"
+ . D CONTINUE^MAGDSTQ
+ . Q
+ S DIVISION=$G(DUZ(2),0) ; user's logon division
+ I $$CHECKDIV^MAGDSTAB()="Y",'DIVISION D  Q
+ . W !!,"*** User's Division is not defined ***"
+ . D CONTINUE^MAGDSTQ
+ . Q
  ;
  S MAGXTMP=$$INITXTMP^MAGDSTQ0
  ;
@@ -325,14 +334,17 @@ COPYPARM(NORMALRUN) ; copy last run's parameters for the next run
  S DIRECTION=$$DIRECTON(SORTORDER)
  ;
  ; get scan mode specific parameters
- I SCANMODE="DATE" D
- . ; set BEGIN DATE to the last date of the previous run
- . I SORTORDER="ASCENDING" D
+ I SCANMODE="PATIENT" D
+ . ; user may want to change patient
+ . S ^TMP("MAG",$J,"BATCH Q/R","PATIENT DFN")=DFN
+ . Q
+ I (SCANMODE="DATE")!(SCANMODE="PATIENT") D  ; user may want to change date range 
+ . I SORTORDER="ASCENDING" D  ; set BEGIN DATE to the last date of the previous run
  . . I NORMALRUN S ^TMP("MAG",$J,"BATCH Q/R","BEGIN DATE")=$$NEXTDATE(ENDDATE,DIRECTION)
  . . E  S ^TMP("MAG",$J,"BATCH Q/R","BEGIN DATE")=STUDYDATE\1
  . . S ^TMP("MAG",$J,"BATCH Q/R","END DATE")=""
  . . Q
- . E  D  ; DESCENDING
+ . E  D  ; DESCENDING -- set END DATE to the last date of the previous run
  . . I NORMALRUN S ^TMP("MAG",$J,"BATCH Q/R","END DATE")=$$NEXTDATE(BEGDATE,DIRECTION)
  . . E  S ^TMP("MAG",$J,"BATCH Q/R","END DATE")=STUDYDATE\1
  . . S ^TMP("MAG",$J,"BATCH Q/R","BEGIN DATE")=""
@@ -342,18 +354,6 @@ COPYPARM(NORMALRUN) ; copy last run's parameters for the next run
  . ; set REPORT/STUDY IEN to the last IEN of the previous run
  . S ^TMP("MAG",$J,"BATCH Q/R","REPORT/STUDY IEN")=(STUDYIEN+DIRECTION)
  . S ^TMP("MAG",$J,"BATCH Q/R","BATCH SIZE")=BATCHSIZE
- . Q
- E  D  ; patient
- . ; user may want to change patient or date range
- . S ^TMP("MAG",$J,"BATCH Q/R","PATIENT DFN")=DFN
- . I SORTORDER="ASCENDING" D
- . . S ^TMP("MAG",$J,"BATCH Q/R","BEGIN DATE")=$$NEXTDATE(STUDYDATE,DIRECTION)
- . . S ^TMP("MAG",$J,"BATCH Q/R","END DATE")=""
- . . Q
- . E  D  ; DESCENDING
- . . S ^TMP("MAG",$J,"BATCH Q/R","END DATE")=$$NEXTDATE(STUDYDATE,DIRECTION)
- . . S ^TMP("MAG",$J,"BATCH Q/R","BEGIN DATE")=""
- . . Q
  . Q
  ;
  ; get consult services

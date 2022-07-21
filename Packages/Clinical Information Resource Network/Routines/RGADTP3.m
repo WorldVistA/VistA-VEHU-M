@@ -1,5 +1,5 @@
-RGADTP3 ;BIR/CMC-RGADTP2 - CONTINUED ; 12/5/19 12:38pm
- ;;1.0;CLINICAL INFO RESOURCE NETWORK;**48,59,63,65,67,68,71,73,76**;30 Apr 99;Build 1
+RGADTP3 ;BIR/CMC-RGADTP2 - CONTINUED ;4/21/22  10:52
+ ;;1.0;CLINICAL INFO RESOURCE NETWORK;**48,59,63,65,67,68,71,73,76,77**;30 Apr 99;Build 3
  ;
  ;MOVED CHKPVT AND DIFF FROM RGADTP2 DUE TO ROUTINE SIZE ISSUE
  Q
@@ -74,14 +74,14 @@ DIFF(ARRAY,RGRSDFN,DR,ARAY) ; are there fields to update? **47
  I $G(ARRAY("ITIN"))'="" D  ;**76, VAMPI-11120 (dri) update ITIN field
  . S ITIN=$$GET1^DIQ(2,+RGRSDFN_",",991.11,"I") S:ITIN="" ITIN="@"
  . I ITIN'=ARRAY("ITIN") S DR=DR_"991.11;",ARAY(2,991.11)=ARRAY("ITIN")
- I $G(ARRAY("SexOrDes"))'="" D  ;**76, VAMPI-11114 (dri) update sexual orientation description
+ I $S($O(ARRAY("SexOr",0)):1,$O(^DPT(+RGRSDFN,.025,0)):1,1:0) S DR=DR_".025;" ;**76, VAMPI-11114 (dri) check in ^vafcpted whether to update sexual orientation
+ I $G(ARRAY("SexOrDes"))'="" D  ;**76, VAMPI-11114 (dri) update sexual orientation description ;**77, VAMPI-13755 (dri) - file after "SexOr" for "AHIST" x-ref
  . S SEXORDES=$$GET1^DIQ(2,+RGRSDFN_",",.0251,"I") S:SEXORDES="" SEXORDES="@"
  . I SEXORDES'=ARRAY("SexOrDes") S DR=DR_".0251;",ARAY(2,.0251)=ARRAY("SexOrDes")
+ I $S($O(ARRAY("Pronoun",0)):1,$O(^DPT(+RGRSDFN,.2406,0)):1,1:0) S DR=DR_".2406;" ;**76, VAMPI-11118 (dri) check in vafcpted whether to update pronoun
  I $G(ARRAY("PronounDes"))'="" D  ;**76, VAMPI-11118 (dri) update pronoun description
  . S PRONOUNDES=$$GET1^DIQ(2,+RGRSDFN_",",.24061,"I") S:PRONOUNDES="" PRONOUNDES="@"
  . I PRONOUNDES'=ARRAY("PronounDes") S DR=DR_".24061;",ARAY(2,.24061)=ARRAY("PronounDes")
- I $S($O(ARRAY("SexOr",0)):1,$O(^DPT(+RGRSDFN,.025,0)):1,1:0) S DR=DR_".025;" ;**76, VAMPI-11114 (dri) check in ^vafcpted whether to update sexual orientation
- I $S($O(ARRAY("Pronoun",0)):1,$O(^DPT(+RGRSDFN,.2406,0)):1,1:0) S DR=DR_".2406;" ;**76, VAMPI-11118 (dri) check in vafcpted whether to update pronoun
  I $S($O(ARRAY("ALIAS",0)):1,$O(^DPT(+RGRSDFN,.01,0)):1,1:0) S DR=DR_"1;"
  ;**65 - Story 323009 (ckn): Update DOD fields
  N ODOD,ODODP,ODODLUP,ODODSRC,ODODARY,ODODD,ANSWER,DUPDFLG

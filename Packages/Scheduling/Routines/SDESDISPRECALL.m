@@ -1,5 +1,5 @@
-SDESDISPRECALL ;ALB/KML,MGD - VISTA SCHEDULING RPCS ;JAN 12,2022
- ;;5.3;Scheduling;**803,805**;Aug 13, 1993;Build 9
+SDESDISPRECALL ;ALB/KML,MGD,KML - VISTA SCHEDULING RPCS ;April 24, 2022
+ ;;5.3;Scheduling;**803,805,815**;Aug 13, 1993;Build 4
  ;;Per VHA Directive 6402, this routine should not be modified
  Q
  ;
@@ -17,6 +17,7 @@ DISPRECALL(SDECY,RECALLIEN,REASON,COMMENT,EAS) ; add a disposition and DELETE an
  ;                            RECEIVED CARE AT ANOTHER VA
  ;                            OTHER
  ;                            APPT SCHEDULED
+ ;                            VET SELF-CANCEL
  ;   COMMENT  - (optional) Text to replace the text in the COMMENT
  ;                        Field 2.5 in RECALL REMINDERS prior to the
  ;                       delete which moves the data including this
@@ -40,7 +41,8 @@ VALIDATE ;
  I '$D(^SD(403.5,+RECALLIEN)) D ERRLOG^SDESJSON(.SDRECALL,17) S ERROR=1
  ;check disposition (optional)
  S SDRRFTR=$G(REASON) ;refer to the A66201 new-style xref defined 403.5 for detail; SDRRFTR is referenced in DELETE^SDRRISRU
- I SDRRFTR'="" S SDRRFTR=$S(SDRRFTR="FAILURE TO RESPOND":1,SDRRFTR="MOVED":2,SDRRFTR="DECEASED":3,SDRRFTR="DOESN'T WANT VA SERVICES":4,SDRRFTR="RECEIVED CARE AT ANOTHER VA":5,SDRRFTR="OTHER":6,SDRRFTR="APPT SCHEDULED":7,1:"")
+ I SDRRFTR'="" D
+ .S SDRRFTR=$S(SDRRFTR="FAILURE TO RESPOND":1,SDRRFTR="MOVED":2,SDRRFTR="DECEASED":3,SDRRFTR="DOESN'T WANT VA SERVICES":4,SDRRFTR="RECEIVED CARE AT ANOTHER VA":5,SDRRFTR="OTHER":6,SDRRFTR="APPT SCHEDULED":7,SDRRFTR="VET SELF-CANCEL":8,1:"")
  I SDRRFTR="" K SDRRFTR
  ;check provider (required)
  S PROVIDER=$$GET1^DIQ(403.5,RECALLIEN_",",4) ; RECALL provider

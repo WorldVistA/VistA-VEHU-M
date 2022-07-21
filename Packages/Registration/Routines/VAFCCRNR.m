@@ -1,5 +1,5 @@
-VAFCCRNR ;BIR/JFW-VAFC EHRM MIGRATED FACILITIES FILE (#391.919) Utilities ;4/26/21  15:51
- ;;5.3;Registration;**981,1050**;Aug 13, 1993;Build 2
+VAFCCRNR ;BIR/JFW-VAFC EHRM MIGRATED FACILITIES FILE (#391.919) Utilities ;2/22/22  13:55
+ ;;5.3;Registration;**981,1050,1071**;Aug 13, 1993;Build 4
  ;
  ;Story 961754 (jfw) - Support processes where there is a need to know
  ;                     which facilities have migrated to CERNER.
@@ -62,4 +62,27 @@ CRNRSITE(VAFCSTNUM) ;is site cerner enabled ;**1050, VAMPI-10038 (dri)
  ;
  I $G(VAFCSTNUM)'="",$O(^DGCN(391.919,"ACRNR",VAFCSTNUM,0)) Q 1
  Q 0
+ ;
+GCRNSITE() ;Return the CERNER Station Number configured for this VistA Instance
+ ;**1071 VAMPI-13671 (dri) new api for VistA consumers needed due to cerner cert/mock accounts
+ N CRNIEN,CRNSITE
+ S CRNIEN=$O(^MPIF(984.8,"B","FOUR",0)) I CRNIEN S CRNSITE=$P($G(^MPIF(984.8,CRNIEN,0)),"^",5)
+ I $G(CRNSITE)="" S CRNSITE="200CRNR"
+ Q CRNSITE
+ ;
+ISCRNPAT(DGDFN) ;Is this a Cerner patient (i.e., is 200CRNR in the TFL)?
+ ;**1071 VAMPI-13671 (dri) new api for VistA consumers needed due to cerner cert/mock accounts
+ ;Input:
+ ;  DGDFN - pointer to PATIENT (#2) file
+ ;
+ ;Return:
+ ;  1 - yes, 0 - no
+ ;
+ N DGRES,DGOUT,DGSITE,DGKEY,DGI
+ S DGRES=0
+ S DGSITE=$P($$SITE^VASITE,U,3)
+ S DGKEY=DGDFN_U_"PI"_U_"USVHA"_U_DGSITE
+ D TFL^VAFCTFU2(.DGOUT,DGKEY)
+ S DGI=0 F  S DGI=$O(DGOUT(DGI)) Q:DGI=""  I $P(DGOUT(DGI),U,4)=$$GCRNSITE(),$P(DGOUT(DGI),U,2)="PI" S DGRES=1 Q
+ Q DGRES
  ;

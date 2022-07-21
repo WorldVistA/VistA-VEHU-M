@@ -1,5 +1,5 @@
-RGADTP ;BIR/DLR-ADT PROCESSOR TO RETRIGGER A08 or A04 MESSAGES WITH AL/AL (COMMIT/APPLICATION) ACKNOWLEDGEMENTS ;7/15/21  16:00
- ;;1.0;CLINICAL INFO RESOURCE NETWORK;**26,27,20,34,35,40,45,44,47,59,60,61,62,63,65,68,69,70,74,76**;30 Apr 99;Build 1
+RGADTP ;BIR/DLR-ADT PROCESSOR TO RETRIGGER A08 or A04 MESSAGES WITH AL/AL (COMMIT/APPLICATION) ACKNOWLEDGEMENTS ;2/18/22  10:22
+ ;;1.0;CLINICAL INFO RESOURCE NETWORK;**26,27,20,34,35,40,45,44,47,59,60,61,62,63,65,68,69,70,74,76,77**;30 Apr 99;Build 3
  ;
  ;Reference to BLDEVN^VAFCQRY and BLDPID^VAFCQRY supported by IA #3630
  ;Reference to EN1^VAFHLZEL is supported by IA #752
@@ -254,13 +254,15 @@ OBX ;;
  .;Date of Death occurred through TK OVR
  .I $P($P(MSG,HL("FS"),4),COMP)="TK OVERRIDE DOD" S ARRAY("TKOVRDOD")=$P($P(MSG,HL("FS"),6),COMP)
  .;
- .;**76, VAMPI-11114 (dri)
- .I $P($P(MSG,HL("FS"),4),COMP)="Sexual Orientation" S ARRAY("SexOr",$O(ARRAY("SexOr",""),-1)+1)=$$FREE^RGRSPARS($P($P(MSG,HL("FS"),6),COMP))
+ .;**76, VAMPI-11114 (dri) - add sexual orientation and sexual orientation description
+ .;**77, VAMPI-13755 (dri) - include status, date created, date last updated
+ .I $P($P(MSG,HL("FS"),4),COMP)="Sexual Orientation" D
+ ..S ARRAY("SexOr",$O(ARRAY("SexOr",""),-1)+1)=$$FREE^RGRSPARS($P($P(MSG,HL("FS"),6),COMP))_"^"_$P(MSG,HL("FS"),12)_"^"_$$FMDATE^HLFNC($P(MSG,HL("FS"),15))_"^"_$$FMDATE^HLFNC($P(MSG,HL("FS"),13))
  .I $P($P(MSG,HL("FS"),4),COMP)="Sexual Or Description" D
  ..S ARRAY("SexOrDes")=$P($P(MSG,HL("FS"),6),COMP,2) I ARRAY("SexOrDes")=HL("Q") S ARRAY("SexOrDes")="@" Q
  ..N MSGX S MSGX=0 F  S MSGX=$O(MSG(MSGX)) Q:'MSGX  S ARRAY("SexOrDes")=ARRAY("SexOrDes")_$P($P(MSG(MSGX),HL("FS"),1),COMP,1)
  .;
- .;**76, VAMPI-11118 (dri)
+ .;**76, VAMPI-11118 (dri) - add pronoun and pronoun description
  .I $P($P(MSG,HL("FS"),4),COMP)="Pronoun" S ARRAY("Pronoun",$O(ARRAY("Pronoun",""),-1)+1)=$$FREE^RGRSPARS($P($P(MSG,HL("FS"),6),COMP))
  .I $P($P(MSG,HL("FS"),4),COMP)="Pronoun Description" D
  ..S ARRAY("PronounDes")=$P($P(MSG,HL("FS"),6),COMP,2) I ARRAY("PronounDes")=HL("Q") S ARRAY("PronounDes")="@" Q

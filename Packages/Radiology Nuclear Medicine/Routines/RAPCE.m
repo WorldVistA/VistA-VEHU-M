@@ -1,5 +1,5 @@
-RAPCE ;HIRMFO/GJC-Interface with PCE APIs for wrkload, visits ; Sep 22, 2020@09:27:59
- ;;5.0;Radiology/Nuclear Medicine;**10,17,21,26,41,57,56,153,172,174**;Mar 16, 1998;Build 2
+RAPCE ;HIRMFO/GJC - Interface with PCE APIs for wrkload, visits ; Apr 28, 2022@08:42:59
+ ;;5.0;Radiology/Nuclear Medicine;**10,17,21,26,41,57,56,153,172,174,189**;Mar 16, 1998;Build 1
  ;Supported IA #2053 FILE^DIE
  ;Supported IA #4663 SWSTAT^IBBAPI
  ;Controlled IA #1889 DATA2PCE^PXAPI
@@ -28,6 +28,8 @@ COMPLETE(RADFN,RADTI,RACNI) ; When an exam status changes to 'complete'
  S RADTE=9999999.9999-RADTI,RACNT=0
  S RA7002=$G(^RADPT(RADFN,"DT",RADTI,0))
  S RAXAMSET=+$P(RA7002,"^",5) ; is this part of an exam set? 1=YES
+ ;TEST: Singles registered together - treat as examset.
+ ;I '$G(RAXAMSET),$P(^RADPT(RADFN,"DT",RADTI,"P",0),U,4)>1 S RAXAMSET=1
  ;
  ;//P174 begin//
 EN2 ;check i-loc's credit method quit if 'no credit'
@@ -100,6 +102,7 @@ PCE(RADFN,RADTI,RACNI) ; Pass on the information to the PCE software
  . S RASENT=1 ; sent to PCE was okay
  . Q
  E  D
+ . I $G(RASULT)=-2 D RSCRFLR^RAPCE1 Q  ;p189/KLM - Resend to PCE (PX211 work around)
  . N RAWHOERR S RAWHOERR=""
  . W:'$D(ZTQUEUED)&('$D(RARECMPL)) !?5,$C(7),"Unable to credit.",!
  . I '$G(RAXAMSET) D FAILBUL^RAPCE2(RADFN,RADTI,RACNI,$S($G(RADUZ):RADUZ,1:DUZ))

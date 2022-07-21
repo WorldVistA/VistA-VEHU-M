@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: FILE
 ZWR
-^DIC(0)="FILE^1^19200.112^2815"
+^DIC(0)="FILE^1^19200.112^2879"
 ^DIC(.11,0)="INDEX^.11"
 ^DIC(.11,0,"DD")="^"
 ^DIC(.11,0,"DEL")="^"
@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3220626.114111
+^DIC(2,"%MSC")=3220719.11052
 ^DIC(2.025,"%MSC")=3220624.22304
 ^DIC(2.191,"%MSC")=3220622.230249
 ^DIC(2.2406,"%MSC")=3220624.22304
@@ -5645,6 +5645,7 @@ ZWR
 ^DIC(58.7,"%D",5,0)="division, and mapping to a PADE cabinet (location/area), will allow VistA "
 ^DIC(58.7,"%D",6,0)="to communicate precisely the outbound messages related to ADT, clinic "
 ^DIC(58.7,"%D",7,0)="visits, order details, drug formulary etc."
+^DIC(58.7,"%MSC")=3220719.110711
 ^DIC(58.71,0)="PADE SEND AREA^58.71"
 ^DIC(58.71,0,"AUDIT")=""
 ^DIC(58.71,0,"DD")=""
@@ -6740,7 +6741,7 @@ ZWR
 ^DIC(64,"%D",11,0)="FILE WITH SPECIFIC INFORMATION AT SPECIFIC INTERNAL FILE NUMBERS. NO"
 ^DIC(64,"%D",12,0)="ENTRIES SHOULD EVER BE DELETED. ADDITIONAL ENTRIES WILL BE DISTRIBUTED"
 ^DIC(64,"%D",13,0)="VIA GLOBAL TAPE WHEN NECESSARY."
-^DIC(64,"%MSC")=3220624.221214
+^DIC(64,"%MSC")=3220719.105835
 ^DIC(64.03,0)="WKLD LOG FILE^64.03"
 ^DIC(64.03,0,"GL")="^LRO(64.03,"
 ^DIC(64.03,0,"GL")="^LRO(64.03,"
@@ -6804,7 +6805,7 @@ ZWR
 ^DIC(64.061,"%D",5,0)=" "
 ^DIC(64.061,"%D",6,0)="This file is a standard file for many types of terms used in electronic"
 ^DIC(64.061,"%D",7,0)="messaging."
-^DIC(64.061,"%MSC")=3220624.221215
+^DIC(64.061,"%MSC")=3220719.105835
 ^DIC(64.062,0)="LAB ELECTRONIC SUBTYPES^64.062"
 ^DIC(64.062,0,"GL")="^LAB(64.062,"
 ^DIC(64.062,0,"GL")="^LAB(64.062,"
@@ -6836,7 +6837,7 @@ ZWR
 ^DIC(64.2,"%D",6,0)="will be distributed to all VAMC sites."
 ^DIC(64.2,"%D",7,0)="  Forward all request for additional codes not found in this file, contact"
 ^DIC(64.2,"%D",8,0)="Pathology Central Office, Attention Asst. Director for DHCP affairs. "
-^DIC(64.2,"%MSC")=3220624.221215
+^DIC(64.2,"%MSC")=3220719.105835
 ^DIC(64.21,0)="WKLD CODE LAB SECT^64.21"
 ^DIC(64.21,0,"GL")="^LAB(64.21,"
 ^DIC(64.21,0,"GL")="^LAB(64.21,"
@@ -6947,7 +6948,7 @@ ZWR
 ^DIC(64.81,"%D",9,0)="UPGRADE."
 ^DIC(64.81,"%D",10,0)=" "
 ^DIC(64.81,"%D",11,0)="The end user never uses this file for day to day laboratory activities. "
-^DIC(64.81,"%MSC")=3220624.221215
+^DIC(64.81,"%MSC")=3220719.105835
 ^DIC(64.9178,0)="LSRP AUDIT CONFIG^64.9178"
 ^DIC(64.9178,0,"GL")="^LABAUD(64.9178,"
 ^DIC(64.9178,0,"GL")="^LABAUD(64.9178,"
@@ -13059,7 +13060,7 @@ ZWR
 ^DIC(95.3,"%D",62,0)="liability for any omissions or errors in the LOINC database, and all "
 ^DIC(95.3,"%D",63,0)="EXPRESS AND IMPLIED WARRANTIES, INCLUDING THOSE RELATED TO MERCHANTABILITY"
 ^DIC(95.3,"%D",64,0)="OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED."
-^DIC(95.3,"%MSC")=3220624.221215
+^DIC(95.3,"%MSC")=3220719.105835
 ^DIC(95.31,0)="LAB LOINC COMPONENT^95.31"
 ^DIC(95.31,0,"AUDIT")="@"
 ^DIC(95.31,0,"DD")="@"
@@ -13078,7 +13079,7 @@ ZWR
 ^DIC(95.31,"%D",1,0)="This file contains the name of the component or analyte measured for the "
 ^DIC(95.31,"%D",2,0)="LAB LOINC file (#95.3).  This file is a standard file distributed"
 ^DIC(95.31,"%D",3,0)="by Dallas CIOFO and should not be edited locally."
-^DIC(95.31,"%MSC")=3220624.221215
+^DIC(95.31,"%MSC")=3220719.105835
 ^DIC(95.4,0)="LAB MAPPING TRANSPORT^95.4"
 ^DIC(95.4,0,"AUDIT")=""
 ^DIC(95.4,0,"DD")=""
@@ -27675,7 +27676,7 @@ ZWR
 ^DIC(403.56,"%D",0)="^1.001^2^2^3090611^^"
 ^DIC(403.56,"%D",1,0)="This file holds records deleted from the RECALL REMINDERS [#403.5]"
 ^DIC(403.56,"%D",2,0)="file, whether deleted by the user or because they were given appointments."
-^DIC(403.56,"%MSC")=3220626.115733
+^DIC(403.56,"%MSC")=3220719.110436
 ^DIC(404.41,0)="OUTPATIENT PROFILE^404.41P"
 ^DIC(404.41,0,"DD")="@"
 ^DIC(404.41,0,"DEL")="@"
@@ -28683,7 +28684,7 @@ ZWR
 ^DIC(409.2,"%D",1,0)="This file contains the cancellation reasons to be used in the Scheduling"
 ^DIC(409.2,"%D",2,0)="Package.  The MAS SIUG determined the allowable reasons.  This file should"
 ^DIC(409.2,"%D",3,0)="not be added to or have entries deleted from it."
-^DIC(409.2,"%MSC")=3220612.13555
+^DIC(409.2,"%MSC")=3220719.110436
 ^DIC(409.3,0)="SD WAIT LIST^409.3"
 ^DIC(409.3,0,"AUDIT")="@"
 ^DIC(409.3,0,"DD")="@"
@@ -29506,7 +29507,7 @@ ZWR
 ^DIC(409.85,"%D",1,0)="This file contains the SDEC Appt Request entries for the Appointment "
 ^DIC(409.85,"%D",2,0)="Scheduling application."
 ^DIC(409.85,"%D",3,0)="Each entry represents a unique appointment request."
-^DIC(409.85,"%MSC")=3220626.115733
+^DIC(409.85,"%MSC")=3220719.110436
 ^DIC(409.853,0)="SDEC DISPOSITION REASON^409.853"
 ^DIC(409.853,0,"AUDIT")="@"
 ^DIC(409.853,0,"DD")="@"
@@ -29528,7 +29529,7 @@ ZWR
 ^DIC(409.853,"%D",2,0)="Package and the VS GUI. The MAS SIUG determined the allowable reasons."
 ^DIC(409.853,"%D",3,0)=" "
 ^DIC(409.853,"%D",4,0)="This file should NOT be edited in anyway by the site. "
-^DIC(409.853,"%MSC")=3220624.213926
+^DIC(409.853,"%MSC")=3220719.110436
 ^DIC(409.854,"%MSC")=3220626.115733
 ^DIC(409.86,0)="SDEC CONTACT^409.86"
 ^DIC(409.86,0,"AUDIT")="@"
@@ -29589,6 +29590,27 @@ ZWR
 ^DIC(409.88,"%D",2,0)="GUI.  Comments consist of hash tags (abbreviations) and their associated "
 ^DIC(409.88,"%D",3,0)="textual equivalent."
 ^DIC(409.88,"%MSC")=3220622.234137
+^DIC(409.89,0)="SDEC STOP CODE^409.89"
+^DIC(409.89,0,"AUDIT")="@"
+^DIC(409.89,0,"DD")="@"
+^DIC(409.89,0,"DEL")="@"
+^DIC(409.89,0,"GL")="^SDEC(409.89,"
+^DIC(409.89,0,"LAYGO")="@"
+^DIC(409.89,0,"RD")="@"
+^DIC(409.89,0,"WR")="@"
+^DIC(409.89,0,"AUDIT")="@"
+^DIC(409.89,0,"DD")="@"
+^DIC(409.89,0,"DEL")="@"
+^DIC(409.89,0,"GL")="^SDEC(409.89,"
+^DIC(409.89,0,"LAYGO")="@"
+^DIC(409.89,0,"RD")="@"
+^DIC(409.89,0,"WR")="@"
+^DIC(409.89,"%",0)="^1.005^^0"
+^DIC(409.89,"%D",0)="^^3^3^3220418^"
+^DIC(409.89,"%D",1,0)="The SDEC Stop Code file (#409.89) contains Stop Codes and their associated"
+^DIC(409.89,"%D",2,0)="Name, Type (P-Primary, M-Mental Health, S-Special Care) and Active flag. "
+^DIC(409.89,"%D",3,0)="It is used to calculate Mission Act Eligibility."
+^DIC(409.89,"%MSC")=3220719.110436
 ^DIC(409.91,0)="ACRP REPORT TEMPLATE^409.91"
 ^DIC(409.91,0,"AUDIT")="@"
 ^DIC(409.91,0,"DD")="@"
@@ -29625,6 +29647,24 @@ ZWR
 ^DIC(409.92,"%D",2,0)="elements used by the 'ACRP Ad Hoc Report' [SCRPW AD HOC REPORT]."
 ^DIC(409.92,"%D",3,0)=" "
 ^DIC(409.92,"%D",4,0)="         *** THE CONTENTS OF THIS FILE SHOULD NOT BE EDITED ***"
+^DIC(409.93,0)="SDES ERROR CODES^409.93"
+^DIC(409.93,0,"AUDIT")="@"
+^DIC(409.93,0,"DD")="@"
+^DIC(409.93,0,"DEL")="@"
+^DIC(409.93,0,"GL")="^SDEC(409.93,"
+^DIC(409.93,0,"LAYGO")="@"
+^DIC(409.93,0,"WR")="@"
+^DIC(409.93,0,"AUDIT")="@"
+^DIC(409.93,0,"DD")="@"
+^DIC(409.93,0,"DEL")="@"
+^DIC(409.93,0,"GL")="^SDEC(409.93,"
+^DIC(409.93,0,"LAYGO")="@"
+^DIC(409.93,0,"WR")="@"
+^DIC(409.93,"%",0)="^1.005^^0"
+^DIC(409.93,"%D",0)="^^2^2^3220509^"
+^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
+^DIC(409.93,"%D",2,0)="or web application."
+^DIC(409.93,"%MSC")=3220719.110457
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
@@ -45601,7 +45641,7 @@ ZWR
 ^DIC(2006.1,"%D",26,0)="Non-integrated sites and Integrated sites that have one shared image "
 ^DIC(2006.1,"%D",27,0)="storage location have one record.  Integrated sites where each site has"
 ^DIC(2006.1,"%D",28,0)="their own image storage have one record for each of the associated sites."
-^DIC(2006.1,"%MSC")=3220624.2132
+^DIC(2006.1,"%MSC")=3220719.105655
 ^DIC(2006.13,0)="MAG PATH CONFIG^2006.13"
 ^DIC(2006.13,0,"AUDIT")="@"
 ^DIC(2006.13,0,"DD")="@"
@@ -45811,6 +45851,7 @@ ZWR
 ^DIC(2006.18,"%D",27,0)="         . display Radiology exam listing"
 ^DIC(2006.18,"%D",28,0)="         . patient listings"
 ^DIC(2006.18,"%D",29,0)="         . and more to be added for future development."
+^DIC(2006.18,"%MSC")=3220719.110721
 ^DIC(2006.19,0)="IMAGING USERS^2006.19IP"
 ^DIC(2006.19,0,"DD")="@"
 ^DIC(2006.19,0,"DEL")="@"
@@ -46614,6 +46655,7 @@ ZWR
 ^DIC(2006.565,"%D",18,0)="This table contains information about batch runs that export DICOM data."
 ^DIC(2006.565,"%D",19,0)="Each record in this table keeps track of the actual parameters of"
 ^DIC(2006.565,"%D",20,0)="one single batch run."
+^DIC(2006.565,"%MSC")=3220719.105655
 ^DIC(2006.57,0)="DICOM HL7 SEGMENT^2006.57"
 ^DIC(2006.57,0,"AUDIT")="@"
 ^DIC(2006.57,0,"DD")="@"
@@ -47130,22 +47172,10 @@ ZWR
 ^DIC(2006.5733,"%D",21,0)="Some entries in this table have sub-records that tally how often"
 ^DIC(2006.5733,"%D",22,0)="specific results occurred."
 ^DIC(2006.574,0)="DICOM OBJECT EXPORT^2006.574"
-^DIC(2006.574,0,"AUDIT")="@"
-^DIC(2006.574,0,"DD")="@"
-^DIC(2006.574,0,"DEL")="@"
 ^DIC(2006.574,0,"GL")="^MAGDOUTP(2006.574,"
-^DIC(2006.574,0,"LAYGO")="@"
-^DIC(2006.574,0,"RD")="@"
-^DIC(2006.574,0,"WR")="@"
-^DIC(2006.574,0,"AUDIT")="@"
-^DIC(2006.574,0,"DD")="@"
-^DIC(2006.574,0,"DEL")="@"
 ^DIC(2006.574,0,"GL")="^MAGDOUTP(2006.574,"
-^DIC(2006.574,0,"LAYGO")="@"
-^DIC(2006.574,0,"RD")="@"
-^DIC(2006.574,0,"WR")="@"
 ^DIC(2006.574,"%",0)="^1.005^^0"
-^DIC(2006.574,"%D",0)="^^21^21^3010619^"
+^DIC(2006.574,"%D",0)="^1.001^21^21^3211221^^"
 ^DIC(2006.574,"%D",1,0)=" +---------------------------------------------------------------+"
 ^DIC(2006.574,"%D",2,0)=" |                                                               |"
 ^DIC(2006.574,"%D",3,0)=" | Property of the US Government.                                |"
@@ -47167,6 +47197,7 @@ ZWR
 ^DIC(2006.574,"%D",19,0)="to an alternate storage provider."
 ^DIC(2006.574,"%D",20,0)="The top-level of this table identifies the storage provider, the next"
 ^DIC(2006.574,"%D",21,0)="level identifies the images for which files are to be transmitted."
+^DIC(2006.574,"%MSC")=3220719.105655
 ^DIC(2006.575,0)="DICOM FAILED IMAGES^2006.575"
 ^DIC(2006.575,0,"AUDIT")="@"
 ^DIC(2006.575,0,"DD")="@"
@@ -58188,7 +58219,7 @@ ZWR
 ^DIC("B","CLOZAPINE OVERRIDE REASONS",52.54)=""
 ^DIC("B","CLOZAPINE PARAMETERS",603.03)=""
 ^DIC("B","CLOZAPINE PATIENT LIST",603.01)=""
-^DIC("B","CLOZAPINE PRESCRIPTION OVERRID",52.52)=" "
+^DIC("B","CLOZAPINE PRESCRIPTION OVERRID",52.52)=""
 ^DIC("B","CLOZAPINE TESTS",603.04)=""
 ^DIC("B","CLRS REPORT STORAGE",446.7)=""
 ^DIC("B","CM HL7 DATA",8973.1)=""
@@ -60154,6 +60185,8 @@ ZWR
 ^DIC("B","SDEC RESOURCE GROUP",409.832)=""
 ^DIC("B","SDEC RESOURCE USER",409.833)=""
 ^DIC("B","SDEC SETTINGS",409.98)=""
+^DIC("B","SDEC STOP CODE",409.89)=""
+^DIC("B","SDES ERROR CODES",409.93)=""
 ^DIC("B","SDSC SERVICE CONNECTED CHANGES",409.48)=""
 ^DIC("B","SDWL TRANSFER ACCEPT",409.36)=""
 ^DIC("B","SDWL TRANSFER REQUEST",409.35)=""

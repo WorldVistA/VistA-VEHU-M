@@ -1,9 +1,12 @@
 TIUCCRHL7P3 ; CCRA/PB - TIUHL7 Msg Processing; March 23, 2005
- ;;1.0;TEXT INTEGRATION UTILITIES;**337,344**;Jun 20, 1997;Build 11
+ ;;1.0;TEXT INTEGRATION UTILITIES;**337,344,349**;Jun 20, 1997;Build 19
  ; Documented API's and Integration Agreements
  ; ----------------------------------------------
  ; IA #3473I  GET^GMRCTIU
+ ; ICR 2980 call to CMT^GMRCGUIB
+ ;
  ;PB - Patch 344 to modify how the note and addendum text is formatted
+ ;PB - Patch 349 modification to parse and file the consult factor from the note and file as a comment with the consult
  ;
  Q
 CONTINUE ;
@@ -41,8 +44,12 @@ MAKEADD ;
  . N PERSON,SUCCESS
  . S PERSON=$G(TIU("AUDA"))
  . D MAKEADD^TIUHL7U2(.SUCCESS,TIUDA,.TIUZ,1)
+ . ; PB - Patch 349 - add comment for consult factor
  . I '+SUCCESS S MSGTEXT=$P(SUCCESS,U,2),STOP=1 D MESSAGE(MSGID,$G(VNUM),MSGTEXT),ANAK^TIUCCHL7UT(MSGID,$G(MSGTEXT),$G(VNUM)) ;D ERR^TIUCCHL7UT("TIU",1,"0000.000",$P(SUCCESS,U,2))
  . Q:$G(STOP)=1
+ . N COMMENT,NOTEDT
+ . S COMMENT(1)=CFNOTE,NOTEDT=$$NOW^XLFDT,GMRCDA=VNUM
+ . D CMT^GMRCGUIB(GMRCDA,.COMMENT,DUZ,NOTEDT,DUZ)  ;icr 2980
  . S $P(^TIU(8925,+SUCCESS,13),U,3)="U",$P(^TIU(8925,+SUCCESS,13),U,2)=$S(+$G(TIU("EBDA")):TIU("EBDA"),1:TIU("AUDA"))
  . D SIGNDOC^TIUHL7U1(+SUCCESS) I +TIU("EC") D ACK^TIUCCHL7UT(HL("MID"),TIUNAME,+SUCCESS) Q
  . ; does the ack method below work for CCRA?

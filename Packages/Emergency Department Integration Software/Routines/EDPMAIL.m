@@ -1,5 +1,5 @@
-EDPMAIL ;SLC/KCM - Process incoming mail for posted events
- ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
+EDPMAIL ;SLC/KCM - Process incoming mail for posted events ; 10/19/21 9:50am
+ ;;2.0;EMERGENCY DEPARTMENT;**16**;May 2, 2012;Build 6
  ;
 MSG(MSG) ; parse message passed in from SEND^EDPFMON
  N I,PARAM,LOG,ORIFN,EDPDBUG
@@ -22,7 +22,7 @@ NEW ; add new order
  Q:'LOG  Q:'ORIFN
  N X,Y,DIC,DA
  S DIC="^EDP(230,"_LOG_",8,",DIC(0)="LZ",DA(1)=LOG,X=+ORIFN
- S DIC("DR")=".02///"_$$VAL("pkg")_";.03///N;.05///"_$$VAL("release")
+ S DIC("DR")=".02///"_$$VAL("pkg")_";.03///"_$$VAL("sts")_";.05///"_$$VAL("release")
  S:$$VAL("stat") DIC("DR")=DIC("DR")_";.04///1"
  D FILE^DICN
  Q
@@ -58,12 +58,12 @@ VAL(X) ; -- return parameter value or null if undefined
  ;
 CHKIN ; check in a patient
  Q:'$$VAL("dfn")  Q:'$$VAL("ssn")  Q:'$L($$VAL("ptNm"))  Q:'$L($$VAL("site"))
- N NEWPT
+ N NEWPT,EDPFAIL
  S NEWPT="dfn="_$$VAL("dfn")_$C(9)_"name="_$$VAL("ptNm")_$C(9)_"dob="_$$VAL("dob")_$C(9)_"ssn="_$$VAL("ssn")_$C(9)_"clinic="_$$VAL("hloc")
  S NEWPT=NEWPT_$C(9)_"create=1"  ; set Creation Source to Scheduling
  N AREA
  S AREA=$O(^EDPB(231.9,"C",$$VAL("site"),0)) Q:'AREA
  N EDPXML,EDPSITE,EDPSTA
  S EDPUSER=DUZ,EDPSITE=DUZ(2),EDPSTA=$$STA^XUAF4(DUZ(2))
- D ADD^EDPLOGA(NEWPT,AREA,$$VAL("time"),0)
+ S EDPFAIL=$$ADD^EDPLOGA(NEWPT,AREA,$$VAL("time"),0)
  Q

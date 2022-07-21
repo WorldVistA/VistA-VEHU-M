@@ -1,5 +1,5 @@
-MAGDSTA4 ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Dec 04, 2019@15:18:50
- ;;3.0;IMAGING;**231**;MAR 19, 2002;Build 9;Feb 27, 2015
+MAGDSTA4 ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Mar 03, 2022@08:41:56
+ ;;3.0;IMAGING;**231,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -106,9 +106,9 @@ RARPT1A ; get new value
  . Q
  Q
  ;
-RARPT1B(RADPT1,ACNUMB,DATE) ; get accession number and date from ^RARPT(POINTER,0)
+RARPT1B(RARPTIEN,ACNUMB,DATE) ; get accession number and date from ^RARPT(RARPTIEN,0)
  N RARPT0,Y,Z
- S RARPT0=$G(^RARPT(RADPT1,0))
+ S RARPT0=$G(^RARPT(RARPTIEN,0))
  S ACNUMB=$P(RARPT0,"^",1)
  S DATE=$P($$FMTE^XLFDT($P(RARPT0,"^",3),1),"@",1)
  Q

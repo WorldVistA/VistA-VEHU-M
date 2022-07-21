@@ -1,5 +1,5 @@
-MAGDSTAS ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Jul 06, 2021@08:17:02
- ;;3.0;IMAGING;**231,306**;MAR 19, 2002;Build 1;OCT 28, 2009
+MAGDSTAS ;WOIFO/PMK - Q/R Retrieve of DICOM images from PACS to VistA ; Feb 15, 2022@10:52:34
+ ;;3.0;IMAGING;**231,306,305**;Mar 19, 2002;Build 3
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -188,7 +188,7 @@ STATS(I,STATS) ; collect statistics info
  . . S (ISTATS,STATS)=STATS+1
  . . S STATS("XREF",NAME)=ISTATS
  . . Q
- . S STATS(ISTATS,"NAME")=NAME_"_________________"
+ . S STATS(ISTATS,"NAME")=NAME_"_____________________________"
  . S STATS(ISTATS,"VALUE")=$G(STATS(ISTATS,"VALUE"))+VALUE
   . Q
  Q
@@ -197,7 +197,7 @@ DISPLAY(STATS) ; output the statistics
  N I
  W !
  F I=1:1:STATS D
- . W !?14,$E(STATS(I,"NAME"),1,31),?45,$TR($J(STATS(I,"VALUE"),10)," ","_")
+ . W !?10,$E(STATS(I,"NAME"),1,35),?45,$TR($J(STATS(I,"VALUE"),10)," ","_")
  . I $Y>(IOSL-4) D
  . . D CONTINUE^MAGDSTQ
  . . W @IOF

@@ -1,5 +1,5 @@
-PSOERXU6 ;ALB/BWF - eRx utilities ; 12/22/2020
- ;;7.0;OUTPATIENT PHARMACY;**508,551,581,631,617**;DEC 1997;Build 110
+PSOERXU6 ;ALB/BWF - eRx utilities ;Feb 10, 2022@11:04
+ ;;7.0;OUTPATIENT PHARMACY;**508,551,581,631,617,672**;DEC 1997;Build 1
  ;
  Q
  ; auto discontinue orders related to cancel request
@@ -222,8 +222,8 @@ JTQ(ERXIEN) ;
  S PSOSORT="PATIENT"
  S PTNM=$$GET1^DIQ(2,DFN,.01,"E")
  S (PSODFN,PAT)=DFN,PSOFINY=DFN_U_PTNM
- ; use the PSNPINST
- I '$D(^PS(52.41,"AOR",PAT,PSNPINST)) W !,"Patient has no pending prescriptions." D DIRE^PSOERXX1 Q
+ ;PSO*7.0*672: Check for any pending Rx's. Do not restrict based on variable PSNPINST.
+ I '$D(^PS(52.41,"AOR",PAT)) W !,"Patient has no pending prescriptions." D DIRE^PSOERXX1 Q
  W !,"Patient: "_PTNM,!
  ; new line SPAT2^PSOORFIN has been created to jump right into pending orders with the patient pre-selected
  S PSOJUMP=1

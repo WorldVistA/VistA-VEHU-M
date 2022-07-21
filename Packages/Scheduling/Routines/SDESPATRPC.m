@@ -1,7 +1,9 @@
-SDESPATRPC ;ALB/TAW,MGD,RJT - PATIENT RPCS ;APR 14, 2022
- ;;5.3;Scheduling;**792,804,805,807,809,814**;Aug 13, 1993;Build 11
+SDESPATRPC ;ALB/TAW,MGD,RJT,ANU - PATIENT RPCS ;MAY 09, 2022
+ ;;5.3;Scheduling;**792,804,805,807,809,814,816**;Aug 13, 1993;Build 3
  ;
  ; Reference to ^IBA(355.33 in ICR #6891
+ ; Reference to $$GETS^DIQ,$$GETS1^DIQ in ICR #2056
+ ; Reference to #354 in ICR #5296
  ;
  Q
  ;
@@ -59,7 +61,38 @@ NEEDVERIFY(NEEDVERIFY,DFN,LASTVERFWINDOW,NOCOVWINDOW) ;
  ;  1 = Verification needed (Default)
  ;  0 = Has active insurance or verification started
  N IENS,SDMSG,PATDATA,BILLPATDATA,NOCOVDT,COVBYHI,SUBIEN,XDT,TMPDT,INDEXEND,IBAIEN,IBADATA
+ N FEDONLY,FEDPOLICY
  S NEEDVERIFY=1
+ ;
+ ;SD*5.3*816
+ ;
+ S IBAIEN=""
+ S FEDONLY="Y"
+ F  S IBAIEN=$O(^IBA(355.33,"C",DFN,IBAIEN)) Q:IBAIEN=""!(FEDONLY="N")  D
+ .S FEDPOLICY=""
+ .S FEDPOLICY=$$GET1^DIQ(355.33,IBAIEN,20.01,"E")
+ .S FEDPOLICY=$G(FEDPOLICY,"")
+ .S FEDPOLICY=$$UP^XLFSTR(FEDPOLICY)
+ .Q:((FEDPOLICY["MEDICAID")!(FEDPOLICY["MEDICARE")!(FEDPOLICY["TRICARE")!(FEDPOLICY["CHAMPVA"))
+ .S FEDONLY="N"
+ ;
+ S SUBIEN=0
+ F  S SUBIEN=$O(^DPT(DFN,.312,SUBIEN)) Q:SUBIEN=""!('SUBIEN)!(FEDONLY="N")  D
+ .S IENS=SUBIEN_","_DFN_","
+ .K PATDATA
+ .D GETS^DIQ(2.312,IENS,".01;3","IE","PATDATA","SDMSG")
+ .;Check the Insurance Expiration Data is active
+ .S TMPDT=PATDATA(2.312,IENS,3,"I")
+ .I +TMPDT,(+TMPDT'>DT) Q  ;term date of today is inactive coverage
+ .S FEDPOLICY=""
+ .S FEDPOLICY=PATDATA(2.312,IENS,.01,"E")
+ .S FEDPOLICY=$G(FEDPOLICY,"")
+ .S FEDPOLICY=$$UP^XLFSTR(FEDPOLICY)
+ .Q:((FEDPOLICY["MEDICAID")!(FEDPOLICY["MEDICARE")!(FEDPOLICY["TRICARE")!(FEDPOLICY["CHAMPVA"))
+ .S FEDONLY="N"
+ ;
+ I FEDONLY="Y" S LASTVERFWINDOW=365
+ ;
  ;Check the Insurance Verification Processor file
  ; The assumption is that once verification is complete all
  ; references to the patient are removed.

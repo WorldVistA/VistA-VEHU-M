@@ -1,5 +1,5 @@
-MAGGTU4D ;WOIFO/SG/NST/JSL/GEK/DAC - VERSION CONTROL (CLINICAL DISPLAY); Sep 27, 2021@08:36:33
- ;;3.0;IMAGING;**93,94,106,117,122,131,149,138,156,161,167,181,191,188,216,234,225,256,258,316**;Mar 19, 2002;Build 5
+MAGGTU4D ;WOIFO/SG/NST/JSL/GEK/DAC - VERSION CONTROL (CLINICAL DISPLAY); Jun 15, 2022@14:07:23
+ ;;3.0;IMAGING;**93,94,106,117,122,131,149,138,156,161,167,181,191,188,216,234,225,256,258,316,290**;Mar 19, 2002;Build 14
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -23,9 +23,9 @@ CLVERCT ;***** VERSION CONTROL TABLE FOR THE CLINICAL DISPLAY CLIENTS
  ;;==================================================================
  ;;| Version |Build|Seq #|                Comment                   |
  ;;|---------+-----+------------------------------------------------|
- ;;| 3.0.316 |   1 |   ??| Oct 2021                                 |
+ ;;| 3.0.290 |   4 |  201| June 2022                                |
+ ;;| 3.0.316 |   1 |  200| Oct 2021                                 |
  ;;| 3.0.258 |   5 |  199| Jun 2021                                 |
- ;;| 3.0.256 |   2 |  198| Feb 2021                                 |
  ;;==================================================================
  ;
  ; Each row of the version control table contains the version and
@@ -35,8 +35,8 @@ CLVERCT ;***** VERSION CONTROL TABLE FOR THE CLINICAL DISPLAY CLIENTS
  ; Sort order of the rows does not matter. However, the reversed
  ; order of patch sequential numbers is recommended.
  ; NOTE:
+ ;  Patch 290 removed support for patch 256
  ;  Patch 316 removed support for patch 290 (will be released after patch 316)
- ;  Patch 290 removed support for patch 225
  ;  Patch 258 removed support for patch 234
  ;  Patch 256 removed support for patch 216
  ;  Patch 225 removed patches prior to patch 216

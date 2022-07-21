@@ -1,5 +1,5 @@
 SDUNC ;ALB/MGD - RESTORE CLINIC AVAILABILITY ;Apr 12, 2022
- ;;5.3;Scheduling;**79,303,380,452,780,806,814**;Aug 13, 1993;Build 11
+ ;;5.3;Scheduling;**79,303,380,452,780,806,814,812**;Aug 13, 1993;Build 17
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  D DT^DICRW S DIC=44,DIC(0)="MEQA",DIC("S")="I $P(^(0),""^"",3)=""C"",'$G(^(""OOS""))",DIC("A")="Select CLINIC NAME: " D ^DIC K DIC("S"),DIC("A") Q:"^"[X  G:Y<0 SDUNC Q:'$D(^SC(+Y,"SL"))
@@ -21,7 +21,7 @@ NOPAT W !,*7,"NO UPCOMING OR INDEFINITE APPOINTMENT PATTERN EXISTS FOR DAY OF WE
 B S X=SD D DOW^SDM0 S DOW=Y,SS=$O(^SC(SC,"T"_Y,X)) I SS'="",$D(^(SS,1)),^(1)]"" S DH=$P("SU^MO^TU^WE^TH^FR^SA","^",DOW+1)_" "_$E(SD,6,7)_$J("",SI+SI-6)_^(1),DO=X+1,DA(1)=SC,HOLD=DH D FIX2
  Q
 N I '$F(^SC(SC,"ST",SD,1),"[") K ^SC(SC,"ST",SD) W !,*7,"CLINIC DOES NOT MEET ON THAT DAY" G SDUNC
- K:^SC(SC,"ST",SD,1)'["X" ^SC(SC,"ST",SD,"CAN") W !,"RESTORED!",*7 D TMPD,CHK Q
+ K:^SC(SC,"ST",SD,1)'["X" ^SC(SC,"ST",SD,"CAN") W !,"RESTORED!",*7 D:'$G(TMPP) TMPD D CHK K TMPP Q  ;Added code to stop TMPD call if a partial day restore *812
 FIX I ^SC(SC,"ST",SD,1)["X" S SDREST=^SC(SC,"OST",SD,1) D SEL Q
  S HOLD=^SC(SC,"OST",SD,1)
  Q
@@ -51,4 +51,4 @@ TC S %=$E(X,3,4),%=X\100-STARTDAY*SI+(%*SI\60)*2
  Q
 TM S X=$E($P(X,".",2)_"0000",1,4),X1=X,%=X>1159 S:X>1259 X=X-1200 S X=X\100_":"_$E(X#100+100,2,3)_" "_$E("AP",%+1)_"M" Q
 TMPD D EN^SDTMPHLC(SC,SD,,"UC","RESTORED - DAY") Q  ;780
-TMPP N F,T S F=+(SD_"."_FR),T=+(SD_"."_TO) D EN^SDTMPHLC(SC,F,T,"UP","RESTORED - PARTIAL DAY") Q  ;780
+TMPP N F,T S F=+(SD_"."_FR),T=+(SD_"."_TO) D EN^SDTMPHLC(SC,F,T,"UP","RESTORED - PARTIAL DAY") S TMPP=1 Q  ;780

@@ -1,5 +1,5 @@
 DGRPD ;ALB/MRL,MLR,JAN,LBD,EG,BRM,JRC,BAJ,JAM,HM,BDB,ARF,RN -PATIENT INQUIRY (NEW) ;July 09, 2014  12:16pm
- ;;5.3;Registration;**109,124,121,57,161,149,286,358,436,445,489,498,506,513,518,550,545,568,585,677,703,688,887,907,925,936,940,941,987,1006,1056,1061,1059**;Aug 13, 1993;Build 6
+ ;;5.3;Registration;**109,124,121,57,161,149,286,358,436,445,489,498,506,513,518,550,545,568,585,677,703,688,887,907,925,936,940,941,987,1006,1056,1061,1059,1071**;Aug 13, 1993;Build 4
  ; *286* Newing variables X,Y in OKLINE subroutine
  ; *358* If a patient is on a domiciliary ward, don't display MEANS
  ; TEST required/Medication Copayment Exemption messages
@@ -259,18 +259,21 @@ L1 W !!,"Language Date/Time: ",$S(DGLANGDT="":"UNANSWERED",1:DGLANGDT),!
  K DGLANGDT,DGPRFLAN,DGLANG0,DGLANGDA
  Q
 SOGI ;**1059 SOGI FIELDS TO BE DISPLAYED VAMPI-11114,VAMPI-11118,VAMPI-11120, VAMPI-11121
+ ;**1071 VAMPI-13755 (jfw) - Display Additional SO Info
  N EN,SXO,PRN
  W !,"Birth Sex    :  ",$$GET1^DIQ(2,DFN,".02","E")
  ;SEXUAL ORIENTATION
- W !,"Sexual Orientation: ",!
+ W !,"Sexual Orientation: "
  S EN=0 F  S EN=$O(^DPT(DFN,.025,EN)) Q:'EN  D
- .S SXO=$G(^DPT(DFN,.025,EN,0))
- .W ?20,$P($G(^DG(47.77,SXO,0)),"^"),!
+ .N DGSOI D GETS^DIQ(2.025,EN_","_DFN,"*",,"DGSOI")
+ .W !?20,DGSOI(2.025,EN_","_DFN_",",.01)_" ("_DGSOI(2.025,EN_","_DFN_",",.02)_")"
+ .W !?25,"Date Created:",?44,DGSOI(2.025,EN_","_DFN_",",.03)
+ .W !?25,"Date Last Updated: "_DGSOI(2.025,EN_","_DFN_",",.04)
  W !,"Sexual Orientation Description: ",$$GET1^DIQ(2,DFN,".0251","E")
- W !,"Pronoun: ",!
+ W !,"Pronoun: "
  S EN=0 F  S EN=$O(^DPT(DFN,.2406,EN)) Q:'EN  D
  .S PRN=$G(^DPT(DFN,.2406,EN,0))
- .W ?20,$P($G(^DG(47.78,PRN,0)),"^"),!
+ .W !?20,$P($G(^DG(47.78,PRN,0)),"^")
  W !,"Pronoun Description: ",$$GET1^DIQ(2,DFN,".24061","E")
  W !,"Self-Identified Gender Identity: ",$$GET1^DIQ(2,DFN,".024","E")
  Q
