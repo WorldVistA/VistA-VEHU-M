@@ -1,5 +1,5 @@
-RCDPEWLP ;ALBANY/KML - EDI LOCKBOX ERA and EEOB WORKLIST procedures ; 6/10/19 12:31pm
- ;;4.5;Accounts Receivable;**298,303,304,319,332,345,349**;Mar 20, 1995;Build 44
+RCDPEWLP ;ALBANY/KML - EDI LOCKBOX ERA and EEOB WORKLIST procedures ; 4/28/22 7:39am
+ ;;4.5;Accounts Receivable;**298,303,304,319,332,345,349,367**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -124,9 +124,13 @@ GETEFTS(TYPE,OPTION) ;function, EP from RCDPEUPO for Unposted EFT Override optio
  ;
 CUTOFF() ; Returns EFT Cutoff date
  ; date is 2 months prior to install date of patch 298, ignore aged EFTS older than that
- N RCX S RCX=+$P($G(^RCY(344.61,1,0)),U,9)
- S:RCX=0 RCX=DT
- Q $$FMADD^XLFDT(RCX,-61,0,0)
+ ;PRCA*4.5*367 changed calculation of the cut-off date to 3 years ago to speed up the checking
+ ;             for old EFTs and to avoid EFTs matched to paper check with a receipt that
+ ;             was purged in the nightly process (MAN^RCDPUT)
+ Q $$FMADD^XLFDT(DT,((365*-3)-2),0,0)
+ ;N RCX S RCX=+$P($G(^RCY(344.61,1,0)),U,9)
+ ;S:RCX=0 RCX=DT
+ ;Q $$FMADD^XLFDT(RCX,-61,0,0)
  ;
 EFTDET(RECVDT,TYPE,DAYSLIMT,TRARRY) ; Gather EFT data, Only EFTs that are aged and unposted
  ;Input: 

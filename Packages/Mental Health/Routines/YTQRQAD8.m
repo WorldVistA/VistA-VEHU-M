@@ -1,11 +1,9 @@
 YTQRQAD8 ;BAL/KTL - RESTful Calls to set/get MHA Note ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**199**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**199,207**;Dec 30, 1994;Build 6
  ;
- ; External Reference    ICR#
- ; ------------------   -----
- ; TIUCNSLT              5546
- ; TIUPUTU               3351
- ; TIUSRVA               5541
+ ; Reference to TIUCNSLT in ICR #5546
+ ; Reference to TIUPUTU in ICR #3351
+ ; Reference to TIUSRVA in ICR #5541
  ;
  Q
 SAVPNOT(ASGN,ADMIN,CONSULT,COSIGNER,YS) ;Save Progress Note Text in XTMP until session complete
@@ -19,12 +17,14 @@ SAVPNOT(ASGN,ADMIN,CONSULT,COSIGNER,YS) ;Save Progress Note Text in XTMP until s
  S LN=0 F  S LN=$O(YS(LN)) Q:+LN=0  D
  . S CNT=CNT+1,^XTMP(NOD,2,"PNOTE","TXT",CNT)=YS(LN)
  Q
-FILPNOT(ASGN,ADMIN,CONSULT,DATA,TMPYS) ;File the aggregate Progress Note
+FILPNOT(ASGN,ADMIN,CONSULT,DATA,TMPYS,FRMDEL) ;File the aggregate Progress Note
+ ;FRMDEL = If invoked from delete the last instrument and Aggregate Progress Note exists
  N YSADMIN,YSCONSULT,YSCOSIGNER,NOD,REMAIN,I
  N CNT,LN,YS,YSDATA
  I +ASGN=0 S ASGN=$G(DATA("assignmentId"))
  I +ASGN=0 D SETERROR^YTQRUTL(400,"No Assignment") Q 0
  S COSIGNER=$G(DATA("cosigner"))
+ S FRMDEL=$G(FRMDEL)
  S NOD="YTQASMT-SET-"_ASGN
  ;I '$D(^XTMP(NOD)) D SETERROR^YTQRUTL(400,"Assignment Not Found") Q 1  ;If no ^XTMP, must be only instrument
  S YSADMIN=$G(^XTMP(NOD,2,"PNOTE","ADMINS",1))
@@ -44,10 +44,11 @@ FILPNOT(ASGN,ADMIN,CONSULT,DATA,TMPYS) ;File the aggregate Progress Note
  E  D PCREATE^YTQTIU(.YSDATA,.YS)
  I YSDATA(1)'="[DATA]" D SETERROR^YTQRUTL(500,"Note not saved") Q 3
  ;Saved progress note for all completed instruments. If last instrument, Delete Assignment
+ K ^XTMP(NOD,2)  ;Kill Aggregate Progress Note
  S REMAIN=""
  S I=0 F  S I=$O(^XTMP(NOD,1,"instruments",I)) Q:'I  D
  . I $G(^XTMP(NOD,1,"instruments",I,"complete"))'="true" S REMAIN=1
- I 'REMAIN D DELASMT1^YTQRQAD1(ASGN)  ;Last instrument OK to Kill Assignment
+ I 'REMAIN,(FRMDEL'=1) D DELASMT1^YTQRQAD1(ASGN)  ;Last instrument OK to Kill Assignment
  K ^XTMP(NOD,2)  ;KILL Filed progress note text
  Q $G(YSDATA(2))
  ;

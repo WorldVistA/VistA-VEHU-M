@@ -64,7 +64,7 @@ ZWR
 ^XOB(18.12,9,100,2,0)="13^^^^^1"
 ^XOB(18.12,9,100,"B",12,1)=""
 ^XOB(18.12,9,100,"B",13,2)=""
-^XOB(18.12,10,0)="DG EE SUMMARY SERVER^^443^vaww.dev03-esm.domain^^1"
+^XOB(18.12,10,0)="DG EE SUMMARY SERVER^^443^dev03.ves.domain.ext^^1"
 ^XOB(18.12,10,1)="1^^3220624.201011"
 ^XOB(18.12,10,3)="1^encrypt_only_tlsv12^443"
 ^XOB(18.12,10,200)="VistASvcUsr"

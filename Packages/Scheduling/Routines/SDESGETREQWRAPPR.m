@@ -1,5 +1,5 @@
-SDESGETREQWRAPPR ;ALB/BLB - VISTA SCHEDULING RPCS ;APR 19, 2022@14:48
- ;;5.3;Scheduling;**815**;Aug 13, 1993;Build 4
+SDESGETREQWRAPPR ;ALB/BLB/MGD - VISTA SCHEDULING RPCS ;JUNE 06, 2022@14:48
+ ;;5.3;Scheduling;**815,818**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -75,6 +75,7 @@ SDESGETREQWRAPPR ;ALB/BLB - VISTA SCHEDULING RPCS ;APR 19, 2022@14:48
  ;("Request",1,"RecallSimilarPatientData")
  ;("Request",1,"RequestIEN")
  ;("Request",1,"RequestSubType")
+ ;("Request",1,"ScheduledDateOfAppt")
  ;("Request",1,"SdecContactDateOfLastLetterSent")
  ;("Request",1,"SdecContactNumberOfCalls")
  ;("Request",1,"SdecContactNumberOfContacts")
@@ -136,23 +137,22 @@ APPTREQUEST(REQUEST,NUM) ;
  ;
  S REQUEST("Request",NUM,"InstitutionIEN")=""
  S REQUEST("Request",NUM,"InstitutionName")=""
- S REQUEST("Request",NUM,"RequestSubType")=""
+ S REQUEST("Request",NUM,"RequestType")=""
  S REQUEST("Request",NUM,"ClinicStopCodeIEN")=""
  S REQUEST("Request",NUM,"ClinicStopCodeName")=""
- S REQUEST("Request",NUM,"ApptType")=""
+ S REQUEST("Request",NUM,"LinkedAppointmentType")=""
  S REQUEST("Request",NUM,"DateTimeEntered")=""
  S REQUEST("Request",NUM,"Priority")=""
  S REQUEST("Request",NUM,"EnrollmentPriorityGroup")=""
  S REQUEST("Request",NUM,"ByPatientOrProvider")=""
  S REQUEST("Request",NUM,"DateLinkedApptMade")=""
  S REQUEST("Request",NUM,"LinkedApptClinic")=""
- S REQUEST("Request",NUM,"LinkedApptInstitutionName")=""
+ S REQUEST("Request",NUM,"LinkedInstitution")=""
  S REQUEST("Request",NUM,"LinkedApptStopCode")=""
  S REQUEST("Request",NUM,"LinkedApptCreditStopCode")=""
- S REQUEST("Request",NUM,"LinkedApptInstitutionNumber")=""
+ S REQUEST("Request",NUM,"LinkedApptStationNumber")=""
  S REQUEST("Request",NUM,"LinkedApptEnteredBy")=""
  S REQUEST("Request",NUM,"LinkedApptStatus")=""
- S REQUEST("Request",NUM,"PatientIndicatedDate")=""
  S REQUEST("Request",NUM,"MRTCNeeded")=""
  S REQUEST("Request",NUM,"MRTCDaysBetweenAppts")=""
  S REQUEST("Request",NUM,"MRTCHowManyNeeded")=""
@@ -163,18 +163,17 @@ APPTREQUEST(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"DispositionReason")=""
  S REQUEST("Request",NUM,"ServiceConnectedPriority")=""
  S REQUEST("Request",NUM,"PatientStatus")=""
- S REQUEST("Request",NUM,"ParentRequest")=""
+ S REQUEST("Request",NUM,"ParentRequestIEN")=""
  S REQUEST("Request",NUM,"PatientContact",1)=""
- S REQUEST("Request",NUM,"ProviderSecID")=""
  S REQUEST("Request",NUM,"MRTC",1)=""
  S REQUEST("Request",NUM,"PatientComment",1)=""
+ S REQUEST("Request",NUM,"ScheduledDateOfAppt")=""
  Q
  ;
 SDECONTACT(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"SdecContactNumberOfCalls")=""
  S REQUEST("Request",NUM,"SdecContactNumberOfEmailContact")=""
  S REQUEST("Request",NUM,"SdecContactNumberOfTextContact")=""
- S REQUEST("Request",NUM,"SdecContactNumberOfLetters")=""
  S REQUEST("Request",NUM,"SdecContactNumberOfSecureMessage")=""
  S REQUEST("Request",NUM,"SdecContactDateOfLastLetterSent")=""
  S REQUEST("Request",NUM,"SdecContactNumberOfContacts")=""

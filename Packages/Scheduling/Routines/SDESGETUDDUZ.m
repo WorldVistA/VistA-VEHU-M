@@ -1,5 +1,5 @@
-SDESGETUDDUZ ;ALB/ANU - VISTA SCHEDULING RPCS GET USER KEYS AND OPTIONS ; Jan 07, 2022@15:20
- ;;5.3;Scheduling;**807,809,814**;Aug 13, 1993;Build 11
+SDESGETUDDUZ ;ALB/ANU/DJS - VISTA SCHEDULING RPCS GET USER KEYS AND OPTIONS ; Jan 07, 2022@15:
+ ;;5.3;Scheduling;**807,809,814,818**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
@@ -8,7 +8,7 @@ SDESGETUDDUZ ;ALB/ANU - VISTA SCHEDULING RPCS GET USER KEYS AND OPTIONS ; Jan 07
  ; Reference to ^%DT in ICR #10003
  ; Reference to $$FIND1^DIC in ICR #2051
  ;
- ; Global References Supported 
+ ; Global References Supported
  ; ----------------- ----------------- ----------
  ; ^TMP($J SACC 2.3.2.5.1
  Q
@@ -48,7 +48,7 @@ BLDJSON ; Build JSON format
  Q
  ;
 GETUSRINF ; Get User Keys and Scheduling Options
- N SDFIELDS,SDDATA,SDMSG,SDX,SDC,SDOPT,SDKEY,SDDIV,SDDIVIEN
+ N SDFIELDS,SDDATA,SDMSG,SDX,SDC,SDOPT,SDKEY,SDDIV,SDDIVIEN,SDSTN,SDDEF
  S SDFIELDS=".01;201"
  D GETS^DIQ(200,SDUSRIEN_",",SDFIELDS,"IE","SDDATA","SDMSG")
  S SDECI=SDECI+1
@@ -74,20 +74,27 @@ GETUSRINF ; Get User Keys and Scheduling Options
  . S SDKEY=$G(SDDATA(200.051,SDX,.01,"E"))
  . I (($E(SDKEY,1,2)="SD")!($E(SDKEY,1,2)="SC")) S SDC=SDC+1 S SDUSRSREC("User","Security Key",SDC,"Name")=SDKEY
  ; Divisions Multiple
- S SDX="",SDC=0
+ S (SDX,SDSTN,SDDEF)="",SDC=0
  S SDFIELDS="16*"
  K SDDATA,SDMSG
  D GETS^DIQ(200,SDUSRIEN_",",SDFIELDS,"IE","SDDATA","SDMSG")
  F  S SDX=$O(SDDATA(200.02,SDX)) Q:SDX=""  D
  . S SDDIVIEN=$G(SDDATA(200.02,SDX,.01,"I"))
+ . S SDSTN=$$GET1^DIQ(4,SDDIVIEN,99,"I")
  . S SDDIV=$G(SDDATA(200.02,SDX,.01,"E"))
+ . S SDDEF=$G(SDDATA(200.02,SDX,1,"I"))
+ . S SDDEF=$S(SDDEF=1:"YES",1:"")
  . S SDC=SDC+1
+ . S SDUSRSREC("User","Division",SDC,"Division")=SDSTN
  . S SDUSRSREC("User","Division",SDC,"IEN")=SDDIVIEN
  . S SDUSRSREC("User","Division",SDC,"Name")=SDDIV
+ . S SDUSRSREC("User","Division",SDC,"Default")=SDDEF
  I SDC=0 D
  . I $G(DUZ(2))'="" D
  . . S SDC=SDC+1
+ . . S SDUSRSREC("User","Division",SDC,"Division")=$G(DUZ(2))
  . . S SDUSRSREC("User","Division",SDC,"IEN")=$G(DUZ(2))
  . . S SDUSRSREC("User","Division",SDC,"Name")=$$GET1^DIQ(4,$G(DUZ(2)),.01,"E")
+ . . S SDUSRSREC("User","Division",SDC,"Default")=""
  I '$D(SDUSRSREC("User")) S SDUSRSREC("User")=""
  Q

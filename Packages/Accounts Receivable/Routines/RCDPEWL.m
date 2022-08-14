@@ -1,5 +1,5 @@
 RCDPEWL ;ALB/TMK/KML - ELECTRONIC EOB MESSAGE WORKLIST ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,208,269,298,317,318,326,349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**173,208,269,298,317,318,326,349,367**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ; IA for read access to ^IBM(361.1 = 4051
  ;
@@ -37,10 +37,11 @@ DISP(RCERA,RCNOED) ; Entry to worklist from receipt processing
  ;          = 1 if auto-posted ERA is in PARTIAL posted status
  ;          = 2 if auto-posted ERA is in COMPLETE status
  ;
- N DUOUT,DTOUT,DIC,DIK,X,Y,DIR,RCQUIT,DA,DIE,DR,RCSCR,RC0,RC5,RCDAT,RCUNM
+ N DUOUT,DTOUT,DIC,DIK,X,Y,DIR,RCQUIT,DA,DIE,DR,RCSCR,RC0,RC5,RCDAT,RCTRACE,RCUNM
  ;
  S RCSCR("NOEDIT")=+$G(RCNOED)
  S RCQUIT=0,RC0=$G(^RCY(344.4,RCERA,0)),RC5=$G(^RCY(344.4,RCERA,5))
+ S RCTRACE=$P(RC0,"^",2)                        ; PRCA*4.5*367 - Trace Number
  I 'RCSCR("NOEDIT"),'$O(^RCY(344.49,"B",RCERA,0)) D  G:RCQUIT DISPQ
  . ;allow additional selections
  . S DIR("A",1)="No worklist scratchpad entry exists for this ERA."
@@ -64,7 +65,19 @@ DISP(RCERA,RCNOED) ; Entry to worklist from receipt processing
  ... I $D(DTOUT)!$D(DUOUT) S RCQUIT=1 Q
  ... I Y'=1 Q
  ... S DIE="^RCY(344.4,",DR=".09////3;.14////3",DA=RCERA D ^DIE S RCUNM=1
- .. I 'RCUNM D
+ .. ; PRCA*4.5*367 - Skip prompt for check number if the ERA is for a TDA
+ .. I 'RCUNM,$$HACERA^RCDPEU(RCERA) D
+ ... W !!,"This ERA does NOT have a matching EFT"
+ ... W !,"ERA #",RCERA," (TRACE #"_RCTRACE_") matched to TDA ",RCTRACE
+ ... S DIR("A")="Has the TDA been received by FMS?: ",DIR("B")="YES"
+ ... S DIR(0)="YA" D ^DIR K DIR
+ ... I $D(DTOUT)!$D(DUOUT)!'Y S RCQUIT=1 Q
+ ... ;
+ ... ; Null check number field but file date matched and USER
+ ... S DIE="^RCY(344.4,",DA=RCERA
+ ... S DR=".13////@;.09////5;5.03///"_$$DT^XLFDT()_";5.04///"_$G(DUZ)
+ ... D ^DIE
+ .. E  I 'RCUNM D
  ... S DIR("A",1)="This ERA does NOT have a matching EFT",DIR("A")="Enter the number of the paper check you received for this ERA: ",DIR(0)="344.01,.07A"
  ... I $P(RC5,U,2)'="" S DIR("B")=$P(RC5,U,2)
  ... I $G(DIR("B"))="",$P(RC0,U,2)'="" S DIR("B")=$P(RC0,U,2)

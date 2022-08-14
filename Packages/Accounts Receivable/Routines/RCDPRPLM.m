@@ -1,5 +1,5 @@
 RCDPRPLM ; WISC/RFJ-receipt profile List Manager main routine ;31 Oct 2018 09:14:14
- ;;4.5;Accounts Receivable;**114,148,149,173,196,220,217,321,326,332,375**;Mar 20, 1995;Build 15
+ ;;4.5;Accounts Receivable;**114,148,149,173,196,220,217,321,326,332,375,367**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; option: Receipt Processing [RCDP RECEIPT PROCESSING]
@@ -223,8 +223,8 @@ DIQ34401(DA,SUBDA) ; Retrieves data for fields in the transaction subfile (#344.
  ;
 HDR ;EP from ListMan Template RCDP RECEIPT PROFILE
  ; Header code for list manager display
- N DATE,DEPIEN,EFTIEN,ERAIEN,FMSDOC,FMSTTR,PAYER,RCDPDATA,RCEFT,XX,Z
- D DIQ344(RCRECTDA,".01;.04;.06;.08;.14;.17;.18;")
+ N DATE,DEPIEN,EFTIEN,ERAIEN,FMSDOC,FMSTTR,PAYER,RCDPDATA,RCEFT,RCHMP,RCTOT,XX,Z
+ D DIQ344(RCRECTDA,".01;.04;.06;.08;.14;.17;.18;.22")
  ;
  ; PRCA*4.5*321 - Start of modified code block
  S XX=$E("   Receipt #: "_RCDPDATA(344,RCRECTDA,.01,"E")_$$SP,1,39)
@@ -237,7 +237,11 @@ HDR ;EP from ListMan Template RCDP RECEIPT PROFILE
  S EFTIEN=RCDPDATA(344,RCRECTDA,.17,"I")
  S FMSDOC=$$FMSSTAT^RCDPUREC(RCRECTDA)
  S FMSTTR=$S($P(FMSDOC,"-",1)="TR":1,1:0)
- S XX="" D 
+ S RCHMP=$$ISCHMPVA^RCDPUREC(RCDPDATA(344,RCRECTDA,.04,"I")) ; PRCA*4.5*367 - Is this a CHAMPVA receipt
+ S RCTOT=+RCDPDATA(344,RCRECTDA,.22,"E") ; PRCA*4.5*367 - Add Receipt Total to Header
+ S XX="" D
+ . ; PRCA*4.5*367 - If CHAMPVA receipt, display receipt total instead of receipt 
+ . I RCHMP S XX="   Receipt Total: "_$FN(RCTOT,",",2) Q
  . I 'RCEFT&'EFTIEN S XX="   Deposit #: "_Z Q
  . I RCEFT S XX=" EFT Deposit: "_Z Q
  . ; PRCA*4.5*321 - Since EFT and ERA are now displayed on their own line, put TIN/Payer here 

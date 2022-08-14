@@ -1,7 +1,8 @@
 DGRP3 ;ALB/MRL,JAM,ARF - REGISTRATION SCREEN 3/CONTACT INFORMATION ;06 JUN 88@2300
- ;;5.3;Registration;**997*1067**;Aug 13, 1993;Build 23
+ ;;5.3;Registration;**997,1067,1075**;Aug 13, 1993;Build 13
  ; 
  ; Patch DG*5.3*997 - Move address fields over 10 spaces and increase field widths by 10 to accomodate foreign address field display; jam
+ ; Patch DG*5.3*1075 - Correct line 2 for SAC compliance
  ;
  S DGRPW=1,DGRPS=3 D H^DGRPU F I=.21,.211,.33,.331,.34 S DGRP(I)=$S($D(^DPT(DFN,I)):^(I),1:"")
  ; DG*5.3*997 ; jam; expand width of the address fields 10 characters (from 24 and 27)

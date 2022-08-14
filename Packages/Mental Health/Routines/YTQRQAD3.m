@@ -1,5 +1,5 @@
 YTQRQAD3 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181,187,199**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181,187,199,207**;Dec 30, 1994;Build 6
  ;
  ; Reference to ^VA(200) in ICR #10060
  ; Reference to DIQ in ICR #2056
@@ -75,10 +75,15 @@ SETNOTE(ARGS,DATA) ; save note in DATA("text") using ARGS("adminId")
  N YS,YSDATA,ADMIN,CONSULT,WRP,ASGN,LSTASGN,PNOT,AGPROG
  S ADMIN=$G(DATA("adminId"))
  S LSTASGN=$G(DATA("lastAssignment"))
+ S ASGN=$G(DATA("assignmentId"))
+ S AGPROG=$D(^XTMP("YTQASMT-SET-"_ASGN,2))
  I ADMIN="" D SETERROR^YTQRUTL(404,"Admin not sent: "_ADMIN) QUIT ""
  I '$D(^YTT(601.84,ADMIN,0)) D SETERROR^YTQRUTL(404,"Admin not found: "_ADMIN) QUIT ""
- I $$ALWNOTE(ADMIN)'="true" QUIT "/api/mha/instrument/note/0"
  S CONSULT=$P(^YTT(601.84,ADMIN,0),U,15)
+ S PNOT=0
+ I $$ALWNOTE(ADMIN)'="true" D  QUIT "/api/mha/instrument/note/"_PNOT
+ . ;This is Restricted Instrument, check if lastAssignment=Yes and there is something in the aggregate progress note.
+ . I +ASGN'=0,(LSTASGN="Yes"),AGPROG S PNOT=$$FILPNOT^YTQRQAD8(ASGN,ADMIN,CONSULT,.DATA,.YS)
  I '$D(^YTT(601.84,ADMIN,0)) D SETERROR^YTQRUTL(404,"Admin not found: "_ADMIN) QUIT ""
  D TXT2LN(.DATA,.YS) ; parse by CRLF and set YS(#) to note text
  D WRAP(.YS,79)  ;reformat lines to 79 max chars
@@ -90,8 +95,6 @@ SETNOTE(ARGS,DATA) ; save note in DATA("text") using ARGS("adminId")
  . I $$REQCSGN(ADMIN,YSCSGN)="true" D  ; cosigner can't require cosigner
  . . S YSCSGN=$$GET1^DIQ(200,YSCSGN_",",.01)
  . . D SETERROR^YTQRUTL(403,YSCSGN_" not allowed to cosign.")
- S ASGN=$G(DATA("assignmentId"))
- S AGPROG=$D(^XTMP("YTQASMT-SET-"_ASGN,2))
  ;assignmentID sent in, lastAssignment=Yes/No, $D of aggregate Progress Note
  I +ASGN'=0,(LSTASGN'="Yes") D SAVPNOT^YTQRQAD8(ASGN,ADMIN,CONSULT,$G(DATA("cosigner")),.YS) Q "/api/mha/instrument/note/1"  ;Dummy 1 instead of Note IEN
  I +ASGN'=0,(LSTASGN="Yes"),AGPROG S PNOT=$$FILPNOT^YTQRQAD8(ASGN,ADMIN,CONSULT,.DATA,.YS) Q "/api/mha/instrument/note/"_PNOT
@@ -162,7 +165,7 @@ SETCOM(ARGS,DATA) ; save comment in Instrument Admin (F601.84,f10) using ARGS("a
  I ADMIN="" D SETERROR^YTQRUTL(404,"Admin not sent: "_ADMIN) QUIT ""
  I '$D(^YTT(601.84,ADMIN,0)) D SETERROR^YTQRUTL(404,"Admin not found: "_ADMIN) QUIT ""
  D TXT2LN(.DATA,.YS) ; parse by CRLF and set YS(#) to note text
- D WRAP(.YS,79)  ;reformst lines to 79 max chars
+ D WRAP(.YS,79)  ;reformat lines to 79 max chars
  S YSNOW=$$HTE^XLFDT($H,"5ZP"),YSNOW=$$UP^XLFSTR(YSNOW)
  S YST="0"_$P(YSNOW," ",2,99),YST=$E(YST,$L(YST)-11,$L(YST)),YSNOW=$P(YSNOW," ")_" "_YST
  S N=0 F  S N=$O(YS(N)) Q:N=""  D

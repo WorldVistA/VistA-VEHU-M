@@ -1,5 +1,5 @@
 YTQRQAD1 ;SLC/KCM - RESTful Calls to handle MHA assignments ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,178,182,181,187,199**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**130,141,178,182,181,187,199,207**;Dec 30, 1994;Build 6
  ;
  ; Reference to VADPT in ICR #10061
  ; Reference to XLFDT in ICR #10103
@@ -89,7 +89,7 @@ FILASGN(ARGS,DATA,SETID,TYPE) ;File the Assignment Data
  . S DATA("instruments",I,"printTitle")=TSTFN
  . S DATA("instruments",I,"restartDays")=TSTRSTRT
  . I +$G(DATA("instruments",I,"replace")) D    ; creating from old asmt
- . . D RMVTEST(DATA("instruments",I,"replace"),DATA("instruments",I,"name"))
+ . . D RMVTEST(DATA("instruments",I,"replace"),DATA("instruments",I,"name"),,,1)
  . . I $E(DATA("instruments",I,"name"),1,4)="CAT-" D
  . . . S OLDSET=DATA("instruments",I,"replace")
  . . K DATA("instruments",I,"replace")
@@ -137,15 +137,19 @@ TRSASMT(ARGS) ; Delete an assignment from Staff Entry by Trash icon
  ; *Deletes any incomplete MH ADMINISTRATIONS
  D DELASMT1(ARGS("assignmentId"),1)
  Q
-DELASMT1(ASMT,TRS) ; delete the assignment given the assignment number
+DELASMT1(ASMT,TRS,REPLACE) ; delete the assignment given the assignment number
  ;ASMT=Assignment number
  ;TRS=Called from Trash Assignment - allow deletion of incomplete MH ADMINISTRATION
+ ;REPLACE=1 if called from FILASGN for moving one AssignmentID to a new AssignmentID
  N DATA,DFN,ORDBY,IARR,INST,TRSERR,VAERR,VA,VADM
+ N AGPROG,PNOT
  S TRS=$G(TRS),TRSERR=""
+ S REPLACE=$G(REPLACE)
  M DATA=^XTMP("YTQASMT-SET-"_ASMT,1)
  I $D(DATA)<10 D SETERROR^YTQRUTL(404,"Assignment not found") QUIT
  S DFN=+$G(DATA("patient","dfn"))
  S ORDBY=+$G(DATA("orderedBy"))
+ S AGPROG=$D(^XTMP("YTQASMT-SET-"_ASMT,2))
  ; Moved Patient check here before deleting XREF otherwise XREF killed before Assignment killed/TRSERR=1
  D DEM^VADPT I $G(VAERR) D SETERROR^YTQRUTL(404,"Assignment missing pt info") QUIT  ; missing pt info
  ;I '$$DELIDX^YTQRQAD1(ASMT,DFN,ORDBY) D SETERROR^YTQRUTL(404,"Assignment missing pt info") QUIT  ; missing pt info
@@ -159,6 +163,7 @@ DELASMT1(ASMT,TRS) ; delete the assignment given the assignment number
  .. Q:'$D(IARR(INST,"ADMINID"))
  .. D DELADMIN(IARR(INST,"ADMINID"))
  I TRSERR=1 QUIT
+ I AGPROG>0,(REPLACE'=1) S PNOT=$$FILPNOT^YTQRQAD8(ASMT,,,,,1)  ;File any completed instrument Progress Note before deleting an Assignment if NOT from a moved assignment
  N OK S OK=$$DELIDX^YTQRQAD1(ASMT,DFN,ORDBY)
  K ^XTMP("YTQASMT-SET-"_ASMT)
  Q
@@ -186,12 +191,14 @@ DELTEST(ARGS) ; remove an instrument from an assignment
  . I '$L(TEST) D SETERROR^YTQRUTL(404,"Instrument not found") QUIT
  . D RMVTEST(ASMT,TEST,1,DELFASGN)
  Q "/api/mha/assignment/"_ASMT_"/"_TSLIST_"/OK"
-RMVTEST(ASMT,TEST,DELADMIN,DELFASGN) ; remove test from assignment, delete assignment if empty
+RMVTEST(ASMT,TEST,DELADMIN,DELFASGN,REPLACE) ; remove test from assignment, delete assignment if empty
  ;Delete MH ADMINISTRATION if DELADMIN=1.
  ;Do Not Delete Instrument from Assignment if DELFASGN="NO". Used for 0 days restart instruments that need to be restarted same day.
+ ;REPLACE=1 if called from FILASGN for moving one AssignmentID to a new AssignmentID
  N I,NODE,IARR
  S DELFASGN=$G(DELFASGN) S:DELFASGN'="NO" DELFASGN="YES"  ;Default is to delete from Assignment
  S DELADMIN=$G(DELADMIN)
+ S REPLACE=$G(REPLACE)
  D AINSTS^YTQRQAD7(ASMT,.IARR)  ;Get Delete status of instruments for an Assignment
  S NODE="YTQASMT-SET-"_ASMT
  S I=0 F  S I=$O(^XTMP(NODE,1,"instruments",I)) Q:'I  D
@@ -204,7 +211,7 @@ RMVTEST(ASMT,TEST,DELADMIN,DELFASGN) ; remove test from assignment, delete assig
  . . . S ^XTMP(NODE,1,"instruments",I,"adminId")="null"
  . . . S ^XTMP(NODE,1,"instruments",I,"complete")="false"
  . . . S ^XTMP(NODE,1,"instruments",I,"progress")=0
- I $D(^XTMP(NODE,1,"instruments"))<10 D DELASMT1(ASMT)
+ I $D(^XTMP(NODE,1,"instruments"))<10 D DELASMT1(ASMT,,REPLACE)
  Q
  ;
 DELMHAD(ARGS,DATA) ;Delete Completed MH Admin

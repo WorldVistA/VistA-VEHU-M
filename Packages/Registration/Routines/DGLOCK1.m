@@ -1,5 +1,5 @@
-DGLOCK1 ;ALB/MRL,JAM - PATIENT FILE DATA EDIT CHECK ; 28 JUL 86
- ;;5.3;Registration;**121,314,1014,1061**;Aug 13, 1993;Build 22
+DGLOCK1 ;ALB/MRL,JAM,ARF - PATIENT FILE DATA EDIT CHECK ; 28 JUL 86
+ ;;5.3;Registration;**121,314,1014,1061,1075**;Aug 13, 1993;Build 13
 AOD ;AO Delete
  I $D(^DPT(DFN,.321)),$P(^(.321),U,2)="Y" W !?4,*7,"Can't delete as long as Agent Orange exposure is indicated." K X
  Q
@@ -28,6 +28,22 @@ SVDEL ;Panama, Grenada, Lebanon, Persian Gulf Svc Delete
  Q
 EC S DGEC=$S('$D(^DPT(DFN,.36)):"",$D(^DIC(8,+$P(^DPT(DFN,.36),U,1),0)):$P(^(0),U,9),1:"") I DGEC=5 W !?4,*7,"Eligibility Code is 'NSC'...Can't be YES." K X,DGEC Q
  K DGEC Q
+HUDCK(DGEC) ; DG*5.3*1075; Check for when HUD-VASH eligibility code can be used
+ ; Called by the Input Transform and SCREEN of ELIGIBILITY field (#.01) of the PATIENT ELIGIBILITIES subfile of PATIENT file (#2)
+ ;  Input:
+ ;     DGEC - (required) Eligibility Code
+ ;
+ ; Output:
+ ;     Function Value - Returns 1 if Eligibility Code can be used, 0 if  Eligibility Code cannot be used
+ ;
+ ; HUD-VASH (MAS number 26) allowed after the date/time stored in parameter "DG PATCH*5.3*1075 ACTIVE"
+ N DGACTIVE
+ Q:$G(DGEC)="" 0
+ I ($$NATCODE^DGENELA(DGEC))'=26 Q 1
+ ; Get the timestamp stored in the parameter
+ S DGACTIVE=$$GET^XPAR("PKG","DG PATCH DG*5.3*1075 ACTIVE",1)
+ I $$NOW^XLFDT()<DGACTIVE Q 0
+ Q 1
 POS ;Screen
  K DGEC D SV1^DGLOCK I $D(X) S DIC("S")="I '$P(^(0),""^"",8),$D(^DPT(DA,.36)),$D(^DIC(21,+Y,""E"",+$P(^(.36),U,1)))" D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X D:'$D(X) POSH I $D(X),$D(^DIC(21,X,0)),$P(^(0),U,7)]"" D POS1 Q
  Q
@@ -46,7 +62,8 @@ ECD ;primary eligibility code input transform
  ; DG*5.3*1014 - Capture if COLLATERAL OF VET is the current Primary Eligibility
  S DGCOV=0 I $$GET1^DIQ(2,DFN_",",.361,"E")="COLLATERAL OF VET." S DGCOV=1
  ; DG*5.3*1061 Add eligibilities 24 and 25 to the screening logic
- S DIC("S")="I $P(^DIC(8,+Y,0),U,5)=DGVT,'$P(^(0),U,7),$$NATCODE^DGENELA(+Y)'=24&($$NATCODE^DGENELA(+Y)'=25)" I DGVT="N" G ECDS
+ ; DG*5.3*1075 Add the HUD-VASH eligibility code 26 to the codes for the screening logic for the PRIMARY ELIGIBILITY CODE prompt
+ S DIC("S")="I $P(^DIC(8,+Y,0),U,5)=DGVT,'$P(^(0),U,7),$$NATCODE^DGENELA(+Y)'=24&($$NATCODE^DGENELA(+Y)'=25)&($$NATCODE^DGENELA(+Y)'=26)" I DGVT="N" G ECDS
  I DGSER S DGPC=$S(+$P(^DPT(DFN,.3),U,2)>49:1,1:0),DGXX=$S(DGPC:1,1:3),DIC("S")=DIC("S")_",($P(^(0),U,9)="_DGXX_")" G ECDS ;sc only
  I $P($G(^DPT(DFN,.52)),"^",5)="Y" S DIC("S")=DIC("S")_",($P(^(0),U,9)=18)" G ECDS ;pow only
  S DGXX="^1^3^18^" ; no sc<50, sc 50-100, pow
@@ -66,6 +83,8 @@ ECDS D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X
  ; DG*5.3*1061 Prevent eligibilities 24 and 25 from being primary eligibilities
  I $G(X),$$NATCODE^DGENELA(X)=24 K X Q
  I $G(X),$$NATCODE^DGENELA(X)=25 K X Q
+ ; DG*5.3*1075 Prevent HUD-VASH eligibility code 26 from being a primary eligibility
+ I $G(X),$$NATCODE^DGENELA(X)=26 K X Q
  ;
  ; DG*5.3*1014 - if editing Primary Eligibility "COLLATERAL OF VET", save off any CCPs
  I $G(X),DGCOV D REMOVE^DGRP1152U(DFN)

@@ -1,5 +1,5 @@
 PRCABJV ;WASH-ISC@ALTOONA,PA/TJK-FILE VERIFICATION FOR BACKGROUND JOB ; Jul 23, 2020@11:17
-V ;;4.5;Accounts Receivable;**1,48,63,114,141,170,176,173,192,220,296,310,315,338,350,360,369,377**;Mar 20, 1995;Build 45
+V ;;4.5;Accounts Receivable;**1,48,63,114,141,170,176,173,192,220,296,310,315,338,350,360,369,377,367**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;;patch 192 changes all occurrences of CHAMPUS to TRICARE
 EN1(FILE,X1,X2,ERROR) ;
@@ -218,6 +218,7 @@ CAT ;patch 192 - ISC-0502-N2803 change Champus to Tricare
  ;;VENDOR;11;V;17
  ;;WORKMAN'S COMP.;23;WC;6
  ;;EOF
+ ; PRCA*4.5*367 - Added comment line for CHAMPVA Event Type
 EVENT ;
  ;;CASH PAYMENT;6;;6
  ;;CHECK/MO PAYMENT;4;;4
@@ -235,4 +236,5 @@ EVENT ;
  ;;EDI LOCKBOX;14;;14
  ;;ADMINISTRATIVE OFFSET;15;;15
  ;;PRIVATE COLLECTION AGENCY;16;;16
+ ;;CHAMPVA;17;;17
  ;;EOF

@@ -1,5 +1,5 @@
 SDESUTIL ;ALB/MGD/TAW,KML,LAB - SDES Utilities ;April 22, 2022
- ;;5.3;Scheduling;**801,804,805,814,816**;Aug 13, 1993;Build 3
+ ;;5.3;Scheduling;**801,804,805,814,816,818**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to INSTITUTION in #2251
@@ -99,15 +99,16 @@ TIMEZONEDATA(CLINICIEN) ;Get timezone and offsets
  ; Output:
  ;   Returns TimeZone Name ^ TimeZone IEN ^ TimeZone Exception ^ Offset for Standard Time ^ Offset for DST or SUMMER ^
  N SDINST,SDDIV,SDTIMEZONEE,SDTIMEZONEI,TIMEZONEEXECPT,X,POP,TIMEFRAMEARY,OFFSET,OFFSETDSTSUM,DSTSUM,RETURN,TIMEFRAMEIEN,SDMSG
- S (POP,SDINST,DSTSUM)="",(OFFSET,OFFSETDSTSUM)=-9999
+ N EXECPTFLG
+ S (POP,SDINST,DSTSUM,EXECPTFLG)="",(OFFSET,OFFSETDSTSUM)=-9999
  I $G(CLINICIEN) D
  .S SDDIV=$$GET1^DIQ(44,CLINICIEN_",",3.5,"I")
  .S:SDDIV SDINST=$$GET1^DIQ(40.8,SDDIV_",",.07,"I")
  I SDINST="" S SDINST=$$GET1^DIQ(8989.3,1,217,"I")
  S SDTIMEZONEE=$$GET1^DIQ(4,SDINST,800,"E")
  S SDTIMEZONEI=$$GET1^DIQ(4,SDINST,800,"I")
- S TIMEZONEEXECPT=$$GET1^DIQ(4,SDINST,802)
- I TIMEZONEEXECPT'=0 S TIMEZONEEXECPT=1 ;1=Use DST 0=Only standard time
+ S EXECPTFLG=$$GET1^DIQ(4,SDINST,802,"I")
+ S TIMEZONEEXECPT=$S(EXECPTFLG=0:1,1:0) ;if except value = 0 then exception is present
  ;
  F X=1:1:3 D  Q:POP
  .S TIMEFRAMEIEN=X_","_SDTIMEZONEI_","
@@ -133,5 +134,5 @@ GETTZOFFSET(SDDATE,SDCLINIC) ;Get Time Zone offset based on clinic and daylight 
  S TZINFO=$$TIMEZONEDATA(SDCLINIC)
  S OFFSET=$P(TZINFO,"^",4)   ;assume non DST
  ; If the Institution uses DST or SUMMER & SDDATE is in the daylight savings period, then send the DST/SUMMER Offset
- I $P(TZINFO,"^",3)=1 S OFFSET=$S($$ISDATEDST(SDDATE,$P(TZINFO,"^",6)):$P(TZINFO,"^",5),1:OFFSET)
+ I $P(TZINFO,"^",3)=0 S OFFSET=$S($$ISDATEDST(SDDATE,$P(TZINFO,"^",6)):$P(TZINFO,"^",5),1:OFFSET)
  Q OFFSET

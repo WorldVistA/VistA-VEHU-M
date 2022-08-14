@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3220719.11052
+^DIC(2,"%MSC")=3220814.171455
 ^DIC(2.025,"%MSC")=3220624.22304
 ^DIC(2.191,"%MSC")=3220622.230249
 ^DIC(2.2406,"%MSC")=3220624.22304
@@ -1458,7 +1458,7 @@ ZWR
 ^DIC(12.11,"%D",6,0)="in this file should only be done through a national patch release. "
 ^DIC(12.11,"%D",7,0)="Records in this file should not be added, edited, or deleted locally. "
 ^DIC(12.11,"%D",8,0)="Doing so would likely cause database corruption."
-^DIC(12.11,"%MSC")=3220626.114113
+^DIC(12.11,"%MSC")=3220814.171456
 ^DIC(13.99,0)="MASTER RELIGION^13.99"
 ^DIC(13.99,0,"AUDIT")="@"
 ^DIC(13.99,0,"DD")="@"
@@ -2886,7 +2886,7 @@ ZWR
 ^DIC(44,"%D",0)=1
 ^DIC(44,"%D",1,0)="Contains locations found in the hospital (ie. Wards, Clinics)"
 ^DIC(44,"%D",2,0)=" *********DO NOT RE-INDEX THIS FILE**********"
-^DIC(44,"%MSC")=3220624.221904
+^DIC(44,"%MSC")=3220814.171528
 ^DIC(44.3,0)="SDAM DATA MAP^44.3"
 ^DIC(44.3,0,"AUDIT")="@"
 ^DIC(44.3,0,"DD")="@"
@@ -20283,7 +20283,7 @@ ZWR
 ^DIC(344,"%D",8,0)="package options."
 ^DIC(344,"%D",9,0)=" "
 ^DIC(344,"%D",10,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(344,"%MSC")=3220624.195044
+^DIC(344,"%MSC")=3220814.171549
 ^DIC(344.1,0)="AR DEPOSIT^344.1I"
 ^DIC(344.1,0,"GL")="^RCY(344.1,"
 ^DIC(344.1,0,"GL")="^RCY(344.1,"
@@ -20337,7 +20337,7 @@ ZWR
 ^DIC(344.4,"%D",2,0)="is received electronically.  It holds the summary for each individual EOB"
 ^DIC(344.4,"%D",3,0)="(Explanation of Benefits) that comprise the ERA.  Individual EOB detail"
 ^DIC(344.4,"%D",4,0)="data is found in file 361.1 in Integrated Billing."
-^DIC(344.4,"%MSC")=3220624.222953
+^DIC(344.4,"%MSC")=3220814.171549
 ^DIC(344.49,0)="EDI LOCKBOX EOB WORKLIST^344.49"
 ^DIC(344.49,0,"GL")="^RCY(344.49,"
 ^DIC(344.49,0,"GL")="^RCY(344.49,"
@@ -29448,7 +29448,7 @@ ZWR
 ^DIC(409.84,"%",0)="^1.005^^0"
 ^DIC(409.84,"%D",0)="^^1^1^3141010^"
 ^DIC(409.84,"%D",1,0)="This is where appointment definitions are linked to a resource."
-^DIC(409.84,"%MSC")=3220626.115733
+^DIC(409.84,"%MSC")=3220814.171528
 ^DIC(409.842,0)="SDEC CHECK-IN STEP STATUS^409.842"
 ^DIC(409.842,0,"AUDIT")="@"
 ^DIC(409.842,0,"DD")="@"
@@ -29507,7 +29507,7 @@ ZWR
 ^DIC(409.85,"%D",1,0)="This file contains the SDEC Appt Request entries for the Appointment "
 ^DIC(409.85,"%D",2,0)="Scheduling application."
 ^DIC(409.85,"%D",3,0)="Each entry represents a unique appointment request."
-^DIC(409.85,"%MSC")=3220719.110436
+^DIC(409.85,"%MSC")=3220814.171528
 ^DIC(409.853,0)="SDEC DISPOSITION REASON^409.853"
 ^DIC(409.853,0,"AUDIT")="@"
 ^DIC(409.853,0,"DD")="@"
@@ -29664,7 +29664,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3220719.110457
+^DIC(409.93,"%MSC")=3220814.171528
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
