@@ -1,5 +1,5 @@
-DGMTSCC ;ALB/RMO,CAW,LBD,EG,LMD,HM - Means Test Screen Completion ;03/24/2006
- ;;5.3;Registration;**33,45,130,438,332,433,462,456,610,624,611,890,1014**;Aug 13, 1993;Build 42
+DGMTSCC ;ALB/RMO,CAW,LBD,EG,LMD,HM,JAM - Means Test Screen Completion ;03/24/2006
+ ;;5.3;Registration;**33,45,130,438,332,433,462,456,610,624,611,890,1014,1064**;Aug 13, 1993;Build 41
  ;
  ; Input  -- DFN      Patient IEN
  ;           DGMTACT  Means Test Action
@@ -33,6 +33,11 @@ EN N DGCAT,DGCOMF,DGDC,DGDET,DGIN0,DGIN1,DGIN2,DGINT,DGINTF,DGMTS,DGNC,DGND,DGNW
  . N DATA S (DATA(.01),DATA(.07))=DT,DATA(2)=1 I $$UPD^DGENDBS(408.31,DGMTI,.DATA)
  W:DGMTYPT=1 !?3,"...means test status is ",$P($$MTS^DGMTU(DFN,DGMTS),"^"),"..."
  W:DGMTYPT=2 !?3,"...copay test status is ",$S(DGCAT="E":"EXEMPT",DGCAT="M":"NON-EXEMPT",DGCAT="P":"PENDING ADJUDICATION",1:"INCOMPLETE"),"..."
+ ;jam; DG*5.3*1064
+ I $$INDSTATUS^DGENELA2(DFN) D
+ . D BLD^DIALOG(261134,"","","","F")
+ . D MSG^DIALOG("WM","","","")
+ ;
  D PRT
  ;
 Q K DGFIN,DTOUT,DUOUT,Y

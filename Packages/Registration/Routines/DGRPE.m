@@ -1,5 +1,5 @@
 DGRPE ;ALB/MRL,LBD,BRM,TMK,BAJ,PWC,JAM,JAM,JAM,LEG,ARF - REGISTRATIONS EDITS ;23 May 2017  1:51 PM
- ;;5.3;Registration;**32,114,139,169,175,247,190,343,397,342,454,415,489,506,244,547,522,528,555,508,451,626,638,624,677,672,702,689,735,688,797,842,865,871,887,941,985,997,1014,1040,1044,1056,1067**;Aug 13, 1993;Build 23
+ ;;5.3;Registration;**32,114,139,169,175,247,190,343,397,342,454,415,489,506,244,547,522,528,555,508,451,626,638,624,677,672,702,689,735,688,797,842,865,871,887,941,985,997,1014,1040,1044,1056,1067,1064**;Aug 13, 1993;Build 41
  ;
  ;DGDR contains a string of edits; edit=screen*10+item #
  ;
@@ -92,11 +92,13 @@ SETFLDS(DGDR) ; Set up fields to edit
 202 ;;1010.15//NO;S:X'="Y" Y="@22";S DIE("NO^")="";1010.152;I X']"" W !?4,*7,"But I need to know where you were treated most recently." S Y=1010.15;1010.151;1010.154;S:X']"" Y="@22";1010.153;@22;K DIE("NO^");
 203 ;;D DR203^DGRPE;6ETHNICITY;2RACE;K DR(2,2.02),DR(2,2.06);
 205 ;;.181;
+ ; patch DG*5.3*1064; ARF; added group 6 to the PATIENT DATA, SCREEN <2>
+206 ;;D DR206^DGRPE;
  ; patch DG*5.3*985 - NOK - Tags 301 and 302 for Primary and Secondary NOK: phone number no longer copied when copying patient address - phone number entered on its own
  ; patch DG*5.3*997; jam; Tags 301-305 modified to allow for copy or entry of Country/foreign addresses
  ;301 ;;.211;S:X']"" Y="@31";.212;D DR301^DGRPE S:DG4=1 Y=.213;.2125//NO;I X="Y" S DGADD=".21" D AD^DGRPE S Y="@30";.213;K DG4;S:X']"" Y=.216;.214;S:X']"" Y=.216;.215:.217;.2207;@30;.219;.21011;@31;
  ;
- ; DG*5.3*1067; Added new Relationship Type field to replace the free-text Reltionship field which will now
+ ; DG*5.3*1067; Added new Relationship Type field to replace the free-text Relationship field which will now
  ;  be used to contain any notes. The new and old relationship fields are now entered via DR300^DGRPE 
 301 ;;.211;S:X']"" Y="@31";N RET S RET=$$DR300^DGRP3("K",.224,.212) I $G(DGTMOT)=1!('RET) S Y="@31";.2125//NO;I X="Y" S DGADD=".21" D AD^DGRPE S Y="@30";.221//USA;.213;S:X']"" Y=.216;.214;S:X']"" Y=.216;.215;.216;
 301000 ;;S DGADD=".21" D DR301^DGRPE S:DG4=1 Y=.222;.217;.2207;S Y="@30";.222;.223;@30;K DG4;.219;.21011;@31;
@@ -203,6 +205,50 @@ DR11 ;clt; DG*5.3*941 - Called from line tag 112 if Perm address is empty
 DR111 ; Set DR string for Confidential Address categories
  S DR(2,2.141)=".01;1//YES;"
  ;S DR(2,2.14)=".01;1//"_"YES"
+ Q
+ ;
+DR206 ;DG*5.3*1064; Code for group 6 on screen 2
+ ;Verify responses and prompt for approval before storing-set group 6 to uneditable if responses approved
+ N DA,DIR,DGFDA,DGERR,X,Y,DTOUT,DUOUT
+ S DIR(0)="2,.571",DA=DFN,DIR("A")="Are you an Indian?"
+ D ^DIR
+ ; quit on ^ or timeout (set DGTMOT for timeout)
+ I $D(DUOUT) Q
+ I $D(DTOUT) S DGTMOT=1 Q
+ S DGFDA(2,+DFN_",",.571)=Y
+ Q:Y=""
+REENTER ;NULL attestation date is not allowed - redisplay prompt
+ S DIR(0)="2,.573",DA=DFN,DIR("A")="Indian Attestation Date"
+ D ^DIR
+ ; quit on ^ or timeout (set DGTMOT for timeout)
+ I $D(DUOUT) Q
+ I $D(DTOUT) S DGTMOT=1 Q
+ I Y="" W !,"This is a required response. Enter "_"'^'"_" to exit" G REENTER
+ S DGFDA(2,+DFN_",",.573)=Y
+ I $$CONFIRM()'=1 D  Q
+ . ; quit if time-out
+ . I $G(DGTMOT) Q
+ . W !,"Indian attestation not saved.",!
+ . D EOP
+ D FILE^DIE("","DGFDA","DGERR")
+ W !,"Changes saved.",! D EOP
+ Q
+CONFIRM() ;Confirm if user wants to save the changes - DG*5.3*1064
+ N DIR,X,Y,DTOUT,DUOUT,DIROUT
+ S DIR(0)="Y"
+ S DIR("A")="Do you wish to save these values"
+ S DIR("?")="Enter Yes to store the Indian Data, enter No or "_"'^'"_" to exit without saving the data."
+ D ^DIR
+ I $D(DTOUT) S DGTMOT=1 Q 0
+ I $G(Y)=0 Q 0
+ I $D(DUOUT)!$D(DIROUT) Q 0
+ Q 1
+EOP ;DG*5.3*1064
+ N DIR,DTOUT,DUOUT,DIROUT,X,Y
+ S DIR(0)="E"
+ S DIR("A")="Press ENTER to continue"
+ D ^DIR
+ S:$D(DTOUT) DGTMOT=1
  Q
  ;
 DR207 ; DR string for preferred language ;*///*

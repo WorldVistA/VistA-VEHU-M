@@ -1,5 +1,5 @@
 DGRPH ;ALB/MRL,TMK,JAM,ARF,ASF,LEG,ARF - REGISTRATION HELP ROUTINE ;Mar 10, 2020@19:19
- ;;5.3;Registration;**114,343,397,415,489,545,638,624,689,842,941,985,997,1014,1056**;Aug 13, 1993;Build 18
+ ;;5.3;Registration;**114,343,397,415,489,545,638,624,689,842,941,985,997,1014,1056,1064**;Aug 13, 1993;Build 41
  ;
  S DGRPH="" D H^DGRPU K DGRPH
  ;LEG; DG*5.3*997; cosmetically adjusted the spacing around the word "listing" to account for if "and edit" text was/wasn't included
@@ -18,7 +18,7 @@ M I DGRPS=9,DGRPSEL="V" W !!,"You may precede your selection with 'V' to denote 
 1 S X="Name, SSN, DOB, Birth Sex^Alias Name & SSN (if applicable)^Remarks concerning this patient^Cell Phone, Pager, E-Mail^Date & Time, Preferred Language^Preferred Name of Patient" Q
  ;ARF; DG*5.3*1056 removed Permanent from the following address label
 A1 S X="Residential Address^Mailing Address^Temporary Mailing Address^Confidential Mailing Address" Q
-2 S X="POB, Parents, etc.^Dates/Locations of Previous Care^Race and Ethnicity^Date of Death Information" Q
+2 S X="POB, Parents, etc.^Dates/Locations of Previous Care^Race and Ethnicity^Date of Death Information^Emergency Response^Indian Attestation" Q   ;jam; DG*5.3*1064 - Added Groups 5 and 6
 3 S X="Primary Next-of-Kin^Secondary Next-of-Kin^Primary Emergency Contact^Secondary Emergency Contact^Designee to receive personal effects" Q
 4 S X="Applicant Employer, Address^Spouses Employer, Address" Q
 5 S X="Unexpired Insurance Policies^Eligibile for Medicaid" Q

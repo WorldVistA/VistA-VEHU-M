@@ -1,58 +1,61 @@
-SDESRTVCLN ;ALB/ANU,MGD - Get Clinic Info based on Clinic IEN ;FEB 09, 2022@10:50
- ;;5.3;Scheduling;**799,805,807,813**;Aug 13, 1993;Build 6
+SDESRTVCLN ;ALB/ANU,MGD - Get Clinic Info based on Clinic IEN ;July 19, 2022
+ ;;5.3;Scheduling;**799,805,807,813,820**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
- ;Reference to $$GETS^DIQ,$$GETS1^DIQ in ICR #2056
+ ; Reference to $$GETS^DIQ is supported by IA #2056
+ ; Reference to $$GETS1^DIQ is supported by IA #2056
  Q
  ;
 JSONCLNINFO(SDCLNJSON,SDCLNIEN,SDEAS) ;Get Clinic info
  ;INPUT - SDCLNIEN (Clinic IEN)
  ;      - SDEAS [optional] - Enterprise Appointment Scheduling (EAS) Tracking Number associated to an appointment.
- ;RETURN PARMETER:
- ; Clinic information from HOSPITAL LOCAITON (#44) File. Data is delimited by carat (^).
+ ;RETURN PARAMETER:
+ ; Clinic information from HOSPITAL LOCATION (#44) File. Data is in JSON format.
  ; Field List:
- ; (1)     Clinic Name
- ; (2)     Abbreviation
- ; (3)     Patient Friendly Name
- ; (4)     Clinic Meets at this Facility
- ; (5)     ALLOW DIRECT PATIENT SCHEDULING?
- ; (6)     DISPLAY CLIN APPT TO PATIENTS?
- ; (7)     SERVICE
- ; (8)     NON-COUNT CLINIC? (Y OR N)
- ; (9)     DIVISION
- ; (10)    STOP CODE NUMBER
- ; (11)    DEFAULT APPOINTMENT TYPE
- ; (12)    ADMINISTER INPATIENT MEDS?
- ; (13)    TELEPHONE
- ; (14)    REQUIRE X-RAY FILMS?
- ; (15)    REQUIRE ACTION PROFILES?
- ; (16)    NO SHOW LETTER
- ; (17)    PRE-APPOINTMENT LETTER
- ; (18)    CLINIC CANCELLATION LETTER
- ; (19)    APPT. CANCELLATION LETTER
- ; (20)    ASK FOR CHECK IN/OUT TIME
- ; (21)    PROVIDER - This is a multiple
- ; (22)    Flag indicating the provider is the defalut for the clinic
- ; (23)    DEFAULT TO PC PRACTITIONER?
- ; (24)    DIAGNOSIS - This is a multiple
- ; (25)    Flag indicating the diagnosis is the default for the clinic
- ; (26)    WORKLOAD VALIDATION AT CHK OUT
- ; (27)    ALLOWABLE CONSECUTIVE NO-SHOWS
- ; (28)    MAX # DAYS FOR FUTURE BOOKING
- ; (29)    SCHEDULE ON HOLIDAYS?
- ; (30)    CREDIT STOP CODE
- ; (31)    PROHIBIT ACCESS TO CLINIC?
- ; (32)    PHYSICAL LOCATION
- ; (33)    PRINCIPAL Clinic
- ; (34)    OVERBOOKS/DAY MAXIMUM
- ; (35)    SPECIAL INSTRUCTIONS - This is a multiple
- ; (36)    E-CHECKIN ALLOWED
- ; (37)    PRE-CHECKIN ALLOWED
- ; (38)    LENGTH OF APP'T
- ; (39)    VARIABLE APP'NTMENT LENGTH
- ; (40)    DISPLAY INCRUMENTS PER HOUR
+ ;  (1) Clinic Name
+ ;  (2) Abbreviation
+ ;  (3) Patient Friendly Name
+ ;  (4) Clinic Meets at this Facility
+ ;  (5) ALLOW DIRECT PATIENT SCHEDULING?
+ ;  (6) DISPLAY CLIN APPT TO PATIENTS?
+ ;  (7) SERVICE
+ ;  (8) NON-COUNT CLINIC? (Y OR N)
+ ;  (9) DIVISION
+ ; (10) STOP CODE NUMBER
+ ; (11) DEFAULT APPOINTMENT TYPE
+ ; (12) ADMINISTER INPATIENT MEDS?
+ ; (13) TELEPHONE
+ ; (14) REQUIRE X-RAY FILMS?
+ ; (15) REQUIRE ACTION PROFILES?
+ ; (16) NO SHOW LETTER
+ ; (17) PRE-APPOINTMENT LETTER
+ ; (18) CLINIC CANCELLATION LETTER
+ ; (19) APPT. CANCELLATION LETTER
+ ; (20) ASK FOR CHECK IN/OUT TIME
+ ; (21) PROVIDER - This is a multiple
+ ; (22) Flag indicating the provider is the default for the clinic
+ ; (23) DEFAULT TO PC PRACTITIONER?
+ ; (24) DIAGNOSIS - This is a multiple
+ ; (25) Flag indicating the diagnosis is the default for the clinic
+ ; (26) WORKLOAD VALIDATION AT CHK OUT
+ ; (27) ALLOWABLE CONSECUTIVE NO-SHOWS
+ ; (28) MAX # DAYS FOR FUTURE BOOKING
+ ; (29) SCHEDULE ON HOLIDAYS?
+ ; (30) CREDIT STOP CODE
+ ; (31) PROHIBIT ACCESS TO CLINIC?
+ ; (32) PHYSICAL LOCATION
+ ; (33) PRINCIPAL Clinic
+ ; (34) OVERBOOKS/DAY MAXIMUM
+ ; (35) SPECIAL INSTRUCTIONS - This is a multiple
+ ; (36) E-CHECKIN ALLOWED
+ ; (37) PRE-CHECKIN ALLOWED
+ ; (38) LENGTH OF APP'T
+ ; (39) VARIABLE APP'NTMENT LENGTH
+ ; (40) DISPLAY INCREMENTS PER HOUR
+ ; (41) CHAR4
+ ; (42) HOUR CLINIC DISPLAY BEGINS
  ;
  N SDCLNSREC,ERRPOP,ERR,ERRMSG,SDECI
  D INIT
@@ -75,7 +78,7 @@ VALIDATE ; validate incoming parameters
  ;validate EAS
  S SDEAS=$G(SDEAS,"")
  I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
- I +SDEAS=-1 D ERRLOG^SDESJSON(.SDCLNSREC,142) S ERRPOP=1
+ I SDEAS=-1 D ERRLOG^SDESJSON(.SDCLNSREC,142) S ERRPOP=1
  Q
  ;
 BLDJSON ;
@@ -86,7 +89,7 @@ BLDJSON ;
 BLDCLNREC ;Build a list of Providers
  ;
  N SDFIELDS,SDDATA,SDMSG,SDX,SDC,TIMEZONE
- S SDFIELDS=".01;1;3.5;8;9;10;60;61;62;2502;2507;2802;99;2000;2000.5;2508;2509;2510;2511;25;2801;30;2001;2002;1918.5;2503;2500;1916;1918;20;21;1912;1913;1917"
+ S SDFIELDS=".01;1;3.5;8;9;10;24;60;61;62;1914;2502;2504;2507;2802;99;2000;2000.5;2508;2509;2510;2511;2801;30;2001;2002;1918.5;2503;2500;1916;1918;20;21;1912;1913;1917"
  D GETS^DIQ(44,SDCLNIEN_",",SDFIELDS,"IE","SDDATA","SDMSG")
  S SDECI=SDECI+1
  S SDCLNSREC("Clinic","Name")=$G(SDDATA(44,SDCLNIEN_",",.01,"E")) ;Clinic Name
@@ -98,19 +101,21 @@ BLDCLNREC ;Build a list of Providers
  S SDCLNSREC("Clinic","Service")=$G(SDDATA(44,SDCLNIEN_",",9,"E")) ;Service
  S SDCLNSREC("Clinic","NonCountClinic")=$G(SDDATA(44,SDCLNIEN_",",2502,"E")) ;NON-COUNT CLINIC? (Y OR N)
  S SDCLNSREC("Clinic","Division")=$G(SDDATA(44,SDCLNIEN_",",3.5,"E")) ;Division
- S SDCLNSREC("Clinic","StopCodeNum")=$G(SDDATA(44,SDCLNIEN_",",8,"E")) ;Stop Code Number
+ S SDCLNSREC("Clinic","StopCodeName")=$G(SDDATA(44,SDCLNIEN_",",8,"E")) ;Stop Code Name
+ S SDCLNSREC("Clinic","StopCodeNum")=$G(SDDATA(44,SDCLNIEN_",",8,"I")) ;Stop Code Number
  S SDCLNSREC("Clinic","DefaultApptType")=$G(SDDATA(44,SDCLNIEN_",",2507,"E")) ;Default Appointment type
  S SDCLNSREC("Clinic","AdminInpatientMeds")=$G(SDDATA(44,SDCLNIEN_",",2802,"E")) ;ADMINISTER INPATIENT MEDS?
  S SDCLNSREC("Clinic","Telephone")=$G(SDDATA(44,SDCLNIEN_",",99,"E")) ;TELEPHONE
  S SDCLNSREC("Clinic","ReqXrayFilms")=$G(SDDATA(44,SDCLNIEN_",",2000,"E")) ;REQUIRE X-RAY FILMS?
  S SDCLNSREC("Clinic","ReqActionProfiles")=$G(SDDATA(44,SDCLNIEN_",",2000.5,"E")) ;REQUIRE ACTION PROFILES?
  S SDCLNSREC("Clinic","NoShowLetter")=$G(SDDATA(44,SDCLNIEN_",",2508,"E")) ;NO SHOW LETTER
+ S SDCLNSREC("Clinic","NoShowLetterIEN")=$G(SDDATA(44,SDCLNIEN_",",2508,"I")) ;NO SHOW IEN
  S SDCLNSREC("Clinic","PreApptLetter")=$G(SDDATA(44,SDCLNIEN_",",2509,"E")) ;PRE-APPOINTMENT LETTER
  S SDCLNSREC("Clinic","CancelLetter")=$G(SDDATA(44,SDCLNIEN_",",2510,"E")) ;CLINIC CANCELLATION LETTER
  S SDCLNSREC("Clinic","ApptCancelLetter")=$G(SDDATA(44,SDCLNIEN_",",2511,"E")) ;APPT. CANCELLATION LETTER
- S SDCLNSREC("Clinic","CheckinCheckoutTime")=$G(SDDATA(44,SDCLNIEN_",",25,"E")) ;ASK FOR CHECK IN/OUT TIME
+ S SDCLNSREC("Clinic","CheckinCheckoutTime")=$G(SDDATA(44,SDCLNIEN_",",24,"E")) ;ASK FOR CHECK IN/OUT TIME
  ;S SDCLNSREC("Clinic","Provider")=$G(SDDATA(44,SDCLNIEN_",",.01,"E")) ;PROVIDER - This is a multiple
- S SDCLNSREC("Clinic","defaultToPCPractitioner")=$G(SDDATA(44,SDCLNIEN_",",2801,"E")) ;DEFAULT TO PC PRACTITIONER?
+ S SDCLNSREC("Clinic","DefaultToPCPractitioner")=$G(SDDATA(44,SDCLNIEN_",",2801,"E")) ;DEFAULT TO PC PRACTITIONER?
  ;S SDCLNSREC("Clinic","Diagnosis")=$G(SDDATA(44,SDCLNIEN_",",.01,"E")) ;DIAGNOSIS - This is a multiple
  S SDCLNSREC("Clinic","WorkloadValidationCheckout")=$G(SDDATA(44,SDCLNIEN_",",30,"E")) ;WORKLOAD VALIDATION AT CHK OUT
  S SDCLNSREC("Clinic","AllowableConsecutiveNoShows")=$G(SDDATA(44,SDCLNIEN_",",2001,"E")) ;ALLOWABLE CONSECUTIVE NO-SHOWS
@@ -126,8 +131,13 @@ BLDCLNREC ;Build a list of Providers
  S SDCLNSREC("Clinic","LengthOfAppt")=$G(SDDATA(44,SDCLNIEN_",",1912,"E")) ;LENGTH OF APP'T
  S SDCLNSREC("Clinic","VariableApptLength")=$G(SDDATA(44,SDCLNIEN_",",1913,"E")) ;VARIABLE APP'NTMENT LENGTH
  S SDCLNSREC("Clinic","IncrementsPerHr")=$G(SDDATA(44,SDCLNIEN_",",1917,"E")) ;DISPLAY INCREMENTS PER HOUR
+ S SDCLNSREC("Clinic","HourClinicDisplayBegins")=$S($G(SDDATA(44,SDCLNIEN_",",1914,"E"))'="":$G(SDDATA(44,SDCLNIEN_",",1914,"E")),1:8) ; HOUR CLINIC DISPLAY BEGINS
  S TIMEZONE=$$TIMEZONEDATA^SDESUTIL($G(SDCLNIEN)),TIMEZONE=$P($G(TIMEZONE),U)
  S SDCLNSREC("Clinic","Timezone")=TIMEZONE
+ ; Get CHAR4 Data
+ N CHAR4
+ S CHAR4=$$CHAR4^SDESUTIL($G(SDDATA(44,SDCLNIEN_",",.01,"E")))
+ S SDCLNSREC("Clinic","CHAR4")=CHAR4
  ; Special Instructions Multiple
  S SDX="",SDC=0
  S SDFIELDS="1910*"

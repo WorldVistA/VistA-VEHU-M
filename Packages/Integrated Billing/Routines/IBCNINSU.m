@@ -1,5 +1,5 @@
 IBCNINSU ;AITC/TAZ - GENERAL INSURANCE UTILITIES ;8/20/20 12:46p.m.
- ;;2.0;INTEGRATED BILLING;**668,687**;21-MAR-94;Build 88
+ ;;2.0;INTEGRATED BILLING;**668,687,713**;21-MAR-94;Build 12
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 PAYER(PIEN,APP,FLDS,FLGS,ARRAY) ;Payer Data Retrieval
@@ -76,3 +76,69 @@ STOP() ; Determine if user wants to exit out of the whole option
 STOPX ; STOP exit pt
  Q Y
  ;
+FOREIGN(VALUE,PIECES,BLANK) ; check for ASCII chars outside (32-126 inclusive)
+ ;INPUT:
+ ;  VALUE  = the string/field to check
+ ;  PIECES = populate if a subcomponent has to be checked (defaults as 1)
+ ;  BLANK  = populated if the value is to be cleared out if foreign char
+ ;           is encountered (1 tells program to clear out field if it cotains foreign)
+ ;
+ ; I VALUE had a character, in the pieces that were to be examined, that is
+ ;   outside of the ASCII range (32-126) a 1 is returned; otherwise returns ZERO
+ ;
+ N BAD,DONE,IBI,IBY,PCE,STRNG,XX
+ S IBY="",BAD=0
+ I '$G(PIECES) S PIECES=1
+ F PCE=1:1:$L(PIECES,";") S XX=$P(PIECES,";",PCE) D
+ . S STRNG=$P(VALUE,HLECH,XX),DONE=0
+ . I STRNG'="" F IBI=1:1 S IBY=$E(STRNG,IBI) Q:IBY=""  D  Q:DONE
+ .. I $A(IBY)<32!($A(IBY)>126) D  Q
+ ... S (DONE,BAD)=1   ;Foreign character found
+ ... I $G(BLANK) S $P(VALUE,HLECH,XX)=""
+ Q BAD
+ ;
+FILTER(STR,FLT) ; Filter Insurance Name, Group Name or Number
+ ;IBFLT A^B^C
+ ;         A - 1 - Search for Name(s) that begin with
+ ;                 the specified text (case insensitive)
+ ;             2 - Search for Name(s) that contain
+ ;                 the specified text (case insensitive)
+ ;             3 - Search for Name(s) in a specified
+ ;                 range (inclusive, case insensitive)
+ ;             4 - Search for Name(s) that are blank (null)
+ ;         B - Begin with text if A=1, Contains Text if A=2 or
+ ;             the range start if A=3
+ ;         C - Range End text (only present when A=3)
+ ;OUTPUT:
+ ;  OK -  0 - Does not match Filter, do not include
+ ;        1 - Matches Filter, include
+ ;
+ N BEG,CHR,END,OK,TYPE,YY
+ S STR=$$UP^XLFSTR(STR)
+ S TYPE=$P(FLT,U,1)
+ S BEG=$$UP^XLFSTR($P(FLT,U,2))
+ S END=$$UP^XLFSTR($P(FLT,U,3))
+ S OK=0
+ ;Blank
+ I TYPE=4 D  G FILTERX
+ . I STR="" S OK=1
+ ;Test begins with
+ I TYPE=1 D  G FILTERX
+ . I ($E(STR,1,$L(BEG))=BEG) S OK=1
+ ;Test contains
+ I TYPE=2 D  G FILTERX
+ . I (STR[BEG) S OK=1
+ ;Test range
+ I TYPE=3 D  G FILTERX
+ . N XX
+ . S XX=$E(STR,1,$L(BEG))
+ . I XX=BEG D  Q
+ .. S YY=$E(STR,1,$L(END)) I YY]END Q
+ .. S OK=1             ;Matches begining characters of BEG - include
+ . I XX']BEG Q         ;Preceeds Beg search
+ . S XX=$E(STR,1,$L(END))
+ . I XX=END S OK=1 Q   ;Matches beginning characters of END - include
+ . I XX]END Q          ;Follows End search
+ . S OK=1
+FILTERX ; Exit
+ Q OK

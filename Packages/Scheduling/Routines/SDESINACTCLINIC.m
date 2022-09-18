@@ -1,10 +1,11 @@
-SDESINACTCLINIC ;ALB/ANU,MG - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;JAN 07, 2022@15:22
- ;;5.3;Scheduling;**799,805**;Aug 13, 1993;Build 9
+SDESINACTCLINIC ;ALB/ANU,MGD - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;July 19, 2022
+ ;;5.3;Scheduling;**799,805,820**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
- ;Reference to $$GETS^DIQ,$$GETS1^DIQ in ICR #2056
+ ;Reference to $$GETS^DIQ is supported by IA #2056
+ ;Reference to $$GETS1^DIQ is supported by IA #2056
  Q
  ;
 JSONINACTCLN(SDCINJSON,SDCLINICIEN,SDEAS) ;Inactivate Clinic
@@ -33,7 +34,7 @@ VALIDATE ; validate incoming parameters
  . S ERRPOP=1
  S SDEAS=$G(SDEAS,"")
  I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
- I +SDEAS=-1 D ERRLOG^SDESJSON(.SDCINREC,142) S ERRPOP=1
+ I SDEAS=-1 D ERRLOG^SDESJSON(.SDCINREC,142) S ERRPOP=1
  Q
  ;
 BLDJSON ;

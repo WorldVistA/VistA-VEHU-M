@@ -1,9 +1,9 @@
-SDESCLINICSET ;ALB/TAW,MGD - CLINIC CREATE AND UPDATE ;Jan 07, 2022
- ;;5.3;Scheduling;**799,805**;Aug 13, 1993;Build 9
+SDESCLINICSET ;ALB/TAW,MGD - CLINIC CREATE AND UPDATE ;July 19, 2022
+ ;;5.3;Scheduling;**799,805,820**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
- ; ICR:
- ;  7024, 2295  - Medical Cednter Division file 40.8
+ ; Reference to ^DG(40.8 is supported by IA #2295
+ ; Reference to ^DG(40.8 is supported by IA #7024
  ;
  ; SDNAME - [TEXT, REQ]  Clinic Name
  ; SDABR - [TEXT]  ABBREVIATION
@@ -90,19 +90,19 @@ VALIDATE(EDIT) ;
  I '$$CHECKYN(SDPATSCHED) D ERRLOG(89)
  ;
  S SDDISPAPPT=$G(P6)
- I SDDISPAPPT="@" S SDDISPAPPT=""  ;Can'ty remove a required field
+ I SDDISPAPPT="@" S SDDISPAPPT=""  ;Can't remove a required field
  I 'EDIT,SDDISPAPPT="" D ERRLOG(90)
  I '$$CHECKYN(SDDISPAPPT) D ERRLOG(91)
  ;
  S SDSERVICE=$G(P7)
- I SDSERVICE="@" S SDSERVICE=""  ;Can't remove a reuired field
+ I SDSERVICE="@" S SDSERVICE=""  ;Can't remove a required field
  I 'EDIT,SDSERVICE="" D ERRLOG(92)
  S SDSERVICE=$E(SDSERVICE)
  S:SDSERVICE="N" SDSERVICE=0
  I SDSERVICE'="@",SDSERVICE'="",'$F("^M^S^P^R^N^0^","^"_SDSERVICE_"^") D ERRLOG(93)
  ;
  S SDNONCOUNT=$G(P8)
- I SDNONCOUNT="@" S SDNONCOUNT=""  ;Can't remove a reqired field
+ I SDNONCOUNT="@" S SDNONCOUNT=""  ;Can't remove a required field
  I 'EDIT,SDNONCOUNT="" D ERRLOG(94)
  I '$$CHECKYN(SDNONCOUNT) D ERRLOG(95)
  ;
@@ -168,10 +168,10 @@ VALIDATE(EDIT) ;
  ; Provider IEN or # | Action
  ;
  ; Action = @ means remove this provider
- ; Adtion = D means set this provider as the default
+ ; Action = D means set this provider as the default
  ; Action = @D means remove the default flag from the provider
  ;
- ; Remove default flag  ; Delet provider ; Add or update provider and set as default ; Add provider
+ ; Remove default flag  ; Delete provider ; Add or update provider and set as default ; Add provider
  ; Provider|@D          ; Provider|@     ; Provider|D                                ; Provider
  ;
  ; EX: SMITH,JANE|@D;JAMES,JIM|;MACEY,MARY|@;ROBERTS,TIM
@@ -183,13 +183,13 @@ VALIDATE(EDIT) ;
  I '$$CHECKYN(SDPRACTIONER) D ERRLOG(102)
  S SDPRACTIONER=$$YNTOBOOL^SDESCLINICSET2(SDPRACTIONER)
  ;
- ; Diagnisis IEN or # | Action
+ ; Diagnosis IEN or # | Action
  ;
- ; Action = @ means remove this diagnosos
- ; Adtion = D means set this diagnosis as the default
+ ; Action = @ means remove this diagnosis
+ ; Action = D means set this diagnosis as the default
  ; Action = @D means remove the default flag from the diagnosis
  ;
- ; Remove default flag  ; Delet Diagnosis ; Add or update Diagnosis and set as default ; Add diagnosos
+ ; Remove default flag  ; Delete Diagnosis ; Add or update Diagnosis and set as default ; Add diagnosis
  ; Diagnosis|@D         ; Diagnosis|@     ; Diagnosis|D                                ; Diagnosis
  ;
  S SDDIAG=$G(P23)
@@ -223,7 +223,7 @@ VALIDATE(EDIT) ;
  .S SDCREDITSTOP=$O(^DIC(40.7,"B",$E(SDCREDITSTOP,1,30),""),-1)
  .I 'SDCREDITSTOP D ERRLOG(109)
  ;
- ;When setting the clinic as Prohibit Access, a list of prevliaged users can be passed in.
+ ;When setting the clinic as Prohibit Access, a list of privileged users can be passed in.
  ;
  ; ex: Y;DOE,JANE;SMITH,JOHN|@
  S SDNOACCESS=$G(P29)
@@ -287,7 +287,7 @@ VALIDATE(EDIT) ;
  ;
  S SDEAS=$G(P40)
  I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
- I +SDEAS=-1 S POP=1 D ERRLOG(142)
+ I SDEAS=-1 S POP=1 D ERRLOG(142)
  Q
  ;
 ERRLOG(ERNUM,OPTIONALTXT) ;

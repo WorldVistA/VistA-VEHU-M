@@ -1,19 +1,19 @@
 PSXRPPL2 ;BIR/WPB - Print From Suspense Utilities ;06/10/08
- ;;2.0;CMOP;**65,69,73,74,79,81,83,87,91,92**;11 Apr 97;Build 19
- ;Reference to ^PSRX( supported by DBIA #1977
- ;Reference to ^PS(52.5, supported by DBIA #1978
- ;Reference to ^PSSLOCK  supported by DBIA #2789
- ;Reference to ^PSOBPSUT supported by DBIA #4701
- ;Reference to ^PSOBPSU1 supported by DBIA #4702
- ;Reference to ^PSOBPSU2 supported by DBIA #4970
- ;Reference to ^PSOBPSU4 supported by DBIA #7212
- ;Reference to ^PSOREJUT supported by DBIA #4706
- ;Reference to ^PSOREJU3 supported by DBIA #5186
- ;Reference to CHANGE^PSOSUCH1 supported by DBIA #5427
- ;Reference to PREVRX^PSOREJP2 supported by DBIA #5912
- ;Reference to $$BILLABLE^IBNCPDP supported by DBIA #6243
- ;Reference to LOG^BPSOSL supported by ICR# 6764
- ;Reference to IEN59^BPSOSRX supported by ICR# 4412
+ ;;2.0;CMOP;**65,69,73,74,79,81,83,87,91,92,93**;11 Apr 97;Build 12
+ ; Reference to ^PSRX( in ICR #1977
+ ; Reference to ^PS(52.5, in ICR #1978
+ ; Reference to ^PSSLOCK  in ICR #2789
+ ; Reference to ^PSOBPSUT in ICR #4701
+ ; Reference to ^PSOBPSU1 in ICR #4702
+ ; Reference to ^PSOBPSU2 in ICR #4970
+ ; Reference to ^PSOBPSU4 in ICR #7212
+ ; Reference to ^PSOREJUT in ICR #4706
+ ; Reference to ^PSOREJU3 in ICR #5186
+ ; Reference to CHANGE^PSOSUCH1 in ICR #5427
+ ; Reference to PREVRX^PSOREJP2 in ICR #5912
+ ; Reference to $$BILLABLE^IBNCPDP in ICR #6243
+ ; Reference to LOG^BPSOSL in ICR #6764
+ ; Reference to IEN59^BPSOSRX in ICR #4412
  ;
  ; CHKDFN makes a second pass through the suspense queue, looking for
  ; any additional prescriptions for patients who already have an Rx
@@ -100,6 +100,9 @@ EPHARM ; - ePharmacy checks for third party billing
  I $$RETRX^PSOBPSUT(RXN,RFL),SDT>DT S EPHQT=1 Q
  I $$FIND^PSOREJUT(RXN,RFL,,"79,88,943",,1) S EPHQT=1 Q
  ;
+ ; If an Open/Unresolved eC/eT reject on claim, don't send to CMOP.
+ I $$ECETREJ(RXN) D EPH Q
+ ;
  ; $$TRISTA performs checks specific to TRICARE/CHAMPVA.  If the claim
  ; was rejected or is still "IN PROGRESS", or if it is non-billable,
  ; then add this Rx to the ^TMP("PSXEPHIN") array and quit.
@@ -149,7 +152,11 @@ EPH ; - Store Rx not xmitted to CMOP in XTMP file for MailMan message.
  ;
 ECMESTAT(RX,RFL) ;
  I '$$PATCH^XPDUTL("PSO*7.0*148") Q 0
- N STATUS,HERR,CHDAT
+ N CHDAT,HERR,PSXECET,PSXIEN,PSXREJ,STATUS
+ ;
+ ; If an Open/Unresolved eC/eT reject on claim, don't resubmit
+ I $$ECETREJ(RX) Q 0
+ ;
  S STATUS=$$STATUS^PSOBPSUT(RX,RFL)
  ; Never submitted before, OK to resubmit
  I STATUS=""!(STATUS["UNSTRANDED") Q 1
@@ -233,7 +240,7 @@ DSHDT(RXIEN,RFL) ; ePharmacy function to determine the 3/4 of the days supply da
  I '$D(^PSRX(RXIEN,0)) Q -1
  I $G(RFL)="" Q -1
  ;
- D PREVRX^PSOREJP2(RXIEN,RFL,,.FILLDT,.DAYSSUP,.PREVRX)     ; DBIA #5912
+ D PREVRX^PSOREJP2(RXIEN,RFL,,.FILLDT,.DAYSSUP,.PREVRX)
  I FILLDT="" Q -1
  ;
  S DSH34=DAYSSUP*.75 ; 3/4 of Days Supply
@@ -344,4 +351,17 @@ SHDT(RX,RFL) ;
  I '$D(RFL) S RFL=$$LSTRFL^PSOBPSU1(RX)
  S FILE=$S(RFL=0:52,1:52.1),IENS=$S(RFL=0:RX_",",1:RFL_","_RX_",")
  Q $$GET1^DIQ(FILE,IENS,86,"I")
+ ;
+ ;
+ ; ECETREJ checks for open/unresolved eC/eT reject on the Rx
+ ; Input: (r) RX - Prescription IEN
+ ; Output: 0 - No open/unresovled eC/eT Reject on Rx
+ ;         1 - Open/unresolved eC/eT Reject on Rx
+ECETREJ(RX) ;
+ N PSXECET,PSXIEN,PSXREJ
+ S PSXREJ=0
+ F PSXECET="eC","eT" S PSXIEN="" D
+ . F  S PSXIEN=$O(^PSRX(RX,"REJ","B",PSXECET,PSXIEN)) Q:'PSXIEN  D
+ . . I $$GET1^DIQ(52.25,PSXIEN_","_RX,9,"I")=0 S PSXREJ=1
+ Q PSXREJ
  ;

@@ -1,5 +1,5 @@
 IBCNSC01 ;ALB/NLR - INSURANCE COMPANY EDIT ;6/1/05 10:06am
- ;;2.0;INTEGRATED BILLING;**52,137,191,184,232,320,349,371,399,416,432,494,519,547,592,608,668,687**;21-MAR-94;Build 88
+ ;;2.0;INTEGRATED BILLING;**52,137,191,184,232,320,349,371,399,416,432,494,519,547,592,608,668,687,713**;21-MAR-94;Build 12
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 PARAM ; -- Insurance company parameters region
@@ -143,6 +143,9 @@ PAYER ; This procedure builds the display for the payer associated with
  S TITLE=" Payer: "_$P($G(IBDATA),U,1)
  S OFFSET=(40-($L(TITLE)/2))\1+1
  D SET^IBCNSP(START,OFFSET,TITLE,IORVON,IORVOFF)
+ ; IB*2.0*713/DTG - start add in set for a blank line for undef error when using SL
+ D SET^IBCNSP(START+1,2,"") ;blank line
+ ; IB*2.0*713/DTG - end add in set for a blank line for undef error when using SL
  D SET^IBCNSP(START+2,5,"VA National ID: "_$P($G(IBDATA),U,2))
  D SET^IBCNSP(START+2,51,"CMS National ID: "_$P($G(IBDATA),U,3))
  ;

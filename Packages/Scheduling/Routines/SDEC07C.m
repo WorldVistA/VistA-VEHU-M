@@ -1,5 +1,5 @@
 SDEC07C ;ALB/WTC/ZEB,KML - VISTA SCHEDULING RPCS ;MAY 5, 2022
- ;;5.3;Scheduling;**686,694,816**;Aug 13, 1993;Build 3
+ ;;5.3;Scheduling;**686,694,816,820**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 2004-038, this routine should not be modified
  ;
  Q
@@ -105,7 +105,7 @@ ORDERLOCKCHECK(REQUESTYPE,APPTREQIEN,SDECI,DFN) ;
  I REQUESTYPE="RTC" D
  . S ORDERID=$$GET1^DIQ(409.85,APPTREQIEN,46,"I")
  . Q:'+ORDERID
- . I $D(^XTMP("ORPTLK-"_DFN)) D
- . . S USER=$$GET1^DIQ(200,$P($G(^XTMP("ORPTLK-"_DFN,1)),"^"),.01)
- . . D ERR^SDEC07(SDECI+1,"Error: RTC Order is being edited by "_USER_". Try again later.",DFN,1) S ERROR=1
+ . I $D(^XTMP("ORLK-"_ORDERID)) D
+ . . S USER=$$GET1^DIQ(200,$P($G(^XTMP("ORLK-"_ORDERID,1)),"^"),.01)
+ . . D ERR^SDEC07(SDECI+1,"RTC Order is being edited by "_USER_". Please try again later.",DFN,1) S ERROR=1
  Q ERROR

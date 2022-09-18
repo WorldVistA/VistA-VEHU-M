@@ -1,8 +1,10 @@
-DVBABURL ;ALB/SPH - CAPRI URL ; 1/12/22 10:08am
- ;;2.7;AMIE;**104,136,143,149,168,181,186,192,205,237,240**;Apr 10, 1995;Build 15
+DVBABURL ;ALB/SPH - CAPRI URL ; 8/18/22 5:29pm
+ ;;2.7;AMIE;**104,136,143,149,168,181,186,192,205,237,240,238,245**;Apr 10, 1995;Build 3
  ;Per VHA Directive 6402 this routine should not be modified
  ;ALB/RTW - added 7=VICAP website
  ;237/240 - added News Server URL 
+ ;238 - added DVBA CAPRI CLIN DOC EFOLDER token parameter return
+ ;245- removed key check
  ;
 URL(Y,WHICH) ;
  ;This procedure supports the DVBAB GET URL remote procedure 
@@ -67,4 +69,10 @@ VVATOKEN(DVBAUTH) ;retrieve and return the Virtual VA authorization credentials
  . S DVBAUTH=DVBUSER_U_DVBPWD_U_DVBTOKEN
  E  D  ;failure
  . S DVBAUTH=""
+ Q
+EFOLD(DVBRTN,DUZ) ;
+ ;Reference to XUS KEY CHECK supported by ICR #6286
+ ;
+ K DVBRTN S DVBRTN=""
+ S DVBRTN=$$GET^XPAR("PKG","DVBAB CAPRI CDEFOLD TOKEN",1,"Q")
  Q

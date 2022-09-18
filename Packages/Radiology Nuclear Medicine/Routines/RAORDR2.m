@@ -1,13 +1,13 @@
-RAORDR2 ;ABV/SCR/MKN - Refer Pending/Hold Requests Reason for Request ; Dec 10, 2020@09:07:23
- ;;5.0;Radiology/Nuclear Medicine;**148,161,170**;Mar 16, 1998;Build 1
+RAORDR2 ;ABV/SCR/MKN - Refer Pending/Hold Requests Reason for Request ; Jul 08, 2022@13:00:02
+ ;;5.0;Radiology/Nuclear Medicine;**148,161,170,190**;Mar 16, 1998;Build 1
  ;
- ; Routine              IA          Type
+ ; Routine/File         IA          Type
  ; -------------------------------------
- ; DETAIL^ORWOR        TBR
+ ; DETAIL^ORWOR        NONE
  ; ^OR(100             5771,6475     (C)
  ;
  ;
-GETREAS ;
+GETREAS ;Get Reason
  N RAARRAY,RACOUNT,RAERR,RAFILE,RAI,RAL,RAMED,RANEXT,RARTRN1
  S RAIENS=RAOIFN_","
  S RAFILE=100.008 ;get order actions
@@ -104,23 +104,19 @@ GETILOC(RAITYP) ;p170 returns imaging location
  ;RAITYP   :Imaging Type from the radiology order (#79.2)
  ;Returns an Imaging Location (#79.1)
  Q:'$D(RAITYP)
- N RAOILOC,RAIL,RAILS S RAUDIV=DUZ(2) I $D(RAUDIV) D
+ N RAOILOC,RAIL,RAILS,RAS,RASOC,RAUDIV S RAUDIV=DUZ(2) I $D(RAUDIV) D
  .S RAIL="" F  Q:$G(RAOILOC)]""  S RAIL=$O(^RA(79,RAUDIV,"L","B",RAIL)) Q:RAIL=""  D
- ..I RAITYP=$$GET1^DIQ(79.1,RAIL,6,"I")&($D(^RA(79.1,RAIL,"CON",1))) S RAOILOC=RAIL
+ ..I RAITYP=$$GET1^DIQ(79.1,RAIL,6,"I")&($O(^RA(79.1,RAIL,"CON",0))) S RAOILOC=RAIL
  ..Q
  .Q
  I $G(RAOILOC)="" D  ;still no location?  Lets prompt the user...
- .;W !,"Please select the "_$$GET1^DIQ(79.2,RAITYP,.01)_" location you want to use.",!
- .;I-lOC must match I-Type from order and be active, and we'll show only locations with a CCC associated
- .;N DIR,Y S DIR(0)="P^79.1:EMZ",DIR("S")="I $P(^(0),U,6)=RAITYP,($P(^(0),U,19)=""""),$D(^RA(79.1,Y,""CON"",1))" D ^DIR Q:$D(DIRUT)
- .;N DIR,Y S DIR(0)="P^79.1:EMZ",DIR("S")="I $$LOCSCRN(DA,+Y)" D ^DIR Q:$D(DIRUT)
  .D LOCSCRN
  .I $D(RAILS) D
  ..W !,"Please select the "_$$GET1^DIQ(79.2,RAITYP,.01)_" location you want to use.",!
  ..S (RAS,RASOC)="" F  S RAS=$O(RAILS(RAS)) Q:RAS=""  D
  ...S RASOC=RASOC_RAS
  ...Q
- ..N DIR,Y S DIR(0)="S^"_RASOC D ^DIR Q:$D(DIRUT)
+ ..N DIR,Y,DIRUT S DIR(0)="S^"_RASOC D ^DIR Q:$D(DIRUT)
  ..S RAOILOC=$G(RAILS(+Y_":"_Y(0)_";"))
  ..Q
  .E  W !!,"There are no consult titles associated with "_$$GET1^DIQ(79.2,RAITYP,.01)_".",!,"Please contact your Radiology ADPAC." Q
@@ -142,7 +138,7 @@ LOCSCRN() ;Screen for user prompt to select the i-loc for the order referral
  N RAI,RAC S (RAI,RAC)=0
  F  S RAI=$O(^RA(79.1,"BIMG",RAITYP,RAI)) Q:RAI=""  D
  .Q:$P(^RA(79.1,RAI,0),U,19)]""  ;inactive
- .Q:'$D(^RA(79.1,RAI,"CON",1))  ;no CCC
+ .Q:'$O(^RA(79.1,RAI,"CON",0))  ;no CCC
  .S RAC=RAC+1 ;ctr
  .S RAILS(RAC_":"_$$GET1^DIQ(79.1,RAI,.01)_";")=RAI
  .Q

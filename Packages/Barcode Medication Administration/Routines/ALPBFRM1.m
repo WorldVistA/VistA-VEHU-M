@@ -1,5 +1,5 @@
-ALPBFRM1 ;OIFO-DALLAS MW,SED,KC -STANDARD PRINT FORMATTING UTIL ;2/6/21  15:27
- ;;3.0;BAR CODE MED ADMIN;**8,48,69,59,73,87,125,108**;Mar 2004;Build 33
+ALPBFRM1 ;DAL/SED -STANDARD PRINT FORMATTING UTIL ;Feb 6, 2021@15:27
+ ;;3.0;BAR CODE MED ADMIN;**8,48,69,59,73,87,125,108,135**;Mar 2004;Build 5
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;*69 move code to print Long Wp special istructions lines near end of
@@ -25,7 +25,7 @@ F132(DATA,DAYS,MLCNT,RESULTS,ALPPAT) ; format data into a 132-column
  I $D(DATA)="" Q
  ;
  N ALPBADM,ALPBDAYS,ALPBDRUG,ALPBIBOX,ALPBNBOX,ALPBPBOX,ALPBSTOP,ALPBTEXT,ALPBTIME,ALPBX,DATE,LINE,BOLDON,BOLDOFF,X,ALPBPRNG,ALPBFLG,ALPBPRN,ALPBMLC,ALPBTSTART
- N AD,AINDX,ALPBRM,ALPBDOA,REMTIM       ;*87
+ N AD,AINDX,ALPBRM,ALPBDOA,REMTIM,ALPBNOAS,I,J      ;*87,*135
  ; to use BOLD, comment out the next line and remove comments from
  ; the following five lines...
  S BOLDON="<<",BOLDOFF=">>"
@@ -233,13 +233,14 @@ ADMTIM F I=1:1:ALPBADM D    ;build admin/remove times grid
  .S RESULTS(I+3)=RESULTS(I+3)_$S($L(ALPBADMT)=2:ALPBADMT_"00",1:ALPBADMT)
  .S RESULTS(I+3)=$$PAD^ALPBUTL(RESULTS(I+3),74)_"|"
  .F J=1:1:DAYS D
- ..I ALPBADMT="    " S ALPBTSTART=$P($P($G(DATA(1)),"^",1),".",1),ALPBSTOP=$P($P($G(DATA(1)),"^",2),".",1)
+ ..S ALPBNOAS=$S(+ALPBADMT:1,ALPBPRNG:0,$$OTYP^ALPBUTL($P($G(DATA(3)),"^"))="IV":0,1:1) ;P135 PRN or IV
+ ..I ALPBADMT="    "&ALPBNOAS S ALPBTSTART=$P($P($G(DATA(1)),"^",1),".",1),ALPBSTOP=$P($P($G(DATA(1)),"^",2),".",1) ;P135
  ..S ALPBDAY=+(ALPBDAYS(J)_"."_ALPBADMT)   ;125 - add + to trim insignificant trailing 0's
  ..S ALPBPBOX=ALPBIBOX
 ASTER ..;prints asterisks in boxes if start date is in the future
  ..;and if the stop date has already expired
  ..I AD D      ;on an admin line
- ...I ALPBDAY<ALPBTSTART S ALPBPBOX=ALPBNBOX
+ ...I ALPBDAY<ALPBTSTART&(ALPBNOAS) S ALPBPBOX=ALPBNBOX ;P135
  ...I ALPBDAY>ALPBSTOP!(ALPBDAY=ALPBSTOP) S ALPBPBOX=ALPBNBOX
  ..E  D        ;on a remove line calc orig admin for this remove time
  ...I ALPBDAY["Remove" S ALPBPBOX=ALPBNBOX Q   ;Remove lbl line = *

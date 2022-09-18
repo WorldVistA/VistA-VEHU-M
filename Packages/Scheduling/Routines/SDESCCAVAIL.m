@@ -1,23 +1,18 @@
-SDESCCAVAIL ;ALB/MGD,KML - VISTA SCHEDULING RPCS CANCEL CLINIC AVAILABILITY ; March 23, 2022
- ;;5.3;Scheduling;**800,805,809,813**;Aug 13, 1993;Build 6
+SDESCCAVAIL ;ALB/KML,MGD - VISTA SCHEDULING RPCS CANCEL CLINIC AVAILABILITY ; July 5, 2022
+ ;;5.3;Scheduling;**800,805,809,813,819,820**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
- ;Global References    Supported by ICR#     Type
- ;-----------------    -----------------     ----------
- ; ^TMP($J             SACC 2.3.2.5.1
- ;
- ;External References
- ;-------------------
- ; ^%DT                10003                 Supported
- ; $$FIND1^DIC          2051                 Supported
- ; $$GET1^DIQ           2056                 Supported
+ ; Reference to ^TMP($J Supported by SACC 2.3.2.5.1
+ ; Reference to ^%DT in ICR #10003
+ ; Reference to $$FIND1^DIC in ICR #2051
+ ; Reference to $$GET1^DIQ in ICR #2056
  ;
  Q  ;No Direct Call
  ;
 CANCLAVAIL(SDCLNJSON,SDCLNIEN,SDESCANDATE,SDESSTRTIM,SDESENDTIM,SDCANREM,SDEAS) ;Called from RPC: SDES CANCEL CLINIC AVAILABILITY
  ; This RPC cancels Clinic availability within a given timeframe for a given clinic.
  ; Input:
- ;   SDCLNSREC   [required] - Successs or Error message
+ ;   SDCLNSREC   [required] - Success or Error message
  ;   SDCLNIEN    [required] - The Internal Entry Number (IEN) from the HOSPITAL LOCATION File #44
  ;   SDESCANDATE [required] - The Cancel Date in ISO8601 format (CCYY-MM-DD)
  ;   SDESSTRTIM  [required] - Starting Time in military 24 format (HHMM)
@@ -29,11 +24,11 @@ CANCLAVAIL(SDCLNJSON,SDCLNIEN,SDESCANDATE,SDESSTRTIM,SDESENDTIM,SDCANREM,SDEAS) 
  N A,DA,DFN,DH,I,FR,NOAP,P,SDCNT,SDDATA0,X,Y,SDXX,SDCLNSREC
  D INIT
  D VALIDATE
- I ERRPOP D BLDJSON Q
+ I ERRPOP S SDCLNSREC("Success",1)="" D BLDJSON Q
  D CHECKCLINIC
  I ERRPOP D BLDJSON Q
  D CANCLNAVA
- S SDCLNSREC("Success")="Clinic Availability is successfully cancelled."
+ S SDCLNSREC("Success",1)="Clinic Availability is successfully cancelled."
  D BLDJSON
  Q
  ;
@@ -71,7 +66,7 @@ VALIDATE ; validate incoming parameters
  ;validate EAS
  S SDEAS=$G(SDEAS,"")
  I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
- I +SDEAS=-1 D ERRLOG^SDESJSON(.SDCLNSREC,142) S ERRPOP=1
+ I SDEAS=-1 D ERRLOG^SDESJSON(.SDCLNSREC,142) S ERRPOP=1
  Q
 CHECKCLINIC ;
  ; Clinic does not meet on that day

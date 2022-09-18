@@ -1,5 +1,5 @@
-SDESGETAPPTREQ ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;JUNE 01, 2022@14:18
- ;;5.3;Scheduling;**815,818**;Aug 13, 1993;Build 9
+SDESGETAPPTREQ ;ALB/BLB,MGD,RRM - GET APPT REQ RPCS ;JUNE 15, 2022@15:32
+ ;;5.3;Scheduling;**815,818,819**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to ^VA(200 in ICR #10060
@@ -247,6 +247,8 @@ GETREQUEST(REQUEST,REQUESTIEN) ; get patient appointment from file
  S REQUEST("Request",NUM,"ServiceConnectedPriority")=REQDATA(FN,REQUESTIEN_",",15,"E")
  S REQUEST("Request",NUM,"PatientStatus")=REQDATA(FN,REQUESTIEN_",",.02,"E")
  S REQUEST("Request",NUM,"ParentRequest")=REQDATA(FN,REQUESTIEN_",",43.8,"I")
+ S REQUEST("Request",NUM,"ModalityName")=REQDATA(FN,REQUESTIEN_",",6,"E")
+ S REQUEST("Request",NUM,"ModalityCode")=REQDATA(FN,REQUESTIEN_",",6,"I")
  ;
  D FINISHAPPTREQ(.REQUEST,NUM,REQUESTIEN)
  ; build recall and consult

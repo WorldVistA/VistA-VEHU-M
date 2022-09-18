@@ -1,5 +1,5 @@
-IBCNIUHL ;AITC/TAZ - IIU PROCESS SEND INSURANCE TRANSMISSIONS;04/06/21 12:46p.m.
- ;;2.0;INTEGRATED BILLING;**687**;21-MAR-94;Build 88
+IBCNIUHL ;AITC/TAZ - IIU PROCESS SEND INSURANCE TRANSMISSIONS ; 04/06/21 12:46p.m.
+ ;;2.0;INTEGRATED BILLING;**687,713**;21-MAR-94;Build 12
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -51,7 +51,8 @@ RT(IIUIEN) ; Real Time IIU Processing
 RT1 ; entry tag for BUFFER^IBCNIUHL that we had to job off, this will correctly
  ; update the values in the DATA array
  ;
- N DA,DATA,DISYS,DFN,EFFDT,EFLAG,EXPDT,FAC,HCT,IBADDR,IBCNHLP,IBSDATA,ICN,IENS,INSIEN,INSIENS
+ ;IB*713/CKB add BADMSG variable to stop HL7 processing due to foreign characters
+ N DA,DATA,DISYS,DFN,EFFDT,EFLAG,EXPDT,FAC,BADMSG,HCT,IBADDR,IBCNHLP,IBSDATA,ICN,IENS,INSIEN,INSIENS
  N NM,PDATE,PIEN,PIENS,PREL,PTR,ROUTINE,VACNTRY,ZMID
  N HL,HL771RF,HL771SF,HLA,HLCDOM,HLCINS,HLCS,HLCSTCP,HLDOM,HLDOMP,HLECH,HLFS,HLHDR,HLINST,HLINSTN,HLIP,HLL,HLN
  N HLPARAM,HLPID,HLPROD,HLREC,HLRESLT,HLRFREQ,HLSFREQ,HLTYPE,HLX
@@ -89,10 +90,14 @@ RT1 ; entry tag for BUFFER^IBCNIUHL that we had to job off, this will correctly
  . S CNT=CNT+1,HLL("LINKS",CNT)="IBCNIU PIN/I07 SUB"_U_LINK(LINKIEN)
  I 'CNT G RTQ   ; No facilities to send
  ;
+ S BADMSG=0  ;IB*713 - initialize to 0 - "NO"
+ ;
  ; Build PIN-I07 record
  D BLD(.DATA)
  ;
  I $G(EFLAG) G RTQ  ;Error creating HL7 record.  Try later.
+ ;NOTE:  BADMSG Returns 1-"YES" if processing is to stop.
+ I BADMSG G RTQ   ;IB*713/CKB DO NOT send HL7 msg
  ;
  ; Generate HL7 record
  D GENERATE^HLMA(IBCNHLP,"GM",1,.HLRESLT,"","")
@@ -130,7 +135,7 @@ BLD(DATA) ; Build the PIN_I07 record.
  ;    DATA         - Data Array of all variables for the record from IIU (#365.19), PAYER (#365.12), 
  ;                   and INSURANCE TYPE (#2.312) files
  ;
- N BIN,DOB,GRP,GT1,IN1,INSDOB,NTE,PCN,PID,PRD,SUBID,VAFSTR,WHO
+ N BIN,DOB,FLD,GRP,GT1,IN1,INSDOB,NTE,PCN,PID,PRD,SUBID,VAFSTR,WHO
  ; The following variables are used in multiple segments
  S DOB=$G(DATA(2.312,INSIENS,3.01,"I"))        ;DATE OF BIRTH
  S SUBID=$G(DATA(365.19,IIUIEN_",",1.06,"E"))  ;SUBSCRIBER ID
@@ -150,6 +155,7 @@ BLD(DATA) ; Build the PIN_I07 record.
  S $P(PID,HLFS,4)=ICN_HLECH_HLECH_HLECH_"USVHA"_HLECH_"NI"_HLECH_"USVHA"
  ;
  I PID=""!(PID?."*") S EFLAG=1 G BLDQ
+ ;
  S HCT=HCT+1,^TMP("HLS",$J,HCT)=$TR(PID,"*","")
  ;
  ;Set up GT1 Node if dependent policy
@@ -161,7 +167,14 @@ BLD(DATA) ; Build the PIN_I07 record.
  . ; segment 3 - Guarantor Name (Name of Insured)
  . S NM=$G(DATA(2.312,INSIENS,7.01,"I"))   ; Set name to NAME OF INSURED
  . S NM=$$HLNAME^HLFNC(NM,HLECH)
- . S $P(GT1,HLFS,3)=NM_HLECH_HLECH_HLECH
+ ;
+ ;IB*713/CKB - add checks for foreign characters
+ ;If foreign chars encountered DO NOT send HL7
+ I GT1]"",$$FOREIGN^IBCNINSU($P(GT1,HLFS,2)) S BADMSG=1 Q  ;GT1-2 SUBSCRIBER ID
+ ;
+ ;If foreign chars encountered clear field and continue with msg
+ ; GT1-3 SUBSCRIBER NAME/NAME OF INSURED 
+ I GT1]"" S FLD=$P(GT1,HLFS,3) I $$FOREIGN^IBCNINSU(.FLD,1,1) S $P(GT1,HLFS,3)=FLD ;GT1-3
  ;
  I GT1]"" D
  . S $P(GT1,HLFS,1)=1,GT1="GT1"_HLFS_GT1 ;
@@ -180,6 +193,15 @@ BLD(DATA) ; Build the PIN_I07 record.
  S $P(IN1,HLFS,8)=$$ENCHL7($G(DATA(2.312,INSIENS,21,"E")))
  ; Segment 9 - Group Name
  S $P(IN1,HLFS,9)=$$ENCHL7($G(DATA(2.312,INSIENS,20,"E")))
+ ;
+ ;IB*713/CKB - add check for foreign characters
+ ;If foreign chars encountered DO NOT send HL7
+ I $$FOREIGN^IBCNINSU($P(IN1,HLFS,2)) S BADMSG=1 Q    ;IN1-2 PATIENT/SUBSCRIBER ID
+ ;
+ ;If foreign chars encountered clear field and continue with msg
+ S FLD=$P(IN1,HLFS,8) I $$FOREIGN^IBCNINSU(.FLD,1,1) S $P(IN1,HLFS,8)=FLD ;IN1-8 GROUP NUMBER
+ S FLD=$P(IN1,HLFS,9) I $$FOREIGN^IBCNINSU(.FLD,1,1) S $P(IN1,HLFS,9)=FLD ;IN1-9 GROUP NAME
+ ;
  ; Segment 12 - Effective Date of Policy
  S EFFDT=$G(DATA(2.312,INSIENS,8,"I")),$P(IN1,HLFS,12)=$$HLDATE^HLFNC(EFFDT)
  ; Segment 15 - Plan Type
@@ -267,12 +289,12 @@ BUFFER(IIUIEN) ;
  ;
  ;Checking Insurance Company Name, Name of Insured, Subscriber ID
  F FIELD=.01,7.01,7.02 D  I 'OK G BUFFERQ
- . I DATA(2.312,INSIENS,FIELD,"E")="" S OK=0
+ . I $G(DATA(2.312,INSIENS,FIELD,"E"))="" S OK=0
  ;
  ;IF Pt. Relationship-HIPAA is not SELF, then Insured Date of Birth + Patient ID are required
  I DATA(2.312,INSIENS,4.03,"E")'="SELF" D
- . I DATA(2.312,INSIENS,3.01,"E")="" S OK=0  Q  ;Insured Date of Birth
- . I DATA(2.312,INSIENS,5.01,"E")="" S OK=0     ;Patient ID
+ . I $G(DATA(2.312,INSIENS,3.01,"E"))="" S OK=0  Q  ;Insured Date of Birth
+ . I $G(DATA(2.312,INSIENS,5.01,"E"))="" S OK=0     ;Patient ID
  ;
 BUFFERQ ;Exit
  ;

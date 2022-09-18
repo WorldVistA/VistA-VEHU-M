@@ -1,5 +1,5 @@
 VPRSDA ;SLC/MKB -- SDA utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,16,20,26,28**;Sep 01, 2011;Build 6
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,16,20,26,28,29**;Sep 01, 2011;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -20,8 +20,10 @@ VPRSDA ;SLC/MKB -- SDA utilities ;10/25/18  15:29
  ; LEXTRAN                       4912
  ; RMIMRP                        4745
  ; TIULQ                         2693
- ; WVRPCVPR                      7199
+ ; VASITE                       10112
+ ; WVRPCVPR, ^TMP("WVPREGST"     7199
  ; XLFNAME                       3065
+ ; XUPARAM                       2541
  ;
 INTDATE(X) ; -- Return internal form of date X
  N %DT,Y
@@ -64,6 +66,8 @@ NAMECOMP(NAME) ; -- return name as string of component pieces
  Q Y
  ;
 CODED ; -- ck Code Table ID for internal^external format
+ ; called from DDEG for entity VPR CODE TABLE using variables:
+ ;   FILE, FIELD, ID (read only, do NOT kill)
  Q:$G(ID)=""  Q:$L(ID,"^")>1  ;ok
  N X,NM S NM=ID
  I $G(FILE),$G(FIELD) D
@@ -132,9 +136,14 @@ COUNTY(ST,CTY) ; -- return ien^name for a STate and CounTY
  S:$L(Y) Y=+CTY_U_Y
  Q Y
  ;
+SITE() ; -- return current site#
+ N Y S Y=+$$SITE^VASITE
+ S:Y'>0 Y=$$KSP^XUPARAM("INST")
+ Q Y
+ ;
  ;
 OR1(ORIFN) ; -- define basic variables for any order
- ; Returns OR0, OR3, OR6, OR8, ORDAD, and ORSIG
+ ; Returns OR0, OR3, OR6, OR8, ORDAD, and ORSIG to Order entities
  S ORIFN=+$G(ORIFN)
  S OR0=$G(^OR(100,ORIFN,0)),OR3=$G(^(3)),OR6=$G(^(6)),OR8=$G(^(8,1,0))
  S ORDAD=$P($G(OR3),U,9) ;parent order
@@ -179,18 +188,7 @@ ORSIG(ORIFN) ; -- return string of signature data from Order Action as
  S X=$P(Y,U) S:$L(X) $P(Y,U)=$$EXTERNAL^DILFD(100.008,4,,X)
  Q Y
  ;
-AD(ID) ; -- get info for one Adv Directive
- K VPRTIU S ID=$G(ID)
- D EXTRACT^TIULQ(+ID,"VPRTIU",,".01:.05;1201;1212;1301;1302",,1,"I")
- S:'DFN DFN=+$G(VPRTIU(+ID,.02,"I"))
- I DFN,'$D(^TMP("TIUPPCV",$J)) D  ;one, do query
- . N DLIST,I,X
- . D ADVDIR^VPRSDAQ
- . S I=0 F  S I=$O(DLIST(I)) Q:I<1  S X=$G(DLIST(I)) I +X=+ID S ID=X Q
- S VPRADV=ID,ID=+ID
- Q
- ;
-CP1(IEN) ; -- get MD nodes for procedure [ID Action]
+CP1(IEN) ; -- get MD nodes for procedure [ID Action], returns:
  ; VPRCP = ^TMP("MDHSP",$J,I)
  ; VPRCN = ^GMR(123,consult,0)
  ; VPRTIU(field#,"I") = TIU data field
@@ -210,7 +208,8 @@ CP1(IEN) ; -- get MD nodes for procedure [ID Action]
  . M VPRTIU=VPRD(X)
  Q
  ;
-VIT1(IEN) ; -- get info for one Vital measurement, returns VPRGMV=^(0)
+VIT1(IEN) ; -- get info for one Vital measurement
+ ; returns VPRV array, VPRGMV=VPRV(0), VPRANGE, VPRTYPE to entity
  S IEN=$G(IEN) I IEN="" S DDEOUT=1 Q
  D GETREC^GMVUTL(.VPRV,IEN,1)
  S VPRGMV=$G(VPRV(0)) I '$G(VPRV(0)) S DDEOUT=1 Q
@@ -243,6 +242,7 @@ VITCODE(IEN,SFN) ; -- return [first] code for vital type
  Q Y
  ;
 FIM1(IEN) ; -- get info for one set of measurements
+ ; Returns VPRSITE, VPRM arrays to entity
  I '$D(VPRSITE) D PRM^RMIMRP(.VPRSITE) I '$O(VPRSITE(1)) S DDEOUT=1 Q
  D GC^RMIMRP(.VPRM,IEN)
  ; S:'$G(DFN) ??
@@ -275,6 +275,7 @@ TOTAL(NODE) ; -- Return total of scores, or "" if incomplete
  Q SUM
  ;
 WVPL1(IEN) ; -- set up pregnancy API array (IEN will be DFN)
+ ; Returns VPRPREG array to entity
  I $G(IEN)<1 S DDEOUT=1 Q
  D:'$D(^TMP("WVPREGST",$J,"BASELINE")) BASELINE^WVRPCVPR(IEN)
  I '$D(^TMP("WVPREGST",$J,"BASELINE")) S DDEOUT=1 Q

@@ -1,8 +1,8 @@
 PSOREJU4 ;BIRM/LE - Pharmacy Reject Overrides ;06/26/08
- ;;7.0;OUTPATIENT PHARMACY;**289,290,358,359,385,421,448,561,562**;DEC 1997;Build 19
- ;Reference to DUR1^BPSNCPD3 supported by IA 4560
- ;Reference to 9002313.93 supported by IA 4720
- ;Reference to ELIG^BPSBUTL supported by IA 4719
+ ;;7.0;OUTPATIENT PHARMACY;**289,290,358,359,385,421,448,561,562,648**;DEC 1997;Build 15
+ ; Reference to DUR1^BPSNCPD3 in ICR #4560
+ ; Reference to 9002313.93 in ICR #4720
+ ; Reference to ELIG^BPSBUTL in ICR #4719
  ;
 AUTOREJ(CODES,PSODIV) ;API to evaluate an array of reject codes to see if they are allowed to be passed to OP reject Worklist 
  ;Input:      CODES - required; array of codes to be validated for overrides.  
@@ -67,6 +67,7 @@ WRKLST(RX,RFL,COMMTXT,USERID,DTTIME,OPECC,RXCOB,RESP) ;External API to store rej
  . . . S REJIDX=0
  . . . F  S REJIDX=$O(^PSRX(RX,"REJ","B",CODE,REJIDX)) Q:'REJIDX  D
  . . . . I +$$GET1^DIQ(52.25,REJIDX_","_RX,9,"I")=1 Q  ; already closed
+ . . . . I $$GET1^DIQ(52.25,REJIDX_","_RX,2)["NOT INSURED" Q  ; already has an unresolved not insured reject
  . . . . D CLOSE^PSOREJUT(RX,RFL,REJIDX,"",1)
  . . ;
  . . I CODE'="79"&(CODE'="88")&(CODE'="943")&('$G(PSOTRIC)) S AUTO=$$EVAL(PSODIV,CODE,OPECC) Q:'+AUTO

@@ -1,5 +1,5 @@
 IBCNERTQ ;ALB/BI - Real-time Insurance Verification ;15-OCT-2015
- ;;2.0;INTEGRATED BILLING;**438,467,497,549,582,593,601,631,659,664,668**;21-MAR-94;Build 28
+ ;;2.0;INTEGRATED BILLING;**438,467,497,549,582,593,601,631,659,664,668,713**;21-MAR-94;Build 12
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -197,7 +197,10 @@ PROCSEND(TQIEN) ; Make call to PROC^IBCNEDEP to build the HL7 message.  Then sen
  ;  Initialize HL7 variables protocol for Verifications
  S IBCNHLP="IBCNE IIV RQV OUT"
  D INIT^IBCNEHLO
- D PROC^IBCNEDEP
+ ;
+ ;IB*713/TAZ - Change to function call and quit if 0 is returned.
+ I '$$PROC^IBCNEDEP Q 0
+ ;
  D GENERATE^HLMA(IBCNHLP,"GM",1,.HLRESLT,"",.HLP)
  ;  If not successful
  I $P(HLRESLT,U,2)]"" D HLER^IBCNEDEQ Q 0

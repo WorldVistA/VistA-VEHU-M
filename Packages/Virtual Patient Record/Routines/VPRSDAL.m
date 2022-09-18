@@ -1,5 +1,5 @@
 VPRSDAL ;SLC/MKB -- SDA Allergy utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,14**;Sep 01, 2011;Build 38
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,14,29**;Sep 01, 2011;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -10,7 +10,7 @@ VPRSDAL ;SLC/MKB -- SDA Allergy utilities ;10/25/18  15:29
  ; GMRADPT                      10099
  ; GMRAOR2                       2422
  ;
-ALG1(IEN) ; -- get info for single allergy, returns VPRALG
+ALG1(IEN) ; -- return info for single allergy in VPRALG & GMRAY arrays
  N GMRA K VPRALG
  I '$D(^GMR(120.8,+$G(IEN),0)) S DDEOUT=1 Q
  I '$D(GMRAL) D
@@ -44,6 +44,7 @@ ALGCMT1(IEN,TYPE) ; -- return TYPE comment
  ;
 ALGCMT(IEN) ; -- return list of comments in
  ; DLIST(#) = id ^ date ^ user ^ type ^ facility ^ text
+ ; expects VASITE (read only) from Entity
  N I,X,Y,TXT S IEN=+$G(IEN)
  S I=0 F  S I=$O(^GMR(120.8,IEN,26,I)) Q:I<1  S X=$G(^(I,0)) D
  . Q:$P(X,U,3)="E"
@@ -55,7 +56,8 @@ ALGCMT(IEN) ; -- return list of comments in
 ALGSEV(IEN) ; -- return overall Allergy Severity
  N I,SEV,X,Y
  S (SEV,Y)="",I=0
- ; find highest severity among reactions
+ I $D(GMRAY("H")) S SEV=$P(GMRAY("H"),U,2)
+ ; else find highest severity among reactions
  F  S I=$O(GMRAY("O",I)) Q:I<1  S X=$P(GMRAY("O",I),U,2) I $L(X),X]SEV S SEV=X
  I $L(SEV)>1 D
  . S X=$E(SEV,1,2),Y=$S(X="MI":255604002,X="MO":6736007,X="SE":24484000,1:"")
@@ -64,6 +66,7 @@ ALGSEV(IEN) ; -- return overall Allergy Severity
  Q Y
  ;
 ALGDT(IEN) ; -- return first D/T of Event
+ I $G(GMRAY("H")) S Y=$P(GMRAY("H"),U) Q Y
  N I,RDT,X,Y
  S I=0,RDT=9999999,Y=""
  ; find first date.time among reactions
@@ -83,6 +86,7 @@ ALGSIGN(IEN) ; -- convert ien^name[^date] to national code for Sign/Symptom
  Q
  ;
 ASSESS ; -- get Assessment #120.86 for patient
+ ; expects ID (read only) from Entity
  I '$G(DFN),$G(ID) S DFN=ID
  Q:'$G(DFN)
  K GMRAL D EN1^GMRADPT

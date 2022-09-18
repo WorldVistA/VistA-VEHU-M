@@ -1,8 +1,8 @@
-SDESCANCELAPPTS ;ALB/BLB - VISTA SCHEDULING RPCS ;May 18, 2022
- ;;5.3;Scheduling;**818**;Aug 13, 1993;Build 9
+SDESCANCELAPPTS ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;July 19, 2022
+ ;;5.3;Scheduling;**818,820**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
- ;Cancel appointments in files 409.84, 44, 2. 
+ ;Cancel appointments in files 409.84, 44, 2.
  ;
  ;APPTIEN - (required) pointer to SDEC APPOINTMENT file #409.84
  ;CLINICIEN -(required) pointer to hospital location file #44

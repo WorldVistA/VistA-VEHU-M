@@ -1,11 +1,11 @@
-SDESUPDRECREQ ;ALB/LAB,MGD,KML -  ;Feb 23, 2022
- ;;5.3;Scheduling;**803,805,809**;Aug 13, 1993;Build 10
+SDESUPDRECREQ ;ALB/LAB,KML,MGD -  ;July 19, 2022
+ ;;5.3;Scheduling;**803,805,809,820**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
- ; External Reference of XPDKEY ICR #1367 ;supported
- ; External Reference of XUSRB ICR #3277 ;supported
+ ; Reference to $$LKUP^XPDKEY is supported by IA #1367
+ ; Reference to OWNSKEY^XUSRB is supported by IA #3277
  ;
  ;INPUT:
  ;   RECALLIEN - sent for UPDATE of RECALL REQUEST only(Required for Update) IEN pointer to RECALL REMINDERS
@@ -33,7 +33,7 @@ CREATERECREQ(RETN,DFN,ACCNO,SDCMT,FASTING,APPTP,RRPROVIEN,CLINIEN,APPTLEN,DATE,R
  S RECALLIEN="+1",SDCREATE=1
  S POP=0
  D VALIDATE
- D:POP BLDJSON
+ I POP D BLDJSON
  Q:POP
  D DATACONV
  D BLDREC
@@ -47,7 +47,7 @@ UPDRECALLREQ(RETN,RECALLIEN,DFN,ACCNO,SDCMT,FASTING,APPTP,RRPROVIEN,CLINIEN,APPT
  N POP,SDRECREQ,SDFDA,SDMSG,SDIEN
  S POP=0,SDCREATE=0
  D VALIDATE
- D:POP BLDJSON
+ I POP D BLDJSON
  Q:POP
  D DATACONV
  D BLDREC
@@ -67,7 +67,7 @@ DATACONV ;make any data conversion changes
  S SDCMT=$TR($G(SDCMT),"^"," ")
  Q
  ;
-VALIDATE ;validate input paramters
+VALIDATE ;validate input parameters
  N NUM
  I $G(RECALLIEN)="" S POP=1,NUM=16 D CALLERROR Q
  I (RECALLIEN'="+1")&('$D(^SD(403.5,+RECALLIEN))) S POP=1,NUM=17 D CALLERROR Q
@@ -97,7 +97,7 @@ VALIDATE ;validate input paramters
  I (SDENTDT=-1)!(SDENTDT="") S SDENTDT=DT ;
  ;validate EAS
  I $L(EAS) S EAS=$$EASVALIDATE^SDESUTIL(EAS)
- I +EAS=-1 S POP=1,NUM=142 D CALLERROR
+ I EAS=-1 S POP=1,NUM=142 D CALLERROR
  Q
  ;
 CALLERROR ;calls json error logic if error encountered

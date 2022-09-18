@@ -1,5 +1,5 @@
 BPSOSCC ;BHAM ISC/FCS/DRS/DLF - Set up BPS() ;06/01/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,8,10,11,19,27**;JUN 2004;Build 15
+ ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,8,10,11,19,27,32**;JUN 2004;Build 15
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; GETINFO - Create BPS array for non-repeating data
@@ -15,7 +15,7 @@ GETINFO(IEN59,IEN5902) ; EP - BPSOSCB
  Q:$G(IEN59)=""
  Q:$G(IEN5902)=""
  ;
- N BPPAYSEQ,DFN,IENS,NPI,SITE,VADM,VAPA,X
+ N BPPAYSEQ,BPSSEX,BPSSIG,DFN,IENS,NPI,SITE,VADM,VAPA,X
  ;
  S BPPAYSEQ=$$COB59^BPSUTIL2(IEN59)  ; COB payer sequence
  ; Setup IENS for transaction multiple
@@ -54,7 +54,10 @@ GETINFO(IEN59,IEN5902) ; EP - BPSOSCB
  S BPS("Patient","Middle Name")=$G(PSONAME("MIDDLE"))
  S BPS("Patient","Prefix")=$G(PSONAME("PREFIX"))
  S BPS("Patient","Suffix")=$G(PSONAME("SUFFIX"))
- S BPS("Patient","Sex")=$P($G(VADM(5)),"^",1)
+ S BPSSEX=$P($G(VADM(5)),"^",1)  ; SEX, field# .02
+ S BPSSIG=$P($G(VADM(14,5)),"^",2)  ; SELF IDENTIFIED GENDER, field# .024
+ I BPSSIG'="" S BPS("Patient","Gender Code")=$S(BPSSIG="M":1,BPSSIG="F":2,BPSSIG="N":0,1:3)
+ E  S BPS("Patient","Gender Code")=$S(BPSSEX="M":1,BPSSEX="F":2,1:0)
  S X=$P($G(VADM(3)),"^")  ; date of birth, FM format
  S BPS("Patient","DOB")=($E(X,1,3)+1700)_$E(X,4,7)
  S BPS("Patient","SSN")=$P($G(VADM(2)),"^",1)

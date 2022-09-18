@@ -1,5 +1,5 @@
 PSOBPSU4 ;AITC/MRD - BPS (ECME) Utilities 4 ;10/29/2020
- ;;7.0;OUTPATIENT PHARMACY;**561**;DEC 1997;Build 41
+ ;;7.0;OUTPATIENT PHARMACY;**561,648**;DEC 1997;Build 15
  ;
 BYPASSACT(PSORX) ; 'BY' hidden action, Bypass 3/4 Day Supply.
  ;
@@ -71,7 +71,7 @@ FLAG(PSORX,PSOFILL) ; Determine how the bypass flag is currently set.
  ; Bypass 3/4 Day Supply flag for the given Rx and Fill.
  ;
  I PSOFILL=0 Q $$GET1^DIQ(52,PSORX,94,"E")
- E  Q $$GET1^DIQ(52.1,PSOFILL_","_PSORX,94,"E")
+ E  Q $$GET1^DIQ(52.1,PSOFILL_","_PSORX,98,"E")
  ;
 SETFLAG(PSORX,PSOFILL,PSOFLAG) ; Set the bypass flag to the value passed.
  ;
@@ -82,7 +82,7 @@ SETFLAG(PSORX,PSOFILL,PSOFLAG) ; Set the bypass flag to the value passed.
  . D FILE^DIE("E","PSOX","")
  . Q
  E  D
- . S PSOX(52.1,PSOFILL_","_PSORX_",",94)=PSOFLAG
+ . S PSOX(52.1,PSOFILL_","_PSORX_",",98)=PSOFLAG
  . D FILE^DIE("E","PSOX","")
  . Q
  ;

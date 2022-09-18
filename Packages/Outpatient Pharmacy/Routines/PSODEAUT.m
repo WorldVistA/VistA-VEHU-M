@@ -1,5 +1,5 @@
 PSODEAUT ;ALB/BI - DEA MANUAL ENTRY ;05/15/2018
- ;;7.0;OUTPATIENT PHARMACY;**529**;DEC 1997;Build 94
+ ;;7.0;OUTPATIENT PHARMACY;**529,684**;DEC 1997;Build 57
  ;External reference to sub-file NEW DEA #S (#200.5321) is supported by DBIA 7000
  ;External reference to DEA BUSINESS ACTIVITY CODES file (#8991.8) is supported by DBIA 7001
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002

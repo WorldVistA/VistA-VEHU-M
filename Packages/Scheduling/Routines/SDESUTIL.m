@@ -1,5 +1,5 @@
-SDESUTIL ;ALB/MGD/TAW,KML,LAB - SDES Utilities ;April 22, 2022
- ;;5.3;Scheduling;**801,804,805,814,816,818**;Aug 13, 1993;Build 9
+SDESUTIL ;ALB/TAW,KML,LAB,MGD - SDES Utilities ;June 29, 2022
+ ;;5.3;Scheduling;**801,804,805,814,816,818,820**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to INSTITUTION in #2251
@@ -86,7 +86,7 @@ SUMMER(DSTDT,DOW,SUNDAY) ; determine last Sunday of MARCH or OCTOBER
  ; DSTDT - March or October (e.g, CYY0301 or CYY1001)
  ; DOW - 1, 2, 3, 4, 5, or 6
  ; SUNDAY - "4,5" representing 4th or 5th Sunday of March or October
- ; Returns the date when SUMMER offset begins or ends (e.g., eastern europe uses Summer offset)
+ ; Returns the date when SUMMER offset begins or ends (e.g., eastern Europe uses Summer offset)
  N X,VALIDSUNDAY,LASTSUNDAY
  S DSTDT=$G(DSTDT),DOW=$G(DOW),SUNDAY=$G(SUNDAY)
  S LASTSUNDAY=0
@@ -122,11 +122,11 @@ TIMEZONEDATA(CLINICIEN) ;Get timezone and offsets
  ;
 GETTZOFFSET(SDDATE,SDCLINIC) ;Get Time Zone offset based on clinic and daylight savings
  ; SDCLINIC - OPT - IEN from Hospital Location #44
- ; SDDATE   - REQ - FM fomatted date
+ ; SDDATE   - REQ - FM formatted date
  ; Return
- ;   If clinic is passed in get Division then Instution
- ;   Otherwise get Instution from Kernel System Parameters
- ;   Get the Time Zone and Time Zone Exception from the Instution
+ ;   If clinic is passed in get Division then Institution
+ ;   Otherwise get Institution from Kernel System Parameters
+ ;   Get the Time Zone and Time Zone Exception from the Institution
  N OFFSET,TZINFO
  S SDDATE=$G(SDDATE)
  I '$$VALIDFMFORMAT^SDECDATE(SDDATE) Q ""
@@ -136,3 +136,15 @@ GETTZOFFSET(SDDATE,SDCLINIC) ;Get Time Zone offset based on clinic and daylight 
  ; If the Institution uses DST or SUMMER & SDDATE is in the daylight savings period, then send the DST/SUMMER Offset
  I $P(TZINFO,"^",3)=0 S OFFSET=$S($$ISDATEDST(SDDATE,$P(TZINFO,"^",6)):$P(TZINFO,"^",5),1:OFFSET)
  Q OFFSET
+ ;
+CHAR4(CLINNAME) ;
+ ; CLINNAME - REQ - Name of clinic from #44
+ ; Return
+ ;  The CODE (#.01) field from NATIONAL CLINIC (#728.411) file or null
+ N CODE,IEN,NATLCODE
+ I CLINNAME="" Q ""
+ I '$D(^SC("B",CLINNAME)) Q ""
+ S IEN=$$FIND1^DIC(728.44,"","X",CLINNAME)
+ I 'IEN Q ""
+ S NATLCODE=$$GET1^DIQ(728.44,IEN_",",7,"E")
+ Q NATLCODE

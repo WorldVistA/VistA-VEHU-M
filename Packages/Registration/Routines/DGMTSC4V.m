@@ -1,5 +1,5 @@
-DGMTSC4V ;ALB/AMA,HM - Means Test Screen Net Worth For MT Version 1 ;11/7/03 1:44pm
- ;;5.3;Registration;**688,1014**;Aug 13, 1993;Build 42
+DGMTSC4V ;ALB/AMA,HM,JAM - Means Test Screen Net Worth For MT Version 1 ;11/7/03 1:44pm
+ ;;5.3;Registration;**688,1014,1064**;Aug 13, 1993;Build 41
  ;Copied from DGMTSC4
  ;
  ; Input  -- DFN      Patient IEN
@@ -64,6 +64,11 @@ MTMSG ;DG*5.3*1014 only display for view a past means test
  .D DEP^DGMTSCU2,INC^DGMTSCU3
  .S DGCAT=$P(^DGMT(408.31,DGMTI,0),"^",3),DGCAT=$P(^DG(408.32,DGCAT,0),"^",2) D STA^DGMTSCU2 S DGCNT=1
  .W !!!!!! I DGMTYPT=1 W "Income of ",$J($$AMT^DGMTSCU1(DGINT-DGDET),12) W "  ",$$GETNAME^DGMTH(DGMTS)
+ .;jam; DG*5.3*1064
+ .I $$INDSTATUS^DGENELA2(DFN) D
+ . . D BLD^DIALOG(261134,"","","","F")
+ . . D MSG^DIALOG("WM","","","")
+ .;
  .;I DGMTYPT=1,DGTYC="M",(DGNWT-DGDET)+$S($G(DGMTNWC):0,1:DGINT)'<$P(DGMTPAR,"^",8) W !,?3,"with property of ",$J($$AMT^DGMTSCU1(DGNWT),12)," makes a ",$S(DGTHG>DGTHA:"G",1:""),"MT COPAY REQUIRED status."
  .;I DGTYC="M",'DGNWTF W " requires property information."
  .;I DGMTYPT=2,'DGNWTF,DGCAT="E" W "Requires property information."

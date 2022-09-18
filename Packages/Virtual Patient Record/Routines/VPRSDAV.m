@@ -1,5 +1,5 @@
 VPRSDAV ;SLC/MKB -- SDA Visit utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**20,26,27,28**;Sep 01, 2011;Build 6
+ ;;1.0;VIRTUAL PATIENT RECORD;**20,26,27,28,29**;Sep 01, 2011;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -71,6 +71,13 @@ VST ; -- get info for a VISIT in @VPRVST [ID Action]
  I D,'$$VALID^VPRSDA(D) S $P(@VPRVST@(0),U,18)=""
  Q
  ;
+LAST(DFN) ; -- return date.time of last visit (last treated)
+ N IDT,X,Y S Y=""
+ I '$G(DFN) Q ""
+ S IDT=(9999999-DT-.000001),X=$O(^AUPNVSIT("AA",DFN,IDT))
+ S:X Y=(9999999-$P(X,"."))_$S($L(X,".")>1:"."_$P(X,".",2),1:"")
+ Q Y
+ ;
 STUB(VST) ; -- switch to stub entity for deleted visits
  N ENT S ENT=+$O(^DDE("B","VPR VISIT STUB",0))
  I ENT<1 S DDEOUT=1 Q
@@ -78,6 +85,8 @@ STUB(VST) ; -- switch to stub entity for deleted visits
  Q
  ;
 VDEL ; -- old V file Entry Action: I ID["~" D VDEL^VPRSDAV
+ ; Expects ID & FILE
+ ; Returns VPRVST, VPRVFN, VPRVT & resets DTYPE for entity
  S VPRVST=+$P($G(ID),"~",2),ID=+$G(ID),VPRVFN=+$G(FILE),VPRVT=DTYPE
  S DTYPE=$O(^DDE("B","VPR VFILE DELETE",0))
  Q
@@ -108,21 +117,35 @@ VAIP ; -- get admission info & Visit# [ID Action]
  I VPRVST<1 S DDEOUT=1 Q
  Q
  ;
-MVTS(ADM) ; -- get all movements for an ADMission in DLIST(#)=mvt ien
+MVTS(ADM) ; -- get movements for an ADMission in DLIST(#)=mvt ien
  ; Expects DFN
- N DATE,DA,N
- S (DATE,N)=0 F  S DATE=$O(^DGPM("APCA",DFN,ADM,DATE)) Q:DATE<1  D
- . S DA=0 F  S DA=$O(^DGPM("APCA",DFN,ADM,DATE,DA)) Q:DA<1  S N=N+1,DLIST(N)=DA
+ N MVTS,IDX,DA,X0,PHYMVT,DATE,N,TS
+ S ADM=+$G(ADM) Q:ADM<1
+ S IDX=$NA(^DGPM("APCA",DFN,ADM)) ;get all physical mvts
+ F  S IDX=$Q(@IDX) Q:$QS(IDX,3)'=ADM  D
+ . S DA=$QS(IDX,5),DATE=+$G(^DGPM(DA,0))
+ . I DATE,DA S MVTS(DATE,DA)=""
+ S IDX=$NA(^DGPM("ATS",DFN,ADM))  ;add TS mvts to list
+ F  S IDX=$Q(@IDX) Q:$QS(IDX,3)'=ADM  S DA=$QS(IDX,6) D
+ . S X0=$G(^DGPM(DA,0)),PHYMVT=+$P(X0,U,24)
+ . I PHYMVT,$D(MVTS(+X0,PHYMVT)) S MVTS(+X0,PHYMVT)=DA Q
+ . S MVTS(+X0,DA)=DA
+ ; create return DLIST from MVTS
+ S (DATE,N)=0 F  S DATE=$O(MVTS(DATE)) Q:DATE<1  D
+ . S DA=0 F  S DA=$O(MVTS(DATE,DA)) Q:DA<1  D
+ .. S TS=$G(MVTS(DATE,DA))
+ .. S N=N+1,DLIST(N)=DA_$S(TS:";"_TS,1:"")
  Q
  ;
 VNUM(ADM) ; -- find Visit# for an admission [expects DFN]
- N VAINDT,LOC,X0,WD,X,Y S Y=""
- S X0=$G(^DGPM(+$G(ADM),0)),X=+X0,VAINDT=(9999999-$P(X,"."))_"."_$P(X,".",2)
- S WD=+$P(X0,U,6),LOC=+$G(^DIC(42,WD,44)) ;ck location, if >1
- I LOC S I=0 F  S I=$O(^AUPNVSIT("AAH",DFN,VAINDT,I)) Q:I<1  D  Q:Y
- . I $P($G(^AUPNVSIT(I,0)),U,22)=LOC S Y=I
- ; if no loc match, default to old logic (1st)
- I 'Y S Y=$O(^AUPNVSIT("AAH",DFN,VAINDT,0))
+ N Y,ADM0,ADMDT,HLOC,VIEN
+ S ADM0=$G(^DGPM(+$G(ADM),0)),ADMDT=+ADM0
+ S HLOC=+$G(^DIC(42,+$P(ADM0,U,6),44)),(Y,VIEN)=""
+ F  S VIEN=$O(^AUPNVSIT("AET",DFN,ADMDT,HLOC,"P",VIEN)) Q:'VIEN  D  Q:Y
+ . I $P(^AUPNVSIT(VIEN,0),U,7)="H" S Y=VIEN
+ I 'Y D  ;try w/o location
+ . N IDT S IDT=(9999999-$P(ADMDT,"."))_"."_$P(ADMDT,".",2)
+ . S Y=$O(^AUPNVSIT("AAH",DFN,IDT,0))
  Q Y
  ;
 WARDFAC(IEN) ; -- return #4 ien for a Ward Location
@@ -240,6 +263,7 @@ CKOUT(VISIT) ; -- get Check-out date from Outpt Enc or EDP Log file
  Q Y
  ;
 EDP1 ; -- get info for single EDP Log record [VST/ID Action]
+ ;    Returns EDP0, EDP1, EDP3, VPRV, VPRVST to Entity
  S EDP0=$G(^EDP(230,DIEN,0)),EDP1=$G(^(1)),EDP3=$G(^(3))
  S VPRV=+$P(EDP0,U,12) I 'VPRV S DDEOUT=1 Q
  D ENCEVENT^PXAPI(VPRV)

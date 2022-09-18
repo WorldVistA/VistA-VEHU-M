@@ -1,5 +1,5 @@
-DGRPD ;ALB/MRL,MLR,JAN,LBD,EG,BRM,JRC,BAJ,JAM,HM,BDB,ARF,RN -PATIENT INQUIRY (NEW) ;July 09, 2014  12:16pm
- ;;5.3;Registration;**109,124,121,57,161,149,286,358,436,445,489,498,506,513,518,550,545,568,585,677,703,688,887,907,925,936,940,941,987,1006,1056,1061,1059,1071**;Aug 13, 1993;Build 4
+DGRPD ;ALB/MRL,MLR,JAN,LBD,EG,BRM,JRC,BAJ,JAM,HM,BDB,ARF,RN,JAM - PATIENT INQUIRY (NEW) ;July 09, 2014  12:16pm
+ ;;5.3;Registration;**109,124,121,57,161,149,286,358,436,445,489,498,506,513,518,550,545,568,585,677,703,688,887,907,925,936,940,941,987,1006,1056,1061,1059,1071,1064**;Aug 13, 1993;Build 41
  ; *286* Newing variables X,Y in OKLINE subroutine
  ; *358* If a patient is on a domiciliary ward, don't display MEANS
  ; TEST required/Medication Copayment Exemption messages
@@ -154,6 +154,9 @@ EN ;call to display patient inquiry - input DFN
  . S DGPTM=$$PCTEAM^DGSDUTL(DFN)
  . I $P(DGPTM,U,2)]"" W !,"[PRIMARY CARE TEAM:] "_$P(DGPTM,U,2)
  . W !,$$REPEAT^XLFSTR("-",78)
+ ;jam; DG*5.3*1064
+ I $$INDSTATUS^DGENELA2(DFN) W !,$$EZBLD^DIALOG(261133)
+ ;
  ; Check if patient is an inpatient and on a DOM ward
  ; If inpatient is on a DOM ward, don't display MT or CP messages
  ; If inpatient is NOT on a DOM ward, don't display CP message

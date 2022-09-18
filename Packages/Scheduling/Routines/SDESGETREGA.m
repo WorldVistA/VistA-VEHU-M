@@ -1,5 +1,5 @@
-SDESGETREGA ;ALB/LAB,TAW,MGD,LAB,KML - Get registration info JSON format ; March 7, 2022
- ;;5.3;SCHEDULING;**799,804,805,809,814**;AUG 13, 1993;Build 11
+SDESGETREGA ;ALB/LAB,TAW,LAB,KML,MGD - Get registration info JSON format ; July 19, 2022
+ ;;5.3;SCHEDULING;**799,804,805,809,814,820**;AUG 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
@@ -28,7 +28,7 @@ VALIDATE ;validate input Parameter
  I '$D(^DPT(DFN,0)) S POP=1 D ERRLOG^SDESJSON(.SDINFO,2)
  S SDEAS=$G(SDEAS,"")
  I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
- I +SDEAS=-1 S POP=1 D ERRLOG^SDESJSON(.SDINFO,142)
+ I $G(SDEAS)=-1 S POP=1 D ERRLOG^SDESJSON(.SDINFO,142)
  Q
  ;
 BUILDER ;Convert data to JSON

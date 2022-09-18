@@ -1,18 +1,19 @@
-RAORDR1 ;ABV/SCR/MKN - Refer Pending/Hold Requests continued ; Aug 13, 2020@16:14:22
- ;;5.0;Radiology/Nuclear Medicine;**148,161,170**;Mar 16, 1998;Build 1
+RAORDR1 ;ABV/SCR/MKN - Refer Pending/Hold Requests continued ; Jul 08, 2022@10:36:51
+ ;;5.0;Radiology/Nuclear Medicine;**148,161,170,190**;Mar 16, 1998;Build 1
  ;
- ; Routine              IA          Type
+ ; Routine/File        IA           Type
  ; -------------------------------------
  ; DEM^VADPT           10061        (S)
  ; GETDLG^ORCD         5493         (C)
- ; SAVE^ORWDX          TBR
+ ; SAVE^ORWDX          NONE
  ; SEND^ORWDX          5656         (C)
- ; VALID^ORWDXA        TBR
+ ; VALID^ORWDXA        NONE
  ; ^OR(100             5771,6475    (C)
- ; 101.41              TBR
+ ; 101.41              NONE
  ; 101.42              2698         (C)
  ; 101.43              2843         (C)
  ; 100.98              3004         (C)
+ ;
  Q
  ;
 MAKECONS(RAOIFN) ;Create Consult using Order Dialog GMRCOR CONSULT
@@ -52,7 +53,7 @@ MAKECONS(RAOIFN) ;Create Consult using Order Dialog GMRCOR CONSULT
  I $G(RAOILOC)="" S RAOILOC=$$GETILOC^RAORDR2(RAITYP)
  I $G(RAOILOC)=0 D ERROR("No Imaging location found/selected") Q 0
  ;if the I-LOC doesn't have a CCC
- I '$D(^RA(79.1,RAOILOC,"CON",1)) S RAOILOC=$$GETILOC^RAORDR2(RAITYP) ;no CCC on order location
+ I '$O(^RA(79.1,RAOILOC,"CON",0)) S RAOILOC=$$GETILOC^RAORDR2(RAITYP) ;no CCC on order location
  I $G(RAOILOC)=0 D ERROR("No Consult title associated with I-LOC") Q 0
  ;p170 end
  ;
@@ -60,6 +61,7 @@ MAKECONS(RAOIFN) ;Create Consult using Order Dialog GMRCOR CONSULT
  .I RAORTYP["MAMMOGRAPHY" S RAMAP=$$MAMMO() Q
  .S RAI=$O(^RA(79.1,RAOILOC,"CON",0)) S RAMAP=$$GET1^DIQ(79.11,RAI_","_RAOILOC_",",.01)
  .Q
+ I $G(RAMAP)=0 Q 0
  I $G(RAMAP)="" D ERROR("No Consult title associated with I-LOC") Q 0
  ;p170 - change next line to FIND^DIC to allow for partial matches
  ;S RAORDITM=$$FIND1^DIC(101.43,,,RAMAP) I RAORDITM=0 D ERROR("Orderable Item "_RAMAP_" not found in Orderable item file") Q 0
@@ -129,7 +131,7 @@ HOLD(RAOIFN,RAOREA) ;Put the original radiology order on hold
  Q
  ;
 USRPRMT() ;Prompt for consult/request service -p161  REMOVE!
- N DIR,Y S DIR(0)="P^RA(79.1,RAOILOC,""CON"",:QEZ" D ^DIR I $D(DIRUT) Q ""
+ N DIR,Y,DIRUT S DIR(0)="P^RA(79.1,RAOILOC,""CON"",:QEZ" D ^DIR I $D(DIRUT) Q ""
  S RAMAP=$G(Y(0,0))
  Q RAMAP
  ; 
@@ -178,7 +180,7 @@ MAMMO() ;
  W !!,"Please select the type of Mammography order from the following options:"
  S DIR(0)="S^1:Diagnostic Mammography;2:Screen Mammography"
  D ^DIR
- I $D(DIRUT) S RARES=0
+ I $D(DIRUT) S RARES=0 Q 0
  S RAARAY("TYPEOFSERVICE")=$S(Y=1:"4^Diagnostic",1:"4^Screen")
  S RATOM=$S(+Y=2:"SCREEN",1:"DIAGNOSTIC"),RAMAP=""
  S RAI=0 F  S RAI=$O(^RA(79.1,RAOILOC,"CON",RAI)) Q:RAI=""  D

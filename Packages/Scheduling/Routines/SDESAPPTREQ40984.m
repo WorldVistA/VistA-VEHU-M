@@ -1,17 +1,14 @@
-SDESAPPTREQ40984  ;ALB/ANU - VISTA SCHEDULING RPCS GET MISSION ELIGIBILITY ; Mar 20, 2022@15:20
- ;;5.3;Scheduling;**813**;Aug 13, 1993;Build 6
+SDESAPPTREQ40984  ;ALB/ANU,MGD - VISTA SCHEDULING RPCS GET MISSION ELIGIBILITY ; June 16, 2022@15:20
+ ;;5.3;Scheduling;**813,819**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
- ;
- ;Global References Supported by ICR# Type
- ;----------------- ----------------- ----------
- ; ^TMP($J SACC 2.3.2.5.1
  ;
  ;External References
  ;-------------------
- ;Reference to $$GETS^DIQ,$$GETS1^DIQ in ICR #2056
- ;Reference to $$SITE^VASITE in ICR #10112
- ;Reference to ^%DT in ICR #10003
- ;Reference to $$FIND1^DIC in ICR #2051
+ ; Reference to $$GETS^DIQ in ICR #2056
+ ; Reference to $$GETS1^DIQ in ICR #2056
+ ; Reference to $$SITE^VASITE in ICR #10112
+ ; Reference to $$FIND1^DIC in ICR #2051
+ ; Reference to ^%DT in ICR #10003
  ;
  Q
  ;
@@ -25,7 +22,7 @@ ARSET(APTRETURN,SDAPPTSTARTDTTM,SDAPPTENDDTTM,SDPATIENTDFN,SDRESOURCE,SDATYPID,S
  ; SDAPPTSTARTDTTM    - [required] - Appointment Start Date and time in ISO 8601 extended format (e.g. 2022-01-19T09:00-04:00)
  ; SDAPPTENDDTTM      - [required] - Appointment End Date and time in ISO 8601 extended format (e.g. 2022-01-19T09:00-04:00)
  ; SDPATIENTDFN       - [required] - ien of patient file 2
- ; SDRESOURCE         - [required] - Resource, Pointer to SDEC Resource File 
+ ; SDRESOURCE         - [required] - Resource, Pointer to SDEC Resource File
  ; SDATYPID           - [optional] - Access Type ID used for 2 purposes:
  ;                      if SDATYPID - "WALKIN" then create a walkin appt.
  ;                      if SDATYPID - a number, then it is the access type id (used for rebooking)
@@ -139,7 +136,7 @@ VALIDATE(ERRORS,SDAPPTSTARTDTTM,SDAPPTENDDTTM,SDPATIENTDFN,SDRESOURCE,SDATYPID,S
  ; validate EAS
  S SDEAS=$G(SDEAS,"")
  I $L(SDEAS) S SDEAS=$$EASVALIDATE^SDESUTIL(SDEAS)
- I +SDEAS=-1 S ERRORFLAG=1 D ERRLOG^SDESJSON(.ERRORS,142) Q $D(ERRORFLAG)
+ I SDEAS=-1 S ERRORFLAG=1 D ERRLOG^SDESJSON(.ERRORS,142) Q $D(ERRORFLAG)
  ;
  ; validate provider
  I '$D(^VA(200,+$G(SDPROVIEN),0)) S SDPROVIEN=""
@@ -165,7 +162,7 @@ BUILDJSON(JSONRETURN,INPUT) ; Build JSON format
  D ENCODE^XLFJSON("INPUT","JSONRETURN","JSONERROR")
  Q
  ;
-CLEANUP ; Cleanup 
+CLEANUP ; Cleanup
  K HASVLDERRORS,RETURN,HASFIELDS,APTFIELDSARRAY,SDSAVESTRT,SDRESOURCED,SDECRNOD,SDECWKIN
  K ERRORFLAG
  K HASDATA

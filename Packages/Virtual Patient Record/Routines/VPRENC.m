@@ -1,5 +1,5 @@
 VPRENC ;SLC/MKB -- VistA Encounter updates ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**19,20,26,25,27,28**;Sep 01, 2011;Build 6
+ ;;1.0;VIRTUAL PATIENT RECORD;**19,20,26,25,27,28,29**;Sep 01, 2011;Build 11
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Collect all visit changes in (NOW = time last modified):
@@ -46,11 +46,12 @@ PX ; -- PXK VISIT DATA EVENT protocol listener
  ... Q:$P($G(^TMP("PXKCO",$J,VST,SUB,DA,0,"BEFORE")),U)'?1"992"2N
  ... S:ACT<1 $P(@VPRPX@(VSTX),U,4)=1 ;visit type deleted
  .. S NEW=$G(@VPRPX@(VSTX,SUB,DA)) S:ACT=2 NEW=1
- .. S @VPRPX@(VSTX,SUB,DA)=NEW       ;new
- .. S X=$G(^TMP("PXKCO",$J,VST,SUB,DA,0,"AFTER")) S:'X X=$G(^("BEFORE")) S:$L(X) @VPRPX@(VSTX,SUB,DA,0)=X
+ .. S @VPRPX@(VSTX,SUB,DA)=NEW       ;new flag
+ .. S X=$G(^TMP("PXKCO",$J,VST,SUB,DA,0,"AFTER")) S:'X X=$G(^("BEFORE"))
+ .. S:$L(X) @VPRPX@(VSTX,SUB,DA,0)=X
 PXQ ; done
  L -@VPRPX@(VSTX)
- I '$G(@VPRPX@("ZTSK")) D NEWTSK     ;QUE(7)
+ I '$G(@VPRPX@("ZTSK")) D NEWTSK
  Q
  ;
 DIFF(NM,IEN) ; -- returns 0/1 if un/changed, 2 if new, -1 if deleted
@@ -68,9 +69,11 @@ EDP(IEN) ; -- EDP Log file #230 AVPR index
  S IEN=+$G(IEN) Q:IEN<1
  S EDP0=$G(^EDP(230,IEN,0)),VST=+$P(EDP0,U,12) Q:VST<1
  S DFN=+$P(EDP0,U,6) Q:DFN<1
+ ; non-PCE event so post immediately for BMS
+ D POST^VPRHS(DFN,"Encounter",VST_";9000010")
+ Q
+ ; get or set up ^XTMP [old]
  S VSTX=VST_"~"_DFN ;visit id for XTMP
- ;
- ; get or set up ^XTMP
  S VPRPX=$NA(^XTMP("VPRPX"))
  L +@VPRPX@(VSTX):5 ;I'$T
  ;
@@ -82,7 +85,7 @@ EDP(IEN) ; -- EDP Log file #230 AVPR index
  S @VPRPX@(VSTX)=NOW_U_ID_U_NEW
  ;
  L -@VPRPX@(VSTX)
- I '$G(@VPRPX@("ZTSK")) D NEWTSK ;QUE(7)
+ I '$G(@VPRPX@("ZTSK")) D NEWTSK
  Q
  ;
 TIU(IEN,ACT,VST) ; -- TIU Document file #8925 [from TIU/R^VPREVNT]
@@ -100,13 +103,13 @@ TIU(IEN,ACT,VST) ; -- TIU Document file #8925 [from TIU/R^VPREVNT]
  S @VPRPX@("DOC",IEN)=NOW_U_IEN_";8925"_U_VST_U_NEW
  S:NEW="@" @VPRPX@("DOC",IEN,0)=$$NODE("TIU(8925,",IEN,0)
  L -@VPRPX@("DOC",IEN)
- I '$G(@VPRPX@("ZTSK")) D NEWTSK ;QUE(7)
+ I '$G(@VPRPX@("ZTSK")) D NEWTSK
  Q
  ;
 NEWTSK ; -- start new task
  L +^XTMP("VPRPX","ZTSK"):3 Q:'$T  ;will try again
  ; if no competing process got there first, create task
- I '$G(^XTMP("VPRPX","ZTSK")) D QUE(7)
+ I '$G(^XTMP("VPRPX","ZTSK")) D QUE(5)
  L -^XTMP("VPRPX","ZTSK")
  Q
  ;
@@ -122,7 +125,7 @@ QUE(M) ; -- create task to post encounters, documents to HS
 TASK ; -- post an encounter update
  S ZTREQ="@" Q:'$P($G(^VPR(1,0)),U,2)   ;monitoring disabled
  N VPRPX,VPRDT,VPRI,VSTX,VST,X0,DFN,V0,VNM,VFL,VDA,VID,ACT,X,VPRD14,VPRSQ
- S VPRPX=$NA(^XTMP("VPRPX")),VPRDT=$$FMADD^XLFDT($$NOW^XLFDT,,,-5)
+ S VPRPX=$NA(^XTMP("VPRPX")),VPRDT=$$FMADD^XLFDT($$NOW^XLFDT,,,-2)
  S VPRD14=$$FMADD^XLFDT(DT,14)
  ; post visits that have been stable for at least 5 minutes
  S VPRI=0 F  S VPRI=$O(@VPRPX@("AVST",VPRI)) Q:VPRI<1  Q:VPRI>VPRDT  D
@@ -158,7 +161,7 @@ TD ; look for waiting documents w/o visit [yet]
  .. I '$G(@VPRPX@("DOC",VDA)) K @VPRPX@("ADOC",VPRI,VDA) Q  ;bad xref
  .. D DOC
 TQ ; re-task if more data
- S X=$O(@VPRPX@(0)) I $L(X),X'="ZTSK" D QUE(7) Q
+ S X=$O(@VPRPX@(0)) I $L(X),X'="ZTSK" D QUE(5) Q
  K @VPRPX@("ZTSK")
  Q
  ;
@@ -212,7 +215,7 @@ DOC ; -- process Document VDA [from TASK]
  . S ^XTMP("VPR-"_VPRSQ,0)=$$FMADD^XLFDT(DT,14)_U_DT_"^Deleted record for AVPR"
  ; update alert containers if CLS is CWD
  S CLS=$G(VPRTIU(.04))
- D:CLS=27 POST^VPRHS(DFN,"AdvanceDirective") ;rebuild
+ D:CLS=27 POST^VPRHS(DFN,"AdvanceDirective",VID,ACT)
  D:CLS=30!(CLS=31) POST^VPRHS(DFN,"Alert",VID,ACT)
 DQ ; clean up array, unlock
  K @VPRPX@("DOC",VDA),@VPRPX@("ADOC",+X0,VDA)

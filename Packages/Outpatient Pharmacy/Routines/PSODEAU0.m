@@ -1,5 +1,5 @@
 PSODEAU0 ;ALB/BI - DEA MANUAL ENTRY ;05/15/2018
- ;;7.0;OUTPATIENT PHARMACY;**529**;DEC 1997;Build 94
+ ;;7.0;OUTPATIENT PHARMACY;**529,684**;DEC 1997;Build 57
  ;External reference to sub-file NEW DEA #S (#200.5321) is supported by DBIA 7000
  ;External reference to DEA BUSINESS ACTIVITY CODES file (#8991.8) is supported by DBIA 7001
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002
@@ -49,8 +49,11 @@ WSGET(FG,DEA) ; Function to Get the Remote DEA information, Return in FG.
  S REQUEST=$$GETREST^XOBWLIB(SERVICE,SERVER)
  ;
  ; Execute the HTTP Get method.
- S SC=$$GET^XOBWLIB(REQUEST,RESOURCE,.PSOERR,0)
- I 'SC S PSOECODE=PSOERR.code
+ S SC=$$GETXOBW(REQUEST,RESOURCE,.PSOERR,.PSOECODE)
+ ;
+ ;S SC=$$GET^XOBWLIB(REQUEST,RESOURCE,.PSOERR,0)
+ ;I 'SC S PSOECODE=PSOERR.code
+ ;
  ; Handle a "DEA NOT FOUND" gracefully.
  I 'SC I PSOECODE=404 Q "0^DEA NUMBER NOT FOUND. Please enter a valid DEA number."
  ; Handle a connection error gracefully.
@@ -69,11 +72,7 @@ WSGET(FG,DEA) ; Function to Get the Remote DEA information, Return in FG.
  ; Decode the JSON format into a MUMPS global in FG
  D DECODE^XLFJSON("RESPJSON","FG","ERRORS")
  ;
- ; Handle a "DEA NOT FOUND" gracefully.
- ;I FG("deaNumber")="DEA NOT FOUND" Q "0^DEA NUMBER NOT FOUND. Please enter a valid DEA number."
- ;
  ; Define LAST DOJ UPDATE DATE/TIME 
- ;S:$G(FG("processedDate"))="" FG("processedDate")=$G(DT)
  S FG("processedDate")=DT
  S:'$D(FG("address2")) FG("address2")=""
  ; 
@@ -99,3 +98,9 @@ DTXDUPIT(DEA,DETOX,NPIEN)  ; Check for DETOX # on file for another provider
  ..W !,"(IEN: ",PSOPROV,", DEA NUMBER: "_DEANXT_") AND CANNOT BE ASSIGNED"
  ..W !," TO THIS PROVIDER."
  Q DUP
+ ;
+GETXOBW(REQUEST,RESOURCE,PSOERR,PSOECODE) ; Execute the HTTP Get method.
+ K PSOECODE S PSOECODE=""
+ S SC=$$GET^XOBWLIB(REQUEST,RESOURCE,.PSOERR,0)
+ I 'SC S PSOECODE=PSOERR.code
+ Q SC

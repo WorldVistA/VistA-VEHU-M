@@ -1,5 +1,8 @@
 VADPT1 ;ALB/MRL,MJK,ERC,TDM,CLT,ARF - PATIENT VARIABLES ;05 May 2017  1:41 PM
- ;;5.3;Registration;**415,489,516,614,688,754,887,941,1059,1067,1071**;Aug 13, 1993;Build 4
+ ;;5.3;Registration;**415,489,516,614,688,754,887,941,1059,1067,1071,1064**;Aug 13, 1993;Build 41
+ ;
+ ; NOTE: When setting up subscripts in the return array, the top level subscript must always be defined
+ ;  - (e.g. Inpatient Meds uses this API and assumes the top level subscript is defined)
  ;
 1 ;Demographic [DEM]
  N W,Z,NODE
@@ -64,7 +67,6 @@ VADPT1 ;ALB/MRL,MJK,ERC,TDM,CLT,ARF - PATIENT VARIABLES ;05 May 2017  1:41 PM
  .S @VAV@($P(VAS,"^",13))=VAY_"^"_VALANGDT ; FM version^human readable
  .S @VAV@($P(VAS,"^",13),1)=VALANGDA_"^"_VAPRFLAN ; Pointer^human readable
  ;
- ; Preferred Name [14 - NM]
  ;**1059 Adding Sexual Orientation, Sexual Orientation Description, Pronoun, Pronoun Description, SIGI [14 - SOGI]
  ;**1071 VAMPI-13755 (jfw) - Display Additional SO Info
  N SOC,CNTR,PRO,SIGI,SIGIN,VAREF
@@ -90,6 +92,15 @@ VADPT1 ;ALB/MRL,MJK,ERC,TDM,CLT,ARF - PATIENT VARIABLES ;05 May 2017  1:41 PM
  ;SELF IDENTIFIED GENDER #.024
  S SIGI=$P($G(^DPT(DFN,.24)),"^",4),SIGIN=$$GET1^DIQ(2,DFN_",",.024)
  S @VAV@($P(VAS,"^",14),5)=SIGIN_"^"_SIGI ;NAME ^ CODE
+ ; DG*5.3*1064; Adding INDIAN SELF IDENTIFICATION, INDIAN ATTESTATION DATE, INDIAN START DATE, INDIAN END DATE [15 - IND]
+ ; The top level subscript must always be defined (see NOTE above)
+ S @VAV@($P(VAS,"^",15))=""
+ N DGINDARR
+ D GETS^DIQ(2,DFN,".571:.574","I","DGINDARR")
+ S @VAV@($P(VAS,"^",15),1)=$G(DGINDARR(2,DFN_",",.571,"I"))
+ S @VAV@($P(VAS,"^",15),2)=$G(DGINDARR(2,DFN_",",.572,"I"))
+ S @VAV@($P(VAS,"^",15),3)=$G(DGINDARR(2,DFN_",",.573,"I"))
+ S @VAV@($P(VAS,"^",15),4)=$G(DGINDARR(2,DFN_",",.574,"I"))
  Q
  ;
 2 ;Other Patient Variables [OPD]

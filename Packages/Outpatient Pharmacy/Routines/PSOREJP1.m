@@ -1,12 +1,12 @@
 PSOREJP1 ;BIRM/MFR - Third Party Reject Display Screen ;04/29/05
- ;;7.0;OUTPATIENT PHARMACY;**148,247,260,281,287,289,290,358,359,385,403,421,427,448,478,482,512,562**;DEC 1997;Build 19
- ;Reference to File 9002313.93 - BPS NCPDP REJECT CODES supported by IA 4720
- ;Reference to ^PS(59.7 supported by IA 694
- ;Reference to ^PSDRUG("AQ" supported by IA 3165
- ;Reference to File 9002313.25 supported by IA 5064
- ;Reference to BPSNCPD3 supported by IA 4560
- ;Reference to ^BPSVRX supported by IA 5723
- ;Reference to $$BBILL^BPSBUTL and $$RESUBMIT^BPSBUTL supported by IA 4719
+ ;;7.0;OUTPATIENT PHARMACY;**148,247,260,281,287,289,290,358,359,385,403,421,427,448,478,482,512,562,648**;DEC 1997;Build 15
+ ; Reference to #9002313.93 in ICR #4720
+ ; Reference to ^PS(59.7 in ICR #694
+ ; Reference to ^PSDRUG("AQ" in ICR #3165
+ ; Reference to #9002313.25 in ICR #5064
+ ; Reference to BPSNCPD3 in ICR #4560
+ ; Reference to ^BPSVRX in ICR #5723
+ ; Reference to $$BBILL^BPSBUTL,$$RESUBMIT^BPSBUTL in ICR #4719
  ;
 EN(RX,REJ,CHANGE) ; Entry point
  ;
@@ -294,7 +294,7 @@ OUT(RX) ; - Supported call by outside PROTOCOLs to act on specific REJECTs
  . S VALMSG="REJ action is not available at this point.",VALMBCK="R"
  S PSOBACK=1
  S (RFL,I)=0 F I=1:1 Q:'$D(^PSRX(RX,1,I))  S RFL=I
- S X=$$FIND^PSOREJUT(RX,RFL,.DATA) S REJ=$O(DATA(""))
+ S X=$$FIND^PSOREJUT(RX,RFL,.DATA,,1) S REJ=$O(DATA(""))
  I '$G(REJ) S VALMSG="Invalid selection!",VALMBCK="R" Q
  D EN(RX,REJ) S VALMBCK="R"
  Q
@@ -348,11 +348,21 @@ SMA ;Submit multiple actions
  ;
 VRX ; View ePharmacy Prescription - invoked from the Reject Information screen
  N BPSVRX
+ K ^TMP("BPSVRX1-PSO VIEW RX",$J,"PSOHDR")
  D FULL^VALM1
+ ;
+ ; save the current header display
+ M ^TMP("BPSVRX1-PSO VIEW RX",$J,"PSOHDR")=^TMP("PSOHDR",$J)
+ ;
  S BPSVRX("RXIEN")=$G(RX)
  S BPSVRX("FILL#")=$G(FILL)
  D ^BPSVRX    ; DBIA #5723
+ ;
+ ; restore the header display
+ I '$D(^TMP("PSOHDR",$J)) M ^TMP("PSOHDR",$J)=^TMP("BPSVRX1-PSO VIEW RX",$J,"PSOHDR")
+ ;
  S VALMBCK="R"
+ K ^TMP("BPSVRX1-PSO VIEW RX",$J,"PSOHDR")
  Q
  ;
 VER ; View ePharmacy Prescription - invoked from the Rx view hidden action of Medication Profile

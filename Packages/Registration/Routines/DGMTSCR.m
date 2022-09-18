@@ -1,5 +1,5 @@
-DGMTSCR ;ALB/RMO/CAW,HM - Means Test Screen Read Processor ; 8/1/08 1:21pm
- ;;5.3;Registration;**45,688,1014**;Aug 13, 1993;Build 42
+DGMTSCR ;ALB/RMO/CAW,HM,JAM - Means Test Screen Read Processor ; 8/1/08 1:21pm
+ ;;5.3;Registration;**45,688,1014,1064**;Aug 13, 1993;Build 41
  ;
  ; Input  -- DGRNG    Range of selectable items
  ;           DGMTACT  Means Test Action
@@ -14,6 +14,8 @@ DGMTSCR ;ALB/RMO/CAW,HM - Means Test Screen Read Processor ; 8/1/08 1:21pm
  ;           DGSEL    Column selections available  (ie, V, S, C)
  ;           DGSELTY  User input - column selected  (ie, V or S or C)
  ;
+ ; Reference to XQY0 in ICR #3356
+ ;
 EN K DGDR,DGSEL,DGSELTY,DGX,DGY,I D FEED
  I $G(DGSCR1) S X="" G EN1
  W !,DGVI,"<RET>",DGVO," to CONTINUE," W:DGMTACT'="VEW" " ",DGVI,DGRNG,DGVO," or ",DGVI,"'ALL' ",DGVO,"to EDIT," W DGVI," ^N",DGVO," for screen N, or ",DGVI,"'^'",DGVO," to EXIT: " R X:DTIME S:'$T X="^"
@@ -24,7 +26,11 @@ EN1 K DGSCR1 S DGX=$$UPPER^DGUTL(X)
  I DGMTACT'="VEW",$E(DGX)="A" S X=DGX,Z="^ALL" D IN^DGHELP S:%'=-1 DGX=DGRNG
  I DGX["?" D HLP G Q^DGMTSC:$D(DTOUT)!($D(DUOUT)),@($$ROU^DGMTSCU(DGMTSCI))
  I DGX="",$O(DGMTSC(DGMTSCI)) G @($$ROU^DGMTSCU($O(DGMTSC(DGMTSCI))))
- I DGX="" G Q^DGMTSC
+ ; DG*5.3*1064 - If in View Past Co-Pay Test option, check patient's Indian status to print message
+ I DGX="" D  G Q^DGMTSC
+ . I $P(XQY0,"^",1)="DG CO-PAY TEST VIEW TEST" I $$INDSTATUS^DGENELA2(DFN) D
+ . . D BLD^DIALOG(261134,"","","","F")
+ . . D MSG^DIALOG("WM","","","")
  I DGMTACT'="VEW" D PRO I $D(DGSELTY) S DGX=DGSELTY_DGX
  S:DGMTACT="VEW" DGERR=1 I DGERR D HLP G @($$ROU^DGMTSCU(DGMTSCI))
 Q G @($$ROURET^DGMTSCU(DGMTSCI))

@@ -1,5 +1,5 @@
-SDESMISSIONELG ;ALB/ANU,LAB - VISTA SCHEDULING RPCS GET MISSION ELIGIBILITY ; Jun 03, 2022@15:20
- ;;5.3;Scheduling;**814,815,818**;Aug 13, 1993;Build 9
+SDESMISSIONELG ;ALB/ANU,LAB,MGD - VISTA SCHEDULING RPCS GET MISSION ELIGIBILITY ; July 19, 2022
+ ;;5.3;Scheduling;**814,815,818,820**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
