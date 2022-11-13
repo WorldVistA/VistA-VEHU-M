@@ -1,5 +1,5 @@
 IBCE837H ;EDE/JWS - OUTPUT FOR 837 FHIR TRANSMISSION ;5/23/18 10:48am
- ;;2.0;INTEGRATED BILLING;**623,641,650,665**;23-MAY-18;Build 28
+ ;;2.0;INTEGRATED BILLING;**623,641,650,665,718**;23-MAY-18;Build 73
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 GET(RESULT,ARG) ;get claim data for TAS Core 837
@@ -20,18 +20,21 @@ GET(RESULT,ARG) ;get claim data for TAS Core 837
  I '$D(^DGCR(399,IBIEN,0)) D FINISH^IBCE837I Q
  ; JWS 1/1/19 - if IEN is invalid, quit
  ; JWS;IB*2.0*623;need to set IBRSBTST if test for patch 608 compliance
- S IB364=$$LAST364^IBCEF4(IBIEN)
+ ; JWS;IB*2.0*718;EBILL-2656;last 364 entry was incorrect - rewrote function for 837 only
+ S IB364=$$LAST364(IBIEN)
  ; JWS;IB*2.0*641v13;changed from TEST^IBCE837I to TEST608, with no $$PROD check
  S IBRSBTST=$$TEST608^IBCE837I(IB364)
  ; create 837 array of data using Output Formatter for form 8
- S IBSIZE=$$EXTRACT^IBCEFG(8,IBIEN,1,.XX)
+ ; JWS;EBILL-2667;add 5th parameter to output formatter call to conditionally execute FSC workarounds post execute
+ S IBSIZE=$$EXTRACT^IBCEFG(8,IBIEN,1,.XX,1)
  ; do not want to include BGN record in FHIR Transaction data
  K ^TMP("IBXDATA",$J,1,1,1,1),^(2)
  S IBBNO=$P($G(^TMP("IBHDR",$J)),U)
  I IBBNO="" D FINISH^IBCE837I Q  ;JWS 1/7/19 if for some reason batch # is null
  ;;JWS 3/19/19-use function to get IB364 entry
  ;S IB364=$O(^IBA(364,"B",IBIEN,""),-1)
- S IB364=$$LAST364^IBCEF4(IBIEN)
+ ; JWS;IB*2.0*718;EBILL-2656;was getting wrong 364 entry - resetting just incase it was stepped on during $$EXTRACT execution
+ S IB364=$$LAST364(IBIEN)
  S IBBDA=$O(^IBA(364.1,"B",IBBNO,""))
  S DR=".02////"_IBBDA
  S DIE="^IBA(364,",DA=IB364 D ^DIE K DIE,DIC,DA,DINUM,DO,DD,DR
@@ -103,4 +106,15 @@ GET(RESULT,ARG) ;get claim data for TAS Core 837
  ; clean up
  D CLEANP^IBCE837A
  Q
+ ;
+ ; JWS;IB*2.0*718;EBILL-2656;last 364 entry was incorrect - rewrote function for 837 only
+LAST364(IBIEN399) ;
+ N X1,X2,XST,OK
+ S OK=0
+ S X1="" F  S X1=$O(^IBA(364,"ABDT",IBIEN399,X1),-1) Q:X1=""  D  Q:OK
+ . S X2="" F  S X2=$O(^IBA(364,"ABDT",IBIEN399,X1,X2),-1) Q:X2=""  D  Q:OK
+ .. S XST=$P(^IBA(364,X2,0),"^",3) I '$F(".C.R.E.Z.","."_XST_".") S OK=1 Q
+ . Q
+ I +X2=0 S X2=$$LAST364^IBCEF4(IBIEN399)
+ Q +X2
  ;

@@ -1,5 +1,5 @@
 SDESGETAPPTREQ ;ALB/BLB,MGD,RRM - GET APPT REQ RPCS ;JUNE 15, 2022@15:32
- ;;5.3;Scheduling;**815,818,819**;Aug 13, 1993;Build 5
+ ;;5.3;Scheduling;**815,818,819,823,824**;Aug 13, 1993;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to ^VA(200 in ICR #10060
@@ -180,6 +180,15 @@ BUILDSDECONTACT(REQUEST,REQUESTIEN,NUM) ; build SDEC contact attempts, called by
  S REQUEST("Request",NUM,"SdecContactNumberOfContacts")=COUNT
  Q
  ;
+BUILDCPRSPREREQS(REQUEST,REQUESTIEN,NUM) ; build CPRS linked PreRequisites
+ N SUBIEN,COUNT,PIENS
+ S SUBIEN=0,COUNT=0
+ F  S SUBIEN=$O(^SDEC(409.85,REQUESTIEN,8,SUBIEN)) Q:'SUBIEN  D
+ .S COUNT=COUNT+1
+ .S PIENS=SUBIEN_","_REQUESTIEN_","
+ .S REQUEST("Request",NUM,"CPRSPreRequisites",COUNT,"PreRequisite")=$$GET1^DIQ(409.8548,PIENS,.01,"E")
+ Q
+ ;
 GETREQUEST(REQUEST,REQUESTIEN) ; get patient appointment from file
  N APPT,REQUESTARY,ERR,IENS,FN,REQDATA,NUM
  S FN=409.85,NUM=""
@@ -193,6 +202,9 @@ GETREQUEST(REQUEST,REQUESTIEN) ; get patient appointment from file
  I $D(^SDEC(409.85,REQUESTIEN,4)) D BUILDPATCONTACTS(.REQUEST,REQUESTIEN,NUM) ; patient contacts
  I '$D(^SDEC(409.85,REQUESTIEN,4)) S REQUEST("Request",NUM,"PatientContact",1)=""
  ;
+ I $D(^SDEC(409.85,REQUESTIEN,8)) D BUILDCPRSPREREQS(.REQUEST,REQUESTIEN,NUM) ; CPRS pre requisites
+ I '$D(^SDEC(409.85,REQUESTIEN,8)) S REQUEST("Request",NUM,"CPRSPreRequisites",1)=""
+ ;
  I $D(^SDEC(409.85,REQUESTIEN,2)) D BUILDMRTCS(.REQUEST,REQUESTIEN,NUM) ; MRTCs
  I '$D(^SDEC(409.85,REQUESTIEN,2)) S REQUEST("Request",NUM,"MRTC",1)=""
  ;
@@ -202,6 +214,7 @@ GETREQUEST(REQUEST,REQUESTIEN) ; get patient appointment from file
  ;
  S REQUEST("Request",NUM,"Type")="Appt Request"
  S REQUEST("Request",NUM,"PatientIEN")=REQDATA(FN,REQUESTIEN_",",.01,"I")
+ S REQUEST("Request",NUM,"PatientICN")=$$GETPATICN^SDESINPUTVALUTL(REQDATA(FN,REQUESTIEN_",",.01,"I"))
  S REQUEST("Request",NUM,"PatientName")=REQDATA(FN,REQUESTIEN_",",.01,"E") ;
  S REQUEST("Request",NUM,"RequestIEN")=REQUESTIEN
  S REQUEST("Request",NUM,"CreateDate")=$$FMTISO^SDAMUTDT(REQDATA(FN,REQUESTIEN_",",1,"I"))
@@ -213,8 +226,10 @@ GETREQUEST(REQUEST,REQUESTIEN) ; get patient appointment from file
  S REQUEST("Request",NUM,"ClinicName")=REQDATA(FN,REQUESTIEN_",",8,"E")
  S REQUEST("Request",NUM,"ClinicStopCodeIEN")=REQDATA(FN,REQUESTIEN_",",8.5,"I")
  S REQUEST("Request",NUM,"ClinicStopCodeName")=REQDATA(FN,REQUESTIEN_",",8.5,"E")
+ S REQUEST("Request",NUM,"ClinicStopCodeAMIS")=$$GET1^DIQ(40.7,REQDATA(FN,REQUESTIEN_",",8.5,"I"),1)
  S REQUEST("Request",NUM,"ClinicSecondaryStopCodeIEN")=REQDATA(FN,REQUESTIEN_",",8.6,"I")
  S REQUEST("Request",NUM,"ClinicSecondaryStopCodeName")=REQDATA(FN,REQUESTIEN_",",8.6,"E")
+ S REQUEST("Request",NUM,"ClinicSecondaryStopCodeAMIS")=$$GET1^DIQ(40.7,REQDATA(FN,REQUESTIEN_",",8.6,"I"),1)
  S REQUEST("Request",NUM,"ApptType")=REQDATA(FN,REQUESTIEN_",",8.7,"E")
  S REQUEST("Request",NUM,"EnteredByName")=REQDATA(FN,REQUESTIEN_",",9,"I")
  S REQUEST("Request",NUM,"EnteredByIEN")=REQDATA(FN,REQUESTIEN_",",9,"E")
@@ -249,6 +264,8 @@ GETREQUEST(REQUEST,REQUESTIEN) ; get patient appointment from file
  S REQUEST("Request",NUM,"ParentRequest")=REQDATA(FN,REQUESTIEN_",",43.8,"I")
  S REQUEST("Request",NUM,"ModalityName")=REQDATA(FN,REQUESTIEN_",",6,"E")
  S REQUEST("Request",NUM,"ModalityCode")=REQDATA(FN,REQUESTIEN_",",6,"I")
+ S REQUEST("Request",NUM,"CPRSOrderID")=REQDATA(FN,REQUESTIEN_",",46,"I")
+ S REQUEST("Request",NUM,"CPRSTimeSensitive")=REQDATA(FN,REQUESTIEN_",",47,"I")
  ;
  D FINISHAPPTREQ(.REQUEST,NUM,REQUESTIEN)
  ; build recall and consult

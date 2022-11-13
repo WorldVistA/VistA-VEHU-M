@@ -1,5 +1,5 @@
 IBCE837 ;ALB/TMP - OUTPUT FOR 837 TRANSMISSION ;8/6/03 10:48am
- ;;2.0;INTEGRATED BILLING;**137,191,197,232,296,349,547,592,623,641**;21-MAR-94;Build 61
+ ;;2.0;INTEGRATED BILLING;**137,191,197,232,296,349,547,592,623,641,718**;21-MAR-94;Build 73
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; Auto-txmt
@@ -136,9 +136,11 @@ OUTPUT ; 837
  ..... Q
  .... ;IB*2.0*623;end
  .... D BILLPARM^IBCEFG0(+IBREF,.IBPARMS)
- .... S IBSIZEM=$$EXTRACT^IBCEFG(IB837,+IBREF,1,.IBPARMS)
+ .... ; JWS;EBILL-2667;add 5th parameter to output formatter call to conditionally execute FSC workarounds post execute
+ .... S IBSIZEM=$$EXTRACT^IBCEFG(IB837,+IBREF,1,.IBPARMS,1)
  .... I (IBSIZEM+IBSIZE)>30000,IBSIZE D  ; exceeds max size
- ..... D MAILIT^IBCE837A(IBQ,.IBBILL,.IBCTM,"",IBDESC,IBBTYP,IBINS) S IBSIZE=0 K ^TMP("IBXDATA",$J) S IBSIZEM=$$EXTRACT^IBCEFG(IB837,+IBREF,1,.IBPARMS)
+ ..... ; JWS;EBILL-2667;add 5th parameter to output formatter call to conditionally execute FSC workarounds post execute
+ ..... D MAILIT^IBCE837A(IBQ,.IBBILL,.IBCTM,"",IBDESC,IBBTYP,IBINS) S IBSIZE=0 K ^TMP("IBXDATA",$J) S IBSIZEM=$$EXTRACT^IBCEFG(IB837,+IBREF,1,.IBPARMS,1)
  .... I 'IBSIZEM D:'IBCTM  Q
  ..... D CHKBTCH^IBCE837A(+$G(^TMP("IBHDR",$J))) K ^TMP("IBHDR",$J)
  .... S IBCT=IBCT+1,IBCTM=IBCTM+1

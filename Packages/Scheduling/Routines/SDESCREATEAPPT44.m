@@ -1,5 +1,5 @@
 SDESCREATEAPPT44 ;ALB/BLB - VISTA SCHEDULING RPCS ;Apr 5, 2022
- ;;5.3;Scheduling;**814**;Aug 13, 1993;Build 11
+ ;;5.3;Scheduling;**814,823**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -56,7 +56,7 @@ APPTIN44EXISTS(DFN,CLINIC,DATE) ;
  N SUBIEN,FOUND
  S FOUND=0
  S SUBIEN=0 F  S SUBIEN=$O(^SC(CLINIC,"S",DATE,1,SUBIEN)) Q:'SUBIEN!($G(FOUND)=1)  D
- .I $$GET1^DIQ(44.003,SUBIEN_","_DATE_","_CLINIC_",",310)="C" Q  ;cancelled
+ .I $$GET1^DIQ(44.003,SUBIEN_","_DATE_","_CLINIC_",",310)="CANCELLED" Q  ;cancelled
  .I $$GET1^DIQ(44.003,SUBIEN_","_DATE_","_CLINIC_",",.01,"I")=DFN S FOUND=1 Q  ; record exists
  I $G(FOUND)=1 Q 1
  Q 0

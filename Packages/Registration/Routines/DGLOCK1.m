@@ -1,5 +1,5 @@
-DGLOCK1 ;ALB/MRL,JAM,ARF - PATIENT FILE DATA EDIT CHECK ; 28 JUL 86
- ;;5.3;Registration;**121,314,1014,1061,1075**;Aug 13, 1993;Build 13
+DGLOCK1 ;ALB/MRL,JAM,ARF,JAM - PATIENT FILE DATA EDIT CHECK ; 28 JUL 86
+ ;;5.3;Registration;**121,314,1014,1061,1075,1081**;Aug 13, 1993;Build 4
 AOD ;AO Delete
  I $D(^DPT(DFN,.321)),$P(^(.321),U,2)="Y" W !?4,*7,"Can't delete as long as Agent Orange exposure is indicated." K X
  Q
@@ -63,7 +63,10 @@ ECD ;primary eligibility code input transform
  S DGCOV=0 I $$GET1^DIQ(2,DFN_",",.361,"E")="COLLATERAL OF VET." S DGCOV=1
  ; DG*5.3*1061 Add eligibilities 24 and 25 to the screening logic
  ; DG*5.3*1075 Add the HUD-VASH eligibility code 26 to the codes for the screening logic for the PRIMARY ELIGIBILITY CODE prompt
- S DIC("S")="I $P(^DIC(8,+Y,0),U,5)=DGVT,'$P(^(0),U,7),$$NATCODE^DGENELA(+Y)'=24&($$NATCODE^DGENELA(+Y)'=25)&($$NATCODE^DGENELA(+Y)'=26)" I DGVT="N" G ECDS
+ S DIC("S")="I $P(^DIC(8,+Y,0),U,5)=DGVT,'$P(^(0),U,7),$$NATCODE^DGENELA(+Y)'=24&($$NATCODE^DGENELA(+Y)'=25)&($$NATCODE^DGENELA(+Y)'=26)"
+ ; DG*5.3*1081 - EXPANDED MH CARE NON-ENROLLEE cannot be Primary Elig Code if INELIGIBLE DATE (field .152) is set
+ I $$GET1^DIQ(2,DFN,.152)'="" S DIC("S")=DIC("S")_",$$NATCODE^DGENELA(+Y)'=23"
+ I DGVT="N" G ECDS
  I DGSER S DGPC=$S(+$P(^DPT(DFN,.3),U,2)>49:1,1:0),DGXX=$S(DGPC:1,1:3),DIC("S")=DIC("S")_",($P(^(0),U,9)="_DGXX_")" G ECDS ;sc only
  I $P($G(^DPT(DFN,.52)),"^",5)="Y" S DIC("S")=DIC("S")_",($P(^(0),U,9)=18)" G ECDS ;pow only
  S DGXX="^1^3^18^" ; no sc<50, sc 50-100, pow

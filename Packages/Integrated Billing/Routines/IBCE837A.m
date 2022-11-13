@@ -1,5 +1,5 @@
 IBCE837A ;ALB/TMP - OUTPUT FOR 837 TRANSMISSION - CONTINUED ;8/6/03 10:50am
- ;;2.0;INTEGRATED BILLING;**137,191,211,232,296,377,592,623,641**;21-MAR-94;Build 61
+ ;;2.0;INTEGRATED BILLING;**137,191,211,232,296,377,592,623,641,718**;21-MAR-94;Build 73
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 UPD(MSGNUM,BATCH,CNT,BILLS,DESC,IBBTYP,IBINS) ; Upd current batch + bills w/new status
@@ -67,6 +67,8 @@ POST ; Run after processing a bill entry for cleanup
  ..S Z=$O(^IBA(364,"ABABI",+$O(^IBA(364.1,"B",Z0,"")),IBXIEN,""))
  ..I Z S ^TMP("IBNOT",$J,Z)=IBXIEN
  K IBXSAVE,IBXNOREQ,^TMP("IBXSAVE",$J),^TMP($J)
+ ;;IB*2.0*718;JWS;12/27/21;EBILL-1629;Incorporate FSC Overrides
+ D POST^IBCE837P
  S Q="VA" F  S Q=$O(^UTILITY(Q)) Q:$E(Q,1,2)'="VA"  I $D(^(Q,$J)) K ^UTILITY(Q,$J)
  D CLEAN^DILF
  Q

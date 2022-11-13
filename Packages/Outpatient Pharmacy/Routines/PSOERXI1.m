@@ -1,5 +1,5 @@
 PSOERXI1 ;ALB/BWF - eRx Utilities/RPC's ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**581,617**;DEC 1997;Build 110
+ ;;7.0;OUTPATIENT PHARMACY;**581,617,692**;DEC 1997;Build 4
  ;
  Q
  ; File incoming XML into appropriate file
@@ -33,6 +33,20 @@ INCERX(RES,XML,PRCHK,PACHK,DACHK,STATION,DIV,ERXHID,ERXVALS,XML2,VADAT,XML3) ;
  ; Process auto-validation results. only log positive results for now
  K FDA
  I $P($G(VADAT),U) S RES="1^Message Filed." Q
+ ;
+ ; Drug Auto-Check (Moved from Hub to VistA - P-692)
+ I $G(DACHK("success"))="false" D
+ . N TMP,MSGTYPE,MTCHDRUG,PRDCODE,PRDCOQL,DRGNAME
+ . D XML2GBL^PSOERUT(XML,"TMP")
+ . S MSGTYPE=$O(TMP("Message",1,"Body",1,"")) I MSGTYPE="" Q
+ . S PRDCODE=$G(TMP("Message",1,"Body",1,MSGTYPE,1,"MedicationPrescribed",1,"DrugCoded",1,"ProductCode",1,"Code",1)) I PRDCODE="" Q
+ . S PRDCOQL=$E($G(TMP("Message",1,"Body",1,MSGTYPE,1,"MedicationPrescribed",1,"DrugCoded",1,"ProductCode",1,"Qualifier",1)),1)
+ . I PRDCOQL'="N",PRDCOQL'="U" Q
+ . S DRGNAME=$G(TMP("Message",1,"Body",1,MSGTYPE,1,"MedicationPrescribed",1,"DrugDescription",1))
+ . D DRGMTCH^PSOERXA0(.MTCHDRUG,PRDCOQL_"^"_PRDCODE,DRGNAME)
+ . I +$G(MTCHDRUG) D
+ . . K DACHK S DACHK("success")="true",DACHK("IEN")=+MTCHDRUG
+ ;
  I $G(DACHK("success"))="true" D
  .I $G(DACHK("IEN")) D
  ..;Saving the eRx Audit Log For Auto-Matched Drug
@@ -49,6 +63,19 @@ INCERX(RES,XML,PRCHK,PACHK,DACHK,STATION,DIV,ERXHID,ERXVALS,XML2,VADAT,XML3) ;
  .S ERRTXT=$G(DACHK("error"))
  .S ERRSEQ=$$ERRSEQ^PSOERXU1(EIEN) Q:'ERRSEQ
  .D FILERR^PSOERXU1(CURREC,ERRSEQ,"D","E",ERRTXT)
+ ;
+ ; Provider Auto-Check (Moved from Hub to VistA - P-692)
+ I $G(PRCHK("success"))="false" D
+ . N TMP,MSGTYPE,MTCHPROV,TMP,NPI,DEA,CS
+ . D XML2GBL^PSOERUT(XML,"TMP")
+ . S MSGTYPE=$O(TMP("Message",1,"Body",1,"")) I MSGTYPE="" Q
+ . S DEA=$G(TMP("Message",1,"Body",1,MSGTYPE,1,"Prescriber",1,"NonVeterinarian",1,"Identification",1,"DEANumber",1))
+ . S NPI=$G(TMP("Message",1,"Body",1,MSGTYPE,1,"Prescriber",1,"NonVeterinarian",1,"Identification",1,"NPI",1))
+ . S CS=$D(TMP("Message",1,"Header",1,"DigitalSignature",1,"SignatureValue",1))
+ . D PRVMTCH^PSOERXA0(.MTCHPROV,NPI,DEA,CS)
+ . I +$G(MTCHPROV) D
+ . . K PRCHK S PRCHK("success")="true",PRCHK("IEN")=+MTCHPROV
+ ;
  I $G(PRCHK("success"))="true" D
  .I PRCHK("IEN") D
  ..S FDA(52.49,CURREC,1.2)=1

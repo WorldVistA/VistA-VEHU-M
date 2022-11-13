@@ -1,5 +1,5 @@
-PSJPATMR ;BIR/RSB,LDT-UTILITY FOR PATIENT MERGE ;28 Oct 99 / 12:53 PM
- ;;5.0;INPATIENT MEDICATIONS;**36,217,404**;16 DEC 97;Build 14
+PSJPATMR ;BIR/RSB - UTILITY FOR PATIENT MERGE ;Apr 19, 2022@14:12
+ ;;5.0;INPATIENT MEDICATIONS;**36,217,404,431**;16 DEC 97;Build 5
  ;
  ; Reference to ^PS(55 supported by DBIA #2191.
  ; Reference to ^PS(52.6 is supported by DBIA 1231
@@ -69,6 +69,8 @@ MOVEUD(DFN1,DFN2)      ;  move all Unit Dose orders for FROM patient
  ;
  S $P(^PS(55,DFN1,5,0),"^",3,4)="0^0"  ; reset last used IEN for FROM patient
  S $P(^PS(55,DFN2,5,0),"^",3,4)=(NEXT-1)_"^"_(NEXT-1)  ; reset last used IEN for TO patient
+ ;PSJ*5.0*431: set second piece with sub-file if not already set.
+ I $P(^PS(55,DFN2,5,0),"^",2)="" S $P(^PS(55,DFN2,5,0),"^",2)="55.06IA"
  K ^PS(55,"CIMOU",DFN1)
  Q
  ;
@@ -122,6 +124,8 @@ MOVEIV(DFN1,DFN2)        ;  move all IV orders for FROM patient
  ;
  S $P(^PS(55,DFN1,"IV",0),"^",3,4)="0^0"  ; reset last used IEN for FROM patient
  S $P(^PS(55,DFN2,"IV",0),"^",3,4)=(NEXT-1)_"^"_(NEXT-1)  ; reset last used IEN for TO patient
+ ;PSJ*5.0*431: set second piece with sub-file if not already set.
+ I $P(^PS(55,DFN2,"IV",0),"^",2)="" S $P(^PS(55,DFN2,"IV",0),"^",2)=55.01
  Q
  ;
 CHKIVACT(PSJDFN1)       ;

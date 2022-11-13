@@ -1,5 +1,5 @@
 SDECAR2 ;ALB/SAT/JSM,WTC,LAB - VISTA SCHEDULING RPCS ;Apr 10, 2020@15:22
- ;;5.3;Scheduling;**627,642,658,671,686,694,745,799,805,820**;Aug 13, 1993;Build 10
+ ;;5.3;Scheduling;**627,642,658,671,686,694,745,799,805,820,823**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -154,7 +154,7 @@ ARSET(RET,INP) ;Appointment Request Set
  . S:$G(ARDAPTDT)'="" @FDA@(22)=ARDAPTDT
  . S:$G(ARNLT)'="" @FDA@(47)=ARNLT
  . D FDAPRER(.FDA,ARPRER,"+1")
- . S:$G(ARORDN)'="" @FDA@(46)=ARORDN
+ . S:(+$G(ARORDN)'=0) @FDA@(46)=ARORDN
  . S @FDA@(23)="O"
  . S:$G(ARCOMM)'="" @FDA@(25)=ARCOMM
  . S:$G(ARMAR)'="" @FDA@(41)=ARMAR
@@ -196,7 +196,7 @@ ARSET(RET,INP) ;Appointment Request Set
  . S:$G(ARNLT)'="" @FDA@(47)=ARNLT
  . D DELPRER(+ARIEN)
  . D FDAPRER(.FDA,ARPRER,+ARIEN)
- . S:$G(ARORDN)'="" @FDA@(46)=ARORDN
+ . S:+$G(ARORDN)'=0 @FDA@(46)=ARORDN
  . S:$G(INP(23))'="" @FDA@(.02)=$S(INP(23)="N":"N",INP(23)="NEW":"N",INP(23)="E":"E",INP(23)="ESTABLISHED":"E",1:"")
  . S:+ARPARENT @FDA@(43.8)=+ARPARENT
  ; Only call UPDATE^DIE if there are any array entries in FDA

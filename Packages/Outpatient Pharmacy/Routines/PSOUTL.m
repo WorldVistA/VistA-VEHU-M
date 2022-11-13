@@ -1,5 +1,5 @@
 PSOUTL ;BHAM ISC/SAB - PSO utility routine ;Jun 22, 2018@08:18
- ;;7.0;OUTPATIENT PHARMACY;**1,21,126,174,218,259,324,390,313,411,466,477,626,639**;DEC 1997;Build 4
+ ;;7.0;OUTPATIENT PHARMACY;**1,21,126,174,218,259,324,390,313,411,466,477,626,639,692**;DEC 1997;Build 4
  ;External reference to $$SERV^IBARX1 supported by DBIA 2245
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^PSSDIUTL supported by DBIA 5737
@@ -355,7 +355,7 @@ CSID() ; Determinte if the ISSUE DATE is for a CS or non-CS (Internal to this ro
  I '$G(DRGIEN),$G(PSODRUG("IEN")) S DRGIEN=PSODRUG("IEN")
  ;
  I $G(DRGIEN) D
- . S DEA=$$GET1^DIQ(50,PSODRUG("IEN"),3)
+ . S DEA=$$GET1^DIQ(50,DRGIEN,3)
  . I (DEA["2")!(DEA["3")!(DEA["4")!(DEA["5") S CSID=1
  ;
  Q CSID

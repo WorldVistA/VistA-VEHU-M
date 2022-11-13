@@ -1,6 +1,8 @@
 IBJDF41 ;ALB/RB - FIRST PARTY FOLLOW-UP REPORT (COMPILE) ;15-APR-00
- ;;2.0;INTEGRATED BILLING;**123,159,204,356,451,473,568,618,651,694,705**;21-MAR-94;Build 8
+ ;;2.0;INTEGRATED BILLING;**123,159,204,356,451,473,568,618,651,694,705,715**;21-MAR-94;Build 25
  ;;Per VA Directive 6402, this routine should not be modified.
+ ;
+ ; Reference to FILE 433.001 in ICR #7321
  ;
 ST ; - Tasked entry point.
  K IB,IBCAT,^TMP("IBJDF4",$J)
@@ -314,12 +316,15 @@ EEOBCK(IBBILL)  ;
  ;
  ;
 SUST(IBA) ;Look for suspended type for a suspended bill IB*2*568/DRF
- N TRANS,ST
+ N TRANS,ST,STIEN
  S IBA=$G(IBA) I IBA="" Q ""
  S ST=""
- S TRANS=$O(^PRCA(433,"C",IBA,""),-1)
- S ST=$P($G(^PRCA(433,TRANS,1)),U,11)
- I ST="" S ST=12 ;Added option for NONE
+ ; IB*2.0*715
+ S TRANS="" F  S TRANS=$O(^PRCA(433,"C",IBA,TRANS),-1) Q:'TRANS  Q:$$GET1^DIQ(433,TRANS_",",12)="CHARGE SUSPENDED"
+ I TRANS>0 S STIEN=$P($G(^PRCA(433,TRANS,1)),U,12) S:STIEN ST=$$GET1^DIQ(433.001,STIEN_",",.01)
+ I ST="" S ST=$P($G(^PRCA(433,TRANS,1)),U,11)  ; if no type, try to get it from the old field 433/90
+ I ST="" S ST=14  ; if still no type, set it to NONE
+ ;
  Q ST
  ;
  ;
@@ -337,7 +342,11 @@ ABBR(SUSP) ;Return abbreviation for suspended bill types IB*2*568/DRF
  I SUSP=9 Q "Probat"
  I SUSP=10 Q "Choice"
  I SUSP=11 Q "Disput"
- I SUSP=12 Q "None"
+ ; IB*2.0*715
+ I SUSP=12 Q "IndAtt"
+ I SUSP=13 Q "Compct"
+ I SUSP=14 Q "None"
+ ;
  Q ""
  ;
 REPDATA(RPIEN,DAYS) ; - Return Repayment Plan information IB*2.0*694

@@ -1,11 +1,10 @@
-SDEC09 ;ALB/SAT/LAB - VISTA SCHEDULING RPCS ;MAR 15, 2017
- ;;5.3;Scheduling;**627,642,658,679,801,809**;Aug 13, 1993;Build 10
+SDEC09 ;ALB/SAT/LAB - VISTA SCHEDULING RPCS ;JUL 26,2022
+ ;;5.3;Scheduling;**627,642,658,679,801,809,823**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to ^DPT in ICR #10035
- ; Reference to ^DGS(41.41 In ICRs #4425
+ ; Reference to ^DGS(41.41 in ICR #4425
  ;
- ;ajf ; adding PCP and MHP to return data
  Q
  ;
  ;
@@ -152,7 +151,8 @@ GETREGA(SDECRET,DFN) ;return basic reg info/demographics for given patient
  S $P(SDECY,U,23)=""
  S SDECNOD=^DPT(+DFN,0)
  S $P(SDECY,"^",6)=$P(SDECNOD,U) ;NAME
- S $P(SDECY,"^",8)=$P(SDECNOD,U,9) ;SSN
+ ;S $P(SDECY,"^",8)=$P(SDECNOD,U,9) ;SSN
+ S $P(SDECY,"^",8)=$$LAST4SSN^SDESINPUTVALUTL(DFN) ;SSN
  S Y=$P(SDECNOD,U,3) I Y]""  X ^DD("DD") S Y=$TR(Y,"@"," ")
  S $P(SDECY,"^",7)=Y ;DOB
  S $P(SDECY,"^",9)=""

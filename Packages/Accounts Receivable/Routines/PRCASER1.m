@@ -1,5 +1,5 @@
 PRCASER1 ;WASH-ISC@ALTOONA,PA/RGY - Accept transaction from billing engine ;9/8/93  2:21 PM
-V ;;4.5;Accounts Receivable;**48,104,165,233,301,307,337,353,364,377**;Mar 20, 1995;Build 45
+V ;;4.5;Accounts Receivable;**48,104,165,233,301,307,337,353,364,377,402**;Mar 20, 1995;Build 3
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;PRCA*4.5*337 Added a bill lock to insure that decreases are stacked
@@ -11,6 +11,7 @@ V ;;4.5;Accounts Receivable;**48,104,165,233,301,307,337,353,364,377**;Mar 20, 1
  ;             decreases to post to 'Suspended' bills to avoid
  ;             further billing issues if the bill is re-opened.
  ;PRCA*4.5*364 Ensure exempt transaction has date/time stamp
+ ;PRCA*4.5*402 Add new category TRICARE PHARMACY
  ;
  NEW AMT,AMT1,PRCAERR,PRCABN,PRCADJ,X1,XMDUZ,XMSUB,XMTEXT,XMY,DEBT
  I '$D(X) S Y="-1^PRCA020" G Q
@@ -54,7 +55,8 @@ DEC(PRCABN,AMT,APR,REA,BDT,PRCAEN) ;Auto decrease from service Bill#,Tran amt,pe
  S PRCA("ADJ")=$O(^PRCA(430.3,"AC",21,0)),PRCASV("FY")=$$FY^RCFN01(DT)_U_BAL,PRCASV("APR")=APR,PRCASV("BDT")=$S($G(BDT)>0:BDT,1:DT)
  D SETTR^PRCAUTL,PATTR^PRCAUTL S DIE="^PRCA(433,",DR="[PRCA FY ADJ2 BATCH]",DA=PRCAEN D ^DIE
  S PRCAA2=$P(^PRCA(433,PRCAEN,4,0),U,3) D UPFY^PRCADJ,TRANUP^PRCAUTL
- I ("^30^31^")[("^"_$P($G(^PRCA(430,PRCABN,0)),"^",2)_"^") D EN^PRCAFBDM(PRCABN,BAL,PRCA("ADJ"),$G(PRCADJ("BDT")),PRCAEN,.ERR)
+ ;PRCA*4.5*402 - add category TRICARE PHARMACY
+ I ("^30^31^80^")[("^"_$P($G(^PRCA(430,PRCABN,0)),"^",2)_"^") D EN^PRCAFBDM(PRCABN,BAL,PRCA("ADJ"),$G(PRCADJ("BDT")),PRCAEN,.ERR)
  D UPPRIN^PRCADJ
  I "AutoAUTO"'[$E(REA,1,4) S REA="Auto Dec.: "_REA
  S DA=PRCAEN,DIE="^PRCA(433,",DR="41///"_REA D ^DIE

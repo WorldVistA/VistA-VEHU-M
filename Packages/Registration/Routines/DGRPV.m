@@ -1,5 +1,5 @@
 DGRPV ;ALB/MRL,RTK,PJR,BRM,TMK,AMA,LBD,TDM,PWC,JAM,JAM,ASF,LEG,ARF - REGISTRATION DEFINE VARIABLES ON ENTRY ;Apr 05, 2020@19:00
- ;;5.3;Registration;**109,114,247,190,327,365,343,397,415,489,546,545,451,624,677,672,689,716,688,797,842,871,887,941,985,997,1014,1064**;Aug 13, 1993;Build 41
+ ;;5.3;Registration;**109,114,247,190,327,365,343,397,415,489,546,545,451,624,677,672,689,716,688,797,842,871,887,941,985,997,1014,1064,1081**;Aug 13, 1993;Build 4
  ;
  ;
  ;set up variables for registration screen processing
@@ -37,6 +37,8 @@ SC7 S X=$S('$D(^DPT(DFN,"TYPE")):0,1:+^("TYPE")) S:'$D(DGELVER) DGELVER=0
  S DGRPVV(1.1)="0000"
  ;ARF - patch DG*5.3*1064 - Add group 6 to PATIENT DATA, SCREEN <2>
  S DGRPVV(2)="000100"
+ ;ARF - patch DG*5.3*1081 - Make group 1 not editable on the INELIGIBLE/MISSING DATA, SCREEN <10>
+ S DGRPVV(10)="10"
  ; DG*5.3*997; ASF; Allowing selection for screen 11.5, group 1 (allows user to see sub-screen 11.5.1)
  S DGRPVV(11.5)="00" ;LEG ;DG*5.3.1014 ; added extra "0" for group [2] ;was S DGRPVV(11.5)=0 
  I $P($G(^DPT(DFN,.52)),U,9)'="" S $E(DGRPVV(6),4)=1  ;POW status verified, no editing (DG*5.3*688)

@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: INPUT TEMPLATE
 ZWR
-^DIE(0)="INPUT TEMPLATE^.402I^2354^1736"
+^DIE(0)="INPUT TEMPLATE^.402I^2357^1739"
 ^DIE(3,0)="EDIT^2831110^^19"
 ^DIE(3,"DR",1,19)=".01;2;50;10;1;32;"
 ^DIE(4,0)="ROUTINE^2840315^Z@^19^^Z@"
@@ -2757,10 +2757,8 @@ ZWR
 ^DIE(507,0)="PRCUAMT89^2880920^^442"
 ^DIE(507,"DR",1,442)="35///^S X=PRCHAMT;"
 ^DIE(507,"DR",2,442.1)="1;2///^S X=PRCHCN;D PREF^PRCHFPDS;1.2;D COMP^PRCHFPDS;1.1;D D1^PRCHFPDS;"
-^DIE(508,0)="PRCHFEDVEN^2890407^^440^^^^"
-^DIE(508,"DIAB",1,1,440.02,0)="ALL"
-^DIE(508,"DR",1,440)=".01;1;2;S:X="""" Y=4.2;3;S:X="""" Y=4.2;4;4.2;4.4;4.6;5;4.8;11;20;.06;.05;"
-^DIE(508,"DR",2,440.02)=.01
+^DIE(508,0)="PRCHFEDVEN^3220127.1756^^440^^^3220224"
+^DIE(508,"DR",1,440)=".01;1;2;S:X="""" Y=4.2;3;S:X="""" Y=4.2;4;4.2;4.4;4.6;5;4.8;11;20;.06;.05;55;"
 ^DIE(509,0)="PRCU EDIT FPDS DATA^2881102^^442"
 ^DIE(509,"DR",1,442)="35///^S X=PRCHAMT;"
 ^DIE(509,"DR",2,442.1)="1;2///^S X=PRCHCN;S X=$S(PRCHDT:""PREF^PRCHFPDS"",1:""EN3^PRCHNPO2"") D @X;S:PRCHDT Y=1.2;3;S Y="""";1.2;D COMP^PRCHFPDS;1.1;D D1^PRCHFPDS;"
@@ -16985,16 +16983,14 @@ ZWR
 ^DIE(1800,"DR",3,445.02)=.01
 ^DIE(1800,"DR",3,445.07)=".01:3"
 ^DIE(1800,"DR",3,445.122)=.01
-^DIE(1801,0)="PRCHVENDOR1^3021203.1504^^440^^^3030224"
-^DIE(1801,"DIAB",1,1,440.02,0)="ALL"
+^DIE(1801,0)="PRCHVENDOR1^3220128.1752^^440^^^3220224"
 ^DIE(1801,"DR",1,440)=".01;I $L($P(^PRC(440,DA,0),U))>30 W !!,""The name you entered is over 30 characters long.  When sent to FMS only the"",!,""first 30 characters will go.  You may want to edit the name."",!;1;S PAYADD1=$P($G(^PRC(440,DA,0)),U,2);2;"
 ^DIE(1801,"DR",1,440,1)="S PAYADD2=$P($G(^PRC(440,DA,0)),U,3);S:X="""" Y=4.2;3;S:X="""" Y=4.2;4;4.2;4.4;4.6;46;SET CHECKR=$P($G(^PRC(440,DA,3)),U,6);I CHECKR=""R"" S Y=38;36///^S X=""R"";38;39;@1;"
 ^DIE(1801,"DR",1,440,2)="S ORDER=^PRC(440,DA,0) W !!,""ORDERING ADDRESS: "",$P(ORDER,U,2) W:$P(ORDER,U,3)]"""" !,?18,$P(ORDER,U,3);W !,?18,$P(ORDER,U,6) S STATE=$S($P(ORDER,U,7)>0:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""") I STATE]"""" W "", ""_STATE;"
 ^DIE(1801,"DR",1,440,3)="W "" ""_$P(ORDER,U,8),!;17.3//^S X=$E($P(^PRC(440,DA,0),U,2),1,30);17.4//^S X=$S($P($G(^PRC(440,DA,7)),U,4)=""""&($P($G(^(7)),U,7)=""""):$E($P(^PRC(440,DA,0),U,3),1,30),1:"""");17.7//^S X=$E($P(^PRC(440,DA,0),U,6),1,19);"
 ^DIE(1801,"DR",1,440,4)="I $L($P(^PRC(440,DA,7),U,7))>19 W !!,""The city you entered is over 19 characters long.  When sent to FMS only the"",!,""first 19 characters will go.  You may want to edit the city."",!;"
 ^DIE(1801,"DR",1,440,5)="S STATE="""" I $P(^PRC(440,DA,0),U,7)>0 S STATE=$P(^DIC(5,$P(^PRC(440,DA,0),U,7),0),U);17.8//^S X=STATE;17.9//^S X=$P(^PRC(440,DA,0),U,8);41//^S X=""YES"";44;5;4.8;5.1;"
-^DIE(1801,"DR",1,440,6)="S:'$D(^PRC(440,DA,4,0)) ^PRC(440.3,DA,4,0)=""^""_$P($G(^DD(440,6,0)),U,2)_""^0^0"";6;8.3;Q;10;D CHK^PRCHFPDS;I '$D(^PRC(440,DA,1.1)) S Y=10;K DIE(""NO^"");11;5.2;20;13//NOT APPLICABLE;S:X=""Y"" Y=14;S Y=18.3;14;18.3;"
-^DIE(1801,"DR",2,440.02)=.01
+^DIE(1801,"DR",1,440,6)="S:'$D(^PRC(440,DA,4,0)) ^PRC(440.3,DA,4,0)=""^""_$P($G(^DD(440,6,0)),U,2)_""^0^0"";6;8.3;Q;10;D CHK^PRCHFPDS;I '$D(^PRC(440,DA,1.1)) S Y=10;K DIE(""NO^"");11;5.2;20;13//NOT APPLICABLE;S:X=""Y"" Y=14;S Y=18.3;14;18.3;55;"
 ^DIE(1801,"DR",2,440.03)=".01:2;"
 ^DIE(1801,"DR",2,440.05)=".01;S DIE(""NO^"")=""A"";"
 ^DIE(1802,0)="PRCF CI FMS ACCOUNTING^2941109.0952^^421.5^^^^"
@@ -17097,17 +17093,17 @@ ZWR
 ^DIE(1809,"DR",1,443.6)="14;"
 ^DIE(1809,"DR",2,443.63)="W:0 ""S AA=$G(^PRC(443.6,DA(1),3,DA,0))"";.01;S:X=""Q"" Y=1;S:'$D(PRCHD(""CN"")) Y=1;I $P(^PRC(443.6,DA(1),3,DA,0),U,4)]"""" S PRCHD(""AC"")=$S($D(PRCHD(""AC"")):PRCHD(""AC""),1:$P(^(0),U,4));3///^S X=PRCHD(""AC"");S:PRCHD(""CN"")="".OM"" Y=1;"
 ^DIE(1809,"DR",2,443.63,1)="4///^S X=PRCHD(""CN"");1;S PRCHAB=$P($G(^PRC(443.6,DA(1),3,DA,0)),U,6) I PRCHAB]"""" S Y="""";S PRCHAA=$P($G(^PRC(443.6,DA(1),0)),U,14)+1;5///^S X=PRCHAA;S $P(^PRC(443.6,DA(1),0),U,14)=PRCHAA;"
-^DIE(1810,0)="PRCF FMS VENEDIT1^3010711.1659^^440^^^3010711"
+^DIE(1810,0)="PRCF FMS VENEDIT1^3220201.1408^^440^^^3220215"
 ^DIE(1810,"DR",1,440)="S ORDER=^PRC(440,DA,0);S CHECKR=$P($G(^PRC(440,DA,3)),U,6);I CHECKR=""R"" S Y=38;36///^S X=""R"";38;39;17;17.2;W !!,""ORDERING ADDRESS: "",$P(ORDER,U,2) W:$P(ORDER,U,3)]"""" !,?18,$P(ORDER,U,3);W !,?18,$P(ORDER,U,6);"
 ^DIE(1810,"DR",1,440,1)="S STATE=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""") I STATE]"""" W "", ""_STATE;W "" "",$P(ORDER,U,8);17.3//^S X=$E($P(ORDER,U,2),1,30);17.4//^S X=$E($P(ORDER,U,3),1,30);17.7//^S X=$E($P(ORDER,U,6),1,19);"
 ^DIE(1810,"DR",1,440,2)="I $L($P(^PRC(440,DA,7),U,7))>19 W !!,""The city you entered is over 19 characters long.  When sent to FMS only the"",!,""first 19 characters will go.  You may want to edit the city."",!;"
-^DIE(1810,"DR",1,440,3)="17.8//^S X=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""");17.9//^S X=$P(ORDER,U,8);41//^S X=""YES"";44;18.3;"
-^DIE(1811,0)="PRCF FMS VENEDIT2^3010712.1144^^440^^^3010712"
+^DIE(1810,"DR",1,440,3)="17.8//^S X=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""");17.9//^S X=$P(ORDER,U,8);41//^S X=""YES"";44;18.3;55;"
+^DIE(1811,0)="PRCF FMS VENEDIT2^3220201.1439^^440^^^3220215"
 ^DIE(1811,"DR",1,440)="S ORDER=^PRC(440,DA,0);.01;I $L($P(^PRC(440,DA,0),U))>30 W !!,""The name you entered is over 30 characters long.  When sent to FMS only the"",!,""first 30 characters will go.  You may want to edit the name."",!;"
 ^DIE(1811,"DR",1,440,1)="S CHECKR=$P($G(^PRC(440,DA,3)),U,6);I CHECKR=""R"" S Y=38;36///^S X=""R"";38;39;17;17.2;W !!,""ORDERING ADDRESS: "",$P(ORDER,U,2) W:$P(ORDER,U,3)]"""" !,?18,$P(ORDER,U,3);W !,?18,$P(ORDER,U,6);"
 ^DIE(1811,"DR",1,440,2)="S STATE=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""") I STATE]"""" W "", ""_STATE;W "" "",$P(ORDER,U,8);17.3//^S X=$E($P(ORDER,U,2),1,30);17.4//^S X=$E($P(ORDER,U,3),1,30);17.7//^S X=$E($P(ORDER,U,6),1,19);"
 ^DIE(1811,"DR",1,440,3)="I $L($P(^PRC(440,DA,7),U,7))>19 W !!,""The city you entered is over 19 characters long.  When sent to FMS only the"",!,""first 19 characters will go.  You may want to edit the city."",!;"
-^DIE(1811,"DR",1,440,4)="17.8//^S X=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""");17.9//^S X=$P(ORDER,U,8);41//^S X=""YES"";44;18.3;"
+^DIE(1811,"DR",1,440,4)="17.8//^S X=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""");17.9//^S X=$P(ORDER,U,8);41//^S X=""YES"";44;18.3;55;"
 ^DIE(1812,0)="PRCE NEW 1358S^3160426.1357^^410^^^3160426"
 ^DIE(1812,"DIAB",5,0,410,0)="40;REQ"
 ^DIE(1812,"DIAB",6,0,410,3)="45;""PURPOSE"""
@@ -17121,17 +17117,17 @@ ZWR
 ^DIE(1813,"DR",1,443.6)="9.2;"
 ^DIE(1813,"DR",2,443.66)=".01//^S X=""NET"";4//^S X=""A"";I X=""X"" S %A=""You have indicated that the payments for this Purchase Order will be MONEY MANAGEMENT EXEMPT.  Is this CORRECT?"",%B="""",%=2 D ^PRCFYN I %'=1 S Y=4;S ZX=X;"
 ^DIE(1813,"DR",2,443.66,1)="1//^S X=$S(ZX=""X"":30,ZX=""M"":7,""PD""[ZX:10,ZX=""V"":15,1:30);"
-^DIE(1814,0)="PRCF FMS VENEDIT1B^3010711.1701^^440^^^3010718"
+^DIE(1814,0)="PRCF FMS VENEDIT1B^3220201.1341^^440^^^3220224"
 ^DIE(1814,"DR",1,440)="S ORDER=^PRC(440,DA,0);S CHECKR=$P($G(^PRC(440,DA,3)),U,6);I CHECKR=""R"" S Y=38;36///^S X=""R"";38;39;34;35;17;17.2;W !!,""ORDERING ADDRESS: "",$P(ORDER,U,2) W:$P(ORDER,U,3)]"""" !,?18,$P(ORDER,U,3);W !,?18,$P(ORDER,U,6);"
 ^DIE(1814,"DR",1,440,1)="S STATE=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""") I STATE]"""" W "", ""_STATE;W "" "",$P(ORDER,U,8);17.3//^S X=$E($P(ORDER,U,2),1,30);17.4//^S X=$E($P(ORDER,U,3),1,30);17.7//^S X=$E($P(ORDER,U,6),1,19);"
 ^DIE(1814,"DR",1,440,2)="I $L($P(^PRC(440,DA,7),U,7))>19 W !!,""The city you entered is over 19 characters long.  When sent to FMS only the"",!,""first 19 characters will go.  You may want to edit the city."",!;"
-^DIE(1814,"DR",1,440,3)="17.8//^S X=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""");17.9//^S X=$P(ORDER,U,8);41//^S X=""YES"";44;18.3;"
-^DIE(1815,0)="PRCF FMS VENEDIT2B^3010712.1145^^440^^^3010717"
+^DIE(1814,"DR",1,440,3)="17.8//^S X=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""");17.9//^S X=$P(ORDER,U,8);41//^S X=""YES"";44;18.3;55;"
+^DIE(1815,0)="PRCF FMS VENEDIT2B^3220201.145^^440^^^3220215"
 ^DIE(1815,"DR",1,440)="S ORDER=^PRC(440,DA,0);.01;I $L($P(^PRC(440,DA,0),U))>30 W !!,""The name you entered is over 30 characters long.  When sent to FMS only the"",!,""first 30 characters will go.  You may want to edit the name."",!;"
 ^DIE(1815,"DR",1,440,1)="S CHECKR=$P($G(^PRC(440,DA,3)),U,6);I CHECKR=""R"" S Y=38;36///^S X=""R"";38;39;34;35;17;17.2;W !!,""ORDERING ADDRESS: "",$P(ORDER,U,2) W:$P(ORDER,U,3)]"""" !,?18,$P(ORDER,U,3);W !,?18,$P(ORDER,U,6);"
 ^DIE(1815,"DR",1,440,2)="S STATE=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""") I STATE]"""" W "", ""_STATE;W "" "",$P(ORDER,U,8);17.3//^S X=$E($P(ORDER,U,2),1,30);17.4//^S X=$E($P(ORDER,U,3),1,30);17.7//^S X=$E($P(ORDER,U,6),1,19);"
 ^DIE(1815,"DR",1,440,3)="I $L($P(^PRC(440,DA,7),U,7))>19 W !!,""The city you entered is over 19 characters long.  When sent to FMS only the"",!,""first 19 characters will go.  You may want to edit the city."",!;"
-^DIE(1815,"DR",1,440,4)="17.8//^S X=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""");17.9//^S X=$P(ORDER,U,8);41//^S X=""YES"";44;18.3;"
+^DIE(1815,"DR",1,440,4)="17.8//^S X=$S($P(ORDER,U,7)?1.N:$P($G(^DIC(5,$P(ORDER,U,7),0)),U),1:"""");17.9//^S X=$P(ORDER,U,8);41//^S X=""YES"";44;18.3;55;"
 ^DIE(1816,0)="PRCD SUBSTATION^2960206.1534^^411^^^^"
 ^DIE(1816,"DIAB",1,1,411.01,0)="ALL"
 ^DIE(1816,"DIAB",1,1,411.03,0)="ALL"
@@ -19300,8 +19296,7 @@ ZWR
 ^DIE(2034,"DIAB",1,1,8989.513,0)="ALL"
 ^DIE(2034,"DR",1,8989.51)=".01;.02;.03//Yes;.04;6.1;6.2;6.3;1.1;1.2;1.3;30;20;"
 ^DIE(2034,"DR",2,8989.513)=".01:.02"
-^DIE(2035,0)="PRCHVENDORNOREACT^3021203.1625^@^440^^@^3021203"
-^DIE(2035,"DIAB",1,1,440.02,0)="ALL"
+^DIE(2035,0)="PRCHVENDORNOREACT^3220131.1612^@^440^^@^3220222"
 ^DIE(2035,"DR",1,440)="W !!!;S NAME=$P($G(^PRC(440,DA,0)),U);W ""NAME: ""_NAME_""// (No Editing)"";1;S PAYADD1=$P($G(^PRC(440,DA,0)),U,2);2;S PAYADD2=$P($G(^PRC(440,DA,0)),U,3);S:X="""" Y=4.2;3;S:X="""" Y=4.2;4;4.2;4.4;4.6;46;S CHECKR=$P($G(^PRC(440,DA,3)),U,6);"
 ^DIE(2035,"DR",1,440,1)="I CHECKR=""R"" S Y=38;36///^S X=""R"";38;I X]"""" S Y=39;W !!,""This VENDOR needs a TAX IDENTIFICATION NUMBER or a SOCIAL SECURITY NUMBER."",!,""Please enter one if you have it or get it from the VENDOR."",!;39;I X]"""" S Y=""@1"";"
 ^DIE(2035,"DR",1,440,2)="W !!,""Please tell me whether the TAX ID/SSN field is a TAX NUMBER or a SSN NUMBER."",!;@1;S ORDER=^PRC(440,DA,0) W !!,""ORDERING ADDRESS: "",$P(ORDER,U,2) W:$P(ORDER,U,3)]"""" !,?18,$P(ORDER,U,3);"
@@ -19309,8 +19304,7 @@ ZWR
 ^DIE(2035,"DR",1,440,4)="17.4//^S X=$S($P($G(^PRC(440,DA,7)),U,4)=""""&($P($G(^(7)),U,7)=""""):$E($P(^PRC(440,DA,0),U,3),1,30),1:"""");17.7//^S X=$E($P(^PRC(440,DA,0),U,6),1,19);"
 ^DIE(2035,"DR",1,440,5)="I $L($P(^PRC(440,DA,7),U,7))>19 W !!,""The city you entered is over 19 characters long.  When sent to FMS only the"",!,""first 19 characters will go.  You may want to edit the city."",!;"
 ^DIE(2035,"DR",1,440,6)="S STATE="""" I $P(^PRC(440,DA,0),U,7)>0 S STATE=$P(^DIC(5,$P(^PRC(440,DA,0),U,7),0),U);17.8//^S X=STATE;17.9//^S X=$P(^PRC(440,DA,0),U,8);41//^S X=""YES"";44;5;4.8;5.1;"
-^DIE(2035,"DR",1,440,7)="S:'$D(^PRC(440,DA,4,0)) ^PRC(440.3,DA,4,0)=""^""_$P($G(^DD(440,6,0)),U,2)_""^0^0"";6;8.3;Q;10;D CHK^PRCHFPDS;I '$D(^PRC(440,DA,1.1)) S Y=10;K DIE(""NO^"");11;5.2;20;13//NOT APPLICABLE;S:X=""Y"" Y=14;S Y=18.3;14;18.3;"
-^DIE(2035,"DR",2,440.02)=.01
+^DIE(2035,"DR",1,440,7)="S:'$D(^PRC(440,DA,4,0)) ^PRC(440.3,DA,4,0)=""^""_$P($G(^DD(440,6,0)),U,2)_""^0^0"";6;8.3;Q;10;D CHK^PRCHFPDS;I '$D(^PRC(440,DA,1.1)) S Y=10;K DIE(""NO^"");11;5.2;20;13//NOT APPLICABLE;S:X=""Y"" Y=14;S Y=18.3;14;18.3;55;"
 ^DIE(2035,"DR",2,440.03)=".01:2;"
 ^DIE(2035,"DR",2,440.05)=".01;S DIE(""NO^"")=""A"";"
 ^DIE(2036,0)="SD ENCOUNTER LOG^2970827.0853^@^409.68^^@^3170718"
@@ -23615,6 +23609,29 @@ ZWR
 ^DIE(2353,"DR",1,342)=".14T~;I '$P(^RC(342,DA,0),""^"",14) S Y=""@10"";D SHOWTYP^RCDPEAD3;.15T~;@10;"
 ^DIE(2354,0)="XUSER REMOTE^3210212.1146^@^200^^@^3220125"
 ^DIE(2354,"DR",1,200)="202.06;"
+^DIE(2355,0)="SAM^3221022.205^@^4^1^@^3221022"
+^DIE(2355,"DIAB",1,1,4.014,0)="ALL"
+^DIE(2355,"DIAB",1,1,4.042,0)="ALL"
+^DIE(2355,"DIAB",1,1,4.9999,0)="ALL"
+^DIE(2355,"DR",1,4)=".01;.02;11;13;14;99;42;9999;800;101;"
+^DIE(2355,"DR",2,4.014)=".01:1"
+^DIE(2355,"DR",2,4.042)=".01:.03"
+^DIE(2355,"DR",2,4.9999)=".01:.04"
+^DIE(2356,0)="OR AP DIALOG EDIT TEMPLATE^3220708.1617^@^101.45^^@^3220715"
+^DIE(2356,"%D",0)="^^2^2^3220708^"
+^DIE(2356,"%D",1,0)="This template is used by Option ORCM UPDATE AP DIALOGS to update entries "
+^DIE(2356,"%D",2,0)="in the AP DIALOG CONFIG File (#101.45)."
+^DIE(2356,"DIAB",1,2,101.4521,0)="ALL"
+^DIE(2356,"DR",1,101.45)=".01;.06;.02;.03;1;2;3;"
+^DIE(2356,"DR",2,101.451)=".01;.02;.03;S:$$ISTEXT^ORWLRAP2(DA(1),DA) Y=""@10"";.04///^S X=$$GETDEFAULT^ORWLRAP2(DA(1),DA);S Y=""@20"";@10;.04;@20;"
+^DIE(2356,"DR",2,101.452)=".01;.05///^S X=$$GETPAGEID^ORWLRAP2(DA(1),DA);.02//^S X=$$GETPAGENAME^ORWLRAP2(DA(1),DA,X);.03;.04;.06;1;"
+^DIE(2356,"DR",3,101.4521)=".01:1"
+^DIE(2356,"DR",4,101.45211)=".01:.04"
+^DIE(2357,0)="OR AP DIALOG ACTIVATE ONLY^3220224.0948^@^101.45^^@^3220630"
+^DIE(2357,"%D",0)="^^2^2^3220224^"
+^DIE(2357,"%D",1,0)="This template is used by Option ORCM UPDATE AP DIALOGS to update the"
+^DIE(2357,"%D",2,0)="Inactive field in the AP DIALOG CONFIG File (#101.45)."
+^DIE(2357,"DR",1,101.45)=".06;"
 ^DIE("AF",2,.01,1169)=""
 ^DIE("AF",2,.01,1336)=""
 ^DIE("AF",2,.02,1169)=""
@@ -30886,6 +30903,8 @@ ZWR
 ^DIE("B","ONCO UTL CORRECT DATA",1317)=""
 ^DIE("B","OR ACTIVATE ITEMS",1347)=""
 ^DIE("B","OR ADV MENU",771)=""
+^DIE("B","OR AP DIALOG ACTIVATE ONLY",2357)=""
+^DIE("B","OR AP DIALOG EDIT TEMPLATE",2356)=""
 ^DIE("B","OR EDIT",765)=""
 ^DIE("B","OR EDIT MENU",769)=""
 ^DIE("B","OR EDIT PACKAGE",768)=""
@@ -31555,6 +31574,7 @@ ZWR
 ^DIE("B","RT RETIREMENT PROFILE",1202)=""
 ^DIE("B","RT TYPE SET-UP",473)=""
 ^DIE("B","RUBY",448)=""
+^DIE("B","SAM",2355)=""
 ^DIE("B","SAMPLE ERROR EDIT",37)=""
 ^DIE("B","SCCV CONV CANCEL",2092)=""
 ^DIE("B","SCCV CONV EDIT SITE PARAMS",2091)=""
@@ -31801,6 +31821,8 @@ ZWR
 ^DIE("F101","ORCL PROTOCOL MENU",1348)=1
 ^DIE("F101","VALM PROTOCOL EDIT",1421)=1
 ^DIE("F101","XUPRTL INPUT",2231)=1
+^DIE("F101.45","OR AP DIALOG ACTIVATE ONLY",2357)=1
+^DIE("F101.45","OR AP DIALOG EDIT TEMPLATE",2356)=1
 ^DIE("F105","ZISL1",688)=1
 ^DIE("F11","DGMF AMSTAT",2345)=1
 ^DIE("F114","FHINPR",757)=1
@@ -32511,6 +32533,7 @@ ZWR
 ^DIE("F399","IB STATUS",736)=1
 ^DIE("F399.2","IB ACTIVATE",542)=1
 ^DIE("F399.3","IB RATE EDIT",541)=1
+^DIE("F4","SAM",2355)=1
 ^DIE("F4","XUMF IMF EDIT",2172)=1
 ^DIE("F4.001","XUMF MFP EDIT",2208)=1
 ^DIE("F4.2","DOMAINS",9)=1

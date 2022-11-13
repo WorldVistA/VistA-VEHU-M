@@ -1,9 +1,10 @@
-SDESUTIL ;ALB/TAW,KML,LAB,MGD - SDES Utilities ;June 29, 2022
- ;;5.3;Scheduling;**801,804,805,814,816,818,820**;Aug 13, 1993;Build 10
+SDESUTIL ;ALB/TAW,KML,LAB,MGD - SDES Utilities ;Aug 26, 2022
+ ;;5.3;Scheduling;**801,804,805,814,816,818,820,823,824**;Aug 13, 1993;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to INSTITUTION in #2251
  ; Reference to KERNEL SYSTEM PARAMETERS in #1518
+ ; Reference to ^ECX(728.44 in #7340
  Q
  ;
 PADCLTIME(TIME) ;
@@ -141,10 +142,49 @@ CHAR4(CLINNAME) ;
  ; CLINNAME - REQ - Name of clinic from #44
  ; Return
  ;  The CODE (#.01) field from NATIONAL CLINIC (#728.411) file or null
- N CODE,IEN,NATLCODE
+ N IEN,NATLCODE
  I CLINNAME="" Q ""
  I '$D(^SC("B",CLINNAME)) Q ""
  S IEN=$$FIND1^DIC(728.44,"","X",CLINNAME)
  I 'IEN Q ""
  S NATLCODE=$$GET1^DIQ(728.44,IEN_",",7,"E")
  Q NATLCODE
+ ;
+TELEPHONE(PHONE) ; Format all numeric Telephone Number
+ ; PHONE - The Telephone Number
+ ; Return
+ ; If PHONE is all numeric it will be formatted as follows
+ ; 1234567890 will be formatted as (123)456-7890
+ ; otherwise the passed in PHONE is returned.
+ S PHONE=$G(PHONE,"")
+ I PHONE?10N S PHONE="("_$E(PHONE,1,3)_")"_$E(PHONE,4,6)_"-"_$E(PHONE,7,10)
+ Q PHONE
+ ;
+EXT(EXT) ; Add an x to the beginning of an all numeric Telephone Extension field.
+ ; EXT - The Telephone Extension.
+ ; Return
+ ; If EXT is all numeric, a lowercase x concantenated to the passed in EXT.
+ ; otherwise the passed in EXT is returned.
+ S EXT=$G(EXT,"")
+ I EXT?1.N S EXT="x"_EXT
+ Q EXT
+ ;
+INACTIVE(SDCL,SDDT) ; determine if clinic is active
+ ; Input:
+ ;  SDCL = (Req) IEN of Clinic from file #44.
+ ;  SDDT = (Opt) Date to use for determining Status. If not passed in, defaults to DT.
+ ; Return:
+ ;  0=ACTIVE
+ ;  1=INACTIVE
+ N SDNODEI,INACTIVEDATE,REACTIVEDATE,STATUS
+ S SDDT=$G(SDDT) I SDDT="" S SDDT=DT
+ S SDDT=$P(SDDT,".",1)
+ S STATUS=1
+ S SDNODEI=$G(^SC(SDCL,"I"))
+ I SDNODEI="" S STATUS=0 Q STATUS
+ S INACTIVEDATE=$P(SDNODEI,U,1)   ;inactive date/time
+ S REACTIVEDATE=$P(SDNODEI,U,2)   ;reactive date/time
+ I (INACTIVEDATE="") S STATUS=0 Q STATUS
+ I (INACTIVEDATE'="")&(INACTIVEDATE>SDDT) S STATUS=0 Q STATUS
+ I (REACTIVEDATE'="")&(REACTIVEDATE'>SDDT) S STATUS=0 Q STATUS
+ Q STATUS

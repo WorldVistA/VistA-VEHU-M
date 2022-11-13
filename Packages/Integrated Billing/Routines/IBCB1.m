@@ -1,5 +1,5 @@
 IBCB1 ;ALB/AAS - Process bill after enter/edited ;2-NOV-89
- ;;2.0;INTEGRATED BILLING;**70,106,51,137,161,182,155,327,432,592,623,641**;21-MAR-94;Build 61
+ ;;2.0;INTEGRATED BILLING;**70,106,51,137,161,182,155,327,432,592,623,641,718**;21-MAR-94;Build 73
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;MAP TO DGCRB1
@@ -95,10 +95,13 @@ AUTH S IBMRA=$$REQMRA^IBEFUNC(IBIFN)
  D:'$D(IBVIEW) VIEW^IBCB2 G:IBQUIT END
  S IBPNT=$P(^DGCR(399,IBIFN,"S"),"^",12)
 GEN I $$TEST^IBCEF4(IBIFN) W !!,"THIS BILL IS BEING USED AS A TRANSMISSION TEST BILL"
+ ;IB*2.0*718v5;EBILL-156;JWS;remove PRINT prompt for Dental Claims
+ I $$FT^IBCEF(IBIFN)=7 D:+$G(IBAC)=1 END,CTCOPY^IBCCCB(IBIFN) G END
  W !!,"WANT TO ",$S(IBPNT]"":"RE-",1:""),"PRINT BILL AT THIS TIME" S %=2 D YN^DICN I %=-1 D:+$G(IBAC)=1 END,CTCOPY^IBCCCB(IBIFN) G END
  I '% W !?4,"YES - to print the bill now",!?4,"NO - To take no action" G GEN
  ;JWS;IB*2.0*592
- I %=1,$$FT^IBCEF(IBIFN)=7 W !!,*7,"Dental Claims can not be printed." G END
+ ;IB*2.0*718v5;EBILL-156;JWS;remove PRINT prompt for Dental claims
+ ;;I %=1,$$FT^IBCEF(IBIFN)=7 W !!,*7,"Dental Claims can not be printed." G END
 GENTX I %'=1 D:+$G(IBAC)=1 END,CTCOPY^IBCCCB(IBIFN) G END
  ;
  N IBABORT   ;WCJ;US3380

@@ -1,6 +1,6 @@
-XOBVLL ;; mjk/alb - VistALink Listen and Spawn Code ; 07/27/2002  13:00
- ;;1.6;VistALink Security;**4**;May 08, 2009;Build 7
- ; ;Per VA Directive 6402, this routine should not be modified.
+XOBVLL ;MJK/ALB - VistALink Listen and Spawn Code ; 07/27/2002  13:00
+ ;;1.6;VistALink;**4,6**;Apr 5,2017;Build 33
+ ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
  ; ***deprecated*** tag ; Use START^XOBVTCP instead
@@ -25,7 +25,10 @@ SPAWN ; -- spawned process
  ;
  ; -- set error trap
  ;Set up the error trap
- S $ET="D APPERROR^%ZTER(""VistALink Error $P(XOBMSG,"": "",2 "") HALT" ;*4
+ ; * * *
+ ;S $ET="D APPERROR^%ZTER(""VistALink Error $P(XOBMSG,"": "",2 "") HALT" ;*4
+ S $ET="D APPERROR^%ZTER(""VistALink Error ""_$P(XOBMSG,"": "",2)) HALT" ;*6
+ ; * * *
  ;
  ; -- attempt to share the license; must have TCP port open first
  U XOBPORT I $T(SHARELIC^%ZOSV)'="" D SHARELIC^%ZOSV(1)
@@ -107,7 +110,10 @@ NXTCALL ; -- do next call
  . S XOBSTOP=1
  ;
  ; -- need null device
- I '$D(XOBNULL) D ERROR(181002,$$EZBLD^DIALOG(181002),XOBPORT) S XOBSTOP=1 G NXTCALLQ
+ ; * * *
+ ;I '$D(XOBNULL) D ERROR(181002,$$EZBLD^DIALOG(181002),XOBPORT) S XOBSTOP=1 G NXTCALLQ
+ I '$D(XOBNULL) D ERROR(181002,$$EZBLD^DIALOG(181002,$$EC^%ZOSV),XOBPORT) S XOBSTOP=1 G NXTCALLQ ;*6
+ ; * * *
  ;
  ; -- call request manager                   
  S XOBOK=$$EN^XOBVRM(XOBROOT,.XOBDATA,.XOBHDLR)
@@ -132,8 +138,11 @@ ERROR(XOBEC,XOBMSG,XOBPORT) ; -- send error message
  N XOBDAT
  ;
  ; -- If we get an error in the error handler just Halt
- S $ET="D APPERROR^%ZTER(""VistALink Error_$G(XOBDAT(""ERRORS"_",1,"_"""CODE"""_"),180000)"_") HALT" ;*4
  ;
+ ; * * *
+ ;S $ET="D APPERROR^%ZTER(""VistALink Error_$G(XOBDAT(""ERRORS"_",1,"_"""CODE"""_"),180000)"_") HALT" ;*4
+ S $ET="D APPERROR^%ZTER(""VistALink Error ""_$G(XOBDAT(""ERRORS"""_",1,"_"""CODE"")"_",180000)) HALT" ;*6
+ ; * * *
  ; -- set up error info
  S XOBDAT("MESSAGE TYPE")=3
  S XOBDAT("ERRORS",1,"CODE")=XOBEC

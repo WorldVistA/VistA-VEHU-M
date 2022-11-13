@@ -1,5 +1,5 @@
-SDESGETAPPTWRAP3 ;ALB/RRM - RPC WRAPPER FOR VIEWING AN APPOINTMENT CONTINUATION;APR 25, 2022@13:47
- ;;5.3;Scheduling;**815**;Aug 13, 1993;Build 4
+SDESGETAPPTWRAP3 ;ALB/RRM,MGD - RPC WRAPPER FOR VIEWING AN APPOINTMENT CONTINUATION;July 29, 2022
+ ;;5.3;Scheduling;**815,823,824**;Aug 13, 1993;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -54,6 +54,7 @@ GETAPPT2(SDALLAPPTARY,DFN,BDATE,EDATE) ;Traverse the "S" node in Appointment Mul
  . S NUM=NUM+1
  . S APPT=$$GETAPPT^SDESGETPATAPPT(.SDPATAPPT,$G(DFN),APPDATETIME)
  . Q:$D(ERR)
+ . K SDPATAPPT("PatientAppt",NUM,"Clinic")
  . I $G(APPT) M SDALLAPPTARY("Appointment",RECNUM)=SDPATAPPT("PatientAppt",NUM)
  I $O(SDALLAPPTARY("Appointment",""))="" S SDALLAPPTARY("Appointment",1)="" ;if no record found, set the array into a NULL value
  Q
@@ -70,13 +71,15 @@ GETAPPT44(SDALLAPPTARY,SDCLINICIEN,BDATE,EDATE,RECNUM,SDVIEWAPPTBY) ;Traverse th
  . . . S SDSTDT=$P(SDIEN,",",2)
  . . . S SDCLIN=$P(SDIEN,",",3)
  . . . I $G(SDVIEWAPPTBY)=0!($G(SDVIEWAPPTBY)=2),$D(SDDFNARY(DFN,APTDATETIME,SDAPPTNUM)) S EXIST=1
- . . . I $G(SDVIEWAPPTBY)=1 S RECNUM=RECNUM+1
+ . . . I $G(SDVIEWAPPTBY)=1 S RECNUM=RECNUM+1,DFN=SDCLINDFN
  . . . Q:'$D(^DPT(SDCLINDFN,"S",SDSTDT,0))
+ . . . Q:$G(DFN)'=SDCLINDFN
  . . . K SDMSG,SDAPPT,APPTREC D GETS^DIQ(44.003,SDIEN,"**","IE","SDAPPT","SDMSG")
  . . . Q:$D(SDMSG)
  . . . D BLDREC^SDESGETCLINAPPT
  . . . I $D(APPTREC) D
  . . . . ;Build the appointment object as we go along
+ . . . . S APPTREC("ClinicApptDate",SDSTDT,"ClinicApptNumber",SDAPPTNO,"Patient",SDCLINDFN,"ICN")=$$GETPATICN^SDESINPUTVALUTL(DFN)
  . . . . M SDTMPARY("Patient")=APPTREC("ClinicApptDate",SDSTDT,"ClinicApptNumber",SDAPPTNO,"Patient",SDCLINDFN)
  . . . . K APPTREC("ClinicApptDate",SDSTDT,"ClinicApptNumber",SDAPPTNO,"Patient",SDCLINDFN)
  . . . . M SDALLAPPTARY("Appointment",RECNUM)=APPTREC("ClinicApptDate",SDSTDT,"ClinicApptNumber",SDAPPTNO)
@@ -84,7 +87,7 @@ GETAPPT44(SDALLAPPTARY,SDCLINICIEN,BDATE,EDATE,RECNUM,SDVIEWAPPTBY) ;Traverse th
  . . . . I $G(SDVIEWAPPTBY)=1 D
  . . . . . I $D(SDDFNARY(SDCLINDFN,APTDATETIME,CNTR+1)) S SDCLINSTATUS=-1 ;Current Appt is cancelled and there is another APPT
  . . . . . I '$D(SDDFNARY(SDCLINDFN,APTDATETIME,CNTR+1)) S SDCLINSTATUS=0 ;Current Appt is either cancelled/not and no other APPT
- . . . . . D GETAPPT40984(.SDALLAPPTARY,SDCLINDFN,SDSTDT,SDSTDT,,RECNUM) ;retrieve appointments from Appointment Multiple PATIENT File #2
+ . . . . . D GETAPPT40984(.SDALLAPPTARY,SDCLINDFN,SDSTDT,SDSTDT,,RECNUM,SDVIEWAPPTBY) ;retrieve appointments from Appointment Multiple PATIENT File #2
  . . . . . D SETOVERLAIDAPPT(.SDALLAPPTARY,SDCLINSTATUS,RECNUM)
  . . . . . I SDCLINSTATUS=0 D GETAPPT2(.SDALLAPPTARY,SDCLINDFN,SDSTDT,SDSTDT) ;retrieve appointments from Appointment Multiple PATIENT File #2
  . . . . . D REMOVEDUPLICATE ;remove duplicates as we go along

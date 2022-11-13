@@ -1,14 +1,16 @@
-SDEC28L ;ALB/LEG,JLS - VISTA SCHEDULING GET PAT DEMOG RPC ;Apr 28, 2021@14:56:31
- ;;5.3;Scheduling;**785**;Aug 13, 1993;Build 14
- ;  Reference to ^AUPNPAT(DFN,41,DUZ(2),0) (for CHART#) is in ICR #7048"
- ;  Reference to ^DPT(DFN,0) is in ICR #10035
+SDEC28L ;ALB/LEG,JLS,LAB - VISTA SCHEDULING GET PAT DEMOG RPC ;JUL 26,2022
+ ;;5.3;Scheduling;**785,823**;Aug 13, 1993;Build 9
+ ;;Per VHA Directive 6402, this routine should not be modified
+ ;
+ ; Reference to ^AUPNPAT(DFN in ICR #7048
+ ; Reference to ^DPT in ICR #10035
  Q
  ;This Routine is a "LITE" version of the rtn SDEC28-Patient info lookup for RPC SDEC PTLOOKRS.
  ; It generates only "PATIENT NAME, SSN, DOB, DFN, SEX, ELIGIBILITY" fields
  ; and finds up to "SDECC" number of patients that match the "SDECP" defined lookup criteria.
  ;
  ;The Patient lookup supports input in the form of:
- ;    a)#DFN,   b)DOB,   c)SSN,   d)First letter of LastName followed by L4SSN, 
+ ;    a)#DFN,   b)DOB,   c)SSN,   d)First letter of LastName followed by L4SSN,
  ;    e)PartialName  or  f)NULL for ALL
  ;Vars In:
  ;  SDECP   - (optional) Free-Text - Partial name to look up
@@ -146,7 +148,7 @@ GET1(DFN,SDECHRN,SDECI,SDECY,LSUB) ;
  S SDECZ=$$GET1^DIQ(2,DFN_",",.01) ; NAME
  Q:SDECZ=""
  S SDECDPT=$G(^DPT(DFN,0))
- S $P(SDECZ,U,2)=$P(SDECDPT,U,9) ;SSN
+ S $P(SDECZ,U,2)=$$LAST4SSN^SDESINPUTVALUTL(DFN)
  S Y=$P(SDECDPT,U,3) X ^DD("DD")
  S $P(SDECZ,U,3)=Y ;DOB
  S $P(SDECZ,U,4)=$P(SDECDPT,U,2) ;Gender

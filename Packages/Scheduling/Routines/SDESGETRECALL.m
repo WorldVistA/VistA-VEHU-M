@@ -1,5 +1,5 @@
-SDESGETRECALL ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;July 5, 2022
- ;;5.3;Scheduling;**803,805,809,813,815,820**;Aug 13, 1993;Build 10
+SDESGETRECALL ;ALB/BLB,MGD,RRM - VISTA SCHEDULING RPCS ;July 5, 2022
+ ;;5.3;Scheduling;**803,805,809,813,815,820,824**;Aug 13, 1993;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -65,6 +65,7 @@ GETRECALL(REQUEST,RECALLIEN,DFN) ;
  ;
  S REQUEST("Request",NUM,"Type")="Recall"
  S REQUEST("Request",NUM,"PatientIEN")=DFN
+ S REQUEST("Request",NUM,"PatientICN")=$$GETPATICN^SDESINPUTVALUTL(DFN)
  S REQUEST("Request",NUM,"PatientName")=RECARY(F,IENS,.01,"E")
  S REQUEST("Request",NUM,"RequestIEN")=RECALLIEN
  S REQUEST("Request",NUM,"EASTrackingNumber")=RECARY(F,IENS,100,"E")

@@ -1,5 +1,5 @@
 IBJDF43 ;ALB/RB - FIRST PARTY FOLLOW-UP REPORT (COMPILE/PRINT SUMMARY);15-APR-00
- ;;2.0;INTEGRATED BILLING;**123,568,705**;21-MAR-94;Build 8
+ ;;2.0;INTEGRATED BILLING;**123,568,705,715**;21-MAR-94;Build 25
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 INIT ; - Initialize counters (Called by IBJDF41)
@@ -161,6 +161,7 @@ OSUM ; Print Overall Summary
  N X,Y,Z,I
  S Y=$P(IB("OSUM",9),U,2)
  F I=1:1:IBS,9 S X=$P($T(CATN+I),";;",2,99) D
+ .I $G(IB("OSUM",I))="" Q  ; IB*2.0*715
  .W:I=9 ! W !,X,?30,$J($P(IB("OSUM",I),U),6)
  .W "  (",$J($S(+IB("OSUM",9)'=0:$P(IB("OSUM",I),U)/+IB("OSUM",9)*100,1:0),0,$S(I=9:0,1:2)),"%)"  ; IB*2.0*705
  .S Z=$FN($P(IB("OSUM",I),U,2),",",2)

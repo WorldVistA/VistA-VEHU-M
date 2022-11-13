@@ -1,5 +1,5 @@
-SDESGETREGA ;ALB/LAB,TAW,LAB,KML,MGD - Get registration info JSON format ; July 19, 2022
- ;;5.3;SCHEDULING;**799,804,805,809,814,820**;AUG 13, 1993;Build 10
+SDESGETREGA ;ALB/LAB,TAW,LAB,KML,MGD,LAB,RRM - Get registration info JSON format ; Jul 28,2022
+ ;;5.3;SCHEDULING;**799,804,805,809,814,820,823,824**;AUG 13, 1993;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
@@ -59,12 +59,13 @@ ASSIGNVALS ;assign values to be used to build output
  ;
 GETREG ;
  S SDINFO("Patient","DataFileNumber")=DFN
+ S SDINFO("Patient","ICN")=$$GETPATICN^SDESINPUTVALUTL(DFN)
  D ASSIGNVALS ;assign all values needed to build SDINFO array
  ;
  ;person identification information
  ;
  S SDINFO("Patient","Name")=SDDEMO("NAME")
- S SDINFO("Patient","SocialSecurityNumber")=SDDEMO("SSN")
+ S SDINFO("Patient","SocialSecurityNumber")=$$GET1^DIQ(2,DFN_",",.09,"E")
  S SDINFO("Patient","DateOfBirth")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,DFN_",",.03,"I")) ;vse-2500  IA 10035
  S SDINFO("Patient","Race","IEN")=$G(PRACE)
  S SDINFO("Patient","Race","Name")=$G(PRACEN)

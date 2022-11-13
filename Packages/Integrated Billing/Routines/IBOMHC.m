@@ -1,24 +1,33 @@
 IBOMHC ;SAB/EDE -  COMPACT ACT COPAY Review Report ;JUL 12 2021
- ;;2.0;INTEGRATED BILLING;**709**;21-MAR-94;Build 14
+ ;;2.0;INTEGRATED BILLING;**709,720**;21-MAR-94;Build 33
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
- ; ICR #5747 - $$CODEC^ICDEX()
- ; 
+ ; Reference to $$CODEC^ICDEX in ICR #5747
+ ; Reference to $$RX^PSO52API in ICR #4820
+ ; Reference to $$GETCPT^SDOE in ICR #2546
+ ; Reference to $$RXSITE^PSOBPSUT in ICR #4701
+ ; Reference to FILE #405 in ICR #419
+ ; Reference to FILE #40.8 in ICR #417
+ ;
 EN ;
  ;
- N IBSTART,IBEND,IBEXCEL,IBSTOP
+ N IBSTART,IBEND,IBEXCEL,IBSTOP,IBSD,VAUTD
  N POP,ZTDESC,ZTRTN,ZTSAVE,ZTSK,%ZIS
  ;Initialze Date fields 
  S (IBSTART,IBEND)="",IBSTOP=0
  ;Get the start and end dates.
  D DATESEL(.IBSTART,.IBEND,"Date Copay Billed")
  Q:IBSTOP
+ ;Ask to sort by Division or not
+ S IBSD=$$GETDIV()
+ Q:IBSD<0   ;User requested an exit
+ ;
  W !!,"** This report can take a while to run and may be queued to run after hours. **",!
  W !,"Note: Copay displays only if at least one COMPACT diagnosis is hit.",!
  ; export to Excel?
  S IBEXCEL=$$GETEXCEL^IBUCMM() I IBEXCEL<0 Q
  I IBEXCEL D PRTEXCEL^IBUCMM()
- W:'IBEXCEL !!,"Report requires 132 columns.",!
+ W:'IBEXCEL !!,"Report requires 150 columns.",!  ; IB*2.0*720
  ;
  ; ask for device
  K IOP,IO("Q")
@@ -26,7 +35,8 @@ EN ;
  I $D(IO("Q")) D  Q  ; queued report: ask if print queue should be cleared, then queue task
  .S ZTDESC="COMPACT ACT Copay Review Report Report"
  .S ZTRTN="MAIN^IBOMHC"
- .S ZTSAVE("IBSTART")=IBSTART,ZTSAVE("IBEXCEL")=IBEXCEL,ZTSAVE("IBEND")=IBEND,ZTSAVE("ZTREQ")="@"
+ .S ZTSAVE("IBSTART")=IBSTART,ZTSAVE("IBEXCEL")=IBEXCEL,ZTSAVE("IBEND")=IBEND,ZTSAVE("VAUTD")="",ZTSAVE("VAUTD(")="",ZTSAVE("ZTREQ")="@"
+ .S ZTSAVE("IBSD")=IBSD
  .D ^%ZTLOAD,HOME^%ZIS
  .I $G(ZTSK) W !!,"Report compilation has started with task# ",ZTSK,".",!
  .Q
@@ -38,8 +48,7 @@ MAIN ; Main routine to gather and print the report
  ;
  K ^TMP($J,"IBOMHC"),^TMP($J,"IBOMHCDX")
  D COLLECT
- I 'IBEXCEL D PRINT(IBSTART,IBEND) Q
- D PRINTEX(IBSTART,IBEND)
+ D PRINT(IBSTART,IBEND)
  Q
  ;
 DATESEL(DATESTRT,DATEEND,DESCR) ; prompt for start and end dates
@@ -76,7 +85,7 @@ DATESELX ; dates prompt exit point
  ;
 COLLECT ; review the copays in the specified period for possible COMPACT Act related copays to review
  ;
- N IBERROR,IBN,IBDXARY,IBPTF,IBDATA,IBLP,IBBLNO,IBCT,VADM,IBPM,IBPCE,IBRX,IBVADM,I
+ N IBERROR,IBN,IBDXARY,IBPTF,IBDATA,IBLP,IBBLNO,IBCT,VADM,IBPM,IBPCE,IBRX,IBVADM,I,IBCPT,IBDIV,IBADM  ; IB*2.0*720
  N DFN,DONE,IBBDSC,IBCHTYPE,IBCHRG,IBDOS,IBNM,IBRF,IBRFFL,IBDATA1,IBLPDT,IBSTATNM,IBSTAT,IBSTABR
  S IBCT=0
  S IBLPDT=IBSTART-.001,IBEND=IBEND+.999999
@@ -93,7 +102,6 @@ COLLECT ; review the copays in the specified period for possible COMPACT Act rel
  ..S IBDATA=$G(^IB(IBLP,0)),IBDATA1=$G(^IB(IBLP,1))
  ..S IBSTATNM=$$GET1^DIQ(350,IBLP_",",.05,"E") I "^BILLED^HOLD - RATE^HOLD - REVIEW^ON HOLD^"'[(U_IBSTATNM_U) Q
  ..S DFN=$P(IBDATA,U,2) I '$$ISELIG(DFN) Q
- ..D DEM^VADPT M IBVADM=VADM
  ..;Extract field (.04)[RESULTING FROM]
  ..S IBRF=$P(IBDATA,U,4)
  ..;If no file number or ":" in field, skip and go to the next.
@@ -104,7 +112,17 @@ COLLECT ; review the copays in the specified period for possible COMPACT Act rel
  ..S:IBRFFL=52 IBDOS=$P($P(IBDATA1,U,2),".")
  ..S:IBRFFL'=52 IBDOS=$P(IBDATA,U,14)
  ..Q:'IBDOS
- ..S IBNM=IBVADM(1),IBCHTYPE=$P(IBDATA,U,3) Q:IBCHTYPE=""  Q:$D(^TMP($J,"IBOMHC","IDX",IBNM,IBDOS,IBCHTYPE))
+ ..; Check division  IB*2.0*720
+ ..S IBDIV=""
+ ..I IBRFFL=405 S IBDIV=$$INP^IBJDF2($P(IBRF,":",2))
+ ..I IBRFFL=45 S IBADM=$O(^DGPM("APTF",$P(IBRF,":",2),0)) S:IBADM IBDIV=$$INP^IBJDF2(IBADM)
+ ..I IBRFFL=52 S IBDIV=$$RXSITE^PSOBPSUT($P($P(IBRF,":",2),";"))
+ ..I IBRFFL=409.68 S IBDIV=$$OPT^IBJDF2(IBDOS,DFN)
+ ..S:IBDIV="" IBDIV=+$$PRIM^VASITE()
+ ..I IBSD,'VAUTD Q:'$D(VAUTD(IBDIV))  ;  quit if not a selected division.
+ ..;
+ ..D DEM^VADPT M IBVADM=VADM  ; IB*2.0*720 moved line from above
+ ..S IBNM=IBVADM(1),IBCHTYPE=$P(IBDATA,U,3) Q:IBCHTYPE=""  Q:$D(^TMP($J,"IBOMHC","IDX",IBNM,IBDOS,IBCHTYPE))  ; IB*2.0*720
  ..Q:$$GET1^DIQ(350.1,IBCHTYPE,.05,"E")'="NEW"
  ..;If file is 45 (PTF), lookup the primary and Secondary diagnoses
  ..I IBRFFL=45 S IBPTF=$P(IBRF,":",2) D GETPTFDX(IBPTF,.IBDXARY)
@@ -114,8 +132,6 @@ COLLECT ; review the copays in the specified period for possible COMPACT Act rel
  ..I IBRFFL=405 S IBPM=$P(IBRF,":",2) D GETPMDX(IBPM,.IBDXARY)
  ..;If file is 52, look the prescription to get the diagnosis associated with it
  ..I IBRFFL=52 S IBRX=$P($P(IBRF,":",2),";") D GETRXDX(IBLP,IBRX,.IBDXARY)
- ..;
- ..; else add the bill to the ^TMP global for display
  ..S IBID=$E(IBVADM(1),1)_$P($P(IBVADM(2),U,2),"-",3)
  ..S IBSTAT=$P(IBDATA,U,5)
  ..I IBSTATNM["HOLD" S IBSTABR="HOLD"
@@ -123,14 +139,33 @@ COLLECT ; review the copays in the specified period for possible COMPACT Act rel
  ..S IBBDSC=$E($$GET1^DIQ(350.1,IBCHTYPE,.01,"E"),1,12)
  ..S IBCHRG=$P(IBDATA,U,7),IBBLNO=$P(IBDATA,U,11)
  ..S DONE=0,I="" F  S I=$O(IBDXARY(I)) Q:I=""  D  Q:DONE
- ...I I'="UNK",'$$CMPDX(I,.IBCPTARY) Q
- ...S IBCT=IBCT+1,DONE=1
- ...S ^TMP($J,"IBOMHC",DFN,IBDOS,IBCT)=IBNM_U_IBID_U_IBBLNO_U_IBSTABR_U_IBBDSC_U_$$FMTE^XLFDT(IBDOS,9)_U_U_U_$S(I="UNK":"",1:I)_U_IBCHRG
- ...S ^TMP($J,"IBOMHC","IDX",IBNM)=DFN,^TMP($J,"IBOMHC","IDX",IBNM,IBDOS,IBCHTYPE)=""
- ...I IBRFFL=52 S $P(^TMP($J,"IBOMHC",DFN,IBDOS,IBCT),U,7,8)=$P(IBDXARY(I),U)_U_$E($P(IBDXARY(I),U,2),1,20)
+ ...I I'="UNK",'$$CMPDX(I,.IBCPTARY),'$D(IBCPTARY("T2034")) Q
+ ...S DONE=1
+ ...I $D(IBCPTARY)<10!(I'="R45.851") D   ;No CPT Codes Extracted or Dx is not R45.851  IB*2.0*720
+ ....Q:'$$CMPDX(I,.IBCPTARY)    ;T2034 visit only, so process this below.
+ ....S IBCT=IBCT+1
+ ....S ^TMP($J,"IBOMHC",IBCT)=IBNM_U_IBID_U_IBBLNO_U_IBSTABR_U_IBBDSC_U_$$FMTE^XLFDT(IBDOS,9)_U_U_U_$S(I="UNK":"",1:I)_U_U_IBCHRG_U_IBDIV  ; IB*2.0*720
+ ....S ^TMP($J,"IBOMHC","IDX",IBNM,IBDOS,IBCHTYPE,0)=IBCT,^TMP($J,"IBOMHC","IDX1",DFN,IBDOS)=""  ; IB*2.0*720
+ ...I $D(IBCPTARY)>9,I="R45.851" D   ;CPT codes extracted and Dx is R45.851  IB*2.0*720
+ ....S IBCPT="" F  S IBCPT=$O(IBCPTARY(IBCPT)) Q:IBCPT=""  D
+ .....S IBCT=IBCT+1
+ .....S ^TMP($J,"IBOMHC",IBCT)=IBNM_U_IBID_U_IBBLNO_U_IBSTABR_U_IBBDSC_U_$$FMTE^XLFDT(IBDOS,9)_U_U_U_$S(I="UNK":"",1:I)_U_IBCPT_U_IBCHRG_U_IBDIV  ; IB*2.0*720
+ .....S ^TMP($J,"IBOMHC","IDX",IBNM,IBDOS,IBCHTYPE,IBCPT)=IBCT,^TMP($J,"IBOMHC","IDX1",DFN,IBDOS)=""  ; IB*2.0*720
+ ... ;Check to see if the HCPCS code T2034 assigned to the copay.
+ ...I $D(IBCPTARY("T2034")) D
+ ....S IBCPT="" F  S IBCPT=$O(IBCPTARY(IBCPT)) Q:IBCPT=""  D
+ .....S IBCT=IBCT+1
+ .....S ^TMP($J,"IBOMHC",IBCT)=IBNM_U_IBID_U_IBBLNO_U_IBSTABR_U_IBBDSC_U_$$FMTE^XLFDT(IBDOS,9)_U_U_U_$S(I="UNK":"",1:I)_U_IBCPT_U_IBCHRG_U_IBDIV  ; IB*2.0*720
+ .....S ^TMP($J,"IBOMHC","IDX",IBNM,IBDOS,IBCHTYPE,IBCPT)=IBCT,^TMP($J,"IBOMHC","IDX1",DFN,IBDOS)=""  ; IB*2.0*720
+ ...I IBRFFL=52 D
+ ....S IBCT=IBCT+1
+ ....S ^TMP($J,"IBOMHC",IBCT)=IBNM_U_IBID_U_IBBLNO_U_IBSTABR_U_IBBDSC_U_$$FMTE^XLFDT(IBDOS,9)_U_U_U_$S(I="UNK":"",1:I)_U_U_IBCHRG_U_IBDIV  ; IB*2.0*720
+ ....S ^TMP($J,"IBOMHC","IDX",IBNM,IBDOS,IBCHTYPE,0)=IBCT,^TMP($J,"IBOMHC","IDX1",DFN,IBDOS)=""  ; IB*2.0*720
+ ....S $P(^TMP($J,"IBOMHC",IBCT),U,7,8)=$P(IBDXARY(I),U)_U_$E($P(IBDXARY(I),U,2),1,20)  ; IB*2.0*720
  ...Q
  ..Q
  .Q
+ ;
  Q
  ;
 ISELIG(DFN) ; check if given patient is COMPACT Act eligible
@@ -151,7 +186,7 @@ GETRXDX(IBN,IBRX,IBDXARY) ;Retrieve Dx's from the PTF file via the Patient Movem
  S IBDOS=$P($P($G(^IB(IBN,1)),U,2),".")
  S NODE=0,LIST="IBOMHCRX"
  ;
- I $D(^TMP($J,"IBOMHC",IBDFN,IBDOS))>0 D
+ I $D(^TMP($J,"IBOMHC","IDX1",DFN,IBDOS))>0 D  ; IB*2.0*720
  .D RX^PSO52API(IBDFN,LIST,IBRX,,NODE,,)
  .S IBRXN=$G(^TMP($J,LIST,IBDFN,IBRX,.01))
  .S IBRXNAME=$P($G(^TMP($J,LIST,IBDFN,IBRX,6)),U,2)
@@ -218,44 +253,50 @@ GETPCECP(IBPCE,IBCPTARY)  ; Retrieve the list of CPT Codes associated with an Ou
  ;
  ; Call the PCE software to retrieve the CPT code info for the visit in array IBCPTARR via indirection.
  D GETCPT^SDOE(IBPCE,.IBCPT,.IBERR)
- S IBLP=0 F  S IBLP=$O(IBCPTRET(IBLP)) Q:'IBLP  S IBCPTARY($P(IBCPTRET(IBLP),U))=""
+ S IBLP=0 F  S IBLP=$O(IBCPTRET(IBLP)) Q:'IBLP  S IBCPTARY($$GET1^DIQ(81,$P(IBCPTRET(IBLP),U)_",",.01,"E"))=""
  Q
  ;
 PRINT(IBSTRT,IBEND) ; Print the results
- N IBI,IBX,IBPAGE,IBLN,QUIT,IBDFN,IBDOS,IBNM
+ N IBI,IBX,IBPAGE,IBLN,QUIT,IBDOS,IBNM,IBDIV,IBDIVIEN,IBCT
  I $E(IOST,1,2)["C-",'$D(ZTQUEUED) W @IOF
- S IBPAGE=0
- D HDR(IBSTRT,IBEND)
- S IBLN=6
- I '$D(^TMP($J,"IBOMHC")) W !!!,"   There were no copayments within the specified date range that were potentially COMPACT ACT eligible",!!!  D PAUSE Q
- ;
+ I IBEXCEL D
+ .W @IOF
+ .W !,"COMPACT ACT Copay Review Report from ",$$FMTE^XLFDT(IBSTRT)," to ",$$FMTE^XLFDT($P(IBEND,".")),"   Date of Report: ",$$FMTE^XLFDT($$DT^XLFDT())
+ .W !,"Patient Name",U,"ID",U,"Bill Number",U,"Stat",U,"Descr.",U,"Fill/Adm/DOS",U,"RX Number",U,"RX Name",U,"DX",U,"Proc.",U,"Amount ($)",U,"Division"
+ .Q
+ I 'IBEXCEL D
+ .S IBPAGE=0 D HDR(IBSTRT,IBEND)
+ .I '$D(^TMP($J,"IBOMHC")) W !!!,"   There were no copayments within the specified date range that were potentially COMPACT ACT eligible",!!!
+ .Q
  S IBNM="" F  S IBNM=$O(^TMP($J,"IBOMHC","IDX",IBNM)) Q:IBNM=""  D  Q:$G(QUIT)
- .S IBDFN=^TMP($J,"IBOMHC","IDX",IBNM)
- .S IBDOS=0 F  S IBDOS=$O(^TMP($J,"IBOMHC",IBDFN,IBDOS)) Q:'IBDOS  D  Q:$G(QUIT)
- ..S IBI=0 F  S IBI=$O(^TMP($J,"IBOMHC",IBDFN,IBDOS,IBI)) Q:'IBI  D  Q:$G(QUIT)
- ...S IBDATA=$G(^TMP($J,"IBOMHC",IBDFN,IBDOS,IBI))
- ...W !,$E(IBNM,1,18),?20,$P(IBDATA,U,2),?26,$P(IBDATA,U,3),?39,$P(IBDATA,U,4),?44,$P(IBDATA,U,5),?60,$P(IBDATA,U,6),?74,$P(IBDATA,U,7),?87,$P(IBDATA,U,8),?114,$P(IBDATA,U,9),?120,$J($P(IBDATA,U,10),9,2)
- ...S IBLN=IBLN+1
- ...I IBLN>(IOSL-3) D HDR(IBSTRT,IBEND) S IBLN=6 I $G(QUIT) Q
+ .S IBDOS=0 F  S IBDOS=$O(^TMP($J,"IBOMHC","IDX",IBNM,IBDOS)) Q:'IBDOS  D  Q:$G(QUIT)
+ ..S IBI=0 F  S IBI=$O(^TMP($J,"IBOMHC","IDX",IBNM,IBDOS,IBI)) Q:'IBI  D  Q:$G(QUIT)
+ ...S IBX="" F  S IBX=$O(^TMP($J,"IBOMHC","IDX",IBNM,IBDOS,IBI,IBX)) Q:IBX=""  D  Q:$G(QUIT)
+ ....S IBCT=^TMP($J,"IBOMHC","IDX",IBNM,IBDOS,IBI,IBX),IBDATA=$G(^TMP($J,"IBOMHC",IBCT))
+ ....S IBDIVIEN=+$P(IBDATA,U,12) S IBDIV=$S(IBDIVIEN:$$GET1^DIQ(40.8,IBDIVIEN_",",1),1:"N/A")
+ ....I IBEXCEL W !,$E(IBNM,1,18),U,$P(IBDATA,U,2,11),U,IBDIV Q
+ ....W !,$E(IBNM,1,18),?20,$P(IBDATA,U,2),?26,$P(IBDATA,U,3),?39,$P(IBDATA,U,4),?44,$P(IBDATA,U,5),?58,$P(IBDATA,U,6),?71,$P(IBDATA,U,7)
+ ....W ?84,$P(IBDATA,U,8),?105,$P(IBDATA,U,9),?114,$P(IBDATA,U,10),?120,$$RJ^XLFSTR($J($P(IBDATA,U,11),10,2),11),?144,IBDIV
+ ....S IBLN=IBLN+1
+ ....I IBLN>(IOSL-3) D HDR(IBSTRT,IBEND)
+ ....Q
  ...Q
  ..Q
  .Q
- ;
- ;Immediately Quit if the user indicates exit.
- Q:$G(QUIT)
- ;
- ; Otherwise, pause to let the user review.
- I IBPAGE>0,'$D(ZTQUEUED) D PAUSE W @IOF
+ I 'IBEXCEL Q:$G(QUIT)  I IBPAGE>0,'$D(ZTQUEUED) D PAUSE W @IOF
  Q
  ;
 HDR(IBSTRT,IBEND) ; print header
  ;
- N IBX
+ N IBX,I,IBCT
  I IBPAGE>0,'$D(ZTQUEUED) D PAUSE W @IOF I $G(QUIT) Q
  S IBPAGE=IBPAGE+1
  W !,"COMPACT ACT Copay Review Report from ",$$FMTE^XLFDT(IBSTRT)," to ",$$FMTE^XLFDT($P(IBEND,".")),?80,"Date of Report: ",?96,$$FMTE^XLFDT($$DT^XLFDT()),?120,"Page: ",IBPAGE
- W !!,"Patient Name",?22,"ID",?26,"Bill Number",?39,"Stat",?44,"Descr.",?60,"Fill/Adm/DOS",?74,"RX Number",?87,"RX Name",?114,"DX",?120,"Amount"
- W ! F IBX=1:1:131 W "-"
+ I 'IBSD!$G(VAUTD)=1 W !,"For All Divisions"
+ E  W !,"For Division(s) - " S (I,IBCT)=0 F  S I=$O(VAUTD(I)) Q:'I  W:IBCT>0 "," W $G(VAUTD(I)) S IBCT=IBCT+1
+ W !!,"Patient Name",?22,"ID",?26,"Bill Number",?39,"Stat",?44,"Descr.",?58,"Fill/Adm/DOS",?71,"RX Number",?84,"RX Name",?105,"DX",?114,"Proc.",?120,"Amount ($)",?142,"Division"  ; IB*2.0*720
+ W ! F IBX=1:1:150 W "-"  ; IB*2.0*720
+ S IBLN=6
  Q
  ;
 PAUSE    ;Press Return to Continue
@@ -263,22 +304,6 @@ PAUSE    ;Press Return to Continue
  S DIR(0)="E" D ^DIR
  I $D(DIRUT) S QUIT=1
  W !
- Q
- ;
-PRINTEX(IBSTRT,IBEND) ; Print the results
- N IBDFN,IBDOS,IBI,IBDATA,IBNM
- W @IOF
- W !,"COMPACT ACT Copay Review Report from ",$$FMTE^XLFDT(IBSTRT)," to ",$$FMTE^XLFDT($P(IBEND,".")),"   Date of Report: ",$$FMTE^XLFDT($$DT^XLFDT())
- W !,"Patient Name",U,"ID",U,"Bill Number",U,"Stat",U,"Descr.",U,"Fill/Adm/DOS",U,"RX Number",U,"RX Name",U,"DX",U,"Amount"
- S IBNM="" F  S IBNM=$O(^TMP($J,"IBOMHC","IDX",IBNM)) Q:IBNM=""  D
- .S IBDFN=^TMP($J,"IBOMHC","IDX",IBNM)
- .S IBDOS=0 F  S IBDOS=$O(^TMP($J,"IBOMHC",IBDFN,IBDOS)) Q:'IBDOS  D
- ..S IBI=0 F  S IBI=$O(^TMP($J,"IBOMHC",IBDFN,IBDOS,IBI)) Q:'IBI  D
- ...S IBDATA=$G(^TMP($J,"IBOMHC",IBDFN,IBDOS,IBI))
- ...W !,$E(IBNM,1,18),U,$P(IBDATA,U,2,10)
- ...Q
- ..Q
- .Q
  Q
  ;
 GETDX() ; Populate the list of DX codes
@@ -314,7 +339,27 @@ DXSLIST ; List of Specific Compact Act Related Diagnosis codes
  ;;T14.91XA;0
  ;;T14.91XD;0
  ;;T14.91XS;0
- ;;R45.851;90839
+ ;;R45.851;0
  ;;EXIT
  Q
  ;
+GETDIV() ; Ask to filter by Division.  If so, select the division.
+ ;
+ N DIROUT,DTOUT,DUOUT,DIRUT,X,Y
+ ; Ask to filter by division.
+ S DIR(0)="Y",DIR("B")="NO"
+ S DIR("A")="Do you wish to filter this report by division"
+ S DIR("?")="^S IBOFF=1 D HELP^IBJDF1H"
+ D ^DIR K DIR I $D(DIRUT)!$D(DTOUT)!$D(DUOUT)!$D(DIROUT) Q -1  ; Escape command given
+ S IBSD=+Y K DIROUT,DTOUT,DUOUT,DIRUT
+ ;
+ Q:'IBSD 0
+ ;
+ ;Sort/filter by division selected Ask for division
+ ; - Issue prompt for division.
+ K X,Y N X,Y   ;Clear and reset X and Y for the next prompt
+ ;
+ ;Prompt for Division to filter on.
+ I IBSD D PSDR^IBODIV I Y<0 Q -1       ;Escape command given
+ ;
+ Q 1

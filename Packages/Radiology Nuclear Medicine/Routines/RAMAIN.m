@@ -1,21 +1,14 @@
-RAMAIN ;HISC/FPT,GJC,CAH AISC/MJK,RMO;VMP/PW-Utility File Maintenance ; Aug 06, 2021@13:46:37
- ;;5.0;Radiology/Nuclear Medicine;**31,43,50,54,87,133,183**;Mar 16, 1998;Build 1
+RAMAIN ;HISC/FPT,GJC,CAH AISC/MJK,RMO;VMP/PW-Utility File Maintenance ; Jul 07, 2022@10:41:55
+ ;;5.0;Radiology/Nuclear Medicine;**31,43,50,54,87,133,183,192**;Mar 16, 1998;Build 1
  ;
  ; 11/15/07 BAY/KAM RA*5*87 Rem Call 205080 Option File Access
 3 ;;Major AMIS Code Enter/Edit
- N RAI F RAI=1:1:5 W !?9,$P($T(REMIND+RAI),";;",2)
- S DIR(0)="Y",DIR("B")="No"
- S DIR("A")="          add/change any AMIS codes and weight"
- S DIR("A",1)="          Do you have approval from Radiology Service VACO to"
- D ^DIR K DIR Q:$D(DIRUT)  Q:'Y
-L3 S DIC="^RAMIS(71.1,",DIC(0)="AEMQ" W ! D ^DIC K DIC I Y<0 K D,X,Y,DDH,I,POP,DISYS Q
- S DA=+Y,DIE="^RAMIS(71.1,",DR=".01;2" D ^DIE K %,%W,%Y,D0,DA,DE,DQ,DIE,DR,DI,I,POP G L3
-REMIND ;;
- ;;+----------------------------------------------------------+
- ;;| New entries and modifications to existing entries are    |
- ;;| prohibited without approval from Radiology Service VACO. |
- ;;+----------------------------------------------------------+
- ;
+ ; --- p192
+L3 ;add/edit AMIS codes
+ S DIC="^RAMIS(71.1,",DIC(0)="AELQ",DLAYGO=71.1 W ! D ^DIC K DIC,DLAYGO I Y<0 K D,X,Y,DDH,I,POP,DISYS Q
+ S DA=+Y,DIE="^RAMIS(71.1,",DR=".01;2" D ^DIE
+ K %,%W,%Y,D0,DA,DE,DQ,DIE,DR,DI,I,POP G L3
+ ; ---
 4 ;;Film Type Enter/Edit
  K DD,DIC,DLAYGO,DO
  S DIC="^RA(78.4,",DIC(0)="AEMQL",DLAYGO=78.4 W ! D ^DIC
