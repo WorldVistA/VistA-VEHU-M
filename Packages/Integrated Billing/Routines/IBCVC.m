@@ -1,6 +1,6 @@
 IBCVC ;ALB/WCJ - VALUE CODE FUNCTIONALITY ;25-JUN-07
- ;;2.0;INTEGRATED BILLING;**371,400,432,718**;21-MAR-94;Build 73
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**371,400,432,718,732**;21-MAR-94;Build 13
+ ;;Per VA Directive 6402, this routine should not be modified.
  G AWAY
 AWAY Q
  ;
@@ -62,7 +62,7 @@ CHK(VCPTR,X) ; This tag is called from the input transform above and also from t
  ; Returns:
  ; 0 or false - Invalid format or can't figure it out.
  ; 1 or true  - valid format (or in the case of 24, defined at the state level)
- ; 
+ ;
  N CODE,OK
  S CODE=$$GET1^DIQ(399.1,VCPTR_",",.02,"I")
  D CLEAN^DILF
@@ -93,10 +93,24 @@ CHK(VCPTR,X) ; This tag is called from the input transform above and also from t
  I CODE="A0" Q X?5N&'(X?5"0")
  ;
  ;I ".48.49."[("."_CODE_".") S OK=1 D  Q OK
- I ".54.48.49.A8.A9.D5."[("."_CODE_".") S OK=1 D  Q OK  ;TPF;IB*2.0*718;EBILL-1570;11/22/2021 ADD NEW VC DECIMAL NUMBERS (DECIMALS)
- . I $P(X,".")'?.2N S OK=0 Q
- . I $P(X,".",2,999)'?.1N S OK=0 Q
- . I $E(X,$L(X))="." S OK=0 Q
+ ;I ".54.48.49.A8.A9.D5."[("."_CODE_".") S OK=1 D  Q OK  ;TPF;IB*2.0*718;EBILL-1570;11/22/2021 ADD NEW VC DECIMAL NUMBERS (DECIMALS)
+ ;. I $P(X,".")'?.2N S OK=0 Q
+ ;. I $P(X,".",2,999)'?.1N S OK=0 Q
+ ;. I $E(X,$L(X))="." S OK=0 Q
+ ;ISSUE P718 DEAL WITH DECIMALS
+ S OK=0
+ I ".48.49."[("."_CODE_".") D  Q OK  ;HEMOGLOBIN AND HEMATOCRIT NN.NN
+ .S OK=(X?1.2N.1".".2N)&(X'?3.N)&($E(X,$L(X))'=".")
+ ;
+ I ".A8.A9."[("."_CODE_".") D  Q OK  ;HEIGHT AND WEIGHT   NNN.NN   weight in Kg, Height in cm
+ .S OK=(X?1.3N.1".".2N)&(X'?4.N)&($E(X,$L(X))'=".")
+ ;
+ I ".D5."[("."_CODE_".") D  Q OK  ;LAST KT  NN.NN
+ .S OK=(X?1.2N1".".2N)&($E(X,$L(X))'=".")
+ ;
+ I ".54."[("."_CODE_".") D  Q OK  ;NEWBORN WEIGHT NNNN.NN
+ .S OK=(X?1.4N.1".".2N)&(X'?5.N)&($E(X,$L(X))'=".")
+ ;END DECIMALS
  ;
  ; Alpha Numeric, no punctuation
  I ".60.61."[("."_CODE_".") Q X?1.7AN&'(X?2"0"."0")
@@ -211,7 +225,8 @@ FMTALPHANUM(VALUE) ;EP - FORMAT ALPHANUMERICS
  Q VALUE
  ;
 FMTDECIMAL(VALUE) ;EP - FORMAT DECIMALS
- S VALUE=$$FORMAT^IBCVC(VALUE,$L(VALUE),"R",1,"",1,"FMTDECIMAL")
+ ;S VALUE=$$FORMAT^IBCVC(VALUE,$L(VALUE),"R",1,"",1,"FMTDECIMAL")
+ S VALUE=$$FORMAT^IBCVC(VALUE,$L(VALUE),"R",1,"",2,"FMTDECIMAL")  ;TPF;IB*732
  W:$G(TESTING) !,"DATATYPE DECIMAL:",?25,"|",VALUE_"|"
  W:$G(TESTING) ?45,VALUECODE,?55,$E(VALCODENAME,1,25)
  Q VALUE
@@ -245,7 +260,7 @@ ALPHANUM(CODE,VALUE,INPUTCHK) ;EP - IS VALUE CODE AN ALPHANUMERIC?
  Q VALUE?1.7AN&'(X?2"0"."0")
  ;
 DECIMALS(CODE,VALUE,INPUTCHK) ;EP - IS VALUE CODE A "DECIMAL" AS DEFINED HISTORICALLY IN CHK^IBCVC
- I (U_54_U_48_U_49_U_"A8"_U_"A9"_"D5"_U)[(U_CODE_U)
+ I (U_54_U_48_U_49_U_"A8"_U_"A9"_U_"D5"_U)[(U_CODE_U)
  Q:'$G(INPUTCHK) $T
  ;
  S OK=1 D  Q OK

@@ -1,5 +1,5 @@
 YTSCAT ;SLC/KCM - CAT Scoring and Reporting ; 6/30/2021
- ;;5.01;MENTAL HEALTH;**182,199**;DEC 30,1994;Build 18
+ ;;5.01;MENTAL HEALTH;**182,199,202**;DEC 30,1994;Build 49
  ;
 DLLSTR(YSDATA,YS,YSMODE) ; main tag for both scores and report text
  ;.YSDATA(1)=[DATA]
@@ -65,6 +65,8 @@ REPORT(YSDATA,YS) ; add textual scores to report
  . I TTYP="ss" D ADDSCORE(I,"cate^seve^prec")
  . I TTYP="ptsd-dx" D ADDSCORE(I,"diag^prob")
  . I TTYP="ptsd-e" D ADDSCORE(I,"cate^seve^prec")
+ . I TTYP="psy-c" D ADDSCORE(I,"cate^seve^prec")
+ . I TTYP="psy-s" D ADDSCORE(I,"cate^seve^prec")
  . I $D(TREE("report","tests",I,"items"))>1 S ALLANS=0 D QA4TEST(I)
  ;
  I ALLANS D QA4ALL
@@ -130,6 +132,8 @@ FULLNAME(TTYP) ; return full name for a CAT Test Type
  I TTYP="ss" Q "Suicide Scale"
  I TTYP="ptsd-dx" Q "PTSD-Diagnosis"
  I TTYP="ptsd-e" Q "PTSD-Expanded"
+ I TTYP="psy-c" Q "Psychosis - Clinician"
+ I TTYP="psy-s" Q "Psychosis - Self-Report"
  Q "Unknown Test"
  ;
 INSNAME(TTYP) ; return full name for a CAT Test Type
@@ -146,6 +150,8 @@ INSNAME(TTYP) ; return full name for a CAT Test Type
  I TTYP="ss" Q "CAT-SS"
  I TTYP="ptsd-dx" Q "CAD-PTSD-DX"
  I TTYP="ptsd-e" Q "CAT-PTSD-E"
+ I TTYP="psy-c" Q "CAT-PSYCHOSIS"
+ I TTYP="psy-s" Q "CAT-PSYCHOSIS"
  Q "Unknown Test"
  ;
 WP2JSON(YSDATA,TREE) ; put YSDATA answer into M-subscript format

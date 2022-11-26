@@ -1,5 +1,5 @@
-MAGVGUID ;WOIFO/RRB,DAC - Duplicate DICOM Study, Series, & SOP Instance UID Checks ; May 10, 2020@10:50:27
- ;;3.0;IMAGING;**118,138,162,262**;Mar 19, 2002;Build 2
+MAGVGUID ;WOIFO/RRB,DAC,JSJ - Duplicate DICOM Study, Series, & SOP Instance UID Checks ; Jul 14, 2021@10:02:27:59
+ ;;3.0;IMAGING;**118,138,162,262,307**;Mar 19, 2002;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,10 @@ MAGVGUID ;WOIFO/RRB,DAC - Duplicate DICOM Study, Series, & SOP Instance UID Chec
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;
+ ; Reference to ^RA(74 in ICR #1171
+ ; Reference to ^RA(70 in ICR #1172
+ ; Reference to GET1^DIQ in ICR #2056
  Q
  ;
  ; check for duplicate SOP Instance UID
@@ -162,6 +166,8 @@ GETACN(MAGIEN,ACNUMB) ; P262 DAC - Added 2nd ACNUMB parameter - return the acces
  . . S RADPT0=$G(^RADPT(DFN,"DT",REVDT,"P",IDX,0))
  . . S ACNUMBVAH=$P(RADPT0,"^",31)
  . . I ACNUMBVAH="" S ACNUMBVAH=$P(RARPT0,"^",1)
+ . . ; if mismatch check accession cross reference for OTHER CASE#  ;P307
+ . . I (ACNUMBVAH'=ACNUMB),$D(^RARPT(POINTER,1,"B",ACNUMB)) S ACNUMBVAH=ACNUMB ; acc found as OTHER CASE#, set the return value  ;P307
  . . Q
  . Q
  E  I ROOT=8925 S ACNUMBVAH=$$GMRCACN^MAGDFCNV(+$$GET1^DIQ(8925,POINTER,1405,"I"))

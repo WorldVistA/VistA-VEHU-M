@@ -1,12 +1,14 @@
-SDESGETAPPTREQ ;ALB/BLB,MGD,RRM - GET APPT REQ RPCS ;JUNE 15, 2022@15:32
- ;;5.3;Scheduling;**815,818,819,823,824**;Aug 13, 1993;Build 3
+SDESGETAPPTREQ ;ALB/BLB,RRM,MGD - GET APPT REQ RPCS ;SEP 06, 2022@14:38
+ ;;5.3;Scheduling;**815,818,819,823,824,825**;Aug 13, 1993;Build 2
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to ^VA(200 in ICR #10060
  ;
  Q
  ;
- ; for an example of the return object, see SDESGETREQWRAPPR due to its length.
+ ; For an example of the return object, see SDESGETREQWRAPPR due to its length.
+ ; If you add new components to the JSON return object in this routine, document
+ ; them in header of SDESGETREQWRAPPR and initialize them in APPTREQUEST.
  ;
 GETREQSBYDFN(JSONRETURN,DFN,EAS) ; SDES GET APPT REQ BY PATIENT
  N ISDFNVALID,ISEASVALID,RETURN,ERRORS,REQUESTIEN,REQUEST
@@ -129,6 +131,14 @@ BUILDPATCOMMENTS(REQUEST,REQUESTIEN,NUM) ; patient comments
  .S REQUEST("Request",NUM,"PatientComment",COUNT,"Comment")=$$GET1^DIQ(409.855,SUBIEN_","_REQUESTIEN_",",.01,"E")
  Q
  ;
+BUILDCOMMENTMULT(REQUEST,REQUESTIEN,NUM) ; Comments Multiple (#26)
+ N SUBIEN,COUNT
+ S SUBIEN=0,COUNT=0
+ F  S SUBIEN=$O(^SDEC(409.85,REQUESTIEN,1,SUBIEN)) Q:'SUBIEN  D
+ .S COUNT=COUNT+1
+ .S REQUEST("Request",NUM,"CommentMultiple",COUNT,"Comment")=$$GET1^DIQ(409.8526,SUBIEN_","_REQUESTIEN_",",.01,"E")
+ Q
+ ;
 BUILDPATCONTACTS(REQUEST,REQUESTIEN,NUM) ; build patient contacts and associated comments
  N SUBIEN,SUBIEN2,PIENS,PIENS2,COMMENTS,COUNT
  S SUBIEN=0,COUNT=0
@@ -199,6 +209,9 @@ GETREQUEST(REQUEST,REQUESTIEN) ; get patient appointment from file
  I $D(^SDEC(409.85,REQUESTIEN,"PATCOM")) D BUILDPATCOMMENTS(.REQUEST,REQUESTIEN,NUM) ; patient comments
  I '$D(^SDEC(409.85,REQUESTIEN,"PATCOM")) S REQUEST("Request",NUM,"PatientComment",1)=""
  ;
+ I $D(^SDEC(409.85,REQUESTIEN,1)) D BUILDCOMMENTMULT(.REQUEST,REQUESTIEN,NUM) ; comment multiple
+ I '$D(^SDEC(409.85,REQUESTIEN,1)) S REQUEST("Request",NUM,"CommentMultiple",1)=""
+ ;
  I $D(^SDEC(409.85,REQUESTIEN,4)) D BUILDPATCONTACTS(.REQUEST,REQUESTIEN,NUM) ; patient contacts
  I '$D(^SDEC(409.85,REQUESTIEN,4)) S REQUEST("Request",NUM,"PatientContact",1)=""
  ;
@@ -217,6 +230,7 @@ GETREQUEST(REQUEST,REQUESTIEN) ; get patient appointment from file
  S REQUEST("Request",NUM,"PatientICN")=$$GETPATICN^SDESINPUTVALUTL(REQDATA(FN,REQUESTIEN_",",.01,"I"))
  S REQUEST("Request",NUM,"PatientName")=REQDATA(FN,REQUESTIEN_",",.01,"E") ;
  S REQUEST("Request",NUM,"RequestIEN")=REQUESTIEN
+ S REQUEST("Request",NUM,"RequestComments")=REQDATA(FN,REQUESTIEN_",",25,"E")
  S REQUEST("Request",NUM,"CreateDate")=$$FMTISO^SDAMUTDT(REQDATA(FN,REQUESTIEN_",",1,"I"))
  S REQUEST("Request",NUM,"InstitutionIEN")=REQDATA(FN,REQUESTIEN_",",2,"I")
  S REQUEST("Request",NUM,"InstitutionName")=REQDATA(FN,REQUESTIEN_",",2,"E")

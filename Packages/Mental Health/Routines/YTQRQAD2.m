@@ -1,11 +1,11 @@
 YTQRQAD2 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181,199**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181,199,202**;Dec 30, 1994;Build 49
  ;
 SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  ; loop through DATA to create ANS array, then YSDATA array
  ; ANS(#)=questionId^choiceId    <-- radio group question
  ; ANS(#,#)=wp value             <-- all others
- N I,QNUM,QANS,QID,VAL,ANS,RT1,ADMIN
+ N I,QNUM,QANS,QID,VAL,ANS,RT1,ADMIN,AGPROG,TMPYS
  S QNUM=0,QANS=0
  S I=0 F  S I=$O(DATA("answers",I)) Q:'I  D
  . S QID=DATA("answers",I,"id")
@@ -36,7 +36,7 @@ SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  S LSTASMT=$G(DATA("lastAssignment"))
  S CPLT=$S(DATA("complete")="true":"Y",1:"N")
  S PTENT=($G(^XTMP("YTQASMT-SET-"_ASMT,1,"entryMode"))="patient")
- I (CPLT="Y"),PTENT D NOTE4PT^YTQRQAD3(ADMIN)
+ I (CPLT="Y"),PTENT,(LSTASMT'="Yes") D NOTE4PT^YTQRQAD3(ADMIN,.DATA)
  ; update the assignment with adminId, remove completed admins/assignments
  N NOD,REMAIN
  S NOD="YTQASMT-SET-"_ASMT,REMAIN=0
@@ -49,7 +49,10 @@ SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  . . S ^XTMP(NOD,1,"instruments",I,"complete")=DATA("complete")
  . . I CPLT'="Y" S REMAIN=1
  . I $G(^XTMP(NOD,1,"instruments",I,"complete"))'="true" S REMAIN=1
- I LSTASMT="Yes",$D(^XTMP(NOD,2)) S PNOT=$$FILPNOT^YTQRQAD8(ASMT)
+ I PTENT,(LSTASMT="Yes"),(CPLT="Y") D
+ . D BLDRPT^YTQRRPT(.TMPYS,ADMIN,79)
+ S AGPROG=$D(^XTMP(NOD,2))
+ I LSTASMT="Yes",AGPROG S PNOT=$$FILPNOT^YTQRQAD8(ASMT,"","","",.TMPYS)
  I 'REMAIN,'$D(^XTMP(NOD,2)) D DELASMT1^YTQRQAD1(ASMT)  ;Added check for consolidated progress note node 2. If exists, ASMT deleted in YTQRQAD8
  Q "/api/mha/instrument/admin/"_ADMIN ; was erroneously /ys/mha/admin/
  ;

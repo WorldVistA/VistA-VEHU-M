@@ -1,7 +1,7 @@
 OSEHRA ZGO Export: MH INSTRUMENT CATEGORY
 ZWR
 ^YTT(601.97,0)="MH INSTRUMENT CATEGORY^601.97^27^27"
-^YTT(601.97,1,0)="Cognitive"
+^YTT(601.97,1,0)="Cognitive/Learning"
 ^YTT(601.97,2,0)="Anxiety/PTSD"
 ^YTT(601.97,3,0)="Pain"
 ^YTT(601.97,4,0)="Depression"
@@ -34,7 +34,7 @@ ZWR
 ^YTT(601.97,"B","Anxiety",25)=""
 ^YTT(601.97,"B","Anxiety/PTSD",2)=""
 ^YTT(601.97,"B","CAT/CAD",27)=""
-^YTT(601.97,"B","Cognitive",1)=""
+^YTT(601.97,"B","Cognitive/Learning",1)=""
 ^YTT(601.97,"B","Couples/Family Func",17)=""
 ^YTT(601.97,"B","Daily Living & Activity",24)=""
 ^YTT(601.97,"B","Depression",4)=""

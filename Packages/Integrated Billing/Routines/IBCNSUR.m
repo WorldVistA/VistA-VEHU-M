@@ -1,5 +1,5 @@
 IBCNSUR ;ALB/CPM/CMS - MOVE SUBSCRIBERS TO DIFFERENT PLAN ; 09-SEP-96
- ;;2.0;INTEGRATED BILLING;**103,276,506,516,549,602,664,702**;21-MAR-94;Build 53
+ ;;2.0;INTEGRATED BILLING;**103,276,506,516,549,602,664,702,732**;21-MAR-94;Build 13
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -44,21 +44,29 @@ PROC ; - Process continuation from IBCNSUR1.
 PROCDP ; - does the user wish to delete the old plan?
  ;IB*2*702/CKB - Add checks to determine whether a group is allowed to be delete or not
  ;
- ;If moving entire group (all subscribers, must be more than 1) by expiring the
- ; policy by adding a new effective date, do NOT allow the group to be deleted.
- I IBGRP,(IBSUB>1),IBSPLIT,$G(IBEFFDT) D NODEL G PROCQ
+ ;IB*732/CKB - removed check for the number of subscribers
+ ;If moving entire group by expiring the policy by adding a new effective
+ ; date, do NOT allow the group to be deleted.
+ I IBGRP,IBSPLIT,$G(IBEFFDT) D NODEL G PROCQ
  ;
- ;If moving the entire group (only 1 subscriber or more than 1 subscriber) by replacing the
+ ;IB*732/CKB - should only check for only 1 subscriber.
+ ;If moving the entire group (if there is only 1 subscriber) by replacing the
  ; old group plan,the user they should BE allowed to delete the group.
- I IBGRP,(IBSUB=1)!(IBSUB>1) G PROCDP1
+ I IBGRP,(IBSUB=1) G PROCDP1
  ;
  ;If moving a subset of subscribers from the group by expiring the policy adding
  ; a new effective date, do NOT allow the group to be deleted.
- I 'IBGRP,(IBSUB>1),+NUMSEL<IBSUB,$G(IBEFFDT) D NODEL G PROCQ
+ ;IB*732/CKB - if user selected chose to select subscribers allow for the user
+ ; selecting All or Some of the subscribers
+ ;;***I 'IBGRP,+NUMSEL<IBSUB,$G(IBEFFDT) D NODEL G PROCQ
+ I 'IBGRP,+NUMSEL'>IBSUB,$G(IBEFFDT) D NODEL G PROCQ
  ;
  ;If moving a subset of subscribers from the group by replacing the old group plan,
  ; do NOT allow the group to be deleted.
- I 'IBGRP,+NUMSEL<IBSUB,'IBSPLIT D NODEL G PROCQ
+ ;IB*732/CKB - if user selected chose to select subscribers allow for the user
+ ; selecting All or Some of the subscribers
+ ;;***I 'IBGRP,+NUMSEL<IBSUB,'IBSPLIT D NODEL G PROCQ
+ I 'IBGRP,+NUMSEL'>IBSUB,'IBSPLIT D NODEL G PROCQ
  ;
 PROCDP1 ; Prompt to delete the plan
  W !! S DIR(0)="Y",DIR("A")="Do you wish to delete this plan"

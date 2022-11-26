@@ -1,5 +1,5 @@
 YTQRCAT ;SLC/KCM - Calls to manage CAT instruments ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**182,199**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**182,199,202**;Dec 30, 1994;Build 49
  ;
 SPLTADM(ADMIN) ; split CAT interview into multiple admins
  N X0 S X0=$G(^YTT(601.84,ADMIN,0))
@@ -95,6 +95,8 @@ NMINST(TTYP) ; return name of instrument
  I TTYP="ss" Q "CAT-SS"
  I TTYP="ptsd-dx" Q "CAD-PTSD-DX"
  I TTYP="ptsd-e" Q "CAT-PTSD-E"
+ I TTYP="psy-c" Q "CAT-PSYCHOSIS"
+ I TTYP="psy-s" Q "CAT-PSYCHOSIS"
  Q ""
  ;
 QSPLT(YTADMIN) ; queue the splitting if this is a CAT interview

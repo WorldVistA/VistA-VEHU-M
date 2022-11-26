@@ -1,5 +1,5 @@
-SDESUTIL ;ALB/TAW,KML,LAB,MGD - SDES Utilities ;Aug 26, 2022
- ;;5.3;Scheduling;**801,804,805,814,816,818,820,823,824**;Aug 13, 1993;Build 3
+SDESUTIL ;ALB/TAW,KML,LAB,MGD - SDES Utilities ;Sept 01, 2022
+ ;;5.3;Scheduling;**801,804,805,814,816,818,820,823,824,825**;Aug 13, 1993;Build 2
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to INSTITUTION in #2251
@@ -188,3 +188,40 @@ INACTIVE(SDCL,SDDT) ; determine if clinic is active
  I (INACTIVEDATE'="")&(INACTIVEDATE>SDDT) S STATUS=0 Q STATUS
  I (REACTIVEDATE'="")&(REACTIVEDATE'>SDDT) S STATUS=0 Q STATUS
  Q STATUS
+ ;
+STATIONNUMBER(CLINICIEN) ;
+ ; Input:
+ ; CLINICIEN (Opt) = IEN of the Clinic from File #44. If not passed in, the default
+ ;   Institution for the VistA Instance it used.
+ ; Output: The STATION NUMBER (#99) field from the INSTITUTION (#4) file.
+ N DIVISION,INSTIEN,STATIONNUMBER
+ I $G(CLINICIEN)="" D  Q STATIONNUMBER
+ . S STATIONNUMBER=$$KSP^XUPARAM("INST")_","
+ . S STATIONNUMBER=$$GET1^DIQ(4,STATIONNUMBER,99)
+ I +$G(CLINICIEN) D  Q STATIONNUMBER
+ . S DIVISION=$$GET1^DIQ(44,CLINICIEN,3.5,"I")
+ . S INSTIEN=$$GET1^DIQ(40.8,DIVISION,.07,"I")
+ . S STATIONNUMBER=$$GET1^DIQ(4,INSTIEN,99,"I")
+ Q
+ ;
+AMISTOSTOPCODE(AMIS) ; Map from AMIS to Stop Code
+ ; Input: AMIS = (Req) the AMIS REPORTING STOP CODE (#1) field from the CLINIC STOP (#40.7) file.
+ ; Output: 0:validation failed, IEN for the Stop Code that matches to the passed in AMIS code.
+ I '+AMIS Q 0
+ I AMIS,'$D(^DIC(40.7,"C",AMIS)) Q 0
+ N SCODEIEN
+ S SCODEIEN=$O(^DIC(40.7,"C",+AMIS,""))
+ I +SCODEIEN,$D(^DIC(40.7,SCODEIEN,0)) Q SCODEIEN
+ Q 0
+ ;
+RESCHKFAILED(STOPCODEIEN,RESTYPE) ;
+ ; Input: STOPCODEIEN (Req) IEN from CLINIC STOP (#40.7) file.
+ ;        RESTYPE (Req) P for Primary or S for Credit
+ ; Output: 0: Restriction checks passed, 1: Restriction checks failed
+ I '+STOPCODEIEN Q 1
+ I "^P^S^"'[("^"_RESTYPE_"^") Q 1
+ N RESTRICTION
+ S RESTRICTION=$$GET1^DIQ(40.7,STOPCODEIEN,5,"I")
+ I RESTRICTION="E" Q 0
+ I RESTRICTION'=RESTYPE Q 1
+ Q 0

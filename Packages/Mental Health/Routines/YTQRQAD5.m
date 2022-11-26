@@ -1,5 +1,5 @@
 YTQRQAD5 ;SLC/LLB - RESTful Calls to handle MHA assignments ; 10/07/2019
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202**;Dec 30, 1994;Build 49
  ;
  ; Reference to VADPT in ICR #10061
  ; Reference to XLFDT in ICR #10103
@@ -114,7 +114,7 @@ LCOLL ; Collect scores from Legacy Instruments
  . . S YSCALENM=$P(^TMP($J,"YSCOR",CNT),"=",1)
  . . S YSRSCORE=$P($P(^TMP($J,"YSCOR",CNT),"=",2),"^",1)
  . . S YSTSCORE=$P($P(^TMP($J,"YSCOR",CNT),"=",2),"^",2)
- . . S YSRSL($$UP^XLFSTR(YSCALENM))=YSRSCORE_U_YSTSCORE_U_YSCALENM  ;By Scale Name
+ . . S YSRSL($$TRIM^XLFSTR($$UP^XLFSTR(YSCALENM)))=YSRSCORE_U_YSTSCORE_U_YSCALENM  ;By Scale Name, added TRIM and UP to match INSTD
  . . ;S YSRSL(CNT-1)=YSRSCORE_U_YSTSCORE_U_YSCALENM  ;CNT-1 for [DATA] offset in scale sequence number
  N GCNTMAX,SCNT,YSCALENAM,YSRSCORE,YSTSCORE,YSGNAM,GCNT
  S GCNTMAX=$O(INSTD(999),-1),GCNT=0

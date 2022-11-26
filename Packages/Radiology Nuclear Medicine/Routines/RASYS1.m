@@ -1,8 +1,9 @@
-RASYS1 ;HISC/CAH - Utility to update I-Loc Type to Clinic ; Aug 27, 2021@12:57
- ;;5.0;Radiology/Nuclear Medicine;**184**;Mar 16, 1998;Build 2
+RASYS1 ;HISC/CAH - Utility to update I-Loc Type to Clinic ; Aug 25, 2022@07:16:49
+ ;;5.0;Radiology/Nuclear Medicine;**184,193**;Mar 16, 1998;Build 1
  ;Supported  IA #10040 ^SC(
  ;Controlled IA #1623  LOC^SCDXUAPI
  ;                     RAD^SCDXUAPI
+ ;Private    IA #19    ^DIC(40.7
 EN1(RA791) ;For each imaging loc, get file 44 pointer, DSS ID, Div
  ;and give to MAS to set/reset params on the file 44 entry
  ; Input: -> ien of entry in the 'Imaging Locations' file (79.1)
@@ -75,7 +76,7 @@ REPOINT ;current img loc points to a file 44 entry with appt patterns
  ;
  N RAERR,RAFDA
  S RA44=RA44NEW,RA44NM2=$P($G(^SC(+RA44NEW,0)),"^",1)
- S RAFDA(79.1,RA791_",",.01)=RA44NEW
+ S RAFDA(79.1,RA791_",",.01)=+RA44NEW ;p193 always plus IENs... (invalid pointer error)
  D FILE^DIE("K","RAFDA","RAERR")
  I $Y>(IOSL-6) S RAXIT=$$EOS^RAUTL5() Q:RAXIT  W @IOF
  W !,"Imaging Location "_RA44NM_" has appointment patterns, and"

@@ -1,5 +1,5 @@
 IBCNEHLM ;DAOU/ALA - HL7 Registration MFN Message ; 02-JUN-2015
- ;;2.0;INTEGRATED BILLING;**184,251,300,416,438,497,506,549,601,621,631,659,664,687,702**;21-MAR-94;Build 53
+ ;;2.0;INTEGRATED BILLING;**184,251,300,416,438,497,506,549,601,621,631,659,664,687,702,732**;21-MAR-94;Build 13
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -71,8 +71,9 @@ REG ;  Registration message for when a site installs
  ; IB*2.0*664 Now version 12, Stats going to FSC: auto update #s split (non-medicare vs medicare)
  ; IB*2.0*687 Now version 13, IIU Functionality Added.
  ; IB*2.0*702 Now version 14, Added EICD & MBI stats (pieces 27-30)
+ ; IB*2.0*732 Now version 15, Added ISBLUE indicator (365.12,.09) and NUMBER RETRIES (#350.9,51.06) to Table Updates
  ;
- S IVER="14"
+ S IVER="15"
  I IHLP="I" S (IHLT,IHLS)=""
  ;
  I IHLP="B",IHLT=""!(IHLS="") D  S QFL=1

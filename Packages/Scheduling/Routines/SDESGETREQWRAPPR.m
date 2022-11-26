@@ -1,5 +1,5 @@
-SDESGETREQWRAPPR ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;JULY 06, 2022
- ;;5.3;Scheduling;**815,818,820,823**;Aug 13, 1993;Build 9
+SDESGETREQWRAPPR ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;SEP 14, 2022
+ ;;5.3;Scheduling;**815,818,820,823,825**;Aug 13, 1993;Build 2
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -7,8 +7,11 @@ SDESGETREQWRAPPR ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;JULY 06, 2022
  ;("Request",1,"ByPatientOrProvider")
  ;("Request",1,"ClinicIEN")
  ;("Request",1,"ClinicName")
+ ;("Request",1,"ClinicSecondaryStopCodeAMIS")
+ ;("Request",1,"ClinicStopCodeAMIS")
  ;("Request",1,"ClinicStopCodeIEN")
  ;("Request",1,"ClinicStopCodeName")
+ ;("Request",1,"CommentMultiple")
  ;("Request",1,"ConsultAssociatedStopCodes",1,"StopCode")
  ;("Request",1,"ConsultCanEditPid")
  ;("Request",1,"ConsultClinicIndicatedDate")
@@ -19,6 +22,9 @@ SDESGETREQWRAPPR ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;JULY 06, 2022
  ;("Request",1,"ConsultServiceRenderedAs")
  ;("Request",1,"ConsultToService")
  ;("Request",1,"ConsultUrgencyOrEarliestDate")
+ ;("Request",1,"CPRSOrderID")=""
+ ;("Request",1,"CPRSTimeSensitive")=""
+ ;("Request",1,"CPRSPreRequisites",1)=""
  ;("Request",1,"CreateDate")
  ;("Request",1,"DateLinkedApptMade")
  ;("Request",1,"DateTimeEntered")
@@ -73,6 +79,7 @@ SDESGETREQWRAPPR ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;JULY 06, 2022
  ;("Request",1,"RecallProviderName")
  ;("Request",1,"RecallSecondPrint")
  ;("Request",1,"RecallSimilarPatientData")
+ ;("Request",1,"RequestComments")
  ;("Request",1,"RequestIEN")
  ;("Request",1,"RequestSubType")
  ;("Request",1,"ScheduledDateOfAppt")
@@ -85,7 +92,6 @@ SDESGETREQWRAPPR ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;JULY 06, 2022
  ;("Request",1,"SdecContactNumberOfTextContact")
  ;("Request",1,"ServiceConnectedPriority")
  ;("Request",1,"Type")
- ;
  ;
  Q
  ;
@@ -171,6 +177,10 @@ APPTREQUEST(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"CPRSOrderID")=""
  S REQUEST("Request",NUM,"CPRSTimeSensitive")=""
  S REQUEST("Request",NUM,"CPRSPreRequisites",1)=""
+ S REQUEST("Request",NUM,"ClinicSecondaryStopCodeAMIS")=""
+ S REQUEST("Request",NUM,"ClinicStopCodeAMIS")=""
+ S REQUEST("Request",NUM,"CommentMultiple",1)=""
+ S REQUEST("Request",NUM,"RequestComments")=""
  Q
  ;
 SDECONTACT(REQUEST,NUM) ;

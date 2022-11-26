@@ -1,5 +1,5 @@
-RAORDP ;HISC/CAH,FPT AISC/DMK-Log of Pending/Hold Requests ; Jun 30, 2021@10:04:45
- ;;5.0;Radiology/Nuclear Medicine;**15,133,182**;Mar 16, 1998;Build 1
+RAORDP ;HISC/CAH,FPT AISC/DMK - Log of Pending/Hold Requests ; Aug 25, 2022@07:17:08
+ ;;5.0;Radiology/Nuclear Medicine;**15,133,182,193**;Mar 16, 1998;Build 1
  ;
  ; This report looks at all orders in file 75.1 with status=5 (pending)
  ; or status=3 (hold) and field 21 (Desired Date) within the date range
@@ -72,7 +72,8 @@ WRT ;
 HDR ; header
  W:$Y>0 @IOF
  W !?(80-$L(RAHDR)/2),RAHDR
- W !?14,"Includes requests scheduled from ",RAOBEG("X")," to ",RAOEND("X") ;W !?(80-$L(RAHDR)/2),RAHDRDSH
+ ;p193/KLM - next line removed 'scheduled' from header. These are not scheduled requests. Updated column to re-center.
+ W !?19,"Includes requests from ",RAOBEG("X")," to ",RAOEND("X") ;W !?(80-$L(RAHDR)/2),RAHDRDSH
  W !,"IMAGING LOCATION: ",$S('RAILOC:"Unknown",$D(^RA(79.1,RAILOC,0)):$S($D(^SC($P(^(0),"^"),0)):$P(^(0),"^"),1:"Unknown"),1:"Unknown"),?51,"Run Date: ",RARUNDTE,!
  W !,"PATIENT NAME",?21,"SSN",?27,"PROCEDURE",?53,"DATE DESIRED",?67,"DATE ORDERED"
  W ?81,$S(RAREQSTA=3:"HOLD DATE",1:"ORDERING PROVIDER")

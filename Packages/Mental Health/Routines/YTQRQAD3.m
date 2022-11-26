@@ -1,5 +1,5 @@
 YTQRQAD3 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181,187,199,207**;Dec 30, 1994;Build 6
+ ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181,187,199,207,202**;Dec 30, 1994;Build 49
  ;
  ; Reference to ^VA(200) in ICR #10060
  ; Reference to DIQ in ICR #2056
@@ -126,13 +126,21 @@ ALWN2(TEST,ADMIN) ;Entry point if TEST is input
  I $$WHATITLE^TIUPUTU(YSTITLE)'>0 Q "false"          ; bad note title
  Q "true"
  ;
-NOTE4PT(ADMIN) ; create a progress note for a patient-entered admin
- N CONSULT,YS,YSDATA
+NOTE4PT(ADMIN,DATA) ; save progress note text in assignment for a patient-entered admin
+ N CONSULT,YS,YSDATA,COSIGNER,ASMT,LSTASMT
  D BLDRPT^YTQRRPT(.YS,ADMIN,79)
  I $$ALWNOTE(ADMIN)'="true" QUIT
+ S COSIGNER=$G(DATA("cosigner"))
+ S CONSULT=$G(DATA("consult")) I CONSULT="" S CONSULT=$P(^YTT(601.84,ADMIN,0),U,15)
+ S ASMT=+$G(DATA("assignmentId"))
+ S LSTASMT=$G(DATA("lastAssignment"))
  D SPLTADM^YTQRCAT(ADMIN) ; separate out the admins if CAT
- S CONSULT=$P(^YTT(601.84,ADMIN,0),U,15)
+ ;S CONSULT=$P(^YTT(601.84,ADMIN,0),U,15)
  S YS("AD")=ADMIN
+ ;Entry predicated on LSTASMT'=Yes. Therefore=No if updated PE, null if old PE.
+ ;If LSTASMT=null, file progress note immediately
+ I ASMT'=0,(LSTASMT="No") D SAVPNOT^YTQRQAD8(ASMT,ADMIN,CONSULT,COSIGNER,.YS) Q  ;Save in aggregate progress note XTMP instead
+ ; If ASMT=0, file directly for backwards compatibility
  I CONSULT S YS("CON")=CONSULT D CCREATE^YTQCONS(.YSDATA,.YS) I 1
  E  D PCREATE^YTQTIU(.YSDATA,.YS)
  I YSDATA(1)'="[DATA]" D SETERROR^YTQRUTL(500,"Note not saved") Q

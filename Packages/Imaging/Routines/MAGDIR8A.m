@@ -1,5 +1,5 @@
-MAGDIR8A ;WOIFO/PMK - Read a DICOM image file ; Nov 27, 2019@16:07:40
- ;;3.0;IMAGING;**11,51,49,123,138,231**;Mar 19, 2002;Build 9;Sep 03, 2013
+MAGDIR8A ;WOIFO/PMK,JSJ - Read a DICOM image file ; Jul 14, 2021@09:50:40
+ ;;3.0;IMAGING;**11,51,49,123,138,231,307**;Mar 19, 2002;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -18,11 +18,11 @@ MAGDIR8A ;WOIFO/PMK - Read a DICOM image file ; Nov 27, 2019@16:07:40
  ;
  ; M2MB server
  ;
- ; Supported IA #2051 reference $$FIND1^DIC function call
- ; Supported IA #2056 reference $$GET1^DIQ function call
- ; Private IA #5020 reference $$ACCFIND^RAAPI
- ; Controlled Subscription IA #1172 to read RAD/NUC MED PATIENT file (#70)
- ; Private IA #1174 to read RAD/NUC MED PROCEDURES file (#71)
+ ; Reference to FIND1^DIC in ICR #2051
+ ; Reference to GET1^DIQ in ICR #2056
+ ; Reference to ACCFIND^RAAPI in ICR #5020
+ ; Reference to ^RA(70 in ICR #1172
+ ; Reference to ^RA(72 in ICR #1174
  ;
  ; Lookup the patient/study in the imaging service's database
  ; Different entry points are invoked from LOOKUP^MAGDIR81
@@ -100,9 +100,10 @@ CONLKUP ; CPRS Consult/Procedure patient/study lookup -- called by ^MAGDIR81
  Q
  ;
 LABLKUP ; Lab patient/study lookup -- called by ^MAGDIR81
- N CASE,FMYEAR,LRAA,IENS,YEAR
- S LRSS=$P(ACNUMB," ",1),YEAR=$P(ACNUMB," ",2),CASE=$P(ACNUMB," ",3)
- S LRAA=$$FIND1^DIC(68,"","BX",LRSS,"","","ERR") ; get lab area index
+ N ABBR,CASE,FMYEAR,LRAA,IENS,YEAR  ;P307
+ S ABBR=$P(ACNUMB," ",1),YEAR=$P(ACNUMB," ",2),CASE=$P(ACNUMB," ",3) ;P307
+ S LRAA=$$FIND1^DIC(68,"","BX",ABBR,"","","ERR") ; get lab area index ;P307
+ S LRSS=$$GET1^DIQ(68,LRAA,.02,"I") ;P307
  S PROCDESC=$$GET1^DIQ(68,LRAA,.01)
  S FMYEAR="3"_YEAR_"0000"
  S IENS=CASE_","_FMYEAR_","_LRAA

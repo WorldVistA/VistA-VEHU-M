@@ -1,5 +1,5 @@
 ONCSCHMM ;HINES OIFO/RTK - Miscellaneous schema code ;07/25/19
- ;;2.2;ONCOLOGY;**10,12,13**;Jul 31, 2013;Build 7
+ ;;2.2;ONCOLOGY;**10,12,13,15**;Jul 31, 2013;Build 5
  ;
  Q
  ;
@@ -31,6 +31,14 @@ SCRNSS ;Screen for SUMMARY STAGE 2018 (#1764) field
  I "00830^"[ONCSCMA S ONCHIT=1,Z=$S((Y'=0)&(Y'=2)&(Y'=3)&(Y'=4)&(Y'=8):1,1:0) I Z Q
  I "99999^"[ONCSCMA S ONCHIT=1,Z=$S((Y=9):1,1:0) I Z Q
  I ONCHIT=0 I ONCSCMA<999999 S Z=1 I Z Q
+ Q
+SCRNFIV ;Screen for fields #3804,3811,3885,3907,3933
+ I $P($G(^ONCO(165.5,D0,2)),"^",1)=67421,(Y'=5) Q
+ I $P($G(^ONCO(165.5,D0,2)),"^",1)'=67421,(Y<10) Q
+ Q
+SCRN555 ;Screen for fields #3857,3869,3930,3931
+ I $P($G(^ONCO(165.5,D0,"SSD4")),"^",21)=0,(Y'=5) Q
+ I $P($G(^ONCO(165.5,D0,"SSD4")),"^",21)'=0,(Y<10) Q
  Q
 RADPH3 ;
  I $L(X)=3 Q
@@ -125,7 +133,7 @@ SAR ;Sarcomatoid Features #3925
  I X?1"R"1N S X=$E(X,1)_"0"_$E(X,2) W "  ...",X
  I $L(X)<3 K X Q
  I $E(X,1)="R","R01^R02^R03^R40^R05"'[X K X Q
- I $E(X,1)="X","XX6^XX7^XX8^XX9"'[X K X Q
+ I $E(X,1)="X","XX5^XX6^XX7^XX8^XX9"'[X K X Q
  Q
 FIGOHLP ; FIGO STAGE #3836
  D ^ONCSCHMA I '$D(ONCSCMA)!(ONCSCMA=0) W !!,"No Schema Calculated!",!! Q

@@ -1,9 +1,7 @@
 YTWJSONO ;SLC/KCM - Instrument Admin Spec Output ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141**;Dec 30, 1994;Build 85
+ ;;5.01;MENTAL HEALTH;**130,141,202**;Dec 30, 1994;Build 49
  ;
- ; External Reference    ICR#
- ; ------------------   -----
- ; XLFSTR               10104
+ ; Reference to XLFSTR in ICR #10104
  ;
 TEST ;
  N TEST,TREE,OUT
@@ -19,6 +17,7 @@ FMTJSON(TREE,OUT) ; format instrument spec in TREE as readable lines
  D PROP("name"),LF(1)
  I $L(@ROOT@("copyright")) D PROP("copyright"),LF(1)
  D PROP("restartDays"),LF(1)
+ D PROP("printTitle"),LF(1)
  D COMMA,TEXT("""content"":[")
  S SLOT=0 F  S SLOT=$O(TREE("content",SLOT)) Q:'SLOT  D
  . S ROOT=$NA(TREE("content",SLOT))

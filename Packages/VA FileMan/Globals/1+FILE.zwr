@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3221113.204124
+^DIC(2,"%MSC")=3221126.161253
 ^DIC(2.025,"%MSC")=3220624.22304
 ^DIC(2.191,"%MSC")=3220622.230249
 ^DIC(2.2406,"%MSC")=3220624.22304
@@ -16536,7 +16536,7 @@ ZWR
 ^DIC(160.16,0,"WR")="@"
 ^DIC(160.16,"%D",0)="^^1^1^2990419^^"
 ^DIC(160.16,"%D",1,0)="This file contains the ONCOLOGY Data Extract Formats."
-^DIC(160.16,"%MSC")=3220626.120638
+^DIC(160.16,"%MSC")=3221126.160733
 ^DIC(160.17,0)="ONCOLOGY PCE EXTRACT FORMAT^160.17"
 ^DIC(160.17,0,"AUDIT")="@"
 ^DIC(160.17,0,"DD")="@"
@@ -17531,6 +17531,7 @@ ZWR
 ^DIC(164,"%D",4,0)=" "
 ^DIC(164,"%D",5,0)="This file comes with data, which overwrite the site's data.  It is not"
 ^DIC(164,"%D",6,0)="recommended that sites modify this file."
+^DIC(164,"%MSC")=3221126.160734
 ^DIC(164.08,0)="ICDO-SITES^164.08I"
 ^DIC(164.08,0,"GL")="^ONCO(164.08,"
 ^DIC(164.08,0,"GL")="^ONCO(164.08,"
@@ -18071,7 +18072,7 @@ ZWR
 ^DIC(165.5,"%D",1,0)="Tumor-related data for Oncology patients is stored in this file."
 ^DIC(165.5,"%D",2,0)="(Demographic and follow-up data is in the Oncology Patient File)."
 ^DIC(165.5,"%D",3,0)="File is populated in the field by using the abstracting options."
-^DIC(165.5,"%MSC")=3220626.120638
+^DIC(165.5,"%MSC")=3221126.160734
 ^DIC(165.55,0)="CONVERSION FLAGS^165.55"
 ^DIC(165.55,0,"AUDIT")="@"
 ^DIC(165.55,0,"DD")="@"
@@ -18161,7 +18162,7 @@ ZWR
 ^DIC(165.9,"%D",0)="^^2^2^3190308^"
 ^DIC(165.9,"%D",1,0)="This file contains the site-specific codes and descriptions for the"
 ^DIC(165.9,"%D",2,0)="SEER EOD (Extent of Disease) data items."
-^DIC(165.9,"%MSC")=3220626.120639
+^DIC(165.9,"%MSC")=3221126.160734
 ^DIC(166,0)="CASEFINDING SOURCE^166"
 ^DIC(166,0,"AUDIT")="@"
 ^DIC(166,0,"DD")="@"
@@ -25342,7 +25343,7 @@ ZWR
 ^DIC(365.12,"%D",8,0)="messages."
 ^DIC(365.12,"%D",9,0)=" "
 ^DIC(365.12,"%D",10,0)="Per VA Directive 6402, this file definition should not be modified.   "
-^DIC(365.12,"%MSC")=3220624.225049
+^DIC(365.12,"%MSC")=3221126.160751
 ^DIC(365.13,0)="PAYER APPLICATION^365.13"
 ^DIC(365.13,0,"DD")="@"
 ^DIC(365.13,0,"GL")="^IBE(365.13,"
@@ -33227,7 +33228,7 @@ ZWR
 ^DIC(601.71,"%D",5,0)="and transmission to the Mental Health National Database are also specified. "
 ^DIC(601.71,"%D",6,0)=" "
 ^DIC(601.71,"%D",7,0)="Direct entry via FileMan is prohibited."
-^DIC(601.71,"%MSC")=3220626.114049
+^DIC(601.71,"%MSC")=3221126.161414
 ^DIC(601.71101,"%MSC")=3200522.22271
 ^DIC(601.712,0)="MH TEST/SURVEY SPEC^601.712"
 ^DIC(601.712,0,"AUDIT")="@"
@@ -34015,6 +34016,14 @@ ZWR
 ^DIC(604.8,"%D",0)="^^2^2^2970113^^^^"
 ^DIC(604.8,"%D",1,0)="File sets site configuration."
 ^DIC(604.8,"%D",2,0)="One and only one record is expected."
+^DIC(605.1,0)="MH DASHBOARD WIDGET^605.1"
+^DIC(605.1,0,"GL")="^YSD(605.1,"
+^DIC(605.1,0,"GL")="^YSD(605.1,"
+^DIC(605.1,"%",0)="^1.005^^0"
+^DIC(605.1,"%D",0)="^^2^2^3191001^"
+^DIC(605.1,"%D",1,0)="The MH DASHBOARD WIDGET file contains widget information used to display"
+^DIC(605.1,"%D",2,0)="specific Vista fields in the MH Dashboard GUI."
+^DIC(605.1,"%MSC")=3221126.161414
 ^DIC(615,0)="MH CLINICAL FILE^615P"
 ^DIC(615,0,"AUDIT")="@"
 ^DIC(615,0,"DD")="@"
@@ -59370,6 +59379,7 @@ ZWR
 ^DIC("B","MH CHOICETYPES",601.751)=""
 ^DIC("B","MH CLINICAL FILE",615)=""
 ^DIC("B","MH CR SCRATCH",601.94)=""
+^DIC("B","MH DASHBOARD WIDGET",605.1)=""
 ^DIC("B","MH DISPLAY",601.88)=""
 ^DIC("B","MH INSTRUMENT",601)=""
 ^DIC("B","MH INSTRUMENT CATEGORY",601.97)=""

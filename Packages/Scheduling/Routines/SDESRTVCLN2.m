@@ -1,5 +1,5 @@
-SDESRTVCLN2 ;ALB/MGD,ANU - Get Clinic Info based on Clinic IEN ;July 19, 2022
- ;;5.3;Scheduling;**823**;Aug 13, 1993;Build 9
+SDESRTVCLN2 ;ALB/MGD,ANU,LAB - Get Clinic Info based on Clinic IEN ;SEP 1, 2022
+ ;;5.3;Scheduling;**823,825**;Aug 13, 1993;Build 2
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -10,93 +10,120 @@ SDESRTVCLN2 ;ALB/MGD,ANU - Get Clinic Info based on Clinic IEN ;July 19, 2022
  ; copy of SDESRTVCLN
  Q
  ;
-JSONCLNINFO(SDCLNJSON,SDCLNIEN,SDEAS) ;Get Clinic info
+JSONCLNINFO(RETSDCLNJSON,SDCLNIEN,SDEAS,HASHFLG) ;Get Clinic info
  ;INPUT - SDCLNIEN (Clinic IEN)
  ;      - SDEAS [optional] - Enterprise Appointment Scheduling (EAS) Tracking Number associated to an appointment.
+ ;      - HASHFLG - Flag to udpate hash value for clinic or not (0 - no (default), 1- yes ) 
  ;RETURN PARAMETER:
- ; Clinic information from HOSPITAL LOCATION (#44) File. Data is in JSON format.
- ; Field List:
- ;  (1) CLINIC IEN
- ;  (2) CLINIC Name
- ;  (3) ABBREVIATION
- ;  (4) Patient Friendly Name
- ;  (5) Clinic Meets at this Facility
- ;  (6) ALLOW DIRECT PATIENT SCHEDULING?
- ;  (7) DISPLAY CLIN APPT TO PATIENTS?
- ;  (8) SERVICE
- ;  (9) NON-COUNT CLINIC? (Y OR N)
- ;  (10) DIVISION IEN
- ;  (11) DIVISION NAME
- ;  (12) STOP CODE NAME
- ;  (13) STOP CODE NUMBER
- ;  (14) DEFAULT APPOINTMENT TYPE
- ;  (15) ADMINISTER INPATIENT MEDS?
- ;  (16) TELEPHONE
- ;  (17) REQUIRE X-RAY FILMS?
- ;  (18) REQUIRE ACTION PROFILES?
- ;  (19) NO SHOW LETTER
- ;  (20) PRE-APPOINTMENT LETTER
- ;  (21) CLINIC CANCELLATION LETTER
- ;  (22) APPT. CANCELLATION LETTER
- ;  (23) ASK FOR CHECK IN/OUT TIME
- ;  (24) PROVIDER - This is a multiple
- ;  (25) Flag indicating the provider is the default for the clinic
- ;  (26) DEFAULT TO PC PRACTITIONER?
- ;  (27) DIAGNOSIS - This is a multiple
- ;  (28) Flag indicating the diagnosis is the default for the clinic
- ;  (29) WORKLOAD VALIDATION AT CHK OUT
- ;  (30) ALLOWABLE CONSECUTIVE NO-SHOWS
- ;  (31) MAX # DAYS FOR FUTURE BOOKING
- ;  (32) SCHEDULE ON HOLIDAYS?
- ;  (33) CREDIT STOP CODE NUMBER
- ; (34) CREDIT STOP CODE NAME
- ; (35) PROHIBIT ACCESS TO CLINIC?
- ; (36) PHYSICAL LOCATION
- ; (37) PRINCIPAL Clinic
- ; (38) OVERBOOKS/DAY MAXIMUM
- ; (39) SPECIAL INSTRUCTIONS - This is a multiple
- ; (40) E-CHECKIN ALLOWED
- ; (41) PRE-CHECKIN ALLOWED
- ; (42) LENGTH OF APP'T
- ; (43) VARIABLE APP'NTMENT LENGTH
- ; (44) DISPLAY INCREMENTS PER HOUR
- ; (45) CHAR4
- ; (46) HOUR CLINIC DISPLAY BEGINS
- ; (47) TIMEZONE
- ; (48) INACTIVATE DATE
- ; (49) REACTIVATE DATE
  ;
- N RETURN,HASFIELDS,ELGFIELDSARRAY,ELGRETURN,SDECI,ERRORS
- N ISCLNVALID,ISEASVALID
+ ;{"Clinic": {
+ ;"Abbreviation": "STPDN-M",
+ ;"AdminInpatientMeds": "",
+ ;"AllowPatScheduling": "",
+ ;"AllowableConsecutiveNoShows": "",
+ ;"ApptCancelLetter": "",
+ ;"CHAR4": "",
+ ;"CancelLetter": "",
+ ;"CheckinCheckoutTime": "",
+ ;"ClinicIEN": 2174,
+ ;"ClinicName": "STPDN-M",
+ ;"CreditStopCodeName": "",
+ ;"CreditStopCodeNum": "",
+ ;"DefaultApptType": "",
+ ;"DefaultToPCPractitioner": "",
+ ;"DisplayClinicAppt": "",
+ ;"DivisionIEN": 1,
+ ;"DivisionName": "CHEYENNE VAMROC",
+ ;"ECheckinAllowed": "",
+ ;"Hash": "F712AC20443E444B4CBF3ECD95AA3B2706BC2964",
+ ;"HolidaySchedule": "",
+ ;"HourClinicDisplayBegins": 8,
+ ;"Inactivate Date": "",
+ ;"IncrementsPerHr": "",
+ ;"LastHashTimestamp": 3220901.160618,
+ ;"LengthOfAppt": "",
+ ;"MaxDaysForFutureBooking": "",
+ ;"MeetsAtThisFacility": "",
+ ;"NoShowLetter": "",
+ ;"NoShowLetterIEN": "",
+ ;"NonCountClinic": "",
+ ;"OverbooksPerDayMax": "",
+ ;"PatientFriendlyName": "",
+ ;"PhysicalLocation": "",
+ ;"PreApptLetter": "",
+ ;"PreCheckinAllowed": "",
+ ;"Principal": "",
+ ;"ProhibitAccessToClinic": "",
+ ;"Reactivate Date": "",
+ ;"ReqActionProfiles": "",
+ ;"ReqXrayFilms": "",
+ ;"Service": "",
+ ;"StationNumber": 442,
+ ;"StopCodeName": "",
+ ;"StopCodeNum": "",
+ ;"Telephone": "",
+ ;"Timezone": "EASTERN",
+ ;"VariableApptLength": "",
+ ;"WorkloadValidationCheckout": ""}}
+ ;
+ N RETURN,HASFIELDS,ELGFIELDSARRAY,ELGRETURN,SDECI,ERRORS,SDCLNJSON
  S (RETURN,ELGFIELDSARRAY,HASFIELDS)=""
  ;
- S ISCLNVALID=$$VALIDATECLINIC(.ERRORS,$G(SDCLNIEN))
- S ISEASVALID=$$VALIDATEEAS(.ERRORS,$G(SDEAS))
+ D VALIDATECLINIC(.ERRORS,$G(SDCLNIEN))
+ D VALIDATEEAS(.ERRORS,$G(SDEAS))
+ D VALIDATEHASHFLG(.ERRORS,.HASHFLG)
  ;
  I $D(ERRORS) M RETURN=ERRORS
  I '$D(ERRORS) S HASFIELDS=$$BLDCLNREC(.ELGFIELDSARRAY,SDCLNIEN)
  I HASFIELDS M RETURN=ELGFIELDSARRAY
  ;
- D BUILDJSON^SDESBUILDJSON(.SDCLNJSON,.RETURN)
+ D BUILDJSON^SDESBUILDJSON(.SDCLNJSON,.RETURN) ;build json without hash
+ I $D(ERRORS) M RETSDCLNJSON=SDCLNJSON
+ I HASFIELDS D
+ .D ADDHASH(SDCLNIEN,.ELGFIELDSARRAY,.SDCLNJSON,HASHFLG)
+ .K RETURN
+ .M RETURN=ELGFIELDSARRAY
+ .D BUILDJSON^SDESBUILDJSON(.RETSDCLNJSON,.RETURN) ;json includes hash
  D CLEANUP
  Q
  ;
+ADDHASH(CLIN,ELGFIELDSARRAY,SDCLNJSON,HASHFLG) ;Add hash to output
+ NEW HASH,HASHDATE
+ D:HASHFLG UPDATECLINICHASH(CLIN,.HASH,.HASHDATE)
+ S HASH=$$GET1^DIQ(44,SDCLNIEN_",",2900)
+ S HASHDATE=$$FMTISO^SDAMUTDT($$GET1^DIQ(44,CLIN,2901,"I"),CLIN)
+ S ELGFIELDSARRAY("Clinic","LastHashTimestamp")=HASHDATE
+ S ELGFIELDSARRAY("Clinic","Hash")=HASH
+ Q
+ ;
+UPDATECLINICHASH(CLIN,HASH,HASHDATE) ;update clinic with new hash
+ N FDA,FDAERR
+ S HASH=$$SHAN^XLFSHAN(160,SDCLNJSON(1))
+ S HASHDATE=$$NOW^XLFDT
+ S FDA(44,CLIN_",",2900)=HASH
+ S FDA(44,CLIN_",",2901)=HASHDATE
+ D FILE^DIE(,"FDA","FDAERR") K FDA
+ Q
+ ;
 VALIDATECLINIC(ERRORS,CLINIC) ;
- N ERRORFLAG
- I CLINIC="" S ERRORFLAG=1 D ERRLOG^SDESJSON(.ERRORS,18)
- I CLINIC'="",'$D(^SC(CLINIC,0)) S ERRORFLAG=1 D ERRLOG^SDESJSON(.ERRORS,19)
- Q $D(ERRORFLAG)
+ I CLINIC="" D ERRLOG^SDESJSON(.ERRORS,18)
+ I CLINIC'="",'$D(^SC(CLINIC,0)) D ERRLOG^SDESJSON(.ERRORS,19)
+ Q
  ;
 VALIDATEEAS(ERRORS,EAS) ;
  I $L(EAS) S EAS=$$EASVALIDATE^SDESUTIL($G(EAS))
- I $P($G(EAS),U)=-1 D ERRLOG^SDESJSON(.ERRORS,142) Q 0
- Q 1
+ I $P($G(EAS),U)=-1 D ERRLOG^SDESJSON(.ERRORS,142) Q
+ Q
+ ;
+VALIDATEHASHFLG(ERRORS,HASHFLG) ;
+ S HASHFLG=$SELECT($G(HASHFLG)="":0,1:HASHFLG)
+ I (HASHFLG'=0)&(HASHFLG'=1) D ERRLOG^SDESJSON(.ERRORS,267)
+ Q
  ;
 BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  ;
  N SDFIELDS,SDDATA,SDMSG,SDX,SDC,TIMEZONE
  S SDECI=$G(SDECI,0)
- ;S SDFIELDS=".01;1;3.5;8;9;10;24;60;61;62;1914;2502;2504;2507;2802;99;2000;2000.5;2508;2509;2510;2511;2801;30;2001;2002;1918.5;2503;2500;1916;1918;20;21;1912;1913;1917"
  S SDFIELDS=".01;1;3.5;8;9;10;24;60;61;62;1914;2502;2504;2505;2506;2507;2802;99;2000;2000.5;2508;2509;2510;2511;2801;30;2001;2002;1918.5;2503;2500;1916;1918;20;21;1912;1913;1917"
  D GETS^DIQ(44,SDCLNIEN_",",SDFIELDS,"IE","SDDATA","SDMSG")
  S SDECI=SDECI+1
@@ -104,6 +131,7 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  S SDCLNSREC("Clinic","ClinicName")=$G(SDDATA(44,SDCLNIEN_",",.01,"E")) ;Clinic Name
  S SDCLNSREC("Clinic","Abbreviation")=$G(SDDATA(44,SDCLNIEN_",",1,"E")) ;Clinic Abbreviation
  S SDCLNSREC("Clinic","PatientFriendlyName")=$G(SDDATA(44,SDCLNIEN_",",60,"E")) ;Patient Friendly Name
+ S SDCLNSREC("Clinic","StationNumber")=$$STATIONNUMBER^SDESUTIL(SDCLNIEN) ;Clinic station number
  S SDCLNSREC("Clinic","MeetsAtThisFacility")=$G(SDDATA(44,SDCLNIEN_",",2504,"E")) ;Clinic meets at this facility?
  S SDCLNSREC("Clinic","AllowPatScheduling")=$G(SDDATA(44,SDCLNIEN_",",61,"E")) ;Allow Direct Patient Scheduling?
  S SDCLNSREC("Clinic","DisplayClinicAppt")=$G(SDDATA(44,SDCLNIEN_",",62,"E")) ;DISPLAY CLIN APPT TO PATIENTS?
@@ -124,9 +152,7 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  S SDCLNSREC("Clinic","CancelLetter")=$G(SDDATA(44,SDCLNIEN_",",2510,"E")) ;CLINIC CANCELLATION LETTER
  S SDCLNSREC("Clinic","ApptCancelLetter")=$G(SDDATA(44,SDCLNIEN_",",2511,"E")) ;APPT. CANCELLATION LETTER
  S SDCLNSREC("Clinic","CheckinCheckoutTime")=$G(SDDATA(44,SDCLNIEN_",",24,"E")) ;ASK FOR CHECK IN/OUT TIME
- ;S SDCLNSREC("Clinic","Provider")=$G(SDDATA(44,SDCLNIEN_",",.01,"E")) ;PROVIDER - This is a multiple
  S SDCLNSREC("Clinic","DefaultToPCPractitioner")=$G(SDDATA(44,SDCLNIEN_",",2801,"E")) ;DEFAULT TO PC PRACTITIONER?
- ;S SDCLNSREC("Clinic","Diagnosis")=$G(SDDATA(44,SDCLNIEN_",",.01,"E")) ;DIAGNOSIS - This is a multiple
  S SDCLNSREC("Clinic","WorkloadValidationCheckout")=$G(SDDATA(44,SDCLNIEN_",",30,"E")) ;WORKLOAD VALIDATION AT CHK OUT
  S SDCLNSREC("Clinic","AllowableConsecutiveNoShows")=$G(SDDATA(44,SDCLNIEN_",",2001,"E")) ;ALLOWABLE CONSECUTIVE NO-SHOWS
  S SDCLNSREC("Clinic","MaxDaysForFutureBooking")=$G(SDDATA(44,SDCLNIEN_",",2002,"E")) ;MAX # DAYS FOR FUTURE BOOKING
@@ -183,5 +209,4 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  ;
 CLEANUP ; kill vars
  K RETURN,HASFIELDS,ELGFIELDSARRAY,ELGRETURN,SDECI,ERRORS
- K ISCLNVALID,ISEASVALID
  Q

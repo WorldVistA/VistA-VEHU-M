@@ -1,5 +1,5 @@
 SDESGETAPPTWRAP3 ;ALB/RRM,MGD - RPC WRAPPER FOR VIEWING AN APPOINTMENT CONTINUATION;July 29, 2022
- ;;5.3;Scheduling;**815,823,824**;Aug 13, 1993;Build 3
+ ;;5.3;Scheduling;**815,823,824,825**;Aug 13, 1993;Build 2
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -55,6 +55,7 @@ GETAPPT2(SDALLAPPTARY,DFN,BDATE,EDATE) ;Traverse the "S" node in Appointment Mul
  . S APPT=$$GETAPPT^SDESGETPATAPPT(.SDPATAPPT,$G(DFN),APPDATETIME)
  . Q:$D(ERR)
  . K SDPATAPPT("PatientAppt",NUM,"Clinic")
+ . K SDPATAPPT("PatientAppt",NUM,"Status")
  . I $G(APPT) M SDALLAPPTARY("Appointment",RECNUM)=SDPATAPPT("PatientAppt",NUM)
  I $O(SDALLAPPTARY("Appointment",""))="" S SDALLAPPTARY("Appointment",1)="" ;if no record found, set the array into a NULL value
  Q

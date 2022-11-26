@@ -1,8 +1,9 @@
 IBCNEPY ;DAOU/BHS - eIV PAYER EDIT OPTION ;28-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,416,668,687**;21-MAR-94;Build 88
+ ;;2.0;INTEGRATED BILLING;**184,416,668,687,732**;21-MAR-94;Build 13
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
- ; Tag HELP1 calls EN^DDIOL ICR #: 10142
+ ; Tag HELP1 calls EN^DDIOL
+ ; Reference to EN^DDIOL in ICR #10142
  ; Call only from a tag
  ;
 EN ; Main entry point
@@ -33,7 +34,8 @@ EDIT(PIEN) ; Modify Payer application settings -/vd-IB*2*687 - Changed the varia
  ;
  ; Initialize variables
  ;NEW IBDATA,LN,APPIEN   ;/vd-IB*2*687 - Replaced this line with the following line.
- N ARRAYEIV,ARRAYIIU,DEACT,EIVIENS,IBDATA,IENEIV,IENIIU,IIUIENS,LN,LNLFT,LNRHT
+ ;IB*732/CKB - added ISBLUE
+ N ARRAYEIV,ARRAYIIU,DEACT,EIVIENS,IBDATA,IENEIV,IENIIU,IIUIENS,ISBLUE,LN,LNLFT,LNRHT
  ;
  ;S LN=26   ;/vd-IB*2*687 - Replaced this line.
  ;/vd-IB*2*687 - Beginning of new code.
@@ -51,6 +53,10 @@ EDIT(PIEN) ; Modify Payer application settings -/vd-IB*2*687 - Changed the varia
  W !!,$$FO^IBCNEUT1("Payer Name: ",LN,"R"),$P(IBDATA,U,1)
  W !,$$FO^IBCNEUT1("VA National ID: ",LN,"R"),$P(IBDATA,U,2)
  W !,$$FO^IBCNEUT1("CMS National ID: ",LN,"R"),$P(IBDATA,U,3)
+ ;IB*732/CKB - display Blue Payer indicator if populated with 1-YES
+ ; NOTE: FSC refers to this field as ISBLUE
+ I +$P(IBDATA,U,9) S ISBLUE=$P(IBDATA,U,9) D
+ . W !,$$FO^IBCNEUT1("Blue Payer: ",LN,"R"),$S(+ISBLUE:"YES",1:"NO")
  W !,$$FO^IBCNEUT1("Inst Electronic Bill ID: ",LN,"R"),$P(IBDATA,U,6)
  W !,$$FO^IBCNEUT1("Prof Electronic Bill ID: ",LN,"R"),$P(IBDATA,U,5)
  W !,$$FO^IBCNEUT1("Date/Time Created: ",LN,"R"),$$FMTE^XLFDT($P(IBDATA,U,4),"5Z")
@@ -209,16 +215,138 @@ PAYER() ; Select Payer - File #365.12
  NEW DIC,DTOUT,DUOUT,X,Y
  ;
  W !!
- S DIC(0)="ABEQ"
- S DIC("A")=$$FO^IBCNEUT1("Payer Name: ",15,"R")
- ; Do not allow editing of '~NO PAYER' entry
- S DIC("S")="I $P(^(0),U,1)'=""~NO PAYER"""
- S DIC="^IBE(365.12,"
- D ^DIC
- I $D(DUOUT)!$D(DTOUT)!(Y<1) S Y=""
+ ; IB*732/DTG start - change standard DIC call to begins with/contains/list
+ ;S DIC(0)="ABEQ"
+ ;S DIC("A")=$$FO^IBCNEUT1("Payer Name: ",15,"R")
+ ; ; Do not allow editing of '~NO PAYER' entry
+ ;S DIC("S")="I $P(^(0),U,1)'=""~NO PAYER"""
+ ;S DIC="^IBE(365.12,"
+ ;D ^DIC
+ ;I $D(DUOUT)!$D(DTOUT)!(Y<1) S Y=""
+ ; ;
+ ;Q $P(Y,U,1)
  ;
- Q $P(Y,U,1)
+ ; Part 1, begin, contains, list
+ N DIR,DIROUT,DIRUT,DTOUT,DUOUT,FILTER,IBA,IBB,IBCT,IBD,IBFND,IBI,IBJ,IBK,IBL,IBLKNM,IBLKUNM,IBN,IBNMA
+ N IBNML,IBNMR,IBR,IBTMPA,IBTMPFIL,IBTN
+ S IBTMPFIL="^TMP(""IBCNEPY-PALK"","_$J_")"
+PAYST ; start of payer questions
+ K DIR,DIROUT,DIRUT,DTOUT,DUOUT
+ S FILTER=""
+ S DIR(0)="SA^B:Begins with;C:Contains;L:List"
+ S DIR("A")="Select B, C, or L:  "
+ S DIR("A",1)=" B - Payer(s) that Begin with"
+ S DIR("A",2)=" C - Payer(s) that Contain"
+ S DIR("A",3)=" L - List of all Payers"
+ S DIR("A",4)="  "
+ S DIR("B")="B"
+ S DIR("?")="^D HLPBEG^IBCNEPY",DIR("??")=DIR("?")
+ D ^DIR
+ S Y=$$UP^XLFSTR(Y)
+ S FILTER="",FILTER=$S($E(Y)="B":1,$E(Y)="C":2,$E(Y)="L":3,1:"")
+ I Y'=""&('FILTER)&($E(Y)'=U) W "   ??" G PAYST
+ I FILTER'=1&(FILTER'=2)&(FILTER'=3) S IBFND="" G PAYX
+ I FILTER=3 D PAYLST G PAYST
  ;
+ ; Part 2, look up payer from 365.12
+PAYNAM ;ask name
+ K DIR,DIROUT,DIRUT,DTOUT,DUOUT
+ W !
+ S DIR(0)="FO^1-80"
+ S DIR("A")="Payer Name"
+ S DIR("?")="^D HLPPN^IBCNEPY"
+ S DIR("??")=DIR("?")
+ D ^DIR
+ S IBFND=""
+ I Y=""!(Y=-1)!($E(Y)="^")
+ I $E(Y)=U!(Y="")!($E(Y)="-") G PAYST
+ ;I Y=""!(Y=-1) G PAYX
+ S IBLKNM=Y,IBLKUNM=$$UP^XLFSTR(IBLKNM),IBNML=$L(IBLKUNM)
+ ;Part 2A - collect names
+ K @IBTMPFIL
+ S IBFND="",IBNMA="^IBE(365.12,""B""",IBNMR=IBNMA_")"
+ S @IBTMPFIL@(0)=0,IBOK=0
+ F  S IBNMR=$Q(@IBNMR) Q:IBNMR=""!($E(IBNMR,1,$L(IBNMA))'=IBNMA)  D
+ . S IBA=$QS(IBNMR,3),IBN=$QS(IBNMR,4),IBB=$$UP^XLFSTR(IBA)
+ . I $E(IBB,1,9)="~NO PAYER" Q
+ . S IBOK=$$FILTER^IBCNINSU(IBB,FILTER_U_IBLKUNM)
+ . I IBOK D PSET
+ ; Part 3 display / select displayed names
+ I '@IBTMPFIL@(0) S IBFND="" D  G PAYNAM ; no payer's found
+ . W "   No payer names matching criteria found"
+ S IBCT=$G(@IBTMPFIL@(0)),IBR="",IBTN=$FN((IBCT/5),"",1),IBR=+$P(IBTN,".",1)*5,IBTN=$P(IBTN,".",2)
+ S:IBTN IBR=IBR+5 K IBTMPA
+ S IBTN="" I IBCT<6 M IBTMPA=@IBTMPFIL K IBTMPA(0) D  G:IBFND=U PAYST G:'IBFND PAYNAM G PAYX
+ . S IBK=IBCT,IBFND=$$PAYD(.IBTMPA,0,IBK)
+ S IBK=0
+ F IBI=0:5:IBR Q:IBFND!(IBFND=U)  K IBTMPA F IBJ=1:1:5 S IBK=IBI+IBJ D  Q:IBFND!(IBFND=U)!(IBK>IBCT)
+ . S IBD=$G(@IBTMPFIL@(IBK)),IBFND="" I IBD'="" S IBTMPA(IBK)=IBD
+ . I IBD=""!(IBJ=5) S IBL=$S(IBK<IBCT:1,IBK=IBCT:0,1:0) D
+ . . S IBLM=IBK I 'IBL&(IBK>IBCT) S IBLM=IBCT
+ . . S IBFND=$$PAYD(.IBTMPA,IBL,IBLM)
+ I IBFND=U G PAYST
+ I 'IBFND G PAYNAM
+ G PAYX
+PAYX ; payer lookup exit point
+ K @IBTMPFIL
+ ;END
+ I IBFND=U S IBFND=""
+ Q IBFND
+ ;
+PSET ;set name into tmp array
+ N IBC,IBD
+ S IBC=@IBTMPFIL@(0)+1,@IBTMPFIL@(0)=IBC
+ S @IBTMPFIL@(IBC)=IBA_U_IBN
+ Q
+ ;
+PAYD(IBARY,IBO,IBLM) ; display up to 5 payer's for selection at a time.
+ ; IBARY - 5 items to display
+ ; IBO - are there more to display
+ ;
+ I $O(IBARY(0))="" Q ""
+ N DIR,DIRUT,DIROUT,IBA,IBB,IBD,IBM,X,Y
+ ; array is payer name ^ payer 365.12 ien
+ S DIR(0)="LCO^1:"_IBLM,IBA=0 F  S IBA=$O(IBARY(IBA)) Q:'IBA  D
+ . S IBD=IBARY(IBA)
+ . S IBM=$E($P(IBD,U,1),1,35)
+ . W !,?6,IBA,?13,IBM
+ S DIR("?")="Enter the Item Number for the Payer desired"
+ S DIR("A")="CHOOSE"
+ I IBO=1 D
+ . S DIR("A",1)="Press "_($S(IBO=1:"<Enter> to see more, ",1:""))_"'^' to exit this list,  OR"
+ D ^DIR
+ I $E(Y)=U S IBFND=U
+ I Y S IBFND=$P(@IBTMPFIL@(+Y),U,2)
+ Q IBFND
+ ;
+HLPBEG ; display help message
+ W !,"Select the type of filter to narrow down your list of available Payers:"
+ W !,"   Begins with - Displays Payer(s) that begin with the specified text"
+ W !,"   Contains    - Displays Payer(s) that contain the specified text"
+ W !,"   List        - Displays listing of all Payers"
+ Q
+ ;
+HLPPN ; display help message for payer name
+ I FILTER=1 W !,"Enter the Payer's name that you want to Begin With." Q
+ I FILTER=2 W !,"Enter the string that you want the Payer's name to Contain." Q
+ W !,"Enter Payer Name"
+ Q
+ ;
+PAYLST ; list out payers in payer 'B' index in groups of 20
+ ;
+ N DIR,DTOUT,DUOUT,IBA,IBC,IBOK,X,Y
+ W !,"CHOOSE FROM:"
+ S IBA="",IBC=0
+ F  S IBA=$O(^IBE(365.12,"B",IBA)) Q:IBA=""  S IBOK=1,IBC=IBC+1 D  Q:'IBOK
+ . I IBA="~NO PAYER" Q
+ . W !,IBA
+ . I IBC#20'=0 Q
+ . S DIR(0)="E" D ^DIR K DIR
+ . I $D(DTOUT)!($D(DUOUT)) S IBOK=0
+ W !!
+ Q
+ ;
+ ; IB*732/DTG end - change standard DIC call to begins with/contains/list
 HELP1 ;This is the help text for RECEIVE IIU DATA (#365.121,5.01)  ICR #: 10142
  N ARR
  S ARR(1,"F")="!"

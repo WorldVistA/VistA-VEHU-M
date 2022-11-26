@@ -1,5 +1,5 @@
-MAGDRPC9 ;WOIFO/EDM/MLH/JSL/SAF/DAC/PMK - Imaging RPCs ; Feb 15, 2022@10:29:45
- ;;3.0;IMAGING;**50,54,53,49,123,118,138,180,190,239,280,305**;Mar 19, 2002;Build 3
+MAGDRPC9 ;WOIFO/EDM/MLH/JSL/SAF/DAC/PMK/JSJ - Imaging RPCs ; Jun 23, 2022@15:30:40
+ ;;3.0;IMAGING;**50,54,53,49,123,118,138,180,190,239,280,305,307**;Mar 19, 2002;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,16 @@ MAGDRPC9 ;WOIFO/EDM/MLH/JSL/SAF/DAC/PMK - Imaging RPCs ; Feb 15, 2022@10:29:45
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;    
+ ; Reference to FIND1^DIC in ICR #2051
+ ; Reference to GET1^DIQ in ICR #2056
+ ; Reference to ^RA(74 in ICR #1171
+ ; Reference to ^RA(70 in ICR #1172
+ ; Reference to ACCFIND^RAAPI in ICR #5020
+ ; Reference to HDIFF^XLFDT in ICR #10103
+ ; Reference to HTFM^XLFDT in ICR #10103
+ ; Reference to GETICN^MPIF001 in ICR #2701
+ ;
  Q
  ;
 UIDROOT(OUT) ; RPC = MAG DICOM GET UID ROOT
@@ -278,19 +288,21 @@ IENLOOK ; Overflow from MAGDRPC4
 GETINFO(INFO,TIUIEN) ; scan the TIU document and try to extract the accession number
  N FILE ; ---- LAB DATA subfile numbers and other info
  N ERRSTAT S ERRSTAT=0 ; error status - assume nothing to repor
- N ERROR,I,LRSS,IENS,TEXT,X
+ N ABBR,ERROR,I,LRAA,LRSS,IENS,TEXT,X  ;P307
  S IENS=TIUIEN_","
  D GETS^DIQ(8925,IENS,2,"I","TEXT","ERROR")
  F I=1:1 Q:'$D(TEXT(8925,IENS,2,I))  S X=TEXT(8925,IENS,2,I) D
  . I '$D(INFO("ACNUMB")),X["Accession No." D
  . . S INFO("ACNUMB")=$P(X,"Accession No. ",2)
- . . S LRSS=$E(INFO("ACNUMB"),1,2)
+ . . S ABBR=$P(INFO("ACNUMB")," ")  ;P307
+ . . S LRAA=$$FIND1^DIC(68,"","BX",ABBR,"","","ERR") ; get lab area index ;P307
+ . . S LRSS=$$GET1^DIQ(68,LRAA,.02,"I")  ;P307
  . . S ERRSTAT=$$GETFILE^MAGT7MA(LRSS) I ERRSTAT S INFO("LAB")="" Q
  . . S INFO("LAB")=FILE("NAME")
  . . Q
  . I '$D(INFO("DATE")),X["Date obtained: " S INFO("DATE")=$P(X,"Date obtained: ",2)
  . Q
- Q 
+ Q
  ;
 STATS(OUT,SITE) ; RPC = MAG DICOM GET EXPORT QUEUE STS
  N COUNT,D0,D1,NOUT,NOW,PRIORITY,STATE,TIME,WAIT,X,Y

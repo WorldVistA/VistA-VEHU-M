@@ -1,5 +1,5 @@
 IBARXCSH ;ALB/CLT-CERNER RXCOPAY SEND DSR-QO3 MESSAGE ; 19 Feb 2021
- ;;2.0;INTEGRATED BILLING;**676,717**;21-MAR-94;Build 1
+ ;;2.0;INTEGRATED BILLING;**676,717,726**;21-MAR-94;Build 1
  ;
  ; Build and return/send seeding of Vista data to Cerner IBARXC-QRYRESP DSR^Q03 
  ;
@@ -67,6 +67,8 @@ DSP1 ;
  N NODE0,FACID,FACID1,TRANSID,TCHRG,BILLED,UNBILLED,ADATE
  N YDATE,STAT,UNITS,DESC,RXNUM,PARENT,SITENM,X
  S NODE0=^IBAM(354.71,IEN,0)
+ ;Null Unbilled issue
+ I $P(NODE0,"^",12)="" S NODE0=$$NULLFIX(IEN,NODE0)
  S FACID=+$$SITE^VASITE
  S FACID1=$P(NODE0,"^",13)
  Q:FACID1'=FACID
@@ -107,6 +109,16 @@ DSP1 ;
  S VALUE="",FIELD=5 D SET^HLOAPI(.SEG,VALUE,FIELD)
  S X=$$ADDSEG^HLOAPI(.MSG,.SEG,.ERROR)
  Q
+ ;
+NULLFIX(IEN,NODE0)  ;The IBEDIT function will all Null values to be passed in Unbilled value
+ ;set NODE0 piece 12 to 0, then set field .12 to 0 to ensure proper data transmission
+ N DIEN
+ I $P(NODE0,"^",12)="" S $P(NODE0,"^",12)=0
+ ;Now set data field .12 in 354.71 to 0
+ S DIEN=IEN_","
+ S IBFDA(354.71,DIEN,.12)=0
+ D FILE^DIE(,"IBFDA","IBERR")
+ Q NODE0
  ;
 END ;
  S WHOTO("RECEIVING APPLICATION")="IBARXC-QRY"

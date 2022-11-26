@@ -1,21 +1,23 @@
 SDCCRSEN ;CCRA/LB,PB - Appointment retrieval API;APR 4, 2019
- ;;5.3;Scheduling;**707,730,735,764,768,741,795,808**;APR 4, 2019;Build 41
+ ;;5.3;Scheduling;**707,730,735,764,768,741,795,808,822**;APR 4, 2019;Build 44
  Q
  ; Documented API's and Integration Agreements
  ; ----------------------------------------------
- ; 2165   GENACK^HLMA1
- ; 2701   $$GETDFN^MPIF001
- ; 2701   $$GETICN^MPIF001
- ; 3535   MAKEADD^TIUSRVP2
- ; 10103  $$HL7TFM^XLFDT
- ; 10141  $$PATCH^XPDUTL
+ ; Reference to GENACK^HLMA1 in ICR #2165
+ ; Reference to $$GETDFN^MPIF001,$$GETICN^MPIF001 in ICR #2701
+ ; Reference to MAKEADD^TIUSRVP2 in ICR #3535
+ ; Reference to $$HL7TFM^XLFDT in ICR #10103
+ ; Reference to $$PATCH^XPDUTL in ICR #10141
  ; Patch 764 changed the SDECEND and SDECSTART times to send them in external format
  ; Patch 741 stopped sending a NAK for inactive clinic status and VistA messages for a successful appointment
  ; Patch 795 added code to lookup up COM CARE-OTEHR-DIVISIONID clinics and to check for the clinic to be non-count
  ; Patch 808 adds code to use the Related Hospital Location file in the Request Services File (#123.5) to lookup of the clinic for the appointment
+ ; Patch 822 adds code to insure the consult id is stored in the Hospital Location File, Appointment multiple
+ ; and when canceling an appointment, only cancel the appointment if it is for a com care clinic that matches the 
+ ; consult service and consult id. Patch 822 also split this routine and move the MAKE, CANCEL and NO SHOW code to SDCCRSEN1
 EN() ;Primary entry routine for HL7 based CCRA scheduling processing.
  ;Will take all scheduling messages through this one point.
- N FS,CS,RS,ES,SS,MID,HLQUIT,HLNODE,USER,USERMAIL,NAKMSG,ICN,MSH
+ N FS,CS,RS,ES,SS,MID,HLQUIT,HLNODE,USER,USERMAIL,NAKMSG,ICN,MSH,FMDTTM
  N MSG,HDR,SEG,SEGTYPE,MSGARY,LASTSEG,HDRTIME,ABORT,BASEDT,CLINARY,COUNT,PROVDTL,RESULTS,P694
  D INT^SDCCRCOR
  D COPYMSG^SDCCRCOR(.MSG)
@@ -49,91 +51,12 @@ PROCMSG(MSG1) ; Process message
  I +$G(ABORT)=2 D APPMSG^SDCCRCOR(MID,.ABORT) Q 1
  ;Q:$G(QUIT)=1 QUIT
  S QUIT=0
- I MSGARY("EVENT")="SCHEDULE" D MAKE
- I MSGARY("EVENT")="CANCEL" D CANCEL
- I MSGARY("EVENT")="NOSHOW" D NOSHOW
+ I MSGARY("EVENT")="SCHEDULE" D MAKE^SDCCRSEN1
+ I MSGARY("EVENT")="CANCEL" D CANCEL^SDCCRSEN1
+ I MSGARY("EVENT")="NOSHOW" D NOSHOW^SDCCRSEN1
  D DONEINC^SDCCRCOR
  K MSG1,SDRES,SDECY,SDECDATE,SDECAPTID,RSNAME,SDAPTYP,SDCL,SDDFN,SDECNOT,SDECNOTE,INP,RET
  Q QUIT
-MAKE ;MAKE APPOINTMENT: "S12"="SCHEDULE"
- S SDECLEN=$P(^SC(SDCL,"SL"),"^",1),SDECAPTID=0
- S:$G(DFN)>0 SDDFN=DFN
- S:$G(SDECLEN)'>0 SDECLEN=15
- S:$G(SDDFN)>0 SDECAPTID=$$APPTGET^SDECUTL(SDDFN,SDECSTART,SDCL,SDECRES)
- I SDECAPTID>0 D ANAK^SDCCRCOR("Patient already has an appointment at that datetime.",$G(USERMAIL),$G(ICN),$G(DFN),$G(APTTM),$G(CONID)) D
- .S ABORT="1^Patient already has an appointment at that datetime.",QUIT=1
- .D MESSAGE^SDCCRCOR(MID,.ABORT) Q
- Q:$G(QUIT)=1
- ;S:$G(SDECSTART)["@" SDECSTART=$P(SDECSTART,".",1)_"."_$E($P(SDECSTART,".",2),1,4)
- ;S SDECSTART=$$FMTE^XLFDT(SDECSTART,2)
- S SDECNOTE="HSRM, PID="_$G(CID)_" PER CONSULT, PROVIDER "_$G(PROV)
- D:QUIT=0 APPADD^SDEC07(.SDECY,SDECSTART,SDECEND,SDDFN,SDECRES,SDECLEN,$G(SDECNOTE),,,,,,,,,SDAPTYP,,,SDCL,,,,,1,,"") ;ADD NEW APPOINTMENT
- ;735 - PB Check to see if the appointment was made.
- I +$G(^TMP("SDEC07",$J,2))>0 Q
- I $P($G(^TMP("SDEC07",$J,3)),"^",2)'="" S ABORT="1^"_$P($G(^TMP("SDEC07",$J,3)),"^",2) D
- .D MESSAGE^SDCCRCOR(MID,.ABORT)
- .D:$P($G(^TMP("SDEC07",$J,3)),"^",2)'["PENDING or ACTIVE" ANAK^SDCCRCOR($P($G(ABORT),"^",2),$G(USERMAIL),$G(ICN),$G(DFN),$G(APTTM),$G(CONID))
- Q
-CANCEL ;CANCEL APPOINTMENT: "S15"="CANCEL"
- ; patch 808 - PB compare the clinic in the Patient file appointment multiple. if it matches good, otherwise use the clinic from the appointment multiple to cancel the appointment
- S:$G(DFN)>0 SDDFN=DFN
- S BASEDT=$$NETTOFM^SDECDATE(SDECSTART,"Y")
- I $D(^DPT(DFN,"S",$G(BASEDT)))  N SDCL2 S SDCL2=$P(^DPT(DFN,"S",$G(BASEDT),0),"^",1)
- I $G(SDCL2)>0 D
- .I $G(SDCL2)'=SDCL D
- ..S SDCL=SDCL2,SRVNAMEX=$P(^SC(SDCL,0),"^")
- ..N SDRES S SDRES=$O(^SDEC(409.831,"B",$G(SRVNAMEX),"")) S:$G(SDRES)>0 SDECRES=$G(SDRES)
- S SDECLEN=$P(^SC(SDCL,"SL"),"^",1),SDECAPTID=0
- S:$G(SDECLEN)'>0 SDECLEN=15
- S:$G(SDDFN)>0 SDECAPTID=$$APPTGET^SDECUTL(SDDFN,BASEDT,SDCL,SDECRES)
- I $G(SDECAPTID)'>0 D
- .S ABORT="1^NO APPOINTMENT was found to mark as CANCELED for the PATIENT on "_$G(SDECSTART)_" for consult, "_CONSULTID
- .S QUIT=1
- I +$G(ABORT)=1 D MESSAGE^SDCCRCOR(MID,.ABORT),ANAK^SDCCRCOR($P($G(ABORT),"^",2),$G(USERMAIL),$G(ICN),$G(DFN),$G(APTTM),$G(CONID)) Q
- S:$G(MSGARY("CANCEL CODE"))="" MSGARY("CANCEL CODE")="C"
- S:$G(MSGARY("CANCEL REASON"))="" MSGARY("CANCEL REASON")=11
- D:QUIT=0 APPDEL^SDEC08(.SDECY,SDECAPTID,$G(MSGARY("CANCEL CODE")),$G(MSGARY("CANCEL REASON")),$G(MSGARY("COMMENT")),$G(SDECDATE),$G(MSGARY("USER"))) ;CANCEL APPOINTMENT
- ;735 - PB Check to see if the appointment was canceled.
- I $G(^TMP("SDEC08",$J,"APPDEL",2))=$C(30) Q
- I $G(^TMP("SDEC08",$J,"APPDEL",2))'="" S ABORT="1^"_$G(^TMP("SDEC08",$J,"APPDEL",2)) D
- .D MESSAGE^SDCCRCOR(MID,.ABORT)
- .D ANAK^SDCCRCOR($P($G(ABORT),"^",2),$G(USERMAIL),$G(ICN),$G(DFN),$G(APTTM),$G(CONID))
- Q
-NOSHOW ;NOSHOW APPOINTMENT: "S26"="NOSHOW"
- ;S SDECLEN=$P(^SC(SDCL,"SL"),"^",1),SDECAPTID=0
- ;S:$G(DFN)>0 SDDFN=DFN
- ;S:$G(SDECLEN)'>0 SDECLEN=15
- ;check if appointment exists
- ; patch 808 - PB compare the clinic in the Patient file appointment multiple. if it matches good, otherwise use the clinic from the appointment multiple to cancel the appointment
- S:$G(DFN)>0 SDDFN=DFN
- S BASEDT=$$NETTOFM^SDECDATE(SDECSTART,"Y")
- I $D(^DPT(DFN,"S",$G(BASEDT)))  N SDCL2 S SDCL2=$P(^DPT(DFN,"S",$G(BASEDT),0),"^",1)
- I $G(SDCL2)>0 D
- .I $G(SDCL2)'=SDCL D
- ..S SDCL=SDCL2,SRVNAMEX=$P(^SC(SDCL,0),"^")
- ..N SDRES S SDRES=$O(^SDEC(409.831,"B",$G(SRVNAMEX),"")) S:$G(SDRES)>0 SDECRES=$G(SDRES)
- S SDECLEN=$P(^SC(SDCL,"SL"),"^",1),SDECAPTID=0
- S:$G(SDECLEN)'>0 SDECLEN=15
- S:$G(SDDFN)>0 SDECAPTID=$$APPTGET^SDECUTL(SDDFN,BASEDT,SDCL,SDECRES)
- ;Retrieve SDECAPTID pointer to SDEC APPOINTMENT file
- ;S BASEDT=$$NETTOFM^SDECDATE(SDECSTART,"Y")
- ;S SDECAPTID=$$APPTGET^SDECUTL(SDDFN,BASEDT,SDCL,SDECRES)
- I $G(SDECAPTID)'>0 D
- .S ABORT="1^NO APPOINTMENT was found to mark as NO SHOW for the PATIENT on "_$G(SDECSTART)_" for consult, "_CONSULTID
- .S QUIT=1
- I +$G(ABORT)=1 D MESSAGE^SDCCRCOR(MID,ABORT) Q
- ; patch 808 - PB compare the clinic in the Patient file appointment multiple. if it matches good, otherwise use the clinic from the appointment multiple to mark the appointment as no show 
- N SDCL2 S SDCL2=$P(^DPT(DFN,"S",$G(BASEDT),0),"^",1)
- I SDCL2'=SDCL D
- .S SDCL=SDCL2,SRVNAMEX=$P(^SC(SDCL,0),"^")
- .N SDRES S SDRES=$O(^SDEC(409.831,"B",$G(SRVNAMEX),"")) S:$G(SDRES)>0 SDECRES=$G(SDRES)
- D:QUIT=0 NOSHOW^SDEC31(.SDECY,SDECAPTID,1,$G(MSGARY("USER")),$G(SDECDATE))
- ;735 - PB Check to see if the appointment was made.
- I +$G(^TMP("SDEC",$J,2))>0 Q
- I +$G(^TMP("SDEC",$J,2))=0 S ABORT="1^"_$P($G(^TMP("SDEC",$J,2)),"^",2) D
- .D MESSAGE^SDCCRCOR(MID,.ABORT)
- .D ANAK^SDCCRCOR($P($G(ABORT),"^",2),$G(USERMAIL),$G(ICN),$G(DFN),$G(APTTM),$G(CONID))
- Q
 SETEVENT(EVENT,MSGARY) ;Takes the scheduling event and sets a message event to process.
  ;EVENT (I/REQ) - Message event from the MSH header. EX. S12, S14, S15, S26
  ;MSGARY (I/O,REQ) message array structure with reformatted and translated data ready for filing. See PARSEMSG for details.
@@ -183,7 +106,8 @@ NTE(NTE,MSGARY,LASTSEG,CLINARY,ABORT,PROVDTL) ;NTE segment processing.
  ;PROVDTL (I/OPT) - passed when NTE concerns a preceding AIP or AIG segment
  N NOTE,NOTETYPE,CLINIC
  S LASTSEG=$G(LASTSEG)
- S NOTE=$$GET^SDCCRSCU(.NTE,3,1)  ;NTE-3.1
+ D PARSESEG^SDCCRSCU(NTE,.NTE)
+ S NOTE="HSRM CONSULT "_$G(CONID)_" "_$G(NTE(3))  ;NTE-3.1
  S NOTETYPE=$$GET^SDCCRSCU(.NTE,4,1)  ;NTE-4.1
  ;Process NTE following SCH for scheduling comments.
  S (SDECNOTE,NOTE)=$TR(NOTE,"^","?")  ;JAN 21, 2020 - PB - adding SDECNOTE to have the booking notes

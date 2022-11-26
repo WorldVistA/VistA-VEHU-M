@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: INDEX
 ZWR
-^DD("IX",0)="INDEX^.11I^1606^1681"
+^DD("IX",0)="INDEX^.11I^1412^1681"
 ^DD("IX",.001,0)="0^ADEL^Delete Keys and Indexes associated with a deleted field.^MU^^F^R^I^0^^^^^A"
 ^DD("IX",.001,1)="Q"
 ^DD("IX",.001,2)="D:'$D(DICATTED)&'$D(DIU) DELXRF^DICATT4(DA(1),DA)"
@@ -25959,11 +25959,11 @@ ZWR
 ^DD("IX",1411,11.1,"BB",2,2)=""
 ^DD("IX",1411,11.1,"BB",3,3)=""
 ^DD("IX",1412,0)="2^AW^Terminate active policies when DATE OF DEATH is entered^MU^^F^IR^I^2^^^^^A"
-^DD("IX",1412,.1,0)="^^5^5^3151118^"
+^DD("IX",1412,.1,0)="^^5^5^3220419^^"
 ^DD("IX",1412,.1,1,0)="Terminates all Insurance Policies that have an EFFECTIVE DATE OF POLICY "
 ^DD("IX",1412,.1,2,0)="and do not have an INSURANCE EXPIRATION DATE for a patient when the DATE "
 ^DD("IX",1412,.1,3,0)="OF DEATH field is first entered. This is done by setting the INSURANCE "
-^DD("IX",1412,.1,4,0)="EXPIRATION DATE to be the DATE OF DEATH+1 in method DEATH^IBCNEUT7. Note: "
+^DD("IX",1412,.1,4,0)="EXPIRATION DATE to be the DATE OF DEATH in method DEATH^IBCNEUT7. Note: "
 ^DD("IX",1412,.1,5,0)="ICR #6231 allows the call to routine IBCNEUT7."
 ^DD("IX",1412,1)="D DEATH^IBCNEUT7(DA,X(1))"
 ^DD("IX",1412,1.4)="S X=$S((X(1)'="""")&(X1(1)=""""):1,1:0)"

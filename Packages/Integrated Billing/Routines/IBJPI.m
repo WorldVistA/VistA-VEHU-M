@@ -1,5 +1,5 @@
 IBJPI ;DAOU/BHS - IBJP eIV SITE PARAMETERS SCREEN ; 01-APR-2015
- ;;2.0;INTEGRATED BILLING;**184,271,316,416,438,479,506,528,549,601,621,659,668,687,702**;21-MAR-94;Build 53
+ ;;2.0;INTEGRATED BILLING;**184,271,316,416,438,479,506,528,549,601,621,659,668,687,702,732**;21-MAR-94;Build 13
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;/vd-IB*2*668 - Removed the SSVI logic introduced with IB*2*528 in its entirety within VistA.
@@ -26,14 +26,17 @@ HELP ; help
  ; IB*2.0*601,IB*2.0*621/DM adjust help text
  D FULL^VALM1
  W @IOF
- W !,"This screen displays all of the eIV Site Parameters used to manage the"
- W !,"eIV application used for electronic Insurance Verification."
+ ;IB*732/CKB - modified the text & added text for the Fix Corrupt Buffers action
+ W !,"This screen displays all the eIV and IIU Site Parameters used to manage"
+ W !,"electronic Insurance Verification."
  W !!,"The General Parameters section concerns overall parameters for"
- W !,"monitoring the interface and controlling eIV communication between"
- W !,"VistA and the EC located in Austin."
+ W !,"monitoring the interface and controlling eIV and IIU communication"
+ W !,"between VistA and the EC located in Austin."
  W !!,"The Batch Extracts section concerns extract-specific parameters"
  W !,"including active/inactive status and selection criteria. Parameters"
  W !,"associated with a specific extract may also be detailed here."
+ W !!,"The Fix Corrupt Buffers action allows a user to fix corrupted entries in"
+ W !,"the INSURANCE VERIFICATION PROCESSOR file (#355.33) aka ""the buffer file""."
  D PAUSE^VALM1
  W @IOF
  S VALMBCK="R"

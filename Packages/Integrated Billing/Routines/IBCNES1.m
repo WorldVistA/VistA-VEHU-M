@@ -1,5 +1,5 @@
 IBCNES1 ;ALB/ESG/JM - eIV elig/benefit utilities ; 01/13/2016
- ;;2.0;INTEGRATED BILLING;**416,438,497,549,702**;21-MAR-94;Build 53
+ ;;2.0;INTEGRATED BILLING;**416,438,497,549,702,732**;21-MAR-94;Build 13
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -401,7 +401,8 @@ SETC(DATA,LINE) ; Sets Note text
  . . S LINE=LINE+1,CWLPOS=1
  . . S CWPOS=CLNEND+1,CLNEND=CLNEND+75
  ;
- Q LINE
+ ;Q LINE
+ Q (LINE-1)  ;IB*732/CKB correct line quit
  ;
 DATE(Z) ; convert date in Z in format CCYYMMDD to MM/DD/CCYY format for display
  I Z?8N S Z=$E(Z,5,6)_"/"_$E(Z,7,8)_"/"_$E(Z,1,4)

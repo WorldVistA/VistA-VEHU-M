@@ -1,5 +1,5 @@
 IBARXCR2 ;ALB/MKN-CERNER RXCOPAY RECEIVE HL7 QRY^R02 MESSAGE SEND DSR^Q03 ; 19 Feb 2021
- ;;2.0;INTEGRATED BILLING;**676**;21-MAR-94;Build 34
+ ;;2.0;INTEGRATED BILLING;**676,726**;21-MAR-94;Build 1
  ;
  ;IA#    Supports
  ;------ -------------------------------------------------

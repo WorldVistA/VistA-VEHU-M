@@ -1,5 +1,5 @@
-SDEC28L ;ALB/LEG,JLS,LAB - VISTA SCHEDULING GET PAT DEMOG RPC ;JUL 26,2022
- ;;5.3;Scheduling;**785,823**;Aug 13, 1993;Build 9
+SDEC28L ;ALB/LEG,JLS,LAB,BWF - VISTA SCHEDULING GET PAT DEMOG RPC ;JUL 26,2022
+ ;;5.3;Scheduling;**785,823,825**;Aug 13, 1993;Build 2
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to ^AUPNPAT(DFN in ICR #7048
@@ -104,6 +104,8 @@ DOB ;DOB Lookup
  ;lab testing I SDECP?2.A.E D  Q
  I SDECP?1.A.E D  Q
  .;F SDECX=1:1:$P(SDECRSLT("DILIST",0),U) D
+ .; restrict lookup to 30 characters to prevent <SUBSCRIPT> error for extremely long values - INC23935053
+ .S SDECP=$E(SDECP,1,30)
  .S SDECX=$S($P(LASTSUB,U,1)'="":$$GETSUB^SDECU($P(LASTSUB,U,1)),1:$$GETSUB^SDECU(SDECP))
  .F  S SDECX=$O(^DPT("B",SDECX)) Q:SDECX'[SDECP  Q:SDECX=""  D  Q:SDECI'<SDECC
  ..S DFN=$S($P(LASTSUB,U,2)'="":$P(LASTSUB,U,2),1:0)

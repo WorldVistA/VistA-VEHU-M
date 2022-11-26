@@ -1,5 +1,5 @@
 IBCNEHL1 ;DAOU/ALA - HL7 Process Incoming RPI Messages ; 26-JUN-2002
- ;;2.0;INTEGRATED BILLING;**300,345,416,444,438,497,506,549,593,601,595,621,631,668,687,702**;21-MAR-94;Build 53
+ ;;2.0;INTEGRATED BILLING;**300,345,416,444,438,497,506,549,593,601,595,621,631,668,687,702,732**;21-MAR-94;Build 13
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -166,8 +166,11 @@ ENX ;
 AUTOFIL(DFN,IEN312,ISSUB) ;Finish processing the response message - file directly into patient insurance
  ;
  ; IB*702/DTG moved autofil to IBCNEHL5 due to routine file size
+ ;IB*732/CKB&TAZ - Loop through each insurance type IEN and file
+ N INSIEN,PCE
  I $G(RIEN)="" G AUTOFILX
- D AUTOFIL^IBCNEHL5(DFN,IEN312,ISSUB)
+ F PCE=1:1 S INSIEN=$P(IEN312,"~",PCE) Q:INSIEN=""  D
+ . D AUTOFIL^IBCNEHL5(DFN,INSIEN,ISSUB)
  ;
 AUTOFILX ;
  Q
@@ -229,8 +232,10 @@ AUTOUPD(RIEN) ;
  ;
  ;RIEN - ien in file 365
  ;
+ ;IB*732/CKB&TAZ - New ISBLUE
  N APPIEN,GDATA,GIEN,GNAME,GNUM,GNUM1,GOK,IEN2,IEN312,IEN36,IDATA0,IDATA3,ISSUB,MWNRA,MWNRB,MWNRIEN,MWNRTYP
- N ONEPOL,PIEN,RDATA0,RDATA1,RES,TQIEN,IDATA7,RDATA13,RDATA14   ;IB*2*497
+ N ONEPOL,PIEN,RDATA0,RDATA1,RES,TQIEN,IDATA7,RDATA13,RDATA14,ISBLUE
+ N IBGETTQ,IBGETWE,IBGETSTC,IBGETDEF,IBGETNOK
  S RES=0
  I +$G(RIEN)'>0 Q RES          ;Invalid ien for file 365
  ;IB*2*595/DM if entry is missing from #200, file in buffer
@@ -243,6 +248,7 @@ AUTOUPD(RIEN) ;
  ;IB*2*497 - longer fields for GROUP NAME, GROUP NUMBER, NAME OF INSURED, & SUBSCRIBER ID
  S RDATA13=$G(^IBCN(365,RIEN,13)),RDATA14=$G(^IBCN(365,RIEN,14))
  S PIEN=$P(RDATA0,U,3)
+ S ISBLUE=$$GET1^DIQ(365.12,PIEN_",",.09,"I") ;IB*732/CKB&TAZ
  ;
  ;IB*2*549 - Moved up the next 2 lines.  Originally, these lines were
  ;             directly after 'S IEN2=$P(RDATA0,U,2) I +IEN2'>0 Q RES'
@@ -258,15 +264,34 @@ AUTOUPD(RIEN) ;
  ;IB*2*601/HN Don't allow any entry with HMS SOI to auto-update
  ;IB*2*595/HN Don't allow any entry with Contract Services SOI to auto-update
  I $P(RDATA0,U,5)'="" I "^HMS^CONTRACT SERVICES^"[("^"_$$GET1^DIQ(365.1,$P(RDATA0,U,5)_",","SOURCE OF INFORMATION","E")_"^") Q RES  ; HAN IB*2*621
+ ;
+ ;IB*732/DTG start, allow auto update for some "Request Electronic Insurance Inquiry" requests
+ ;
  ;Check dictionary 365.1 MANUAL REQUEST DATE/TIME Flag, Quit if Set.
- I $P(RDATA0,U,5)'="",$P($G(^IBCN(365.1,$P(RDATA0,U,5),3)),U,1)'="" Q RES
+ ;I $P(RDATA0,U,5)'="",$P($G(^IBCN(365.1,$P(RDATA0,U,5),3)),U,1)'="" Q RES
+ ;
+ ; get values
+ S (IBGETTQ,IBGETDEF,IBGETWE,IBGETSTC)=""
+ ; Get 365.1 transmission queue number
+ S IBGETTQ=$$GET1^DIQ(365,RIEN_",",.05,"I") I IBGETTQ="" Q RES
+ ; Get 365.1 which extract
+ S IBGETNOK=0
+ S IBGETWE=$$GET1^DIQ(365.1,IBGETTQ_",",.1,"I") I IBGETWE=5 D  I IBGETNOK Q RES
+ . ; Get 350.9 default service type code
+ . S IBGETDEF=$$GET1^DIQ(350.9,1_",",60.01,"I") I IBGETDEF="" S IBGETNOK=1 Q
+ . ; Get 365 requested service type code
+ . S IBGETSTC=$$GET1^DIQ(365,RIEN_",",.15,"I") I IBGETSTC'=IBGETDEF S IBGETNOK=1 Q
+ ;
+ ;IB*732/DTG end, allow auto update for some "Request Electronic Insurance Inquiry" requests
+ ;
  ;IB*2*668/TAZ - Changed to new field location
  I '$$GET1^DIQ(365.121,APPIEN_","_PIEN_",",4.01,"I") Q RES  ; auto-accept is OFF
  S IEN2=$P(RDATA0,U,2) I +IEN2'>0 Q RES  ; couldn't find patient
  S ONEPOL=$$ONEPOL^IBCNEHLU(PIEN,IEN2)
  ;try to find a matching pat. insurance
- S IEN36="" F  S IEN36=$O(^DIC(36,"AC",PIEN,IEN36)) Q:IEN36=""!(RES>0)  D
- .S IEN312="" F  S IEN312=$O(^DPT(IEN2,.312,"B",IEN36,IEN312)) Q:IEN312=""!(RES>0&('+MWNRTYP))  D
+ ;IB*732/CKB&TAZ - Modify next two lines to check for ISBLUE
+ S IEN36="" F  S IEN36=$O(^DIC(36,"AC",PIEN,IEN36)) Q:IEN36=""  D  I 'ISBLUE&(RES>0) Q
+ .S IEN312="" F  S IEN312=$O(^DPT(IEN2,.312,"B",IEN36,IEN312)) Q:IEN312=""  D  I ('ISBLUE)&(RES>0&('+MWNRTYP)) Q
  ..S IDATA0=$G(^DPT(IEN2,.312,IEN312,0)),IDATA3=$G(^DPT(IEN2,.312,IEN312,3))
  ..S IDATA7=$G(^DPT(IEN2,.312,IEN312,7))   ;IB*2*497 (vd)
  ..I $$EXPIRED^IBCNEDE2($P(IDATA0,U,4)) Q  ;Insurance policy has expired
@@ -305,9 +330,10 @@ AUTOUPD(RIEN) ;
  ....S GOK=0
  ....Q
  ...Q
- ..S RES=1_U_IEN2_U_$S(+MWNRTYP:MWNRA_U_MWNRB_U_1,1:IEN312_U_U_0)
- ..S $P(RES,U,6)=ISSUB
- ..Q
+ ..;IB*732/CKB&TAZ - Restructured building RES string
+ ..I +MWNRTYP S RES=1_U_IEN2_U_MWNRA_U_MWNRB_U_1_U_ISSUB Q   ;Process MWNR
+ ..I ISBLUE S P3=$P(RES,U,3),P3=P3_$S($L(P3):"~",1:"")_IEN312,RES=1_U_IEN2_U_P3_U_U_0_U_ISSUB Q  ;Process Blues
+ ..S RES=1_U_IEN2_U_IEN312_U_U_0_U_ISSUB  ;Process non-MWNR and Non-Blue
  .Q
  Q RES
  ;

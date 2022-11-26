@@ -1,10 +1,8 @@
 YTWJSON ;SLC/KCM - Generate JSON Instrument Spec ; 7/20/2018
- ;;5.01;MENTAL HEALTH;**130,141**;Dec 30, 1994;Build 85
+ ;;5.01;MENTAL HEALTH;**130,141,202**;Dec 30, 1994;Build 49
  ;
- ; External Reference    ICR#
- ; ------------------   -----
- ; %ZOSV                10097
- ; %ZTER                 1621
+ ; Reference to %ZOSV in ICR #10097
+ ; Reference to %ZTER in ICR #1621
  ;
 GETSPEC(JSON,TEST) ; Get the JSON admin spec for instrument TEST
  I TEST'=+TEST S TEST=$O(^YTT(601.71,"B",TEST,0)) Q:'TEST
@@ -25,6 +23,7 @@ ERRHND ; Handle errors & clear stack
  Q
 CONTENT(TEST,TREE) ; build TEST spec as TREE for JSON conversion
  S TREE("name")=$P(^YTT(601.71,TEST,0),U)
+ S TREE("printTitle")=$P(^YTT(601.71,TEST,0),U,3)
  ; TODO: replace Copyright (c) with \u00A9 ??
  S TREE("copyright")=$$HTMLESC^YTWJSONU($G(^YTT(601.71,TEST,7)))
  S TREE("restartDays")=$P($G(^YTT(601.71,TEST,8)),U,7)
@@ -172,7 +171,7 @@ ADDINTRO(IEN,FORMAT,PREPEND) ; add intro node
  S TREE("content",CTNTIDX,"id")="i"_+^YTT(601.73,IEN,0)
  S TREE("content",CTNTIDX,"type")="IntroText"
  D BLDTXT^YTWJSONU($NA(^YTT(601.73,IEN,1)),.TEXT)
- S TEXT=PREPEND_TEXT ; TEMPORARY fix of section header
+ S TEXT=PREPEND_$G(TEXT) ; TEMPORARY fix of section header
  M TREE("content",CTNTIDX,"text")=TEXT
  Q
 ADDQSTN(IEN,DESIG,FORMAT) ; add question node

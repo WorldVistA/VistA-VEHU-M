@@ -1,5 +1,5 @@
 IBCNEHLT ;DAOU/ALA - HL7 Process Incoming MFN Messages ; 15 Mar 2016  3:00 PM
- ;;2.0;INTEGRATED BILLING;**184,251,271,300,416,438,506,549,582,601,621,664,668,687**;21-MAR-94;Build 88
+ ;;2.0;INTEGRATED BILLING;**184,251,271,300,416,438,506,549,582,601,621,664,668,687,732**;21-MAR-94;Build 13
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -13,7 +13,8 @@ EN ;  Entry Point
  NEW IBCNACT,IBCNADT,FSVDY,PSVDY
  NEW CMIEN,DATA,DATAAP,DATABPS,DATACM,DATE,ERROR,FIELDNO,FILENO
  NEW IBSEG,MSG,BUFF
- NEW X12TABLE,BADFMT
+ ;IB*732/CKB&TAZ - Added ISBLUE
+ NEW X12TABLE,BADFMT,ISBLUE
  ;
  ; BADFMT is true if a site with patch 300 receives an eIV message in the previous HL7 interface structure (pre-300)
  ;
@@ -87,6 +88,7 @@ EN ;  Entry Point
  . I SEG="ZP0" D
  .. S ID=$$DECHL7^IBCNEHL2(IBSEG(3)),NEWID=$$DECHL7^IBCNEHL2(IBSEG(4))
  .. S DESC=$$DECHL7^IBCNEHL2(IBSEG(5)),HEDI=$$DECHL7^IBCNEHL2(IBSEG(6)),PEDI=$$DECHL7^IBCNEHL2(IBSEG(7))
+ .. S ISBLUE=$S($G(IBSEG(8))="Y":1,1:0)  ;IB*732/CKB&TAZ
  . ;
  . I SEG="ZPA" D
  .. ;IB*668/TAZ - Added APP logic
@@ -131,7 +133,8 @@ PFIL ;  Payer Table Filer (Updates file #365.12)
  ;
  S DESC=$E(DESC,1,80)    ;restriction of the field in the DD
  S DIC=$$ROOT^DILFD(FLN)
- S DR=".01///^S X=DESC;.02////^S X=NEWID;.05////^S X=PEDI;.06////^S X=HEDI"
+ ;IB*732/CKB&TAZ - Add field .09 to DR string
+ S DR=".01///^S X=DESC;.02////^S X=NEWID;.05////^S X=PEDI;.06////^S X=HEDI;.09////^S X=ISBLUE"
  ;
  ;IB*668/TAZ - Moved MDC/MAC logic to new file location
  ;I MDC or MAC

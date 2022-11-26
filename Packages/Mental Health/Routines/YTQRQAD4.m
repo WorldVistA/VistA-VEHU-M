@@ -1,7 +1,7 @@
 YTQRQAD4 ;ISP/MJB - RESTful Calls to handle MHA lists ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202**;Dec 30, 1994;Build 49
  ;
- ; Referince to PXRMINDX in ICR #4290
+ ; Reference to PXRMINDX in ICR #4290
  ;
 GETLIST(ARGS,RESULTS) ; GET LIST OF INSTRUMENTS FOR PATIENT
  N LST,TST,I,NM,TEST,DFN,SRISK
@@ -52,15 +52,22 @@ GETLOCS(ARGS,RESULTS) ; get list of hospital locations
  ; .Y=returned list, ORFROM=text to $O from, DIR=$O direction.
  N I,IEN,CNT,LCNT,STR,LOC,HIT,DIR,ORFROM
  N ROOT,LROOT
+ N STRT,EXCT
  S HIT=0,CNT=0,DIR=1,ORFROM=""
  S ROOT=$$UP^XLFSTR($G(ARGS("locmatch"))),LROOT=$L(ROOT)
- S ORFROM=ROOT
  D SETRES("{""locations"":[")
+ ;Handle Exact match first
+ I $D(^SC("B",ROOT)) D
+ . S IEN="" F  S IEN=$O(^SC("B",ROOT,IEN)) Q:'IEN  D
+ ..Q:("CW"'[$P($G(^SC(IEN,0)),U,3)!('$$ACTLOC(IEN)))
+ ..S STR="{""locId"": """_IEN_""", ""locName"": """_ROOT_"""},",HIT=IEN
+ ..D SETRES(STR)
+ S ORFROM=$S(+ROOT=ROOT:ROOT_" ",1:ROOT)
  S I=0,LCNT=99999  ;Return all locs for now
  ;F  Q:I'<LCNT  S ORFROM=$O(^SC("B",ORFROM),DIR) Q:ORFROM=""  D  ; IA# 10040.
  F  Q:I'<LCNT  S ORFROM=$O(^SC("B",ORFROM),DIR) Q:ORFROM=""  Q:$E(ORFROM,1,LROOT)'=ROOT  D  ; IA# 10040.
  .S IEN="" F  S IEN=$O(^SC("B",ORFROM,IEN),DIR) Q:'IEN  D
- ..Q:("C"'[$P($G(^SC(IEN,0)),U,3)!('$$ACTLOC(IEN)))
+ ..Q:("CW"'[$P($G(^SC(IEN,0)),U,3)!('$$ACTLOC(IEN)))
  ..S STR="{""locId"": """_IEN_""", ""locName"": """_ORFROM_"""},",HIT=IEN
  ..D SETRES(STR)
  I HIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR  ;Remove last ","
@@ -129,6 +136,28 @@ GETDES(NAME,DARR) ;Get Instrument Description
  M DARR=YSDARR
  S NDX=$O(DARR("")) S DARR(NDX)=$E(DARR(NDX),2,$L(DARR(NDX)))  ;Strip off leading {
  S NDX=$O(DARR(""),-1) S DARR(NDX)=$E(DARR(NDX),1,$L(DARR(NDX))-1)_", "  ;Strip off trailing } add , for next property
+ Q
+ ;
+GETINTRP(ARGS,RESULTS) ;Get Interpretive Description for all instruments
+ ;Manually build JSON because text can be too long and cause XLFJSON arrays to break on the front end.
+ N NAME,IEN,IARR,I,ERR,YSARR,DARR,ICNT,CRLF,OP,LN
+ N IEN,IARR,I,ERR,CRLF,CRL,OP,LN,STR,INTERP
+ K ^TMP("YTQ-JSON",$J)
+ S ICNT=0,CRLF="\n",CRL=$L(CRLF)
+ S LN=1,^TMP("YTQ-JSON",$J,LN,0)="{""Instruments"":["
+ S NAME="" F  S NAME=$O(^YTT(601.71,"B",NAME)) Q:NAME=""  D
+ . S IEN=$O(^YTT(601.71,"B",NAME,""))
+ . S OP=$P($G(^YTT(601.71,IEN,2)),U,2) Q:OP'="Y"
+ . K IARR D GET1^DIQ(601.71,IEN_",",110,"","IARR","ERR")
+ . Q:'$D(IARR)
+ . S INTERP=""
+ . S I=0 F  S I=$O(IARR(I)) Q:I=""  D
+ .. S INTERP=INTERP_IARR(I)_CRLF
+ . S INTERP=$E(INTERP,1,$L(INTERP)-CRL)
+ . S LN=LN+1,^TMP("YTQ-JSON",$J,LN,0)="{""instrumentId"":"_IEN_",""name"":"""_NAME_""",""interpText"":"""_INTERP_"""},"
+ S STR=^TMP("YTQ-JSON",$J,LN,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,LN,0)=STR
+ S LN=LN+1,^TMP("YTQ-JSON",$J,LN,0)="]}"
+ S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
  ;
 ASMTLST(ARGS,RESULTS) ; get assignments identified by patient id with list of instruments and last complete date

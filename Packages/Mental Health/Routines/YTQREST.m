@@ -1,5 +1,5 @@
 YTQREST ;SLC/KCM - RESTful API front controller ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202**;Dec 30, 1994;Build 49
  ;
  ; .HTTPREQ: HTTP-formatted request and JSON body (if present)
  ; .HTTPRSP: HTTP-formatted response and JSON body (if present)
@@ -8,6 +8,7 @@ QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;GET /api/mha/getconn/ GETCONN^YTQREST
  ;;GET /api/mha/dtime/ GETDTIM^YTQREST
  ;;GET /api/mha/patient/:dfn/identifiers PID^YTQRQAD
+ ;;GET /api/mha/persons PERSONS^YTQRQAD
  ;;GET /api/mha/persons/:match PERSONS^YTQRQAD
  ;;GET /api/mha/users/:match/:adminId USERS^YTQRQAD
  ;;GET /api/mha/instruments/active LSTALL^YTQRQAD
@@ -30,8 +31,10 @@ QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;DELETE /api/mha/instrument/mhadmin/:adminId?1.N DELMHAD^YTQRQAD1
  ;;GET /api/mha/permission/cosign/:adminId/:userId ALWCSGN^YTQRQAD3
  ;;GET /api/mha/instrument/list/:dfn?1.N GETLIST^YTQRQAD4
+ ;;GET /api/mha/location/list GETLOCS^YTQRQAD4
  ;;GET /api/mha/location/list/:locmatch GETLOCS^YTQRQAD4
  ;;GET /api/mha/category/list GETCATA^YTQRQAD4
+ ;;GET /api/mha/specialgraph/interptext GETINTRP^YTQRQAD4
  ;;GET /api/mha/assignment/list/:dfn?1.N ASMTLST^YTQRQAD4
  ;;GET /api/mha/consult/list/:dfn?1.N GETCONS^YTQRQAD7
  ;;GET /api/mha/assignment/staff/:assignmentId?1.N ASMTSTAF^YTQRQAD7
@@ -49,12 +52,20 @@ QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;POST /api/mha/specialgraph/rptpref SETSPCLG^YTQRQAD7
  ;;GET /api/mha/reports/rptpref GETRPT^YTQRQAD7
  ;;POST /api/mha/reports/rptpref SETRPT^YTQRQAD7
+ ;;GET /api/mha/notes/noteprefs GETNP^YTQRQAD7
+ ;;POST /api/mha/notes/noteprefs SETNP^YTQRQAD7
  ;;GET /api/mha/instrument/description/:instrumentName GINSTD^YTQRQAD
  ;;GET /api/mha/assignment/cat/:assignmentId?1.N GCATINFO^YTQRCAT
  ;;POST /api/mha/assignment/cat/:assignmentId?1.N PCATINFO^YTQRCAT
  ;;GET /api/mha/cat/interview/:interviewId GETCATI^YTQRCAT
  ;;POST /api/mha/cat/interview/:interviewId SETCATI^YTQRCAT
  ;;POST /api/wrapper/close WRCLOSE^YTQRQAD
+ ;;GET /api/dashboard/widget/:widgetName WEBWIDG^YSBRPC
+ ;;GET /api/dashboard/highrisk/cssrs/:adminId WEBRPRT^YSBDD1
+ ;;GET /api/dashboard/highrisk/hrpp/:dfn WEBPROF^YSBDD1
+ ;;GET /api/dashboard/highrisk/note/:noteId WEBNOTE^YSBDD1
+ ;;GET /api/dashboard/userpref WEBGUSRP^YTQRQAD7
+ ;;POST /api/dashboard/userpref WEBPUSRP^YTQRQAD7
  ;;
  D HANDLE^YTQRUTL("QADMIN^YTQREST",.HTTPREQ,.HTTPRSP)
  Q

@@ -1,5 +1,5 @@
 ONCACD1 ;HINES OIFO/GWB - Extract NAACCR/STATE/VACCR data ;09/06/11
- ;;2.2;ONCOLOGY;**1,4,5,8,9,13,14**;Jul 31, 2013;Build 8
+ ;;2.2;ONCOLOGY;**1,4,5,8,9,13,14,15**;Jul 31, 2013;Build 5
  ;
  ;P5 added in RQRS the Analytic Cases selection.
  ;P8 allows BLANK in TNM Clin/Path data fields & others.
@@ -27,15 +27,17 @@ SETUP ;Loop through appropriate cross-reference
  .N ONC11,ONC22,ONC33,ONC44,ONC55,ONCNN,ONCPP,ONCTT,ONCDTIME,ONCDIC,ONCTYPE,ONCXPRT,ONCTHR,ONCTMN,ONCTSN
  .S ONCT=$$NOW^XLFDT()
  .S ONCTZONE=$$TZ^XLFDT()
- .S ONCTHR=$E(ONCT,9,10),ONCTMN=$E(ONCT,11,12),ONCTSN=$E(ONCT,13,14)_".0000000"_$E(ONCTZONE,1,3)_":"_$E(ONCTZONE,4,5)
+ .S ONCTHR=$E(ONCT,9,10),ONCTMN=$E(ONCT,11,12),ONCTSN=$E(ONCT,13,14)
  .S:ONCTSN="" ONCTSN="00"
+ .S:($L(ONCTSN)=1) ONCTSN="0"_ONCTSN
+ .S ONCTSN=ONCTSN_".000"_$E(ONCTZONE,1,3)_":"_$E(ONCTZONE,4,5)
  .S ONCDTNW=""""_(1700+$E(ONCT,1,3))_"-"_$E(ONCT,4,5)_"-"_$E(ONCT,6,7)_"T"_ONCTHR_":"_ONCTMN_":"_ONCTSN_""""
  .S ONCX21=1
  .S ONCTYPE="""A"""
  .I EXTRACT=7 S ONCTYPE="""I"""
  .S ONCDIC="""http://naaccr.org/naaccrxml/naaccr-dictionary-210.xml"""
  .S ONC11=" baseDictionaryUri="
- .S ONC22=" recordType=",ONC33=" timeGenerated=",ONC44=" specification="
+ .S ONC22=" recordType=",ONC33=" timeGenerated=",ONC44=" specificationVersion="
  .W "<?xml version=""1.0"" encoding=""UTF-8""?>",!
  .W "<NaaccrData xmlns=""http://naaccr.org/naaccrxml""",ONC11,ONCDIC,!
  .W ONC22,ONCTYPE,ONC33,ONCDTNW,ONC44,"""1.4""",">"
@@ -85,7 +87,7 @@ SETUP ;Loop through appropriate cross-reference
  ;Quit if "ADX" is before 2008 - p2.2*4
  I ($G(STEXT)=3),($G(ONCLDT)=2) S SDT=SDT-.00001 F  S SDT=$O(^ONCO(165.5,"AAE",SDT)) Q:(SDT<1)!(SDT>EDT)!(OUT=1)  F  S IEN=$O(^ONCO(165.5,"AAE",SDT,IEN)) Q:IEN<1  I $$DIV^ONCFUNC(IEN)=DUZ(2) D  Q:OUT
  .Q:$G(^ONCO(165.5,IEN,0))=""
- .Q:$P($G(^ONCO(165.5,IEN,0)),U,16)<3080101
+ .Q:$P($G(^ONCO(165.5,IEN,0)),U,16)<3060101
  .S TPG=$P($G(^ONCO(165.5,IEN,2)),U,1)
  .S NC=0
  .F FDNUM=.03,.05,.06,3,20,22.3 I $$GET1^DIQ(165.5,IEN,FDNUM,"I")="" S NC=1
@@ -97,7 +99,7 @@ SETUP ;Loop through appropriate cross-reference
  ;Loop through ACCESSION NUMBER (165.5,.05) "AA" cross-reference
  I ($G(STEXT)=3),($G(ONCLDT)=3) S SDT=SDT-1 F  S SDT=$O(^ONCO(165.5,"AA",SDT)) Q:(SDT<1)!(SDT>EDT)!(OUT=1)  F  S IEN=$O(^ONCO(165.5,"AA",SDT,IEN)) Q:IEN<1  I $$DIV^ONCFUNC(IEN)=DUZ(2) D  Q:OUT
  .Q:$G(^ONCO(165.5,IEN,0))=""
- .Q:$P($G(^ONCO(165.5,IEN,0)),U,16)<3080101
+ .Q:$P($G(^ONCO(165.5,IEN,0)),U,16)<3060101
  .S TPG=$P($G(^ONCO(165.5,IEN,2)),U,1)
  .S NC=0
  .F FDNUM=.03,.05,.06,3,20,22.3 I $$GET1^DIQ(165.5,IEN,FDNUM,"I")="" S NC=1
@@ -333,6 +335,7 @@ STRIP ;replace special characters
  .S:X1="&" AA=" and "
  .S:X1=">" AA=" GT "
  .S:X1="<" AA=" LT "
+ .S:X1="$" AA=" "
  .S BB=BB_AA
  S ACDANS=BB
  Q

@@ -1,10 +1,13 @@
 TIUCCRHL7P2 ; CCRA/PB - TIUHL7 Msg Processing; March 23, 2005
- ;;1.0;TEXT INTEGRATION UTILITIES;**337,348,349**;Jun 20, 1997;Build 19
- ;ICR 7223 - TIU CALLS TO GMRCGUIB
- ;ICR 2980 - TIU calls to GMRCGUIB
+ ;;1.0;TEXT INTEGRATION UTILITIES;**337,348,349,352**;Jun 20, 1997;Build 21
+ ; Reference to CMT^GMRCGUIB in ICR #2980
+ ; Reference to SETCOM^GMRCGUIB, SETDA^GMRCGUIB in ICR #7223
+ ; Reference to ^TMP("CSLSUR1" supported by DBIA #3498
+ ; Reference to ^GMR(123 supported by DBIA #7342 
  ;
  ;PB - Patch 348 modification to parse the note text from NTE segments rather than the OBX segment
  ;PB - Patch 349 modification to parse and file the consult factor from the note and file as a comment with the consult
+ ;PB - Patch 352 modifications to set field 1205 in file 8925 to the value in field 2 in file 123 for the consult
  Q
 CONTINUE ; data verification
  ;
@@ -81,6 +84,11 @@ MAKE(SUCCESS,DFN,TITLE,VDT,VLOC,VSIT,TIUX,VSTR,SUPPRESS,NOASF) ; New Document
  I '+$G(SUPPRESS) D
  . D RELEASE^TIUT(TIUDA,1)
  . D UPDTIRT^TIUDIRT(.TIU,TIUDA)
+ ;Patch 352 - PB update field 1205 to be the FROM field (#2) in file 123
+ I $G(TIUDA)>0 D
+ .N FDA
+ .S FDA(1,8925,TIUDA_",",1205)=$$GET1^DIQ(123,VNUM_",",2,"I")
+ .D UPDATE^DIE("","FDA(1)","ZERR")
  K ^TIU(8925,+TIUDA,"TEMP")
  Q
 FILE(SUCCESS,TIUDA,TIUX,SUPPRESS,TIUCPF) ; Call FM Filer & commit
@@ -215,7 +223,7 @@ ES(DA,TIUES,TIUI,TIUESIG) ; ^DIE call for /es/
  S GMRCO=VNUM,GMRCSTS=ORIGSTAT,GMRCA=3
  D STATUS^GMRCP
  S GMRCAD=$$NOW^XLFDT
- S DA=$$SETDA^GMRCGUIB
+ S DA=$$SETDA^GMRCGUIB  ;7223
  S GMRCMT(1)="HSRM added a note and reset the status.",GMRCDUZ=$G(TIU("AUDA")),GMRCAD=""
  D SETCOM^GMRCGUIB(.GMRCMT,GMRCDUZ) ;ICR 7223
  ;PB - Feb 16, 2022 - patch 349 added code to add a comment to the consult activity log
