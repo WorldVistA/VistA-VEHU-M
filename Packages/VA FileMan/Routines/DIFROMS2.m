@@ -1,5 +1,5 @@
-DIFROMS2 ;SFISC/DCL/TKW - INSTALL DD FROM SOURCE ARRAY ; Nov 09, 2021@09:47:24
- ;;22.2;VA FileMan;**3,5,14,19,21**;Jan 05, 2016;Build 4
+DIFROMS2 ;SFISC/DCL/TKW - INSTALL DD FROM SOURCE ARRAY ; Jul 05, 2022@09:27:23
+ ;;22.2;VA FileMan;**3,5,14,19,21,23**;Jan 05, 2016;Build 2
  ;;Per VA Directive 6402, this routine should not be modified.
  ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
  ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
@@ -140,7 +140,7 @@ DIKZ I $D(^DD(DIFRFILE,0,"DIK")) D
  ;
 K12(DIFRD) N DD,D S DIFRD=+$G(DIFRD) ;DIFRD WILL BE THERE FOR A PARTIAL UPDATE
  F DD=0:0 S DD=$O(@DIFRSA@("^DD",DIFRFILE,DD)) Q:'DD  I DIFRD=DD!'DIFRD D
- .F D=0:0 S D=$O(@DIFRSA@("^DD",DIFRFILE,DD,D)) Q:'D  K ^DD(DD,D,12),^(12.1) ;KILL THE 'SCREEN' NODES, BECAUSE THEY MAY NOT BE COMING IN
+ .F D=0:0 S D=$O(@DIFRSA@("^DD",DIFRFILE,DD,D)) Q:'D  K ^DD(DD,D,12),^(12.1),^("V") ;p23 Kill 'SCREEN' and Variable pointer nodes, because they may not be coming in
  Q
  ;
 UP(ROOT,FILE,DDN) ;Return 1 if OK, or 0 for error p14

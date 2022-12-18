@@ -1,5 +1,5 @@
-SDESPRIVUSRSRCH  ;ALB/RRM - VISTA SCHEDULING PRIVILEGED USER SEARCH RPC; Jun 10, 2022@15:02
- ;;5.3;Scheduling;**819**;Aug 13, 1993;Build 5
+SDESPRIVUSRSRCH  ;ALB/RRM,MGD - VISTA SCHEDULING PRIVILEGED USER SEARCH RPC; Sept 23, 2022@01:21
+ ;;5.3;Scheduling;**819,826**;Aug 13, 1993;Build 18
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
@@ -147,7 +147,6 @@ EMPTYPC(SDPRIVUSERINFO,RECORDCNTR) ;Set Person Class subscript to Null
 EMPTYJSON(SEARCHSTRING,SDPRIVUSERINFO) ;return an empty string JSON Format if an Error occur or no data found
  I $O(SDPRIVUSERINFO("NewPerson",""))="" D
  . I $O(RETURNERROR("Error",""))="" D  Q
- . . S SDPRIVUSERINFO("Error",1)="No records were found using the search criteria '"_SEARCHSTRING_"'"
  . . S SDPRIVUSERINFO("NewPerson",1)=""
  . S RETURNERROR("NewPerson",1)=""
  Q

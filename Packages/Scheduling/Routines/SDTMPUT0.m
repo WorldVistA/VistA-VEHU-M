@@ -1,23 +1,24 @@
 SDTMPUT0 ;MS/SJA - TELEHEALTH SEARCH UTILITY ;Dec 17, 2020
- ;;5.3;Scheduling;**773,779,812**;Aug 13, 1993;Build 17
- ;
+ ;;5.3;Scheduling;**773,779,812,817**;Aug 13, 1993;Build 7
+ ;Reference to ^DGCN(391.91 supported by IA #4943
  ;
  N II,ARR,CNT,CODE,DFN,FAC,F407,S407,ICNHA,SIEN,MPI,NODE1,NODE8,NODE99,FICN,SDCL,NODE0,DIV,MCD,INST,INSF
  N LTZ,SDASH,CTRY,TZEX,SDSL,SDRE,SDIN,SDNO,STP1,STP2,OPT,VADM,XX,ZD
  S $P(SDASH,"=",80)=""
 EN W @IOF W ?22,"Telehealth Inquiries",!!
  K DIRUT,DUOUT,DIR
- S DIR(0)="SA^C:Clinic;M:Medical Center Division;I:Institution;P:Patient Information;L:List Stop codes;S:Stop Code Lookup;SN:Station Number (Time Sensitive);Q:QUIT"
+ S DIR(0)="SA^C:Clinic;M:Medical Center Division;I:Institution;P:Patient Information;N:Patient ICN;L:List Stop Codes;S:Stop Code Lookup;SN:Station Number (Time Sensitive);Q:QUIT"
  S DIR("A",1)="      Select one of the following:"
  S DIR("A",2)=""
  S DIR("A",3)="          C         Clinic"
  S DIR("A",4)="          M         Medical Center Division"
  S DIR("A",5)="          I         Institution"
  S DIR("A",6)="          P         Patient Information"
- S DIR("A",7)="          L         List Telehealth Stop Codes"
- S DIR("A",8)="          S         Telehealth Stop Code Lookup"
- S DIR("A",9)="          SN        Station Number (Time Sensitive)"
- S DIR("A",10)=""
+ S DIR("A",7)="          N         Patient ICN"
+ S DIR("A",8)="          L         List Telehealth Stop Codes"
+ S DIR("A",9)="          S         Telehealth Stop Code Lookup"
+ S DIR("A",10)="          SN        Station Number (Time Sensitive)"
+ S DIR("A",11)=""
  S DIR("A")="Search Option or (Q)uit: "
  D ^DIR K DIR I Y="Q"!$D(DTOUT)!$D(DIRUT) G END
  S OPT=Y W !
@@ -92,16 +93,19 @@ I ; search by Institution
  Q
  ;
 P ; search by patient
- K DIC,DFN,MPI,XX,ICNHA,VADM
+ K DIC,DFN,MPI,XX,ICNHA,VADM,SDDOD,SDDODN
  S DIC="^DPT(",DIC(0)="AEMQ",DIC("A")="Select Patient: " D ^DIC K DIC
  Q:"^"[X  I +Y'>0 W !,$C(7),"Patient not found. Please try again." G P
  S DFN=+Y D 2^VADPT S MPI=$G(^DPT(DFN,"MPI"))
+ S SDDOD=0,SDDOD=$O(^DGCN(391.91,"AKEY2",DFN,"USDOD",SDDOD))
+ I SDDOD S SDDODN=$P(^DGCN(391.91,SDDOD,2),U,2)
  W !,SDASH
  W !,"Number (IEN)",?18,": ",DFN
  W !,"Name",?18,": ",VADM(1)
  W !,"Sex",?18,": ",$P(VADM(5),U,2)
  W !,"Date of Birth",?18,": ",$P(VADM(3),U,2)
  W !,"SSN",?18,": ",$P(VADM(2),U,2)
+ W !,"DOD Number",?18,": ",$G(SDDODN)
  W !,"Full ICN",?18,": ",$P(MPI,U,10)
  W !,"Integrated Control: ",$P(MPI,U)
  W !,"ICN Checksum",?18,": ",$P(MPI,U,2)
@@ -109,6 +113,16 @@ P ; search by patient
  W "Deceased Date",?18,": ",$P($P(VADM(6),U,2),"@"),!
  D SC
  W !,SDASH G P
+ Q
+ ;
+N ; search by ICN
+ W !,"Select ICN: " R SDICN:DTIME
+ I SDICN=""!(SDICN="^") D SDCLN Q
+ I SDICN="?"!(SDICN="??") D SDHELP G N
+ I '$D(^DPT("AFICN",SDICN)) W $C(7)," ??" G N
+ S DFN="",SDCNT=0 F  S DFN=$O(^DPT("AFICN",SDICN,DFN)) Q:DFN=""  S SDCNT=SDCNT+1 D:SDCNT=1 SDINQ D:SDCNT>1 SDINQ,SDMSG
+ W !,"Records Found: ",SDCNT,!
+ G N
  Q
  ;
 S ; Telehealth stop code
@@ -196,4 +210,42 @@ SC ;SERVICE CONNECTED MESSAGE/IOFO - BAY PINES/TEH
  ;
  W !,"Primary Eligibility Code: "_$P(VAEL(1),"^",2)
  I $P($G(^DPT(DFN,.372,0)),"^",4)<1 W !,"No Service Connected Disabilities Listed"
+ Q
+ ;
+SDINQ ;Print inquiry
+ D 2^VADPT S MPI=$G(^DPT(DFN,"MPI"))
+ S SDDOD=0,SDDOD=$O(^DGCN(391.91,"AKEY2",DFN,"USDOD",SDDOD))
+ I SDDOD S SDDODN=$P(^DGCN(391.91,SDDOD,2),U,2)
+ W !,SDASH
+ W !,"Full ICN",?18,": ",$P(MPI,U,10)
+ W !,"Number (IEN)",?18,": ",DFN
+ W !,"Name",?18,": ",VADM(1)
+ W !,"Sex",?18,": ",$P(VADM(5),U,2)
+ W !,"Date of Birth",?18,": ",$P(VADM(3),U,2)
+ W !,"SSN",?18,": ",$P(VADM(2),U,2)
+ W !,"DOD Number",?18,": ",$G(SDDODN)
+ W !,"Integrated Control: ",$P(MPI,U)
+ W !,"ICN Checksum",?18,": ",$P(MPI,U,2)
+ D ICN W !,"Full ICN History  :" S XX=0 F  S XX=$O(ICNHA(XX)) Q:'XX  W ?20,$G(ICNHA(XX)),!
+ W "Deceased Date",?18,": ",$P($P(VADM(6),U,2),"@"),!
+ D SC
+ W !,SDASH,!
+ Q
+ ;
+SDMSG ;Print warning for multiple ICN
+ W !,$C(7)
+ W "More than one Patient ICN exists in this VistA System, please contact your",!
+ W "local Health Administration Services.  If this is related to an INTRAfacility",!
+ W "action, enter a Service Now ticket with your local HAS Office. If this is",!
+ W "related to an INTERfacility action, enter an IAM Toolkit Request at",!
+ W "http://vaww.vhadataportal.domain.ext/PolicyAdmin/HealthcareIdentityManagement.aspx",!
+ Q
+ ;
+SDCLN ;Clean up variables
+ K SDCNT,DFN,ICNHA,FICN,MPI,SDICN,VA,VADM,XX,SDDOD,SDDODN
+ Q
+ ;
+SDHELP ;Help text
+ W !,"   Enter the local or national Integration Control Number (ICN)",!
+ W "   assigned to the patient.",!
  Q

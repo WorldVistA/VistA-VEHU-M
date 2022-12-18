@@ -1,10 +1,11 @@
-XINDEX ;ISC/REL,GFT,GRK,RWF - INDEX & CROSS-REFERENCE ; Feb 15, 2022@06:14:24
- ;;7.3;TOOLKIT;**20,27,48,61,66,68,110,121,128,132,133,148,151,153**;Apr 25, 1995;Build 3
- ; Per VHA Directive 2004-038, this routine should not be modified.
+XINDEX ;ISC/REL,GFT,GRK,RWF - INDEX & CROSS-REFERENCE ; Sep 07, 2022@14:22:58
+ ;;7.3;TOOLKIT;**20,27,48,61,66,68,110,121,128,132,133,148,151,153,155**;Apr 25, 1995;Build 3
+ ;Per VHA Directive 2004-038, this routine should not be modified.
  G ^XINDX6
 SEP F I=1:1 S CH=$E(LIN,I) D QUOTE:CH=Q Q:" "[CH
  S ARG=$E(LIN,1,I-1) S:CH=" " I=I+1 S LIN=$E(LIN,I,999) Q
-QUOTE F I=I+1:1 S CH=$E(LIN,I) Q:CH=""!(CH=Q)
+QUOTE S Y=I F I=I+1:1 S CH=$E(LIN,I) Q:CH=""!(CH=Q)
+ S Y=$E(LIN,Y,I) I Y["$ZF("!(Y["$zf(") S ERR=28 G ^XINDX1 ;p155 check for $ZF( hidden in string
  Q:CH]""  S ERR=6 G ^XINDX1
 ALIVE ;enter here from taskman
  D SETUP^XINDX7 ;Get ready to process
@@ -30,17 +31,16 @@ BEG ;
  . N LABO S LABO=0
  . S LIN=$G(^UTILITY($J,1,RTN,0,1,0)),TXT=1
  . ;check 1st line (SITE/DEV - description ) ;p128
- . I $P(LIN,";",2)'?1.UP1"/"1.UP.1"-".E D E^XINDX1(62) ;p151 site/dev must be uppercase
+ . I $P(LIN,";",2)'?1.UP1"/"1.UP1"-".E D E^XINDX1(62) ;p151, p155 site/dev must be uppercase
  . S LIN=$G(^UTILITY($J,1,RTN,0,2,0)),(LABO,TXT)=2
  . ;check 2nd line (;;nn.nn[TV]nn;package;.anything)
  . I $P(LIN,";",3,99)'?1.2N1"."1.2N.1(1"T",1"V").2N1";"1A.APN1";".E D E^XINDX1(44) ;p132
  . I $L(INP(11)) X INP(11) ;Version number check
  . I $L(INP(12)) X INP(12) ;Patch number check
- . ;check (;<space>Reference<space>to<space>[Routine/File referenced]<space>in<space>ICR<space>#[ID from ICR registration]) ;p153
- . F TXT=3:1:LC S LIN=^UTILITY($J,1,RTN,0,TXT,0),LABO=TXT Q:$E(LIN,1,2)'=" ;"  D
- .. I LIN[" ICR",$P(LIN,";",2,99)'?1" Reference to "1.UPN1" in ICR #"1.5N D E^XINDX1(66)
- .. Q
  . Q
+ ;. ;check (;<space>Reference<space>to<space>[Routine/File referenced]<space>in<space>ICR<space>#[ID from ICR registration]) p153, removed in p155
+ ;. F TXT=3:1:LC S LIN=^UTILITY($J,1,RTN,0,TXT,0),LABO=TXT Q:$E(LIN,1,2)'=" ;"  D
+ ;.. I LIN[" ICR",$P(LIN,";",2,99)'?1" Reference to "1.UPN1" in ICR #"1.5N D E^XINDX1(66)
  S LABO=0
 B5 F TXT=1:1:LC S LIN=^UTILITY($J,1,RTN,0,TXT,0),LN=$L(LIN),IND("SZT")=IND("SZT")+LN+2 D LN,ST ;Process Line
  S LAB="",LABO=0,TXT=0,^UTILITY($J,1,RTN,0)=IND("SZT")_"^"_LC_"^"_IND("SZC")

@@ -395,7 +395,7 @@ ZWR
 ^DIC(1.5,"%D",2,0)="be exposed RESTfully to standard web methods and formats. It can support"
 ^DIC(1.5,"%D",3,0)="various data models such as Fast Healthcare Interoperability Resources"
 ^DIC(1.5,"%D",4,0)="(FHIR) or Intersystems' Summary Document Architecture (SDA)."
-^DIC(1.5,"%MSC")=3220626.124928
+^DIC(1.5,"%MSC")=3221218.000537
 ^DIC(1.521,0)="SQLI_SCHEMA^1.521"
 ^DIC(1.521,0,"DD")="^"
 ^DIC(1.521,0,"DEL")="^"
@@ -787,9 +787,6 @@ ZWR
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
 ^DIC(2,"%MSC")=3221126.161253
-^DIC(2.025,"%MSC")=3220624.22304
-^DIC(2.191,"%MSC")=3220622.230249
-^DIC(2.2406,"%MSC")=3220624.22304
 ^DIC(3.05,0)="FAILED ACCESS ATTEMPTS LOG^3.05"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
@@ -3454,7 +3451,6 @@ ZWR
 ^DIC(50.0733,"%","B","PSO",1)=""
 ^DIC(50.0733,"%D",0)="^^1^1^2930407^^"
 ^DIC(50.0733,"%D",1,0)="This file is used to group DUE Answer sheets into meaningful groups, e.g. Providers, Clinics, Services, etc."
-^DIC(50.095,"%MSC")=3190312.104301
 ^DIC(50.2,0)="IV CATEGORY^50.2"
 ^DIC(50.2,0,"DD")="@"
 ^DIC(50.2,0,"GL")="^PS(50.2,"
@@ -3834,8 +3830,6 @@ ZWR
 ^DIC(50.7,"%D",0)="^^1^1^2941026^"
 ^DIC(50.7,"%D",1,0)="Order Entry name for items that can be ordered in the Pharmacy package."
 ^DIC(50.7,"%MSC")=3220612.123617
-^DIC(50.713,"%MSC")=3181031.133237
-^DIC(50.714,"%MSC")=3220612.123617
 ^DIC(50.8,0)="IV STATS^50.8P"
 ^DIC(50.8,0,"DD")="@"
 ^DIC(50.8,0,"DEL")="^"
@@ -4500,8 +4494,6 @@ ZWR
 ^DIC(52.49,"%D",0)="^1.001^1^1^3170711^^"
 ^DIC(52.49,"%D",1,0)="This file holds the eRx prescriptions received from Change Healthcare."
 ^DIC(52.49,"%MSC")=3220624.222755
-^DIC(52.4971,"%MSC")=3190312.103514
-^DIC(52.4972,"%MSC")=3190312.103514
 ^DIC(52.5,0)="RX SUSPENSE^52.5PI"
 ^DIC(52.5,0,"GL")="^PS(52.5,"
 ^DIC(52.5,0,"GL")="^PS(52.5,"
@@ -5185,9 +5177,6 @@ ZWR
 ^DIC(55,"%D",6,0)="This file is also shared with inpatient pharmacy and promises to become a"
 ^DIC(55,"%D",7,0)="very central file to the pharmacy."
 ^DIC(55,"%MSC")=3220626.113455
-^DIC(55.0109,"%MSC")=3190319.172133
-^DIC(55.17,"%MSC")=3190312.103559
-^DIC(55.174,"%MSC")=3190312.103559
 ^DIC(55.95,0)="DRUG MANUFACTURER^55.95"
 ^DIC(55.95,0,"GL")="^PS(55.95,"
 ^DIC(55.95,0,"GL")="^PS(55.95,"
@@ -5487,8 +5476,6 @@ ZWR
 ^DIC(58.42,"%D",4,0)="  "
 ^DIC(58.42,"%D",5,0)="The data in this file is automatically populated and is not editable by the end-user."
 ^DIC(58.42,"%MSC")=3220624.192943
-^DIC(58.42102,"%MSC")=3220624.192943
-^DIC(58.42201,"%MSC")=3220624.192943
 ^DIC(58.5,0)="AR/WS STATS FILE^58.5D"
 ^DIC(58.5,0,"GL")="^PSI(58.5,"
 ^DIC(58.5,0,"GL")="^PSI(58.5,"
@@ -9069,8 +9056,6 @@ ZWR
 ^DIC(79.1,"%D",73,0)=" "
 ^DIC(79.1,"%D",74,0)=" The modification of any sort templates is not recommended."
 ^DIC(79.1,"%MSC")=3220626.120547
-^DIC(79.11,"%MSC")=3200522.210208
-^DIC(79.188,"%MSC")=3220626.120547
 ^DIC(79.2,0)="IMAGING TYPE^79.2"
 ^DIC(79.2,0,"DD")="#"
 ^DIC(79.2,0,"DEL")="#"
@@ -13120,7 +13105,6 @@ ZWR
 ^DIC(100.01,"%D",9,0)="and/or editing locally defined fields in the file are not permitted.  Use "
 ^DIC(100.01,"%D",10,0)="of locally defined fields that were created prior to VHA Directive "
 ^DIC(100.01,"%D",11,0)="2005-044 shall not be supported."
-^DIC(100.011,"%MSC")=3220624.203821
 ^DIC(100.02,0)="NATURE OF ORDER^100.02I"
 ^DIC(100.02,0,"AUDIT")="@"
 ^DIC(100.02,0,"DD")="@"
@@ -18589,7 +18573,6 @@ ZWR
 ^DIC(200,"%D",21,0)="Field numbers 910-910.9 reserved for Police Package"
 ^DIC(200,"%D",22,0)=" Node and X-ref 'ESP'"
 ^DIC(200,"%MSC")=3220626.152254
-^DIC(200.5321,"%MSC")=3220626.144747
 ^DIC(201,0)="USER CLASS^201"
 ^DIC(201,0,"GL")="^VA(201,"
 ^DIC(201,0,"GL")="^VA(201,"
@@ -20217,7 +20200,6 @@ ZWR
 ^DIC(342,"%D",3,0)=""
 ^DIC(342,"%D",4,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
 ^DIC(342,"%MSC")=3220626.152318
-^DIC(342.014,"%MSC")=3220612.135746
 ^DIC(342.1,0)="AR GROUP^342.1I"
 ^DIC(342.1,0,"GL")="^RC(342.1,"
 ^DIC(342.1,0,"GL")="^RC(342.1,"
@@ -20324,7 +20306,6 @@ ZWR
 ^DIC(344.31,"%D",2,0)="made to the site using Electronic Funds Transfer and the EDI 3rd Party"
 ^DIC(344.31,"%D",3,0)="Lockbox system in VistA."
 ^DIC(344.31,"%MSC")=3220624.195044
-^DIC(344.33,"%MSC")=3220626.120505
 ^DIC(344.4,0)="ELECTRONIC REMITTANCE ADVICE^344.4"
 ^DIC(344.4,0,"GL")="^RCY(344.4,"
 ^DIC(344.4,0,"GL")="^RCY(344.4,"
@@ -20374,8 +20355,6 @@ ZWR
 ^DIC(344.61,"%D",1,0)="This file holds the parameters specific to the EDI Lockbox processes "
 ^DIC(344.61,"%D",2,0)="(ePayments)."
 ^DIC(344.61,"%MSC")=3220624.222953
-^DIC(344.611,"%MSC")=3190923.190549
-^DIC(344.612,"%MSC")=3220624.222953
 ^DIC(344.62,0)="RCDPE CARC-RARC AUTO DEC^344.62"
 ^DIC(344.62,0,"AUDIT")=""
 ^DIC(344.62,0,"DD")=""
@@ -20422,7 +20401,6 @@ ZWR
 ^DIC(344.71,"%D",2,0)="placed in suspense.  Once in suspense, the suspensed item will update the "
 ^DIC(344.71,"%D",3,0)="audit log whenever the suspended item is refunded or paid."
 ^DIC(344.71,"%MSC")=3190312.104505
-^DIC(344.711,"%MSC")=3190312.104505
 ^DIC(344.72,0)="RCDPE AUTO-POST AUDIT^344.72"
 ^DIC(344.72,0,"AUDIT")="@"
 ^DIC(344.72,0,"DD")="@"
@@ -27173,8 +27151,6 @@ ZWR
 ^DIC(396.33,"%D",0)="^^1^1^3160407^"
 ^DIC(396.33,"%D",1,0)="This file contains the status for the 2507 Request."
 ^DIC(396.33,"%MSC")=3190312.14192
-^DIC(396.34,"%MSC")=3190312.14192
-^DIC(396.341,"%MSC")=3190312.14192
 ^DIC(396.4,0)="2507 EXAM^396.4"
 ^DIC(396.4,0,"AUDIT")=""
 ^DIC(396.4,0,"DD")=""
@@ -27371,7 +27347,6 @@ ZWR
 ^DIC(399.3,"%D",1,0)="This file contains all of the Rate Types which may be used in MCCR Billing."
 ^DIC(399.3,"%D",2,0)=" "
 ^DIC(399.3,"%D",3,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(399.30491,"%MSC")=3190319.171806
 ^DIC(399.4,0)="MCCR INCONSISTENT DATA ELEMENTS^399.4"
 ^DIC(399.4,0,"DD")="@"
 ^DIC(399.4,0,"GL")="^DGCR(399.4,"
@@ -28042,8 +28017,6 @@ ZWR
 ^DIC(404.91,"%D",0)="^^1^1^2960719^^^^"
 ^DIC(404.91,"%D",1,0)="This file contains the scheduling parameters."
 ^DIC(404.91,"%MSC")=3190319.173036
-^DIC(404.9102,"%MSC")=3190319.173036
-^DIC(404.91021,"%MSC")=3190319.173036
 ^DIC(404.92,0)="SCHEDULING REPORT DEFINITION^404.92"
 ^DIC(404.92,0,"AUDIT")="@"
 ^DIC(404.92,0,"DD")="@"
@@ -29477,7 +29450,6 @@ ZWR
 ^DIC(409.842,"%D",1,0)="This file is comprised of the various different appointment CHECK-IN"
 ^DIC(409.842,"%D",2,0)="STEP STATUSes that are referenced by the applications that utilize it."
 ^DIC(409.842,"%MSC")=3220624.203529
-^DIC(409.843,"%MSC")=3220624.203529
 ^DIC(409.845,0)="SDEC PREFERENCES AND SPECIAL NEEDS^409.845"
 ^DIC(409.845,0,"AUDIT")=""
 ^DIC(409.845,0,"DD")=""
@@ -29539,7 +29511,6 @@ ZWR
 ^DIC(409.853,"%D",3,0)=" "
 ^DIC(409.853,"%D",4,0)="This file should NOT be edited in anyway by the site. "
 ^DIC(409.853,"%MSC")=3220719.110436
-^DIC(409.854,"%MSC")=3220626.115733
 ^DIC(409.86,0)="SDEC CONTACT^409.86"
 ^DIC(409.86,0,"AUDIT")="@"
 ^DIC(409.86,0,"DD")="@"
@@ -29673,7 +29644,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3221113.204307
+^DIC(409.93,"%MSC")=3221218.000843
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
@@ -29768,7 +29739,6 @@ ZWR
 ^DIC(409.98,"%D",5,0)=" "
 ^DIC(409.98,"%D",6,0)="The two records in this file should never be deleted."
 ^DIC(409.98,"%MSC")=3220624.201416
-^DIC(409.987,"%MSC")=3220622.234137
 ^DIC(410,0)="CONTROL POINT ACTIVITY^410I"
 ^DIC(410,0,"DD")="@"
 ^DIC(410,0,"DEL")="%"
@@ -33229,7 +33199,6 @@ ZWR
 ^DIC(601.71,"%D",6,0)=" "
 ^DIC(601.71,"%D",7,0)="Direct entry via FileMan is prohibited."
 ^DIC(601.71,"%MSC")=3221126.161414
-^DIC(601.71101,"%MSC")=3200522.22271
 ^DIC(601.712,0)="MH TEST/SURVEY SPEC^601.712"
 ^DIC(601.712,0,"AUDIT")="@"
 ^DIC(601.712,0,"DD")="@"
@@ -33728,7 +33697,6 @@ ZWR
 ^DIC(601.92,"%D",0)="^1.001^1^1^3050309^^^"
 ^DIC(601.92,"%D",1,0)="This file contains results of the scored output of completed instruments."
 ^DIC(601.92,"%MSC")=3190524.160729
-^DIC(601.921,"%MSC")=3190524.160729
 ^DIC(601.93,0)="MH REPORT^601.93"
 ^DIC(601.93,0,"AUDIT")="@"
 ^DIC(601.93,0,"DD")="@"
@@ -37253,7 +37221,7 @@ ZWR
 ^DIC(727.802,"%D",15,0)="modified."
 ^DIC(727.802,"%D",16,0)="  "
 ^DIC(727.802,"%D",17,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.802,"%MSC")=3220624.223236
+^DIC(727.802,"%MSC")=3221218.0008
 ^DIC(727.804,0)="CLINIC NOSHOW EXTRACT"
 ^DIC(727.804,0,"AUDIT")="@"
 ^DIC(727.804,0,"DD")="@"
@@ -37387,7 +37355,7 @@ ZWR
 ^DIC(727.808,"%D",16,0)="modified."
 ^DIC(727.808,"%D",17,0)="  "
 ^DIC(727.808,"%D",18,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.808,"%MSC")=3220624.223236
+^DIC(727.808,"%MSC")=3221218.0008
 ^DIC(727.809,0)="UNIT DOSE LOCAL EXTRACT"
 ^DIC(727.809,0,"AUDIT")="@"
 ^DIC(727.809,0,"DD")="@"
@@ -37421,7 +37389,7 @@ ZWR
 ^DIC(727.809,"%D",15,0)="modified."
 ^DIC(727.809,"%D",16,0)="  "
 ^DIC(727.809,"%D",17,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.809,"%MSC")=3220624.223236
+^DIC(727.809,"%MSC")=3221218.0008
 ^DIC(727.81,0)="PRESCRIPTION EXTRACT"
 ^DIC(727.81,0,"AUDIT")="@"
 ^DIC(727.81,0,"DD")="@"
@@ -37456,7 +37424,7 @@ ZWR
 ^DIC(727.81,"%D",16,0)="modified."
 ^DIC(727.81,"%D",17,0)="  "
 ^DIC(727.81,"%D",18,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.81,"%MSC")=3220624.223236
+^DIC(727.81,"%MSC")=3221218.0008
 ^DIC(727.811,0)="SURGERY EXTRACT"
 ^DIC(727.811,0,"AUDIT")="@"
 ^DIC(727.811,0,"DD")="@"
@@ -37490,7 +37458,7 @@ ZWR
 ^DIC(727.811,"%D",15,0)="modified."
 ^DIC(727.811,"%D",16,0)="  "
 ^DIC(727.811,"%D",17,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.811,"%MSC")=3220624.223236
+^DIC(727.811,"%MSC")=3221218.0008
 ^DIC(727.812,0)="MENTAL HEALTH EXTRACT^727.812"
 ^DIC(727.812,0,"AUDIT")="@"
 ^DIC(727.812,0,"DD")="@"
@@ -37544,7 +37512,7 @@ ZWR
 ^DIC(727.813,"%D",20,0)="modified."
 ^DIC(727.813,"%D",21,0)="  "
 ^DIC(727.813,"%D",22,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.813,"%MSC")=3220624.223236
+^DIC(727.813,"%MSC")=3221218.0008
 ^DIC(727.814,0)="RADIOLOGY EXTRACT"
 ^DIC(727.814,0,"GL")="^ECX(727.814,"
 ^DIC(727.814,0,"GL")="^ECX(727.814,"
@@ -37567,7 +37535,7 @@ ZWR
 ^DIC(727.814,"%D",15,0)="modified."
 ^DIC(727.814,"%D",16,0)="  "
 ^DIC(727.814,"%D",17,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.814,"%MSC")=3220624.223236
+^DIC(727.814,"%MSC")=3221218.000801
 ^DIC(727.815,0)="EVENT CAPTURE LOCAL EXTRACT"
 ^DIC(727.815,0,"GL")="^ECX(727.815,"
 ^DIC(727.815,0,"GL")="^ECX(727.815,"
@@ -37591,7 +37559,7 @@ ZWR
 ^DIC(727.815,"%D",17,0)="modified."
 ^DIC(727.815,"%D",18,0)="  "
 ^DIC(727.815,"%D",19,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.815,"%MSC")=3220624.223236
+^DIC(727.815,"%MSC")=3221218.000801
 ^DIC(727.817,0)="TREATING SPECIALTY CHANGE EXTRACT"
 ^DIC(727.817,0,"AUDIT")="@"
 ^DIC(727.817,0,"DD")="@"
@@ -37626,7 +37594,7 @@ ZWR
 ^DIC(727.817,"%D",16,0)="modified."
 ^DIC(727.817,"%D",17,0)="  "
 ^DIC(727.817,"%D",18,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.817,"%MSC")=3220624.223236
+^DIC(727.817,"%MSC")=3221218.000801
 ^DIC(727.819,0)="IV DETAIL EXTRACT"
 ^DIC(727.819,0,"AUDIT")="@"
 ^DIC(727.819,0,"DD")="@"
@@ -37661,7 +37629,7 @@ ZWR
 ^DIC(727.819,"%D",15,0)="modified."
 ^DIC(727.819,"%D",16,0)="  "
 ^DIC(727.819,"%D",17,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.819,"%MSC")=3220624.223236
+^DIC(727.819,"%MSC")=3221218.000801
 ^DIC(727.823,0)="PAI EXTRACT"
 ^DIC(727.823,0,"AUDIT")="@"
 ^DIC(727.823,0,"DD")="@"
@@ -37796,7 +37764,7 @@ ZWR
 ^DIC(727.826,"%D",22,0)="functioning of the Prosthetics extract."
 ^DIC(727.826,"%D",23,0)=" "
 ^DIC(727.826,"%D",24,0)="This file should not be modified directly using VA FileMan."
-^DIC(727.826,"%MSC")=3220624.223236
+^DIC(727.826,"%MSC")=3221218.000801
 ^DIC(727.827,0)="CLINIC EXTRACT^727.827"
 ^DIC(727.827,0,"AUDIT")="@"
 ^DIC(727.827,0,"DD")="@"
@@ -37831,7 +37799,7 @@ ZWR
 ^DIC(727.827,"%D",15,0)="modified."
 ^DIC(727.827,"%D",16,0)="  "
 ^DIC(727.827,"%D",17,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.827,"%MSC")=3220624.223237
+^DIC(727.827,"%MSC")=3221218.000801
 ^DIC(727.829,0)="BLOOD BANK EXTRACT^727.829"
 ^DIC(727.829,0,"GL")="^ECX(727.829,"
 ^DIC(727.829,0,"GL")="^ECX(727.829,"
@@ -37855,7 +37823,7 @@ ZWR
 ^DIC(727.829,"%D",16,0)="modified.  "
 ^DIC(727.829,"%D",17,0)="  "
 ^DIC(727.829,"%D",18,0)="This file should NOT be modified directly using VA FileMan."
-^DIC(727.829,"%MSC")=3220612.135936
+^DIC(727.829,"%MSC")=3221218.000801
 ^DIC(727.831,0)="DSS TREATING SPECIALTY TRANSLATION^727.831"
 ^DIC(727.831,0,"AUDIT")="@"
 ^DIC(727.831,0,"DD")="@"
@@ -37936,7 +37904,7 @@ ZWR
 ^DIC(727.833,"%D",17,0)="modified.  "
 ^DIC(727.833,"%D",18,0)="   "
 ^DIC(727.833,"%D",19,0)="This file should NOT be modified directly using VA FileMan.  "
-^DIC(727.833,"%MSC")=3220624.223237
+^DIC(727.833,"%MSC")=3221218.000801
 ^DIC(728,0)="DSS EXTRACTS^728"
 ^DIC(728,0,"GL")="^ECX(728,"
 ^DIC(728,0,"GL")="^ECX(728,"
@@ -37982,7 +37950,7 @@ ZWR
 ^DIC(728.44,"%D",11,0)="fields in this file are linked to fields in the HOSPITAL LOCATION"
 ^DIC(728.44,"%D",12,0)="file (#44), data in this file should be entered and edited only by using"
 ^DIC(728.44,"%D",13,0)="the DSS software and not by direct access via VA FileMan."
-^DIC(728.44,"%MSC")=3200413.2358
+^DIC(728.44,"%MSC")=3221218.000801
 ^DIC(728.441,0)="NATIONAL CLINIC"
 ^DIC(728.441,0,"GL")="^ECX(728.441,"
 ^DIC(728.441,0,"GL")="^ECX(728.441,"
@@ -40029,8 +39997,6 @@ ZWR
 ^DIC(790.2,"%D",4,0)="CPT and ICD codes, and colposcopy related information.  There is no option"
 ^DIC(790.2,"%D",5,0)="to edit this file although new entries may be added through FileMan. "
 ^DIC(790.2,"%MSC")=3220609.022514
-^DIC(790.24,"%MSC")=3220624.223951
-^DIC(790.243,"%MSC")=3220609.022513
 ^DIC(790.3,0)="WV REFUSALS^790.3"
 ^DIC(790.3,0,"AUDIT")="@"
 ^DIC(790.3,0,"DD")="@"
@@ -56908,7 +56874,6 @@ ZWR
 ^DIC(9002313.511,"%D",1,0)="More input.  Override of specific NCPDP fields."
 ^DIC(9002313.511,"%D",2,0)="BPSOSO* routines (letter O)"
 ^DIC(9002313.511,"%MSC")=3190312.103559
-^DIC(9002313.5112,"%MSC")=3190312.103559
 ^DIC(9002313.56,0)="BPS PHARMACIES^9002313.56"
 ^DIC(9002313.56,0,"AUDIT")="@"
 ^DIC(9002313.56,0,"DD")="@"

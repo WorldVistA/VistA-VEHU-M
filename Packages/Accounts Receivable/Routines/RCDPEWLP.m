@@ -1,10 +1,13 @@
 RCDPEWLP ;ALBANY/KML - EDI LOCKBOX ERA and EEOB WORKLIST procedures ; 4/28/22 7:39am
- ;;4.5;Accounts Receivable;**298,303,304,319,332,345,349,367**;Mar 20, 1995;Build 11
+ ;;4.5;Accounts Receivable;**298,303,304,319,332,345,349,367,411**;Mar 20, 1995;Build 1
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
  ;
  ; PRCA*4.5*298 - handle outstanding EFTs & ERAs with exceptions
+ ; PRCA*4.5*411 - Check if prescription has a 'Delete' status which
+ ;                returns a null value to ^TMP("PSOR") array results
+ ;                in <undefined> error.
  ;
 AGEDEFTS(ERADA,TYPE) ;function, Search medical or pharmacy aged EFTs that have not been posted 
  ; ENTRY point for the Select ERA action on the ERA Worklist screen
@@ -316,11 +319,17 @@ GETPHARM(PRCAIEN,RCARRY) ;prca*4.5*298 return pharmacy data to show on EEOB item
  S RCARRY("FILL")=+$P(RXDATA,U,10)  ; Rx fill#
  S RXIEN=+$P(RXDATA,U,5)  ; Rx IEN in file 52
  D EN^PSOORDER(RCDFN,RXIEN)
- S RCARRY("RX")=$P(^TMP("PSOR",$J,RXIEN,0),U,5)
- I RCARRY("FILL")=0 D
- . S RCARRY("RELEASED STATUS")=$S($P(^TMP("PSOR",$J,RXIEN,0),U,13)]"":"Released",1:"Not Released")   ; determine release status from Rx on the first fill (no refills)
- I RCARRY("FILL")>0 D
- . S RCARRY("RELEASED STATUS")=$S($P($G(^TMP("PSOR",$J,RXIEN,"REF",RCARRY("FILL"),0)),U,8)]"":"Released",1:"Not Released")  ; ; determine release status from Rx refill # ;PRCA319 add $G()
+ ; PRCA*4.5*411 - Check if prescription was deleted.
+ I $D(^TMP("PSOR",$J,RXIEN,0)) D  ;
+ . S RCARRY("RX")=$P(^TMP("PSOR",$J,RXIEN,0),U,5)
+ . I RCARRY("FILL")=0 D
+ . . S RCARRY("RELEASED STATUS")=$S($P(^TMP("PSOR",$J,RXIEN,0),U,13)]"":"Released",1:"Not Released") ; determine release status from Rx on the first fill (no refills)
+ . I RCARRY("FILL")>0 D
+ . . S RCARRY("RELEASED STATUS")=$S($P($G(^TMP("PSOR",$J,RXIEN,"REF",RCARRY("FILL"),0)),U,8)]"":"Released",1:"Not Released") ; ; determine release status from Rx refill # ;PRCA319 add $G()
+ E  D  ;
+ . S RCARRY("RX")="Rx Deleted"
+ . S RCARRY("RELEASED STATUS")="Not Found"
+ ; PRCA*4.5*411 - End modified code block
  Q
  ;
 CV ; Change View action for ERA Worklist

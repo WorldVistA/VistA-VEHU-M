@@ -1,13 +1,13 @@
 ECXWRD ;BIR/CML,ALB/JAP  Print Active Wards for Fiscal Year ;11/8/17  14:59
- ;;3.0;DSS EXTRACTS;**2,8,127,149,166,169,181**;Dec 22, 1997;Build 71
+ ;;3.0;DSS EXTRACTS;**2,8,127,149,166,169,181,184**;Dec 22, 1997;Build 124
  ;
- ;Reference to fields INSTITUTION and FACILITY NUMBER in ^DG(40.8) supported by ICR #417
- ;Reference to fields "G&L ORDER" AND "OOS" in ^DIC(42) supported by DBIA #1848
+ ; Reference to ^DG(40.8) in ICR #417
+ ; Reference to ^DIC(42) in ICR #1848
  ;
 EN ;entry point from option
  N DATE,YR,MON,FY,POP,ZTSK,ECXPORT,CNT ;149
  D NOW^%DTC S DATE=$$FMTE^XLFDT(%,"5D"),YR=+$P(DATE,"/",3),MON=+$P(DATE,"/",1),FY=$S(MON<10:YR,1:YR+1)
- W !!,"This option prints a list of all MAS/HAS wards that were active at any time"
+ W !!,"This option prints a list of all wards that were active at any time" ;184 Removed MAS/HAS
  W !,"during FY",FY,".  The list is sorted by Medical Center Division and displays"
  W !,"the pointer to the Hospital Location file (#44) and DSS Department data"
  W !,"if available."

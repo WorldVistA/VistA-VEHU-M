@@ -1,8 +1,8 @@
 ECXBCM ;ALB/JAP-Bar Code Medical Administration Extract ;6/13/19  12:36
- ;;3.0;DSS EXTRACTS;**107,127,132,136,143,144,148,149,154,160,161,166,170,174,181**;Dec 22, 1997 ;Build 71
+ ;;3.0;DSS EXTRACTS;**107,127,132,136,143,144,148,149,154,160,161,166,170,174,181,184**;Dec 22, 1997 ;Build 124
  ;
- ;Reference to ^TMP($J  supported by SACC 2.3.2.5.1
- ;Reference to $$LJ^XLFSTR supported by ICR #10104
+ ; Reference to ^TMP($J) in SACC 2.3.2.5.1
+ ; Reference to $$LJ^XLFSTR in ICR #10104
  ;
 BEG ;entry point from option
  ;ECFILE=^ECX(727.833,
@@ -29,6 +29,7 @@ START ; start package specific extract
  ;
 GET(ECSD,ECED) ;get extract data
  N ECXESC,ECXECL,ECXCLST,ECXASIH,ECXDEA ;144,170,174
+ N ECXNMPI,ECXSIGI ;184
  S (ACTDT,ECXADT,ECXAMED,ECXASTA,ECXATM,ECXORN,ECXORT,ECXOSC,ECPRO,PLACEHLD,ECXFAC,DRG,ECXESC,ECXECL,ECXCLST)="" ;144
  ; get needed YYYYDD variable
  I $G(ECXYM)="" S ECXYM=$$ECXYM^ECXUTL(DT)
@@ -76,6 +77,7 @@ GET(ECSD,ECED) ;get extract data
  ;
 CMPT ; during component/sequence processing, retrieve rest of data record then file it.
  S (ECXSCADT,ECXOS,ECXIVID,ECXIR,SCADT,ECXSCADT,ECXSCATM,DRUG,ECVNDC,ECINV,ECVACL,ECXVAP,ECXDEA)="" ;143,174
+ S (ECXFDK,ECXPPDU)="" ;184
  I $G(DRG) D
  .S DRUG=$$PHAAPI^ECXUTL5(DRG)
  .S ECVNDC=$P(DRUG,U,3)
@@ -87,6 +89,9 @@ CMPT ; during component/sequence processing, retrieve rest of data record then f
  ..S ECINV=$S((+ECINV>0)&(+ECINV<6):+ECINV,ECINV["I":"I",1:"")
  .S ECVACL=$P(DRUG,U,2)
  .S ECXVAP=$P(DRUG,U,6) ;143 set ECXVAP to VA PRODUCT IEN
+ .I ECXLOGIC>2022 D  ;184
+ ..S ECXPPDU=+$P(DRUG,U,7) ;set ECXPPDU to Price Per Dispense Unit
+ ..S ECXFDK=$$RJ^XLFSTR($TR(ECXVAP," ",""),5,0)_$$RJ^XLFSTR($P(ECVNDC,"-"),6,0)_$$RJ^XLFSTR($P(ECVNDC,"-",2),4,0)_$$RJ^XLFSTR($P(ECVNDC,"-",3),2,0) ;184 Feeder Key=DRG ien_NDC
  S SCADT=$$GET1^DIQ(53.79,RIEN,.13,"I")
  S ECXSCADT=$$ECXDATE^ECXUTL(SCADT,ECXYM)
  S ECXSCATM=$$ECXTIME^ECXUTL(SCADT)
@@ -113,7 +118,7 @@ PAT(ECXDFN,ECXDATE,ECXERR)  ;get patient demographics, primary care, and inpatie
  I 'OK K ECXPAT S ECXERR=1 Q
  S ECXPNM=ECXPAT("NAME")
  S ECXSSN=ECXPAT("SSN")
- S ECXMPI=ECXPAT("MPI")
+ S ECXMPI=ECXPAT("MPI") I ECXLOGIC>2022 S ECXNMPI=ECXMPI,ECXMPI="" ;184
  S ECXDOB=ECXPAT("DOB")
  S ECXELIG=ECXPAT("ELIG")
  S ECXSEX=ECXPAT("SEX")
@@ -136,6 +141,7 @@ PAT(ECXDFN,ECXDATE,ECXERR)  ;get patient demographics, primary care, and inpatie
  S ECXCLST=ECXPAT("CL STAT") ;144 Camp Lejeune status
  S ECXSVCI=ECXPAT("COMBSVCI") ;149 COMBAT SVC IND
  S ECXSVCL=ECXPAT("COMBSVCL") ;149 COMBAT SVC LOC
+ S ECXSIGI=ECXPAT("SIGI") ;184 - SELF IDENTIFED GENDER
  S ECXCNHU=$$CNHSTAT^ECXUTL4(ECXDFN) S ECXCNHU=$S(ECXCNHU'="":$E(ECXCNHU,1),1:"") ;get CNHU status
  ;get enrollment data (category, status and priority)
  I $$ENROLLM^ECXUTL2(ECXDFN)
@@ -174,7 +180,8 @@ CCODE(RIEN) ; get component information
  ..S CCUNIT=$S($P(DATA,U,4)?1.N1"E"1.N.E:1,+($P(DATA,U,4))>0:+($P(DATA,U,4)),1:1) ;174 Added check for exponential numbers
  ..I I=.5 D  ;144 New drug Cost Fields added
  ...S DRG=CCIEN,UNITCOST=$$GET1^DIQ(50,DRG,16,"I")
- ...S ECXDRGC=(CCDGVN*CCUNIT)*UNITCOST
+ ...;S ECXDRGC=(CCDGVN*CCUNIT)*UNITCOST ;184
+ ...S ECXDRGC=(CCDGVN)*UNITCOST ;184 - Removed the Unit of Admistration from the  DRUG cost calculation
  ..I I=.6 D  ;144 New IV Additive Cost Fields added
  ...S DRG=$$GET1^DIQ(52.6,CCIEN,1,"I"),UNITCOST=$$GET1^DIQ(52.6,CCIEN,7,"I")
  ...S ECXIVAC=CCDGVN*UNITCOST

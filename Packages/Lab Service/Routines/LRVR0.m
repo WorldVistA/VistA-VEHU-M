@@ -1,5 +1,5 @@
-LRVR0 ;DALOI/STAFF - LEDI MI/AP Data Verification ;Jul 20, 2020@13:53
- ;;5.2;LAB SERVICE;**350,427,474,480,537**;Sep 27, 1994;Build 11
+LRVR0 ;DALOI/STAFF - LEDI MI/AP Data Verification; Jul 20, 2020@13:53
+ ;;5.2;LAB SERVICE;**350,427,474,480,537,561**;Sep 27, 1994;Build 2
  ;
  ; LEDI MI/AP Auto-instrument verification
  ; Called from LRVR
@@ -379,7 +379,12 @@ LEDI ; If LEDI put results in queue to return to collecting lab
  . S IEN=0
  . F  S IEN=$O(^LRO(68,LRAA,1,LRAD,1,LRAN,4,IEN)) Q:IEN<1  D  Q:$G(LRTS)
  . . I $P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,4,IEN,0)),U,2)<50 S LRTS=IEN,LRTSDEF=1
- I $G(LRTS) D SETACC
+ ;LR*5.2*561: Commenting out line below. It caused an issue when preliminary
+ ;            results were verified because the accession will not appear on
+ ;            the Incomplete Test Status Report. Also, if the results have a
+ ;            final status, the file 68 fields are already populated with a
+ ;            complete date/time, etc by upstream routines.
+ ;I $G(LRTS) D SETACC
  ;
  ; Comment out the following line after testing is complete
  W !!,$$CJ^XLFSTR("Sending report to LEDI collecting site",IOM)

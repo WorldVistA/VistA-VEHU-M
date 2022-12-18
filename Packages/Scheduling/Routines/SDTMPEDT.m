@@ -1,5 +1,5 @@
 SDTMPEDT ;MS/SJA - TELEHEALTH STOP CODES EDIT ;Dec 17, 2020
- ;;5.3;Scheduling;**773,779,780**;Aug 13, 1993;Build 17
+ ;;5.3;Scheduling;**773,779,780,817**;Aug 13, 1993;Build 7
  ;
  ;
 EDIT ; Add/edit stop code entries in file #40.6
@@ -46,12 +46,16 @@ MSG(TEXT) ; give user error message if stop code is not valid
  Q
  ;
 PROVID ; provider fields add/edit
- N CLNDA
+ N CLNDA,JJ,PRIEN,SEQ,TXT
  W !!!,$C(7),"CAUTION: DO NOT USE - Default Provider for setting up a Shared or Patient Site",!,?19,"Telehealth VistA Clinics."
  W !! S DIC("A")="Select Clinic: ",(DIC,DIE)=44,DIC(0)="AEQMZ" D ^DIC G:"^"[X EX
  G:Y<0 PROVID
  S CLNDA=+Y
  L +^SC(CLNDA,0):5 I '$T W !!,$C(7),"Another user is editing this record.  Try again later.",! D CR G EX
+ S TXT="Providers associated with this clinic"
+ W !!,$S($O(^SC(CLNDA,"PR",0)):"  "_TXT_":",1:"  No "_TXT_".")
+ S PRIEN=0 F  S PRIEN=$O(^SC(CLNDA,"PR","B",PRIEN)) Q:'PRIEN  W !,?4,"- ",$$GET1^DIQ(200,PRIEN,.01) D
+ . S SEQ=$O(^SC(CLNDA,"PR","B",PRIEN,0)) I $$GET1^DIQ(44.1,SEQ_","_CLNDA_",",.02,"I") W ?39,"<< Default >>"
  ; edit default provider and provider multiple fields
  W !
  K DR S DR="16",DA=CLNDA,DIE=44 D ^DIE K DR

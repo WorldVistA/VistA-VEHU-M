@@ -1,9 +1,9 @@
 LRMIEDZ2 ;DALIO/JMC - MICROBIOLOGY EDIT ROUTINE; May 24, 2021@14:40
- ;;5.2;LAB SERVICE;**23,104,242,295,350,427,474,536,547**;Sep 27, 1994;Build 10
+ ;;5.2;LAB SERVICE;**23,104,242,295,350,427,474,536,547,561**;Sep 27, 1994;Build 2
  ;
  ; from LRFAST,LRMIEDZ,LRVER
  ;
- ; Reference to ^DIE global supported by ICR #5002
+ ; Reference to ^DIE in ICR #5002
  ;
 PAT ;
  N LRUID
@@ -259,7 +259,17 @@ EC3 ;
  S LRSSCN=$P(^LR(LRDFN,"MI",LRIDT,0),U,5)_U_$P(^(0),U,11)
  D:LRSSCN'=LRSSC UPDATE
  K LRSSCN,LRSSC S LRSAME=1
- D TIME^LRMIEDZ3 D:'LREND STF^LRMIUT
+ ;LR*5.2*561: If verifying LEDI results and status is not final,
+ ;            do not automatically populate complete date/time.
+ ;            (LRINTYPE=10 indicates LEDI.)
+ N LRXSB,LRXQUIT
+ S LRXQUIT=0
+ I $G(LRINTYPE)=10,$G(LRI),$D(LRTX(LRI)) D
+ . S LRXSB=$S(LRTX(LRI)["11.5":1,LRTX(LRI)["23":11,LRTX(LRI)["19":8,LRTX(LRI)["15":5,LRTX(LRI)["34":16,1:"")
+ . Q:LRXSB=""
+ . I $D(^LR(LRDFN,"MI",LRIDT,LRXSB)),$P(^LR(LRDFN,"MI",LRIDT,LRXSB),"^",2)'="F" S LRXQUIT=1
+ I 'LRXQUIT D TIME^LRMIEDZ3
+ D:'LREND STF^LRMIUT
  Q
  ;
  ;

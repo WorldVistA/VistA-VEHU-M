@@ -1,5 +1,5 @@
 SDHL7APT ;MS/TG,PH - TMP HL7 Routine;AUG 17, 2018
- ;;5.3;Scheduling;**704,714,754,773,780,798,810**;AUG 17, 2018;Build 3
+ ;;5.3;Scheduling;**704,714,754,773,780,798,810,817**;AUG 17, 2018;Build 7
  ;
  ;  Integration Agreements:
  Q
@@ -24,7 +24,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ;    
  ;  Integration Agreements: NONE
  ;
- N MSGROOT,DATAROOT,QRY,XMT,ERR,RNAME,IX
+ N MSGROOT,DATAROOT,QRY,XMT,ERR,RNAME,IX,REQIEN     ;817 reqien
  K SDTMPHL
  S (MSGROOT,QRY,XMT,ERR,RNAME)=""
  S U="^"
@@ -160,8 +160,9 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ;IF a regular appt, not rtc or consult check to see if the appointment is in 409.85
  I $P(SDAPTYP,"|",1)="A" D
  .Q:$$UPPER^SDUL1(MSGARY("HL7EVENT"))'="S12"
- .S:INP(3)="" INP(3)=DT S RTN=0 D ARSET^SDECAR2(.RTN,.INP) S:$P($G(RTN),U,2) SDAPTYP="A|"_$P($G(RTN),U,2)      ;810- SDECAR2 routine should be used instead of SDHLAPT1 version of ARSET
- I $G(SDMTC)=1 D CHKCHILD^SDHL7APU ; if multi check to see if the child order is in 409.85, if not add it
+ .S:INP(3)="" INP(3)=DT S RTN=0 D ARSET^SDECAR2(.RTN,.INP)
+ .S REQIEN=+$P(RTN,$c(30),2),SDAPTYP="A|"_REQIEN      ;817- define REQIEN for later  ;810- SDECAR2 routine should be used instead of SDHLAPT1 version of ARSET
+ .I $G(SDMTC)=1 D CHKCHILD^SDHL7APU ; if multi check to see if the child order is in 409.85, if not add it
  ;714 - PB get the division associated with the clinic and pass to the function to convert utc to local time
  N TMPSTART,D1,D2
  S:$G(SDCL)>0 D1=$P(^SC(SDCL,0),"^",15),D2=$$GET1^DIQ(40.8,D1_",",.07,"I")
@@ -273,13 +274,12 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ..S ERRSND=1,ERRTXT=$E("Message link undefined for facility: "_$G(STA),1,48)
  ..Q 
  .S SDLINK=SDLINK(SDLINK)
+ .;817 removed code setting HLL("LINKS") for INTRA type appts. Not used for internal HL7 processing. TMP-1559
  .I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S12" D
  ..S:$G(INTRA)=0 HLL("LINKS",1)="SD IFS SUBSCRIBER"_U_$G(SDLINK)
- ..S:$G(INTRA)=1 HLL("LINKS",1)="SD TMP RECEIVE INTRAFACILITY"_U_$G(SDLINK)
  ..Q
  .I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S15" D
  ..S:$G(INTRA)=0 HLL("LINKS",1)="SD TMP S15 CLIENT SUBSCRIBER"_U_$G(SDLINK)
- ..S:$G(INTRA)=1 HLL("LINKS",1)="SD TMP RECEIVE CANCEL INTRA"_U_$G(SDLINK)
  ..Q
  .S HLMTIEN=""
  .I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S12" D
@@ -329,6 +329,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  S:$G(DUZ)="" (PROVIEN,DUZ)=.5
  S:$G(DUZ(2))="" DUZ(2)=$G(MSGARY("HLTHISSITE"))
  S (INP(11),SDDDT)=$G(SCH(11,1,8))
+ ;Begin S12 processing (make)
  I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S12" D
  .S URL=$G(AILNTE)
  .I $P($G(SDAPTYP),"|")="A"&($G(SDAPT)>0) D
@@ -351,7 +352,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .I $L(ERRTXT) S ERRCND=9999
  .S DUZ(2)=$G(STA)
  .I $G(SUCCESS)>0 D
- ..N INPA S INPA(1)=$P(SDAPTYP,"|",2),INPA(2)="SA",INPA(3)=$G(DUZ),DUZ(2)=$G(STA) ;INP(1) is the IEN of the PARENT order
+ ..N INPA S INPA(1)=$S($G(REQIEN):REQIEN,1:$P(SDAPTYP,"|",2)),INPA(2)="SA",INPA(3)=$G(DUZ),DUZ(2)=$G(STA)    ;INPA(1) is the IEN of the PARENT order  ;817 If RTC, then add new Req (i.e. REQIEN) will exist.
  ..S INPA(4)=$$FMTE^XLFDT(DT)
  ..N RET D ARCLOSE^SDECAR(.RET,.INPA) ; Dispositions the order.
  ..I $G(SDPARENT)'="" N CLOSEOUT S CLOSEOUT=0 I $G(RTCID)>0 S:$G(RTCID)=$P($G(^SDEC(409.85,+$G(SDPARENT),3)),"^",3) CLOSEOUT=1
@@ -369,7 +370,8 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ...Q
  ..Q
  .Q
- ;SECAPPT ; If this is an intrafacility appointment make the second appointment
+ ;SECAPPT ; If this is an intrafacility appointment make the second appointment  <<GSN, THIS COMMENT MEANS NOTHING
+ ;Begin S15 processing (cancel)
  I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S15" D
  .N XDT,%D,X,Y,STARTDT,ERRTXT,ERRCND
  .S SDECCR="",SDUSER=$G(MSGARY("DUZ"))

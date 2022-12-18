@@ -1,5 +1,5 @@
-SDESPROVSEARCH ;BAYPINES/KML - Get Provider based on Search String ;June 13, 2022
- ;;5.3;Scheduling;**819**;Aug 13, 1993;Build 5
+SDESPROVSEARCH ;BAYPINES/KML,MGD - Get Provider based on Search String ;Sept 23, 2022
+ ;;5.3;Scheduling;**819,826**;Aug 13, 1993;Build 18
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
@@ -113,7 +113,6 @@ BUILDRETURN(PROVIDERLIST,PROVIDERETURN) ;Build return array with provider data
  . S IENS=0 F  S IENS=$O(^VA(200,IEN,"USC3",IENS)) Q:'IENS  D
  . . S PROVIDERETURN("Provider",RECORDNUMBER,"UserClass",IENS)=$$GET1^DIQ(200.07,IENS_","_IEN_",",.01)
  I '$D(PROVIDERETURN("Provider")) S PROVIDERETURN("Provider",1)=""
- I RECORDNUMBER=0 D ERRLOG^SDESJSON(.PROVIDERETURN,65)
  Q
  ;
 GETUSERLIST(SEARCHSTRING,USERLIST) ; pull matching providers using the first input parameter passed in by the RPC
