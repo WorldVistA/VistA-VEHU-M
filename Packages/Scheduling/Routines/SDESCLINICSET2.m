@@ -1,10 +1,9 @@
-SDESCLINICSET2 ;ALB/TAW/MGD - CLINIC CREATE AND UPDATE ;Apr 06, 2022
- ;;5.3;Scheduling;**799,813**;Aug 13, 1993;Build 6
+SDESCLINICSET2 ;ALB/TAW/MGD/RRM - CLINIC CREATE AND UPDATE ;Oct 11, 2022
+ ;;5.3;Scheduling;**799,813,827,828**;Aug 13, 1993;Build 8
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
- ; ICR:
- ;  5747  - ICD Diagnosis file 80
- ;  10060 - New Person File 200
+ ; Reference to ^ICDEX( in ICR #5747
+ ; Reference to ^VA(200 in ICR #10060
  ;
  Q
 GETDEFAULT(INDEX,SDIEN) ;Get the IEN of the disposition or provider flagged as default
@@ -41,6 +40,8 @@ SAVE(POP,SDIEN,FDA,SDCLINIC,PROVIDER,DIAGNOSIS,SPECIALINSTRUCT,PRIVLIAGEDUSER) ;
  . F MI=1:1:$G(CLINMSG("DIERR")) D ERRLOG^SDESCLINICSET(48,$G(CLINMSG("DIERR",MI,"TEXT",1)))
  ;
  S IEN=$S(+SDIEN:+SDIEN,1:CLINRET(1))
+ ; Add clinic HASH info
+ D ADDHASH2CLIN^SDESRTVCLN2(IEN)
  ; Add entry to SDEC RESOURCE (#409.831) file VSE-2769
  D SDRES(IEN)
  ;
@@ -72,6 +73,9 @@ PROVIDER ;Upodate the Provider multiple in field 44.1
  ;
 DIAGNOSIS ;Diagnosis multiple in field 44.11
  N SDFDA,KEY,ACTION,DIAGIEN,DIAG44IEN
+ ;SD*828:remove any existing diagnosis tied to this clinic before adding
+ ;the diagnosis list(s) to be exactly what was passed in as input from the RPC
+ D DELDIAGNOSIS^SDESINPUTVALUTL($G(SDIEN))
  S KEY=""
  F  S KEY=$O(DIAGNOSIS(KEY)) Q:KEY=""  D
  .S DIAGIEN=""
@@ -163,10 +167,13 @@ VALIDATEDIAG(SDDIAG,DIAGNOSIS,IEN) ;
  .I ACTION="@D" S KEY="2-REMOVE DEFAULT"  ;takes priority over add diagnosis
  .I ACTION="@" S KEY="1-REMOVE DIAGNOSIS"  ;Takes priority over remove default
  .;I +DIAG,$D(^ICD9(DIAG,0)) D SETDIAG Q
- .I +DIAG,$$GET1^DIQ(80,DIAG,.01)'="" D SETDIAG Q
+ .I +DIAG,$$GET1^DIQ(80,DIAG,.01)'="" D  Q
+ ..I $$GETDIAGSTAT^SDESINPUTVALUTL(DIAG)<1 D ERRLOG^SDESCLINICSET(363) Q  ;SD*828-Inactive diagnosis not allowed
+ ..D SETDIAG
  .;S DIAG=$O(^ICD9("BA",$E(DIAG_" ",1,30),""),-1)
  .S DIAG=+$$CODEN^ICDEX(DIAG,80)
  .I DIAG=-1 D ERRLOG^SDESCLINICSET(85) Q
+ .I $$GETDIAGSTAT^SDESINPUTVALUTL(DIAG)<1 D ERRLOG^SDESCLINICSET(363) Q
  .D SETDIAG
  ; Only 1 diag allowed to be flagged as default / default removal
  I DEFAULTCNT>1 D ERRLOG^SDESCLINICSET(52,"Only 1 diagnosis can be set as default") Q

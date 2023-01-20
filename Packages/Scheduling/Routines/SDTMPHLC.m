@@ -1,5 +1,5 @@
 SDTMPHLC ;TMP/DRF - TMP HL7 Routine;May 29, 2018
- ;;5.3;Scheduling;**780,806,798**;SEP 26, 2018;Build 12
+ ;;5.3;Scheduling;**780,806,798,821**;SEP 26, 2018;Build 9
  Q
  ;
 EN(CLINID,NCDATE,NCSTOP,FUNCTION,COMMENT) ;Entry to the routine to build an HL7 message
@@ -17,6 +17,7 @@ EN(CLINID,NCDATE,NCSTOP,FUNCTION,COMMENT) ;Entry to the routine to build an HL7 
  Q:COMMENT=""
  I FUNCTION["P",(NCDATE=""!(NCSTOP="")) Q  ;Need start and stop time to cancel partial day
  N ANODE,ANODE1,APTTM,CLINODE,CNODE,ERROR,LENGTH,MSG,PARMS,RTN,SEG,SNODE,START,WHOTO
+ ;S ^ZDRF("SDTX",$H,CLINID,NCDATE,FUNCTION)=$G(NCSTOP) H 1
  S (SSTOP,PSTOP,STOP)=0
  I FUNCTION["C" S APTTM=$P(NCDATE,".",1)_".0"
  I FUNCTION["P" S APTTM=NCDATE
@@ -225,8 +226,10 @@ SEND(SC,DT,PATTERN) ;Send a transaction from SDBUILD - SD*5.3*806
  ;SC = Clinic
  ;DT = Date
  ;PATTERN = New pattern being recorded
- N OLDPAT
- S OLDPAT=$P($G(^SC(SC,"ST",DT,1)),"[",2)
- I OLDPAT="",$P(PATTERN,"[",2)]"" D EN^SDTMPHLC(SC,DT,,"UC","RESTORED BY SDBUILD") Q  ;No appointments previously available, send unblock transaction
- I OLDPAT]"",$P(PATTERN,"[",2)="" D EN^SDTMPHLC(SC,DT,,"C","NO APPOINTMENT AVAILABILITY") Q  ;Appointments previously available, now none - send block transaction
+ N OLDPAT,JOB
+ S OLDPAT=$P($G(^SC(SC,"ST",DT,1)),"[",2),JOB=$J
+ ;No appointments previously available, send unblock transaction
+ I OLDPAT="",$P(PATTERN,"[",2)]"" S SEQ=$P($G(^XTMP("SDTMPX",JOB,"SEQ")),U,1)+1,^XTMP("SDTMPX",JOB,SEQ)=SC_"^"_$H_"^"_DT_"^"_DUZ_"^"_"UC",$P(^XTMP("SDTMPX",JOB,"SEQ"),U,1)=SEQ Q
+ ;Appointments previously available, now none - send block transaction
+ I OLDPAT]"",$P(PATTERN,"[",2)="" S SEQ=$P($G(^XTMP("SDTMPX",JOB,"SEQ")),U,1)+1,^XTMP("SDTMPX",JOB,SEQ)=SC_"^"_$H_"^"_DT_"^"_DUZ_"^"_"C",$P(^XTMP("SDTMPX",JOB,"SEQ"),U,1)=SEQ Q
  Q  ;Change neither creates or deletes all availability, so no transaction sent

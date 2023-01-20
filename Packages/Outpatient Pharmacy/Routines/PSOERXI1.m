@@ -1,5 +1,5 @@
 PSOERXI1 ;ALB/BWF - eRx Utilities/RPC's ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**581,617,692**;DEC 1997;Build 4
+ ;;7.0;OUTPATIENT PHARMACY;**581,617,692,706**;DEC 1997;Build 1
  ;
  Q
  ; File incoming XML into appropriate file
@@ -36,13 +36,12 @@ INCERX(RES,XML,PRCHK,PACHK,DACHK,STATION,DIV,ERXHID,ERXVALS,XML2,VADAT,XML3) ;
  ;
  ; Drug Auto-Check (Moved from Hub to VistA - P-692)
  I $G(DACHK("success"))="false" D
- . N TMP,MSGTYPE,MTCHDRUG,PRDCODE,PRDCOQL,DRGNAME
- . D XML2GBL^PSOERUT(XML,"TMP")
- . S MSGTYPE=$O(TMP("Message",1,"Body",1,"")) I MSGTYPE="" Q
- . S PRDCODE=$G(TMP("Message",1,"Body",1,MSGTYPE,1,"MedicationPrescribed",1,"DrugCoded",1,"ProductCode",1,"Code",1)) I PRDCODE="" Q
- . S PRDCOQL=$E($G(TMP("Message",1,"Body",1,MSGTYPE,1,"MedicationPrescribed",1,"DrugCoded",1,"ProductCode",1,"Qualifier",1)),1)
+ . N MSGTYPE,MTCHDRUG,PRDCODE,PRDCOQL,DRGNAME
+ . S MSGTYPE=$O(^TMP($J,"PSOERXO1","Message",0,"Body",0,"")) I MSGTYPE="" Q
+ . S PRDCODE=$G(^TMP($J,"PSOERXO1","Message",0,"Body",0,MSGTYPE,0,"MedicationPrescribed",0,"DrugCoded",0,"ProductCode",0,"Code",0)) I PRDCODE="" Q
+ . S PRDCOQL=$E($G(^TMP($J,"PSOERXO1","Message",0,"Body",0,MSGTYPE,0,"MedicationPrescribed",0,"DrugCoded",0,"ProductCode",0,"Qualifier",0)),1)
  . I PRDCOQL'="N",PRDCOQL'="U" Q
- . S DRGNAME=$G(TMP("Message",1,"Body",1,MSGTYPE,1,"MedicationPrescribed",1,"DrugDescription",1))
+ . S DRGNAME=$G(^TMP($J,"PSOERXO1","Message",0,"Body",0,MSGTYPE,0,"MedicationPrescribed",0,"DrugDescription",0))
  . D DRGMTCH^PSOERXA0(.MTCHDRUG,PRDCOQL_"^"_PRDCODE,DRGNAME)
  . I +$G(MTCHDRUG) D
  . . K DACHK S DACHK("success")="true",DACHK("IEN")=+MTCHDRUG
@@ -67,11 +66,10 @@ INCERX(RES,XML,PRCHK,PACHK,DACHK,STATION,DIV,ERXHID,ERXVALS,XML2,VADAT,XML3) ;
  ; Provider Auto-Check (Moved from Hub to VistA - P-692)
  I $G(PRCHK("success"))="false" D
  . N TMP,MSGTYPE,MTCHPROV,TMP,NPI,DEA,CS
- . D XML2GBL^PSOERUT(XML,"TMP")
- . S MSGTYPE=$O(TMP("Message",1,"Body",1,"")) I MSGTYPE="" Q
- . S DEA=$G(TMP("Message",1,"Body",1,MSGTYPE,1,"Prescriber",1,"NonVeterinarian",1,"Identification",1,"DEANumber",1))
- . S NPI=$G(TMP("Message",1,"Body",1,MSGTYPE,1,"Prescriber",1,"NonVeterinarian",1,"Identification",1,"NPI",1))
- . S CS=$D(TMP("Message",1,"Header",1,"DigitalSignature",1,"SignatureValue",1))
+ . S MSGTYPE=$O(^TMP($J,"PSOERXO1","Message",0,"Body",0,"")) I MSGTYPE="" Q
+ . S DEA=$G(^TMP($J,"PSOERXO1","Message",0,"Body",0,MSGTYPE,0,"Prescriber",0,"NonVeterinarian",0,"Identification",0,"DEANumber",0))
+ . S NPI=$G(^TMP($J,"PSOERXO1","Message",0,"Body",0,MSGTYPE,0,"Prescriber",0,"NonVeterinarian",0,"Identification",0,"NPI",0))
+ . S CS=($G(^TMP($J,"PSOERXO1","Message",0,"Header",0,"DigitalSignature",0,"SignatureValue",0))'="")
  . D PRVMTCH^PSOERXA0(.MTCHPROV,NPI,DEA,CS)
  . I +$G(MTCHPROV) D
  . . K PRCHK S PRCHK("success")="true",PRCHK("IEN")=+MTCHPROV
@@ -87,6 +85,7 @@ INCERX(RES,XML,PRCHK,PACHK,DACHK,STATION,DIV,ERXHID,ERXVALS,XML2,VADAT,XML3) ;
  .S ERRTXT=$G(PRCHK("error"))
  .S ERRSEQ=$$ERRSEQ^PSOERXU1(EIEN) Q:'ERRSEQ
  .D FILERR^PSOERXU1(CURREC,ERRSEQ,"PR","E",ERRTXT)
+ ;
  I $G(PACHK("MVIerror"))']"" D
  .S PAICN=+$P($G(PACHK("ICN")),"V")
  .I PAICN D

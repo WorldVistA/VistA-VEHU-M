@@ -1,5 +1,5 @@
 DGRP7 ;ALB/MRL,CKN,ERC,RN,JAM - REGISTRATION SCREEN 7/ELIGIBILITY INFORMATION ; 7/25/06 12:06pm
- ;;5.3;Registration;**528,653,688,842,952,977,1016,1061,1075**;Aug 13, 1993;Build 13
+ ;;5.3;Registration;**528,653,688,842,952,977,1016,1061,1075,1082**;Aug 13, 1993;Build 29
  ;
  N DGCASH,DGMBCK,DGEMHCNVT,DGPRVSPE
  ;DG*5.3*952 add .55 into DRPG array
@@ -47,7 +47,9 @@ DGRP7 ;ALB/MRL,CKN,ERC,RN,JAM - REGISTRATION SCREEN 7/ELIGIBILITY INFORMATION ; 
  W !?4,"Other Elig Code(s): " S I1="" F I=0:0 S I=$O(^DPT("AEL",DFN,I)) Q:'I  I $D(^DIC(8,+I,0)),I'=DGRPE S I1=I1+1 W:I1>1 !?24 W $P(^(0),"^",1)
  W:'I1 "NO ADDITIONAL ELIGIBILITIES IDENTIFIED"
  S DGRPX=+$P(DGRP(.32),"^",3) W !?5,"Period of Service: ",$S($D(^DIC(21,+DGRPX,0)):$P(^(0),"^",1),1:DGRPU)
- N DGPP S DGPP=$$GET1^DIQ(2,DFN_",",.5601,"E") I DGPP]"",$G(DGRP("VET"))="Y" W !," Presumptive Psychosis: ",DGPP ;*977
+ ; DG*5.3*1082 - remove the check for Veteran to display the Presumptive Psychosis field
+ ;N DGPP S DGPP=$$GET1^DIQ(2,DFN_",",.5601,"E") I DGPP]"",$G(DGRP("VET"))="Y" W !," Presumptive Psychosis: ",DGPP ;*977
+ N DGPP S DGPP=$$GET1^DIQ(2,DFN_",",.5601,"E") I DGPP]"" W !," Presumptive Psychosis: ",DGPP
  D ^DGYZODS G:'DGODS CONT S DGRPX=$S($D(^DPT(DFN,"ODS")):^("ODS"),1:"") W !?6,"Recalled to Duty: ",$S($P(DGRPX,"^",2)=1:"FROM NATIONAL GUARDS",$P(DGRPX,"^",2)=2:"FROM RESERVES",$P(DGRPX,"^",2)=0:"NO",1:DGRPU)
  W !?18,"Rank: ",$S($D(^DIC(25002.1,+$P(DGRPX,"^",3),0)):$P(^(0),"^",1),1:DGRPU)
 CONT ;

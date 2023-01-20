@@ -1,5 +1,5 @@
-SDESRTVCLN2 ;ALB/MGD,ANU,LAB - Get Clinic Info based on Clinic IEN ;SEP 1, 2022
- ;;5.3;Scheduling;**823,825**;Aug 13, 1993;Build 2
+SDESRTVCLN2 ;ALB/MGD,ANU,LAB,MGD,ANU - Get Clinic Info based on Clinic IEN ;Nov 4, 2022
+ ;;5.3;Scheduling;**823,825,827,828**;Aug 13, 1993;Build 8
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -13,7 +13,7 @@ SDESRTVCLN2 ;ALB/MGD,ANU,LAB - Get Clinic Info based on Clinic IEN ;SEP 1, 2022
 JSONCLNINFO(RETSDCLNJSON,SDCLNIEN,SDEAS,HASHFLG) ;Get Clinic info
  ;INPUT - SDCLNIEN (Clinic IEN)
  ;      - SDEAS [optional] - Enterprise Appointment Scheduling (EAS) Tracking Number associated to an appointment.
- ;      - HASHFLG - Flag to udpate hash value for clinic or not (0 - no (default), 1- yes ) 
+ ;      - HASHFLG - Flag to udpate hash value for clinic or not (0 - no (default), 1- yes )
  ;RETURN PARAMETER:
  ;
  ;{"Clinic": {
@@ -89,20 +89,27 @@ JSONCLNINFO(RETSDCLNJSON,SDCLNIEN,SDEAS,HASHFLG) ;Get Clinic info
  ;
 ADDHASH(CLIN,ELGFIELDSARRAY,SDCLNJSON,HASHFLG) ;Add hash to output
  NEW HASH,HASHDATE
- D:HASHFLG UPDATECLINICHASH(CLIN,.HASH,.HASHDATE)
+ D:HASHFLG UPDATECLINICHASH(CLIN,.HASH,.HASHDATE,.SDCLNJSON)
  S HASH=$$GET1^DIQ(44,SDCLNIEN_",",2900)
  S HASHDATE=$$FMTISO^SDAMUTDT($$GET1^DIQ(44,CLIN,2901,"I"),CLIN)
  S ELGFIELDSARRAY("Clinic","LastHashTimestamp")=HASHDATE
  S ELGFIELDSARRAY("Clinic","Hash")=HASH
  Q
  ;
-UPDATECLINICHASH(CLIN,HASH,HASHDATE) ;update clinic with new hash
+UPDATECLINICHASH(CLIN,HASH,HASHDATE,SDCLNJSON) ;update clinic with new hash
  N FDA,FDAERR
  S HASH=$$SHAN^XLFSHAN(160,SDCLNJSON(1))
  S HASHDATE=$$NOW^XLFDT
  S FDA(44,CLIN_",",2900)=HASH
  S FDA(44,CLIN_",",2901)=HASHDATE
  D FILE^DIE(,"FDA","FDAERR") K FDA
+ Q
+ ;
+ADDHASH2CLIN(IEN) ; add HASH to clinic after creation of clinic
+ N HASH,HASHDATE,SDCLNJSON,SDCLNSREC
+ D BLDCLNREC(.SDCLNSREC,IEN)
+ D BUILDJSON^SDESBUILDJSON(.SDCLNJSON,.SDCLNSREC)
+ D UPDATECLINICHASH(IEN,.HASH,.HASHDATE,.SDCLNJSON)
  Q
  ;
 VALIDATECLINIC(ERRORS,CLINIC) ;
@@ -122,7 +129,7 @@ VALIDATEHASHFLG(ERRORS,HASHFLG) ;
  ;
 BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  ;
- N SDFIELDS,SDDATA,SDMSG,SDX,SDC,TIMEZONE
+ N SDFIELDS,SDDATA,SDMSG,SDX,SDC,TIMEZONE,USRCNT,USRIEN
  S SDECI=$G(SDECI,0)
  S SDFIELDS=".01;1;3.5;8;9;10;24;60;61;62;1914;2502;2504;2505;2506;2507;2802;99;2000;2000.5;2508;2509;2510;2511;2801;30;2001;2002;1918.5;2503;2500;1916;1918;20;21;1912;1913;1917"
  D GETS^DIQ(44,SDCLNIEN_",",SDFIELDS,"IE","SDDATA","SDMSG")
@@ -203,6 +210,14 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  . S SDC=SDC+1
  . S SDCLNSREC("Clinic","Diagnosis",SDC,"Code")=$G(SDDATA(44.11,SDX,.01,"E"))
  . S SDCLNSREC("Clinic","Diagnosis",SDC,"DefaultForClinic")=$G(SDDATA(44.11,SDX,.02,"E"))
+ ; Return all Privileged Users
+ S (USRCNT,USRIEN)=0
+ F  S USRIEN=$O(^SC(SDCLNIEN,"SDPRIV",USRIEN)) Q:'USRIEN  D
+ .S USRCNT=USRCNT+1
+ .S SDCLNSREC("Clinic","PrivilegedUser",USRCNT,"IEN")=USRIEN
+ .S SDCLNSREC("Clinic","PrivilegedUser",USRCNT,"Name")=$$GET1^DIQ(44.04,USRIEN_","_SDCLNIEN,.01)
+ ;I USRCNT=0 S SDCLNSREC("Clinic","PrivilegedUser","Error",1)="No privileged users are found."
+ ;
  I $D(SDCLNSREC("Clinic")) Q 1
  S SDCLNSREC("Clinic")=""
  Q 0

@@ -1,13 +1,13 @@
 SDTMPUT0 ;MS/SJA - TELEHEALTH SEARCH UTILITY ;Dec 17, 2020
- ;;5.3;Scheduling;**773,779,812,817**;Aug 13, 1993;Build 7
+ ;;5.3;Scheduling;**773,779,812,817,821**;Aug 13, 1993;Build 9
  ;Reference to ^DGCN(391.91 supported by IA #4943
  ;
- N II,ARR,CNT,CODE,DFN,FAC,F407,S407,ICNHA,SIEN,MPI,NODE1,NODE8,NODE99,FICN,SDCL,NODE0,DIV,MCD,INST,INSF
+ N II,ARR,CNT,CODE,DEA,DFN,FAC,F407,S407,ICNHA,SIEN,MPI,NODE1,NODE8,NODE99,FICN,SDCL,NODE0,DIV,MCD,INST,INSF
  N LTZ,SDASH,CTRY,TZEX,SDSL,SDRE,SDIN,SDNO,STP1,STP2,OPT,VADM,XX,ZD
- S $P(SDASH,"=",80)=""
+ S $P(SDASH,"=",81)=""
 EN W @IOF W ?22,"Telehealth Inquiries",!!
  K DIRUT,DUOUT,DIR
- S DIR(0)="SA^C:Clinic;M:Medical Center Division;I:Institution;P:Patient Information;N:Patient ICN;L:List Stop Codes;S:Stop Code Lookup;SN:Station Number (Time Sensitive);Q:QUIT"
+ S DIR(0)="SA^C:Clinic;M:Medical Center Division;I:Institution;P:Patient Information;N:Patient ICN;L:List Stop Codes;S:Stop Code Lookup;SN:Station Number (Time Sensitive);R:Clinic Schedule Queuing Report;Q:QUIT"
  S DIR("A",1)="      Select one of the following:"
  S DIR("A",2)=""
  S DIR("A",3)="          C         Clinic"
@@ -18,7 +18,8 @@ EN W @IOF W ?22,"Telehealth Inquiries",!!
  S DIR("A",8)="          L         List Telehealth Stop Codes"
  S DIR("A",9)="          S         Telehealth Stop Code Lookup"
  S DIR("A",10)="          SN        Station Number (Time Sensitive)"
- S DIR("A",11)=""
+ S DIR("A",11)="          R         Clinic Schedule Queuing Report"
+ S DIR("A",12)=""
  S DIR("A")="Search Option or (Q)uit: "
  D ^DIR K DIR I Y="Q"!$D(DTOUT)!$D(DIRUT) G END
  S OPT=Y W !
@@ -26,13 +27,14 @@ EN W @IOF W ?22,"Telehealth Inquiries",!!
  G EN
  ;
 C ; Search by clinic
- K DIC,SDCL,SDNO,NOD0,PNODE,DIV,SDSL,MCD,INST,INSF,LTZ,CTRY,TZEX
+ K DIC,SDCL,SDNO,NOD0,PNODE,DIV,SDSL,MCD,INST,INSF,LTZ,CTRY,TZEX,CHAR4,CHAR4DSC
  S DIC="^SC(",DIC(0)="AEMQZ",DIC("S")="I $P(^(0),""^"",3)=""C"",'$G(^(""OOS""))"
  S DIC("A")="Select CLINIC: " D ^DIC K DIC("S"),DIC("A") Q:"^"[X  I +Y'>0 G:+Y<0 C
  S SDCL=Y
  S SDNO="",NODE0=$G(^SC(+SDCL,0)),DIV=$P(NODE0,U,15)
  S SDSL=$G(^SC(+SDCL,"SL")),MCD=$G(^DG(40.8,DIV,0)),INST=$P(MCD,U,7)
  S INSF=$G(^DIC(4,INST,8)),LTZ=$P(INSF,U),CTRY=$P(INSF,U,2),TZEX=$P(INSF,U,3)
+ S CHAR4=$$CHAR4^SDESUTIL($P(SDCL,U,2)) S CHAR4DSC=$S(CHAR4="":"",1:CHAR4_"-"_$$CHAR4DSC^SDTMPUTL(CHAR4))
  W !!,SDASH,!
  W !,"Clinic",?18,": ",$TR(SDCL,"^","-")
  W !,"Default Provider",?18,": " I $P(NODE0,U,13) W $P(NODE0,U,13),"-",$P(^VA(200,$P(NODE0,U,13),0),U)
@@ -44,36 +46,42 @@ C ; Search by clinic
  W !,"Station Number",?18,": ",$$GET1^DIQ(4,INST_",",99,"E")
  W !,"Stop Code",?18,": ",$P(NODE0,U,7),"-",$$GET1^DIQ(40.7,$P(NODE0,U,7),.01)," (",$$GET1^DIQ(40.7,$P(NODE0,U,7),1),")"
  W !,"Credit Stop Code",?18,": ",$P(NODE0,U,18),"-",$$GET1^DIQ(40.7,$P(NODE0,U,18),.01)," (",$$GET1^DIQ(40.7,$P(NODE0,U,18),1),")"
+ W !,"CHAR4",?18,": ",CHAR4DSC ;821
  W !,"Country",?18,": ",CTRY,"-",$$GET1^DIQ(779.004,CTRY,.01)
  W !,"Location Timezone",?18,": ",LTZ,"-",$$GET1^DIQ(1.71,LTZ,.01)
  W !,"Timezone Exception",?18,": ",TZEX
  W !,"Overbooks per day",?18,": ",$P(SDSL,U,7)
+ W !,"Spec Instructions",?18,":"
+ D SI
  D ACT
  W !,SDASH,!! G C
  Q
  ;
 M ; Search by Medical Center Division
- K DIC,ZD,MCD,INST,INSF,LTZ,CTRY,TZEX
+ K DEA,DIC,ZD,MCD,INST,INSF,LTZ,CTRY,TZEX
  S DIC="^DG(40.8,",DIC(0)="AEMQ" D ^DIC K DIC
  Q:"^"[X  I +Y'>0 W !,$C(7),"Division not found. Please try again."  G M
  S ZD=+Y
  S MCD=$G(^DG(40.8,ZD,0)),INST=$P(MCD,U,7)
  S INSF=$G(^DIC(4,INST,8)),LTZ=$P(INSF,U),CTRY=$P(INSF,U,2),TZEX=$P(INSF,U,3)
+ S DEA=$G(^DIC(4,INST,"DEA"))
  W !!,SDASH,!
  W !,"Medical Division",?18,": ",ZD,"-",$$GET1^DIQ(40.8,ZD,.01)
  W !,"Facility Number",?18,": ",$P(MCD,U,2)
  W !,"Institution",?18,": ",INST,"-",$$GET1^DIQ(4,INST,.01)
+ W !,"Facility DEA #",?18,": ",$P(DEA,U)
+ W !,"Facility Exp. date",?18,": ",$$FMTE^XLFDT($P(DEA,U,2),2)
  W !,SDASH,!! G M
  Q
  ;
 I ; search by Institution
- K DIC,FAC,NOD0,NODE1,NODE8,II,ARR,LTZ,CTRY,TZEX,NODE99
+ K DEA,DIC,FAC,NOD0,NODE1,NODE8,II,ARR,LTZ,CTRY,TZEX,NODE99
  S DIC="^DIC(4,",DIC(0)="AEMNQ" D ^DIC  K DIC Q:Y<1 0
  Q:"^"[X  I +Y'>0 W !,$C(7),"Institution not found. Please try again." G I
  S FAC=Y
  S NODE0=$G(^DIC(4,+Y,0)),NODE1=$G(^DIC(4,+Y,1))
  S NODE8=$G(^DIC(4,+Y,8)),LTZ=$P(NODE8,U),CTRY=$P(NODE8,U,2),TZEX=$P(NODE8,U,3)
- S NODE99=$G(^DIC(4,+Y,99))
+ S NODE99=$G(^DIC(4,+Y,99)),DEA=$G(^DIC(4,+FAC,"DEA"))
  W !!,SDASH,!
  W !,"Name",?18,": ",$TR(FAC,"^","-")
  W !,"City",?18,": ",$P(NODE1,U,3)
@@ -84,8 +92,8 @@ I ; search by Institution
  W !,"Timezone Exception",?18,": ",TZEX
  W !,"Country",?18,": ",CTRY,"-",$$GET1^DIQ(779.004,CTRY,.01)
  W !,"Station #",?18,": ",$P(NODE99,U)
- W !,"Facility DEA #:",?18,": ",$P($G(^DIC(4,+FAC,"DEA")),U)
- W !,"Facility Exp. date",?18,": ",$P($G(^DIC(4,+FAC,"DEA")),U,2)
+ W !,"Facility DEA #",?18,": ",$P(DEA,U)
+ W !,"Facility Exp. date",?18,": ",$$FMTE^XLFDT($P(DEA,U,2),2)
  S II=0 F  S II=$O(^DIC(4,+FAC,7,II)) Q:'II  K ARR D GETS^DIQ(4.014,II_","_+FAC,".01;1","E","ARR") D
  . W !,"Association",?18,": ",II_"-"_ARR(4.014,II_","_+FAC_",",.01,"E")
  . W ?40,"  Parent",": ",II_"-"_ARR(4.014,II_","_+FAC_",",1,"E")
@@ -182,7 +190,7 @@ ICN ; full ICN history
 ACT ; inactive clinic
  I $D(^SC(+SDCL,"I")) S SDRE=+$P(^("I"),U,2),SDIN=+^("I") I SDRE'=SDIN I SDIN'>DT&(SDRE=0!(SDRE>DT)) D
  . S Y=SDIN D DTS^SDUTL W !!,?4,"**** Clinic is inactive ",$S(SDRE:"from ",1:"as of "),Y S Y=SDRE D:Y DTS^SDUTL W $S(SDRE:" to "_Y,1:"")," ****" K SDIN,SDRE S SDNO=1
- I 'SDNO,$D(SDIN),SDIN>DT,SDRE'=SDIN W !!,?4,"**** Clinic will be inactive ",$S(SDRE:"from ",1:"as of ") S Y=SDIN D DTS^SDUTL W Y S Y=SDRE D:Y DTS^SDUTL W $S(SDRE:" to "_Y,1:"")," ****" K SDIN,SDRE
+ I 'SDNO,$D(SDIN),SDIN>DT,SDRE'=SDIN W !,?4,"**** Clinic will be inactive ",$S(SDRE:"from ",1:"as of ") S Y=SDIN D DTS^SDUTL W Y S Y=SDRE D:Y DTS^SDUTL W $S(SDRE:" to "_Y,1:"")," ****" K SDIN,SDRE
  Q
  ;
 END K ARR,CNT,CODE,CTRY,DFN,FAC,F407,S407,ICNHA,SIEN,II,MPI,NODE1,NODE8,NODE99,FICN,SDCL,NODE0,DIV,MCD,INST,INSF
@@ -248,4 +256,20 @@ SDCLN ;Clean up variables
 SDHELP ;Help text
  W !,"   Enter the local or national Integration Control Number (ICN)",!
  W "   assigned to the patient.",!
+ Q
+ ;
+SI ;Parse and display special instructions
+ N N,I,E,S
+ S N=+$P($G(^SC(+SDCL,"SI",0)),U,3)
+ I N=0 Q
+ F I=1:1:N S X=$G(^SC(+SDCL,"SI",I,0)) D
+  . I X="" Q
+  . I $L(X)<61 W ?20,X W:I<N ! Q 
+  . S E=48 F  S E=$F(X," ",E) Q:E=0!(E>60)  S S=E
+  . W ?20,$E(X,1,S-1),!,?22,$E(X,S,99)
+  . I I<N W !
+ Q
+ ;
+R ;Clinic schedule queuing report
+ D BEGIN^SDTMPPRC
  Q

@@ -1,5 +1,5 @@
 SDHL7APT ;MS/TG,PH - TMP HL7 Routine;AUG 17, 2018
- ;;5.3;Scheduling;**704,714,754,773,780,798,810,817**;AUG 17, 2018;Build 7
+ ;;5.3;Scheduling;**704,714,754,773,780,798,810,817,821**;AUG 17, 2018;Build 9
  ;
  ;  Integration Agreements:
  Q
@@ -21,7 +21,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ;
  ; Output:
  ;          Positive (AA) or negative acknowledgement (AE - with appropriate error text)
- ;    
+ ;
  ;  Integration Agreements: NONE
  ;
  N MSGROOT,DATAROOT,QRY,XMT,ERR,RNAME,IX,REQIEN     ;817 reqien
@@ -35,9 +35,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ;
  S MSGROOT="SDHL7APT"
  K @MSGROOT
- N EIN
- S EIN=$$FIND1^DIC(101,,,"SD TMP S12 SERVER EVENT DRIVER")
- ;
+ N EIN S EIN=HL("EID") ;ien of HL7 server receiving msg 821
  D LOADXMT^SDHL7APU(.HL,.XMT)         ;Load inbound message information
  K ACKMSG S ACKMSG=$G(HL("MID"))
  S RNAME=XMT("MESSAGE TYPE")_"-"_XMT("EVENT TYPE")_" RECEIVER"
@@ -45,7 +43,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  N CNT,SEG
  K @MSGROOT
  D LOADMSG^SDHL7APU(MSGROOT)
- ;
  D PARSEMSG^SDHL7APU(MSGROOT,.HL)
  ;
  N APPTYPE,AILNTE,DFN,RET,CNT,PID,PV1,RGS,AIS,AIG,AISNTE,OVB,OFFSET,AIP,RTCID,AIPNTE,INP,SETID,EXTIME,SCHNTE,SCH,SDMTC,QRYDFN,MSGCONID,LST,MYRESULT,HLA,PTIEN,SCPER,ATYPIEN
@@ -71,7 +68,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ..I +SETID=0 S ERR=1,ERRTXT="Invalid RGS SetID received" Q
  ..M RGS(SETID)=@MSGROOT@(CNT)
  ..S GRPCNT=GRPCNT+1
- ..Q
  .I SEGTYPE="AIS" M AIS(SETID)=@MSGROOT@(CNT) Q
  .I SEGTYPE="NTE",(PREVSEG="AIS") M AISNTE(SETID)=@MSGROOT@(CNT) Q
  .I SEGTYPE="AIG" M AIG(SETID)=@MSGROOT@(CNT) Q
@@ -80,19 +76,15 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .I SEGTYPE="NTE",(PREVSEG="AIL") M AILNTE(SETID)=@MSGROOT@(CNT) Q 
  .I SEGTYPE="AIP" M AIP(SETID)=@MSGROOT@(CNT) Q
  .I SEGTYPE="NTE",(PREVSEG="AIP") M AIPNTE(SETID)=@MSGROOT@(CNT)
- .Q
  I $G(AIL(2,4))="R" D  ;Check to see if this is an intrafacility rtc order and set the rtc number to null on the second AIL second so both appointments file.
  .I $G(AIL(2,4))=$G(AIL(1,4)) S AIL(2,4)="",AIL(2,4)=""
  ;
  S MSAHDR="MSA^1^^100^AE^"
  I +ERR D  Q
- .S ERR=$G(MSAHDR)_$E(ERRTXT,1,50)
+ .S ERR=$G(MSAHDR)_$E(ERRTXT,1,52)
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
- .Q
- ;
  K SCHNW,INP,PCE,SCPER,ATYPIEN
- ;
  ; Loop to populate MSGARY, INP arrays which are used in ^SDECAR2 (to create appt request) and ^SDEC07 (to create appt)
  N MSGARY,SDCL2,SDCL3
  D MSH^SDHL7APU(.MSH,.INP,.MSGARY)
@@ -111,7 +103,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .D AILNTE^SDHL7APU(.AILNTE,IX,.INP)
  .D AIP^SDHL7APU(.AIP,IX,.INP,.MSGARY)
  .D AIPNTE^SDHL7APU(.AIPNTE,IX,.INP)
- .Q
  N %,NOW
  D NOW^%DTC S CURDTTM=$$TMCONV^SDTMPHLA(%,$$KSP^XUPARAM("INST")) ;773
  S NOW=$$HTFM^XLFDT($H),INP(3)=$$FMTE^XLFDT(NOW)
@@ -121,33 +112,25 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ;
  N X11 S X11=$P($G(SDAPTYP),"|") S:$G(X11)="" X11="A"
  S INP(9)=$S(X11="A":"PATIENT",1:"PROVIDER") ;request by provider or patient. RTC orders and consults will always be PROVIDER otherwise it is PATIENT
- ;
  K DFN
  S (DFN,INP(2))=$$GETDFN^MPIF001(MSGARY("MPI"))
  I $P(DFN,U,2)="NO ICN"!($P(DFN,U,2)="ICN NOT IN DATABASE") D  Q
  .S ERR=$G(MSAHDR)_"PATIENT ICN NOT FOUND"
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
- .Q
  ;
  N STOPME
  I $P($G(SDAPTYP),"|",1)="C"!($P($G(SDAPTYP),"|",1)="R") D CHKCON^SDHLAPT2(DFN,SDAPTYP) I $G(STOPME)=1 Q
- ;
  I $G(SDCL)="" D  Q
  .S ERR=$G(MSAHDR)_"CLINIC ID IS NULL",STOPME=1
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
- .Q
- ;
  Q:$G(STOPME)=1
- ;
  I '$D(^SC($G(SDCL),0)) D  Q
  .Q:$G(AIL(1,3,1,4))'=$P(^DIC(4,$$KSP^XUPARAM("INST"),99),"^")
  .S ERR=$G(MSAHDR)_"NOT A CLINIC AT THIS SITE "_$G(SDCL)
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
- .Q
- ;
  S STOPME=0
  I $G(SDCL2)>0 D
  .Q:$G(AIL(2,3,1,4))'=$P(^DIC(4,$$KSP^XUPARAM("INST"),99),"^")
@@ -171,7 +154,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .S ERR=$G(MSAHDR)_"Invalid Start Date sent"
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
- .Q
  ;
  ;PB - 714 fix to stop duplicate appointments for the patient
  S STOPME=0
@@ -180,7 +162,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .S ERR=$G(MSAHDR)_"PATIENT ALREADY HAS AN APPT AT ON "_$$FMTE^XLFDT(FLMNFMT),STOPME=1
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
- .Q
  Q:$G(STOPME)=1
  S STOPME=0
  I $G(INTRA)=1 D
@@ -197,12 +178,10 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ...S ERR=$G(MSAHDR)_"PATIENT ALREADY HAS AN APPT AT ON "_$$FMTE^XLFDT(FLMNFMT2),STOPME=1
  ...D SENDERR^SDHL7APU(ERR)
  ...K @MSGROOT
- .Q
  Q:$G(STOPME)=1
  I $L(SDECLEN),$L($G(SCH(10))) D
  .I $G(SCH(10))="MIN" S SDECEND=$$FMADD^XLFDT(FLMNFMT,,,$G(SDECLEN))
  .I $G(SCH(10))="HR" S SDECEND=$$FMADD^XLFDT(FLMNFMT,,$G(SDECLEN))
- .Q
  ;
  N TMPARR,LEN
  S LEN=0,ERRSND=0,ERRTXT="",MSGROOT="SDTMPHL"
@@ -244,76 +223,60 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .S:$G(AIL(1,3,1,4))=$G(AIL(2,3,1,4)) INTRA=1
  .I $G(INTRA)=1 D NEWTIME^SDHLAPT2
  .N HLRESLT,X
- .I $G(INTRA)=0 D
- ..I '$$CHKLL^HLUTIL($G(STA)) D  Q
- ...S ERRSND=1,ERRTXT=$E("Invalid Link assoc with institution: "_$G(STA),1,48)
- ..Q
- .K HLA,HLEVN
+ .I $G(INTRA)=0,'$$CHKLL^HLUTIL($G(STA)) D  Q     ;821 quit@single dot, so errtxt can be sent now
+ ..S ERRSND=1,ERRTXT=$E("Invalid Link assoc with institution: "_$G(STA),1,52)
+ .N HLA,HLEVN   ;821 new instead of kill
  .N MC,HLFS,HLCS,IXX
  .F IXX=1:1:CNT S HLA("HLS",IXX)=$G(@MSGROOT@(IXX))
  .M HLA("HLA")=HLA("HLS")
- .S EIN=$$FIND1^DIC(101,,,"SD IFS EVENT DRIVER")
  .;the following HL* variables are created by DIRECT^HLMA
  .N HL,HLCS,HLDOM,HLECH,HLFS,HLINST,HLINSTN,HLMTIEN,HLNEXT,HLNODE,HLPARAM,HLPROD,HLQ,HLQUITQ,SDLINK,OROK,MSASEG,ERRRSP
- .;
+ .;  more HL News, to protect Orig incoming HL* variables vs Intra/Inter msgs occurring real time below.   ;821
+ .N HLL,HLMTIENS,HL771RF,HL771SF,HLARTYP,HLASTMSG,HLASTRSP,HLDBACK,HLDBSIZE,HLDP,HLDREAD,HLDRETR,HLDWAIT,HLIED,HLEIDS,HLENROU,HLFORMAT,HLHDRO,HLLSTN,HLMIDAR
+ .N HLORNOD,HLOS,HLP,HLPID,HLPROU,HLQUIT,HLREC,HLRESLT,HLRETRA,HLFREQ,HLTCP,HLTCPADD,HLTCPCS,HLTPCI,HLTCPLNK,HLTCPO,HLTCPORT,HLTCPRET,HLTMBUF,HLEXROU,HLMTIENA
  .I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S12" D
  ..K HL
  ..D:$G(INTRA)=0 INIT^HLFNC2("SD IFS EVENT DRIVER",.HL)
  ..D:$G(INTRA)=1 INIT^HLFNC2("SD TMP SEND INTRAFACILITY",.HL) ;if intra
- ..Q
  .I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S15" D
  ..K HL
  ..D:$G(INTRA)=0 INIT^HLFNC2("SD TMP S15 SERVER EVENT DRIVER",.HL)
  ..D:$G(INTRA)=1 INIT^HLFNC2("SD TMP SEND CANCEL INTRA",.HL) ;if intra
- ..Q
  .I $G(STA)="" S STA=$G(AIL(2,3,1,4)),STA=$$GETSTA^SDHL7APU(STA)
  .D LINK^HLUTIL3(STA,.SDLINK,"I")
  .S SDLINK=$O(SDLINK(0))
  .I SDLINK="" D  Q
  ..Q:$G(INTRA)=1
- ..S ERRSND=1,ERRTXT=$E("Message link undefined for facility: "_$G(STA),1,48)
- ..Q 
+ ..S ERRSND=1,ERRTXT=$E("Message link undefined for facility: "_$G(STA),1,52)
  .S SDLINK=SDLINK(SDLINK)
  .;817 removed code setting HLL("LINKS") for INTRA type appts. Not used for internal HL7 processing. TMP-1559
  .I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S12" D
  ..S:$G(INTRA)=0 HLL("LINKS",1)="SD IFS SUBSCRIBER"_U_$G(SDLINK)
- ..Q
  .I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S15" D
  ..S:$G(INTRA)=0 HLL("LINKS",1)="SD TMP S15 CLIENT SUBSCRIBER"_U_$G(SDLINK)
- ..Q
  .S HLMTIEN=""
  .I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S12" D
- ..D:$G(INTRA)=0 DIRECT^HLMA("SD IFS EVENT DRIVER","LM",1,.OROK) ;GENERATE   /SD IFS EVENT DRIVER/////SD TMP S12 CLIENT SUBSCRIBER TOMS CODE
- ..I $G(INTRA)=1 D GENERATE^HLMA("SD TMP SEND INTRAFACILITY","LM",1,.OROK) S HLMTIEN=+OROK ;GENERATE   /SD IFS EVENT DRIVER/////SD TMP S12 CLIENT SUBSCRIBER TOMS CODE
- ..Q
+ ..D:$G(INTRA)=0 DIRECT^HLMA("SD IFS EVENT DRIVER","LM",1,.OROK)
+ ..I $G(INTRA)=1 D GENERATE^HLMA("SD TMP SEND INTRAFACILITY","LM",1,.OROK) S HLMTIEN=+OROK
  .I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S15" D
- ..D:$G(INTRA)=0 DIRECT^HLMA("SD TMP S15 SERVER EVENT DRIVER","LM",1,.OROK) ;GENERATE   /SD IFS EVENT DRIVER/////SD TMP S12 CLIENT SUBSCRIBER
- ..I $G(INTRA)=1 D GENERATE^HLMA("SD TMP SEND CANCEL INTRA","LM",1,.OROK) S HLMTIEN=+OROK  ;GENERATE   /SD IFS EVENT DRIVER/////SD TMP S12 CLIENT SUBSCRIBER
- ..Q
- .I 'HLMTIEN D  Q
- ..S ERRSND=1,ERRTXT=$E("Message sent to remote facility unsuccessful: "_$G(STA),1,48)
- ..Q
+ ..D:$G(INTRA)=0 DIRECT^HLMA("SD TMP S15 SERVER EVENT DRIVER","LM",1,.OROK)
+ ..I $G(INTRA)=1 D GENERATE^HLMA("SD TMP SEND CANCEL INTRA","LM",1,.OROK) S HLMTIEN=+OROK
+ .I 'HLMTIEN S ERRSND=1,ERRTXT=$E("ERROR-PROVIDER FACILITY #"_$G(STA)_":"_$P(OROK,U,2)_":"_$P(OROK,U,3),1,99) Q   ;821 increase all Errtxt from 48 to 99
  .K @MSGROOT
  .;Process response
- .;NOTE: OCT 25 - need to test this to see if it will quit properly
  .I $G(INTRA)=0 D
  ..N HLNODE,SEG,I,RESP,IK
- ..;H 2
  ..F IK=1:1 X HLNEXT Q:HLQUIT'>0  D
  ...S RESP(IK)=HLNODE
- ...Q
  ..S MSASEG=$G(RESP(2))
- ..I $E(MSASEG,1,3)="MSA",$P(MSASEG,"|",2)="AE" S ERRSND=1,ERRTXT=$$STRIP^SDHL7APU($P(MSASEG,"|",4)),ERRTXT=$E(ERRTXT,1,50)
- .Q
+ ..I $E(MSASEG,1,3)="MSA",$P(MSASEG,"|",2)="AE" S ERRSND=1,ERRTXT=$$STRIP^SDHL7APU($P(MSASEG,"|",4)),ERRTXT=$E(ERRTXT,1,52)
  ;
- I +ERRSND D  Q
+ I +ERRSND D  Q   ;**** Provider side error, exit and do not file patient side appt. ****
  .S ERR=$G(MSAHDR)_ERRTXT
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
- .Q
+ ;Begin Appt filing
  K @MSGROOT
- D INIT^HLFNC2(EIN,.HL)
- S HL("FS")="|",HL("ECH")="^~\&"
  S (SDSVCP,SDSVCPR,SDEKG,SDXRAY,SDLAB,SDECCR,SDECY,SDID,APPTYPE,EESTAT,SDEL)="",SDCL=$G(AIL(1,3,1,1))
  S SDECRES=$$RESLKUP^SDHL7APU($G(SDCL))
  S SDECRES=SDECRES,OVB=1
@@ -348,7 +311,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .I SUCCESS=0 S ERRTXT=$P($G(^TMP("SDEC07",$J,2)),"^",3)
  .I ((SUCCESS=0)&(ERRTXT="")) D
  ..S ERRTXT=$P($G(^TMP("SDEC07",$J,3)),"^",2)
- ..Q
  .I $L(ERRTXT) S ERRCND=9999
  .S DUZ(2)=$G(STA)
  .I $G(SUCCESS)>0 D
@@ -365,12 +327,6 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ....S INP(1)=$P(^SDEC(409.85,SDPARENT,2,X12,0),"^"),INP(2)="MC",INP(3)=$G(DUZ),DUZ(2)=$G(STA)
  ....S INP(4)=$$FMTE^XLFDT(DT)
  ....D ARCLOSE^SDECAR(.RET,.INP)
- ....Q
- ...;S $P(^SDEC(409.85,+SDPARENT,0),"^",5)="APPT"
- ...Q
- ..Q
- .Q
- ;SECAPPT ; If this is an intrafacility appointment make the second appointment  <<GSN, THIS COMMENT MEANS NOTHING
  ;Begin S15 processing (cancel)
  I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S15" D
  .N XDT,%D,X,Y,STARTDT,ERRTXT,ERRCND
@@ -386,22 +342,14 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .I +$L(ERRTXT)>0 S ERRCND=9999
  .D CHKCAN^SDHLAPT2(DFN,SDCL,STARTDT)
  ;
- I +ERRCND D
- .S ERRTXT=$$ERRLKP^SDHL7APU(ERRTXT)
- .Q 
+ I +ERRCND S ERRTXT=$$ERRLKP^SDHL7APU(ERRTXT)
  S ERRTXT=$$STRIP^SDHL7APU(ERRTXT)
  ;
  ;****BUILD THE RESPONSE MSA
  K @MSGROOT
  N HLA
- ;
- D INIT^HLFNC2(EIN,.HL)
- S HL("FS")="|",HL("ECH")="^~\&"
- ;
  N ERR,LEN S ERR=""
- N FOUNDCN
- S FOUNDCN=0
- ;
- S HLA("HLA",1)="MSA"_HL("FS")_$S(ERRCND:"AE",1:"AA")_HL("FS")_HL("MID")_HL("FS")_$S(ERRCND:$E(ERRTXT,1,50),1:"")_HL("FS")
+ N FOUNDCN S FOUNDCN=0
+ S HLA("HLA",1)="MSA"_HL("FS")_$S(ERRCND:"AE",1:"AA")_HL("FS")_HL("MID")_HL("FS")_$S(ERRCND:$E(ERRTXT,1,52),1:"")_HL("FS")
  D GENACK^HLMA1(HL("EID"),HLMTIENS,HL("EIDS"),"LM",1,.MYRESULT)
  Q

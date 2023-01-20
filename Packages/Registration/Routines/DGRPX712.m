@@ -1,4 +1,4 @@
-DGRPX712 ; ;08/14/22
+DGRPX712 ; ;01/20/23
  D DE G BEGIN
 DE S DIE="^DPT(D0,.373,",DIC=DIE,DP=2.05,DL=2,DIEL=1,DU="" K DG,DE,DB Q:$O(^DPT(D0,.373,DA,""))=""
  I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,1) S:%]"" DE(1)=% S %=$P(%Z,U,2) S:%]"" DE(2)=%

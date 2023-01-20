@@ -1,5 +1,5 @@
 DGLOCK1 ;ALB/MRL,JAM,ARF,JAM - PATIENT FILE DATA EDIT CHECK ; 28 JUL 86
- ;;5.3;Registration;**121,314,1014,1061,1075,1081**;Aug 13, 1993;Build 4
+ ;;5.3;Registration;**121,314,1014,1061,1075,1081,1082**;Aug 13, 1993;Build 29
 AOD ;AO Delete
  I $D(^DPT(DFN,.321)),$P(^(.321),U,2)="Y" W !?4,*7,"Can't delete as long as Agent Orange exposure is indicated." K X
  Q
@@ -66,6 +66,8 @@ ECD ;primary eligibility code input transform
  S DIC("S")="I $P(^DIC(8,+Y,0),U,5)=DGVT,'$P(^(0),U,7),$$NATCODE^DGENELA(+Y)'=24&($$NATCODE^DGENELA(+Y)'=25)&($$NATCODE^DGENELA(+Y)'=26)"
  ; DG*5.3*1081 - EXPANDED MH CARE NON-ENROLLEE cannot be Primary Elig Code if INELIGIBLE DATE (field .152) is set
  I $$GET1^DIQ(2,DFN,.152)'="" S DIC("S")=DIC("S")_",$$NATCODE^DGENELA(+Y)'=23"
+ ; DG*5.3*1082 Add the PRESUMPTIVE PSYCHOSIS ELIGIBLE eligibility code 28 to the codes for the screening logic for the PRIMARY ELIGIBILITY CODE prompt
+ S DIC("S")=DIC("S")_",$$NATCODE^DGENELA(+Y)'=28"
  I DGVT="N" G ECDS
  I DGSER S DGPC=$S(+$P(^DPT(DFN,.3),U,2)>49:1,1:0),DGXX=$S(DGPC:1,1:3),DIC("S")=DIC("S")_",($P(^(0),U,9)="_DGXX_")" G ECDS ;sc only
  I $P($G(^DPT(DFN,.52)),"^",5)="Y" S DIC("S")=DIC("S")_",($P(^(0),U,9)=18)" G ECDS ;pow only
@@ -88,6 +90,8 @@ ECDS D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X
  I $G(X),$$NATCODE^DGENELA(X)=25 K X Q
  ; DG*5.3*1075 Prevent HUD-VASH eligibility code 26 from being a primary eligibility
  I $G(X),$$NATCODE^DGENELA(X)=26 K X Q
+ ; DG*5.3*1082 Prevent PRESUMPTIVE PSYCHOSIS ELIGIBLE eligibility code 28 from being entered as a primary eligibility
+ I $G(X),$$NATCODE^DGENELA(X)=28 K X Q
  ;
  ; DG*5.3*1014 - if editing Primary Eligibility "COLLATERAL OF VET", save off any CCPs
  I $G(X),DGCOV D REMOVE^DGRP1152U(DFN)

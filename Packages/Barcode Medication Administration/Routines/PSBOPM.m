@@ -1,5 +1,5 @@
 PSBOPM ;BIRMINGHAM/BSR - BCMA OIT HISTORY ;Sep 02, 2020@15:05:53
- ;;3.0;BAR CODE MED ADMIN;**3,9,13,17,40,70,72,83,82**;Mar 2004;Build 27
+ ;;3.0;BAR CODE MED ADMIN;**3,9,13,17,40,70,72,83,82,136**;Mar 2004;Build 7
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; Reference/IA
@@ -305,8 +305,9 @@ WRAPMEDS(W,SITE,MED,UG,UO,UOA,TYP)  ;insert parm W (possible RM string) to print
  .S UGWRAP=$E(UG,CNT,(CNT+14))
  .; PSB*3.0*82 rbd Units Ordered & Site handling next 3 lines of code
  .S UOWRAP=$E(UO,CNT,(CNT+14))
- .I CNT=1 D ADD(W_$E(MED_PSBSPC,1,43)_" "_$E(SITE_PSBSPC,1,25)_"   "_$$PAD(UOWRAP,11)_" "_$$PAD(UGWRAP,11)_" "_$$PAD(UOA1,11),TYP)
- .I (CNT>1),($L(UGWRAP)>0!$L(@("UOA"_CNT))>0) D ADD($J("",99)_$$PAD(UOWRAP,11)_" "_$$PAD(UGWRAP,11)_" "_$$PAD(@("UOA"_CNT),11),TYP)
+ .;P136 reduce SITE_PSBSPC,1,24(25);UOWRAP,9(11);UGWRAP,9(11);$J,97(99);Increase UOA1,15(11); UOA,15(11)
+ .I CNT=1 D ADD(W_$E(MED_PSBSPC,1,43)_" "_$E(SITE_PSBSPC,1,24)_"  "_$$PAD(UOWRAP,9)_" "_$$PAD(UGWRAP,9)_" "_$$PAD(UOA1,15),TYP)
+ .I (CNT>1),($L(UGWRAP)>0!$L(@("UOA"_CNT))>0) D ADD($J("",97)_$$PAD(UOWRAP,9)_" "_$$PAD(UGWRAP,9)_" "_$$PAD(@("UOA"_CNT),15),TYP)
  Q
  ;
 PAD(X,CNT) ;
@@ -375,6 +376,12 @@ MAKELINE(X,CNT) ;LINE OF WHAT'S PASSED IN CNT TIMES
  Q Y
  ;
 PARSE(X,CNT) ;Split text for wrapping.
+ ;Begin P136
+ N VAR
+ S VAR="UOA"_CNT
+ S @VAR=$E(X,CNT,CNT+14)
+ Q
+ ;End of P136, the below lines do not need anymore
  S CNTX="UOA"_CNT,@CNTX=@CNTX_$E(X,CNT,(CNT+14)),UOAX=""
  F  S:$F(@CNTX,", ",+UOAX)>0 UOAX=$F(@CNTX,", ",+UOAX)  Q:'$F(@CNTX,", ",+UOAX)
  I UOAX<1 F  S:$F(@CNTX," ",+UOAX)>0 UOAX=$F(@CNTX," ",+UOAX)  Q:'$F(@CNTX," ",+UOAX)

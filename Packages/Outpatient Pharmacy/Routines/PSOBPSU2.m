@@ -1,5 +1,5 @@
 PSOBPSU2 ;BIRM/MFR - BPS (ECME) Utilities 2 ;10/15/04
- ;;7.0;OUTPATIENT PHARMACY;**260,287,289,341,290,358,359,385,421,459,482,512,544,562**;DEC 1997;Build 19
+ ;;7.0;OUTPATIENT PHARMACY;**260,287,289,341,290,358,359,385,421,459,482,512,544,562,660**;DEC 1997;Build 1
  ;Reference to File 200 - NEW PERSON supported by IA 10060
  ;Reference to DUR1^BPSNCPD3 supported by IA 4560
  ;Reference to $$NCPDPQTY^PSSBPSUT supported by IA 4992
@@ -262,8 +262,13 @@ UPDFL(RXREC,SUB,INDT) ;update fill date with release date when NDC changes at CM
  I SUB S (OLD,X)=+$P($G(^PSRX(RXREC,1,SUB,0)),"^"),DA(1)=RXREC,DA=SUB,OFILLD=$$GET1^DIQ(52.1,DA_","_RXREC,.01,"I") Q:OFILLD=EXDAT  D
  . S DIE="^PSRX("_DA(1)_",1,",DR=".01///"_EXDAT D ^DIE K DIE S $P(^PSRX(RXREC,3),"^")=EXDAT
  Q:$D(DTOUT)!($D(DUOUT))
- S DA=RXREC
- D AREC^PSOSUCH1
+ ;start of pso 660 code
+ N PSOSUSPA,RXRECI S RXRECI=$O(^PS(52.5,"B",RXREC,0)) S:RXRECI PSOSUSPA=$P($G(^PS(52.5,RXRECI,0)),"^",5)
+ S COM="Change "_$S($G(PSOSUSPA):"Partial",'$G(SUB):"Fill",1:"Refill")_" Date "_$E(OFILLD,4,5)_"/"_$E(OFILLD,6,7)_"/"_$E(OFILLD,2,3)_" to "_$E(INDT,4,5)_"/"_$E(INDT,6,7)_"/"_$E(INDT,2,3)
+ D RXACT(RXREC,SUB,COM,"S",DUZ)
+ ;S DA=RXREC
+ ;D AREC^PSOSUCH1
+ ; end of pso 660 code
 FIN ;
  Q
  ;

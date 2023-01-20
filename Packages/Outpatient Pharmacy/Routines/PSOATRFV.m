@@ -1,10 +1,16 @@
-PSOATRFV ;BIR/MHA - Automate VCC Refill request ;Jul 18, 2021@09:47:58
- ;;7.0;OUTPATIENT PHARMACY;**642**;DEC 1997;Build 9
+PSOATRFV ;BIR/MHA,KML - Automate VCC Refill request ;April 11,2022
+ ;;7.0;OUTPATIENT PHARMACY;**642,679**;DEC 1997;Build 16
  ;Reference to ^PSSLOCK supported by DBIA 2789
  ;Reference ^PSDRUG supported by DBIA 221
  ;Reference ^PS(55 supported by DBIA 2228
  ;
-REF(PSORXN,PSOUSR,PSOITMG) ;process refill request
+REF(PSORXN,PSOUSR,PSORFSRC,PSOITMG) ;process refill request
+ ; Input:  
+ ; PSORX      (required) - Prescription Number
+ ; PSOUSR    (optional) - User requesting refill
+ ; PSORFSRC  (optional) - the source system from which the REFILL
+ ;                      request Originated (e.g., AUDIOCARE, VCC, CPRS, VSE)
+ ; PSOITMG - error array
  N DFN,PSODFN,PSODTCUT,PSOITNS,PSOITDD,PSOITNF,PSOITF,DIV
  N PSOITP,PSOITR,PSOINST,PSOPAR,PSOPINST,PSOPRPAS,PSOPAR7,PSOPTPST
  N PSOSITE,PSOSNM,PSOSYS,PSORFN,PSOREA,PSOSTAT,PSOD,PSOS,DRG,DIVN
@@ -63,12 +69,13 @@ REF(PSORXN,PSOUSR,PSOITMG) ;process refill request
  D EN^PSOR52(.PSOX)
  ;add additional activity log comment to refill just added
  I PSOITF,$D(^PSRX(PSORXN,1,PSOITF,0)) D
- . S ^PSRX(PSORXN,1,PSOITF,"RF1")="3^"_PSOUSR
+ . S PSORFSRC=$G(PSORFSRC)
+ . S ^PSRX(PSORXN,1,PSOITF,"RF1")=$S(PSORFSRC]"":PSORFSRC,1:"UNKNOWN")_"^"_$G(PSOUSR)
  . N AL,DONE,PSOFDA
  . S AL="",DONE=0
  . F  S AL=$O(^PSRX(PSORXN,"A",AL),-1) Q:'AL  D  Q:DONE
  . . Q:$P(^PSRX(PSORXN,"A",AL,0),U,4)'=PSOITF
- . . S PSOFDA(52.34,"+3,"_AL_","_PSORXN_",",.01)="VCC Auto Refill"
+ . . S PSOFDA(52.34,"+3,"_AL_","_PSORXN_",",.01)=$S(PSORFSRC]"":PSORFSRC,1:"UNKNOWN")
  . . D UPDATE^DIE("","PSOFDA")
  . . S DONE=1
  Q

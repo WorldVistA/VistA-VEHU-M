@@ -1,5 +1,5 @@
-SDECCON ;SPFO/DMR/MGD SCHEDULING ENHANCEMENTS VSE CONTACT API ;Mar 31, 2021@09:59
- ;;5.3;Scheduling;**669,686,781,785**;Aug 13 1993;Build 14
+SDECCON ;SPFO/DMR,MGD,RRM SCHEDULING ENHANCEMENTS VSE CONTACT API ;Mar 31, 2021@09:59
+ ;;5.3;Scheduling;**669,686,781,785,827**;Aug 13 1993;Build 10
  ;
  ;This API provides SDEC CONTACT(#409.86)file information to the VSE VS GUI.
  ; 3/6/18 - wtc/zeb Added new cross-reference for audit statistics compiler.  Patch 686
@@ -34,7 +34,7 @@ DISPLAY1(RTU,REQT,RIEN) ;
  ;        2nd ^ Piece = 0 node of File #409.86 for the identified record
  ;
  I $G(RTU)="" S RTU=0
- Q:REQT=""!("^R^A^RTC^C^P^"'[("^"_REQT_"^"))
+ Q:REQT=""!("^R^A^RTC^C^P^V^"'[("^"_REQT_"^"))
  Q:RIEN=""
  ;
  S (CC,ROOT,REC,GMR,AR40985,RECALL)=""
@@ -53,7 +53,7 @@ DISPLAY1(RTU,REQT,RIEN) ;
  .S RTU=CC_"^"_REC
  .Q
  ; Check for SDEC APPT REQUEST
- I REQT="A"!(REQT="RTC") D
+ I (REQT="A")!(REQT="RTC")!(REQT="V") D
  .S AR40985="" S AR40985=$G(^SDEC(409.85,RIEN,0))
  .Q:AR40985=""
  .Q:$P(REC,"^",1)'=$P(AR40985,"^",1)
@@ -104,9 +104,9 @@ NEW(RET,DFN,CLI,DTP,REQT,SRV,DTCON,CONT,COM,DTENT,RIEN) ;
  ; Determine variable pointer file
  S SDRIEN=""
  I RIEN>0 D
- . I REQT="A"!(REQT="RTC") D
+ . I (REQT="A")!(REQT="RTC")!(REQT="V") D
  . . Q:$P($G(^SDEC(409.85,RIEN,0)),U,1)'=DFN
- . . Q:($P($G(^SDEC(409.85,RIEN,0)),U,5)'="APPT"&($P($G(^SDEC(409.85,RIEN,0)),U,5)'="RTC"))
+ . . Q:($P($G(^SDEC(409.85,RIEN,0)),U,5)'="APPT"&($P($G(^SDEC(409.85,RIEN,0)),U,5)'="RTC"))&($P($G(^SDEC(409.85,RIEN,0)),U,5)'="VETERAN")
  . . S SDRIEN=RIEN_";"_"SDEC(409.85," Q
  . Q:SDRIEN'=""
  . I REQT="C"!(REQT="P") D
@@ -129,7 +129,7 @@ NEW(RET,DFN,CLI,DTP,REQT,SRV,DTCON,CONT,COM,DTENT,RIEN) ;
  ..Q
  S CC2=CC2+1 D
  .S ^SDEC(409.86,0)="SDEC CONTACT^409.86P^"_CC2_"^"_CC2
- .S ^SDEC(409.86,CC2,0)=DFN_"^"_CLI_"^"_DTP_"^"_REQT_"^"_1_"^"_SRV  ;785
+ .S ^SDEC(409.86,CC2,0)=DFN_"^"_CLI_"^"_DTP_"^"_REQT_"^"_1_"^"_SRV
  .S ^SDEC(409.86,CC2,1,0)="^409.863D^1^1"
  .S ^SDEC(409.86,CC2,1,1,0)=DTCON
  .S ^SDEC(409.86,CC2,1,1,1)=CONT_"^"_COM_"^"_0_"^"_1_"^"_DUZ_"^"_DTENT
@@ -179,7 +179,7 @@ SEQ1(RTU,REQT,RIEN) ;
  ; OUTPUT:
  ;        RTU = Newly created contact sequence number
  I $G(RTU)="" S RTU=0
- Q:REQT=""!("^R^A^RTC^C^P^"'[("^"_REQT_"^"))
+ Q:REQT=""!("^R^A^RTC^C^P^V^"'[("^"_REQT_"^"))
  Q:RIEN=""
  ;
  ; $O backwards to get the last entry entered if there are more than one entry in the x-ref
@@ -197,7 +197,7 @@ UPDATE(RTT,IEN,CONDT,CTYPE,COMM,DTEN) ;
  ; RPC: SDEC CONTACT UPDATE
  Q:'$G(IEN)
  Q:'$G(CONDT)
- Q:'$D(CTYPE) 
+ Q:'$D(CTYPE)
  I '$D(COMM) S COMM=""
  I '$G(DTEN) S DTEN=""
  ;
@@ -215,7 +215,7 @@ UPDATE(RTT,IEN,CONDT,CTYPE,COMM,DTEN) ;
  .S ^SDEC(409.86,"AD",DTEN,DUZ,IEN,COUNT)="" ;  3/6/18 WTC/ZEB create date/user cross-reference.
  .Q
  D EXIT
- Q 
+ Q
 GETSTC(RET,CLIEN) ;
  ; RPC: SDEC CONTACT STOP CODE
  Q:CLIEN=""

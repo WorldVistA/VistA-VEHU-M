@@ -1,5 +1,5 @@
-MAGVIM01 ;WOIFO/DAC/NST/BT - Utilities for RPC calls for DICOM file processing ; Nov 05, 2020@07:26:32
- ;;3.0;IMAGING;**118,138,221,250,283**;Mar 19, 2002;Build 5
+MAGVIM01 ;WOIFO/DAC/NST/BT/JSJ - Utilities for RPC calls for DICOM file processing ; May 19, 2022@15:15:24
+ ;;3.0;IMAGING;**118,138,221,250,283,332**;Mar 19, 2002;Build 34
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -313,47 +313,9 @@ GETNEXT(OUT,ETYPE,EXPSTAT,NEWSTAT,UPDUSR,UPDAPP,LOCATION) ; Find last update wor
  Q
  ; RPC: MAGV IMPORT STATUS
 IMSTATUS(OUT,UIDS) ; Get import status
- N SSEP,STUDYLIST,SOPLIST,STUDYOUT,SOPOUT,I,CNT,STUDYUID,SERUID,SOPUID,ISEP,SOPIEN,SERIEN,STUDIEN
- S SSEP=$$OUTSEP,ISEP=$$INPUTSEP,I=0,CNT=0
- I '$D(UIDS) S OUT(1)=-6_SSEP_"No UIDs provided" Q
- F  S I=$O(UIDS(I)) Q:I=""  D
- . S CNT=I
- . S STUDYUID=$P(UIDS(I),ISEP,1),SERUID=$P(UIDS(I),ISEP,2),SOPUID=$P(UIDS(I),ISEP,3)
- . I $G(STUDYUID)="" S OUT(I+1)=-1_SSEP_"No study UID provided" Q
- . I $G(SERUID)="" S OUT(I+1)=-2_SSEP_"No series UID provided" Q
- . I $G(SOPUID)="" S OUT(I+1)=-3_SSEP_"No SOP UID provided" Q
- . S OUT(I+1)=-1_SSEP_UIDS(I)_SSEP_"not on file"
- . S STUDYLIST(1)=1,STUDYLIST(2)=STUDYUID
- . S SOPLIST(1)=1,SOPLIST(2)=SOPUID
- . ; Check ^MAG(2005) for import study status 
- . D CHECKUID^MAGDRPCA(.STUDYOUT,.STUDYLIST,"STUDY")
- . I STUDYOUT(2)'="",(+STUDYOUT(2))'<0 D
- . . D CHECKUID^MAGDRPCA(.SOPOUT,.SOPLIST,"SOP")
- . . I SOPOUT(2)'="",(+SOPOUT(2))'<0 D  S CNT=I
- . . . S OUT(I+1)="0"_SSEP_UIDS(I)_SSEP_"on file"
- . . . Q
- . . Q
- . S SOPOUT=""
- . ; Check SOP original and UID
- . I ('$D(^MAGV(2005.64,"B",SOPUID)))&('$D(^MAGV(2005.66,"B",SOPUID))) Q
- . S SOPIEN=$O(^MAGV(2005.64,"B",SOPUID,""),-1)
- . Q:SOPIEN=""
- . I $G(^MAGV(2005.64,SOPIEN,11))'="A" Q
- . ; Check Series original and UID
- . I ('$D(^MAGV(2005.63,"B",SERUID)))&('$D(^MAGV(2005.66,"B",SERUID))) Q
- . S SERIEN=$O(^MAGV(2005.63,"B",SERUID,""),-1)
- . Q:SERIEN=""
- . I $G(^MAGV(2005.63,SERIEN,9))'="A" Q
- . ; Check Study original and UID
- . I ('$D(^MAGV(2005.62,"B",STUDYUID)))&('$D(^MAGV(2005.66,"B",STUDYUID))) Q
- . S STUDIEN=$O(^MAGV(2005.62,"B",STUDYUID,""),-1)
- . Q:STUDIEN=""
- . I $P($G(^MAGV(2005.62,STUDIEN,5)),U,2)'="A" Q
- . S OUT(I+1)="0"_SSEP_UIDS(I)_SSEP_"on file"
- . Q
- ;
- S OUT(1)=0_SSEP_CNT
+ D IMSTATUS^MAGVIM09(.OUT,.UIDS)  ;P332 routine size exceeded - Moved to MAGVIM09
  Q
+ ;
 UPUSRAPP(OUT,ID,NEWSTAT,UPDUSR,UPDAPP) ; Update user, app, updated time fields
  N FDA,APPIEN
  S FDA(2006.941,ID_",",3)=NEWSTAT

@@ -1,5 +1,6 @@
-SDESCLINICDATA ;ALB/TAW,MGD,RRM - VISTA Clinic data getter ;July 21, 2021@16:04
- ;;5.3;Scheduling;**788,823,825**;Aug 13, 1993;Build 2
+SDESCLINICDATA ;ALB/TAW,MGD,RRM,CGP - VISTA Clinic data getter ;November 03, 2022@16:50
+ ;;5.3;Scheduling;**788,823,825,828**;Aug 13, 1993;Build 8
+ ;;Per VHA Directive 6402, this routine should not be modified
  Q
  ;
  ; The intention of this routine is to return a unique set of data from the HOSPITAL
@@ -30,4 +31,5 @@ APPTCLINIC(RETURN,IEN) ;
  S RETURN("TelephoneExtension")=$G(CLINICARY(44,IENS,99.1,"E"))
  S RETURN("Division")=$G(CLINICARY(44,IENS,3.5,"E"))
  S RETURN("StationNumber")=$$STATIONNUMBER^SDESUTIL($G(IEN)) ;SD,825-Clinic station number
+ S RETURN("ClinicIEN")=$G(IEN) ;CP,828-Clinic IEN
  Q

@@ -1398,7 +1398,7 @@ ZWR
 ^XMB(3.8,167,2,3,0)="acknowledgment message from the national database when the transmitted"
 ^XMB(3.8,167,2,4,0)="Quarterly Report is received.  Also, this group may receive alerts and"
 ^XMB(3.8,167,2,5,0)="other mail messages relating to the Quarterly Report."
-^XMB(3.8,168,0)="NDF DATA^PU^n^726^3220702^^11595"
+^XMB(3.8,168,0)="NDF DATA^PU^n^727^3230120^^11595"
 ^XMB(3.8,168,1,0)="^3.81P^5^5"
 ^XMB(3.8,168,1,1,0)=11595
 ^XMB(3.8,168,1,2,0)=11733
@@ -3496,7 +3496,7 @@ ZWR
 ^XMB(3.8,428,2,5,0)="clinic inactivation messages will error out. The routine"
 ^XMB(3.8,428,2,6,0)="SDNACT needs this mail group in order to work properly."
 ^XMB(3.8,428,3)=11720
-^XMB(3.8,429,0)="REMINDER MANAGEMENT^PU^n^55^3220702^^1"
+^XMB(3.8,429,0)="REMINDER MANAGEMENT^PU^n^56^3230120^^1"
 ^XMB(3.8,429,1,0)="^3.81P^2^2"
 ^XMB(3.8,429,1,1,0)="1^I"
 ^XMB(3.8,429,1,2,0)="11720^I"

@@ -1,5 +1,5 @@
-SDEC52 ;ALB/SAT,CT,LAB - VISTA SCHEDULING RPCS ;MAR 23, 2022
- ;;5.3;Scheduling;**627,642,651,658,745,813**;Aug 13, 1993;Build 6
+SDEC52 ;ALB/SAT,CT,LAB,BWF - VISTA SCHEDULING RPCS ;OCT 19, 2022
+ ;;5.3;Scheduling;**627,642,651,658,745,813,827**;Aug 13, 1993;Build 10
  ;
  Q
  ;
@@ -240,6 +240,12 @@ GET1 ;
  S SDFLAGS=$G(SDFLAGS)  ;alb/sat 651
  S PRHBLOC=0
  D GETS^DIQ(403.5,IEN,"**","IE","SDDATA","SDMSG")
+ ; if there is an error (SDMSG), clean up dangling cross references - SD*827
+ I $D(SDMSG),'$D(^SD(403.5,IEN)) D
+ .N D0,I,STR,X,N3,N4
+ .S D0=IEN D KXREF^SDRRTSK
+ ; quit if there is an error
+ Q:$D(SDMSG)
  S DATE=SDDATA(403.5,IEN_",",5,"I")
  Q:(DATE<SDBEG)!(DATE>SDEND)
  S:$G(DFN)="" DFN=SDDATA(403.5,IEN_",",.01,"I") ;alb/sat 658 get Patient

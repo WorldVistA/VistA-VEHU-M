@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3221126.161253
+^DIC(2,"%MSC")=3230120.021007
 ^DIC(3.05,0)="FAILED ACCESS ATTEMPTS LOG^3.05"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
@@ -2379,7 +2379,7 @@ ZWR
 ^DIC(33.1,"%D",0)="^^2^2^3191001^"
 ^DIC(33.1,"%D",1,0)="This file contains the history of changes made to the PRESUMPTIVE "
 ^DIC(33.1,"%D",2,0)="PSYCHOSIS CATEGORY field (#.5601) in the PATIENT file (#2)."
-^DIC(33.1,"%MSC")=3220611.235739
+^DIC(33.1,"%MSC")=3230120.021006
 ^DIC(35.1,0)="SHARING AGREEMENT CATEGORY^35.1"
 ^DIC(35.1,0,"GL")="^DG(35.1,"
 ^DIC(35.1,0,"GL")="^DG(35.1,"
@@ -2883,7 +2883,7 @@ ZWR
 ^DIC(44,"%D",0)=1
 ^DIC(44,"%D",1,0)="Contains locations found in the hospital (ie. Wards, Clinics)"
 ^DIC(44,"%D",2,0)=" *********DO NOT RE-INDEX THIS FILE**********"
-^DIC(44,"%MSC")=3221113.204236
+^DIC(44,"%MSC")=3230120.021102
 ^DIC(44.3,0)="SDAM DATA MAP^44.3"
 ^DIC(44.3,0,"AUDIT")="@"
 ^DIC(44.3,0,"DD")="@"
@@ -4306,7 +4306,7 @@ ZWR
 ^DIC(52,"%D",6,0)=" "
 ^DIC(52,"%D",7,0)="Of particular interest is that essentially all the history pertaining to a"
 ^DIC(52,"%D",8,0)="particular Rx is contained in each Rx entry."
-^DIC(52,"%MSC")=3220918.134902
+^DIC(52,"%MSC")=3230120.015828
 ^DIC(52.09,0)="REMOTE PRESCRIPTION LOG^52.09"
 ^DIC(52.09,0,"DD")="#"
 ^DIC(52.09,0,"DEL")="p"
@@ -5965,7 +5965,7 @@ ZWR
 ^DIC(59,"%D",6,0)="These parameters are loaded into a local variable when entering the"
 ^DIC(59,"%D",7,0)="package.  Any changes made to these parameters will not be effective"
 ^DIC(59,"%D",8,0)="until the users exit from the package and re-enters it."
-^DIC(59,"%MSC")=3220624.232329
+^DIC(59,"%MSC")=3230120.020748
 ^DIC(59.1,0)="OUTPATIENT AMIS DATA^59.1OD"
 ^DIC(59.1,0,"GL")="^PS(59.1,"
 ^DIC(59.1,0,"GL")="^PS(59.1,"
@@ -29430,7 +29430,7 @@ ZWR
 ^DIC(409.84,"%",0)="^1.005^^0"
 ^DIC(409.84,"%D",0)="^^1^1^3141010^"
 ^DIC(409.84,"%D",1,0)="This is where appointment definitions are linked to a resource."
-^DIC(409.84,"%MSC")=3220814.171528
+^DIC(409.84,"%MSC")=3230120.021029
 ^DIC(409.842,0)="SDEC CHECK-IN STEP STATUS^409.842"
 ^DIC(409.842,0,"AUDIT")="@"
 ^DIC(409.842,0,"DD")="@"
@@ -56896,7 +56896,7 @@ ZWR
 ^DIC(9002313.56,"%D",2,0)="has a list of one or more OUTPATIENT SITES (file 59)."
 ^DIC(9002313.56,"%D",3,0)=" "
 ^DIC(9002313.56,"%D",4,0)="Per VHA Directive 2004-038, this file definition should not be modified."
-^DIC(9002313.56,"%MSC")=3181030.174806
+^DIC(9002313.56,"%MSC")=3230120.020828
 ^DIC(9002313.57,0)="BPS LOG OF TRANSACTIONS^9002313.57"
 ^DIC(9002313.57,0,"AUDIT")="@"
 ^DIC(9002313.57,0,"DD")="@"

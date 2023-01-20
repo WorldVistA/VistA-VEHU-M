@@ -1,5 +1,5 @@
-SDESGETAPPTREQ ;ALB/BLB,RRM,MGD - GET APPT REQ RPCS ;SEP 06, 2022@14:38
- ;;5.3;Scheduling;**815,818,819,823,824,825**;Aug 13, 1993;Build 2
+SDESGETAPPTREQ ;ALB/BLB,RRM,MGD,DJS - GET APPT REQ RPCS ;Oct 31, 2022@15:35
+ ;;5.3;Scheduling;**815,818,819,823,824,825,828**;Aug 13, 1993;Build 8
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to ^VA(200 in ICR #10060
@@ -245,8 +245,8 @@ GETREQUEST(REQUEST,REQUESTIEN) ; get patient appointment from file
  S REQUEST("Request",NUM,"ClinicSecondaryStopCodeName")=REQDATA(FN,REQUESTIEN_",",8.6,"E")
  S REQUEST("Request",NUM,"ClinicSecondaryStopCodeAMIS")=$$GET1^DIQ(40.7,REQDATA(FN,REQUESTIEN_",",8.6,"I"),1)
  S REQUEST("Request",NUM,"ApptType")=REQDATA(FN,REQUESTIEN_",",8.7,"E")
- S REQUEST("Request",NUM,"EnteredByName")=REQDATA(FN,REQUESTIEN_",",9,"I")
- S REQUEST("Request",NUM,"EnteredByIEN")=REQDATA(FN,REQUESTIEN_",",9,"E")
+ S REQUEST("Request",NUM,"EnteredByName")=REQDATA(FN,REQUESTIEN_",",9,"E")
+ S REQUEST("Request",NUM,"EnteredByIEN")=REQDATA(FN,REQUESTIEN_",",9,"I")
  S REQUEST("Request",NUM,"DateTimeEntered")=$$FMTISO^SDAMUTDT($G(REQDATA(FN,REQUESTIEN_",",9.5,"I")))
  S REQUEST("Request",NUM,"Priority")=REQDATA(FN,REQUESTIEN_",",10,"E")
  S REQUEST("Request",NUM,"EnrollmentPriorityGroup")=REQDATA(FN,REQUESTIEN_",",10.5,"E")

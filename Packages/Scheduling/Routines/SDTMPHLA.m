@@ -1,7 +1,7 @@
 SDTMPHLA ;MS/PB - TMP HL7 Routine;May 29, 2018
- ;;5.3;Scheduling;**704,733,773,780,798,812**;SEP 26, 2018;Build 17
+ ;;5.3;Scheduling;**704,733,773,780,798,812,821**;SEP 26, 2018;Build 9
  Q
- ;
+ ;        ;
 EN(DFN,APTTM) ; Entry to the routine to build an HL7 message
  ;notification to TMP about a new appointment in a TeleHealth Clinic
  ;
@@ -11,7 +11,6 @@ EN(DFN,APTTM) ; Entry to the routine to build an HL7 message
  S (SSTOP,PSTOP,STOP)=0
  K CLINID
  S RTN=0,CAN=0
- ;Q:'$D(^DPT(DFN,"S",APTTM,0))
  S ANODE=$G(^DPT(DFN,"S",APTTM,0))
  S ANODE1=$G(^DPT(DFN,"S",APTTM,1))
  ;If this appointment was made by the TMP application, stop 773
@@ -20,13 +19,10 @@ EN(DFN,APTTM) ; Entry to the routine to build an HL7 message
  S CLINODE=$G(^SC(CLINID,0))
  S XX=0 F  S XX=$O(^SC(CLINID,"S",APTTM,1,XX)) Q:XX'>0  D  ;Get the correct appointment node for the patient
  .I $P(^SC(CLINID,"S",APTTM,1,XX,0),"^")=DFN S SNODE=$G(^SC(CLINID,"S",APTTM,1,XX,0)),CNODE=$P($G(^SC(CLINID,"S",APTTM,1,XX,"CONS")),"^")
- ;Q:$G(SNODE)=""  ; If the appointment is not in the Hospital Location File stop. 
- ;S PSTOP=$P(SNODE,"^",7),SSTOP=$P(SNODE,"^",18)
  S PSTOP=$P(CLINODE,"^",7),SSTOP=$P(CLINODE,"^",18)
  ;If both stop codes are null, stop the check, we know it is not a tele health clinic
  Q:($G(PSTOP)="")&(($G(SSTOP))="")
  S STOP=$$CHKCLIN(PSTOP) ;if STOP=0, primary stop code is not a tele health stop code so check secondary stop code to see if it is a tele health clinic
- ;I $G(STOP)=0,($$CHKCLIN(SSTOP)=0) Q  ;if primary stop code is not tele health check secondary stop code if secondary not tele health stop
  I $G(STOP)=0 Q:$G(SSTOP)'>0  S STOP=$$CHKCLIN(SSTOP) ; if primary stop code is not tele health check secondary stop code if secondary not tele health stop   ;773
  Q:$G(STOP)=0  ; Double check for either primary or secondary stop code to be a tele health clinic
  I $P($G(ANODE),"^",2)["C" S CAN=1
@@ -89,7 +85,7 @@ PID(DFN,SEQ,SEG) ;
  ; set the address into PID-11
  D SETAD^HLOAPI4(.SEG,.ADDRESS,11)
  Q
-PD1 ; Not needed right now
+PD1      ; Not needed right now
  Q
 PV1(DFN,SEQ,SEG) ;
  N FAC
@@ -112,7 +108,10 @@ SCH(DFN,SEQ,SEG,ANODE,SNODE)  ; update for new appointments
  N APTSTATUS,LENGTH,TMUNITS,SCHED,ENTEREDBY,STATUS,START,CONNM,PREMAIL,END
  S:$G(SNODE)'="" LENGTH=$P($G(SNODE),"^",2)
  S TMUNITS="M"
- S:$G(LENGTH)="" LENGTH=$S($G(SDECC("LEN")):$G(SDECC("LEN")),1:$P(^SC(CLINID,"SL"),U))
+ ;821 Create best default LENGTH variable.  Also, the main value will be found in SDECLEN variable that is
+ ;used by SDEC07 & 08A APIs, as a key param. If not there, use the new best default variable.
+ N LENDEF S:$G(SDECAPPTID) LENDEF=$P(^SDEC(409.84,SDECAPPTID,0),U,18) S:'$G(LENDEF) LENDEF=$P(^SC(CLINID,"SL"),U)
+ S:$G(LENGTH)="" LENGTH=$S($G(SDECLEN):SDECLEN,1:LENDEF)
  S START=$$TMCONV(APTTM,$$INST(CLINID)),END=$$FMADD^XLFDT(APTTM,0,0,LENGTH,0),END=$$TMCONV(END,$$INST(CLINID))
  S:$G(CNODE)>0 CONNM=$P(^GMR(123.5,$P(^GMR(123,CNODE,0),"^",5),0),"^")
  S PROVID=$P(^SC(CLINID,0),"^",13) S:$G(PROVID)>0 PROVNM=$P(^VA(200,PROVID,0),"^"),PREMAIL=$P($G(^VA(200,PROVID,.15)),"^")
@@ -126,7 +125,6 @@ SCH(DFN,SEQ,SEG,ANODE,SNODE)  ; update for new appointments
  D SET^HLOAPI(.SEG,SEQ,1) ; Set the SCH-1
  D SET^HLOAPI(.SEG,APTSTATUS,6)  ;Field 6, Appointment status
  D:$G(CNODE)>0 SET^HLOAPI(.SEG,CNODE,7,1)  ;Consult ID if this is for a consult request
- ;D:$G(CONNM)'="" SET^HLOAPI(.SEG,CONNM,7,2)  ;Consult name
  D SET^HLOAPI(.SEG,LENGTH,9)  ;Field 9, Apt Length
  D SET^HLOAPI(.SEG,TMUNITS,10)  ; Field 10, time units
  D SET^HLOAPI(.SEG,START,11,4,1,1)  ; Field 11, appointment start and end time
@@ -145,7 +143,7 @@ SCHCAN(DFN,SEQ,SEG,ANODE,SNODE,CNODE)  ; update for cancelled appointments
  S:$G(DUZ(2))="" DUZ=$$KSP^XUPARAM("SITE")
  S LENGTH=$P(^SC(CLINID,"SL"),"^",1),TMUNITS="M"
  S START=$$TMCONV(APTTM,$$INST(CLINID)),END=$$FMADD^XLFDT(APTTM,0,0,LENGTH,0),END=$$TMCONV(END,$$INST(CLINID))
- S:$G(CNODE)>0 CONNM=$$GET1^DIQ(123,CNODE_",",1,"E")   ;CONNM=$P(GMR(123.5,$P(^GMR(123,CNODE,0),"^",5),0),"^")
+ S:$G(CNODE)>0 CONNM=$$GET1^DIQ(123,CNODE_",",1,"E")
  S PROVID=$P(^SC(CLINID,0),"^",13) S:$G(PROVID)>0 PROVNM=$P(^VA(200,PROVID,0),"^"),PREMAIL=$P($G(^VA(200,PROVID,.15)),"^")
  K XS S (STATUS("ID"),XS)=$S($P(ANODE,"^",2)="":"S",1:$P(ANODE,"^",2)) S:STATUS("ID")="S" STATUS("TEXT")="SCHEDULED"
  N X,X1 S STATUS("TEXT")=$$STATUS(STATUS("ID"))
@@ -156,7 +154,6 @@ SCHCAN(DFN,SEQ,SEG,ANODE,SNODE,CNODE)  ; update for cancelled appointments
  D SET^HLOAPI(.SEG,SEQ,1) ; Set the SCH-1
  D SET^HLOAPI(.SEG,APTSTATUS,6)  ;Field 6, Appointment status
  D:$G(CNODE)>0 SET^HLOAPI(.SEG,CNODE,7,1)  ;Consult ID if this is for a consult request
- ;D:$G(CONNM)'="" SET^HLOAPI(.SEG,CONNM,7,2)  ;Consult name
  D SET^HLOAPI(.SEG,LENGTH,9)  ;Field 9, Apt Length
  D SET^HLOAPI(.SEG,TMUNITS,10)  ; Field 10, time units
  D SET^HLOAPI(.SEG,START,11,4,1,1)  ; Field 11, appointment start and end time
@@ -169,15 +166,15 @@ SCHCAN(DFN,SEQ,SEG,ANODE,SNODE,CNODE)  ; update for cancelled appointments
  D SETCE^HLOAPI4(.SEG,.STATUS,25)  ; Field 25, current status of the appointment
  K SCHEMAIL
  Q
-PV2 ; Not needed right now
+PV2      ; Not needed right now
  Q
-OBX1 ; Not needed right now
+OBX1     ; Not needed right now
  Q
-OBX2 ; Not needed right now
+OBX2     ; Not needed right now
  Q
-OBX3 ; Not needed right now
+OBX3     ; Not needed right now
  Q
-OBX4 ; Not needed right now
+OBX4     ; Not needed right now
  Q
 RGS1(FLAG,SEQ,SEG) ; At least one RGS segment is required
  N GRP
@@ -187,7 +184,7 @@ RGS1(FLAG,SEQ,SEG) ; At least one RGS segment is required
  D SET^HLOAPI(.SEG,FLAG,2)
  D SET^HLOAPI(.SEG,GRP,3)
  Q
-AIS1 ;
+AIS1     ;
  Q
 NTE(SEQ,SEG) ;
  N NOTES,CLINID,CLINNM
