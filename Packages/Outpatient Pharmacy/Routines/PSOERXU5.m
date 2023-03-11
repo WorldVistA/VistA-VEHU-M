@@ -1,5 +1,5 @@
 PSOERXU5 ;ALB/BWF - eRx utilities ; 4/9/2018 10:55am
- ;;7.0;OUTPATIENT PHARMACY;**508,581**;DEC 1997;Build 126
+ ;;7.0;OUTPATIENT PHARMACY;**508,581,651**;DEC 1997;Build 30
  ;
  Q
 CANREQ(ERXIEN,LINE,PMODE) ;
@@ -125,6 +125,8 @@ CANACK(ERXIEN) ;
  I $D(^XUSEC("PSO ERX VIEW",DUZ)) W !,">>>  You do not have privilege to use this option." D DIRE^PSOERXX1 Q
  S MTYPE=$$GET1^DIQ(52.49,ERXIEN,.08,"I")
  S RESTYPE=$$GET1^DIQ(52.49,ERXIEN,52.1,"I"),MESREQ=$$GET1^DIQ(52.49,ERXIEN,315.1,"E")
+ S ERXSTAT=$$GET1^DIQ(52.49,ERXIEN,1,"E")
+ I ",CAA,CXA,ICA,IEA,IRA,RXA,"[ERXSTAT W !!,"Record already acknowledged!",!,$C(7) D DIRE^PSOERXX1 Q
  I RESTYPE="A"!(RESTYPE="AWC"),MESREQ="G"!(MESREQ="T")!(MESREQ="S")!(MESREQ="OS")!(MESREQ="D") S RESCHECK=1
  I $G(RESCHECK) W !,"For RxChange Response Approved and Approved with changes types (G/T/S/OS/D)",!,"hidden action ACK is not available." D DIRE^PSOERXX1 Q
  I MTYPE="CX",RESTYPE="V" W !,"ACK is not available for RxChange Response - 'Validated' response messages." D DIRE^PSOERXX1 Q
@@ -138,7 +140,6 @@ CANACK(ERXIEN) ;
  .W !,"You do not have priviledge to use this option." D DIRE^PSOERXX1
  I MTYPE="CA"!(MTYPE="CN"),'$D(^XUSEC("PSDRPH",DUZ)),'$D(^XUSEC("PSO ERX ADV TECH",DUZ)) D  Q
  .W !,"You do not have priviledge to use this option." D DIRE^PSOERXX1
- S ERXSTAT=$$GET1^DIQ(52.49,ERXIEN,1,"E")
  I ",CAO,CAH,CAF,CAP,CAR,CAX,RXD,RRE,RXF,CXV,CXD,CXY,CRE,"'[ERXSTAT W !,"Acknowledge cannot be used on this record status." D DIRE^PSOERXX1 Q
  I (ERXSTAT="CAO")!(ERXSTAT="RXD")!(ERXSTAT="RRE")!(ERXSTAT="CRE")!(ERXSTAT="RXF") D  Q
  .W !,"Would you like to acknowledge this record?"

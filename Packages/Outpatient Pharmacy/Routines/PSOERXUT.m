@@ -1,5 +1,5 @@
 PSOERXUT ;ALB/MR - eRx CS utilities ;7/21/2020 9:57am
- ;;7.0;OUTPATIENT PHARMACY;**617,667**;DEC 1997;Build 18
+ ;;7.0;OUTPATIENT PHARMACY;**617,667,651**;DEC 1997;Build 30
  Q
  ;
 CSFILTER(ERXIEN) ; Check eRx against CS Filter Prompt Answers
@@ -79,7 +79,7 @@ PRDRVAL(RESULT,ACTION,ERXIEN,PROVIEN,DRUGIEN) ; API used to Verify Provider and 
  . . . . S VADEADSP=$$DEA^XUSER(0,PROVIEN,RXWRDATE)
  . . . . I $P(VADEANUM,"^")=2 D
  . . . . . S RESULT($O(RESULT(""),-1)+1)="VistA Provider "_$$GET1^DIQ(200,PROVIEN,.01)_" is NOT authorized to write to the schedule ("_$P(VADRSCH,"^",3)_") of the VistA Drug selected."
- . . . I $$DETOX^PSSOPKI(DRUGIEN),$$DETOX^XUSER(PROVIEN,RXWRDATE)'?1"X"1A7N D
+ . . . I $$DETOX^PSSOPKI(DRUGIEN),$$DETOX^XUSER(PROVIEN,RXWRDATE)'?2A7N D
  . . . . S VACSDRUG=1
  . . . . S RESULT($O(RESULT(""),-1)+1)="VistA Provider "_$$GET1^DIQ(200,PROVIEN,.01)_" does not have a valid DETOX#."
  . ; All checks are OK
@@ -224,7 +224,7 @@ OLDVAL(ERXIEN,FIELD,STRTFROM,OLDVAL) ; Retrieves the Previous/Old Value for the 
  ;        (o) STRTFROM - Start From Audit Log IEN. Default: Lastest value for the field.
  ;Output:     OLDVAL   - Array containing the old/previous value for the field (Returned by Reference)
  ;
- N AUDLOG K OLDVAL
+ N AUDLOG,X K OLDVAL
  S AUDLOG=$S(+$G(STRTFROM):STRTFROM,1:999999999)
  F  S AUDLOG=$O(^PS(52.49,ERXIEN,"AUD",AUDLOG),-1)  Q:'AUDLOG  D  I $O(OLDVAL(0)) Q
  . I $$GET1^DIQ(52.4920,AUDLOG_","_ERXIEN,.02)=FIELD D
@@ -256,3 +256,43 @@ SUFFWARN(RESULT,ERXPRDEA,VADEADSP,HEADER) ; Append suffix warning to end of RESU
  . S RESULT($O(RESULT(""),-1)+1)="*******************************  WARNING(S)  *******************************"
  S RESULT($O(RESULT(""),-1)+1)="Provider DEA suffix mismatch (eRx: "_ERXPRDEA_" | VistA: "_VADEADSP_")."
  Q
+ ;
+DEFROUTE(OIIEN) ; Returns the Default Route for Orderable Item
+ ; Input: OIIEN    - Orderable Item IEN - Pointer to PHARMACY ORDERABLE ITEM file (#50.7)
+ ;Output: DEFROUTE - Default Route (e.g., "ORAL", "TOPICAL", etc..) or "" (No default route found)
+ I '$G(OIIEN)!'$D(^PS(50.7,+$G(OIIEN))) Q ""
+ N DEFROUTE,DFIEN,RTIEN S DEFROUTE=""
+ I $$GET1^DIQ(50.7,OIIEN,10,"I")="N" D                ; OI uses Possible Med Route(s)
+ . S RTIEN=$O(^PS(50.7,OIIEN,3,0)) I 'RTIEN Q         ; No Possible Routes Found
+ . I $O(^PS(50.7,OIIEN,3,RTIEN)) Q                    ; More than one Possible Med Route Found
+ . S DEFROUTE=$$GET1^DIQ(50.711,RTIEN_","_OIIEN,.01)
+ I $$GET1^DIQ(50.7,OIIEN,10,"I")="Y" D                ; OI uses Dosage Form Med Route(s)
+ . S DFIEN=$$GET1^DIQ(50.7,OIIEN,.02,"I") I 'DFIEN Q  ; No Dosage Form pointer Found
+ . S RTIEN=$O(^PS(50.606,DFIEN,"MR",0)) I 'RTIEN Q    ; No Med Route for Dosage Form Found
+ . I $O(^PS(50.606,DFIEN,"MR",RTIEN)) Q               ; More than one Med Route Found  
+ . S DEFROUTE=$$GET1^DIQ(50.6061,RTIEN_","_DFIEN,.01)
+ ;
+ ; No Route Found above and Orderable Item has a Default Route
+ I DEFROUTE="",$$GET1^DIQ(50.7,OIIEN,.06)'="" Q $$GET1^DIQ(50.7,OIIEN,.06)
+ ; Orderable Item has a Default Route that does not match the one found
+ I DEFROUTE'="",$$GET1^DIQ(50.7,OIIEN,.06)'="",DEFROUTE'=$$GET1^DIQ(50.7,OIIEN,.06) Q ""
+ ;
+ Q DEFROUTE
+ ;
+ERXSIG(ERXIEN) ; Returns the eRx SIG
+ ; Input: (r) ERXIEN - Pointer to ERX HOLDING QUEUE File (#52.49)
+ ;Output:     ERXSIG - eRx SIG in one string
+ ;
+ N ERXSIG,SIG,I,S2017,MTYPE,MEDIEN
+ S ERXSIG=""
+ I '$D(^PS(52.49,+$G(ERXIEN),0)) Q ERXSIG
+ S S2017=$$GET1^DIQ(52.49,ERXIEN,312.1,"I")
+ S MTYPE=$$GET1^DIQ(52.49,ERXIEN,.08,"I")
+ I S2017,MTYPE'="RE" D
+ . S MEDIEN=$O(^PS(52.49,ERXIEN,311,"C","P",0))
+ . S SIG=$$GET1^DIQ(52.49311,MEDIEN_","_ERXIEN_",",8,"","SIG")
+ . F I=1:1 Q:'$D(SIG(I))  D
+ . . S ERXSIG=ERXSIG_SIG(I)
+ I 'S2017 D
+ . S ERXSIG=$$GET1^DIQ(52.49,ERXIEN,7,"E")
+ Q ERXSIG

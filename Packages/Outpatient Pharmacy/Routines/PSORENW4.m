@@ -1,5 +1,5 @@
 PSORENW4 ;BIR/SAB - rx speed renew ;Jul 08, 2021@14:24:25
- ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,37,64,46,75,71,100,130,117,152,148,264,225,301,390,313,411,444,504,508,550,457,639,441**;DEC 1997;Build 209
+ ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,37,64,46,75,71,100,130,117,152,148,264,225,301,390,313,411,444,504,508,550,457,639,441,683**;DEC 1997;Build 4
  ;External reference to ^PSDRUG( supported by DBIA 221
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference to $$L^PSSLOCK supported by DBIA 2789
@@ -34,8 +34,24 @@ SEL K PSODRUG  ;PSO*7*301
  ..  S Y=$$GET1^DIQ(52,+$P(ORDLN,U,2),.01)  ; Rx #
  ..  S PSOERR=2 S DIR(0)="E",DIR("A")="Rx #"_Y_" not processed. Press enter" D ^DIR
  ;
- S Y=0 I $G(LST)]"" F ORD=1:1:$L(LST,",") S:$P(LST,",",ORD)>0 Y=Y+1  ; count remaining orders in LST
- I 'Y G SELQ  ; no orders to process
+ ;PSO 683 skip discontinued by provider RXs
+ S (ORD,PSOLCNT)=0
+ I $G(LST)]"" D
+ . ; count remaining orders in LST
+ . F ORD=1:1:$L(LST,",")-1 D
+ .. Q:$P(LST,",",ORD)'>0
+ .. S PSOLCNT=PSOLCNT+1,ORN=$P(LST,",",ORD)
+ .. I (+PSOLST(ORN)=52&(^PSRX($P(PSOLST(ORN),U,2),"STA")=14)) D
+ ... S PSOSKIP($P(PSOLST(ORN),U,2))="",$P(LST,",",ORD)=0,PSOLCNT=PSOLCNT-1  ; order removed from LST
+ .I $O(PSOSKIP(0)) D
+ .. W !
+ .. S ORD=0 F  S ORD=$O(PSOSKIP(ORD)) Q:'ORD  D
+ ... S PSOSTA=$$GET1^DIQ(52,ORD,100)
+ ... W $C(7),!,"  Cannot renew Rx # "_$$GET1^DIQ(52,ORD,.01)_", Rx is in "_PSOSTA_" status."
+ .. D PAUSE^VALM1
+ ;END PSO 683
+ ;
+ I 'PSOLCNT G SELQ  ; no orders to process
  ; end NCC remediation *457
  D  ; process remaining orders
  . S (PSODIR("DFLG"),PSODIR("FIELD"))=0,PSOOPT=3,(PSORENW("DFLG"),PSORENW("QFLG"),PSORX("DFLG"))=0 D INIT Q:PSORENW("DFLG")
@@ -46,7 +62,7 @@ SEL K PSODRUG  ;PSO*7*301
  S VALMBCK="R"
  D ^PSOBUILD,BLD^PSOORUT1 K DIR,DIRUT,DTOUT,DUOUT,LST,ORD,IEN,ORN,RPH,ST,REFL,REF,PSOACT,ORSV,PSORNW,PSORENW,PSONO,PSOCO,PSOCU,PSODIR,DSMSG,SPEED,PSORENW,PSOOELSE,PSOOPT,PSORX("FILL DATE"),PSORX("ISSUE DATE"),PSOID,PSOMSG,PSORX("DFLG"),PSOQTY
 SELQ ;
- K PSORNSPD,RTE,DRET,PRC,PHI,PSOSPRNW,X
+ K PSORNSPD,RTE,DRET,PRC,PHI,PSOSPRNW,X,PSOSKIP,PSOLCNT,PSOSTA
  S X=PSODFN_";DPT(" D ULK^ORX2,UL^PSSLOCK(PSODFN),CLEAN^PSOVER1
  Q
  ;

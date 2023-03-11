@@ -1,5 +1,5 @@
 DGUAMWS ;ALB/MCF,JAM - UAM Address Validation Web Service ;30 June 2020 10:00 AM
- ;;5.3;Registration;**1014,1065**;Aug 13, 1993;Build 6
+ ;;5.3;Registration;**1014,1065,1084**;Aug 13, 1993;Build 4
     ;
     ; Supported ICR's:
     ; #5421 - XOBWLIB - Public APIs for HWSC
@@ -8,7 +8,8 @@ DGUAMWS ;ALB/MCF,JAM - UAM Address Validation Web Service ;30 June 2020 10:00 AM
     ; #7191 - Read access to file 18.12
     ; #7190 - Read access to file 18.02  
     ; #2263 - Permits the use of $$GET^XPAR to retrieve a parameter value.
-    ; 
+    ; #1621 - APPERROR^%ZTER - sets $ZE and call the error trap 
+    ;
     ; NOTE: EN^DGUAMWS contains vendor specific code that is restricted and will be reported by XINDEX. 
     ;       Exemption (20200806-01) was granted by the Standards and Conventions (SAC) committee on 8/6/20 
     ;       allowing the vendor specific code.
@@ -65,10 +66,13 @@ EN(DGADDRESS,DGFLDS,DGFORGN) ; Main entry to for UAM Address Validation Web Serv
 ERRRSPMSG(DGRESPERR) ; 
     ; Input : DGRESPERR (Required) - response error from Post call
     ; Return: response code/txt (ex: DGERR(400) from Init)_response code/msg (ex: ADDRVAL###)
-    D ZTER^XOBWLIB(DGRESPERR)
+    N DGERRARR
+    ;D ZTER^XOBWLIB(DGRESPERR), DG*5.3*1084 adds the APPERROR^%ZTER API for proper error handling
+    D ERR2ARR^XOBWLIB(DGRESPERR,.DGERRARR)
     N DGERRCODE S DGERRCODE=DGRESPERR.code
+    D APPERROR^%ZTER(DGERRCODE_" HTTP/Webservice error")
     I '$D(DGERR(DGERRCODE)) Q DGERRCODE_" An error occurred and has been logged. The service is currently not available."
-    E  Q DGERR(DGERRCODE)
+ E  Q DGERR(DGERRCODE)
     ;
 RSPMSG(DGSTCODE,DGRESPMSG) ;
     ; Input : DGSTCODE (Required)  - response statuscode from DGHTTPRESP

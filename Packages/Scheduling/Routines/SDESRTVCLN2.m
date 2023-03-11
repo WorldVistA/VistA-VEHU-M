@@ -1,5 +1,5 @@
-SDESRTVCLN2 ;ALB/MGD,ANU,LAB,MGD,ANU - Get Clinic Info based on Clinic IEN ;Nov 4, 2022
- ;;5.3;Scheduling;**823,825,827,828**;Aug 13, 1993;Build 8
+SDESRTVCLN2 ;ALB/MGD,ANU,LAB,MGD,ANU,JAS - Get Clinic Info based on Clinic IEN ;Dec 23, 2022
+ ;;5.3;Scheduling;**823,825,827,828,833**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -13,7 +13,7 @@ SDESRTVCLN2 ;ALB/MGD,ANU,LAB,MGD,ANU - Get Clinic Info based on Clinic IEN ;Nov 
 JSONCLNINFO(RETSDCLNJSON,SDCLNIEN,SDEAS,HASHFLG) ;Get Clinic info
  ;INPUT - SDCLNIEN (Clinic IEN)
  ;      - SDEAS [optional] - Enterprise Appointment Scheduling (EAS) Tracking Number associated to an appointment.
- ;      - HASHFLG - Flag to udpate hash value for clinic or not (0 - no (default), 1- yes )
+ ;      - HASHFLG - Flag to update hash value for clinic or not (0 - no (default), 1- yes )
  ;RETURN PARAMETER:
  ;
  ;{"Clinic": {
@@ -27,6 +27,7 @@ JSONCLNINFO(RETSDCLNJSON,SDCLNIEN,SDEAS,HASHFLG) ;Get Clinic info
  ;"CheckinCheckoutTime": "",
  ;"ClinicIEN": 2174,
  ;"ClinicName": "STPDN-M",
+ ;"CreditStopCodeAMISNum": "",
  ;"CreditStopCodeName": "",
  ;"CreditStopCodeNum": "",
  ;"DefaultApptType": "",
@@ -59,10 +60,12 @@ JSONCLNINFO(RETSDCLNJSON,SDCLNIEN,SDEAS,HASHFLG) ;Get Clinic info
  ;"ReqXrayFilms": "",
  ;"Service": "",
  ;"StationNumber": 442,
+ ;"StopCodeAMISNum": "",
  ;"StopCodeName": "",
  ;"StopCodeNum": "",
  ;"Telephone": "",
  ;"Timezone": "EASTERN",
+ ;"TimezoneException": 1,
  ;"VariableApptLength": "",
  ;"WorkloadValidationCheckout": ""}}
  ;
@@ -129,7 +132,7 @@ VALIDATEHASHFLG(ERRORS,HASHFLG) ;
  ;
 BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  ;
- N SDFIELDS,SDDATA,SDMSG,SDX,SDC,TIMEZONE,USRCNT,USRIEN
+ N SDFIELDS,SDDATA,SDMSG,SDX,SDC,TIMEZONE,TIMEZONEEXC,USRCNT,USRIEN
  S SDECI=$G(SDECI,0)
  S SDFIELDS=".01;1;3.5;8;9;10;24;60;61;62;1914;2502;2504;2505;2506;2507;2802;99;2000;2000.5;2508;2509;2510;2511;2801;30;2001;2002;1918.5;2503;2500;1916;1918;20;21;1912;1913;1917"
  D GETS^DIQ(44,SDCLNIEN_",",SDFIELDS,"IE","SDDATA","SDMSG")
@@ -147,7 +150,8 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  S SDCLNSREC("Clinic","DivisionIEN")=$G(SDDATA(44,SDCLNIEN_",",3.5,"I")) ;Division
  S SDCLNSREC("Clinic","DivisionName")=$G(SDDATA(44,SDCLNIEN_",",3.5,"E")) ;Division
  S SDCLNSREC("Clinic","StopCodeName")=$G(SDDATA(44,SDCLNIEN_",",8,"E")) ;Stop Code Name
- S SDCLNSREC("Clinic","StopCodeNum")=$G(SDDATA(44,SDCLNIEN_",",8,"I")) ;Stop Code Number
+ S SDCLNSREC("Clinic","StopCodeNum")=$G(SDDATA(44,SDCLNIEN_",",8,"I")) ;Stop Code IEN
+ S SDCLNSREC("Clinic","StopCodeAMISNum")=$$GET1^DIQ(40.7,$G(SDDATA(44,SDCLNIEN_",",8,"I")),1) ;Stop Code AMIS Number
  S SDCLNSREC("Clinic","DefaultApptType")=$G(SDDATA(44,SDCLNIEN_",",2507,"E")) ;Default Appointment type
  S SDCLNSREC("Clinic","AdminInpatientMeds")=$G(SDDATA(44,SDCLNIEN_",",2802,"E")) ;ADMINISTER INPATIENT MEDS?
  S SDCLNSREC("Clinic","Telephone")=$G(SDDATA(44,SDCLNIEN_",",99,"E")) ;TELEPHONE
@@ -164,8 +168,9 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  S SDCLNSREC("Clinic","AllowableConsecutiveNoShows")=$G(SDDATA(44,SDCLNIEN_",",2001,"E")) ;ALLOWABLE CONSECUTIVE NO-SHOWS
  S SDCLNSREC("Clinic","MaxDaysForFutureBooking")=$G(SDDATA(44,SDCLNIEN_",",2002,"E")) ;MAX # DAYS FOR FUTURE BOOKING
  S SDCLNSREC("Clinic","HolidaySchedule")=$G(SDDATA(44,SDCLNIEN_",",1918.5,"E")) ;SCHEDULE ON HOLIDAYS?
- S SDCLNSREC("Clinic","CreditStopCodeNum")=$G(SDDATA(44,SDCLNIEN_",",2503,"I")) ;CREDIT STOP CODE
- S SDCLNSREC("Clinic","CreditStopCodeName")=$G(SDDATA(44,SDCLNIEN_",",2503,"E")) ;CREDIT STOP CODE
+ S SDCLNSREC("Clinic","CreditStopCodeNum")=$G(SDDATA(44,SDCLNIEN_",",2503,"I")) ;CREDIT STOP IEN
+ S SDCLNSREC("Clinic","CreditStopCodeName")=$G(SDDATA(44,SDCLNIEN_",",2503,"E")) ;CREDIT STOP NAME
+ S SDCLNSREC("Clinic","CreditStopCodeAMISNum")=$$GET1^DIQ(40.7,$G(SDDATA(44,SDCLNIEN_",",2503,"I")),1) ;Credit Stop Code AMIS Number
  S SDCLNSREC("Clinic","ProhibitAccessToClinic")=$G(SDDATA(44,SDCLNIEN_",",2500,"E")) ;PROHIBIT ACCESS TO CLINIC?
  S SDCLNSREC("Clinic","PhysicalLocation")=$G(SDDATA(44,SDCLNIEN_",",10,"E")) ;PHYSICAL LOCATION
  S SDCLNSREC("Clinic","Principal")=$G(SDDATA(44,SDCLNIEN_",",1916,"E")) ;PRINCIPAL Clinic
@@ -176,8 +181,9 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  S SDCLNSREC("Clinic","VariableApptLength")=$G(SDDATA(44,SDCLNIEN_",",1913,"E")) ;VARIABLE APP'NTMENT LENGTH
  S SDCLNSREC("Clinic","IncrementsPerHr")=$G(SDDATA(44,SDCLNIEN_",",1917,"E")) ;DISPLAY INCREMENTS PER HOUR
  S SDCLNSREC("Clinic","HourClinicDisplayBegins")=$S($G(SDDATA(44,SDCLNIEN_",",1914,"E"))'="":$G(SDDATA(44,SDCLNIEN_",",1914,"E")),1:8) ; HOUR CLINIC DISPLAY BEGINS
- S TIMEZONE=$$TIMEZONEDATA^SDESUTIL($G(SDCLNIEN)),TIMEZONE=$P($G(TIMEZONE),U)
+ S TIMEZONE=$$TIMEZONEDATA^SDESUTIL($G(SDCLNIEN)),TIMEZONEEXC=$P($G(TIMEZONE),U,3),TIMEZONE=$P($G(TIMEZONE),U)
  S SDCLNSREC("Clinic","Timezone")=TIMEZONE
+ S SDCLNSREC("Clinic","TimezoneException")=TIMEZONEEXC
  S SDCLNSREC("Clinic","Inactivate Date")=$$FMTISO^SDAMUTDT($G(SDDATA(44,SDCLNIEN_",",2505,"I"))) ;Inactivate Date
  S SDCLNSREC("Clinic","Reactivate Date")=$$FMTISO^SDAMUTDT($G(SDDATA(44,SDCLNIEN_",",2506,"I"))) ;Reactivate Date
  ; Get CHAR4 Data

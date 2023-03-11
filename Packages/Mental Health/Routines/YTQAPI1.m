@@ -1,5 +1,8 @@
 YTQAPI1 ;ASF/ALB- MHAX REMOTE PROCEDURES ; 4/3/07 10:50am
- ;;5.01;MENTAL HEALTH;**85,119,121,141**;Dec 30, 1994;Build 85
+ ;;5.01;MENTAL HEALTH;**85,119,121,141,217**;Dec 30, 1994;Build 12
+ ;
+ ;
+ ;
  Q
 RULES(YSDATA,YS) ;list rules for a survey
  ;entry point for YTQ RULES rpc
@@ -37,6 +40,7 @@ EDAD(YSDATA,YS) ;Edit and Save Data
  Q:YSFILEN<601  Q:YSFILEN>605
  S YSIEN=$G(YS("IEN"),"?+1")_","
  I YSFILEN="" S YSDATA(1)="[ERROR]",YSDATA(2)="bad filen " Q  ;-->out
+ I YSFILEN=601.84 S N=$O(YS("FILEN"),-1)+1 S:'$D(YS(N)) YS(N)="18^`"_DUZ
  S N=0 F  S N=$O(YS(N)) Q:N'>0  D  Q:$G(YSRESULT)="^"
  . S G=YS(N)
  . S YSF=$P(G,U),YSV=$P(G,U,2),YSX=$P(G,U,3)

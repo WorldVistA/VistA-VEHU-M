@@ -6730,7 +6730,7 @@ ZWR
 ^DIC(64,"%D",11,0)="FILE WITH SPECIFIC INFORMATION AT SPECIFIC INTERNAL FILE NUMBERS. NO"
 ^DIC(64,"%D",12,0)="ENTRIES SHOULD EVER BE DELETED. ADDITIONAL ENTRIES WILL BE DISTRIBUTED"
 ^DIC(64,"%D",13,0)="VIA GLOBAL TAPE WHEN NECESSARY."
-^DIC(64,"%MSC")=3220719.105835
+^DIC(64,"%MSC")=3230311.16162
 ^DIC(64.03,0)="WKLD LOG FILE^64.03"
 ^DIC(64.03,0,"GL")="^LRO(64.03,"
 ^DIC(64.03,0,"GL")="^LRO(64.03,"
@@ -6794,7 +6794,7 @@ ZWR
 ^DIC(64.061,"%D",5,0)=" "
 ^DIC(64.061,"%D",6,0)="This file is a standard file for many types of terms used in electronic"
 ^DIC(64.061,"%D",7,0)="messaging."
-^DIC(64.061,"%MSC")=3220719.105835
+^DIC(64.061,"%MSC")=3230311.16162
 ^DIC(64.062,0)="LAB ELECTRONIC SUBTYPES^64.062"
 ^DIC(64.062,0,"GL")="^LAB(64.062,"
 ^DIC(64.062,0,"GL")="^LAB(64.062,"
@@ -6826,7 +6826,7 @@ ZWR
 ^DIC(64.2,"%D",6,0)="will be distributed to all VAMC sites."
 ^DIC(64.2,"%D",7,0)="  Forward all request for additional codes not found in this file, contact"
 ^DIC(64.2,"%D",8,0)="Pathology Central Office, Attention Asst. Director for DHCP affairs. "
-^DIC(64.2,"%MSC")=3220719.105835
+^DIC(64.2,"%MSC")=3230311.16162
 ^DIC(64.21,0)="WKLD CODE LAB SECT^64.21"
 ^DIC(64.21,0,"GL")="^LAB(64.21,"
 ^DIC(64.21,0,"GL")="^LAB(64.21,"
@@ -6937,7 +6937,7 @@ ZWR
 ^DIC(64.81,"%D",9,0)="UPGRADE."
 ^DIC(64.81,"%D",10,0)=" "
 ^DIC(64.81,"%D",11,0)="The end user never uses this file for day to day laboratory activities. "
-^DIC(64.81,"%MSC")=3220719.105835
+^DIC(64.81,"%MSC")=3230311.16162
 ^DIC(64.9178,0)="LSRP AUDIT CONFIG^64.9178"
 ^DIC(64.9178,0,"GL")="^LABAUD(64.9178,"
 ^DIC(64.9178,0,"GL")="^LABAUD(64.9178,"
@@ -7711,7 +7711,7 @@ ZWR
 ^DIC(71,"%D",65,0)=" RA SERIES ONLY               PROCEDURE LIST"
 ^DIC(71,"%D",66,0)=" "
 ^DIC(71,"%D",67,0)=" The modification of any sort templates is not recommended."
-^DIC(71,"%MSC")=3220624.215022
+^DIC(71,"%MSC")=3230311.162117
 ^DIC(71.1,0)="MAJOR RAD/NUC MED AMIS CODES^71.1"
 ^DIC(71.1,0,"DD")="#"
 ^DIC(71.1,0,"DEL")="#"
@@ -13018,7 +13018,7 @@ ZWR
 ^DIC(95.3,"%D",62,0)="liability for any omissions or errors in the LOINC database, and all "
 ^DIC(95.3,"%D",63,0)="EXPRESS AND IMPLIED WARRANTIES, INCLUDING THOSE RELATED TO MERCHANTABILITY"
 ^DIC(95.3,"%D",64,0)="OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED."
-^DIC(95.3,"%MSC")=3220719.105835
+^DIC(95.3,"%MSC")=3230311.16162
 ^DIC(95.31,0)="LAB LOINC COMPONENT^95.31"
 ^DIC(95.31,0,"AUDIT")="@"
 ^DIC(95.31,0,"DD")="@"
@@ -13037,7 +13037,7 @@ ZWR
 ^DIC(95.31,"%D",1,0)="This file contains the name of the component or analyte measured for the "
 ^DIC(95.31,"%D",2,0)="LAB LOINC file (#95.3).  This file is a standard file distributed"
 ^DIC(95.31,"%D",3,0)="by Dallas CIOFO and should not be edited locally."
-^DIC(95.31,"%MSC")=3220719.105835
+^DIC(95.31,"%MSC")=3230311.16162
 ^DIC(95.4,0)="LAB MAPPING TRANSPORT^95.4"
 ^DIC(95.4,0,"AUDIT")=""
 ^DIC(95.4,0,"DD")=""
@@ -15229,7 +15229,7 @@ ZWR
 ^DIC(123,"%D",5,0)="  "
 ^DIC(123,"%D",6,0)="The only associating of results to a consult or request, for this "
 ^DIC(123,"%D",7,0)="version, is based on Medicine Package procedure results."
-^DIC(123,"%MSC")=3220612.141624
+^DIC(123,"%MSC")=3230311.162153
 ^DIC(123.033,0)="GMRC CONSULT MAPPING^123.033"
 ^DIC(123.033,0,"AUDIT")="@"
 ^DIC(123.033,0,"DD")="@"
@@ -20305,7 +20305,7 @@ ZWR
 ^DIC(344,"%D",8,0)="package options."
 ^DIC(344,"%D",9,0)=" "
 ^DIC(344,"%D",10,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(344,"%MSC")=3220814.171549
+^DIC(344,"%MSC")=3230311.162138
 ^DIC(344.1,0)="AR DEPOSIT^344.1I"
 ^DIC(344.1,0,"GL")="^RCY(344.1,"
 ^DIC(344.1,0,"GL")="^RCY(344.1,"
@@ -20348,7 +20348,7 @@ ZWR
 ^DIC(344.31,"%D",1,0)="This file is used to store each individual payment from a single payer"
 ^DIC(344.31,"%D",2,0)="made to the site using Electronic Funds Transfer and the EDI 3rd Party"
 ^DIC(344.31,"%D",3,0)="Lockbox system in VistA."
-^DIC(344.31,"%MSC")=3220624.195044
+^DIC(344.31,"%MSC")=3230311.162138
 ^DIC(344.4,0)="ELECTRONIC REMITTANCE ADVICE^344.4"
 ^DIC(344.4,0,"GL")="^RCY(344.4,"
 ^DIC(344.4,0,"GL")="^RCY(344.4,"
@@ -20358,14 +20358,14 @@ ZWR
 ^DIC(344.4,"%D",2,0)="is received electronically.  It holds the summary for each individual EOB"
 ^DIC(344.4,"%D",3,0)="(Explanation of Benefits) that comprise the ERA.  Individual EOB detail"
 ^DIC(344.4,"%D",4,0)="data is found in file 361.1 in Integrated Billing."
-^DIC(344.4,"%MSC")=3220814.171549
+^DIC(344.4,"%MSC")=3230311.162138
 ^DIC(344.49,0)="EDI LOCKBOX EOB WORKLIST^344.49"
 ^DIC(344.49,0,"GL")="^RCY(344.49,"
 ^DIC(344.49,0,"GL")="^RCY(344.49,"
 ^DIC(344.49,"%D",0)="^^2^2^3030204^"
 ^DIC(344.49,"%D",1,0)="This file contains the data that will be used to auto-create a receipt"
 ^DIC(344.49,"%D",2,0)="from data received via the EDI Lockbox system for ERAs."
-^DIC(344.49,"%MSC")=3190312.103535
+^DIC(344.49,"%MSC")=3230311.162138
 ^DIC(344.5,0)="AR EDI LOCKBOX MESSAGES^344.5"
 ^DIC(344.5,0,"GL")="^RCY(344.5,"
 ^DIC(344.5,0,"GL")="^RCY(344.5,"
@@ -20389,7 +20389,7 @@ ZWR
 ^DIC(344.6,"%D",6,0)="combination, a new record will be added to this file. The file will be"
 ^DIC(344.6,"%D",7,0)="maintained via the EDI Lockbox Parameters [RCDPE EDI LOCKBOX PARAMETERS]"
 ^DIC(344.6,"%D",8,0)="option.  "
-^DIC(344.6,"%MSC")=3220624.222953
+^DIC(344.6,"%MSC")=3230311.162138
 ^DIC(344.61,0)="RCDPE PARAMETER^344.61"
 ^DIC(344.61,0,"GL")="^RCY(344.61,"
 ^DIC(344.61,0,"GL")="^RCY(344.61,"
@@ -20626,6 +20626,7 @@ ZWR
 ^DIC(347,"%D",6,0)="needs to be recreated or traced in the event of a system problem."
 ^DIC(347,"%D",7,0)=" "
 ^DIC(347,"%D",8,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
+^DIC(347,"%MSC")=3230311.162138
 ^DIC(347.1,0)="AR FMS DOCUMENT TYPE^347.1"
 ^DIC(347.1,0,"GL")="^RC(347.1,"
 ^DIC(347.1,0,"GL")="^RC(347.1,"
@@ -29531,7 +29532,7 @@ ZWR
 ^DIC(409.85,"%D",1,0)="This file contains the SDEC Appt Request entries for the Appointment "
 ^DIC(409.85,"%D",2,0)="Scheduling application."
 ^DIC(409.85,"%D",3,0)="Each entry represents a unique appointment request."
-^DIC(409.85,"%MSC")=3220918.135158
+^DIC(409.85,"%MSC")=3230311.162234
 ^DIC(409.853,0)="SDEC DISPOSITION REASON^409.853"
 ^DIC(409.853,0,"AUDIT")="@"
 ^DIC(409.853,0,"DD")="@"
@@ -29687,7 +29688,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3221218.000843
+^DIC(409.93,"%MSC")=3230311.162234
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
@@ -30932,7 +30933,7 @@ ZWR
 ^DIC(430,"%D",4,0)="will compromise system integrity. Use the AR menu options."
 ^DIC(430,"%D",5,0)=""
 ^DIC(430,"%D",6,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(430,"%MSC")=3220626.152209
+^DIC(430,"%MSC")=3230311.162138
 ^DIC(430.2,0)="ACCOUNTS RECEIVABLE CATEGORY^430.2I"
 ^DIC(430.2,0,"DD")="@"
 ^DIC(430.2,0,"DEL")="@"
@@ -31035,7 +31036,7 @@ ZWR
 ^DIC(433,"%D",3,0)="Using Fileman will compromise system integrity. Use the AR menu options."
 ^DIC(433,"%D",4,0)=" "
 ^DIC(433,"%D",5,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(433,"%MSC")=3220624.232259
+^DIC(433,"%MSC")=3230311.162138
 ^DIC(433.001,0)="AR SUSPENSION TYPES^433.001"
 ^DIC(433.001,0,"AUDIT")="@"
 ^DIC(433.001,0,"DD")="@"
@@ -33572,7 +33573,7 @@ ZWR
 ^DIC(601.84,"%D",9,0)="indicates whether the instrument has been completed, who ordered the "
 ^DIC(601.84,"%D",10,0)="instrument, how many questions were answered and if the test has been "
 ^DIC(601.84,"%D",11,0)="electronically signed."
-^DIC(601.84,"%MSC")=3220626.114049
+^DIC(601.84,"%MSC")=3230311.162245
 ^DIC(601.844,0)="MH ADMINISTRATION SOURCE^601.844"
 ^DIC(601.844,0,"DD")="@"
 ^DIC(601.844,0,"DEL")="@"
@@ -33608,6 +33609,7 @@ ZWR
 ^DIC(601.85,"%D",3,0)="entry has an MH ADMINISTRATON ID field(#.01) of the MH ADMINISTRATION file"
 ^DIC(601.85,"%D",4,0)="(#601.84), a Question NUMBER field (#.01) of the MH QUESTIONS file (#601.72)"
 ^DIC(601.85,"%D",5,0)="and the response."
+^DIC(601.85,"%MSC")=3230311.162245
 ^DIC(601.86,0)="MH SCALEGROUPS^601.86"
 ^DIC(601.86,0,"AUDIT")="@"
 ^DIC(601.86,0,"DD")="@"

@@ -1,5 +1,5 @@
 RCDPRPL3 ;WISC/RFJ-receipt profile listmanager options ;1 Jun 99
- ;;4.5;Accounts Receivable;**114,148,153,173,301,326,367**;Mar 20, 1995;Build 11
+ ;;4.5;Accounts Receivable;**114,148,153,173,301,326,367,371**;Mar 20, 1995;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -153,7 +153,8 @@ PROCESS ;  option: process receipt
  ;  check for critical fields, deposit ticket, date of deposit
  ; No deposit ticket is OK for ERA not related to an EFT or for HAC ERA
  ; PRCA*4.5*367 - Do not create deposit ticket for CHAMPVA receipts
- I 'RCHMP,'RCDEPTDA,$S('$G(RCDPDATA(344,RCRECTDA,.18,"I")):1,$$EDILB^RCDPEU(RCRECTDA)=2:0,1:'$$HAC^RCDPURE1(RCRECTDA)) D
+ ; PRCA*4.5*371 - EDI LOCKBOX type Receipts have an EFT and don't need a deposit #
+ I 'RCEFT,'RCHMP,'RCDEPTDA,$S('$G(RCDPDATA(344,RCRECTDA,.18,"I")):1,$$EDILB^RCDPEU(RCRECTDA)=2:0,1:'$$HAC^RCDPURE1(RCRECTDA)) D
  .   W !!,"WARNING, Deposit Ticket is missing.  If you continue with processing,"
  .   W !,"the AR accounts will be updated and a cash receipt (CR) document will"
  .   W !,"NOT be sent to FMS.  You have the option to add the Deposit Ticket now."

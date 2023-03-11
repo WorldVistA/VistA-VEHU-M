@@ -1,5 +1,5 @@
 PSOERXA5 ;ALB/BWF - eRx Utilities/RPC's ; 1/20/2018 10:28am
- ;;7.0;OUTPATIENT PHARMACY;**508,581,631,617**;DEC 1997;Build 110
+ ;;7.0;OUTPATIENT PHARMACY;**508,581,631,617,651**;DEC 1997;Build 30
  ;
  Q
  ; ERXIEN - IEN to file 52.49
@@ -51,7 +51,7 @@ MEDDISP(ERXIEN,MTYPE) ;
  S FDA(52.49,ERXIEN_",",51.2)=REFILLS D FILE^DIE(,"FDA") K FDA
  Q
 REFRESP(ERXIEN,MTYPE) ;
- N GL,REFFDA,RESTYPE,REFNUM,RESNOTE,I,REACODE,IENS,FDA,RESTUP,RESNODE,RESTNODE,REFRES,REFREQ,DELTAS,PSOIEN,RXIEN
+ N GL,REFFDA,RESTYPE,REFNUM,RESNOTE,I,REACODE,IENS,FDA,RESTUP,RESNODE,RESTNODE,REFRES,REFREQ,DELTAS,PSOIEN,RXIEN,COMM
  S GL=$NA(^TMP($J,"PSOERXO1","Message",0,"Body",0,MTYPE,0,"Response",0))
  S RESTYPE=$O(@GL@("")),RESTUP=$$UP^XLFSTR(RESTYPE),RESTUP=$TR(RESTUP," ",""),RESTUP=$TR(RESTUP,",","")
  S RESTNODE=RESTYPE
@@ -70,16 +70,19 @@ REFRESP(ERXIEN,MTYPE) ;
  .S REFFDA(52.4955,IENS,.01)=REACODE
  .D UPDATE^DIE(,"REFFDA") K REFFDA
  S REFRES=ERXIEN,REFREQ=$$GETREQ^PSOERXU2(ERXIEN)
+ ; If a corresponding eRx was not found for the Response received, update the Response status to RXF and do not process further
+ I 'REFREQ D  Q
+ .S COMM="Response received was '"_$S(RESTYPE="A":"Approved",RESTYPE="D":"Denied",RESTYPE="DNP":"Denied, New Rx to Follow",RESTYPE="AWC":"Approved with Changes",RESTYPE="R":"Replace",1:$G(RESTUP))
+ .D UPDSTAT^PSOERXU1(ERXIEN,"RXF",COMM_"' - No corresponding eRx Record found.") Q
  S RXIEN=$$GET1^DIQ(52.49,REFREQ,.13,"I")
- ; If the Rx has been renewed within the VA, update that status to RXE and do not process further.
+ ; If the Rx has been renewed within the VA, update the Response status to RXF and do not process further.
  I RXIEN,$$VARENEW^PSOERXU6(RXIEN) D  Q
- .N COMM
- .S COMM="Reponse received was '"_$S(RESTYPE="A":"Approved",RESTYPE="D":"Denied",RESTYPE="DNP":"Denied, New Rx to Follow",RESTYPE="AWC":"Approved with Changes",RESTYPE="R":"Replace",1:$G(RESTUP))
+ .S COMM="Response received was '"_$S(RESTYPE="A":"Approved",RESTYPE="D":"Denied",RESTYPE="DNP":"Denied, New Rx to Follow",RESTYPE="AWC":"Approved with Changes",RESTYPE="R":"Replace",1:$G(RESTUP))
  .D UPDSTAT^PSOERXU1(ERXIEN,"RXF",COMM_"' - Unable to process - eRx already Renewed via Backdoor Pharmacy.") Q
  ; auto-dc original prescription if this is a denied, new rx to follow
  I RESTYPE="DNP"!(RESTYPE="R") D  Q
- .I RESTYPE="DNP" D RXACT^PSOBPSU2(RXIEN,,"RxRenewal response from external provider - Denied, New prescription to follow.","O")
- .I RESTYPE="R" D RXACT^PSOBPSU2(RXIEN,,"RxRenewal response from external provider - Replace.","O")
+ .I RESTYPE="DNP",RXIEN D RXACT^PSOBPSU2(RXIEN,,"RxRenewal response from external provider - Denied, New prescription to follow.","O")
+ .I RESTYPE="R",RXIEN D RXACT^PSOBPSU2(RXIEN,,"RxRenewal response from external provider - Replace.","O")
  .D AUTODC^PSOERXU3(ERXIEN)
  ; if the response type is approved, process the approval into OP.
  I RESTYPE="A" D  Q

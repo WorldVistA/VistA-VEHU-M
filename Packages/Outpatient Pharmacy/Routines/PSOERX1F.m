@@ -1,5 +1,5 @@
 PSOERX1F ;ALB/MR - Accept/Un-Accept eRx function ; 8/18/2020 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**617**;DEC 1997;Build 110
+ ;;7.0;OUTPATIENT PHARMACY;**617,651**;DEC 1997;Build 30
  ;
  Q
  ;PSOHY("LOC")=IEN of hospital location file (#44) - NOT USED, 
@@ -180,10 +180,11 @@ ADD(QUIET) ;Add CHCS message to Outpatient Pending Orders file
  .D UPDSTAT^PSOERXU1(RTHIEN,"CRP")
  S REQIEN=$$GETREQ^PSOERXU2(PSOIEN) I REQIEN,$$GET1^DIQ(52.49,REQIEN,.08,"I")="RR" D UPDSTAT^PSOERXU1(REQIEN,"RRP")
  ; PSO*7*508 - end
- ; gather the unexpanded sig and file in 52.41
- S ILOOP=0 F  S ILOOP=$O(^PS(52.49,PSOIEN,31,ILOOP)) Q:'ILOOP  D
- .S IARY(ILOOP)=$G(^PS(52.49,PSOIEN,31,ILOOP,0))
- I $D(IARY) D WP^DIE(52.41,PSOCPEND_",",9,"K","IARY","IERR")
+ ;
+ ; Saves the Actual eRx SIG (from outside provider) into the PROVIDER COMMENTS field (P-651/14)
+ N UNEXINS S UNEXINS(1)=$$ERXSIG^PSOERXUT(PSOIEN)
+ I $L($G(UNEXINS(1))) D WP^DIE(52.41,PSOCPEND_",",9,"K","UNEXINS")
+ ;
  I '$D(QUIET) W !!,"eRx #"_PSOHY("CHNUM")_" sent to PENDING OUTPATIENT ORDERS!"
  ;PSO*7*520 - add sending and warning/information related to RxVerify Message.
  I '$$UNACCBEF(PSOIEN),MTYPE="N"!((MTYPE="RE")&(RESTYPE="R"))!(MTYPE="CX") D

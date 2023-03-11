@@ -1,5 +1,5 @@
-PSOREF ;BIR/SAB-refill data entry ;May 08, 2019@06:42:36
- ;;7.0;OUTPATIENT PHARMACY;**1,23,27,36,46,78,130,131,148,206,313,441**;DEC 1997;Build 209
+PSOREF ;BIR/SAB - refill data entry ;Dec 01, 2022@15:02:34
+ ;;7.0;OUTPATIENT PHARMACY;**1,23,27,36,46,78,130,131,148,206,313,441,710**;DEC 1997;Build 1
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External references PSOL and PSOUL^PSSLOCK supported by DBIA 2789
  ;
@@ -98,8 +98,7 @@ REFILL(PLACER) ;passes flag to CPRS for front door refill request
  I ST Q "0^Prescription is in a Non-Refillable Status."
  I $P($G(^PSDRUG(PSODRG,2)),"^",3)'["O" Q "0^Cannot Refill. Drug No Longer Used by Outpatient Pharmacy."
  S PSORFRM=$P(RX0,"^",9) F PSOJ=0:0 S PSOJ=$O(^PSRX(RXN,1,PSOJ)) Q:'PSOJ  S PSORFRM=PSORFRM-1
- I $P(RX0,"^",9)=0,$O(^PSRX(RXN,"L",0)) Q "0^No Refills remaining. New Med order required."  ;PAPI
- I PSORFRM<1,$P(RX0,"^",9) Q "0^No Refills remaining. New Med order required."  ;PAPI
+ I PSORFRM<1 Q "0^No Refills remaining. New Med order required."
  I $P(^PSRX(RXN,3),"^"),DT=$P(^PSRX(RXN,3),"^") Q "0^Can't Refill, Fill Date already exists for "_$E($P(^PSRX(RXN,3),"^"),4,5)_"/"_$E($P(^PSRX(RXN,3),"^"),6,7)_"/"_$E($P(^PSRX(RXN,3),"^"),2,3)_"."
  I $P(^PSRX(RXN,3),"^"),DT<$P(^PSRX(RXN,3),"^") Q "0^Can't Refill, later Refill Date already exists for "_$E($P(^PSRX(RXN,3),"^"),4,5)_"/"_$E($P(^PSRX(RXN,3),"^"),6,7)_"/"_$E($P(^PSRX(RXN,3),"^"),2,3)_"."
  I $O(^PS(52.41,"ARF",RXN,0)) Q "0^Pending Refill Request already exists."

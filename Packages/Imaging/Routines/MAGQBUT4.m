@@ -1,5 +1,5 @@
-MAGQBUT4 ;WOIFO/RMP,DAC,JSJ - BP Utilities ; Mar 3, 2022@11:40:48
- ;;3.0;IMAGING;**7,8,48,20,81,39,121,135,196,198,214,222,235,238,243,248,325,293**;Mar 19, 2002;Build 6
+MAGQBUT4 ;WOIFO/RMP,DAC,JSJ - BP Utilities ; Jun 16, 2022@14:42:24
+ ;;3.0;IMAGING;**7,8,48,20,81,39,121,135,196,198,214,222,235,238,243,248,325,293,331**;Mar 19, 2002;Build 8
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -24,10 +24,10 @@ VOKR(RESULT,VER) ; RPC for VOK [MAGQ VOK]
  ;   get client Patch number
  S CLPATCH=$$TRIM($P(VER,"P",2))
  ; These are allowable Clients.
- S SVRPATCH=",248,325,293" ; P325,P293 continue last 3
+ S SVRPATCH=",325,293,331" ; P325,P293,P331 drop 248 continue last 3
  ; if client patch is allowed Result = 1^...
- I SVRPATCH[CLPATCH S RESULT="1^3.0P293"
- E  S RESULT="0^3.0P293"
+ I SVRPATCH[CLPATCH S RESULT="1^3.0P331"
+ E  S RESULT="0^3.0P331"
  Q
 OLD ;
  S VER="3.0P"_($$TRIM($P(VER,"P",2)))

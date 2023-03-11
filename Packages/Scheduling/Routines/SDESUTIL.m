@@ -1,5 +1,5 @@
-SDESUTIL ;ALB/TAW,KML,LAB,MGD - SDES Utilities ;Sept 01, 2022
- ;;5.3;Scheduling;**801,804,805,814,816,818,820,823,824,825**;Aug 13, 1993;Build 2
+SDESUTIL ;ALB/TAW,KML,LAB,MGD,ANU - SDES Utilities ;Dec 07, 2022
+ ;;5.3;Scheduling;**801,804,805,814,816,818,820,823,824,825,831**;Aug 13, 1993;Build 4
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to INSTITUTION in #2251
@@ -38,7 +38,7 @@ EASVALIDATE(SDEAS) ;
 ISDATEDST(DATE,DSTSUM) ;Does this date use Daylight Savings
  ; DATE -    FM format
  ; DSTSUM - "DST" or "SUM"
- ; Return 1 = DATE is considered DST or SUM.
+ ; Return 1 = DATE is considered DST or SUM
  ;        0 = DATE is not DST and not SUM
  ;       -1 = DATE is not FM format
  N YR
@@ -105,6 +105,9 @@ TIMEZONEDATA(CLINICIEN) ;Get timezone and offsets
  I $G(CLINICIEN) D
  .S SDDIV=$$GET1^DIQ(44,CLINICIEN_",",3.5,"I")
  .S:SDDIV SDINST=$$GET1^DIQ(40.8,SDDIV_",",.07,"I")
+ ; 831 - BEGIN
+ I $$GET1^DIQ(4,SDINST,800,"I")="" S SDINST=""
+ ; 831 - END
  I SDINST="" S SDINST=$$GET1^DIQ(8989.3,1,217,"I")
  S SDTIMEZONEE=$$GET1^DIQ(4,SDINST,800,"E")
  S SDTIMEZONEI=$$GET1^DIQ(4,SDINST,800,"I")
@@ -204,14 +207,48 @@ STATIONNUMBER(CLINICIEN) ;
  . S STATIONNUMBER=$$GET1^DIQ(4,INSTIEN,99,"I")
  Q
  ;
+VALIDATEAMIS(AMIS,RESTYP) ;
+ ; Input:
+ ;  AMIS: The AMIS Stop Code to validate
+ ;  RESTYP: P:Primary, C:Credit
+ ; Output:
+ ;  0 = AMIS Stop Code is Valid
+ ;  # = Error number to log
+ S AMIS=$G(AMIS),RESTYP=$G(RESTYP)
+ N ERRORNUM
+ S ERRORNUM=""
+ I RESTYP="P" D PRIMARYAMIS(.AMIS,.ERRORNUM)
+ I RESTYP="C" D SECONDARYAMIS(.AMIS,.ERRORNUM)
+ Q +ERRORNUM
+ ;
+PRIMARYAMIS(PRIAMIS,ERRORNUM) ;
+ I +PRIAMIS=0 S ERRORNUM=270 Q
+ I $L(PRIAMIS) D
+ . I +PRIAMIS=0 S ERRORNUM=270 Q
+ . I +PRIAMIS=900 S ERRORNUM=273 Q
+ . S PRIAMIS=$$AMISTOSTOPCODE(.PRIAMIS)
+ . I +PRIAMIS=0 S ERRORNUM=270 Q
+ . ; AMIS Stop Code has priority over passed in Stop Code
+ . I $$RESCHKFAILED(+PRIAMIS,"P") S ERRORNUM=287 Q
+ Q
+ ;
+SECONDARYAMIS(CREDITAMIS,ERRORNUM) ;
+ I +CREDITAMIS=0 S ERRORNUM=271 Q
+ I $L(CREDITAMIS) D
+ . I +CREDITAMIS=0 S ERRORNUM=271 Q
+ . I +CREDITAMIS=900 S ERRORNUM=273 Q
+ . S CREDITAMIS=$$AMISTOSTOPCODE(.CREDITAMIS)
+ . I +CREDITAMIS=0 S ERRORNUM=271 Q
+ . ; AMIS Credit Stop Code has priority over passed in Credit Stop Code
+ . I $$RESCHKFAILED(+CREDITAMIS,"S") S ERRORNUM=288 Q
+ Q
+ ;
 AMISTOSTOPCODE(AMIS) ; Map from AMIS to Stop Code
  ; Input: AMIS = (Req) the AMIS REPORTING STOP CODE (#1) field from the CLINIC STOP (#40.7) file.
  ; Output: 0:validation failed, IEN for the Stop Code that matches to the passed in AMIS code.
  I '+AMIS Q 0
- I AMIS,'$D(^DIC(40.7,"C",AMIS)) Q 0
- N SCODEIEN
- S SCODEIEN=$O(^DIC(40.7,"C",+AMIS,""))
- I +SCODEIEN,$D(^DIC(40.7,SCODEIEN,0)) Q SCODEIEN
+ S AMIS=$$FIND1^DIC(40.7,"","X",AMIS,"C")
+ I +AMIS,$D(^DIC(40.7,AMIS,0)) Q AMIS
  Q 0
  ;
 RESCHKFAILED(STOPCODEIEN,RESTYPE) ;

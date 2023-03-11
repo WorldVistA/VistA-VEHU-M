@@ -1,5 +1,5 @@
 PSOERXOU ;ALB/BWF - eRx parsing Utilities ; 12/30/2019 3:46pm
- ;;7.0;OUTPATIENT PHARMACY;**581**;DEC 1997;Build 126
+ ;;7.0;OUTPATIENT PHARMACY;**581,651**;DEC 1997;Build 30
  Q
  ;
  ; GBL - global root where the data is stored
@@ -49,7 +49,14 @@ OADD(GBL,CNT,AL1,AL2,CTY,ST,PC,CC) ;
 OCOMM(GBL,SGBL,CNT,IENS,SFILE,DAFIL,DAFLD,DAIENS) ;
  ; do not build if there are no communication numbers
  N CSEQ,CIEN,CIENS,TYPE,EMAIL,NUM,EXT,SSMS,DADD,CDAT
- Q:'$O(@SGBL@("B",0))
+ ; If no Phone # found, send 0000000000 because it is required
+ I '$O(@SGBL@("B",0)) D  Q
+ .D C S @GBL@(CNT,0)="<CommunicationNumbers>"
+ .D C S @GBL@(CNT,0)="<PrimaryTelephone>"
+ .D C S @GBL@(CNT,0)="<Number>0000000000</Number>"
+ .D C S @GBL@(CNT,0)="</PrimaryTelephone>"
+ .D C S @GBL@(CNT,0)="</CommunicationNumbers>"
+ ;
  D C S @GBL@(CNT,0)="<CommunicationNumbers>"
  ; loop through and build communication values
  S CSEQ=0 F  S CSEQ=$O(@SGBL@("B",CSEQ)) Q:'CSEQ  D

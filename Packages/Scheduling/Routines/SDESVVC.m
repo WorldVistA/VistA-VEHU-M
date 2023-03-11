@@ -1,51 +1,76 @@
-SDESVVC ;ALB/WTC,DJS - VISTA SCHEDULING RPCS ;NOV 9, 2022@9:52
- ;;5.3;Scheduling;**828**;Aug 13, 1993;Build 8
+SDESVVC ;ALB/WTC,DJS,JAS - VISTA SCHEDULING RPCS ;DEC 23, 2022@11:25
+ ;;5.3;Scheduling;**828,833**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
- Q  ;
+ Q
  ;
-VVCAPPT(SDECY,SDECAPPT) ;
+VVCAPPT(SDESJSON,SDESAPPT) ;
  ;
- ;  SDEC VVC_APPT RPC
+ ;  SDES VVC APPT RPC
  ;
- ;  Returns VVC Web app URL if appointment is for VVC clinic or null if not.
+ ;  Returns VVC Web app URL in JSON format if appointment is valid and for a VVC clinic.
  ;
- ;  SDECAPPT = Appointment (pointer to #409.84)
+ ;  SDESAPPT = Appointment (pointer to #409.84)
  ;
- S SDECY="^TMP(""SDECSTNG"","_$J_",""VVC_APPT"")" ;
- K @SDECY ;
+ N SDESARRAY
  ;
- S @SDECY@(0)="T01000URL"_$C(30) ;
+ D ERRCHK
+ I '$D(SDESARRAY("Error",1)) D URLCHK
  ;
- I +$G(SDECAPPT)=0 S @SDECY@(1)=$C(30)_$C(31) Q  ;
- I '$D(^SDEC(409.84,SDECAPPT)) S @SDECY@(1)=$C(30)_$C(31) Q  ;
+ D BUILDJSON^SDESBUILDJSON(.SDESJSON,.SDESARRAY)
+ Q
  ;
- N SDECRES,SDEC44,SDECSTOP,SDECREDT ;
+ERRCHK ;
+ ;
+ ; ERROR CHECKING
+ ;
+ I '$L($G(SDESAPPT)) D  Q
+ . S SDESARRAY("Error",1)=$$ERRTXT(14)  ; Missing Appt IEN
+ ;
+ I '+$G(SDESAPPT) D  Q
+ . S SDESARRAY("Error",1)=$$ERRTXT(15)  ; Incorrectly formatted Appt IEN
+ ;
+ I '$D(^SDEC(409.84,SDESAPPT)) D  Q
+ . S SDESARRAY("Error",1)=$$ERRTXT(15)  ; Appt IEN does not exist
+ Q
+ ;
+URLCHK ;
+ ;
+ N SDESRES,SDES44,SDESSTOP,SDESREDT
  ;
  ;  Appointment's resource
  ;
- S SDECRES=$P($G(^SDEC(409.84,SDECAPPT,0)),U,7) I 'SDECRES S @SDECY@(1)=$C(30)_$C(31) Q  ;
+ S SDESRES=$$GET1^DIQ(409.84,SDESAPPT,.07,"I")
+ I 'SDESRES S SDESARRAY("Error",1)=$$ERRTXT(383) Q  ; Resource is missing from Appt
  ;
  ;  Resource's clinic
  ;
- S SDEC44=$P($G(^SDEC(409.831,SDECRES,0)),U,4) I 'SDEC44 S @SDECY@(1)=$C(30)_$C(31) Q  ;
+ S SDES44=$$GET1^DIQ(409.831,SDESRES,.04,"I")
+ I 'SDES44 S SDESARRAY("Error",1)=$$ERRTXT(283) Q  ; Clinic is missing from Resource
  ;
  ;  Clinic's stop code and credit stop code.
  ;
- S SDECSTOP=$P($G(^SC(SDEC44,0)),U,7),SDECREDT=$P(^(0),U,18) ;
- I SDECSTOP S SDECSTOP=$P($G(^DIC(40.7,SDECSTOP,0)),U,2) ;
- I SDECREDT S SDECREDT=$P($G(^DIC(40.7,SDECREDT,0)),U,2) ;
+ S SDESSTOP=$$GET1^DIQ(44,SDES44,8,"I"),SDESREDT=$$GET1^DIQ(44,SDES44,2503,"I")
+ I SDESSTOP S SDESSTOP=$$GET1^DIQ(40.7,SDESSTOP,1,"I")
+ I SDESREDT S SDESREDT=$$GET1^DIQ(40.7,SDESREDT,1,"I")
  ;
- I 'SDECSTOP,'SDECREDT S @SDECY@(1)=$C(30)_$C(31) Q  ;  No stop codes so no URL.
+ I 'SDESSTOP,'SDESREDT S SDESARRAY("Error",1)=$$ERRTXT(98) Q  ;  No stop codes so no URL.
  ;
  ;  If clinic's stop code or credit stop code is for VVC, return URL for VVC Web app
  ;
- I SDECSTOP'="",$O(^SDEC(409.98,1,3,"B",SDECSTOP,0))>0 S @SDECY@(1)=$G(^SDEC(409.98,1,2))_$C(30)_$C(31) Q  ;
- I SDECREDT'="",$O(^SDEC(409.98,1,3,"B",SDECREDT,0))>0 S @SDECY@(1)=$G(^SDEC(409.98,1,2))_$C(30)_$C(31) Q  ;
+ I SDESSTOP'="",$O(^SDEC(409.98,1,3,"B",SDESSTOP,0))>0 D  Q
+ . S SDESARRAY(0)="T01000URL",SDESARRAY(1)=$$GET1^DIQ(409.98,1,6)
+ I SDESREDT'="",$O(^SDEC(409.98,1,3,"B",SDESREDT,0))>0 D  Q
+ . S SDESARRAY(0)="T01000URL",SDESARRAY(1)=$$GET1^DIQ(409.98,1,6)
  ;
- ;  Not a VVC clinic.
+ ;  Not a VVC appointment.
  ;
- S @SDECY@(1)=$C(30)_$C(31) Q  ;
+ S SDESARRAY("Error",1)=$$ERRTXT(403)
  ;
- Q  ;
+ERRTXT(ERRNM) ;
  ;
+ ; ERRNM - The ERROR CODE/NUMBER field from the SDES ERROR CODES file (#409.93)
+ ;
+ N SDESERR
+ D ERRLOG^SDESJSON(.SDESERR,ERRNM)
+ Q SDESERR("Error",1)

@@ -1,5 +1,5 @@
 YTSCAT ;SLC/KCM - CAT Scoring and Reporting ; 6/30/2021
- ;;5.01;MENTAL HEALTH;**182,199,202**;DEC 30,1994;Build 49
+ ;;5.01;MENTAL HEALTH;**182,199,202,217**;DEC 30,1994;Build 12
  ;
 DLLSTR(YSDATA,YS,YSMODE) ; main tag for both scores and report text
  ;.YSDATA(1)=[DATA]
@@ -67,7 +67,7 @@ REPORT(YSDATA,YS) ; add textual scores to report
  . I TTYP="ptsd-e" D ADDSCORE(I,"cate^seve^prec")
  . I TTYP="psy-c" D ADDSCORE(I,"cate^seve^prec")
  . I TTYP="psy-s" D ADDSCORE(I,"cate^seve^prec")
- . I $D(TREE("report","tests",I,"items"))>1 S ALLANS=0 D QA4TEST(I)
+ . I $D(TREE("report","tests",I,"items"))>1 S ALLANS=0 D TM4TEST(I),QA4TEST(I)
  ;
  I ALLANS D QA4ALL
  S I=$O(YSDATA(""),-1)+1
@@ -76,11 +76,14 @@ REPORT(YSDATA,YS) ; add textual scores to report
  Q
 QA4TEST(ITEST) ; add Questions & Answers for 1 Test
  ; expects: TREE,SCORTXT,LN from REPORT
- N ITEM,QID,TXT
+ N ITEM,QID,TXT,DUR
  S TXT=""
  S ITEM=0 F  S ITEM=$O(TREE("report","tests",ITEST,"items",ITEM)) Q:'ITEM  D
  . S QID=$G(TREE("report","tests",ITEST,"items",ITEM,"questionId"))
- . I QID S TXT=TXT_$$QA4QID(QID)
+ . I QID D
+ . . S TXT=TXT_$$QA4QID(QID)
+ . . S DUR=$G(TREE("report","tests",ITEST,"items",ITEM,"duration"),0)
+ . . I DUR S TXT=TXT_"("_$$TMSTR(DUR)_")"
  S SCORTXT=SCORTXT_"||Questions and Answers:|"_TXT
  Q
 QA4QID(QID) ; return question & response text from answers
@@ -88,17 +91,35 @@ QA4QID(QID) ; return question & response text from answers
  S QATXT=""
  S ANS=0 F  S ANS=$O(TREE("answers",ANS)) Q:'ANS  I TREE("answers",ANS,"id")=QID D  Q
  . S QATXT=$$WRAP($G(TREE("answers",ANS,"text")),75,"|")
- . S QATXT=QATXT_"|   "_$G(TREE("answers",ANS,"responseText"))
+ . S QATXT=QATXT_"|   "_$$PAD(25,$G(TREE("answers",ANS,"responseText")))
  Q QATXT
  ;
+TM4TEST(SEQ) ; return a block of text with the completion time
+ N I,TTIME
+ I $G(TREE("status"))="declined" QUIT
+ ;
+ S TTIME=0
+ S I=0 F  S I=$O(TREE("report","tests",SEQ,"items",I)) Q:'I  D
+ . S TTIME=TTIME+$G(TREE("report","tests",SEQ,"items",I,"duration"),0)
+ D ADDLN("|   Total Elapsed Time: "_$$TMSTR(TTIME))
+ Q
 QA4ALL ; add Questions & Answers for all tests together
  ; expects: TREE,SCORTXT,LN from REPORT
  N I,TXT
  S TXT=""
  S I=0 F  S I=$O(TREE("answers",I)) Q:'I  D
  . S TXT=TXT_$$WRAP($G(TREE("answers",I,"text")),75,"|")
- . S TXT=TXT_"|   "_$G(TREE("answers",I,"responseText"))
+ . S TXT=TXT_"|   "_$$PAD(25,$G(TREE("answers",I,"responseText")))
+ . S TXT=TXT_"("_$$TMSTR($G(TREE("answers",I,"duration"))/1000)_")"
  S SCORTXT=SCORTXT_"||Questions and Answers:|"_TXT
+ Q
+TM4ALL ; add elapsed time for all questions
+ N I,TTIME
+ S TTIME=0
+ S I=0 F  S I=$O(TREE("answers",I)) Q:'I  D
+ . S TTIME=TTIME+$G(TREE("answers",I,"duration"),0)
+ S TTIME=TTIME/1000
+ D ADDLN("|   Total Elapsed Time: "_$$TMSTR(TTIME))
  Q
 ADDSCORE(SEQ,WHICH) ; return a block of text with the appropriate scores
  ; expects TREE,SCORTXT from REPORT
@@ -153,6 +174,19 @@ INSNAME(TTYP) ; return full name for a CAT Test Type
  I TTYP="psy-c" Q "CAT-PSYCHOSIS"
  I TTYP="psy-s" Q "CAT-PSYCHOSIS"
  Q "Unknown Test"
+ ;
+PAD(LEN,STR) ; return spaces until X is LEN
+ N X S X="                                        "
+ Q STR_$E(X,1,LEN-$L(STR))
+ ;
+TMSTR(ATIME) ; return a readable elapsed time
+ N MIN,SEC,X
+ S MIN=ATIME\60
+ S SEC=$P(ATIME-(60*MIN)+0.5,".")
+ S X=""
+ I MIN S X=MIN_$S(MIN=1:" minute ",1:" minutes ")
+ S X=X_SEC_$S(SEC=1:" second",1:" seconds")
+ Q X
  ;
 WP2JSON(YSDATA,TREE) ; put YSDATA answer into M-subscript format
  N I,J,K,L,JSON

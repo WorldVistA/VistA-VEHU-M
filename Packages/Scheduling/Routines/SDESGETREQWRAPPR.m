@@ -1,5 +1,5 @@
 SDESGETREQWRAPPR ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;SEP 14, 2022
- ;;5.3;Scheduling;**815,818,820,823,825**;Aug 13, 1993;Build 2
+ ;;5.3;Scheduling;**815,818,820,823,825,831**;Aug 13, 1993;Build 4
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -181,6 +181,7 @@ APPTREQUEST(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"ClinicStopCodeAMIS")=""
  S REQUEST("Request",NUM,"CommentMultiple",1)=""
  S REQUEST("Request",NUM,"RequestComments")=""
+ S REQUEST("Request",NUM,"ServiceConnectedPercentage")=""
  Q
  ;
 SDECONTACT(REQUEST,NUM) ;

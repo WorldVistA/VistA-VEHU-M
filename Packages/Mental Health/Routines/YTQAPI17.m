@@ -1,12 +1,13 @@
-YTQAPI17 ;ALB/ASF,HIOFO/FT - MHA REMOTE PROCEDURES IMPORT ;1/23/13 4:27pm
- ;;5.01;MENTAL HEALTH;**96,108**;Dec 30, 1994;Build 17
- ;No external references
+YTQAPI17 ;ALB/ASF - MHA REMOTE PROCEDURES IMPORT ;3/18/10 3:16pm
+ ;;5.01;MENTAL HEALTH;**96,217**;Dec 30, 1994;Build 12
+ ;
+ ;No external references in this routine
+ ;
  Q
 SAVEALL(YSDATA,YS) ;save all answers from an administration
- ;entry point for YTQ SET ANSWER ALL rpc
  ;input: AD = ADMINISTRATION #
  ;output: [DATA] vs [ERROR]
- N N,N1,YSIENS,YSAD,YSQN,YSCI,YSCODE,YSOP,YSFLAG
+ N G,G1,N,N1,YSIENS,YSAD,YSQN,YSCI,YSCODE,YSOP,YSFLAG
  S YSDATA(1)="[ERROR]"
  S YSAD=$G(YS("AD"))
  I YSAD'?1N.N S YSDATA(2)="bad ad num" Q  ;-->out
@@ -17,17 +18,17 @@ SAVEALL(YSDATA,YS) ;save all answers from an administration
  . ;use old ien
  . I $D(^YTT(601.85,"AC",YSAD,YSQN)) S YSIENS=$O(^YTT(601.85,"AC",YSAD,YSQN,0))
  . ;set new ien
- . I '$D(^YTT(601.85,"AC",YSAD,YSQN)) S YSIENS="",YSIENS=$$NEW^YTQLIB(601.85)
+ . I '$D(^YTT(601.85,"AC",YSAD,YSQN)) S YSIENS="",YSIENS=$$NEW(601.85)
  . I YSIENS'?1N.N S YSFLAG=1,YSDATA(1)="[ERROR]",YSDATA(2)="bad ans ien" Q  ;-->out
  . L +^YTT(601.85,YSIENS):DILOCKTM
  . I '$T S YSFLAG=1,YSDATA(1)="[ERROR]",YSDATA(2)="time out" Q  ;-->out
  . S ^YTT(601.85,YSIENS,0)=YSIENS_U_YSAD_U_YSQN_U_YSCI
- . L -^YTT(601.85,YSIENS)
  . S ^YTT(601.85,0)="MH ANSWERS^601.85^"_YSIENS_U_($P(^YTT(601.85,0),U,4)+1)
  . S ^YTT(601.85,"B",YSIENS,YSIENS)=""
  . S ^YTT(601.85,"AC",YSAD,YSQN,YSIENS)=""
  . S ^YTT(601.85,"AD",YSAD,YSIENS)=""
  . S N1=0 F  S N1=$O(YS(N,N1)) Q:N1'>0  S ^YTT(601.85,YSIENS,1,N1,0)=YS(N,N1),^YTT(601.85,YSIENS,1,0)=U_U_N1_U_N1_U_DT_U
+ . L -^YTT(601.85,YSIENS)
  . S YSDATA(2)=N_"^OK"
  ;set has been operational
  S YSDATA(1)="[DATA]"
@@ -35,3 +36,14 @@ SAVEALL(YSDATA,YS) ;save all answers from an administration
  S YSOP=$P($G(^YTT(601.71,YSCODE,2)),U,2)
  S:YSOP="Y" $P(^YTT(601.71,YSCODE,2),U,5)="Y"
  Q
+NEW(YSFILEN) ; Adding New Entry -- return IEN -- use incremental locking
+ N MHQ2X,MHQ2XFND,YS
+ S YS=$P($G(^YTT(YSFILEN,0)),U,3) S:YS<1 YS=1
+ I '$D(^XUSEC("YSPROG",DUZ)),(YS<100000) S YS=100000 ; Natl pointers <100000
+ S MHQ2XFND=0
+ F MHQ2X=YS:1 I '$D(^YTT(YSFILEN,MHQ2X)) D  Q:MHQ2XFND
+ . L +^YTT(YSFILEN,MHQ2X):DILOCKTM Q:'$T
+ . S ^YTT(YSFILEN,MHQ2X,0)=MHQ2X,MHQ2XFND=1
+ . L -^YTT(YSFILEN,MHQ2X)
+ Q MHQ2X
+ ;

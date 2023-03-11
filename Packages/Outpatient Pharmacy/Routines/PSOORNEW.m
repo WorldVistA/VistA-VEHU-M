@@ -1,5 +1,5 @@
 PSOORNEW ;BIR/SAB - display orders from oerr ;Dec 13, 2021@08:01:18
- ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,55,46,71,90,94,106,131,133,143,237,222,258,206,225,251,386,390,391,372,416,431,313,408,436,411,444,486,446,505,517,508,457,581,617,441**;DEC 1997;Build 209
+ ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,55,46,71,90,94,106,131,133,143,237,222,258,206,225,251,386,390,391,372,416,431,313,408,436,411,444,486,446,505,517,508,457,581,617,441,651**;DEC 1997;Build 30
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PS(50.606 supported by DBIA 2174
@@ -32,7 +32,8 @@ PT D DOSE2^PSOORFI4
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="        Indications: "_$G(PSONEW("IND")) ;*441-IND
  I $P($G(^PS(55,PSODFN,"LAN")),"^"),$G(PSONEW("INDO"))]"" D
  . S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="  Other Indications: "_PSONEW("INDO")
- S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="       Instructions:" S TY=2 D INST^PSOORFI1
+ I $$ERXIEN^PSOERXUT(ORD_"P") S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="           eRx Drug: "_$$GET1^DIQ(52.49,$$ERXIEN^PSOERXUT(ORD_"P"),3.1)
+ S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="   "_$S($$ERXIEN^PSOERXUT(ORD_"P"):"eRx",1:"   ")_" Instructions: " S TY=2 D INST^PSOORFI1
  K PSOELSE S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="                SIG:"
  F I=0:0 S I=$O(SIG(I)) Q:'I  S SIG=SIG(I) D
  .F SG=1:1:$L(SIG) S:$L(^TMP("PSOPO",$J,IEN,0)_" "_$P(SIG," ",SG))>80 IEN=IEN+1,$P(^TMP("PSOPO",$J,IEN,0)," ",20)=" " S:$P(SIG," ",SG)'="" ^TMP("PSOPO",$J,IEN,0)=$G(^TMP("PSOPO",$J,IEN,0))_" "_$P(SIG," ",SG)
@@ -244,6 +245,6 @@ CSBLOCK(DFN,DIEN) ;
  Q 0
  ;
 CSERX(ORD) ; Check whether a Pending Order is for a CS eRx
- I $$ERXIEN^PSOERXUT(ORD_"P"),$$GET1^DIQ(52.49,$$ERXIEN^PSOERXUT(ORD_"P"),95.1,"I") D  Q 1
+ I $$ERXIEN^PSOERXUT(ORD_"P"),$$CSDRG(+$$GET1^DIQ(52.41,+ORD,11,"I")) D  Q 1
  . S VALMSG="CS eRx prescriptions cannot be edited",VALMBCK="R" W $C(7)
  Q 0

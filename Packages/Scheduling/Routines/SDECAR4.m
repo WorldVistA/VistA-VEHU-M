@@ -1,5 +1,5 @@
 SDECAR4 ;ALB/TAW,LAB - VISTA SCHEDULING RPCS ;Oct 31, 2022@14:00
- ;;5.3;Scheduling;**784,785,788,805,813,826**;Aug 13, 1993;Build 18
+ ;;5.3;Scheduling;**784,785,788,805,813,826,833**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Reference to ^DPT(DFN,0) in ICR #10035
  ;
@@ -109,7 +109,7 @@ BUILDREC ; Build an output record
  N ARINST,ARINSTNM,ARTYPE,VAOSGUID,ARSTOP,ARSTOPN,ARCLIEN,ARCLNAME,APPTYPE,ARUSER,ARUSRNM
  N AREDT,ARPRIO,ARENPRI,ARREQBY,ARPROV,ARPROVNM,ARSDOA,ARSDOA,ARDAM,ARCLERK,ARCLERKN,ARASD,ARSDOA
  N ARCLERK,ARCLERKN,ARDAM,ARSVCCON,ARDAPTDT,ARCOMM,ARMAR,ARMAI,ARMAN,ARPC,ARDISPD,ARDISPU,ARDISPUN
- N APPTPTRS,CHILDREN,ARMRTC,SDPARENT,SDMTRC,CANCHANGEPID
+ N APPTPTRS,CHILDREN,ARMRTC,SDPARENT,SDMTRC,CANCHANGEPID,MRTCSEQUENCENUM
  S ARORIGDT=ARDATA(FNUM,ARIEN_",",1,"I")
  S ARSTAT=ARDATA(FNUM,ARIEN_",",23,"I")
  S DFN=ARDATA(FNUM,ARIEN_",",.01,"I")
@@ -157,6 +157,7 @@ BUILDREC ; Build an output record
  S CHILDREN=$$CHILDREN^SDECAR1A(ARIEN)
  S ARMRTC=$$MRTC^SDECAR(ARIEN)
  S SDPARENT=ARDATA(FNUM,ARIEN_",",43.8,"I")
+ S MRTCSEQUENCENUM=ARDATA(FNUM,ARIEN_",",43.1,"I")
  S CANCHANGEPID=ARDATA(409.85,ARIEN_",",49,"I")
  ;Build string of RTC dates
  S (SDI,SDMTRC)=""
@@ -221,7 +222,8 @@ BUILDREC ; Build an output record
  S APPT("ApptReq",COUNT,"DateTimeEnteredE")=AREDT
  S SUBCNT=0
  F I=1:1:$L(SDMTRC,"|") D
- .S:$P(SDMTRC,"|",I)'="" APPT("ApptReq",COUNT,"MRTCCalcPrefDates",$I(SUBCNT),"Date")=$P(SDMTRC,"|",I)
+ .S SUBCNT=SUBCNT+1
+ .S:$P(SDMTRC,"|",I)'="" APPT("ApptReq",COUNT,"MRTCCalcPrefDates",SUBCNT,"Date")=$P(SDMTRC,"|",I)
  I '$D(APPT("ApptReq",COUNT,"MRTCCalcPrefDates")) S APPT("ApptReq",COUNT,"MRTCCalcPrefDates")=""
  ;
  S APPT("ApptReq",COUNT,"ReqServiceSpecialtyI")=ARSTOP
@@ -231,19 +233,22 @@ BUILDREC ; Build an output record
  S APPT("ApptReq",COUNT,"ApptClerkE")=ARCLERKN
  S APPT("ApptReq",COUNT,"DateApptMadeE")=ARDAM
  S APPT("ApptReq",COUNT,"CountOfRTCs")=ARMRTC  ;Count of nodes in 43.3 sub file
+ S APPT("ApptReq",COUNT,"MrtcSequenceNumber")=$G(MRTCSEQUENCENUM)
  S APPT("ApptReq",COUNT,"ReqAppointmentTypeI")=APPTYPE
  S APPT("ApptReq",COUNT,"PatientStatusE")=SDPS
  S APPT("ApptReq",COUNT,"CanEditPid")=CANCHANGEPID
  S SUBCNT=0
  F I=1:1:$L(APPTPTRS,"|") D
  .S VAR=$P(APPTPTRS,"|",I)
- .S:VAR'="" APPT("ApptReq",COUNT,"MultiAppointmentsI",$I(SUBCNT),"IEN")=VAR
+ .S SUBCNT=SUBCNT+1
+ .S:VAR'="" APPT("ApptReq",COUNT,"MultiAppointmentsI",SUBCNT,"IEN")=VAR
  I '$D(APPT("ApptReq",COUNT,"MultiAppointmentsI")) S APPT("ApptReq",COUNT,"MultiAppointmentsI")=""
  ;
  S SUBCNT=0
  F I=1:1:$L(CHILDREN,"|") D
  .S VAR=$P(CHILDREN,"|",I)
- .S:VAR'="" APPT("ApptReq",COUNT,"MultiApptRequestsChildI",$I(SUBCNT),"ARIEN")=VAR
+ .S SUBCNT=SUBCNT+1
+ .S:VAR'="" APPT("ApptReq",COUNT,"MultiApptRequestsChildI",SUBCNT,"ARIEN")=VAR
  I '$D(APPT("ApptReq",COUNT,"MultiApptRequestsChildI")) S APPT("ApptReq",COUNT,"MultiApptRequestsChildI")=""
  ;
  S APPT("ApptReq",COUNT,"ParentRequestI")=SDPARENT

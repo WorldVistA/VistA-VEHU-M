@@ -1,5 +1,8 @@
-RASITE ;HISC/CAH,FPT,GJC AISC/MJK,RMO - IRM Menu ; Jan 05, 2022@10:42:30
- ;;5.0;Radiology/Nuclear Medicine;**137,185**;Mar 16, 1998;Build 1
+RASITE ;HISC/CAH,FPT,GJC AISC/MJK,RMO - IRM Menu ; Sep 28, 2022@11:23:18
+ ;;5.0;Radiology/Nuclear Medicine;**137,185,194**;Mar 16, 1998;Build 1
+ ;
+ ; Note: tag DD71 code removed with RA*5.0*194 
+ ;
 2 ;;Device Specifications
  F  D  Q:%
  . W !!,"Do you want to see a 'help' message on printer assignment"
@@ -24,27 +27,20 @@ Q3 K I,POP,DDER,DDH,DISYS Q
 5 ;;Imaging Type Activity Log
  S L=0,DIC="^RA(79.2,",FLDS="[RA ACTIVITY LOG]",FR="A",TO="ZZZZ",BY="#.01" D EN1^DIP K FR,TO,FLDS,BY,DHD,POP Q
  ;
-DD71 ;entry point for input transform, 71.03, .01 field
- ;imaging type in procedure file should have associated AMIS codes
- ; radiology - AMIS codes ien's are 1:26
- ; nuclear medicine - AMIS codes ien is 25:27
- Q:'$D(DA(1))
- N RAIMAG,RAIMAGA S RAIMAG=$$ITYPE(DA(1)),RAIMAGA=$P(RAIMAG,U,3)
- Q:$S(RAIMAGA="NM"&(X=25):1,RAIMAGA="NM"&(X=26):1,RAIMAGA="NM"&(X=27):1,RAIMAGA'="NM"&(X'>26):1,1:0)
- W !?5,"Select Radiology AMIS codes for Radiology imaging type procedures,",!?5,"Nuclear Medicine AMIS codes for Nuclear Medicine procedures",*7
- K X Q
 ITYPE(X) ;get image type for procedure in 71
  ;INPUT = IEN of Rad/Nuc Med Procedure file, in X
  ;OUTPUT = IEN of imaging type file (79.2)^name (.01)^abbreviation (3)
  S RASERIES=$S($P($G(^RAMIS(71,+X,0)),U,6)="S":1,1:0)
  S X=+$P($G(^RAMIS(71,X,0)),U,12)
  Q $$IMAG(X)
+ ;
 IMAG(X) ;set string of passed image type
  ;INPUT=ien of image type, in x
  ;OUTPUT=Internal Entry Number of image type^name (.01)^abbreviation (3)
  N Y
  S Y=$G(^RA(79.2,X,0))
  Q +X_U_$P(Y,U)_U_$P(Y,U,3)
+ ;
 DEVHLP ; Display printer assignment help text to the user.
  ;Add registered request printer to help text -P137/KLM
  ;185 - Add Alternate request printer to help text

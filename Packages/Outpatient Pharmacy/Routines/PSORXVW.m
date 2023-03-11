@@ -1,5 +1,5 @@
 PSORXVW ;BIR/SAB - ListMan View of a Prescription ;Dec 13, 2021@09:48
- ;;7.0;OUTPATIENT PHARMACY;**14,35,46,96,103,88,117,131,146,156,185,210,148,233,260,264,281,359,385,400,391,313,427,504,622,441**;DEC 1997;Build 209
+ ;;7.0;OUTPATIENT PHARMACY;**14,35,46,96,103,88,117,131,146,156,185,210,148,233,260,264,281,359,385,400,391,313,427,504,622,441,651**;DEC 1997;Build 30
  ; Reference to ^PS(55 in ICR #2228
  ; Reference to ^PS(50.7 in ICR #2223
  ; Reference to ^PSDRUG( in ICR #221
@@ -120,6 +120,7 @@ PTST S $P(RN," ",25)=" ",PTST=$S($G(^PS(53,+$P(RX0,"^",3),0))]"":$P($G(^PS(53,+$
  I ST<12,$P(RX2,"^",6)<DT S ST=11
  S VALM("TITLE")="Rx View "_"("_$P("Error^Active^Non-Verified^Refill^Hold^Non-Verified^Suspended^^^^^Done^Expired^Discontinued^Deleted^Discontinued^Discontinued (Edit)^Provider Hold^","^",ST+2)_")"
  S:$P($G(^PSRX(DA,"PKI")),"^") VALMSG="Digitally Signed Order"
+ S:$P($G(^PSRX(DA,"PKI")),"^",3) VALMSG="Digitally Signed eRx Order"
  ;
  ; pso*7*385 - esg - if being called by the BPSVRX routine, call HDR^PSOLMUTL to build the VALMHDR array and then Quit
  I $G(BPSVRX) D HDR^PSOLMUTL Q

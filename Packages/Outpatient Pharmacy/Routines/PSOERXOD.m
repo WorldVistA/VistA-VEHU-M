@@ -1,5 +1,5 @@
 PSOERXOD ;ALB/BWF - eRx parsing Utilities ; 11/14/2019 3:46pm
- ;;7.0;OUTPATIENT PHARMACY;**581**;DEC 1997;Build 126
+ ;;7.0;OUTPATIENT PHARMACY;**581,651**;DEC 1997;Build 30
  ;
  Q
  ;
@@ -35,6 +35,15 @@ OPHARM(GBL,CNT,PSOSITE,PSOIEN) ; Adapted from VAPHARM^PSOERXX2
  S CNTRY=$G(PHARDAT(F,IENS,1.7,"E"))
  ; country code is required on an rxRenewalRequest, try to get it from the Institution file
  I CNTRY']"" S CNTRY=$$INSCCODE^PSOERXOU(PSOSITE)
+ ; address missing from NewRx
+ I $G(ADDL1)="" D
+ .S ADDL1=$$GET1^DIQ(59,PSOSITE,.02,"E")
+ .S ADDL2=""
+ .S CITY=$$GET1^DIQ(59,PSOSITE,.07,"E")
+ .S STATE=$$GET1^DIQ(59,PSOSITE,.08,"I")
+ .I STATE S STATE=$$GET1^DIQ(5,STATE,1,"E")
+ .S ZIP=$E($$GET1^DIQ(59,PSOSITE,.05,"E"),1,5)
+ .S CNTRY=$$INSCCODE^PSOERXOU(PSOSITE)
  ; default to US if country code could not be found (per PBM 10/27/2020).
  I CNTRY']"" S CNTRY="US"
  ; VARIABLES ENDING IN 7 <-> File #52.47
@@ -155,12 +164,11 @@ LOCAL(GBL,CNT,PSOSITE,PSOIEN) ;
  .D BL(GBL,.CNT,"PostalCode",ZIP)
  .D BL(GBL,.CNT,"CountryCode",CNTRY)
  .D C S @GBL@(CNT,0)="</Address>"
- I $L(PHONE) D
- .D C S @GBL@(CNT,0)="<CommunicationNumbers>"
- .D C S @GBL@(CNT,0)="<PrimaryTelephone>"
- .D BL(GBL,.CNT,"Number",PHONE)
- .D C S @GBL@(CNT,0)="</PrimaryTelephone>"
- .D C S @GBL@(CNT,0)="</CommunicationNumbers>"
+ D C S @GBL@(CNT,0)="<CommunicationNumbers>"
+ D C S @GBL@(CNT,0)="<PrimaryTelephone>"
+ D BL(GBL,.CNT,"Number",$S($L(PHONE):PHONE,1:"0000000000"))
+ D C S @GBL@(CNT,0)="</PrimaryTelephone>"
+ D C S @GBL@(CNT,0)="</CommunicationNumbers>"
  D C S @GBL@(CNT,0)="</Pharmacy>"
  Q
 BL(GBL,CNT,TAG,VAR) ; Build line

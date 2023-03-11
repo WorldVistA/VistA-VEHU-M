@@ -1,5 +1,5 @@
 RCDPUREC ;WISC/RFJ - receipt utilities ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**114,148,169,173,208,222,293,298,321,326,380,367**;Mar 20, 1995;Build 11
+ ;;4.5;Accounts Receivable;**114,148,169,173,208,222,293,298,321,326,380,367,371**;Mar 20, 1995;Build 29
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -154,7 +154,7 @@ LOOKUP ;  special lookup on receipts, called from ^dd(344,.01,7.5)
  ; PRCA*4.5*298 - updated logic and comments in EDITREC
 EDITREC(DA,DR) ;  edit the receipt (DR = string of fields to ask) in AR BATCH PAYMENT file (#344)
  ; RCBPYMNT - AR BATCH PAYMENT entry before edit
- N D,D0,DI,DIC,DIE,DQ,EFTKEY,RCBPYMNT,RCDA,RCDR1,RCDR2,RCDR3,X,Y
+ N D,D0,DI,DIC,DIE,DQ,EFTKEY,RCBPYMNT,RCDA,RCDR1,RCDR2,RCDR3,RCNE,X,Y ; PRCA*4.5*371 Added RCNE
  S (DIC,DIE)="^RCY(344,",RCDA=DA
  S EFTKEY=$$EFTKEY() ; PRCA*4.5*321 - Check if user has key to unmatch EFTs
  I $G(DR)="" N DR D

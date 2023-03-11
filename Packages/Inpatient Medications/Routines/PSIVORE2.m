@@ -1,5 +1,5 @@
 PSIVORE2 ;BIR/RGY,PR,MLM - ACT, NEW ORDER (CONT. OF PSIVORE1) ;Nov 10, 2020@14:01:05
- ;;5.0;INPATIENT MEDICATIONS;**21,58,101,244,290,329,319,399**;16 DEC 97;Build 65
+ ;;5.0;INPATIENT MEDICATIONS;**21,58,101,244,290,329,319,399,430**;16 DEC 97;Build 1
  ;
  ; References to ^PS(55 supported by DBIA #2191.
  ;
@@ -46,6 +46,8 @@ INCOMP ; Delete order missing critical information.
  ;
 DEL55 ; Delete order from 55.
  I ON55'["V"!($G(P(21))]"") Q
+ ;p430 nothing to delete, quit out
+ I $D(^PS(55,DFN,"IV",+ON55,0))=0 Q
  I $G(^PS(55,DFN,"IV",+ON55,0))=+ON55 NEW PSIVORFA S PSIVORFA=1 ; P290 If only operating on a stub, do not display status message below
  S DIK="^PS(55,"_DFN_",""IV"",",DA(1)=DFN,DA=+ON55 D ^DIK W:'$G(PSIVORFA) $C(7),"...Order ",$S($E($G(PSIVAC),2)="N":"deleted.",1:"unchanged.")
  N DA,DIK,ORIFN S ORIFN=$P($G(^PS(55,DFN,"IV",+ON55,0)),U,21) I ORIFN,$E($G(PSIVAC),2)="N" D EN1^PSJHL2(DFN,"OD",+ON55_"V","ORDER DELETED")

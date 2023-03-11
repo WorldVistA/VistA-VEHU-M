@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MH INSTRUMENT CATEGORY
 ZWR
-^YTT(601.97,0)="MH INSTRUMENT CATEGORY^601.97^27^27"
+^YTT(601.97,0)="MH INSTRUMENT CATEGORY^601.97^28^28"
 ^YTT(601.97,1,0)="Cognitive/Learning"
 ^YTT(601.97,2,0)="Anxiety/PTSD"
 ^YTT(601.97,3,0)="Pain"
@@ -28,6 +28,7 @@ ZWR
 ^YTT(601.97,25,0)="Anxiety"
 ^YTT(601.97,26,0)="Frequent MBCs"
 ^YTT(601.97,27,0)="CAT/CAD"
+^YTT(601.97,28,0)="Eating/Nutrition"
 ^YTT(601.97,"B","ADL/Func Status",9)=""
 ^YTT(601.97,"B","Addiction",23)=""
 ^YTT(601.97,"B","Addiction-SUD",5)=""
@@ -39,6 +40,7 @@ ZWR
 ^YTT(601.97,"B","Daily Living & Activity",24)=""
 ^YTT(601.97,"B","Depression",4)=""
 ^YTT(601.97,"B","EBP",18)=""
+^YTT(601.97,"B","Eating/Nutrition",28)=""
 ^YTT(601.97,"B","Employment",8)=""
 ^YTT(601.97,"B","Frequent MBCs",26)=""
 ^YTT(601.97,"B","General Symptoms",19)=""

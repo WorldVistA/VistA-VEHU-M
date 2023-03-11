@@ -1,5 +1,5 @@
 PSOERXOB ;ALB/BWF - eRx parsing Utilities ; 11/14/2019 3:46pm
- ;;7.0;OUTPATIENT PHARMACY;**581**;DEC 1997;Build 126
+ ;;7.0;OUTPATIENT PHARMACY;**581,651**;DEC 1997;Build 30
  ;
  Q
 OBENEFIT(GBL,CNT,ERXIEN) ;outbound benefits coordination section
@@ -174,8 +174,10 @@ OFAC(GBL,CNT,ERXIEN) ;outbound facility segment
  .D C S @GBL@(CNT,0)="</Facility>"
  Q
 OOBSERVE(GL,CNT,ERXIEN) ;outbound observation segment
- N OIEN,OIENS,ODAT,VITAL,LOINC,VALUE,UOM,UCUM,OBDATE,OBNOTE
- Q:'$O(^PS(52.49,ERXIEN,306,0))
+ N OIEN,OIENS,ODAT,VITAL,LOINC,VALUE,UOM,UCUM,OBDATE,OBNOTE,FOUND,OBS
+ ; Must find at least one Observation with a valid date in order to include the <Observation> section
+ S (FOUND,OBS)=0 F  S OBS=$O(^PS(52.49,ERXIEN,306,OBS)) Q:'OBS  I $G(^PS(52.49,ERXIEN,306,OBS,6)) S FOUND=1 Q
+ I 'FOUND Q
  D C S @GBL@(CNT,0)="<Observation>"
  S OIEN=0 F  S OIEN=$O(^PS(52.49,ERXIEN,306,OIEN)) Q:'OIEN  D
  .S F=52.49306
@@ -187,7 +189,8 @@ OOBSERVE(GL,CNT,ERXIEN) ;outbound observation segment
  .S VALUE=$G(ODAT(F,OIENS,3,"E"))
  .S UOM=$G(ODAT(F,OIENS,4,"E"))
  .S UCUM=$G(ODAT(F,OIENS,5,"E"))
- .S OBDATE=$G(ODAT(F,OIENS,6,"I")) I $G(OBDATE) S OBDATE=$P($$EXTIME^PSOERXO1(OBDATE),"T")
+ .S OBDATE=$G(ODAT(F,OIENS,6,"I")) I 'OBDATE Q
+ .S OBDATE=$P($$EXTIME^PSOERXO1(OBDATE),"T")
  .I $L(VITAL_LOINC_VALUE_UOM_UCUM) D
  ..D C S @GBL@(CNT,0)="<Measurement>"
  ..D BL(GBL,.CNT,"VitalSign",VITAL)

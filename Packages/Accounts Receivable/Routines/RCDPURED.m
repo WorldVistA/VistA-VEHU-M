@@ -1,5 +1,5 @@
 RCDPURED ;WISC/RFJ - File 344 receipt/payment dd calls ;1 Jun 99
- ;;4.5;Accounts Receivable;**114,169,174,196,202,244,268,271,304,301,312,319,321,375**;Mar 20, 1995;Build 15
+ ;;4.5;Accounts Receivable;**114,169,174,196,202,244,268,271,304,301,312,319,321,375,371**;Mar 20, 1995;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to $$REC^IBRFN supported by DBIA 2031
@@ -13,7 +13,10 @@ RCDPURED ;WISC/RFJ - File 344 receipt/payment dd calls ;1 Jun 99
 DUPLCATE ;  called by input transform receipt number (.01)
  ;  make sure no duplicate receipt numbers
  I $O(^RCY(344,"B",X,"")) K X W !,"This is a duplicate receipt number." Q
- I $O(^PRCA(433,"AF",X,"")) K X W !,"This receipt number has already been used and has been purged from the system. " K X
+ I $O(^PRCA(433,"AF",X,"")) K X W !,"This receipt number has already been used and has been purged from the system. " K X Q
+ ;
+ ;PRCA*4.5*371 added next line to prevent spaces when creating a new receipt
+ I X[" " K X W !,"Blank Spaces are not allowed in receipt numbers." Q
  Q
  ;
  ;

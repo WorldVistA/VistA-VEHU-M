@@ -1,5 +1,5 @@
 SDCCRSEN1 ;CCRA/LB,PB - Appointment retrieval API;APR 4, 2019
- ;;5.3;Scheduling;**,822**;APR 4, 2019;Build 44
+ ;;5.3;Scheduling;**822,830**;APR 4, 2019;Build 45
  Q
  ; Documented API's and Integration Agreements
  ; ----------------------------------------------
@@ -7,6 +7,9 @@ SDCCRSEN1 ;CCRA/LB,PB - Appointment retrieval API;APR 4, 2019
  ; NO SHOW code to this routine adds code to insure the consult id is stored in the Hospital Location File,
  ; Appointment multiple and when canceling an appointment, only cancel the appointment if it is for a com care 
  ; clinic that matches the consult service and consult id
+ ; Patch 830 - fixing an issue from patch 822 where an error is created if the appointment is not made,
+ ; the code sent the HL7 NAK message back to HSRM, but then continued to process. This resulted in an error
+ ; in the VistA error trap.
 MAKE ;MAKE APPOINTMENT: "S12"="SCHEDULE"
  S SDECLEN=$P(^SC(SDCL,"SL"),"^",1),SDECAPTID=0
  S:$G(DFN)>0 SDDFN=DFN
@@ -18,7 +21,7 @@ MAKE ;MAKE APPOINTMENT: "S12"="SCHEDULE"
  Q:$G(QUIT)=1
  ;S:$G(SDECSTART)["@" SDECSTART=$P(SDECSTART,".",1)_"."_$E($P(SDECSTART,".",2),1,4)
  ;S SDECSTART=$$FMTE^XLFDT(SDECSTART,2)
- S SDECNOTE="HSRM, COMSULT "_$G(CONID)_" PID="_$G(CID)_" PER CONSULT, PROVIDER "_$G(PROV)
+ S SDECNOTE="HSRM, CONSULT "_$G(CONID)_" PID="_$G(CID)_" PER CONSULT, PROVIDER "_$G(PROV)
  D:QUIT=0 APPADD^SDEC07(.SDECY,SDECSTART,SDECEND,SDDFN,SDECRES,SDECLEN,$G(SDECNOTE),,,,,,,,,SDAPTYP,,,SDCL,,,,,1,,"") ;ADD NEW APPOINTMENT
  ;735 - PB Check to see if the appointment was made.
  ;822 - PB make sure the CONS node in the appt multiple of file 44 has the consult number, if it doesn't hard code it
@@ -28,6 +31,9 @@ MAKE ;MAKE APPOINTMENT: "S12"="SCHEDULE"
  I $P($G(^TMP("SDEC07",$J,3)),"^",2)'="" S ABORT="1^"_$P($G(^TMP("SDEC07",$J,3)),"^",2) D
  .D MESSAGE^SDCCRCOR(MID,.ABORT)
  .D:$P($G(^TMP("SDEC07",$J,3)),"^",2)'["PENDING or ACTIVE" ANAK^SDCCRCOR($P($G(ABORT),"^",2),$G(USERMAIL),$G(ICN),$G(DFN),$G(APTTM),$G(CONID))
+ .;patch 830 - PB added setting QUIT=1 and then a quit command to make sure the code stops if the appointment was not made.
+ .S QUIT=1
+ Q:QUIT=1
  N XCLINIC S XCLINIC=+$G(^DPT($G(DFN),"S",FMDTTM,0),"^")  I $G(XCLINIC)>0 D
  .;Get the correct appointment from the appointment multiple in file 44 by matching .01 with the patient DFN,
  .S XCLINIC=+$P(^DPT(DFN,"S",FMDTTM,0),"^")

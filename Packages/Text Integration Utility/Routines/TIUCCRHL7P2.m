@@ -1,13 +1,16 @@
 TIUCCRHL7P2 ; CCRA/PB - TIUHL7 Msg Processing; March 23, 2005
- ;;1.0;TEXT INTEGRATION UTILITIES;**337,348,349,352**;Jun 20, 1997;Build 21
+ ;;1.0;TEXT INTEGRATION UTILITIES;**337,348,349,352,354**;Jun 20, 1997;Build 24
  ; Reference to CMT^GMRCGUIB in ICR #2980
  ; Reference to SETCOM^GMRCGUIB, SETDA^GMRCGUIB in ICR #7223
  ; Reference to ^TMP("CSLSUR1" supported by DBIA #3498
  ; Reference to ^GMR(123 supported by DBIA #7342 
+ ; Reference to ^GMR(123 supported by DBA #3983
  ;
  ;PB - Patch 348 modification to parse the note text from NTE segments rather than the OBX segment
  ;PB - Patch 349 modification to parse and file the consult factor from the note and file as a comment with the consult
  ;PB - Patch 352 modifications to set field 1205 in file 8925 to the value in field 2 in file 123 for the consult
+ ;PB - Patch 354 modifications to keep the status of the consult after the note/addendum is filed whether the note/addendum
+ ;     originates in CPRS or in HSRM.  
  Q
 CONTINUE ; data verification
  ;
@@ -96,6 +99,7 @@ FILE(SUCCESS,TIUDA,TIUX,SUPPRESS,TIUCPF) ; Call FM Filer & commit
  S IENS=""""_TIUDA_",""",FDARR="FDA(8925,"_IENS_")",FLAGS=""
  I +$G(TIUX(1202)) S TIUX(1204)=+$G(TIUX(1202))
  I +$G(TIUX(1209)) S TIUX(1208)=+$G(TIUX(1209))
+ ;I +$G(TIUX(1405)) S TIUX(1405)=TIU("CNCN")_";GMR(123,"
  ;If the document is a member of the Clinical Procedures Class, set the
  ;Entered By field to the Author/Dictator field
  I $G(TIUCPF),+$G(TIUX(1202)) S TIUX(1302)=+$G(TIUX(1202))
@@ -220,6 +224,8 @@ ES(DA,TIUES,TIUI,TIUESIG) ; ^DIE call for /es/
  . F  S TIUK=$O(TIUKIDS(TIUK)) Q:'TIUK  D
  . . I $P(TIUKIDS(TIUK),U,7)="completed" X TIUPSIG
  N GMRCA,GMRCAD,GMRCDUZ,GMRCMT,GMRCO,GMRCSTS,GMRCDA
+ ;Patch 354 - PB - link the note or addendum to the consult then update the status of the consult to the original status
+ D POST^TIUCNSLT(+DA,"ACTIVE")
  S GMRCO=VNUM,GMRCSTS=ORIGSTAT,GMRCA=3
  D STATUS^GMRCP
  S GMRCAD=$$NOW^XLFDT
@@ -228,6 +234,19 @@ ES(DA,TIUES,TIUI,TIUESIG) ; ^DIE call for /es/
  D SETCOM^GMRCGUIB(.GMRCMT,GMRCDUZ) ;ICR 7223
  ;PB - Feb 16, 2022 - patch 349 added code to add a comment to the consult activity log
  N COMMENT,NOTEDT
- S COMMENT(1)=CFNOTE,NOTEDT=$$NOW^XLFDT,GMRCDA=VNUM
+ S COMMENT(1)=$G(CFNOTE),NOTEDT=$$NOW^XLFDT,GMRCDA=VNUM
  D CMT^GMRCGUIB(GMRCDA,.COMMENT,GMRCDUZ,NOTEDT,GMRCDUZ)  ;icr 2980
+ Q
+POST(TIUDA) ;Patch 354 - PB - link the note or addendum to the consult then update the status of the consult to the original status
+ N GMRCO,GMRCSTS,GMRCA
+ S GMRCA=3,GMRCO=$P($P(^TIU(8925,TIUDA,14),"^",5),";",1)
+ S GMRCSTS=$$GET1^DIQ(123,GMRCO_",",8,"I")    ;ICR 3983
+ D STATUS^GMRCP
+ S DA=TIUDA
+ Q
+POST1(TIUDA) ;Patch 354 - PB - link the note or addendum to the consult then update the status of the consult to the original status
+ N GMRCO,GMRCSTS,GMRCA
+ S GMRCO=+$P($G(^TIU(8925,+TIUDA,14)),U,5),GMRCSTS=$$GET1^DIQ(123,GMRCO_",",8,"I"),GMRCA=3    ;ICR 3983
+ D POST^TIUCNSLT(DA,"INCOMPLETE")
+ D STATUS^GMRCP
  Q

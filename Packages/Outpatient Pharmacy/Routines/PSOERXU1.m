@@ -1,5 +1,5 @@
 PSOERXU1 ;ALB/BWF - eRx utilities ; 1/27/2019 11:03am
- ;;7.0;OUTPATIENT PHARMACY;**467,520,508,551,565,581,617**;DEC 1997;Build 110
+ ;;7.0;OUTPATIENT PHARMACY;**467,520,508,551,565,581,617,651**;DEC 1997;Build 30
  ;
  Q
  ; OR0 - OR0 FROM PENDING OUTPATIENT ORDERS OR BACKDOOR ORDERS
@@ -16,7 +16,9 @@ PROVPMT(ERXIEN) ;
  S OLDQUIT=0,NEWQUIT=0
  S $P(LINE,"*",80)="" W !!,LINE
  S S2017=$$GET1^DIQ(52.49,ERXIEN,312.1)
- W !!,"This prescription is an inbound electronic prescription (eRx).",!,"Please contact the original provider for approval to renew."
+ W !!,"This prescription is an inbound electronic prescription (eRx)."
+ W !,"Please contact the original provider for approval to renew.",$C(7)
+ D PAUSE^PSOSPMU1
  S ERXPHYS=$$GET1^DIQ(52.49,ERXIEN,2.1,"I")
  S ERXPHNM=$$GET1^DIQ(52.48,ERXPHYS,.01,"E") W !,ERXPHNM
  I '$G(S2017) D
@@ -100,13 +102,13 @@ DERX1(GL,PSOIEN,DFLG,IEN,CALLER) ;
  ..S ACDTTM=$$GET1^DIQ(52.4919,STHIS_","_PSOIENS,.01,"E")
  ..S ACBY=$$GET1^DIQ(52.4919,STHIS_","_PSOIENS,.03,"E"),FOUND=1
  S PKID=0,PKIE=""
- I $G(CALLER)="P",$$GET1^DIQ(52.49,PSOIEN,95.1,"I") D
+ I $G(CALLER)="P",$$GET1^DIQ(52.49,PSOIEN,95.1,"I"),$$CS^PSOERXA0($$GET1^DIQ(52.49,PSOIEN,3.2,"I")) D
  . S IEN=IEN+1,@GL@(IEN,0)="Processing Digitally Signed eRx order"
- . S PKID=1,PKIE="Processing Digitally Signed eRx order" ; D CNTRL^VALM10(IEN,1,36,IORVON,IORVOFF)
+ . S PKID=1,PKIE="Processing Digitally Signed eRx order"
  I $L($G(ACBY)) S IEN=IEN+1,@GL@(IEN,0)="eRx Accepted By: "_ACBY_" ("_ACDTTM_")"
  S LINETXT=""
  D ADDITEM^PSOERX1A(.LINETXT,"eRx Patient: ",ERXPAT,1,55)
- D ADDITEM^PSOERX1A(.LINETXT,"SSN: ",ERXPSSN,57,15)
+ D ADDITEM^PSOERX1A(.LINETXT,"SSN: ",ERXPSSN,57,20)
  S IEN=IEN+1,@GL@(IEN,0)=LINETXT
  S LINETXT=""
  I $L(ERXPAT)>42 D ADDITEM^PSOERX1A(.LINETXT,"             ",$E(ERXPAT,43,84),1,55)

@@ -1,5 +1,5 @@
 PSOORFI1 ;BIR/SAB - finish OP orders from OE/RR continued ;Dec 13, 2021@08:00:50
- ;;7.0;OUTPATIENT PHARMACY;**7,15,23,27,32,44,51,46,71,90,108,131,152,186,210,222,258,260,225,391,408,444,467,505,617,441**;DEC 1997;Build 209
+ ;;7.0;OUTPATIENT PHARMACY;**7,15,23,27,32,44,51,46,71,90,108,131,152,186,210,222,258,260,225,391,408,444,467,505,617,441,651**;DEC 1997;Build 30
  ;Ref. ^PS(50.7 supp. DBIA 2223
  ;Ref. ^PSDRUG( supp. DBIA 221
  ;Ref. L^PSSLOCK supp. DBIA 2789
@@ -66,7 +66,8 @@ PST D DOSE^PSOORFI4 K PSOINSFL
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)=" (4)   Pat Instruct:" D INST^PSOORFI4
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="  Provider Comments:" S TY=3 D INST
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="        Indications: "_$G(PSONEW("IND")) ;*441-IND
- S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="       Instructions:" S TY=2 D INST
+ I $G(ERXIEN) S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="           eRx Drug: "_$$GET1^DIQ(52.49,ERXIEN,3.1)
+ S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="   "_$S($G(ERXIEN):"eRx",1:"   ")_" Instructions: " S TY=2 D INST
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="                SIG:" D SIG
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)=" (5) Patient Status: "_$P($G(^PS(53,+PSONEW("PATIENT STATUS"),0)),"^")
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)=" (6)     Issue Date: "_PSONEW("ISSUE DATE")
@@ -107,7 +108,7 @@ PST D DOSE^PSOORFI4 K PSOINSFL
  S Y=$P(OR0,"^",12) X ^DD("DD") S ^TMP("PSOPO",$J,IEN,0)=^TMP("PSOPO",$J,IEN,0)_"Entry Date: "_$E($P(OR0,"^",12),4,5)_"/"_$E($P(OR0,"^",12),6,7)_"/"_$E($P(OR0,"^",12),2,3)_" "_$P(Y,"@",2) K RN
  ; DEA compliance note for eRx CS prescriptions
  N ERXIEN S ERXIEN=$$ERXIEN^PSOERXUT($G(ORD)_"P")
- I ERXIEN,$$GET1^DIQ(52.49,ERXIEN,95.1,"I") D
+ I ERXIEN,$$GET1^DIQ(52.49,ERXIEN,95.1,"I"),$$CS^PSOERXA0(+$$GET1^DIQ(52.49,ERXIEN,3.2,"I")) D
  . S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)=""
  . S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="This prescription meets the requirements of the Drug Enforcement Administration"
  . S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="(DEA) electronic prescribing for controlled substances rules (21 CFR Parts 1300,"

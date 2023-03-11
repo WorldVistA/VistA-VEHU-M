@@ -1,7 +1,7 @@
-GMRCIACT ;SLC/JFR - PROCESS ACTIONS ON IFC ;02/15/19  05:42
- ;;3.0;CONSULT/REQUEST TRACKING;**22,47,58,66,73,121,154,176**;DEC 27, 1997;Build 5
+GMRCIACT ;SLC/JFR - PROCESS ACTIONS ON IFC ; Jun 28, 2022@12:03:01
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,47,58,66,73,121,154,176,184**;DEC 27, 1997;Build 22
  ;;Per VHA Directive 2004-038, this routine should not be modified.
- ;#2051($$FIND1^DIC), #2053(DIE), #2165 HLMA1, #2701 MPIF001, #10103 XLFDT, #3065 XLFNAME, #2171 XUAF4
+ ;#2051($$FIND1^DIC), #2053(DIE), #2165 HLMA1, #2701 MPIF001, #10103 XLFDT, #3065 XLFNAME, #2171 XUAF4, #10104 XLFSTR
  Q  ;don't start here!
 NW(ARRAY) ;process and file new order
  ;Input:
@@ -20,10 +20,21 @@ NW(ARRAY) ;process and file new order
  . K ^TMP("GMRCIN",$J) Q
  I '$D(^TMP("GMRCIN",$J,"PID")) Q  ;prepare reject message (no PID)
  D  ;get patient DFN from ICN in message
- . N PAT
+ . N PAT,CRNRACCT ; p184
  . S PAT=$$GETDFN^MPIF001(+$P(^TMP("GMRCIN",$J,"PID"),"|",2))
  . I +PAT'>1 S GMRCFDA(.02)="" Q
  . S GMRCFDA(.02)=+PAT
+ . ;
+ . ;  Save patient account number in field #502
+ . ;
+ . S CRNRACCT=$P(^TMP("GMRCIN",$J,"PID"),"|",18),GMRCFDA(502)=CRNRACCT ; p184
+ . ;
+ . ;  Save ordering provider data and placer field 1 from OBR-16 and OBR-19 in fields #507 and 508
+ . ;
+ . I $D(^TMP("GMRCIN",$J,"OBR")) D  ;  P184
+ .. N OBR16 S OBR16=$P(^("OBR"),"|",16),GMRCFDA(507)=$E(OBR16,1,255) ;
+ .. N OBR19 S OBR19=$P(^("OBR"),"|",19),GMRCFDA(508)=$E(OBR19,1,255) ; 184V10 WTC 6/28/2022
+ ;
  I '$G(GMRCFDA(.02)) D  Q  ;reject message, patient is unknown
  . N STA S STA=$P($P(^TMP("GMRCIN",$J,"ORC"),"|",2),U,2)
  . N OBR S OBR=^TMP("GMRCIN",$J,"OBR")
@@ -111,7 +122,7 @@ NW(ARRAY) ;process and file new order
  . N GMRCSEG
  . S GMRCSEG("ORC")=GMRCORC
  . S GMRCSEG("OBX",5,1)=^TMP("GMRCIN",$J,"OBX",5,1)
- . D FILEACT^GMRCIAC2(GMRCDA(1),GMRCLAC,,"GMRCSEG")
+ . D FILEACT^GMRCIAC2(GMRCDA(1),GMRCLAC,,"GMRCSEG",$G(GMRCCRNR),$G(GMRCROUT)) ; P184
  D  ;print SF-513
  . I GMRCLAC=24 Q  ;don't print if part of a FWD to IFC
  . D PRNT^GMRCUTL1("",GMRCDA(1))
@@ -145,7 +156,7 @@ DIS(GMRCAR,GMRCCRNR,GMRCMSGI) ;dis-associate a result from a remote request ; MK
  ;    v--check to see if a dup transmission
  I $$DUPACT^GMRCIAC2(GMRCDA,12,GMRCORC,^TMP("GMRCID",$J,"OBX",4,1),GMRCCRNR,GMRCMSGI) Q  ;MKN GMRC*3*154 added CRNR and MSGI
  ;
- D FILEACT^GMRCIAC2(GMRCDA,12,,$NA(^TMP("GMRCID",$J))) ; act. tracking
+ D FILEACT^GMRCIAC2(GMRCDA,12,,$NA(^TMP("GMRCID",$J)),$G(GMRCCRNR),$$GET1^DIQ(123,GMRCDA,.07,"I")) ; act. tracking ; P184
  D FILRES^GMRCIAC2(GMRCDA,^TMP("GMRCID",$J,"OBX",4,1)) ;file results
  K GMRCERR,FDA,GMRCFDA
  I $$STSCHG^GMRCDIS(GMRCDA) S FDA(1,123,GMRCDA_",",8)=6
@@ -199,7 +210,7 @@ OTHER(GMRCAR,GMRCCRNR,GMRCMSGI) ;process most IFC actions
  M FDA(1,123,GMRCDA_",")=GMRCFDA
  D UPDATE^DIE("","FDA(1)",,"GMRCERR") ;file last action and update status
  K GMRCFDA
- D FILEACT^GMRCIAC2(GMRCDA,GMRCLAT,,$NA(^TMP("GMRCIN",$J)))
+ D FILEACT^GMRCIAC2(GMRCDA,GMRCLAT,,$NA(^TMP("GMRCIN",$J)),$G(GMRCCRNR),$$GET1^DIQ(123,GMRCDA,.07,"I")) ; P184
  D  ;send notifications
  . N GMRCTX,GMRCNOT,GMRCFL
  . S GMRCFL=1

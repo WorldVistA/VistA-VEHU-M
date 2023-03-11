@@ -1,5 +1,5 @@
-SDESCLINICAVAIL ;ALB/RRM,KML,BWF,MGD,DJS - VISTA SCHEDULING RPCS GET CLINIC AVAILABILITY ; Nov 1, 2022@10:21
- ;;5.3;Scheduling;**800,805,809,816,820,823,826,827,828**;Aug 13, 1993;Build 8
+SDESCLINICAVAIL ;ALB/RRM,KML,BWF,MGD,DJS,ANU - VISTA SCHEDULING RPCS GET CLINIC AVAILABILITY ; Nov 1, 2022@10:21
+ ;;5.3;Scheduling;**800,805,809,816,820,823,826,827,828,831**;Aug 13, 1993;Build 4
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; External References
@@ -91,7 +91,7 @@ VALIDATEINPUT   ;validate input parameters
  Q
  ;
 BUILDDATA(CLINICIEN) ;retrieve clinic availability data
- N SDP1,SDP2,SDP3,SDP4,SDSTRTDT,SDENDDT,SDSLOTS,SDSTOPTM,SDSTRTTM,SDTOTAL,II
+ N SDP1,SDP2,SDP3,SDP4,SDSTRTDT,SDENDDT,SDSLOTS,SDSTOPTM,SDSTRTTM,SDTOTAL,II,SDDIV,SDINST
  I $O(@SDTMPARY@(""))="" Q
  S SDTOTAL=@SDTMPARY@("CNT")
  F II=1:1:SDTOTAL D
@@ -108,6 +108,14 @@ BUILDDATA(CLINICIEN) ;retrieve clinic availability data
  . S SDGETCLAVL("ClinAvail",II,"BeginTime")=SDSTRTTM
  . S SDGETCLAVL("ClinAvail",II,"EndTime")=SDSTOPTM
  . S SDGETCLAVL("ClinAvail",II,"SlotsAvail")=SDSLOTS
+ ; Changes for 831 start
+ I $G(CLINICIEN) D
+ .S SDDIV=$$GET1^DIQ(44,CLINICIEN_",",3.5,"I")
+ .S:SDDIV SDINST=$$GET1^DIQ(40.8,SDDIV_",",.07,"I")
+ .I $$GET1^DIQ(4,SDINST,800,"I")="" D
+ ..S SDGETCLAVL("ClinAvail",0.1,"Error")="No Timezone set for Clinic."
+ ..I $$GET1^DIQ(8989.3,1,217,"I")="" S SDGETCLAVL("ClinAvail",0.2,"Error")="No Timezone set for Institution in Kernel Parameters (#8989.3) file."
+ ; Changes for 831 end
  Q
  ;
 BUILDJSON ;Convert data to JSON

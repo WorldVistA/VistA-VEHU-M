@@ -2781,7 +2781,7 @@ ZWR
 ^ORD(101.41,147,10,22,0)="11^390^^^^1^^^C"
 ^ORD(101.41,147,10,22,1)="Do you want to mark this Order as 'Titration'?"
 ^ORD(101.41,147,10,22,3)="I $$ASKTITR^ORCDPS3"
-^ORD(101.41,147,10,23,0)="8.5^4277^^Indication: ^^1"
+^ORD(101.41,147,10,23,0)="8.5^4277^^Indication: ^^0"
 ^ORD(101.41,147,10,23,.1)="D INDIT^ORCDPS3"
 ^ORD(101.41,147,10,23,1)="You can choose a common indication from the list or free text an indication between 3-40 characters. This field is not required in a quick order. If left blank the provider will have to fill it during order entry."
 ^ORD(101.41,147,10,23,2)="20^^^Indication:^^1"
