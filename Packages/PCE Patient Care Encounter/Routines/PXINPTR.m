@@ -1,5 +1,5 @@
-PXINPTR ;SLC/PKR - Input transforms for some PCE files. ;01/07/2019
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
+PXINPTR ;SLC/PKR - Input transforms for some PCE files. ;03/16/2022
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211,217**;Aug 12, 1996;Build 135
  ;=========================================
 VCLASS(X) ;Check for valid CLASS field, ordinary users cannot create
  ;National classes.
@@ -27,6 +27,13 @@ VCODE(FILENUM,DA,CODE) ;Check for a valid coding system, code pair.
 VCODESYS(CODESYS) ;Check for a valid coding system.
  S CODESYS=$$UP^XLFSTR(CODESYS)
  Q $$VCODESYS^PXLEX(CODESYS,1)
+ ;
+ ;=========================================
+VMAGNITUDE(MAG) ;Check for a valid magnitude, a positive or negative number,
+ ;up to 14 digits and 9 decimal places.
+ I MAG'?0.1(0.1"-",0.1"+")0.14N0.1(1"."0.9N) Q 0
+ S MAG=$$MAGFORMAT^PXMEASUREMENT(MAG)
+ Q 1
  ;
  ;=========================================
 VNAME(NAME) ;Check for a valid .01 value. The names of national reminder

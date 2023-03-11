@@ -1,5 +1,5 @@
-PXUTIL ;SLC/PKR - Utility routines for use by PX. ;11/06/2017
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
+PXUTIL ;SLC/PKR - Utility routines for use by PX. ;03/02/2022
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211,217**;Aug 12, 1996;Build 135
  ;
  ;=================================
 ACOPY(REF,OUTPUT) ;Copy all the descendants of the array reference into a linear
@@ -153,9 +153,12 @@ RENAME(FILENUM,OLDNAME,NEWNAME) ;Rename entry OLDNAME to NEWNAME in
  ;file number FILENUM.
  N IEN,NIEN,MSG,PXNAT
  S IEN=+$$FIND1^DIC(FILENUM,"","BXU",OLDNAME)
- I IEN=0 Q
+ I IEN=0 D  Q
+ . D BMES^XPDUTL("Rename failed, original entry: "_OLDNAME_" in file #"_FILENUM_", does not exist.")
  S PXNAT=1
- S NIEN=+$$FIND1^DIC(FILENUM,"","BXU",NEWNAME) I NIEN>0 Q
+ S NIEN=+$$FIND1^DIC(FILENUM,"","BXU",NEWNAME)
+ I NIEN>0 D  Q
+ . D BMES^XPDUTL("Rename failed, new entry: "_NEWNAME_" in file #"_FILENUM_", already exists.")
  S FDA(FILENUM,IEN_",",.01)=NEWNAME
  D FILE^DIE("ET","FDA","MSG")
  Q

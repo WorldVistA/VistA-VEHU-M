@@ -1,5 +1,5 @@
-PSJOEA1 ;BIR/MLM-INPATIENT ORDER ENTRY ;Jul 26, 2017@18:04:02
- ;;5.0;INPATIENT MEDICATIONS;**110,127,133,171,254,382,327,401**;16 DEC 97;Build 8
+PSJOEA1 ;BIR/MLM - INPATIENT ORDER ENTRY ; Feb 02, 2022
+ ;;5.0;INPATIENT MEDICATIONS;**110,127,133,171,254,382,327,401,399**;16 DEC 97;Build 65
  ;
  ; Reference to ^PS(55 is supported by DBIA #2191.
  ; Reference to ^PSSLOCK is supported by DBIA #2789.
@@ -20,9 +20,17 @@ CHK ;Check to be sure all the orders in the complex order series are completed.
  .S PSGS0Y=$P($G(^TMP("PSJCOM",$J,+PSJO,2)),"^",5),PSGS0XT=$P($G(^TMP("PSJCOM",$J,+PSJO,2)),"^",6)
  .N EDITS0Y,EDITS0XT S EDITS0Y=$P($G(^TMP("PSJCOM2",$J,+PSJO,2)),"^",5),EDITS0XT=$P($G(^TMP("PSJCOM2",$J,+PSJO,2)),"^",6) D
  ..S:EDITS0Y PSGS0Y=EDITS0Y I EDITS0XT!(",O,D,"[(","_EDITS0XT_",")) S PSGS0XT=EDITS0XT
+ .;save the old value of indication and status before filing data to the file (#53.1) entry for this particular sub-order of the complex order
+ .N PSJPRIND,PSPRSTAT S PSJPRIND=$G(^PS(53.1,+PSJO,18)),PSPRSTAT=$P($G(^PS(53.1,+PSJO,0)),U,9) ;*399-IND
+ .;change the status
  .N DIE,DA,DR S DR="28////^S X=$P(^TMP(""PSJCOM"",$J,+PSJO,0),""^"",9)",DA=+PSJO,DIE="^PS(53.1," D ^DIE
  .N DIK,DA S DIK="^PS(53.1,",DA=+PSJO S:$G(DFN) DA(1)=DFN D IX^DIK K DIK,DA
  .M ^PS(53.1,+PSJO)=^TMP("PSJCOM",$J,+PSJO)
+ .;the new value of indication after filing in the file (#53.1) is difefrent for this particular sub-order of the complex order
+ .;then add active log entry if INDICATION has changed
+ .I PSJPRIND'=$G(^PS(53.1,+PSJO,18)) D
+ ..I PSPRSTAT="P"!(PSPRSTAT="N") D NEWNVAL^PSGAL5(+PSJO,6000,"INDICATION",PSJPRIND)
+ ..I PSPRSTAT="U" D NEWUDAL^PSGAL5(DFN,+PSJO,6000,"INDICATION",PSJPRIND)
  .S PSGND=$G(^PS(53.1,+PSJO,0)),PSGND2P5=$G(^PS(53.1,+PSJO,2.5)),DUR=$P(PSGND2P5,"^",2),ND14=$$LASTREN^PSJLMPRI(DFN,+PSJO_"P")
  .I $P(PSGND,U,4)="U",$P(PSGND,U,24)="R" D
  ..N PND0,PSGORDR S PND0=^PS(53.1,+PSJO,0) I $P(PND0,U,24)="R" S PSGORDR=$P(PND0,U,25) D

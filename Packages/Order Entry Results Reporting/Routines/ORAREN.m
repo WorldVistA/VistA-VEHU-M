@@ -1,5 +1,5 @@
-ORAREN ;SLC/JLC - PROCESS RENEWAL REQUEST ;Dec 21, 2020@13:39
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**336,349,350,540**;Dec 17, 1997;Build 2
+ORAREN ;SLC/JLC - PROCESS RENEWAL REQUEST ;Apr 07, 2022@14:23:48
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**336,349,350,540,405**;Dec 17, 1997;Build 212
  ;
  ;The purpose of this API is to process a request to renew an
  ;Outpatient Prescription
@@ -100,6 +100,7 @@ END ;*249 Modify END.
  . F I=0:0 S I=$O(INMSG(I)) Q:'I  D
  . . I $L(INMSG(I))<500 S ^TMP($J,"ORAREN OC",J,0)=INMSG(I),J=J+1 Q
  . . D SEG
+ D CLRALLGY^ORWDXC("",DFN)
  Q
  ;
 SEG ;break up lines longer than 500 characters

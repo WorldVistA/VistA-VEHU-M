@@ -1,5 +1,5 @@
-PSOLMUTL ;BIR/SAB - ListMan Utilities ;Jan 25, 2021@13:35
- ;;7.0;OUTPATIENT PHARMACY;**19,46,84,99,131,132,148,268,225,305,386,390,622**;DEC 1997;Build 44
+PSOLMUTL ;BIR/SAB - listman utilities ;Dec 08, 2021@10:34
+ ;;7.0;OUTPATIENT PHARMACY;**19,46,84,99,131,132,148,268,225,305,386,390,622,441**;DEC 1997;Build 209
  ;External reference FULL^VALM1 supported by dbia 10116
  ;External reference $$SETSTR^VALM1 supported by dbia 10116
  ;External reference EN2^GMRAPEMO supported by dbia 190
@@ -75,6 +75,8 @@ ACTIONS() ;screen actions on active orders
  I Y="PSO CANCEL" Q $S(PSOACT["D":1,1:0)
  I Y="PSO HOLD" Q $S(PSOACT["H":1,1:0)
  I Y="PSO UNHOLD" Q $S(PSOACT["U":1,1:0)
+ I Y="PSO PARK" Q $S($E(PSOACT,1,2)="PK":1,1:0)  ;441 PAPI
+ I Y="PSO UNPARK" Q $S(PSOACT["UPK":1,1:0)
  I Y="PSO LM BACKDOOR COPY" Q $S(PSOACT["C":1,1:0)
  I Y="PSO VERIFY" Q $S(PSOACT["V":1,1:0)
  I Y="PSO ACTIVITY LOGS" Q 1

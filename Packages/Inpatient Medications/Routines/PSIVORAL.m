@@ -1,5 +1,5 @@
-PSIVORAL ;BIR/MLM - ACTIVITY LOGGER FOR PHARMACY EDITS ;May 09, 2019@11:20:16
- ;;5.0;INPATIENT MEDICATIONS;**58,135,267,279,319,418**;16 DEC 97;Build 1
+PSIVORAL ;BIR/MLM - ACTIVITY LOGGER FOR PHARMACY EDITS ;Mar 04, 2022@08:06:26
+ ;;5.0;INPATIENT MEDICATIONS;**58,135,267,279,319,418,399**;16 DEC 97;Build 65
  ; Reference to ^PS(52.7 is supported by DBIA 2173.
  ; Reference to ^PS(55 is supported by DBIA 2191.
  ;
@@ -33,6 +33,14 @@ CLNAPT ; Record changes to clinic and appointment date
  S OLCLN=$G(^PS(55,DFN,"IV",+ON55,"DSS"))
  I $P(OLCLN,"^")'="",$P(OLCLN,"^")'=$G(P("CLIN")) S P("FC")="CLINIC^"_$P($G(^SC(+$P(OLCLN,"^"),0)),"^")_U_$P($G(^SC(+$G(P("CLIN")),0)),"^") D GTFC
  I $P(OLCLN,"^",2)'="",$P(OLCLN,"^",2)'=$G(P("APPT")) S P("FC")="APPOINTMENT DATE/TIME^"_$P(OLCLN,"^",2)_U_$G(P("APPT")) D GTFC
+ ;
+INDICAT ; Record changes to INDICATION
+ Q:'$D(P("IND"))
+ N OLDVAL
+ S OLDVAL=$G(^PS(55,DFN,"IV",+ON55,18))
+ I OLDVAL'=P("IND") S P("FC")="INDICATION"_U_OLDVAL_U_P("IND") D GTFC
+ ;
+ ;End of active log updates
  K P("FC")
  Q
  ;
@@ -81,3 +89,4 @@ LOG ; Update activity log (ask for comment.)
 OPI ; Record changes to Other print info.
  I $$DIFFOPI^PSJBCMA5(DFN,ON55) S P("FC")="OTHER PRINT INFO^^" D GTFC
  Q
+ ;

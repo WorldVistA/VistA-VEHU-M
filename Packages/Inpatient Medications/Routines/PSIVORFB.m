@@ -1,5 +1,5 @@
-PSIVORFB ;BIR/MLM - FILE/RETRIEVE ORDERS IN ^PS(55 ;25 Sep 98 / 2:24 PM
- ;;5.0;INPATIENT MEDICATIONS;**3,18,28,68,58,85,110,111,120,134,213,161,181,273,267,285,257,299,323,335,416**;16 DEC 97;Build 8
+PSIVORFB ;BIR/MLM - FILE/RETRIEVE ORDERS IN ^PS(55 ;Nov 2, 2021@12:53:00
+ ;;5.0;INPATIENT MEDICATIONS;**3,18,28,68,58,85,110,111,120,134,213,161,181,273,267,285,257,299,323,335,416,399**;16 DEC 97;Build 65
  ;
  ; Reference to ^PS(50.7 is supported by DBIA #2180.
  ; Reference to ^PS(51.2 is supported by DBIA #2178.
@@ -8,7 +8,7 @@ PSIVORFB ;BIR/MLM - FILE/RETRIEVE ORDERS IN ^PS(55 ;25 Sep 98 / 2:24 PM
  ; Reference to ^PS(55 is supported by DBIA #2191.
  ; Reference to ^PS(51.1 is supported by DBIA #2177.
  ; Reference to ^PSUHL is supported by DBIA #4803.
- ; 
+ ;
 NEW55 ; Get new order number in 55.
  N DA,DD,DO,DIC,DLAYGO,X,Y,PSIVLIM,MINS,PSJDSTP1,PSJDSTP2,A,PSJCLIN,PSJDNM,PSJPROV,PSJWARD,PSJPAO,PSJALRT
  I ($G(PSIVAC)="PN"),$G(PSJSYSP) D KILL^PSJBCMA5(+$G(PSJSYSP))
@@ -78,6 +78,7 @@ SET55 ; Move data from local variables to 55.
  S:+$G(P("CLIN")) $P(^PS(55,DFN,"IV",+ON55,"DSS"),"^")=P("CLIN")
  S:+$G(P("APPT")) $P(^PS(55,DFN,"IV",+ON55,"DSS"),"^",2)=P("APPT")
  S:+$G(P("NINIT")) ^PS(55,DFN,"IV",+ON55,4)=P("NINIT")_U_P("NINITDT")
+ S:$G(P("IND"))]"" ^PS(55,DFN,"IV",+ON55,18)=P("IND") ;*399-IND
  I '$D(^PS(53.45,PSJSYSP,6)),($G(P("NEWON"))["P") S PSJTROPI=P("NEWON") S PSJTROPL=$$GETOPI^PSJBCMA5(DFN,PSJTROPI)
  I $G(^PS(53.45,PSJSYSP,6))!$P($G(^PS(53.45,PSJSYSP,6,0)),"^",3) D
  . I $G(PSJCOM),$G(PSJCOMSI),$G(PSJORD)["V" M ^TMP("PSJOPI",$J,6)=^PS(53.45,PSJSYSP,6)
@@ -112,6 +113,7 @@ GT55 ; Retrieve data from 55 into local array
  S Y=$G(^PS(55,DFN,"IV",+ON55,2)),P("LOG")=$P(Y,U),P("IVRM")=$P(Y,U,2)_U_$P($G(^PS(59.5,+$P(Y,U,2),0)),U)
  S P("CLRK")=$P(Y,U,11)_U_$P($G(^VA(200,+$P(Y,U,11),0)),U),P("RES")=$P(Y,U,8),P("FRES")=$P(Y,U,9),P("SYRS")=$P(Y,U,4),P("OPI")=$G(^PS(55,DFN,"IV",+ON55,3))
  S P("INS")=$G(^PS(55,DFN,"IV",+ON55,.3))
+ S P("IND")=$G(^PS(55,DFN,"IV",+ON55,18)) ;*399-IND
  S P("CLIN")=$P($G(^PS(55,DFN,"IV",+ON55,"DSS")),"^"),P("APPT")=$P($G(^PS(55,DFN,"IV",+ON55,"DSS")),"^",2)
  S P("DTYP")=$S(P(4)="":0,P(4)="P"!(P(23)="P")!(P(5)):1,P(4)="H":2,1:3)
  D:'$D(PSJLABEL) GTPC(ON55) S ND=$G(^PS(55,DFN,"IV",+ON55,.2)),P("PD")=$S($P(ND,U):$P(ND,U)_U_$$OIDF^PSJLMUT1(+ND)_U_$P($G(^PS(50.7,+ND,0)),U),1:""),P("DO")=$P(ND,U,2),P("PRY")=$P(ND,U,4),P("NAT")=$P(ND,U,5),(PSJCOM,P("PRNTON"))=$P(ND,U,8)

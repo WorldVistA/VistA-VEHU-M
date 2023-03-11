@@ -1,5 +1,5 @@
 PSJHL3 ;BIR/RLW - PHARMACY ORDER SEGMENTS ; 8/19/14 2:08pm
- ;;5.0;INPATIENT MEDICATIONS;**1,11,14,40,42,47,50,56,58,92,101,102,123,110,111,152,134,226,267,260,281,315,406,364**;16 DEC 97;Build 47
+ ;;5.0;INPATIENT MEDICATIONS;**1,11,14,40,42,47,50,56,58,92,101,102,123,110,111,152,134,226,267,260,281,315,406,364,399**;16 DEC 97;Build 65
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; Reference to ^PS(50.606 is supported by DBIA# 2174.
@@ -39,13 +39,15 @@ INIT ; initialize HL7 variables
  D INIT^PSJHLU
  Q
 RXO ; pharmacy prescription order segment (used to send Orderable Item to OE/RR)
- S LIMIT=17 X PSJCLEAR
+ S LIMIT=20 X PSJCLEAR
  S FIELD(0)="RXO"
  S OINODE=$G(@(PSJORDER_".2)"))
  S SPDIEN=+$P(OINODE,"^"),DOSEOR=$$UP^XLFSTR($$ESC^ORHLESC($P(OINODE,"^",2))),DOSE=$P(OINODE,"^",5),UNIT=$P(OINODE,"^",6) S:'$G(PSJBCBU) UNIT=$$ESC^ORHLESC(UNIT)
  S FIELD(1)=$S(SPDIEN=0:"^^^^",1:"^^^"_SPDIEN_"^")
  I SPDIEN S DOSEFORM=$P($G(^PS(50.7,SPDIEN,0)),"^",2),NAME=$P($G(^PS(50.606,+DOSEFORM,0)),"^") S:'$G(PSJBCBU) NAME=$$ESC^ORHLESC(NAME) S FIELD(1)=FIELD(1)_$$ESC^ORHLESC($P($G(^PS(50.7,SPDIEN,0)),"^"))_" "_NAME
  S FIELD(1)=FIELD(1)_"^99PSP"
+ N IND S IND=$G(@(PSJORDER_"18)")),IND=$$ESC^ORHLESC(IND) ;*399-IND
+ S FIELD(20)=IND
  N IVLNOD S IVLNOD=$G(@(PSJORDER_"2.5)")) D
  .S IVLIM=$P(IVLNOD,"^",4) I IVLIM?1"a".N S IVLIM="doses"_$P(IVLIM,"a",2)
  .S $P(FIELD(1),"^",3)=IVLIM
@@ -201,7 +203,7 @@ FINDDOSE(PSJDD,PSJF1P1,PSJDO) ;
  ;PSJDD - IEN file #50
  ;PSJF1P1 - Unit Per Dose
  ;PSJDO - Dosage Ordered
- ;PSJOUT - Dose&Unit&UPD& 
+ ;PSJOUT - Dose&Unit&UPD&
  ;PSJOUT="" - for freetext (not calculated dose or multi ingredient drug)
  NEW PSJDO1,PSJDO2,PSJDOSE,PSJOUT
  I '+$G(PSJDD)!'+$G(PSJF1P1)!($G(PSJDO)="") Q ""

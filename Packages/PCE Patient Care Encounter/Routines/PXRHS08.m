@@ -1,5 +1,5 @@
-PXRHS08 ;ISL/SBW,PKR - PCE Visit Patient Education data extract ;12/21/2017
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**13,16,211**;Aug 12, 1996;Build 340
+PXRHS08 ;ISL/SBW,PKR - PCE Visit Patient Education data extract ;03/21/2022
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**13,16,211,217**;Aug 12, 1996;Build 135
 EDUC(DFN,BEGDT,ENDDT,OCCLIM,CATCODE) ; Control branching
  ;INPUT  : DFN      - Pointer to PATIENT file (#2)
  ;         BEGDT    - Beginning date/time in internal FileMan format
@@ -73,6 +73,7 @@ ADDEDU(EDUIEN,VPEDIEN,BEGDT,ENDDT) ;
  ;Only get data with passed serv. cat.
  I $G(CATCODE)'[$P(VDATA,U,3) Q 0
  S TMP220=$G(^AUPNVPED(VPEDIEN,220))
+ I TMP220'="" S TMP220=TMP220_U_$P(^AUTTEDT(EDUIEN,220),U,6)
  S TMP811=$G(^AUPNVPED(VPEDIEN,811))
  S TMP812=$G(^AUPNVPED(VPEDIEN,812))
  S TOPIC=$P(^AUTTEDT(EDUIEN,0),U,1)

@@ -1,5 +1,5 @@
-PXCEPRV ;ISL/dee - Used to edit and display V PROVIDER ;04/04/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**7,27,124,211**;Aug 12, 1996;Build 340
+PXCEPRV ;ISL/dee - Used to edit and display V PROVIDER ;03/16/2022
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**7,27,124,211,217**;Aug 12, 1996;Build 135
  ;
  Q
  ;
@@ -10,7 +10,7 @@ PXCEPRV ;ISL/dee - Used to edit and display V PROVIDER ;04/04/2018
  ;Followning lines:
  ;;Node~Piece~,Field Number~Edit Label~Display Label~Display Routine~Edit Routine~Help Text for DIR("?")~Set of PXCEKEYS that can Edit~D if Detail Display Only~
  ;  1  ~  2  ~      3      ~     4    ~        5    ~        6      ~     7      ~       8              ~          9                  ~       10
- ;The Display & Edit routines are for special caces.
+ ;The Display & Edit routines are for special cases.
  ;  (The .01 field cannot have a special edit.)
  ;
 FORMAT ;;Provider~9000010.06~0,12,811,812~0~^AUPNVPRV
@@ -47,6 +47,7 @@ EPROV ;
  S DIC(0)="AEMQ"
  S DIC("A")=$P(PXCETEXT,"~",4)
  S DIC("S")="I $$ACTIVPRV^PXAPI(Y,PXPRVDT)"
+ S DIC("W")="W !,""NPI: "",$$GET1^DIQ(200,Y_"","",41.99)"
  D ^DIC
  K DIR
  I $D(DUOUT)!$D(DTOUT)!(X="") S DIRUT=1 Q
@@ -118,7 +119,6 @@ EPROV12 ;
 EVENTDT(PXCEAFTR) ;Edit the Event Date and Time.
  N DEFAULT,EVENTDT,HELP,PROMPT
  S DEFAULT=$P(^TMP("PXK",$J,"PRV",1,12,"BEFORE"),U,1)
- I DEFAULT="" S DEFAULT="NOW"
  S HELP="D EVDTHELP^PXCEPRV"
  S PROMPT="Enter the Event Date and Time"
  S EVENTDT=$$GETDT^PXDATE(-1,-1,-1,DEFAULT,PROMPT,HELP)

@@ -1,5 +1,5 @@
-PSIVEDT1 ;BIR/MLM - EDIT IV ORDER (CONT) ;Oct 28, 2020@10:09:21
- ;;5.0;INPATIENT MEDICATIONS;**3,7,41,47,50,64,58,116,110,111,113,267,279,305,194,373,411,416**;16 DEC 97;Build 8
+PSIVEDT1 ;BIR/MLM - EDIT IV ORDER (CONT) ;Nov 2, 2021@12:47:00
+ ;;5.0;INPATIENT MEDICATIONS;**3,7,41,47,50,64,58,116,110,111,113,267,279,305,194,373,411,416,399**;16 DEC 97;Build 65
  ;
  ; Reference to ^PS(55 is supported by DBIA# 2191.
  ; Reference to ^PS(51.1 is supported by DBIA# 2177.
@@ -150,6 +150,50 @@ NUMLAB2 ; Loop ;*305
  I PSJTMPTX="",PSJOPILN="" S P("OPI")=$$ENBCMA^PSJUTL("V")  ;P416
  Q
  ;
+IND ;*399-IND
+ N INDLST,DIR,SEL,I,J,K,L,M,N,O,INDI,CHK,CNT K DUOUT,DTOUT,DIROUT,DIRUT
+ S (CHK,CNT,J)=0
+ S O=0 S:'$D(DRG("AD")) O=1
+ F I="AD","SOL" S J=0 F  S J=$O(DRG(I,J)) Q:'J  S K=$P(DRG(I,J),U,6) D:K
+ . K ^TMP($J,"PSJDIND")
+ . D INDCATN^PSS50P7(K,"PSJDIND")
+ . Q:'$O(^TMP($J,"PSJDIND",0))
+ . S L=0 F  S L=$O(^TMP($J,"PSJDIND",L)) Q:'L  D
+ . . S N=$P($G(^TMP($J,"PSJDIND",L)),"^") S:N]"" M(N)=""
+ K ^TMP($J,"PSJDIND")
+ I '$D(M) S Y=99 G CIND
+ S INDI="" F  S INDI=$O(M(INDI)) Q:INDI=""  D
+ . I $G(P("IND"))]"",INDI=P("IND") S CHK=1
+ . S CNT=CNT+1,DIR("L",CNT)="  "_CNT_$S(CNT<10:"   ",1:"  ")_INDI S:CNT=1 SEL=CNT_":"_INDI S:CNT>1 SEL=SEL_";"_CNT_":"_INDI
+ W !,"INDICATION:"
+ S DIR(0)="SO^"_SEL_";99:Free Text entry",DIR("A")="Select INDICATION from the list"
+ S DIR("L")="  99  Free Text entry"
+ S:CHK DIR("B")=P("IND") S:'CHK&(P("IND")]"") DIR("B")=99
+ S DIR("?")="This field contains the Indication For Use and must be 3-40 characters in length"
+ D ^DIR
+ I X="^"!($G(DTOUT))!($G(DIROUT)) S DONE=1 Q
+ I Y=99 S:CHK P("IND")="" G CIND
+ I X="@",$G(P("IND"))]"" D DEL^PSIVEDRG G:%'=1 IND S P("IND")="" Q
+ I X="@" S P("IND")="" G IND
+ S:Y>0 P("IND")=Y(0)
+ Q
+ ;
+CIND ;
+ I Y=99 N I,J,IND,DA D  G:$G(Y)=99 CIND
+  . K X,Y,DIRUT,DTOUT,DUOUT,DIROUT,DIR
+  . S:$G(P("IND"))]"" DIR("B")=P("IND")
+ . S DIR(0)="53.1,132",DIR("A")="INDICATION" D ^DIR
+ . I X="^"!($G(DTOUT))!($G(DIROUT)) S DONE=1 Q
+ . I X="@",$G(P("IND"))]"" D DEL^PSIVEDRG G:%'=1 IND S P("IND")="" Q
+ . I X="@" S P("IND")="" G IND
+ . I $L(X," ")=1,$L(X)>32 W $C(7),!?5,"MAX OF 32 CHARACTERS ALLOWED WITHOUT SPACES.",! S Y=99 Q
+ . S IND="" F I=1:1:$L(X," ") Q:I=""  S J=$P(X," ",I) D  I '$D(X) S Y=99 Q
+ . .I $L(J)>32 W $C(7),!?5,"MAX OF 32 CHARACTERS ALLOWED BETWEEN SPACES.",! K X Q
+ . .S:J]"" IND=$S($G(IND)]"":IND_" ",1:"")_J
+ . Q:$G(Y)=99
+ . S P("IND")=$$ENLU^PSGMI(IND)
+ Q
+ ;
 ORFLDS ; Display OE/RR fields during edit.
  D FULL^VALM1
  W !!,"Orderable Item: ",$P(P("PD"),U,2),!,"Give: ",$P(P("MR"),U,2)," ",P(9),!!
@@ -246,3 +290,4 @@ EXPINF(P8,SILENT) ; Expand Infusion Rate
  I P8'["@" S P8=EXPANDED
  I '$G(SILENT) W:$G(PSJEXMSG) !," Input expanded to ",EXPANDED
  Q
+ ;

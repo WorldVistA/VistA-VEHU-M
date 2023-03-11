@@ -1,5 +1,5 @@
-PSOLMPAT ;BIR/SAB - update pharmacy patient data using listman ;Sep 17, 2021@10:23
- ;;7.0;OUTPATIENT PHARMACY;**15,117,149,233,268,468,622**;DEC 1997;Build 44
+PSOLMPAT ;BIR/SAB - update pharmacy patient data using listman ;Dec 09, 2021@14:00
+ ;;7.0;OUTPATIENT PHARMACY;**15,117,149,233,268,468,622,441**;DEC 1997;Build 209
  ;External reference ^PS(55 supported by DBIA 2228
  ;
 EN I '$D(PSOPAR) D ^PSOLSET I '$D(PSOPAR) S VALMSG="Site Parameters must be Defined!" G EX
@@ -36,5 +36,5 @@ PLST ;PREGNANCY & LACTATION STATUS DISPLAY
  ..W !!,"Could not find the "_PSOTYPE(PSOTYPE)_" health summary type."
  ..I $D(^TMP("DIERR",$J)) W ! D MSG^DIALOG() K ^TMP("DIERR",$J)
  ..D WAIT^VALM1
- .D ENX^GMTSDVR(DFN,PSOHSTYPE)
+ .D ENX^GMTSDVR(PSODFN,PSOHSTYPE)
  Q

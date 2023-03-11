@@ -1,5 +1,5 @@
-ORB3U2 ;SLC/CLA - OE/RR 3 Notifications Utilities routine two ;Nov 04, 2020@11:32
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**9,74,105,179,498**;Dec 17, 1997;Build 38
+ORB3U2 ; SLC/CLA - OE/RR 3 Notifications Utilities routine two ;Dec 06, 2021@15:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**9,74,105,179,498,405**;Dec 17, 1997;Build 212
  Q
 USRNOTS(ORBUSR) ;  generate a list of notifs indicating user's recip status
  I +$G(ORBUSR)<1 S ORBUSR=DUZ
@@ -218,3 +218,14 @@ WHRECIP(ORBADUZ,ORN,ORBDFN,ORBU) ;returns Women's Health notif recipients
  .S ORBU=1+$G(ORBU),ORBU(ORBU)="WOMEN'S HEALTH: "_$P(ORBADUZ(0),U,2)
  .K ORBADUZ(0)
  Q 1
+GETRCPNT(ORY,ALERTID) ;
+ N I,IDX,USERNAME,XQALUSRS,FIRST,SORT
+ D USERLIST^XQALBUTL(ALERTID)
+ S IDX=0,FIRST=1
+ S I=0 F  S I=$O(XQALUSRS(I)) Q:'I  D
+ . S USERNAME=$P(XQALUSRS(I),U,2)
+ . I $L(USERNAME) D
+ . . I FIRST S FIRST=0,IDX=IDX+1,ORY(IDX)="Alert Recipients:"
+ . . S SORT(USERNAME)=""
+ I $D(SORT) S I="" F  S I=$O(SORT(I)) Q:I=""  S IDX=IDX+1,ORY(IDX)="  "_I
+ Q

@@ -1,5 +1,5 @@
-ORWDXA1 ;SLC/JMC - Utilities for Order Flag Actions ;Mar 17, 2021@10:13:04
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**539**;Dec 17, 1997;Build 41
+ORWDXA1 ;SLC/JMC - Utilities for Order Flag Actions ;Dec 14, 2021@08:39:22
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**539,405**;Dec 17, 1997;Build 212
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 FLAGACT(LST,ORIFN,ACTION) ;perform action on flag order
@@ -68,6 +68,13 @@ CMTMSG(ORIFN,ORVP,ORAUSR) ; send alert notification information to recipients
 FLGCOM(LST,ORIFN) ; flag comments, get
  N DA,CNT,X,Y,ORZ,DIWL,DIWR,DIWF,DATA,I
  S DA=$P(ORIFN,";",2),(CNT,Y)=0
+ D:$D(^OR(100,+ORIFN,8,DA,3))
+ . Q:$G(ACTION)=""
+ . N BFLAG S BFLAG=$G(^OR(100,+ORIFN,8,DA,3))
+ . S CNT=CNT+1,LST(CNT)="<COMMENT>"
+ . S CNT=CNT+1,LST(CNT)=$P(BFLAG,U,3)_";"_$$DATE^ORQ20($P(BFLAG,U,3))_U_$P(BFLAG,U,4)_";"_$$USER^ORQ20($P(BFLAG,U,4))
+ . S CNT=CNT+1,LST(CNT)="Flagged Reason: "_$P(BFLAG,U,5)
+ . S CNT=CNT+1,LST(CNT)="</COMMENT>"
  S DIWL=1,DIWR=70,DIWF="C70" K ^UTILITY($J,"W")
  F  S Y=$O(^OR(100,+ORIFN,8,DA,9,Y)) Q:'Y  D
  . S DATA=$G(^OR(100,+ORIFN,8,DA,9,Y,0))
@@ -118,9 +125,10 @@ SCHALRT(ORVP,ORIFN,OREXP) ;schedule alert in file #100.97
  S ORDATA("PATIENT")=ORVP
  S ORDATA("WHEN")=OREXP
  S ORDATA("WHO")=$P(ORDA3,U,4)
+ S ORDATA("ALERT")="98;ORD(100.9,"
  S ORNAM=$$OI^ORX8(ORIFN)
  S ORDATA("TITLE")="Order flag expired for "_$P(ORNAM,"^",2)_" on "_$$DATE^ORQ20(OREXP)
- S ORDATA("IFN")=+ORIFN
+ S ORDATA("IFN")=ORIFN
  D SCHALRT^ORB3UTL(.ORDATA)
  Q
  ;

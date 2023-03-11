@@ -1,10 +1,9 @@
-GMTSPXEP ; SLC/SBW,KER,PKR - PCE Patient Education comp ; 02/08/2019
- ;;2.7;Health Summary;**8,10,28,35,56,122**;Oct 20, 1995;Build 71
+GMTSPXEP ; SLC/SBW,KER,PKR - PCE Patient Education comp ; 04/15/2022
+ ;;2.7;Health Summary;**8,10,28,35,56,122,115**;Oct 20, 1995;Build 191
  ;
  ; External References
  ;   DBIA  3063  EDUC^PXRHS08
  ;   DBIA 10011  ^DIWP
- ;   DBIA  6225  UCUMCODE^LEXMUCUM
  ;                     
 PTED ; Patient Education
  N GMTSOVT K ^TMP("PXPE",$J) S GMTSOVT="AICTSORXHDE"
@@ -81,10 +80,21 @@ EDMAIN ; Main Education Display
  . . . I $L(TEXT)<56 W ?25,TEXT,!
  . . . E  D LONGTEXT(TEXT)
  . . . I $G(^TMP("PXPE",$J,GMDT,GMED,GMIFN,"MEASUREMENT"))'="" D
- . . . . N MEAS
+ . . . . N MAGNITUDE,MEAS,UCUMDISPLAY,UCUMFIELD,UCUMIEN,UNITS
  . . . . S MEAS=^TMP("PXPE",$J,GMDT,GMED,GMIFN,"MEASUREMENT")
- . . . . S TEXT="  Measurement: "_$P(MEAS,U,1)
- . . . . I $P(MEAS,U,2)'="" S TEXT=TEXT_" "_$$UCUMCODE^LEXMUCUM($P(MEAS,U,2))
+ . . . . S MAGNITUDE=$P(MEAS,U,1)
+ . . . . I MAGNITUDE="" Q
+ . . . . S UCUMIEN=$P(MEAS,U,2)
+ . . . . I UCUMIEN'="" D
+ . . . . . S UCUMDISPLAY=$P(MEAS,U,3)
+ . . . . . I UCUMDISPLAY="N" S UNITS="" Q
+ . . . . . S UCUMFIELD=$S(UCUMDISPLAY="C":"UCUM CODE",1:"DESCRIPTION")
+ . . . . . S UNITS=$$UCUMFIELDS^GMTSUCUM(UCUMIEN,UCUMFIELD)
+ . . . . E  S UNITS=""
+ . . . . I UNITS="" S TEXT="  Magnitude: "
+ . . . . E  S TEXT="  Measurement: "
+ . . . . S TEXT=TEXT_MAGNITUDE
+ . . . . I UNITS'="" S TEXT=TEXT_" "_UNITS
  . . . . I $L(TEXT)<56 W ?25,TEXT,!
  . . . . E  D LONGTEXT(TEXT)
  . . . S COMMENT=$P(^TMP("PXPE",$J,GMDT,GMED,GMIFN,"COM"),U,1)

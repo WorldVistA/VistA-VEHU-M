@@ -1,5 +1,5 @@
-ORWTPUA ;SLC/STAFF Personal Preference - Utility Alerts ;Apr 06, 2021@00:23:07
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,243,296,539**;Oct 24, 2000;Build 41
+ORWTPUA ;SLC/STAFF Personal Preference - Utility Alerts ;Jul 19, 2021@12:39:02
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,243,296,539,405**;Oct 24, 2000;Build 212
  ;
 START(USER) ; $$(user) -> user's surrogate start date/time
  Q $P($G(^XTV(8992,+$G(USER),0)),U,3)
@@ -34,7 +34,7 @@ CHKSURRO(USER,SURR,START,STOP) ; Check if surrogate has a surrogate
  ... I START<=SURSTRT,STOP>=SURSTOP S OK=0 Q
  ... I START>SURSTRT,START<SURSTOP S OK=0 Q
  ... I STOP>SURSTRT,STOP<SURSTOP S OK=0 Q
- .. I OK=0 S OK="0^"_$S(+SURR>0:$P($G(^VA(200,SURR,0)),U,1),1:SURR)_" has a surrogate scheduled during the same time period of "_$$FMTE^XLFDT(SURSTRT,5)_" thru "_$S(SURSTOP'=9999999:$$FMTE^XLFDT(SURSTOP,5),1:"""""")_"!"
+ .. I OK=0 S OK="0^"_$S(+SURR>0:$P($G(^VA(200,SURR,0)),U,1),1:SURR)_" has a surrogate scheduled during the same time period of "_$$FMTE^XLFDT(SURSTRT,5)_$S(SURSTOP'=9999999:" through "_$$FMTE^XLFDT(SURSTOP,5),1:" with no end date")_"!"
  Q OK
  ;
 GETSURR(USER) ; $$(user ien) -> surrogate ien

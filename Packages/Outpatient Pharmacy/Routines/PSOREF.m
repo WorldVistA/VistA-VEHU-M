@@ -1,5 +1,5 @@
-PSOREF ;BIR/SAB-refill data entry ;4/25/07 8:45am
- ;;7.0;OUTPATIENT PHARMACY;**1,23,27,36,46,78,130,131,148,206,313**;DEC 1997;Build 76
+PSOREF ;BIR/SAB-refill data entry ;May 08, 2019@06:42:36
+ ;;7.0;OUTPATIENT PHARMACY;**1,23,27,36,46,78,130,131,148,206,313,441**;DEC 1997;Build 209
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External references PSOL and PSOUL^PSSLOCK supported by DBIA 2789
  ;
@@ -27,7 +27,7 @@ SPEED ;speed refill
  D ^DIR K DIR,DUOUT,DTOUT I $D(DIRUT) S VALMBCK="" Q
  G BCREF:Y
  K PSOREF,PSOFDR,DIR,DUOUT,DIRUT S DIR("A")="Select Orders by number",DIR(0)="LO^1:"_PSOCNT D ^DIR I $D(DTOUT)!($D(DUOUT)) K DIR,DIRUT,DTOUT,DUOUT S VALMBCK="" Q
- K DIR,DIRUT,DTOUT,PSOOELSE,DTOUT I +Y S (ASK,SPEED,PSOOELSE)=1 D FULL^VALM1 S LST=Y D  G:$G(PSOREF("DFLG"))!($G(PSOREF("QFLG"))) SPEEDX
+ K DIR,DIRUT,DTOUT,PSOOELSE,DTOUT I +Y S (ASK,SPEED,PSOOELSE)=1 D FULL^VALM1 S LST=Y D  I $G(PSOREF("DFLG"))!($G(PSOREF("QFLG"))) D ^PSOBUILD,BLD^PSOORUT1 G SPEEDX
  .F ORD=1:1:$L(LST,",") Q:$P(LST,",",ORD)']""!($G(PSOREF("QFLG")))  S ORN=$P(LST,",",ORD) D:+PSOLST(ORN)=52
  ..I $$LMREJ^PSOREJU1($P(PSOLST(ORN),"^",2)) W $C(7),!!,"Rx "_$$GET1^DIQ(52,$P(PSOLST(ORN),"^",2),.01)_" has OPEN/UNRESOLVED 3rd Party Payer Reject!" K DIR D PAUSE^VALM1 Q
  ..I $$TITRX^PSOUTL($P(PSOLST(ORN),"^",2))="t" D  Q
@@ -98,7 +98,8 @@ REFILL(PLACER) ;passes flag to CPRS for front door refill request
  I ST Q "0^Prescription is in a Non-Refillable Status."
  I $P($G(^PSDRUG(PSODRG,2)),"^",3)'["O" Q "0^Cannot Refill. Drug No Longer Used by Outpatient Pharmacy."
  S PSORFRM=$P(RX0,"^",9) F PSOJ=0:0 S PSOJ=$O(^PSRX(RXN,1,PSOJ)) Q:'PSOJ  S PSORFRM=PSORFRM-1
- I PSORFRM<1 Q "0^No Refills remaining. New Med order required."
+ I $P(RX0,"^",9)=0,$O(^PSRX(RXN,"L",0)) Q "0^No Refills remaining. New Med order required."  ;PAPI
+ I PSORFRM<1,$P(RX0,"^",9) Q "0^No Refills remaining. New Med order required."  ;PAPI
  I $P(^PSRX(RXN,3),"^"),DT=$P(^PSRX(RXN,3),"^") Q "0^Can't Refill, Fill Date already exists for "_$E($P(^PSRX(RXN,3),"^"),4,5)_"/"_$E($P(^PSRX(RXN,3),"^"),6,7)_"/"_$E($P(^PSRX(RXN,3),"^"),2,3)_"."
  I $P(^PSRX(RXN,3),"^"),DT<$P(^PSRX(RXN,3),"^") Q "0^Can't Refill, later Refill Date already exists for "_$E($P(^PSRX(RXN,3),"^"),4,5)_"/"_$E($P(^PSRX(RXN,3),"^"),6,7)_"/"_$E($P(^PSRX(RXN,3),"^"),2,3)_"."
  I $O(^PS(52.41,"ARF",RXN,0)) Q "0^Pending Refill Request already exists."

@@ -1,5 +1,5 @@
-ORWPT ;SLC/KCM/REV - Patient Lookup Functions ; 12/24/20 1:20pm
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,149,206,187,190,215,243,280,306,311,441,528,519,544**;Dec 17, 1997;Build 1
+ORWPT ;SLC/KCM/REV - Patient Lookup Functions ;Apr 15, 2022@11:15:28
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,149,206,187,190,215,243,280,306,311,441,528,519,544,405**;Dec 17, 1997;Build 212
  ;
  ; Ref. to ^UTILITY via IA 10061
  ; DBIA 10096  ^%ZOSF()
@@ -76,6 +76,7 @@ SELECT(REC,DFN) ; Selects patient & returns key information
  N X,ORPREF,VADEMO
  I $G(XWB("2","RPC"))="ORWPT SELECT" K ^TMP($J,"OC-OPOS") ; delete once per order session order checks
  K ^TMP("ORWPCE",$J) ; delete PCE 'cache' when switching patients
+ K ^TMP("ORALLERGYCHK",$J) ; delete all temp allergy data for current session
  D DEMUPD^VADPT S ORPREF=$P(VADEMO(1,1),"^")
  S X=^DPT(DFN,0),REC=$P(X,U,1)_$S(ORPREF="":"",1:" ("_ORPREF_")")_"^"_$P(X,U,2,3)_U_$P(X,U,9)_U_U_$G(^(.1))_U_$G(^(.101))
  S X=$P(REC,U,6) I $L(X) S $P(REC,U,5)=+$G(^DIC(42,+$O(^DIC(42,"B",X,0)),44))

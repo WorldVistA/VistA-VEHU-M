@@ -1,5 +1,5 @@
-PSORXPA1 ;BIR/SAB - listman partial prescriptions ;07/14/93
- ;;7.0;OUTPATIENT PHARMACY;**11,27,56,77,130,152,181,174,287,385,442,528,630**;DEC 1997;Build 26
+PSORXPA1 ;BIR/SAB - listman partial prescriptions ;Aug 06, 2021@13:21:01
+ ;;7.0;OUTPATIENT PHARMACY;**11,27,56,77,130,152,181,174,287,385,442,528,630,441**;DEC 1997;Build 209
  ;External references L,UL, PSOL, and PSOUL^PSSLOCK supported by DBIA 2789
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^DD(52 supported by DBIA 999
@@ -9,6 +9,7 @@ PSORXPA1 ;BIR/SAB - listman partial prescriptions ;07/14/93
  ;I $D(RXPR($P(PSOLST(ORN),"^",2))) S VALMBCK="",VALMSG="A Partial has already been requested!" Q
  I $D(RXRS($P(PSOLST(ORN),"^",2))) S VALMBCK="",VALMSG="Rx is being pulled from suspense!" Q
  S PSORPDFN=+$P($G(^PSRX($P(PSOLST(ORN),"^",2),0)),"^",2)
+ I +$P($G(^PSRX($P(PSOLST(ORN),"^",2),"STA")),"^")=0,$G(^PSRX($P(PSOLST(ORN),"^",2),"PARK")) S VALMBCK="",VALMSG="Rx is PARKED; Unpark Rx before acting!" Q  ;441 PAPI
  S PSOPLCK=$$L^PSSLOCK(PSORPDFN,0) I '$G(PSOPLCK) D LOCK^PSOORCPY S VALMSG=$S($P($G(PSOPLCK),"^",2)'="":$P($G(PSOPLCK),"^",2)_" is working on this patient.",1:"Another person is entering orders for this patient.") K PSOPLCK,PSORPDFN D  Q
  .S VALMBCK=""
  K PSOPLCK D PSOL^PSSLOCK($P(PSOLST(ORN),"^",2)) I '$G(PSOMSG) D UL^PSSLOCK(PSORPDFN) S VALMSG=$S($P($G(PSOMSG),"^",2)'="":$P($G(PSOMSG),"^",2),1:"Another person is editing this order."),VALMBCK="" K PSOMSG,PSORPDFN Q
@@ -100,7 +101,7 @@ ULK ;
  K PSOMSG,PSOPLCK,PSORPDFN
  Q
 CS(LINEITEM) ; controlled substance check
- ; Input: LINEITEM - the line item that was selected from the list of active Rx's 
+ ; Input: LINEITEM - the line item that was selected from the list of active Rx's
  ;        off the Medication Profile screen rendered using PSO LM BACKDOOR ORDERS
  ;Output: $$CS  - 1:YES / 0:NO
  N RXIEN,DRGIEN,CSVAL

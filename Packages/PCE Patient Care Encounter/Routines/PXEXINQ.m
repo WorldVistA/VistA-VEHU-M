@@ -1,5 +1,5 @@
-PXEXINQ ;SLC/PKR - Exam Inquire. ;01/11/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
+PXEXINQ ;SLC/PKR - Exam Inquire. ;03/21/2022
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211,217**;Aug 12, 1996;Build 135
  ;
  ;==========================================
 BEXINQ(IEN) ;Display an Exam inquiry, defaults to the Browser.
@@ -84,6 +84,7 @@ EXINQ(IEN,OUTPUT) ;Exam inquiry, return the formatted text in OUTPUT.
  .. S OUTPUT(NL)=OUTPUT(NL)_$$REPEAT^XLFSTR(" ",NSP)_UCUMDATA(UCUMIEN,"UCUM CODE")
  .. S NL=NL+1,OUTPUT(NL)=""
  .. S NL=NL+1,OUTPUT(NL)="UCUM Description: "_UCUMDATA(UCUMIEN,"DESCRIPTION")
- ;
+ .. S NL=NL+1,OUTPUT(NL)="Prompt Caption: "_$P(TEMP,U,5)
+ .. S NL=NL+1,OUTPUT(NL)="UCUM Display: "_$$EXTERNAL^DILFD(9999999.15,225,"",$P(TEMP,U,6))
  Q
  ;

@@ -1,5 +1,5 @@
-GMRAPEM0 ; HIRMFO/WAA,FT - ALLERGY/ADVERSE REACTION PATIENT EDIT DRIVER ;May 11, 2021@13:23:44
- ;;4.0;Adverse Reaction Tracking;**2,5,17,21,36,50,58,63**;Mar 29, 1996;Build 34
+GMRAPEM0 ; HIRMFO/WAA,FT - ALLERGY/ADVERSE REACTION PATIENT EDIT DRIVER ;May 4, 2022@12:17:44
+ ;;4.0;Adverse Reaction Tracking;**2,5,17,21,36,50,58,63,51**;Mar 29, 1996;Build 190
 EN11 ; Entry point for GMRA USER E/E PAT REC DATA option
  ; GMRAUSER is a flag that indicates that this is a User
  ; If user has Verifier Key then user will act normal
@@ -223,7 +223,7 @@ MEDCHK ; NSR 20070203
  . . N PRVDA S PRVDA=""
  . . F  S PRVDA=$O(GMRAPROV(PRVDA)) Q:PRVDA=""  I $D(GMRAPROV(PRVDA)) D
  . . . S GMRASLST($P(GMRAMCHK(GMRADA),"^"),$P(GMRAPROV(PRVDA),";"))=GMRAPROV(PRVDA)
- . . . W !,?3,GMRAPROV(PRVDA)
+ . . . W !?3,$P(GMRAPROV(PRVDA),"^",2)," - ",$P(GMRAPROV(PRVDA),"^",3)
  . . K GMRAPROV
  . W !!
  . S (GMRAOUT,GMRAYN)=0 D ASK^GMRAUTL("Do you wish to send the alert(s) to additional recipients? ",.GMRAOUT,.GMRAYN) Q:GMRAOUT

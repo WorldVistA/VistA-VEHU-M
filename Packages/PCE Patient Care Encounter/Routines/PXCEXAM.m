@@ -1,5 +1,5 @@
-PXCEXAM ;ISL/dee,PKR - Used to edit and display V EXAM ;04/18/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**27,211**;Aug 12, 1996;Build 340
+PXCEXAM ;ISL/dee,PKR - Used to edit and display V EXAM ;04/25/2022
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**27,211,217**;Aug 12, 1996;Build 135
  ;; ;
  Q
  ;
@@ -50,15 +50,14 @@ EVENTDT(PXCEAFTR) ;Edit the Event Date and Time.
  I (IEN>0),$$ISMAPPED^PXEXMGR(IEN) D  Q
  . W !,"The exam has mapped codes so the Event Date and Time cannot be edited.",!
  S DEFAULT=$P(^TMP("PXK",$J,"XAM",1,12,"BEFORE"),U,1)
- I DEFAULT="" S DEFAULT="NOW"
- S HELP="D EVDTHELP^PXCEXAM"
+ S HELP="D EVENTDTHELP^PXCEXAM"
  S PROMPT="Enter the Event Date and Time"
  S EVENTDT=$$GETDT^PXDATE(-1,-1,-1,DEFAULT,PROMPT,HELP)
  S $P(PXCEAFTR(12),U,1)=EVENTDT
  Q
  ;
  ;********************************
-EVDTHELP ;Event Date and Time help.
+EVENTDTHELP ;Event Date and Time help.
  N ERR,RESULT,TEXT
  S RESULT=$$GET1^DID(9000010.13,1201,"","DESCRIPTION","TEXT","ERR")
  D BROWSE^DDBR("TEXT(""DESCRIPTION"")","NR","V Exam Event Date and Time Help")
@@ -67,30 +66,38 @@ EVDTHELP ;Event Date and Time help.
  ;
  ;********************************
 MEAS(PXCEAFTR) ;Edit the measurement.
- N EXAMCHG,MAX,MAXDEC,MIN,TEMP,UCUMCODE,UCUMIEN,XAMIEN,XAMIENO
+ N EXAMCHG,MAX,MAXDEC,MIN,MPARMS,PXAERR,UCUMCODE,UCUMIEN,UNITS,XAMIEN,XAMIENO
  S XAMIENO=$P(PXCEVFIN(0),U,1)
  S XAMIEN=$P(PXCEAFTR(0),U,1)
  S EXAMCHG=$S(XAMIEN'=XAMIENO:1,1:0)
- S TEMP=$G(^AUTTEXAM(XAMIEN,220))
- I TEMP="" Q
- S MIN=$P(TEMP,U,1)
+ S MPARMS=$G(^AUTTEXAM(XAMIEN,220))
+ I MPARMS="" Q
+ S MIN=$P(MPARMS,U,1)
  I MIN="" Q
- S MAX=$P(TEMP,U,2)
+ S MAX=$P(MPARMS,U,2)
  I MAX="" Q
- S MAXDEC=+$P(TEMP,U,3)
- S UCUMIEN=$P(TEMP,U,4)
- ;DBIA #6225
- S UCUMCODE=$S(UCUMIEN="":"",1:$$UCUMCODE^LEXMUCUM(UCUMIEN))
+ S MAXDEC=+$P(MPARMS,U,3)
+ S UCUMIEN=$P(MPARMS,U,4)
+ S UCUMCODE=$$UCUMCODE^LEXMUCUM(UCUMIEN)
+ S UNITS=$$UCUMFIELDS^PXUCUM(UCUMIEN,"DESCRIPTION")
  N DIR,DIRUT,X,Y
- S DIR(0)="NA^"_MIN_":"_MAX_":"_MAXDEC
- I UCUMCODE'="" S DIR("A",2)="The units are: "_UCUMCODE
- S DIR("A",1)="Enter the measurement, the allowed range is "_MIN_" to "_MAX
- S DIR("A",2)="The maximum number of decimal digits is "_MAXDEC
+ I UCUMCODE="{clock_time}" D
+ . S DIR(0)="FAO^6:7^K:'$$MAG^PXAIVAL(X,MPARMS,.PXAERR) X"
+ . S DIR("A",1)="Enter clock time as HH:MMAM or HH:MMPM"
+ I UCUMCODE="{mm/dd/yyyy}" D
+ . S DIR(0)="FAO^10:10^K:'$$MAG^PXAIVAL(X,MPARMS,.PXAERR) X"
+ . S DIR("A",1)="Enter month-day-year as MM/DD/YYYY"
+ I (UCUMCODE'="{clock_time}"),(UCUMCODE'="{mm/dd/yyyy}") D
+ . S DIR(0)="NAO^"_MIN_":"_MAX_":"_MAXDEC_"^K:$$MAXDECEX^PXMEASUREMENT(X,MAXDEC) X"
+ . S DIR("A",1)="Enter the magnitude, the allowed range is "_MIN_" to "_MAX
+ . S DIR("A",2)="The maximum number of decimal digits is "_MAXDEC
+ . S DIR("A",3)="The units are: "_UNITS
  S DIR("A")="The current value is: "
  I EXAMCHG S $P(PXCEAFTR(220),U,1)=""
  S DIR("B")=$P(PXCEAFTR(220),U,1)
  D ^DIR
  I $D(DIRUT) Q
+ S X=$$MAGFORMAT^PXMEASUREMENT(X)
  S PXCEAFTR(220)=X_U_UCUMIEN
  Q
  ;

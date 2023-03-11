@@ -1,5 +1,5 @@
-ORWDXC ; SLC/KCM - Utilities for Order Checking ; 3/18/21 12:17pm
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,141,221,243,280,346,345,311,395,269,469,377,539**;Dec 17, 1997;Build 41
+ORWDXC ; SLC/KCM - Utilities for Order Checking ;Apr 12, 2022@12:09:48
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,141,221,243,280,346,345,311,395,269,469,377,539,405**;Dec 17, 1997;Build 212
  ;
 ON(VAL) ; returns E if order checking enabled, otherwise D
  S VAL=$$GET^XPAR("DIV^SYS^PKG","ORK SYSTEM ENABLE/DISABLE")
@@ -30,9 +30,12 @@ ALLERGY(LST,DFN,FID,OIL,ORDRNUM) ; Return list of allergy Order Checks on select
  I +ORDRNUM,+OIL Q  ;Only OIL or ORDRNUM is allowed, not both
  S FID=$S(FID="PSH":FID,FID="PSX":"PSH",FID="PSO":FID,FID="PSIV":"PSIV",1:"PSI")
  K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"ORDSGCHK_CACHE")
- K ^TMP($J,"ORENHCHK"),^TMP($J,"ORALLERGYCHK")
- N X,Y,USID,ORCHECK,ORI,ORX,ORY,%DT,ORDODSG,CNT,ORL,RSLT
+ K ^TMP($J,"ORENHCHK")
+ N X,Y,USID,ORCHECK,ORI,ORX,ORY,%DT,ORDODSG,CNT,ORL,RSLT,OILORD,ORALLCHKNM
+ S ORALLCHKNM="ORALLERGYCHK"
+ S OILORD=$S(+OIL:+OIL,1:+ORDRNUM)
  K ORX,ORY
+ I OILORD>0 K ^TMP(ORALLCHKNM,$J,DFN,OILORD)
  S ORL=""
  ; do the ALLERGY order checks
  I +OIL D
@@ -50,21 +53,40 @@ ALLERGY(LST,DFN,FID,OIL,ORDRNUM) ; Return list of allergy Order Checks on select
  I $D(ORY) D RETURN^ORCHECK   ; expects ORY, ORCHECK
  ; return ORCHECK as 1 dimensional list
  D FDBDOWN^ORCHECK(0)
- I $D(ORY) M ^TMP($J,"ORALLERGYCHK")=ORY
+ I $D(ORY),OILORD>0 M ^TMP(ORALLCHKNM,$J,DFN,OILORD)=ORY
  D CHK2LST
  K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"DD"),^TMP($J,"ORDSGCHK_CACHE")
  Q
-ACCEPT(LST,DFN,FID,STRT,ORL,OIL,ORIFN,ORREN)    ; Return list of Order Checks on Accept Order
+REASON(LST,TYP,DFN,OID) ;Return list of pre-defined override reasons
+ N ORRSN,RSNI,RSNTYP,ORDT,ORVP,ORIFN,ORLAST
+ S ORDT="",ORIFN="",ORVP=DFN_";DPT(",ORLAST=""
+ I OID D
+ . F  S ORDT=$O(^OR(100,"AOI",OID,ORVP,ORDT),-1) Q:ORDT=""  D
+ . . F  S ORIFN=$O(^OR(100,"AOI",OID,ORVP,ORDT,ORIFN)) Q:ORIFN=""!(ORLAST]"")  D
+ . . . Q:'$D(^ORD(100.05,ORIFN,3,1))
+ . . . S ORLAST=$G(^ORD(100.05,ORIFN,3,1,0))
+ S ORRSN=0,RSNI=0
+ I ORLAST]"" S LST($I(RSNI))=ORLAST
+ F  S ORRSN=$O(^ORD(100.04,ORRSN)) Q:'ORRSN  D
+ . S RSNTYP=$P(^ORD(100.04,ORRSN,0),"^",3)
+ . I RSNTYP="B",TYP="R" Q  ;Quit if the reason type is 'B' for Both and the incoming option is 'R' only
+ . Q:TYP'[RSNTYP&(RSNTYP'="B")  ;Otherwise quit if the reason type is not contained in the incoming option AND not 'B'
+ . Q:$P(^ORD(100.04,ORRSN,0),"^",1)=ORLAST
+ . S LST($I(RSNI))=$P(^ORD(100.04,ORRSN,0),"^",1)
+ I 'RSNI S LST(1)="No predefined reasons available"
+ Q
+ACCEPT(LST,DFN,FID,STRT,ORL,OIL,ORIFN,ORREN,ORRENFLDS,ALLACC)    ; Return list of Order Checks on Accept Order
  K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"ORDSGCHK_CACHE")
  ; OIL(n)=OIptr^PS|PSIV|LR^PkgInfo
  ; ORREN - IF ORREN IS SET TO 1 THEN ORIFN IS THE ORDER GETTING RENEWED
  K ^TMP($J,"ORENHCHK")
- N X,Y,USID,ORCHECK,ORI,ORX,ORY,%DT,ORDODSG
+ N ACCEPT,X,Y,USID,ORCHECK,ORI,ORX,ORY,%DT,ORDODSG,ORDITM,ORALLCHKNM
  ; convert relative start date to real start date
  S ORL=ORL_";SC(",X=STRT,STRT="",ORDODSG=0
  D:X="AM" AM^ORCSAVE2 D:X="NEXT" NEXT^ORCSAVE2
  I $L(X) S %DT="FTX" D ^%DT S:Y'>0 Y="" S STRT=Y
-  ; do the SELECT order checks
+ S ACCEPT=$S('+$G(ALLACC):"ACCEPT",1:"ALLACC")
+ ; do the SELECT order checks
  S (ORI,ORX)=0 F  S ORI=$O(OIL(ORI)) Q:'ORI  D
  . Q:'OIL(ORI)
  . S USID=$$USID(OIL(ORI))
@@ -80,11 +102,19 @@ ACCEPT(LST,DFN,FID,STRT,ORL,OIL,ORIFN,ORREN)    ; Return list of Order Checks on
  . S ORX=ORX+1
  . S ORX(ORX)=+OIL(ORI)_"|"_FID_"|"_OIL(ORI,"USID")_"|"_STRT
  . S:$P(OIL(ORI),U,2)="LR" $P(ORX(ORX),"|",6)=$P(OIL(ORI),U,3)
- D EN^ORKCHK(.ORY,DFN,.ORX,"ACCEPT",.OIL,.ORDODSG)
+ D EN^ORKCHK(.ORY,DFN,.ORX,ACCEPT,.OIL,.ORDODSG)
  I $D(ORY) D RETURN^ORCHECK   ; expects ORY, ORCHECK
  ; return ORCHECK as 1 dimensional list
  D FDBDOWN^ORCHECK(0)
  D OPOS(DFN)
+ I '$G(DT) S DT=$$DT^XLFDT
+ S ORALLCHKNM="ORALLERGYCHK"
+ S ORDITM=+$P($G(OIL(1)),U,1)
+ I $D(ORY),ORDITM>0,'$D(^TMP(ORALLCHKNM,$J,DFN,ORDITM)) D
+ . N ORCNTR
+ . S ORCNTR=0
+ . F  S ORCNTR=$O(ORY(ORCNTR)) Q:ORCNTR=""  D
+ . . I $P(ORY(ORCNTR),U,2)=3 S ^TMP(ORALLCHKNM,$J,DFN,ORDITM,ORCNTR)=$G(ORY(ORCNTR))
  D CHK2LST
  D CHECKIT(.LST)
  K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"DD"),^TMP($J,"ORDSGCHK_CACHE")
@@ -127,6 +157,12 @@ SAVECHK(OK,ORVP,RSN,LST)    ; Save order checks for session
  N ORCHECK,ORIFN S OK=1
  D LST2CHK
  I $L(RSN)>0 S ORCHECK("OK")=RSN
+ S ORIFN=0 F  S ORIFN=$O(ORCHECK(ORIFN)) Q:'ORIFN  D OC^ORCSAVE2
+ Q
+SAVEMCHK(OK,ORVP,LST)    ; TDP - Save order checks for session with
+ ; multiple Reasons/Comments
+ N ORCHECK,ORCOMMENTS,ORREASONS,ORIFN S OK=1
+ D LST2CHK
  S ORIFN=0 F  S ORIFN=$O(ORCHECK(ORIFN)) Q:'ORIFN  D OC^ORCSAVE2
  Q
 DELORD(OK,ORIFN)      ; ACTUALLY only cancel the order
@@ -179,7 +215,8 @@ CHK2LST ; creates list that can be passed to broker from ORCHECK array
  . . . . I $P(ORCHECK(ORIFN,CDL,I),U,1)=99 S LST(RESERVED)=ORID_U_ORCHECK(ORIFN,CDL,I) Q  ;Put RDI warning at the top of each order's checks
  . . . . S ILST=ILST+1,LST(ILST)=ORID_U_ORCHECK(ORIFN,CDL,I)
  Q
-LST2CHK ; create ORCHECK array from list passed by broker
+LST2CHK ; create ORCHECK array from list passed by broker and
+ ; create ORREASON and ORCOMMENTS arrays from lists passed by broker
  N ORIFN,CDL,I,ILST,X S I=0
  S ILST="" F  S ILST=$O(LST("ORCHECKS",ILST)) Q:$L(ILST)'>0  D
  . I $D(LST("ORCHECKS",ILST,0)) D
@@ -188,6 +225,20 @@ LST2CHK ; create ORCHECK array from list passed by broker
  . S ORIFN=$P(X,U),CDL=$P(X,U,3)
  . I +$G(ORIFN)>0,+$G(CDL)>0 D  ;cla 12/16/03
  . . S I=I+1,ORCHECK(+ORIFN,CDL,I)=$P(X,U,2,4)
+ ;TDP - Added below code to handle Override Reasons
+ S ILST="" F  S ILST=$O(LST("ORREASONS",ILST)) Q:ILST=""  D
+ . ;
+ . S X=LST("ORREASONS",ILST) ;I $D(LST("ORREASONS",ILST))
+ . ;. S ILST="" F  S ILST=$O(LSTR("ORREASONS",ILST)) Q:$L(ILST)'>0  D
+ . S ORIFN=+$P(X,U)
+ . Q:+ORIFN<1
+ . S ORREASONS(ORIFN)=$P(X,U,2)
+ ;TDP - Added below code to handle Remote Allergy Comments
+ S ILST="" F  S ILST=$O(LST("ORCOMMENTS",ILST)) Q:ILST=""  D
+ . S X=LST("ORCOMMENTS",ILST)
+ . S ORIFN=+$P(X,U)
+ . Q:+ORIFN<1
+ . S ORCOMMENTS(ORIFN)=$P(LST("ORCOMMENTS",ILST),U,2)
  Q
 CHECKIT(X) ;remove uncessesary duplication of Duplicate Therapy checks
  N I,J,K,Y,Z
@@ -300,4 +351,11 @@ FNDDRG(ORX,ORDER,PKG) ;
  . ;S SPEC=$S(PKG="LR":$$VALUE^ORCSAVE2(ORDER,"SPECIMEN",INST),1:"")
  . ;S ORX=+$G(ORX)+1,ORX(ORX)=ITEM_"|"_PKG_"|"_USID_"|"_START_"|"_ORDER_"|"_SPEC
  . S ORX=+$G(ORX)+1,ORX(ORX)=ITEM_"|"_PKG_"|"_USID_"|"_START_"|"_ORDER_"|"
+ Q
+CLRALLGY(ORY,DFN) ;Clears the ^TMP data containing the temporary allergy order checks for a patient
+ ;   DFN = PATIENT IEN
+ N ORALLCHKNM
+ S ORALLCHKNM="ORALLERGYCHK"
+ I +$G(DFN)=0 Q
+ K ^TMP(ORALLCHKNM,$J,+DFN)
  Q

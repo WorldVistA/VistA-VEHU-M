@@ -1,5 +1,5 @@
-PXCEVFI2 ;ISL/dee,ESW - Supporting routines for editing a visit or v-file entry ;06/02/2017
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,73,95,96,124,158,184,215,211**;Aug 12, 1996;Build 340
+PXCEVFI2 ;ISL/dee,ESW - Supporting routines for editing a visit or v-file entry ;Jun 19, 2018@15:13
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,73,95,96,124,158,184,215,211,217**;Aug 12, 1996;Build 135
  ;
  Q
 ASK(PXCVIEN,PXCFIEN,PXCEAUPN,PXCCATT,PXCCODE) ; -- Display a selection list from one V-File for this visit
@@ -56,6 +56,10 @@ DEL(PXCECAT) ; -- Delete this V-File entry from the List if all the visit inform
  ;
  N PXCENODS,PXCEFOR,PXCENODE,PXCECATS,PXCECATT,PXCECODE,PXCEAUPN,PXCEQUIT
  N PXCEDT
+ ;
+ ; Check to see if there is a skin test placement linked to this entry
+ I PXCECAT="SK",'$$CANDEL^PXCESK(PXCEFIEN) Q
+ ;
  S PXCECODE="PXCE"_$S(PXCECAT="IMM":"VIMM",1:PXCECAT)
  S PXCECATS=$S(PXCECAT="CSTP":"VST",PXCECAT="HIST":"VST",1:PXCECAT)
  S PXCEAUPN=$P($T(FORMAT^@PXCECODE),"~",5)
@@ -126,7 +130,7 @@ DELQUIT ;
  Q
  ;
 SC(PXDFN) ;Service Connected Help
- ; Input  -- DFN      Patient file IEN  
+ ; Input  -- DFN      Patient file IEN
  ; Output -- Help
  N I,SDCNT,SDDC,SDRD0
  W !!,"Patient's Service Connection and Rated Disabilities:"

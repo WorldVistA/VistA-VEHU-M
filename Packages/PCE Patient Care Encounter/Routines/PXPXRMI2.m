@@ -1,5 +1,5 @@
-PXPXRMI2 ; SLC/PKR,SCK - Build indexes for the V files (continued). ;05/08/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**119,194,199,211**;Aug 12, 1996;Build 340
+PXPXRMI2 ; SLC/PKR,SCK - Build indexes for the V files (continued). ;03/16/2020
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**119,194,199,211,217**;Aug 12, 1996;Build 135
  ;DBIA 4113 supports PXRMSXRM entry points.
  ;DBIA 4114 supports setting and killing ^PXRMINDX
  ; Reference to ICDEX supported by ICR #5747.
@@ -194,10 +194,10 @@ VSC ;Build the indexes for V Standard Codes.
  .. S ETEXT=DAS_" missing coding system"
  .. D ADDERROR^PXRMSXRM(GLOBAL,ETEXT,.NERROR)
  . I '$$VCODESYS^PXLEX(CODESYS,0) D  Q
- .. S ETEXT=CODESYS_" is not a valid coding system"
+ .. S ETEXT=DAS_" "_CODESYS_" is not a valid coding system"
  .. D ADDERROR^PXRMSXRM(GLOBAL,ETEXT,.NERROR)
  . I '$$VCODE^PXLEX(CODESYS,CODE) D  Q
- .. S ETEXT="The coding system "_CODESYS_" code "_CODE_" pair is not valid"
+ .. S ETEXT=DAS_" The coding system "_CODESYS_" code "_CODE_" pair is not valid"
  .. D ADDERROR^PXRMSXRM(GLOBAL,ETEXT,.NERROR)
  . S DATE=$P($G(^AUPNVSC(DAS,12)),U,1)
  . I DATE="" S DATE=$P(^AUPNVSIT(VISIT,0),U,1)
@@ -242,6 +242,8 @@ VSK ;Build the indexes for V SKIN TEST.
  .. S DONE=1
  .. S ETEXT="Bad IEN: "_DAS_", cannot continue."
  .. D ADDERROR^PXRMSXRM(GLOBAL,ETEXT,.NERROR)
+ . ; Don't index a placement skin test that is linked to a reading skin test
+ . I $D(^AUPNVSK("APT",DAS)) Q
  . S IND=IND+1
  . I IND#TENP=0 D
  .. S TEXT="Processing entry "_IND
@@ -266,7 +268,8 @@ VSK ;Build the indexes for V SKIN TEST.
  . I '$D(^AUPNVSIT(VISIT)) D  Q
  .. S ETEXT=DAS_" invalid visit"
  .. D ADDERROR^PXRMSXRM(GLOBAL,ETEXT,.NERROR)
- . S DATE=$P($G(^AUPNVSK(DAS,12)),U,1)
+ . S DATE=$P(TEMP,U,6) ; Date Read
+ . I DATE="" S DATE=$P($G(^AUPNVSK(DAS,12)),U,1)
  . I DATE="" S DATE=$P(^AUPNVSIT(VISIT,0),U,1)
  . I DATE="" D  Q
  .. S ETEXT=DAS_" missing date"

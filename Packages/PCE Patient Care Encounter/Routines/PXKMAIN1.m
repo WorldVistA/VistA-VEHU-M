@@ -1,5 +1,5 @@
-PXKMAIN1 ;ISL/JVS,ISA/Zoltan - Main Routine for Data Capture ;10/11/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,73,124,178,210,216,211**;Aug 12, 1996;Build 340
+PXKMAIN1 ;ISL/JVS,ISA/Zoltan - Main Routine for Data Capture ;Jul 26, 2021@09:35:17
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,73,124,178,210,216,211,217**;Aug 12, 1996;Build 135
  ;+This routine is responsible for:
  ;+ - creating new entries in PCE files,
  ;+ - processing modifications to existing entries,
@@ -36,7 +36,7 @@ ERROR ;+Check for missing required fields
  D EN1^@PXKRTN
  S PXKER=$P(PXKER," * ",1)
  I PXKER="" Q
- N PXJ,PXJJ,PXKFD,PXKFLD
+ N PXJ,PXKFD,PXKFLD
  F PXJ=1:1:$L(PXKER,",") D
  . S PXJJ=$P(PXKER,",",PXJ)
  . I '$D(PXKAV(PXKNOD,PXJJ)) D
@@ -139,7 +139,6 @@ DRDIE ;--Set the DR string and DO DIE
  ..I $G(PXKER)'="" S DR=DR_PXKER_"PXKAV("_PXKNOD_","_PXKPCE_"));"
  ..I $L(DR)>200 D DIE
  D DIE
- I PXKCAT="IMM",$G(PXVNEWIM) D STOCK^PXVXR K PXVNEWIM ; PX*1*210
  K DIE,PXKLR,DIC(0)
  D ER
  Q
@@ -219,7 +218,7 @@ DUP ;+Code to check for duplicates
  Q
  ;
 CPTMOD(VCPTIEN,MODIEN) ;
- N IND
+ N IND,VCPTE
  S IND=$O(^AUPNVCPT(VCPTIEN,1,"B",MODIEN,""))
  I IND="" S IND=1
  S VCPTE="^AUPNVCPT("_VCPTIEN_",1,"_IND_",0)"

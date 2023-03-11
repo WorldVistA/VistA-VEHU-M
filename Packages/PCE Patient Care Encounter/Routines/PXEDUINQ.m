@@ -1,5 +1,5 @@
-PXEDUINQ ;SLC/PKR - Education Topic Inquire. ;01/11/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
+PXEDUINQ ;SLC/PKR - Education Topic Inquire. ;03/21/2022
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211,217**;Aug 12, 1996;Build 135
  ;
  ;==========================================
 BEDUINQ(IEN) ;Display an Education Topic inquiry, defaults to the Browser.
@@ -106,6 +106,8 @@ EDUINQ(IEN,OUTPUT) ;Education Topic inquiry, return the formatted text
  .. S OUTPUT(NL)=OUTPUT(NL)_$$REPEAT^XLFSTR(" ",NSP)_UCUMDATA(UCUMIEN,"UCUM CODE")
  .. S NL=NL+1,OUTPUT(NL)=""
  .. S NL=NL+1,OUTPUT(NL)="UCUM Description: "_UCUMDATA(UCUMIEN,"DESCRIPTION")
+ .. S NL=NL+1,OUTPUT(NL)="Prompt Caption: "_$P(TEMP,U,5)
+ .. S NL=NL+1,OUTPUT(NL)="UCUM Display: "_$$EXTERNAL^DILFD(9999999.09,225,"",$P(TEMP,U,6))
  ;
  S NL=NL+1,OUTPUT(NL)=""
  S NL=NL+1,OUTPUT(NL)="      Subtopics"

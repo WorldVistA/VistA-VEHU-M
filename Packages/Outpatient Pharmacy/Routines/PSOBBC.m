@@ -1,5 +1,6 @@
-PSOBBC ;IHS/DSD/JCM-BATCH BARCODE DRIVER ;3/30/06 10:10am
- ;;7.0;OUTPATIENT PHARMACY;**11,22,27,34,46,130,146,185,242,264,300,337,313,473,504,570,653**;DEC 1997;Build 14
+PSOBBC ;IHS/DSD/JCM - BATCH BARCODE DRIVER ;Feb 03, 2022@11:08
+ ;;7.0;OUTPATIENT PHARMACY;**11,22,27,34,46,130,146,185,242,264,300,337,313,473,504,570,653,441**;DEC 1997;Build 209
+ ;
  ;External reference to ^IBE(350.1,"ANEW" supported by DBIA 592
  ;External references CHPUS^IBACUS and TRI^IBACUS supported by DBIA 2030
  ;External references LK^ORX2 and ULK^ORX2 supported by DBIA 867
@@ -172,9 +173,14 @@ PTX K PSOPTPST W:PSOBBC("DFLG") !!,$C(7),"Rx not filled" W:$G(PSOBBC("IRXN")) " 
  ;
 REFILL ;
  ; Titration Rx refill request check from AudioFax/Internet
- N PSORXIEN
+ N PSORXIEN,PSOPARKED,PSOORIG
  S PSORXIEN=+$G(PSOBBC("IRXN"))
- I PSORXIEN,$D(^PSRX(PSORXIEN,0)),$$TITRX^PSOUTL(PSORXIEN)="t" D  Q
+ S PSOORIG=0
+ S PSOPARKED=($G(^PSRX(PSORXIEN,"STA"))=0)&($G(^PSRX(PSORXIEN,"PARK")))
+ I PSOPARKED S PSOORIG=$$CHKPRKORIG^PSOPRKA(PSORXIEN)  ;check if filling original or refill
+ ;
+ ; p441 PAPI - don't quit here if filling original parked titration
+ I PSORXIEN,$D(^PSRX(PSORXIEN,0)),$$TITRX^PSOUTL(PSORXIEN)="t",'PSOORIG D  Q
  . W !!,$C(7),"Rx# "_$$GET1^DIQ(52,PSORXIEN,.01)_" is marked as 'Titration Rx' and cannot be refilled.",!
  . D PAUSE^VALM1
  N PSOFROM S PSOFROM="REFILL",XFROM="BATCH"

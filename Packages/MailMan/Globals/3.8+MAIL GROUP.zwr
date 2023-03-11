@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MAIL GROUP
 ZWR
-^XMB(3.8,0)="MAIL GROUP^3.8^463^439"
+^XMB(3.8,0)="MAIL GROUP^3.8^464^440"
 ^XMB(3.8,1,0)="YS PSYCHTEST^PR^^^^0"
 ^XMB(3.8,1,1,0)="^3.81P^^0"
 ^XMB(3.8,1,2,0)="^^1^1^2921113^^"
@@ -3170,8 +3170,11 @@ ZWR
 ^XMB(3.8,376,2,1,0)="This mail group contains users responsible for DSS extracts."
 ^XMB(3.8,376,2,2,0)="A message is sent to this group upon completion of package extracts."
 ^XMB(3.8,376,3)=10000000216
-^XMB(3.8,377,0)="OR CACS^PU^n^12^3220624^^10000000216"
-^XMB(3.8,377,2,0)="^3.801^2^2^3110816^^^^"
+^XMB(3.8,377,0)="OR CACS^PU^n^13^3230307^^10000000216"
+^XMB(3.8,377,1,0)="^3.81P^1^1"
+^XMB(3.8,377,1,1,0)=1
+^XMB(3.8,377,1,"B",1,1)=""
+^XMB(3.8,377,2,0)="^3.801^2^2^3230307^^^^"
 ^XMB(3.8,377,2,1,0)="This Mail Group identifies the Clinical Applications Coordinators at the "
 ^XMB(3.8,377,2,2,0)="facility."
 ^XMB(3.8,377,3)=10000000216
@@ -3675,6 +3678,14 @@ ZWR
 ^XMB(3.8,463,2,3,0)="Nightly Process.  Mail sent using this group must not contain any PII "
 ^XMB(3.8,463,2,4,0)="or PHI."
 ^XMB(3.8,463,3)=1
+^XMB(3.8,464,0)="PXV IMM INVENTORY ALERTS^PR^y^^^0"
+^XMB(3.8,464,1,0)="^3.81P^1^1"
+^XMB(3.8,464,1,1,0)=1
+^XMB(3.8,464,1,"B",1,1)=""
+^XMB(3.8,464,2,0)="^^2^2^3230307"
+^XMB(3.8,464,2,1,0)="This mail group will receive messages when an immunization is running low on"
+^XMB(3.8,464,2,2,0)="stock."
+^XMB(3.8,464,3)=1
 ^XMB(3.8,"AB",.5,120,1)=""
 ^XMB(3.8,"AB",.5,372,1)=""
 ^XMB(3.8,"AB",.5,428,1)=""
@@ -3682,11 +3693,13 @@ ZWR
 ^XMB(3.8,"AB",1,314,1)=""
 ^XMB(3.8,"AB",1,317,1)=""
 ^XMB(3.8,"AB",1,318,2)=""
+^XMB(3.8,"AB",1,377,1)=""
 ^XMB(3.8,"AB",1,408,1)=""
 ^XMB(3.8,"AB",1,423,1)=""
 ^XMB(3.8,"AB",1,424,1)=""
 ^XMB(3.8,"AB",1,429,1)=""
 ^XMB(3.8,"AB",1,434,1)=""
+^XMB(3.8,"AB",1,464,1)=""
 ^XMB(3.8,"AB",5,372,4)=""
 ^XMB(3.8,"AB",541,29,10)=""
 ^XMB(3.8,"AB",541,31,5)=""
@@ -4891,6 +4904,7 @@ ZWR
 ^XMB(3.8,"B","PTT",30)=""
 ^XMB(3.8,"B","PXCA PCE ERROR BULLETIN",162)=""
 ^XMB(3.8,"B","PXRM MANAGER",303)=""
+^XMB(3.8,"B","PXV IMM INVENTORY ALERTS",464)=""
 ^XMB(3.8,"B","QAFD_EXT",181)=""
 ^XMB(3.8,"B","QAFD_SM",180)=""
 ^XMB(3.8,"B","QAINC",21)=""

@@ -1,7 +1,7 @@
-PXHFSM ;SLC/PKR - Health Factor ScreenMan routines ;10/24/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
+PXHFSM ;SLC/PKR - Health Factor ScreenMan routines ;06/14/2022
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211,217**;Aug 12, 1996;Build 135
  ;
- ;===================================
+ ;===============
 CATNDVAL(NAME) ;Name data validation for PX HF CATEGORY.
  I NAME="" Q
  N L3C,LEN
@@ -12,7 +12,7 @@ CATNDVAL(NAME) ;Name data validation for PX HF CATEGORY.
  S DDSERROR=1
  Q
  ;
- ;===================================
+ ;===============
 CODEPAOC(DA) ;Code Post-Action On Change.
  N CODE,CODESYS,NEWCODE,SAVEDDS
  S CODESYS=$$GET^DDSVAL(9999999.66,.DA,.01)
@@ -31,7 +31,7 @@ CODEPAOC(DA) ;Code Post-Action On Change.
  D PUT^DDSVAL(9999999.66,.DA,1,NEWCODE)
  Q
  ;
- ;===================================
+ ;===============
 CODEPRE(DA) ;Code pre-action.
  N CODESYS,TEXT
  S CODESYS=$$GET^DDSVAL(9999999.66,.DA,.01)
@@ -41,13 +41,13 @@ CODEPRE(DA) ;Code pre-action.
  D EN^DDIOL(.TEXT)
  Q
  ;
- ;===================================
+ ;===============
 DELPAOC(X,DA) ;Delete field post action on change.
  N IENS
  I X=1 S IENS=$$IENS^DILF(.DA),^TMP($J,"UNLINK",9999999.64,IENS)=""
  Q
  ;
- ;===================================
+ ;===============
 DELPRE ;Delete field pre-action.
  N TEXT
  S TEXT(1)="Enter 'Y' if you want to delete this code mapping."
@@ -56,39 +56,46 @@ DELPRE ;Delete field pre-action.
  D EN^DDIOL(.TEXT)
  Q
  ;
- ;===================================
+ ;===============
 FDATAVAL(IEN) ;Form Data Validation.
- ;If either MINIMUM VALUE or MAXIMUM VALUE is defined, they both must be.
- N MAX,MIN,TEXT
+ N CLASS,ERROR,MAX,MAXDEC,MIN,NAME,PREFIX,PROMPT
+ N SCLASS,SIEN,UCUM,TEXT
+ ;Validate measurement input.
  S MIN=$$GET^DDSVAL(9999999.64,IEN,220)
  S MAX=$$GET^DDSVAL(9999999.64,IEN,221)
- I (MIN=""),(MAX'="") D  Q
- . S TEXT(1)="The Maximum Value is "_MAX_", but the Minimum Value is undefined."
- . S TEXT(2)="Set a Minimum Value or delete the Maximum Value."
+ S MAXDEC=$$GET^DDSVAL(9999999.64,IEN,222)
+ S UCUM=$$GET^DDSVAL(9999999.64,IEN,223)
+ S PROMPT=$$GET^DDSVAL(9999999.64,IEN,224)
+ S UDISPLAY=$$GET^DDSVAL(9999999.64,IEN,225)
+ I (MIN=""),(MAX=""),(MAXDEC=""),(UCUM=""),(PROMPT=""),(UDISPLAY="") G SPONCLASS
+ ;If any of the measurement fields are defined they all must be.
+ I (MIN="")!(MAX="")!(MAXDEC="")!(UCUM="")!(PROMPT="")!(UDISPLAY="") D  Q
+ . S TEXT="If any of the measurement fields are defined, they all must be."
  . D HLP^DDSUTL(.TEXT)
  . S DDSBR="MINIMUM VALUE",DDSERROR=1
- I (MIN'=""),(MAX="") D  Q
- . S TEXT(1)="The Minimum Value is "_MIN_", but the Maximum Value is undefined."
- . S TEXT(2)="Set a Maximum Value or delete the Minimum Value."
- . D HLP^DDSUTL(.TEXT)
- . S DDSBR="MAXIMUM VALUE",DDSERROR=1
  I MAX<MIN D  Q
- . S TEXT(1)="The Maximum Value cannot be less than the Minimum Value."
+ . S TEXT="The Maximum Value cannot be less than the Minimum Value."
  . D HLP^DDSUTL(.TEXT)
  . S DDSBR="MAXIMUM VALUE",DDSERROR=1
- ;Make sure the Class of the Sponsor matches that of the Health Factor.
- N CLASS,SCLASS,SIEN
- S CLASS=$$GET^DDSVAL(9999999.64,DA,100,.ERROR,"E")
- S SIEN=$$GET^DDSVAL(9999999.64,DA,101,.ERROR,"I")
- S SCLASS=$$GET1^DIQ(811.6,SIEN,100)
- I SCLASS="" Q
- I SCLASS'=CLASS D
+SPONCLASS ;Make sure the Class of the Sponsor matches that of the Health Factor.
+ S CLASS=$$GET^DDSVAL(9999999.64,IEN,100,.ERROR,"I")
+ S SIEN=$$GET^DDSVAL(9999999.64,IEN,101,.ERROR,"I")
+ S SCLASS=$S(SIEN="":"",1:$$GET1^DIQ(811.6,SIEN,100,"I"))
+ I (SCLASS'=""),(SCLASS'=CLASS) D  Q
  . S TEXT="Sponsor Class is "_SCLASS_", Health Factor Class is "_CLASS_" they must match!"
  . D HLP^DDSUTL(.TEXT)
- . S DDSBR="CLASS",DDSERROR=1
+ . S DDSBR="SPONSOR",DDSERROR=1
+ ;If the Name starts with VA- make sure the Class is National and vice versa.
+ S NAME=$$GET^DDSVAL(9999999.64,IEN,.01)
+ S PREFIX=$E(NAME,1,3),TEXT=""
+ I PREFIX="VA-",CLASS'="N" S TEXT="Name starts with 'VA-', but the Class is not National."
+ I CLASS="N",PREFIX'="VA-" S TEXT="The Class is National but the name does not start with VA-."
+ I TEXT'="" D
+ . D HLP^DDSUTL(.TEXT)
+ . S DDSBR="NAME",DDSERROR=1
  Q
  ;
- ;===================================
+ ;===============
 FPOSTACT(IEN) ;Form Post-Action
  N INACTIVE,INUSE,OUTPUT
  ;If the change was a deletion there is nothing else to do.
@@ -98,7 +105,7 @@ FPOSTACT(IEN) ;Form Post-Action
  S INACTIVE=$$GET^DDSVAL(9999999.64,IEN,"INACTIVE FLAG")
  Q
  ;
- ;===================================
+ ;===============
 FPOSTSAV(IEN) ;Form Post-Save.
  ;Check for mapped codes to link.
  D MCLINK^PXMCLINK(9999999.64,IEN)
@@ -106,18 +113,18 @@ FPOSTSAV(IEN) ;Form Post-Save.
  I $D(^TMP($J,"UNLINK",9999999.64)) D MCUNLINK^PXMCLINK(9999999.64,IEN)
  Q
  ;
- ;===================================
+ ;===============
 FPREACT(DA) ;Form pre-action
  Q
  ;
- ;===================================
+ ;===============
 LINKED(DA) ;This is the display for the Linked column, the field is uneditable.
  I DA="" Q " "
  N LINKDT
  S LINKDT=$$GET^DDSVAL(9999999.66,.DA,"DATE LINKED")
  Q $S(LINKDT'="":"Y",1:"N")
  ;
- ;===================================
+ ;===============
 MCBLKPRE(DA) ;Mapped codes block pre-action.
  ;Make any mapped codes uneditable.
  N IENS,IND
@@ -130,7 +137,7 @@ MCBLKPRE(DA) ;Mapped codes block pre-action.
  . D UNED^DDSUTL("DELETE","PX HF CODE MAPPINGS BLOCK",1,0,IENS)
  Q
  ;
- ;===================================
+ ;===============
 NAMEVAL ;Name validation for factors entry type
  N L3C,LEN
  S LEN=$L(DDSEXT),L3C=$E(DDSEXT,(LEN-2),LEN)
@@ -140,18 +147,19 @@ NAMEVAL ;Name validation for factors entry type
  . S DDSERROR=1
  Q
  ;
- ;===================================
+ ;===============
 SMANEDIT(IEN,NEW) ;ScreenMan edit for entry IEN.
- N CLASS,DA,DDSCHANG,DDSFILE,DDSPARM,DDSSAVE,DEL,DIDEL,DIMSG,DR,DTOUT
- N ETYPE,HASH256,OCLOG,NATOK,SHASH256
- S CLASS=$P(^AUTTHF(IEN,100),U,1)
+ N CLASS,CODEMAP,DA,DDSCHANG,DDSFILE,DDSPARM,DDSSAVE,DEL,DIDEL,DIMSG,DR,DTOUT
+ N ERROR,ETYPE,HASH256,OCLOG,NATOK,SHASH256
+ S CLASS=$$GET^DDSVAL(9999999.64,IEN,100,.ERROR,"I")
  S NATOK=$S(CLASS'="N":1,1:($G(PXNAT)=1)&($G(DUZ(0))="@"))
  I 'NATOK D  Q
  . W !,"National health factors cannot be edited."
  . H 2
  . S VALMBCK="R"
+ S CODEMAP=$S((CLASS="N")&$D(^XUSEC("PX CODE MAPPING",DUZ)):1,1:0)
  S ETYPE=$$GET^DDSVAL(9999999.64,IEN,.1)
- S DR=$S(ETYPE="C":"[PX HF CATEGORY EDIT]",$D(^XUSEC("PX CODE MAPPING",DUZ)):"[PX HEALTH FACTOR EDIT]",1:"[PX HEALTH FACTOR EDIT NCM]")
+ S DR=$S(ETYPE="C":"[PX HF CATEGORY EDIT]",CODEMAP=1:"[PX HEALTH FACTOR EDIT]",1:"[PX HEALTH FACTOR EDIT NCM]")
  S (DDSFILE,DIDEL)=9999999.64,DDSPARM="CS"
  S NEW=$G(NEW)
  S SHASH256=$$FILE^XLFSHAN(256,9999999.64,IEN)
@@ -186,7 +194,7 @@ SMANEDIT(IEN,NEW) ;ScreenMan edit for entry IEN.
  D BLDLIST^PXHFMGR("PXHFL") S VALMBCK="R"
  Q
  ;
- ;===================================
+ ;===============
 UNLINK(X,DA) ;Unlink form-only field save code.
  N IENS
  I X=1 S IENS=$$IENS^DILF(.DA),^TMP($J,"UNLINK",9999999.64,IENS)=""

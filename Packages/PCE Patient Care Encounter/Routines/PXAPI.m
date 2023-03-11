@@ -1,5 +1,5 @@
-PXAPI ;ISL/dee - PCE's APIs ;02/06/2019
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**15,14,27,28,124,164,210,211**;Aug 12, 1996;Build 340
+PXAPI ;ISL/dee,PKR - PCE's APIs ;07/13/2021
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**15,14,27,28,124,164,210,211,217**;Aug 12, 1996;Build 135
  Q
  ;
 GMPARAMS(FILENUM,IEN) ;Return the measurement parameters for the
@@ -23,16 +23,22 @@ PROVNARR(PXPNAR,PXFILE,PXCLEX) ;Add or lookup external Provider Narrative.
  ;  or -1 ^ PXPNAR if was unsuccessful.
  ;
  I PXPNAR="" Q -1
- N X,Y
+ I PXPNAR="-1" Q -1
+ ;Provider narrative must be at least 2 characters.
+ I $L(PXPNAR)<2 Q -1_U_PXPNAR
+ N MSG,RESULT,X,Y
  S X=$E(PXPNAR,1,245)
+ ;It is possible there may already be an invalid entry in the Provider
+ ;Narrative file, if the user happens to select it, the lookup on the
+ ;"B" index will return it so validate the input passes the input
+ ;transform before the lookup.
+ D VAL^DIE(9999999.27,"+1",.01,"EU",X,.RESULT,"","MSG")
+ I RESULT="^" Q -1_U_X
  S Y=+$O(^AUTNPOV("B",X,""))
  I Y>0 Q Y_U_X
  ;
- ;Provider narrative must be at least 2 characters.
- I $L(X)<2 Q -1_U_X
- ;
  ;Add a new entry.
- N FDA,FDAIEN,MSG
+ N FDA,FDAIEN
  S FDA(9999999.27,"+1,",.01)=X
  ;Make sure PXFILE is a valid file number.
  I $G(PXFILE)'="" D
@@ -40,14 +46,14 @@ PROVNARR(PXPNAR,PXFILE,PXCLEX) ;Add or lookup external Provider Narrative.
  . D FILE^DID(PXFILE,"","NAME","DATA","MSG")
  . I $G(DATA("NAME"))'="" S FDA(9999999.27,"+1,",75702)=PXFILE
  . K MSG
- ;Validate the pointer to file #757.01
- ;ICR #457
- I $G(PXCLEX)'="" D
- . N CL
- . S CL=$G(^LEX(757.01,PXCLEX,0))
- . I CL'="" S FDA(9999999.27,"+1,",75701)=PXCLEX
- D UPDATE^DIE("","FDA","FDAIEN","MSG")
+ D UPDATE^DIE("E","FDA","FDAIEN","MSG")
  I $D(MSG) Q -1_U_X
+ ;If a pointer to file #757.01 was passed validate it.
+ ;ICR #457
+ I ($G(PXCLEX)'=""),($D(^LEX(757.01,PXCLEX,0))>0) D
+ . K FDA,MSG
+ . S FDA(9999999.27,FDAIEN(1)_",",75701)=PXCLEX
+ . D FILE^DIE("","FDA","MSG")
  Q FDAIEN(1)_U_X_U_1
  ;
 STOPCODE(PXASTOP,PXAPAT,PXADATE) ;This is the function call to return the
@@ -115,11 +121,11 @@ INTV(WHAT,PACKAGE,SOURCE,VISIT,HL,DFN,APPT,LIMITDT,ALLHLOC) ;This API will
  ;
  Q $$INTV^PXBAPI(WHAT,PACKAGE,SOURCE,.VISIT,.HL,.DFN,$G(APPT),$G(LIMITDT),$G(ALLHLOC))
  ;
-DELVFILE(WHICH,VISIT,PACKAGE,SOURCE,ASK,ECHO,USER) ;Deletes the requested data
+DELVFILE(WHICH,VISIT,PACKAGE,SOURCE,ASK,ECHO,USER,ERROR,PROBARR) ;Deletes the requested data
  ;related to the visit. See DELVFILE^PXAPIDEL for parameters and return
  ;values. ICR #1890
  ;
- Q $$DELVFILE^PXAPIDEL(WHICH,VISIT,$G(PACKAGE),$G(SOURCE),$G(ASK),$G(ECHO),$G(USER))
+ Q $$DELVFILE^PXAPIDEL(WHICH,VISIT,$G(PACKAGE),$G(SOURCE),$G(ASK),$G(ECHO),$G(USER),.ERROR,.PROBARR)
  ;
 DATA2PCE(DATA,PACKAGE,SOURCE,VISIT,USER,DISPLAY,ERROR,SCREEN,ARRAY,ACCOUNT) ;
  ;PI to pass data for add/edit/delete to PCE
@@ -157,9 +163,9 @@ GETENC(DFN,ENCDT,HLOC) ;--Get all of the encounter data
  Q $$GETENC^PXKENC($G(DFN),$G(ENCDT),$G(HLOC))
  ;
 ENCEVENT(VISIT,DONTKILL) ;--Get all of the encounter data
- ;See ENCEVENT^PXKENC for parameters and return values. ICR #1894
+ ;See ENCEVENT^PXKENCOUNTER for parameters and return values. ICR #1894
  ;
- D ENCEVENT^PXKENC($G(VISIT),$G(DONTKILL))
+ D ENCEVENT^PXKENCOUNTER($G(VISIT),$G(DONTKILL))
  Q
  ;
 VST2APPT(VISIT) ;Is this visit related to an appointment
