@@ -1,5 +1,5 @@
 IBCNBLE ;ALB/ARH - Ins Buffer: LM buffer entry screen ;1-Jun-97
- ;;2.0;INTEGRATED BILLING;**82,231,184,251,371,416,435,452,497,519,516,528,687**;21-MAR-94;Build 88
+ ;;2.0;INTEGRATED BILLING;**82,231,184,251,371,416,435,452,497,519,516,528,687,737**;21-MAR-94;Build 19
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; - main entry point for list manager display
@@ -30,7 +30,11 @@ HELP ; - help text for list manager screen
  D FULL^VALM1
  W !!,"This screen displays all data in a Buffer File entry."
  W !!,"The actions allow editing of all data and verification of coverage."
- W !!,"It is not necessary to use the Verify Entry action, this action is optional.",!,"If the Verify Entry action is not used, the policy will be automatically flagged",!,"as verified when it is Accepted and stored in the main Insurance files."
+ ; IB*2.0*737/DTG remove verify action reference
+ ; W !!,"It is not necessary to use the Verify Entry action, this action is optional."
+ ; W !,"If the Verify Entry action is not used, the policy will be automatically flagged"
+ ; W !,"as verified when it is Accepted and stored in the main Insurance files."
+ ;
  D PAUSE^VALM1 S VALMBCK="R"
  Q
  ;

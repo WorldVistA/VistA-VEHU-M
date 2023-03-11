@@ -1,3 +1,3 @@
-DGX62 ; ;09/25/15
- S X=DG(DQ),DIC=DIE
- S ^DGPT(DA(1),"P","AP6",$E(X,1,30),DA)=""
+DGX62 ; ;03/11/23
+ S X=DE(57),DIC=DIE
+ K ^DGPT(DA(1),"P","AP6",$E(X,1,30),DA)

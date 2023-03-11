@@ -1,6 +1,9 @@
 VAFHLZPD ;ALB/KCL/PHH,TDM,KUM - Create generic HL7 ZPD segment ; 8/15/08 11:42am
- ;;5.3;Registration;**94,122,160,220,247,545,564,568,677,653,688,1002,1064**;Aug 13, 1993;Build 41
+ ;;5.3;Registration;**94,122,160,220,247,545,564,568,677,653,688,1002,1064,1085**;Aug 13, 1993;Build 13
  ;
+ ;
+ ;ICRs
+ ; Reference to NAME,^DI(.85 in ICR #6062
  ;
 EN(DFN,VAFSTR) ; This generic extrinsic function was designed to return
  ;  sequences 1 throught 21 of the HL7 ZPD segment.  This segment
@@ -106,7 +109,9 @@ GETDATA(DFN,VAFSTR,ARRAY) ;Get info needed to build segment
  S @ARRAY@(1)=1
  S DFN=+$G(DFN)
  S VAFSTR=$G(VAFSTR)
- S:(VAFSTR="") VAFSTR=$$COMMANUM(1,40)
+ ;DG*5.3*1085 - Include sequence numbers for Preferred Language and Preferred Language Date/Time
+ ;S:(VAFSTR="") VAFSTR=$$COMMANUM(1,40)
+ S:(VAFSTR="") VAFSTR=$$COMMANUM(1,47)
  S VAFSTR=","_VAFSTR_","
  ;Declare variables
  N VAFNODE,VAPD,X1,X
@@ -231,6 +236,23 @@ GETDATA(DFN,VAFSTR,ARRAY) ;Get info needed to build segment
  I VAFSTR[44 S X=VAFINDARR(2,DFN_",",.572,"I"),X1=$$HLDATE^HLFNC(X),@ARRAY@(44)=$S(X1]"":X1,1:HLQ)
  ; Sequence 45 - Indian End Date
  I VAFSTR[45 S X=VAFINDARR(2,DFN_",",.574,"I"),X1=$$HLDATE^HLFNC(X),@ARRAY@(45)=$S(X1]"":X1,1:HLQ)
+ ; DG*5.3*1085
+ ; Retrieve Preferred Language and Preferred Language Date/Time
+ N DGDATE,DGDA,DGLANGNM,DGLANGDT,DG85IEN
+ S DGLANGDT="",DGLANGNM="",DG85IEN=""
+ S DGDATE="",DGDATE=$O(^DPT(DFN,.207,"B",DGDATE),-1) Q:DGDATE=""
+ I DGDATE'="" S DGDA=$O(^DPT(DFN,.207,"B",DGDATE,0))
+ I DGDA'="" D
+ .S DGLANGNM=$$GET1^DIQ(2.07,DGDA_","_DFN_",",.02)
+ .S DGLANGDT=$$GET1^DIQ(2.07,DGDA_","_DFN_",",.01,"I")
+ .I DGLANGNM="DECLINED TO ANSWER" S DGLANGNM="888" Q
+ .I DGLANGNM="NO PREFERENCE" S DGLANGNM="999" Q
+ .S DG85IEN=$$FIND1^DIC(.85,,"B",DGLANGNM)
+ .I DG85IEN'="" S DGLANGNM=$$GET1^DIQ(.85,DG85IEN_",",.03)
+ ; Sequence 46 - Preferred Language
+ I VAFSTR[46 S X=DGLANGNM,@ARRAY@(46)=$S(X]"":X,1:HLQ)
+ ; Sequence 47 - Preferred Language Update Date/Time
+ I VAFSTR[47 S X=$$HLDATE^HLFNC(DGLANGDT),@ARRAY@(47)=$S(X]"":X,1:HLQ)
  ;Done - cleanup & quit
  D KVA^VADPT
  Q

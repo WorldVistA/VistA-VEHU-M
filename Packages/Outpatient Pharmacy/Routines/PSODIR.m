@@ -1,5 +1,5 @@
 PSODIR ;BHAM ISC/SAB - asks data for rx order entry ;Aug 23, 2021@14:07:15
- ;;7.0;OUTPATIENT PHARMACY;**37,46,111,117,146,164,211,264,275,391,372,416,422,504,457,572,587,441**;DEC 1997;Build 209
+ ;;7.0;OUTPATIENT PHARMACY;**37,46,111,117,146,164,211,264,275,391,372,416,422,504,457,572,587,441,682**;DEC 1997;Build 1
  ;External reference PSDRUG( supported by DBIA 221
  ;External reference PS(50.7 supported by DBIA 2223
  ;External reference to VA(200 is supported by DBIA 10060
@@ -15,7 +15,9 @@ PROVEN ; Entry point for failed lookup
  S DIC("W")="W ""     "",$P(^(""PS""),""^"",9)"
  S DIC("A")="PROVIDER: ",DIC("S")="I $D(^(""PS"")),$P(^(""PS""),""^""),$S('$P(^(""PS""),""^"",4):1,1:$P(^(""PS""),""^"",4)'<DT)"
  I $G(PSOTPBFG),$G(PSOFROM)="NEW" S DIC("S")=DIC("S")_",$P($G(^(""TPB"")),""^""),$P($G(^(""TPB"")),""^"",5)=0"
- S:$G(PSORX("PROVIDER NAME"))]"" DIC("B")=PSORX("PROVIDER NAME")
+ ;p682 change condition for setting DIC("B"); do not overwrite
+ ;S:$G(PSORX("PROVIDER NAME"))]"" DIC("B")=PSORX("PROVIDER NAME")
+ S DIC("B")=$S($G(DIC("B"))]"":DIC("B"),1:$G(PSORX("PROVIDER NAME")))
  D ^DIC K DIC
  I X[U,$L(X)>1 D:'$G(PSOEDIT) JUMP G PROVX
  I $D(DTOUT)!$D(DUOUT) S PSODIR("DFLG")=1 G PROVX

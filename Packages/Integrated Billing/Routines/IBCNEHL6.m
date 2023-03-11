@@ -1,5 +1,5 @@
 IBCNEHL6 ;EDE/DM - HL7 Process Incoming RPI Continued ; 19-OCT-2017
- ;;2.0;INTEGRATED BILLING;**601,621**;21-MAR-94;Build 14
+ ;;2.0;INTEGRATED BILLING;**601,621,737**;21-MAR-94;Build 19
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -82,8 +82,9 @@ FIL ; Finish processing the response message - file into insurance buffer
  ;  If there is an associated buffer entry & one or both of the following
  ;  is true, stop filing (don't update buffer entry)
  ;  1) buffer status is not 'Entered'
- ;  2) the buffer entry is verified (* symbol)
- I BUFF'="",($P($G(^IBA(355.33,BUFF,0)),U,4)'="E")!($$SYMBOL^IBCNBLL(BUFF)="*") G FILX
+ ;  2) the buffer entry is verified (* symbol)  ;IB*737/DTG stop use of '*' verified
+ ;I BUFF'="",($P($G(^IBA(355.33,BUFF,0)),U,4)'="E")!($$SYMBOL^IBCNBLL(BUFF)="*") G FILX
+ I BUFF'="",($P($G(^IBA(355.33,BUFF,0)),U,4)'="E") G FILX  ;IB*737/DTG stop use of '*' verified
  ;
  ; Set buffer symbol based on value returned from EC
  ; IB*2*601/DM
