@@ -1,5 +1,5 @@
-SDEC57 ;ALB/SAT/JSM,WTC - VISTA SCHEDULING RPCS ;Feb 12, 2020@15:22
- ;;5.3;Scheduling;**627,642,658,665,701,686,694**;Aug 13, 1993;Build 61
+SDEC57 ;ALB/SAT/JSM,WTC/BLB - VISTA SCHEDULING RPCS ;Feb 12, 2020@15:22
+ ;;5.3;Scheduling;**627,642,658,665,701,686,694,837**;Aug 13, 1993;Build 4
  ;
  Q
  ;APPSLOTS - return appt slots and availability
@@ -148,12 +148,15 @@ TDAY(SDAB,SDCL,SDCLS,SDLEN,SDSI,SDBEG,SDEND) ;add/update access blocks for day t
  D TDAY1
  Q
 TDAY1 ;
- N D,SDA,SDTP,SS,ST,Y
+ N D,SDA,SDTP,SS,ST,Y,SUB,DAY
  ;SDA=begin position of pattern on template
  S SDA=$S(SDSI=3:6,SDSI=6:12,1:8)
  S SDTP=""
  ;if no CURRENT AVAILABILITY pattern, try to build it
- I '$D(^SC(SDCL,"ST",$P(SDBEG,".",1),1)) S ST='$$ST(SDCL,SDBEG) Q:ST
+ ;
+ S DAY=$$DOW^XLFDT(SDBEG,1)
+ S SUB="T"_DAY
+ I '$D(^SC(SDCL,"ST",$P(SDBEG,".",1),1)),$L($G(^SC(SDCL,SUB,9999999,1))) S ST='$$ST(SDCL,SDBEG) Q:ST
  S SDTP=$G(^SC(SDCL,"ST",$P(SDBEG,".",1),1)) S SDTP=$E(SDTP,SDA,$L(SDTP))
  Q:SDTP=""
  K SDBLKS

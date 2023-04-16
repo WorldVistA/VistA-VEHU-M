@@ -1,5 +1,5 @@
 SDESGETREQWRAPPR ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;SEP 14, 2022
- ;;5.3;Scheduling;**815,818,820,823,825,831**;Aug 13, 1993;Build 4
+ ;;5.3;Scheduling;**815,818,820,823,825,831,838**;Aug 13, 1993;Build 7
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -171,6 +171,7 @@ APPTREQUEST(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"PatientStatus")=""
  S REQUEST("Request",NUM,"ParentRequestIEN")=""
  S REQUEST("Request",NUM,"PatientContact",1)=""
+ S REQUEST("Request",NUM,"Status")=""
  S REQUEST("Request",NUM,"MRTC",1)=""
  S REQUEST("Request",NUM,"PatientComment",1)=""
  S REQUEST("Request",NUM,"ScheduledDateOfAppt")=""

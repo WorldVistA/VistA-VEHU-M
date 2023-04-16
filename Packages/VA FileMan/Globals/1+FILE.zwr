@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3230311.174443
+^DIC(2,"%MSC")=3230415.224942
 ^DIC(3.05,0)="FAILED ACCESS ATTEMPTS LOG^3.05"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
@@ -5512,7 +5512,7 @@ ZWR
 ^DIC(58.41,"%D",3,0)=" "
 ^DIC(58.41,"%D",4,0)="While some of the parameters are updated by the user via a menu option, others"
 ^DIC(58.41,"%D",5,0)="are used internally for automated scheduled transmissions."
-^DIC(58.41,"%MSC")=3220624.211234
+^DIC(58.41,"%MSC")=3230415.224847
 ^DIC(58.42,0)="SPMP EXPORT BATCH^58.42"
 ^DIC(58.42,0,"AUDIT")=""
 ^DIC(58.42,0,"DD")=""
@@ -21302,7 +21302,7 @@ ZWR
 ^DIC(350.9,"%D",10,0)="This file should always be edited by use of the provided options."
 ^DIC(350.9,"%D",11,0)=" "
 ^DIC(350.9,"%D",12,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(350.9,"%MSC")=3230311.174522
+^DIC(350.9,"%MSC")=3230415.2247
 ^DIC(351,0)="MEANS TEST BILLING CLOCK^351I"
 ^DIC(351,0,"DD")="@"
 ^DIC(351,0,"GL")="^IBE(351,"
@@ -27419,7 +27419,7 @@ ZWR
 ^DIC(399,"%D",6,0)="number in the BILL/CLAIMS file."
 ^DIC(399,"%D",7,0)=" "
 ^DIC(399,"%D",8,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(399,"%MSC")=3221113.203836
+^DIC(399,"%MSC")=3230415.224701
 ^DIC(399.1,0)="MCCR UTILITY^399.1I"
 ^DIC(399.1,0,"DD")="@"
 ^DIC(399.1,0,"GL")="^DGCR(399.1,"
@@ -29748,7 +29748,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3230311.17472
+^DIC(409.93,"%MSC")=3230415.224725
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
@@ -33209,6 +33209,7 @@ ZWR
 ^DIC(601,"%D",5,0)="unless a license has been procured through authorized channels."
 ^DIC(601,"%D",6,0)="   "
 ^DIC(601,"%D",7,0)="Exported with data."
+^DIC(601,"%MSC")=3230415.224608
 ^DIC(601.2,0)="PSYCH INSTRUMENT PATIENT^601.2"
 ^DIC(601.2,0,"DD")="@"
 ^DIC(601.2,0,"DEL")="y"
@@ -52668,7 +52669,7 @@ ZWR
 ^DIC(8925.99,"%D",1,0)="This file contains the site-configurable parameters for the Text Integration"
 ^DIC(8925.99,"%D",2,0)="Utilities package.  It will have one entry for each division, to support"
 ^DIC(8925.99,"%D",3,0)="variable definition of package behavior at multi-divisional facilities."
-^DIC(8925.99,"%MSC")=3220609.022512
+^DIC(8925.99,"%MSC")=3230415.22464
 ^DIC(8926,0)="TIU PERSONAL PREFERENCES^8926"
 ^DIC(8926,0,"AUDIT")="@"
 ^DIC(8926,0,"DD")="@"

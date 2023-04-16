@@ -1,5 +1,5 @@
 YTQREST ;SLC/KCM - RESTful API front controller ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202**;Dec 30, 1994;Build 49
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204**;Dec 30, 1994;Build 18
  ;
  ; .HTTPREQ: HTTP-formatted request and JSON body (if present)
  ; .HTTPRSP: HTTP-formatted response and JSON body (if present)
@@ -7,9 +7,12 @@ YTQREST ;SLC/KCM - RESTful API front controller ; 1/25/2017
 QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;GET /api/mha/getconn/ GETCONN^YTQREST
  ;;GET /api/mha/dtime/ GETDTIM^YTQREST
+ ;;GET /api/mha/rbac/ RBAC^YTQRQAD7
  ;;GET /api/mha/patient/:dfn/identifiers PID^YTQRQAD
+ ;;GET /api/mha/patient/:dfn/name NM4DFN^YTQRQAD
  ;;GET /api/mha/persons PERSONS^YTQRQAD
  ;;GET /api/mha/persons/:match PERSONS^YTQRQAD
+ ;;GET /api/mha/user/:duz/name NM4DUZ^YTQRQAD
  ;;GET /api/mha/users/:match/:adminId USERS^YTQRQAD
  ;;GET /api/mha/instruments/active LSTALL^YTQRQAD
  ;;GET /api/mha/instruments/cprs LSTCPRS^YTQRQAD
@@ -30,6 +33,7 @@ QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;POST /api/mha/instrument/note SETNOTE^YTQRQAD3
  ;;DELETE /api/mha/instrument/mhadmin/:adminId?1.N DELMHAD^YTQRQAD1
  ;;GET /api/mha/permission/cosign/:adminId/:userId ALWCSGN^YTQRQAD3
+ ;;GET /api/mha/permission/needcosign/:userId NEEDCSGN^YTQRQAD3
  ;;GET /api/mha/instrument/list/:dfn?1.N GETLIST^YTQRQAD4
  ;;GET /api/mha/location/list GETLOCS^YTQRQAD4
  ;;GET /api/mha/location/list/:locmatch GETLOCS^YTQRQAD4

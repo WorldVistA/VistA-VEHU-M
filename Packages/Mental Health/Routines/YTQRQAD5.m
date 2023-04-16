@@ -1,5 +1,5 @@
 YTQRQAD5 ;SLC/LLB - RESTful Calls to handle MHA assignments ; 10/07/2019
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202**;Dec 30, 1994;Build 49
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204**;Dec 30, 1994;Build 18
  ;
  ; Reference to VADPT in ICR #10061
  ; Reference to XLFDT in ICR #10103
@@ -21,6 +21,7 @@ EDITASMT(ARGS,DATA) ; save assignment, return /api/mha/assignment/edit/{assignme
  S ORDBY=+$G(DATA("orderedBy"))
  I $G(DATA("consult"))=""!($G(DATA("consult"))="null") K DATA("consult")
  I $G(DATA("adminDate"))=""!($G(DATA("adminDate"))="null")!(+$G(DATA("adminDate"))=0) K DATA("adminDate")
+ I $G(DATA("cosigner"))=""!($G(DATA("cosigner"))="null") K DATA("cosigner")
  S DATA("appSrc")=$G(DATA("appSrc"))
  I 'DFN!'ORDBY Q $$DONE(400,"FAIL - Missing Reqd Fields",1)
  D DEM^VADPT I $G(VAERR) Q $$DONE(400,"Missing Pt Info",1)

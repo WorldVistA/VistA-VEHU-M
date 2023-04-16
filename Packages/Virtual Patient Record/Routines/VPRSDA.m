@@ -1,11 +1,10 @@
 VPRSDA ;SLC/MKB -- SDA utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,16,20,26,28,29**;Sep 01, 2011;Build 11
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,16,20,26,28,29,30**;Sep 01, 2011;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
  ; -------------------          -----
- ; ^OR(100                       5771
- ; ^ORD(100.98                   6982
+ ; ^DIC(4                       10090
  ; ^SC                          10040
  ; %DT                          10003
  ; DILFD                         2055
@@ -23,6 +22,7 @@ VPRSDA ;SLC/MKB -- SDA utilities ;10/25/18  15:29
  ; VASITE                       10112
  ; WVRPCVPR, ^TMP("WVPREGST"     7199
  ; XLFNAME                       3065
+ ; XUAF4                         2171
  ; XUPARAM                       2541
  ;
 INTDATE(X) ; -- Return internal form of date X
@@ -136,57 +136,35 @@ COUNTY(ST,CTY) ; -- return ien^name for a STate and CounTY
  S:$L(Y) Y=+CTY_U_Y
  Q Y
  ;
+FAC(HLOC) ; -- return facility #4 ien for HospLOC #44 ien
+ N X,Y S Y=""
+ S HLOC=+$G(HLOC) I HLOC<1 S Y=$$SITE G FACQ
+ S X=$$GET1^DIQ(44,HLOC,3,"I")
+ S:X<1 X=$$GET1^DIQ(44,HLOC,"3.5:.07","I")
+ S Y=$$CKFAC(X)
+FACQ Q Y
+ ;
+CKFAC(IEN) ; -- validate #4 ien, return Parent if no stn#
+ N VPRZ S IEN=+$G(IEN)
+ I IEN<1 S Y=$$SITE Q Y
+ I $L($P($G(^DIC(4,IEN,99)),U)) Q IEN  ;ok
+ D PARENT^XUAF4("VPRZ","`"_IEN,2) S Y=$O(VPRZ("P",0))
+ S:Y<1 Y=$$SITE
+ Q Y
+ ;
 SITE() ; -- return current site#
  N Y S Y=+$$SITE^VASITE
  S:Y'>0 Y=$$KSP^XUPARAM("INST")
  Q Y
  ;
- ;
-OR1(ORIFN) ; -- define basic variables for any order
- ; Returns OR0, OR3, OR6, OR8, ORDAD, and ORSIG to Order entities
- S ORIFN=+$G(ORIFN)
- S OR0=$G(^OR(100,ORIFN,0)),OR3=$G(^(3)),OR6=$G(^(6)),OR8=$G(^(8,1,0))
- S ORDAD=$P($G(OR3),U,9) ;parent order
- S ORSIG=$$ORSIG(ORIFN)  ;signature info
+DEL1 ; -- ID Action for Delete entities, returns VPR0=data
+ N SEQ,VST S VPR0=""
+ S SEQ=+$G(FILTER("sequence")) I SEQ,$L($G(DIEN)) D
+ . S VPR0=$G(^XTMP("VPR-"_SEQ,DIEN,0)) Q:$L(VPR0)  ;ok
+ . ; else get visit# from header node
+ . S VST=$P($G(^XTMP("VPR-"_SEQ,DIEN)),U,5) S:VST VPR0="^^"_VST
  Q
  ;
-WP(ORIFN,ID) ; -- return a WP value from an order response as a string
- N DA,I,X,Y S Y=""
- S DA=+$O(^OR(100,+$G(ORIFN),4.5,"ID",ID,0))
- S I=0 F  S I=$O(^OR(100,+$G(ORIFN),4.5,DA,2,I)) Q:'I  S X=$G(^(I,0)) D
- . I '$L(Y) Q:(X="")!(X?1." ")  S Y=X Q
- . I $E(X)=" " S Y=Y_$C(13,10)_X Q
- . S Y=Y_$S($E(Y,$L(Y))=" ":"",1:" ")_X
- Q Y
- ;
-ORDG(DG) ; -- return ien^name^VA100.98 for a DG abbreviation
- N X,Y S X=$O(^ORD(100.98,"B",DG,0)),Y=""
- S:X Y=X_U_$P($G(^ORD(100.98,X,0)),U)_"^VA100.98"
- Q Y
- ;
-LASTACT(ORIFN) ; -- return DA of current or last order action
- N Y S ORIFN=+$G(ORIFN)
- S Y=+$P($G(^OR(100,ORIFN,3)),U,7)
- I Y<1 S Y=+$O(^OR(100,ORIFN,8,"A"),-1) S:'Y Y=1
- Q Y
- ;
-ORSIG(ORIFN) ; -- return string of signature data from Order Action as
- ; Signature Status (#4) ^ Signed By (#5) ^ D/T Signed (#6), or
- ; Signature Status (#4) ^ ^ Release D/T (#16) if not e-signed
- N Y,X0,X,I S Y=""
- S X0=$G(^OR(100,+$G(ORIFN),8,1,0))
- I $P(X0,U,6) S Y=$P(X0,U,4,6)
- ; look for sign on corrected or parent order action
- I Y="",$P(X0,U,15)=12 D  ;replaced
- . S I=+$O(^OR(100,+$G(ORIFN),8,1)),X=$G(^(I,0))
- . I $P(X,U,2)="XX",$P(X,U,6) S Y=$P(X,U,4,6)
- I Y="",$P(X0,U,4)=8,$G(ORDAD) D  ;parent [no longer used]
- . S X=$G(^OR(100,+$G(ORDAD),8,1,0))
- . S:$P(X,U,6) Y=$P(X,U,4,6)
- ; else, return Sig Sts & Release D/T
- S:Y="" Y=$P(X0,U,4)_U_U_$P(X0,U,16)
- S X=$P(Y,U) S:$L(X) $P(Y,U)=$$EXTERNAL^DILFD(100.008,4,,X)
- Q Y
  ;
 CP1(IEN) ; -- get MD nodes for procedure [ID Action], returns:
  ; VPRCP = ^TMP("MDHSP",$J,I)

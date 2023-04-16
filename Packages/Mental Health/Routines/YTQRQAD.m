@@ -1,5 +1,5 @@
 YTQRQAD ;SLC/KCM - RESTful Calls for Instrument Admin ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,158,181,187,199**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**130,141,158,181,187,199,204**;Dec 30, 1994;Build 18
  ;
  ; Reference to ^DIC(3.1) in ICR #1234
  ; Reference to ^DIC(49) in ICR #10093
@@ -160,6 +160,20 @@ USERS(ARGS,RESULTS) ; GET /api/mha/users/:match
  . S ^TMP("YTQ-JSON",$J,1,0)="{""persons"":[]}"
  . S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
+NM4DFN(ARGS,RESULTS) ; get patient name given DFN
+ N DFN
+ S DFN=$G(ARGS("dfn"))
+ I '$D(^DPT(DFN,0)) D SETERROR^YTQRUTL(404,"Not Found: "_DFN) QUIT
+ S RESULTS("dfn")=DFN
+ S RESULTS("name")=$P($G(^DPT(DFN,0)),U)
+ Q
+NM4DUZ(ARGS,RESULTS) ; get user name given DUZ
+ N USER
+ S USER=$G(ARGS("duz"))
+ I '$D(^VA(200,DUZ,0)) D SETERROR^YTQRUTL(404,"Not Found: "_USER) QUIT
+ S RESULTS("duz")=USER
+ S RESULTS("name")=$P($G(^VA(200,USER,0)),U)
+ Q
 GINSTD(ARGS,RESULTS) ;Get Instrument Description
  N YS,YSDATA,YSTESTN,II,YSAR,VAR,VAL,JSONAR,XX
  S YS("CODE")=$G(ARGS("instrumentName"))
@@ -169,7 +183,7 @@ GINSTD(ARGS,RESULTS) ;Get Instrument Description
  I YSDATA(1)["ERROR",(YSDATA(2)="NO code") D SETERROR^YTQRUTL(404,"No instrument name.") Q
  I YSDATA(1)["ERROR",(YSDATA(2)="bad code") D SETERROR^YTQRUTL(404,"Instrument not found.") Q
  S I=0 F  S I=$O(YSDATA(I)) Q:I=""  D
- . S XX=YSDATA(I),VAR=$P(XX,"="),VAL=$P(XX,"=",2)
+ . S XX=YSDATA(I),VAR=$P(XX,"="),VAL=$P(XX,"=",2,999)
  . Q:VAR=""
  . S:VAR="LAST EDIT DATE" VAL=$P($$FMTE^XLFDT(VAL,2),"@")
  . I VAR="ENTRY DATE" D

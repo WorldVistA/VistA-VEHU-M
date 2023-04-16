@@ -1,5 +1,5 @@
 YTQRQAD3 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181,187,199,207,202**;Dec 30, 1994;Build 49
+ ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181,187,199,207,202,204**;Dec 30, 1994;Build 18
  ;
  ; Reference to ^VA(200) in ICR #10060
  ; Reference to DIQ in ICR #2056
@@ -163,6 +163,16 @@ REQCSGN(ADMIN,COSIGNER) ; return "true" if this user requires a cosigner
  S YSTITLE=$S(CONSULT:$P($G(^YTT(601.71,TEST,8)),U,10),1:$P($G(^YTT(601.71,TEST,8)),U,9))
  D REQCOS^TIUSRVA(.YSCREQ,YSTITLE,"",YSPERSON,"")
  Q $S(YSCREQ:"true",1:"false")
+ ;
+NEEDCSGN(ARGS,RESULTS) ; GET /api/mha/permission/needcosign/:userId
+ ; Returns "true" if userId requires a cosigner
+ ; Returns "false" if userId does NOT require a cosigner
+ ;N YSPERSON,YSTITLE,YSTARR,YSCREQ
+ S YSPERSON=$G(ARGS("userId")),YSTITLE=$$TITLE^YTQRQAD7()
+ D REQCOS^TIUSRVA(.YSCREQ,YSTITLE,"",YSPERSON,"")
+ S RESULTS("userId")=YSPERSON
+ S RESULTS("needCosigner")=$S(YSCREQ:"true",1:"false")
+ Q
  ;
 SETCOM(ARGS,DATA) ; save comment in Instrument Admin (F601.84,f10) using ARGS("adminId")
  ;Expects DATA to contain individual lines of text for the comment. Need to retrieve existing and prepend new lines
