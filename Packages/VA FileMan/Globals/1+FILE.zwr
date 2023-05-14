@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3230415.224942
+^DIC(2,"%MSC")=3230514.004924
 ^DIC(3.05,0)="FAILED ACCESS ATTEMPTS LOG^3.05"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
@@ -2264,7 +2264,7 @@ ZWR
 ^DIC(27.11,"%D",2,0)="not be added, edited, or deleted except through the use of the enrollment"
 ^DIC(27.11,"%D",3,0)="software that is part of Registration.  Doing so would likely cause the"
 ^DIC(27.11,"%D",4,0)="enrollment database to become corrupted."
-^DIC(27.11,"%MSC")=3220624.201011
+^DIC(27.11,"%MSC")=3230514.004925
 ^DIC(27.12,0)="ENROLLMENT QUERY LOG^27.12"
 ^DIC(27.12,0,"GL")="^DGEN(27.12,"
 ^DIC(27.12,0,"GL")="^DGEN(27.12,"
@@ -2450,7 +2450,7 @@ ZWR
 ^DIC(38.6,"%D",3,0)="individual checks on or off the user should not alter or add to this"
 ^DIC(38.6,"%D",4,0)="file in any way.  Making any modification to this file will definitely"
 ^DIC(38.6,"%D",5,0)="cause the consistency checker to function improperly."
-^DIC(38.6,"%MSC")=3181025.171523
+^DIC(38.6,"%MSC")=3230514.004925
 ^DIC(39.4,0)="ADT/HL7 TRANSMISSION^39.4"
 ^DIC(39.4,0,"AUDIT")="@"
 ^DIC(39.4,0,"DD")="@"
@@ -4366,7 +4366,7 @@ ZWR
 ^DIC(52,"%D",6,0)=" "
 ^DIC(52,"%D",7,0)="Of particular interest is that essentially all the history pertaining to a"
 ^DIC(52,"%D",8,0)="particular Rx is contained in each Rx entry."
-^DIC(52,"%MSC")=3230307.02004
+^DIC(52,"%MSC")=3230514.004806
 ^DIC(52.09,0)="REMOTE PRESCRIPTION LOG^52.09"
 ^DIC(52.09,0,"DD")="#"
 ^DIC(52.09,0,"DEL")="p"
@@ -4387,7 +4387,7 @@ ZWR
 ^DIC(52.09,"%D",1,0)="This file logs all activity related to remote refills and partial fills. "
 ^DIC(52.09,"%D",2,0)="This file will hold actions taken locally on a remote prescription, as "
 ^DIC(52.09,"%D",3,0)="well as actions taken by an external facility on any local prescriptions."
-^DIC(52.09,"%MSC")=3170118.130351
+^DIC(52.09,"%MSC")=3230514.004808
 ^DIC(52.11,0)="PATIENT NOTIFICATION (Rx READY)^52.11PI"
 ^DIC(52.11,0,"GL")="^PS(52.11,"
 ^DIC(52.11,0,"GL")="^PS(52.11,"
@@ -56445,7 +56445,7 @@ ZWR
 ^DIC(9002313.03,"%D",3,0)="NCPDP specifications."
 ^DIC(9002313.03,"%D",4,0)=" "
 ^DIC(9002313.03,"%D",5,0)="Per VHA Directive 2004-038, this file definition should not be modified."
-^DIC(9002313.03,"%MSC")=3220626.152042
+^DIC(9002313.03,"%MSC")=3230514.004828
 ^DIC(9002313.12,0)="BPS LOG^9002313.12"
 ^DIC(9002313.12,0,"AUDIT")="@"
 ^DIC(9002313.12,0,"DD")="@"
@@ -56528,14 +56528,14 @@ ZWR
 ^DIC(9002313.2,"%",0)="^1.005^1^1"
 ^DIC(9002313.2,"%",1,0)="BPS"
 ^DIC(9002313.2,"%","B","BPS",1)=""
-^DIC(9002313.2,"%D",0)="^1.001^6^6^3150302^^"
+^DIC(9002313.2,"%D",0)="^1.001^6^6^3220825^^^"
 ^DIC(9002313.2,"%D",1,0)="This file is used to store the codes and descriptions for NCPDP field "
 ^DIC(9002313.2,"%D",2,0)="342-HC (Other Payer Amount Paid Qualifier).  These codes are used for "
 ^DIC(9002313.2,"%D",3,0)="secondary electronic claim transmissions to third party payers.  No local "
 ^DIC(9002313.2,"%D",4,0)="changes should ever be made to this file."
 ^DIC(9002313.2,"%D",5,0)=" "
 ^DIC(9002313.2,"%D",6,0)="Per VA Directive 6402, this file definition should not be modified."
-^DIC(9002313.2,"%MSC")=3220622.23371
+^DIC(9002313.2,"%MSC")=3230514.004828
 ^DIC(9002313.21,0)="BPS NCPDP PROFESSIONAL SERVICE CODE^9002313.21"
 ^DIC(9002313.21,0,"AUDIT")="@"
 ^DIC(9002313.21,0,"DD")="@"
@@ -57334,7 +57334,7 @@ ZWR
 ^DIC(9002313.93,"%D",6,0)="are nationally distributed."
 ^DIC(9002313.93,"%D",7,0)=" "
 ^DIC(9002313.93,"%D",8,0)="Per VHA Directive 2004-038, this file definition should not be modified."
-^DIC(9002313.93,"%MSC")=3220624.214059
+^DIC(9002313.93,"%MSC")=3230514.004828
 ^DIC(9002313.99,0)="BPS SETUP^9002313.99"
 ^DIC(9002313.99,0,"AUDIT")="@"
 ^DIC(9002313.99,0,"DD")="@"

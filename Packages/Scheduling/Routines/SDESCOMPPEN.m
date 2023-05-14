@@ -1,5 +1,5 @@
 SDESCOMPPEN ;ALB/BWF - VISTA SCHEDULING COMPENSATION AND PENSION RPCS ; Jan 23, 2023
- ;;5.3;Scheduling;**836,837**;Aug 13, 1993;Build 4
+ ;;5.3;Scheduling;**836,837,839**;Aug 13, 1993;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Reference to DVBCUTL5 in ICR #7042
  ; Reference to DVBCCNNS in ICR #7038
@@ -63,20 +63,28 @@ GETREQUESTS(RETURN,DFN,CLINIEN) ;
  ...D LNKARY^DVBCUTA3(REQIEN,DFN)
  ...S SDLOOP="" F  S SDLOOP=$O(TMP("DVBC LINK",SDLOOP)) Q:SDLOOP=""  D
  ....S SDAMIEIEN="" F  S SDAMIEIEN=$O(TMP("DVBC LINK",SDLOOP,SDAMIEIEN)) Q:SDAMIEIEN=""  D
- .....S INITIALAPPTDT=$P(TMP("DVBC LINK",SDLOOP,SDAMIEIEN),U)
- .....S ORIGAPPTDT=$P(TMP("DVBC LINK",SDLOOP,SDAMIEIEN),U,2)
- .....S CURRAPPTDT=$P(TMP("DVBC LINK",SDLOOP,SDAMIEIEN),U,3)
+ .....S INITIALAPPTDT=$$CONVDATE($P(TMP("DVBC LINK",SDLOOP,SDAMIEIEN),U))
+ .....S ORIGAPPTDT=$$CONVDATE($P(TMP("DVBC LINK",SDLOOP,SDAMIEIEN),U,2))
+ .....S CURRAPPTDT=$$CONVDATE($P(TMP("DVBC LINK",SDLOOP,SDAMIEIEN),U,3))
  .....S CLINNAME=$P(TMP("DVBC LINK",SDLOOP,SDAMIEIEN),U,4)
  .....S LINKCNT=LINKCNT+1
  .....S RETURN("CompensationPensionRequest",CNT,"Links",LINKCNT,"AMIETrackingID")=SDAMIEIEN
- .....S RETURN("CompensationPensionRequest",CNT,"Links",LINKCNT,"InitialAppointmentDate")=INITIALAPPTDT
- .....S RETURN("CompensationPensionRequest",CNT,"Links",LINKCNT,"OriginalAppointmentDate")=ORIGAPPTDT
- .....S RETURN("CompensationPensionRequest",CNT,"Links",LINKCNT,"CurrentAppointmentDate")=CURRAPPTDT
+ .....S RETURN("CompensationPensionRequest",CNT,"Links",LINKCNT,"InitialAppointmentDate")=$$FMTISO^SDAMUTDT(INITIALAPPTDT,CLINIEN)
+ .....S RETURN("CompensationPensionRequest",CNT,"Links",LINKCNT,"OriginalAppointmentDate")=$$FMTISO^SDAMUTDT(ORIGAPPTDT,CLINIEN)
+ .....S RETURN("CompensationPensionRequest",CNT,"Links",LINKCNT,"CurrentAppointmentDate")=$$FMTISO^SDAMUTDT(CURRAPPTDT,CLINIEN)
  .....S RETURN("CompensationPensionRequest",CNT,"Links",LINKCNT,"ClinicName")=CLINNAME
  .....S RETURN("CompensationPensionRequest",CNT,"Links",LINKCNT,"ClinicID")=$$FIND1^DIC(44,,"B",CLINNAME)
  K ^TMP("DVBC",$J)
  K TMP("DVBC LINK")
  Q
+ ; convert external date/time to fileman
+CONVDATE(INDATE)    ;
+ N X,Y,%DT
+ I INDATE="" Q ""
+ S %DT="ST"
+ S X=INDATE D ^%DT
+ I Y<1 Q ""
+ Q Y
  ;
 SET(RESULT,REQIEN,AMIETRKIEN,VETREQ,SDCL,SDT)  ;SET entries to AMIE C&P EXAM TRACKING file 396.95 and update file 396.3
  ;INPUT:
