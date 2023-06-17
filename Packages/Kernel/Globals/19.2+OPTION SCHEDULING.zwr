@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: OPTION SCHEDULING
 ZWR
-^DIC(19.2,0)="OPTION SCHEDULING^19.2P^18^18"
+^DIC(19.2,0)="OPTION SCHEDULING^19.2P^17^17"
 ^DIC(19.2,0,"AUDIT")="@"
 ^DIC(19.2,0,"DD")="@"
 ^DIC(19.2,0,"DEL")="@"
@@ -32,10 +32,8 @@ ZWR
 ^DIC(19.2,15,0)="7172^3230618.0045^^^^1D^^^"
 ^DIC(19.2,15,1)=1727
 ^DIC(19.2,16,0)="15048^3221114.03^^^^24H"
-^DIC(19.2,17,0)="15077^3230617.1227^^^^900S"
-^DIC(19.2,17,1)=1747
-^DIC(19.2,18,0)="14640^3230617.132305"
-^DIC(19.2,18,1)=1751
+^DIC(19.2,17,0)="15077^3230617.1342^^^^900S"
+^DIC(19.2,17,1)=1767
 ^DIC(19.2,"%D",0)="^^6^6^2941121^^"
 ^DIC(19.2,"%D",1,0)="This file hold records that relate to the scheduling of options"
 ^DIC(19.2,"%D",2,0)="to run on a one time basis or more likely on a schedule."
@@ -58,6 +56,5 @@ ZWR
 ^DIC(19.2,"B",11180,7)=""
 ^DIC(19.2,"B",11434,6)=""
 ^DIC(19.2,"B",12338,4)=""
-^DIC(19.2,"B",14640,18)=""
 ^DIC(19.2,"B",15048,16)=""
 ^DIC(19.2,"B",15077,17)=""

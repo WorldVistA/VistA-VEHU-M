@@ -97,7 +97,7 @@ ZWR
 ^%ZIS(1,670,"TYPE")="RES"
 ^%ZIS(1,671,0)="ORW THREAD RESOURCE^ORW THREAD RESOURCE^^^^^^^"
 ^%ZIS(1,671,1)="CPRS GUI background data retrieval^^^^^^^^^9"
-^%ZIS(1,671,5)=3554
+^%ZIS(1,671,5)=3555
 ^%ZIS(1,671,"SUBTYPE")=16
 ^%ZIS(1,671,"TYPE")="RES"
 ^%ZIS(1,674,0)="ZZP-MESSAGE-HFS (ONT)^/tmp/XMHFS.TEMP^0^0^^^^^^^0^0"
@@ -161,7 +161,7 @@ ZWR
 ^%ZIS(1,699,"TYPE")="RES"
 ^%ZIS(1,700,0)="TELNET-VMS^/dev/pts^1^^^^^^^^1"
 ^%ZIS(1,700,1)="VMS"
-^%ZIS(1,700,5)=28883
+^%ZIS(1,700,5)=28887
 ^%ZIS(1,700,"SUBTYPE")=231
 ^%ZIS(1,700,"TYPE")="VTRM"
 ^%ZIS(1,701,0)="CONSOLE-VMS^OPA0:^1^^^^^^^^1"
@@ -254,7 +254,7 @@ ZWR
 ^%ZIS(1,717,"TYPE")="RES"
 ^%ZIS(1,718,0)="NULL^/dev/null^^^^^^^^^"
 ^%ZIS(1,718,1)="BIT BUCKET"
-^%ZIS(1,718,5)=4
+^%ZIS(1,718,5)=5
 ^%ZIS(1,718,"SUBTYPE")=16
 ^%ZIS(1,718,"TYPE")="TRM"
 ^%ZIS(1,719,0)="VIRTUAL TERMINAL^/dev/pts^1^^^^^^^^1"
