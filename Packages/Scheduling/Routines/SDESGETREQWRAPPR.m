@@ -1,5 +1,5 @@
-SDESGETREQWRAPPR ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;SEP 14, 2022
- ;;5.3;Scheduling;**815,818,820,823,825,831,838**;Aug 13, 1993;Build 7
+SDESGETREQWRAPPR ;ALB/BLB,MGD,JAS - VISTA SCHEDULING RPCS ;Mar 7, 2023
+ ;;5.3;Scheduling;**815,818,820,823,825,831,838,842**;Aug 13, 1993;Build 17
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -69,14 +69,24 @@ SDESGETREQWRAPPR ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;SEP 14, 2022
  ;("Request",1,"ProviderSecID")
  ;("Request",1,"RecallAccessionNumber")
  ;("Request",1,"RecallAppointmentLength")
+ ;("Request",1,"RecallAppointmentType")
+ ;("Request",1,"RecallClinicStopCodeIEN")
+ ;("Request",1,"RecallClinicStopCodeAMIS")
+ ;("Request",1,"RecallClinicStopCodeName")
+ ;("Request",1,"RecallClinicSecondaryStopCodeIEN")
+ ;("Request",1,"RecallClinicSecondaryStopCodeAMIS")
+ ;("Request",1,"RecallClinicSecondaryStopCodeName")
  ;("Request",1,"RecallComment")
  ;("Request",1,"RecallDateReminderSent")
+ ;("Request",1,"RecallEnteredBySecID")
  ;("Request",1,"RecallFastingNonFasting")
  ;("Request",1,"RecallGAFScore")
  ;("Request",1,"RecallPatientSensitiveRecordAccessChecks")
  ;("Request",1,"RecallProviderIEN")
  ;("Request",1,"RecallProviderIndicatedDate")
  ;("Request",1,"RecallProviderName")
+ ;("Request",1,"RecallProviderNewPersonIEN")
+ ;("Request",1,"RecallProviderSecID")
  ;("Request",1,"RecallSecondPrint")
  ;("Request",1,"RecallSimilarPatientData")
  ;("Request",1,"RequestComments")
@@ -91,6 +101,7 @@ SDESGETREQWRAPPR ;ALB/BLB,MGD - VISTA SCHEDULING RPCS ;SEP 14, 2022
  ;("Request",1,"SdecContactNumberOfSecureMessage")
  ;("Request",1,"SdecContactNumberOfTextContact")
  ;("Request",1,"ServiceConnectedPriority")
+ ;("Request",1,"Status")
  ;("Request",1,"Type")
  ;
  Q
@@ -162,9 +173,7 @@ APPTREQUEST(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"MRTCNeeded")=""
  S REQUEST("Request",NUM,"MRTCDaysBetweenAppts")=""
  S REQUEST("Request",NUM,"MRTCHowManyNeeded")=""
- S REQUEST("Request",NUM,"EASTrackingNumber")=""
  S REQUEST("Request",NUM,"DispositionedDate")=""
- S REQUEST("Request",NUM,"DispositionedBy")=""
  S REQUEST("Request",NUM,"DispositionedBy")=""
  S REQUEST("Request",NUM,"DispositionReason")=""
  S REQUEST("Request",NUM,"ServiceConnectedPriority")=""
@@ -208,6 +217,16 @@ RECALL(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"RecallGAFScore")=""
  S REQUEST("Request",NUM,"RecallPatientSensitiveRecordAccessChecks")=""
  S REQUEST("Request",NUM,"RecallSimilarPatientData")=""
+ S REQUEST("Request",NUM,"RecallAppointmentType")=""
+ S REQUEST("Request",NUM,"RecallProviderNewPersonIEN")=""
+ S REQUEST("Request",NUM,"RecallProviderSecID")=""
+ S REQUEST("Request",NUM,"RecallClinicStopCodeIEN")=""
+ S REQUEST("Request",NUM,"RecallClinicStopCodeAMIS")=""
+ S REQUEST("Request",NUM,"RecallClinicStopCodeName")=""
+ S REQUEST("Request",NUM,"RecallClinicSecondaryStopCodeIEN")=""
+ S REQUEST("Request",NUM,"RecallClinicSecondaryStopCodeAMIS")=""
+ S REQUEST("Request",NUM,"RecallClinicSecondaryStopCodeName")=""
+ S REQUEST("Request",NUM,"RecallEnteredBySecID")=""
  Q
  ;
 CONSULT(REQUEST,NUM) ;

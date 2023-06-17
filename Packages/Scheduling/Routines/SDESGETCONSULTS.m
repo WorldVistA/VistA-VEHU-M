@@ -1,9 +1,10 @@
-SDESGETCONSULTS ;ALB/BLB,MGD,RRM,BWF - VISTA SCHEDULING RPCS GET CONSULTS ;Feb 14, 2023
- ;;5.3;Scheduling;**815,820,824,837**;Aug 13, 1993;Build 4
+SDESGETCONSULTS ;ALB/BLB,MGD,RRM,BWF,CGP - VISTA SCHEDULING RPCS GET CONSULTS ;Mar 15, 2023
+ ;;5.3;Scheduling;**815,820,824,837,842**;Aug 13, 1993;Build 17
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
  ;-------------------
+ ; Reference to ^VA(200 in ICR #10060 ;
  ; Reference to $$GETS^DIQ,$$GET1^DIQ in ICR #2056
  ;
  ;
@@ -101,7 +102,7 @@ CONSCANCELCHECK(CONSULTIEN,DFN) ;looking for most recent appt linked to this con
  Q CANCHANGE
  ;
 GETCONSULT(REQUSET,CONSULTIEN) ;Build a consult record for every consult
- N CLINICIEN,CLINICNAME,SERVICEIEN,CONDATA,CONSERR,CANCHANGEPID,PID,NUM,ERRORS
+ N CLINICIEN,CLINICNAME,SERVICEIEN,CONDATA,CONSERR,CANCHANGEPID,PID,NUM,ERRORS,PROVIDERIEN
  D GETS^DIQ(123,CONSULTIEN,"**","IE","CONDATA","CONSERR")
  S NUM="",NUM=$O(REQUEST("Request",NUM),-1)+1
  S REQUEST("Request",NUM,"Type")="Consult"
@@ -122,6 +123,8 @@ GETCONSULT(REQUSET,CONSULTIEN) ;Build a consult record for every consult
  .S CLINICIEN=$G(CONDATA(123,CONSULTIEN_",",.05,"I"))
  .S CLINICNAME=$G(CONDATA(123,CONSULTIEN_",",.05,"E"))
  ;
+ S PROVIDERIEN=$G(CONDATA(123,CONSULTIEN_",",10,"I"))
+ ;
  S DFN=$G(CONDATA(123,CONSULTIEN_",",.02,"I"))
  S REQUEST("Request",NUM,"Type")="Consult"
  S REQUEST("Request",NUM,"PatientIEN")=DFN
@@ -140,8 +143,11 @@ GETCONSULT(REQUSET,CONSULTIEN) ;Build a consult record for every consult
  S REQUEST("Request",NUM,"ConsultUrgencyOrEarliestDate")=$$FMTISO^SDAMUTDT($$PRIO^SDEC51A(CONSULTIEN))
  S REQUEST("Request",NUM,"ProviderIEN")=$G(CONDATA(123,CONSULTIEN_",",10,"I"))
  S REQUEST("Request",NUM,"ProviderName")=$G(CONDATA(123,CONSULTIEN_",",10,"E"))
+ S REQUEST("Request",NUM,"ProviderSecID")=$$GET1^DIQ(200,PROVIDERIEN_",",205.1,"E")
  S REQUEST("Request",NUM,"ConsultServiceRenderedAs")=$G(CONDATA(123,CONSULTIEN_",",14,"E"))
  S REQUEST("Request",NUM,"ConsultProhibitedClinicFlag")=$S($$GET1^DIQ(44,+CLINICIEN_",",2500,"I")="Y":1,1:0)
+ ;
+ S REQUEST("Request",NUM,"CPRSStatus")=$$GET1^DIQ(123,CONSULTIEN,8,"E")
  ;
  I $D(^SDEC(409.87,"B",CONSULTIEN)) D
  .S PID=$$GETPID(CONSULTIEN)

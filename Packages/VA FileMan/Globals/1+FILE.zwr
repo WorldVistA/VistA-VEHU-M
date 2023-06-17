@@ -4447,10 +4447,11 @@ ZWR
 ^DIC(52.43,0,"RD")="Pp"
 ^DIC(52.43,0,"WR")="@"
 ^DIC(52.43,"%",0)="^1.005^^0"
-^DIC(52.43,"%D",0)="^^3^3^3030210^"
+^DIC(52.43,"%D",0)="^1.001^3^3^3221130^^"
 ^DIC(52.43,"%D",1,0)="The purpose of this file is to hold the refill requests that are "
 ^DIC(52.43,"%D",2,0)="generated from the web interface in the My HealtheVet package. Requests "
 ^DIC(52.43,"%D",3,0)="are filed here, to be processed by pharmacy."
+^DIC(52.43,"%MSC")=3230617.120538
 ^DIC(52.444,0)="PHARMACY TELEPHONE REFILLS^52.444"
 ^DIC(52.444,0,"GL")="^PS(52.444,"
 ^DIC(52.444,0,"GL")="^PS(52.444,"
@@ -16039,7 +16040,7 @@ ZWR
 ^DIC(130,"%D",2,0)="case made up of an operative procedure, or multiple operative procedures"
 ^DIC(130,"%D",3,0)="for a patient.  The file includes the information necessary for creating"
 ^DIC(130,"%D",4,0)="the Nurses' Intraoperative Report, Operation Report, and Anesthesia Report"
-^DIC(130,"%MSC")=3220918.135229
+^DIC(130,"%MSC")=3230617.120609
 ^DIC(131,0)="PERSON FIELD RESTRICTION^131I"
 ^DIC(131,0,"GL")="^SRP("
 ^DIC(131,0,"GL")="^SRP("
@@ -27212,6 +27213,7 @@ ZWR
 ^DIC(396.25,"%",0)="^1.005^^0"
 ^DIC(396.25,"%D",0)="^^1^1^3141105^"
 ^DIC(396.25,"%D",1,0)="This file contains a list of valid Special Considerations."
+^DIC(396.25,"%MSC")=3230617.121228
 ^DIC(396.27,0)="2507 CLAIM TYPE^396.27"
 ^DIC(396.27,0,"AUDIT")="@"
 ^DIC(396.27,0,"DD")="@"
@@ -29534,7 +29536,7 @@ ZWR
 ^DIC(409.84,"%",0)="^1.005^^0"
 ^DIC(409.84,"%D",0)="^^1^1^3141010^"
 ^DIC(409.84,"%D",1,0)="This is where appointment definitions are linked to a resource."
-^DIC(409.84,"%MSC")=3230120.021029
+^DIC(409.84,"%MSC")=3230617.120452
 ^DIC(409.842,0)="SDEC CHECK-IN STEP STATUS^409.842"
 ^DIC(409.842,0,"AUDIT")="@"
 ^DIC(409.842,0,"DD")="@"
@@ -29614,7 +29616,7 @@ ZWR
 ^DIC(409.853,"%D",2,0)="Package and the VS GUI. The MAS SIUG determined the allowable reasons."
 ^DIC(409.853,"%D",3,0)=" "
 ^DIC(409.853,"%D",4,0)="This file should NOT be edited in anyway by the site. "
-^DIC(409.853,"%MSC")=3220719.110436
+^DIC(409.853,"%MSC")=3230617.120452
 ^DIC(409.86,0)="SDEC CONTACT^409.86"
 ^DIC(409.86,0,"AUDIT")="@"
 ^DIC(409.86,0,"DD")="@"
@@ -29748,7 +29750,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3230415.224725
+^DIC(409.93,"%MSC")=3230617.120452
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
@@ -52262,7 +52264,7 @@ ZWR
 ^DIC(8925,"%D",6,0)="from remote sites, which may be excluded from the corresponding local "
 ^DIC(8925,"%D",7,0)="DHCP Package databases (e.g., Operative Reports, Radiology Reports, "
 ^DIC(8925,"%D",8,0)="Pathology Reports, etc.) to avoid confusion with local workload."
-^DIC(8925,"%MSC")=3230307.020039
+^DIC(8925,"%MSC")=3230617.1207
 ^DIC(8925.1,0)="TIU DOCUMENT DEFINITION^8925.1"
 ^DIC(8925.1,0,"AUDIT")="@"
 ^DIC(8925.1,0,"DD")="@"

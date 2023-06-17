@@ -1,5 +1,5 @@
 IBCEMU1 ;ALB/DSM - IB MRA Utility ;26-MAR-2003
- ;;2.0;INTEGRATED BILLING;**135,155,432,718,727**;21-MAR-94;Build 34
+ ;;2.0;INTEGRATED BILLING;**135,155,432,718,727,743**;21-MAR-94;Build 18
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 MRAUSR() ;; Function
@@ -217,7 +217,9 @@ SPLIT2(IBEOB,IBALLORONE) ; All lines Covered? aka SPLIT2
  . Q:$$GET1^DIQ(361.1,IBLOOPEOB_",",.04,"I")'=1  ; remember, only MRAs
  . Q:".1.2."'[("."_$$GET1^DIQ(361.1,IBLOOPEOB_",",.13,"I")_".")  ; must be PROCESSED or DENIED
  . Q:$$GET1^DIQ(361.1,IBLOOPEOB_",",.15,"I")'=IBPAYSEQ  ; must be for same payer seq as EOB passed in
- . I $D(^IBM(361.1,IBEOB,"ERR")) S RESULT=-1 Q  ; filing errors, can't tell
+ . ;WCJ;IB743;wrong variable as it kept checking the same EOB for filing errors
+ .; I $D(^IBM(361.1,IBEOB,"ERR")) S RESULT=-1 Q  ; filing errors, can't tell
+ . I $D(^IBM(361.1,IBLOOPEOB,"ERR")) S RESULT=-1 Q  ; filing errors, can't tell
  . S IBLINE=0
  . F  S IBLINE=$O(IBZDATA(IBLINE)) Q:'IBLINE  D
  .. I $D(^IBM(361.1,IBLOOPEOB,15,"AC",IBLINE)) K IBZDATA(IBLINE) ; remove the lines local array that are in an acceptable MRA

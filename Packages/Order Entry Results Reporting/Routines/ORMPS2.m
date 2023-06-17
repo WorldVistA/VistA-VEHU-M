@@ -1,10 +1,10 @@
-ORMPS2 ;SLC/MKB - Process Pharmacy ORM msgs cont ; Nov 18, 2022@12:03:02
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**94,116,129,134,186,190,195,215,265,243,280,363,350,462,413,405,577**;Dec 17, 1997;Build 12
- ;
+ORMPS2 ;SLC/MKB - Process Pharmacy ORM msgs cont ; April 27, 2023@15:28:03
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**94,116,129,134,186,190,195,215,265,243,280,363,350,462,413,405,577,602,**;Dec 17, 1997;Build 1
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
- ; Reference to ^VA(200 in ICR #10060
- ; Reference to ^DIE in ICR #2053
+ ; External References:
+ ; ^VA(200,
+ ; ^DIE     ICR #2053
  ;
 FINISHED() ; -- new order [SN^ORMPS] due to finishing?
  N Y,ORIG,TYPE,ORIG4 S Y=0
@@ -15,7 +15,7 @@ FINISHED() ; -- new order [SN^ORMPS] due to finishing?
 WPX() ; -- Compare comments in @ORMSG@(NTE) with order ORIFN
  ;     Returns 1 if different, or 0 if same
  N NTE,SPINST,Y,X S Y=0
- S NTE=+$$NTE^ORMPS3(6),SPINST=$S(NTE:$$NTXT^ORMPS3(NTE),1:"")
+ S NTE=+$$NTE^ORMPS3(21),SPINST=$S(NTE:$$NTXT^ORMPS3(NTE),1:"")
  S X=$$VALTXT^ORMPS3(+ORIFN,"COMMENT")
  I $TR(X," ")'=$TR(SPINST," ") S Y=1 ;comp text w/o spaces
 WQ Q Y
@@ -109,7 +109,7 @@ RO ; -- Replacement order (finished)
  D @($S(RXC:"IV",$G(ORCAT)="I":"UDOSE",1:"OUT")_"^ORMPS1") Q:$D(ORERR)
  ;Check keep Admin Time with order if not define in the RXE segment on
  ;verify
- I $$VALUE("TYPE")="I",'$P($P($P(RXE,"|",2),U,2),"&",2) S ORDIALOG($$PTR("ADMIN TIMES"),1)=$$VALUE("ADMIN") ;P577
+ I RXC,$$VALUE("TYPE")="I" S ORDIALOG($$PTR("ADMIN TIMES"),1)=$$VALUE("ADMIN")
  S ORDA=$$ACTION^ORCSAVE("XX",ORIFN,ORNP,"",ORNOW,ORWHO)
  I ORDA'>0 S ORERR="Cannot create new order action" Q
  ; DRM - 462 - 2017/7/24 - if original action flagged, carry flag forward

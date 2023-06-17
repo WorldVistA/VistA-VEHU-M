@@ -1,5 +1,5 @@
 IBCE837P ;EDE/JWSP - OUTPUT FOR 837 TRANSMISSION - CONTINUED ;
- ;;2.0;INTEGRATED BILLING;**718,727**;21-MAR-94;Build 34
+ ;;2.0;INTEGRATED BILLING;**718,727,743**;21-MAR-94;Build 18
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -291,7 +291,8 @@ POST ;POST execute for 837, called by IBCE837A@POST
  . F I=2,4,6 I $G(^TMP("IBXDATA",$J,1,101,1,I))'="1G",$G(^(I))'="0B" K ^(I),^(I+1)  ;seq=101 : OPR5 referring provider secondary id
  . F I=2,4,6,8 I $G(^TMP("IBXDATA",$J,1,104.4,1,I))="1C" S ^(I)="G2"  ;seq=104.4 : OPRA rendering provider sec id
  . F I=7:1:12 K ^TMP("IBXDATA",$J,1,57,1,I)  ;seq=57 : SUB2 service facility data
- . F I=2,4,6,8 I $G(^TMP("IBXDATA",$J,1,104,1,I))="EI" S ^(I)="G2"  ;seq=104 : OPR8 supervising provider secondary id data
+ .;F I=2,4,6,8 I $G(^TMP("IBXDATA",$J,1,104,1,I))="EI" S ^(I)="G2"  ;seq=104 : OPR8 supervising provider secondary id data ; WCJ EBILL-3260;IB743
+ . F I=2,4,6,8 I $G(^TMP("IBXDATA",$J,1,104,1,I))="EI" K ^(I),^(I+1)  ;seq=104 : OPR8 supervising provider secondary id data ; WCJ EBILL-3260;IB743
  . S X1=0 F  S X1=$O(^TMP("IBXDATA",$J,1,193.6,X1)) Q:X1=""  D  ;seq=193.6 : LPUR line purchase service provider data
  .. ;JWS;8/15/22;IB*2.0*727v12;FSC workaround documentation was incorrect - Set LPUR-6 = "1G" and LPUR-7 = 'VAD001'
  .. ;JWS;10/19/22;EBILL-2979;IB*2.0*727v14;should only set if LPUR line exists

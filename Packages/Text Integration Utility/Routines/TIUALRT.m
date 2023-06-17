@@ -1,7 +1,7 @@
-TIUALRT ; SLC/JER,AJB - SEND ALERTS ;02/28/23  12:01
- ;;1.0;TEXT INTEGRATION UTILITIES;**21,84,79,88,58,61,151,158,175,221,227,259,355**;Jun 20, 1997;Build 11
+TIUALRT ; SLC/JER,AJB - SEND ALERTS ;04/06/23  06:16
+ ;;1.0;TEXT INTEGRATION UTILITIES;**21,84,79,88,58,61,151,158,175,221,227,259,355,358**;Jun 20, 1997;Build 16
  ;
- ; External reference to ^DPT( supported by IA 10035
+ ; Reference to ^DPT( supported by IA #10035
  ;
  Q
 SEND(DA,OVERDUE,TIUXQA) ;
@@ -9,7 +9,7 @@ SEND(DA,OVERDUE,TIUXQA) ;
  ; [OVERDUE]  send alert as overdue
  ; [TIUXQA]   third party alerts, passed by reference, TIUXQA(<IEN>)=""  recipients
  ;            TIUXQA=0 delete current alerts, TIUXQA=1 keep current alerts
- N ADDENDUM,FDA,NODE,TIUAAALRT,TIUDPRM,TIUPRM0,TIUPRM1,XQA,XQAARCH,XQADATA,XQAID,XQAMSG,XQAROU
+ N ADDENDUM,FDA,NODE,TIUAAALRT,TIUDPRM,TIUPRM0,TIUPRM1,XQA,XQAARCH,XQADATA,XQADFN,XQAID,XQAMSG,XQAROU
  S NODE(0)=$G(^TIU(8925,+DA,0)) Q:'NODE(0)  S NODE(12)=$G(^(12)),NODE(13)=$G(^(13))
  S NODE(14)=$G(^TIU(8925,+DA,14)),NODE(15)=$G(^(15)),OVERDUE=+$G(OVERDUE,0)
  S ADDENDUM=$S($P($G(^TIU(8925.1,+NODE(0),0)),U)["ADDENDUM"&$P(NODE(0),U,6):1,1:0) ;    is document an addendum?
@@ -24,7 +24,7 @@ SEND(DA,OVERDUE,TIUXQA) ;
  S TIU("Expected Signer")=$P(NODE(12),U,4),TIU("Signature Date/Time")=$P(NODE(15),U)
  S TIU("Expected Co-signer")=$P(NODE(12),U,8),TIU("Attending Physician")=$P(NODE(12),U,9)
  S TIU("Co-signature Date/Time")=$P(NODE(15),U,7)
- I +$G(TIUXQA) G TPA ;                                                                  send only third party alerts
+ I +$G(TIUXQA)!(TIU("Status")>6) G TPA ;                                                send only third party or additional signer alerts
  I +$P(TIUDPRM(0),U,2),TIU("Status")=3,'+$P(NODE(13),U,4) Q  ;                          requires release, unreleased, no release date/time
  I +$P(TIUDPRM(0),U,3),TIU("Status")=4,'+$P(NODE(13),U,5) Q  ;                          requires verification, unverified, no verification date/time
  I 'TIU("Expected Signer"),TIU("Author/Dictator") D  ;                                  no expected signer, set expected signer to author/dictator
@@ -35,7 +35,7 @@ SEND(DA,OVERDUE,TIUXQA) ;
  . S FDA(8925,DA_",",1208)=$P(NODE(12),U,9) D FILE^DIE(,"FDA")
  ; signer as recipient
  I $P(TIUDPRM(0),U,4),'TIU("Signature Date/Time"),TIU("Expected Signer") D  ;           require author to sign, no signature
- . S XQA(TIU("Expected Signer"))=""
+ . Q:TIU("Status")>5  S XQA(TIU("Expected Signer"))="" ;                                verify status, add as recipient
  ; co-signer as recipient
  I TIU("Expected Co-signer"),'TIU("Co-signature Date/Time"),TIU("Status")<7 D
  . I '$P(TIUDPRM(0),U,20),$P(TIUDPRM(0),U,4),'TIU("Signature Date/Time") Q  ;           send co-signer alert, require author to sign, unsigned
@@ -47,7 +47,9 @@ TPA S TIUXQA=0 F  S TIUXQA=$O(TIUXQA(TIUXQA)) Q:'TIUXQA  S XQA(TIUXQA)="" ;     
  ; if recipients, setup alert data and send alert
  I $D(XQA) D XQADATA(DA,.PT),SETUP^XQALERT Q:+$G(TIUXQA)  K XQA ;                       send , if third party alert quit
  I $P(NODE(0),U,5)>5,$O(^TIU(8925.7,"B",DA,0)) D  ;                                     for a signed document, check for additional signers
- . N I S I=0 F  S I=$O(^TIU(8925.7,"AC",+NODE(12),DA,I)) Q:'I  D  ;                     "AC" for outstanding additional signers
+ . N I S I=0 F  S I=$O(^TIU(8925.7,"AC",+NODE(12),DA,I)) Q:'I  D  ;                     traverse "AC" for outstanding additional signers
+ . . I '$D(^TIU(8925.7,I,0)) K ^TIU(8925.7,"AC",+NODE(12),DA,I) Q  ;                    remove "AC" if no entry
+ . . I +$P($G(^TIU(8925.7,I,0)),U,4) K ^TIU(8925.7,"AC",+NODE(12),DA,I) Q  ;            remove "AC" if signed
  . . N USR S USR=$P($G(^TIU(8925.7,I,0)),U,3) S:+USR XQA(USR)="" ;                      set additional signer
  Q:'$D(XQA)  ;                                                                          quit, no outstanding additional signers
  D XQADATA(DA,.PT,1),SETUP^XQALERT ;                                                    send additional signer alert(s)
@@ -55,7 +57,7 @@ TPA S TIUXQA=0 F  S TIUXQA=$O(TIUXQA(TIUXQA)) Q:'TIUXQA  S XQA(TIUXQA)="" ;     
 XQADATA(DA,PT,AS) ; setup message text
  ; DA  document IEN      PT  patient demographics [passed by reference]
  ; AS  additional signer [default 0]
- S XQAARCH=24000,XQADATA=+DA_U,XQAID="TIU"_DA,XQAROU="ACT^TIUALRT"
+ S XQAARCH=24000,XQADATA=+DA_U,XQADFN=$P(NODE(0),U,2),XQAID="TIU"_DA,XQAROU="ACT^TIUALRT"
  S XQAMSG=PT("PNM")_" ("_$E(PT("PNM"),1)_$P(PT("SSN"),"-",3)_"): "
  S XQAMSG=XQAMSG_$S(TIU("Status")=5&TIU("Expected Co-signer")&$P(TIUDPRM(0),U,20):"UNSIGNED/UNCOSIGNED",1:$$UP^XLFSTR($$GET1^DIQ(8925,DA,.05)))
  S XQAMSG=XQAMSG_$S($P(NODE(0),U,9)="P":" STAT ",1:" ")_$$PNAME^TIULC1(+NODE(0))
