@@ -82,7 +82,7 @@ ZWR
 ^XOB(18.12,12,100,0)="^18.121P^1^1"
 ^XOB(18.12,12,100,1,0)="15^^^^^1"
 ^XOB(18.12,12,100,"B",15,1)=""
-^XOB(18.12,13,0)="ONCO WEB SERVER^^443^vaww.vaccra.registries.domain^^1^30"
+^XOB(18.12,13,0)="ONCO WEB SERVER^^443^vaww.vaccrb.registries.domain^^1^30"
 ^XOB(18.12,13,1)=0
 ^XOB(18.12,13,3)="1^encrypt_only_tlsv12^443"
 ^XOB(18.12,13,100,0)="^18.121P^1^1"

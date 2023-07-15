@@ -1,5 +1,5 @@
 SDESCLNSETAVAIL ;ALB/TAW,KML,MGD,LAB - SET CLINIC AVAILABILITY ;Mar 16,2023
- ;;5.3;Scheduling;**800,803,805,809,818,820,833,842**;Aug 13, 1993;Build 17
+ ;;5.3;Scheduling;**800,803,805,809,818,820,833,842,843**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
 SETCLINAVAIL(RETURN,SDCLINIC,DATES,TIMES,SLOTS,SDEAS) ;INICSET2(.POP,SDIEN,.FDA,.SDCLINIC,.PROVIDER,.DIAGNOSIS,.SPECIALINSTRUCT,.PRIVLIAGEDUSER)
@@ -45,6 +45,7 @@ VALIDATE ;
  I ((TIMES="")&(SLOTS'=""))!((TIMES'="")&(SLOTS="")) D ERRLOG(52,"Times and slots mismatch")
  I 'POP,$L(TIMES,";")'=$L(SLOTS,";") D ERRLOG(52,"Times and slots mismatch")
  ;
+ I $P(DATES,"9999999",1)="" D ERRLOG(52,"Date Missing.  Must have a date indicated.") Q
  I $P(DATES,"9999999",2)'="" D ERRLOG(52,"Indefinite date indicator must be last") Q
  ;
  I TIMES'="" D

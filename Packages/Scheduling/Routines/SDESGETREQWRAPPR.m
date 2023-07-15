@@ -1,5 +1,5 @@
-SDESGETREQWRAPPR ;ALB/BLB,MGD,JAS - VISTA SCHEDULING RPCS ;Mar 7, 2023
- ;;5.3;Scheduling;**815,818,820,823,825,831,838,842**;Aug 13, 1993;Build 17
+SDESGETREQWRAPPR ;ALB/BLB,MGD,JAS - VISTA SCHEDULING RPCS ;Apr 4, 2023
+ ;;5.3;Scheduling;**815,818,820,823,825,831,838,842,843**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -173,6 +173,7 @@ APPTREQUEST(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"MRTCNeeded")=""
  S REQUEST("Request",NUM,"MRTCDaysBetweenAppts")=""
  S REQUEST("Request",NUM,"MRTCHowManyNeeded")=""
+ I '$D(REQUEST("Request",NUM,"EASTrackingNumber")) S REQUEST("Request",NUM,"EASTrackingNumber")=""
  S REQUEST("Request",NUM,"DispositionedDate")=""
  S REQUEST("Request",NUM,"DispositionedBy")=""
  S REQUEST("Request",NUM,"DispositionReason")=""
@@ -227,6 +228,7 @@ RECALL(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"RecallClinicSecondaryStopCodeAMIS")=""
  S REQUEST("Request",NUM,"RecallClinicSecondaryStopCodeName")=""
  S REQUEST("Request",NUM,"RecallEnteredBySecID")=""
+ I '$D(REQUEST("Request",NUM,"EASTrackingNumber")) S REQUEST("Request",NUM,"EASTrackingNumber")=""
  Q
  ;
 CONSULT(REQUEST,NUM) ;
@@ -241,5 +243,6 @@ CONSULT(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"ConsultProhibitedClinicFlag")=""
  S REQUEST("Request",NUM,"ConsultClinicIndicatedDate")=""
  S REQUEST("Request",NUM,"ConsultCanEditPid")=""
+ I '$D(REQUEST("Request",NUM,"EASTrackingNumber")) S REQUEST("Request",NUM,"EASTrackingNumber")=""
  Q
  ;

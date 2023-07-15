@@ -1,5 +1,5 @@
 DGAUDIT1 ; ISL/DKA - Dataset 1 of VAS VistA Audit Solution ; 03 Aug 2021  1:05 PM
- ;;5.3;Registration;**964**;Aug 13, 1993;Build 323
+ ;;5.3;Registration;**964,1097**;Aug 13, 1993;Build 43
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to ^VA(200 in ICR #1262
@@ -36,42 +36,56 @@ NEWAUDEX ; Export newly added AUDIT (#1.1) records
  S AUDGREF=$NA(^DIA),GREF=$NA(^DGAUDIT1)
  S (CNTREC,FILENUM,DGABORT)=0
  F  S FILENUM=$O(@AUDGREF@(FILENUM)) Q:'FILENUM!$G(DGAUDSTOP)!'$G(DGAUDSHUT)!$$S^%ZTLOAD!$G(DGDONE)!$G(DGABORT)  D
+ . S DGAUDSHUT=$$GET1^DIQ(46.5,1,.02,"I")                ; Check send switch. NEWed in DGAUDIT
+ . N LASTDIA,RECDATA,SWITCHDT,EXPRTIEN,RECDATE
+ . S LASTDIA=$$GET1^DIQ(1.1,FILENUM,.03) Q:(LASTDIA<1)
  . Q:'$$PATREL(FILENUM)
  . K DIC S DIC="^DGAUDIT1(",X=FILENUM D ^DIC D:Y<1  Q:Y'>0
- . . K DIC S DIC="^DGAUDIT1(",DIC(0)="",DIC("DR")=".02///0",X=FILENUM D FILE^DICN
- . ; Y now contains the IEN of DGV AUDIT EXPORT, whether newly created or not.
- . S REC=+$$GET1^DIQ(46.4,+Y,.02)
- . ; If the REC is not in the AUDIT file or the RECDATA doesn't match
- . ; the current contents of the 0 node for that REC, then reset the REC to 0.
- . I '$D(@AUDGREF@(FILENUM,REC)) S REC=$O(@AUDGREF@(FILENUM,REC),-1) ; REC=0
- . E  S RECDATA=$$GET1^DIQ(46.4,+Y,.03) I $TR($G(@AUDGREF@(FILENUM,REC,0)),U,"%")'=RECDATA D DBEMAIL^DGAUDIT1("NEWAUDEX0^DGAUDIT1") ;S REC=0
- . F  S REC=$O(@AUDGREF@(FILENUM,REC)) Q:'REC!$G(DGAUDSTOP)!'$G(DGAUDSHUT)!$G(DGABORT)  D
- . . S CNTREC=CNTREC+($$FMAUD(FILENUM,REC)>0)
- . . K DIC S DIC="^DGAUDIT1(",X=FILENUM D ^DIC
- . . K DIE,DR,DA S DIE=46.4,DA=+Y,DR=".02///"_REC_";.03///"_$TR($G(@AUDGREF@(FILENUM,REC,0)),U,"%") D ^DIE
- . . I $$PENDING>(DGAUDMAX/4) D EXPORT3^DGAUDIT(.DGABORT)  ; If queue is more than 25% full, clear it out by sending all queued records
- . . S:$$FROZEN^DGAUDIT(70) DGABORT=1   ; Queue should be empty now - if queue remains more than 70% full, there's a problem.
+ . . K DIC S DIC="^DGAUDIT1(",DIC(0)="",DIC("DR")=".02///0;.04///"_$$NOW^XLFDT,X=FILENUM D FILE^DICN
+ . ; Y now contains the IEN of DG AUDIT EXPORT, whether newly created or not.
+ . S EXPRTIEN=+Y S REC=+$$GET1^DIQ(46.4,EXPRTIEN,.02) S:'REC REC=$O(@AUDGREF@(FILENUM,+LASTDIA),-1) S:'REC REC=LASTDIA
+ . ; If the REC is not in the AUDIT file, reset the REC to the next-to-last IEN in the AUDIT file.
+ . I '$D(@AUDGREF@(FILENUM,+REC,0)) S REC=$O(@AUDGREF@(FILENUM,+LASTDIA),-1) Q:'REC
+ . ; If starting record isn't already set to the last record in ^DIA, and the record's audit date is prior to the switch date, reset REC to last IEN in the AUDIT file.
+ . I REC'=LASTDIA S RECDATA=$G(@AUDGREF@(FILENUM,REC,0)),RECDATE=$P(RECDATA,"^",2),SWITCHDT=$P($G(^DGAUDIT1(EXPRTIEN,0)),"^",4) D  Q:'REC
+ .. I SWITCHDT'?7N.E S SWITCHDT=$$NOW^XLFDT N DGFDA,DGFILERR S DGFDA(46.4,EXPRTIEN_",",.04)=SWITCHDT D FILE^DIE(,"DGFDA","DGFILERR")
+ .. Q:RECDATE>SWITCHDT                                                              ; Record's audit date is after send switch date, use this record
+ .. S RECDATE=0 F  Q:$G(RECDATE)  S REC=$O(^DIA(FILENUM,REC)) Q:'REC  D  Q:'REC     ; Find next audit record
+ ... S RECDATA=$G(@AUDGREF@(FILENUM,REC,0)),RECDATE=$P(RECDATA,"^",2)
+ ... I SWITCHDT?7N.E,(RECDATE<SWITCHDT) S RECDATE="" Q                              ; Check audit date, quit and move to next record if before send switch date
+ ... S REC=$O(^DIA(FILENUM,REC),-1)                                                 ; Found audit date>send switch date, set REC=previous record ($O will start with this record)
+ . F  S REC=$O(@AUDGREF@(FILENUM,REC)) Q:'REC!$G(DGAUDSTOP)!'$G(DGAUDSHUT)!$G(DGABORT)!(REC>LASTDIA)  D
+ .. S DGAUDSHUT=$$GET1^DIQ(46.5,1,.02,"I")                ; Check send switch. NEWed in DGAUDIT
+ .. S CNTREC=CNTREC+($$FMAUD(FILENUM,REC)>0)
+ .. K DIC S DIC="^DGAUDIT1(",X=FILENUM D ^DIC
+ .. K DIE,DR,DA S DIE=46.4,DA=+Y,DR=".02///"_REC_";.03///"_$TR($G(@AUDGREF@(FILENUM,REC,0)),U,"%") D ^DIE
+ .. I $$PENDING>(DGAUDMAX/4) D EXPORT3^DGAUDIT(.DGABORT)  ; If queue is more than 25% full, clear it out by sending all queued records
+ .. S:$$FROZEN^DGAUDIT(70) DGABORT=1   ; Queue should be empty now - if queue remains more than 70% full, there's a problem.
  . I DGDEBUGON D
- . . D DBEMAIL("NEWAUDEX^DGAUDIT1")
- . . S DGDEBUGON=0
- . . D EN^XPAR("SYS","DG VAS DEBUGGING FLAG",1,DGDEBUGON) ; Turn debug mode off. ; Changed XPAR names from VSRA to VAS 3/17/21
+ .. D DBEMAIL("NEWAUDEX^DGAUDIT1")
+ .. S DGDEBUGON=0
+ .. D EN^XPAR("SYS","DG VAS DEBUGGING FLAG",1,DGDEBUGON)  ; Turn debug mode off. ; Changed XPAR names from VSRA to VAS 3/17/21
  . I $$PENDING>+$G(DGBATSIZE) D EXPORT3^DGAUDIT(.DGABORT) ; Clear out queue by sending all records for file FILENUM from ^DIA
  . S:$$FROZEN^DGAUDIT(70) DGABORT=1   ; Queue should be empty now - if queue remains more than 70% full, there's a problem.
  L -^DGAUDIT1(0)
  Q
  ;
 FMAUD(FILENUM,AUDIEN) ; Send the data for a given AUDIT (#1.1) record
- N AUDARR,JSON,C,DA,DATETIME,DIA,DIC,DIQ,DR,ERR,FILEDATA,N,X,DGVARR,DGVDATA,DGVDFN,DGVDUZ,DGVREF,DGVMSG,DGVOFFN,DGVINST,DGAUDSTANUM,DGMVI
+ N AUDARR,JSON,C,DA,DATETIME,DIA,DIC,DIQ,DR,ERR,FILEDATA,N,X,DGVARR,DGVDATA,DGVDFN,DGVDUZ,DGVREF,DGVMSG,DGVOFFN,DGVINST,DGAUDSTANUM,DGMVI,DGCTRL,DCCI
  S DIA=FILENUM ; This is a special variable used for accessing AUDIT entries
  S DIC="^DIA(DIA,",DA=AUDIEN,DIQ="DGVDATA"
  ; Get the fields for which we want both Internal and External values
  S DIQ(0)="IEN",DR=".02;.04;4.1"
  D EN^DIQ1
  I '$D(DGVDATA) Q -1
+ ;
  S DGVREF=$NA(@$Q(DGVDATA),2)
  S DIQ(0)="N" ; DICMX allows the lookup on Field 2.14 without <UNDEFINED>
  S DR=".01;.03;.05;.06;1;1.1;2;2.1;2.2;2.9;3;3.1;3.2;4.2"
  D EN^DIQ1
+ F DCCI=0:1:31 S DGCTRL=$G(DGCTRL)_$c(DCCI)  ; Build string of non-printable control characters
+ F DCCI=127:1:159 S DGCTRL=$G(DGCTRL)_$c(DCCI)
+ ;
  ; If the AUDIT File can't identify the Patient,
  ; Then see if the Field being changed is the .01 Field and has an Old Value but a blank New Value
  ; and the Field Type is a Pointer to the PATIENT File (#2) or the PATIENT/IHS File (#9000001),
@@ -94,39 +108,39 @@ FMAUD(FILENUM,AUDIEN) ; Send the data for a given AUDIT (#1.1) record
  S @DGVARR@("RequestType")=$S($G(@DGVREF@(.05))="Added Record":"CREATE",$G(@DGVREF@(.03))=.01&($G(@DGVREF@(3))="<deleted>"):"DELETE",1:"UPDATE")
  S @DGVARR@("SchemaType")="FMAUDIT"
  S DGVARR=$NA(AUDARR("data","HEADER","Patient"))
- S @DGVARR@("DFN")=DGVDFN
+ S @DGVARR@("DFN")=$TR(DGVDFN,DGCTRL)
  S DGMVI=$$GETICN^MPIF001(DGVDFN),DGMVI=$S(DGMVI>0:DGMVI,1:"")
- S @DGVARR@("MVI")=DGMVI
- S @DGVARR@("PatientName")=$$GET1^DIQ(2,DGVDFN,.01)
- S @DGVARR@("SSN")=$$GET1^DIQ(2,DGVDFN,.09)
- S @DGVARR@("INITPLUS4")=$$GET1^DIQ(2,DGVDFN,.0905)
- S @DGVARR@("DOB")=$$FMTHL7^XLFDT($$GET1^DIQ(2,DGVDFN,.03,"I"))
+ S @DGVARR@("MVI")=$TR(DGMVI,DGCTRL)
+ S @DGVARR@("PatientName")=$TR($$GET1^DIQ(2,DGVDFN,.01),DGCTRL)
+ S @DGVARR@("SSN")=$TR($$GET1^DIQ(2,DGVDFN,.09),DGCTRL)
+ S @DGVARR@("INITPLUS4")=$TR($$GET1^DIQ(2,DGVDFN,.0905),DGCTRL)
+ S @DGVARR@("DOB")=$TR($$FMTHL7^XLFDT($$GET1^DIQ(2,DGVDFN,.03,"I")),DGCTRL)
  ;
  S DGVARR=$NA(AUDARR("data","HEADER","User"))
- S (DGVDUZ,@DGVARR@("DUZ"))=$G(@DGVREF@(.04,"I"))
- S @DGVARR@("UID")=$$GET1^DIQ(200,$G(@DGVREF@(.04,"I")),205.4)
- S @DGVARR@("UserName")=$G(@DGVREF@(.04,"E"))
- S @DGVARR@("Title")=$$GET1^DIQ(200,$G(@DGVREF@(.04,"I")),8)
+ S (DGVDUZ,@DGVARR@("DUZ"))=$TR($G(@DGVREF@(.04,"I")),DGCTRL)
+ S @DGVARR@("UID")=$TR($$GET1^DIQ(200,$G(@DGVREF@(.04,"I")),205.4),DGCTRL)
+ S @DGVARR@("UserName")=$TR($G(@DGVREF@(.04,"E")),DGCTRL)
+ S @DGVARR@("Title")=$TR($$GET1^DIQ(200,$G(@DGVREF@(.04,"I")),8),DGCTRL)
  ;
  S DGVARR=$NA(AUDARR("data","HEADER","Location"))
  S:DGVDUZ'="" DGVINST=$O(^VA(200,DGVDUZ,2,"AX1",1,"")) ; Get User's Default Division
  S:$G(DGVINST)="" DGVINST=$$GET1^DIQ(8989.3,1,217,"I") ; Default Institution
- S DGVOFFN=$$GET1^DIQ(4,DGVINST,100) ; Official VA Name
- S @DGVARR@("Site")=$S(DGVOFFN'="":DGVOFFN,1:$$GET1^DIQ(8989.3,1,217)) ; External value of the Default Institution
- S @DGVARR@("StationNumber")=$$GET1^DIQ(4,DGVINST,99) ; Station Number for the Default Institution
+ S DGVOFFN=$TR($$GET1^DIQ(4,DGVINST,100),DGCTRL) ; Official VA Name
+ S @DGVARR@("Site")=$S(DGVOFFN'="":$TR(DGVOFFN,DGCTRL),1:$TR($$GET1^DIQ(8989.3,1,217),DGCTRL)) ; External value of the Default Institution
+ S @DGVARR@("StationNumber")=$TR($$GET1^DIQ(4,DGVINST,99),DGCTRL) ; Station Number for the Default Institution
  ;
  S DGVARR=$NA(AUDARR("data","SCHEMA"))
  S @DGVARR@("FILE NUMBER")=FILENUM
  D FILE^DID(FILENUM,,"NAME","FILEDATA")
  S @DGVARR@("FILE NAME")=$G(FILEDATA("NAME"),"null")
  ; These are fields supplied by the AUDIT Data Dictionary (#1.1) that we have chosen to send.
- S @DGVARR@("RECORD ADDED")=$G(@DGVREF@(.05),"null")
- S @DGVARR@("ACCESSED")=$G(@DGVREF@(.06),"null")
- S @DGVARR@("FIELD NAME")=$G(@DGVREF@(1.1),"null")
- S @DGVARR@("OLD VALUE")=$G(@DGVREF@(2),"null")
- S @DGVARR@("NEW VALUE")=$G(@DGVREF@(3),"null")
- S @DGVARR@("MENU OPTION USED")=$G(@DGVREF@(4.1,"E"),"null")
- S @DGVARR@("PROTOCOL or OPTION USED")=$G(@DGVREF@(4.2),"null")
+ S @DGVARR@("RECORD ADDED")=$TR($G(@DGVREF@(.05),"null"),DGCTRL)
+ S @DGVARR@("ACCESSED")=$TR($G(@DGVREF@(.06),"null"),DGCTRL)
+ S @DGVARR@("FIELD NAME")=$TR($G(@DGVREF@(1.1),"null"),DGCTRL)
+ S @DGVARR@("OLD VALUE")=$TR($G(@DGVREF@(2),"null"),DGCTRL)
+ S @DGVARR@("NEW VALUE")=$TR($G(@DGVREF@(3),"null"),DGCTRL)
+ S @DGVARR@("MENU OPTION USED")=$TR($G(@DGVREF@(4.1,"E"),"null"),DGCTRL)
+ S @DGVARR@("PROTOCOL or OPTION USED")=$TR($G(@DGVREF@(4.2),"null"),DGCTRL)
  ;
  D PAYLOAD(.JSON,.AUDARR,DGVARR,FILENUM,AUDIEN)
  Q 1
@@ -250,15 +264,18 @@ GETTEXT(ERRARRAY) ;
 ERRSPMSG(DGRESPERR,DGRESPETXT) ; 
  ; Input : DGRESPERR (Required) - response error from Post call
  ; Return: response code/txt (ex: DGERR(400) from Init)_response code/msg (ex: ADDRVAL###)
- N DGERRCODE S DGERRCODE=DGRESPERR.code
+ N DGERRCODE,DGEMSG
+ S DGERRCODE=DGRESPERR.code
  DO ERR2ARR^XOBWLIB(.DGRESPERR,.DGRESPETXT)
  ; Example:
  ;  S DGRESPETXT("errorType")="HTTP"
  ;  S DGRESPETXT("statusLine")="HTTP/1.1 504 Gateway Timeout"
  ;  S DGRESPETXT("text")=1
  ;  S DGRESPETXT("text",1)={"message":"Unable to parse data. Not JSON format"}
- I '$D(DGERR(DGERRCODE)) Q DGERRCODE_" VAS Service Not Available."
- E  Q DGERR(DGERRCODE)
+ S DGEMSG=$G(DGRESPETXT("text",1))
+ I DGEMSG="" S DGEMSG=DGRESPETXT("statusLine")
+ S DGERR(DGERRCODE)=DGERRCODE_$S($L(DGEMSG)>1:DGEMSG,1:" VAS Service Error.")
+ Q DGERR(DGERRCODE)
  ;
 PENDING() ; Return number of entries in queue
  N DGQIEN,DGQCNT
@@ -289,15 +306,9 @@ GENERR(DGAUDERR,DGALTSUB) ; General Error, DGAUDERR specific text
  D SNDMSG^DGAUDIT(.DGAUDER2,,$G(DGALTSUB)) K DGAUDERR,DGAUDER2
  Q
  ;
-PRGEXBAT ; Delete old batches from ^XTMP
- N XTMPNODE
- S XTMPNODE="DGAUDIT_BATCH;" F  S XTMPNODE=$O(^XTMP(XTMPNODE)) Q:XTMPNODE'["DGAUDIT_BATCH;"  D
- .K ^XTMP(XTMPNODE)
- Q
- ;
 BADJSON(DGAUDCNT,DGAUDKPX) ; Purge bad JSON, send message
  N DGERR,DGXNODE S DGERR=1
- S DGERR(DGERR)=" An audit record with missing JSON data was purged from the",DGERR=DGERR+1
+ S DGERR(DGERR)=" An audit record with missing or invalid JSON data was purged from the",DGERR=DGERR+1
  S DGERR(DGERR)=" VAS queue. See ^XTMP(""DGAUDIT_EXCEPTION;"_$$NOW^XLFDT_"."_DGAUDCNT_"""",DGERR=DGERR+1
  S DGERR(DGERR)=" for more information. ",DGERR=DGERR+1
  S DGERR(DGERR)=" Header information: ",DGERR=DGERR+1
@@ -306,7 +317,7 @@ BADJSON(DGAUDCNT,DGAUDKPX) ; Purge bad JSON, send message
  ; DGAUDKPX = Days to keep exception JSON in ^XTMP : "DG VAS DAYS TO KEEP EXCEPTIONS" parameter
  S DGAUDKPX=$S($G(DGAUDKPX):DGAUDKPX,1:3)
  S DGXNODE="DGAUDIT_EXCEPTION;"_$$NOW^XLFDT_"."_DGAUDCNT
- S ^XTMP(DGXNODE,0)=$$FMADD^XLFDT($$DT^XLFDT(),DGAUDKPX)_"^"_$$DT^XLFDT()_"^VAS Server Exceptions"
+ S ^XTMP(DGXNODE,0)=$$FMADD^XLFDT($$DT^XLFDT(),DGAUDKPX)_"^"_$$DT^XLFDT()_"^VAS Server Exceptions: Invalid JSON"
  S ^XTMP(DGXNODE,0,0)=$G(^DGAUDIT(DGAUDCNT,0))
  S ^XTMP(DGXNODE,0,1)=$G(^DGAUDIT(DGAUDCNT,1))
  ; Delete Record Exceptions From ^DGAUDIT

@@ -1,7 +1,8 @@
-SDECAR ;ALB/SAT,MGD,KML,BLB,LAB - VISTA SCHEDULING RPCS ;Jan 20, 2023
- ;;5.3;Scheduling;**627,642,671,745,792,797,805,815,833,837**;Aug 13, 1993;Build 4
+SDECAR ;ALB/SAT,MGD,KML,BLB,LAB - VISTA SCHEDULING RPCS ;Apr 21, 2023
+ ;;5.3;Scheduling;**627,642,671,745,792,797,805,815,833,837,843**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
+ ; Reference to OP^XQCHK in ICR #10078
  Q
  ;
 ARCLOSE(RET,INP) ;Appointment Request Close
@@ -13,10 +14,11 @@ ARCLOSE(RET,INP) ;Appointment Request Close
  ;     INP(2) - Disposition
  ;     INP(3) - User Id - Pointer to NEW PERSON file
  ;     INP(4) - Date Dispositioned in external form
- N MI,ARDISP,ARDISPBY,ARDISPDT,ARFDA,ARIEN,ARMSG,ARRET,POP
+ N MI,ARDISP,ARDISPBY,ARDISPDT,ARFDA,ARIEN,ARMSG,ARRET,POP,XQOPT
  S RET=$G(INP(1))_$C(30)
  S POP=0
- D CHECKLOCK(.INP,.RET) Q:POP
+ D OP^XQCHK
+ D:$P($G(XQOPT),U)'="SD RECEIVE OR" CHECKLOCK(.INP,.RET) Q:POP
  ;validate IEN
  S ARIEN=$G(INP(1)) I ARIEN="" S RET="-1^Missing IEN"_$C(30,31) Q
  ;validate DISPOSITION

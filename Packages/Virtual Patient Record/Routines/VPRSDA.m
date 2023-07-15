@@ -1,5 +1,5 @@
 VPRSDA ;SLC/MKB -- SDA utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,16,20,26,28,29,30**;Sep 01, 2011;Build 9
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,16,20,26,28,29,30,31**;Sep 01, 2011;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -11,16 +11,12 @@ VPRSDA ;SLC/MKB -- SDA utilities ;10/25/18  15:29
  ; DIQ                           2056
  ; ETSLNC                        6731
  ; ETSRXN                        6758
- ; GMRCGUIB                      2980
  ; GMRVUT0, ^UTILITY($J          1446
  ; GMVGETVT                      5047
  ; GMVUTL                        5046
  ; ICPTCOD                       1995
  ; LEXTRAN                       4912
- ; RMIMRP                        4745
- ; TIULQ                         2693
  ; VASITE                       10112
- ; WVRPCVPR, ^TMP("WVPREGST"     7199
  ; XLFNAME                       3065
  ; XUAF4                         2171
  ; XUPARAM                       2541
@@ -165,26 +161,9 @@ DEL1 ; -- ID Action for Delete entities, returns VPR0=data
  . S VST=$P($G(^XTMP("VPR-"_SEQ,DIEN)),U,5) S:VST VPR0="^^"_VST
  Q
  ;
- ;
-CP1(IEN) ; -- get MD nodes for procedure [ID Action], returns:
- ; VPRCP = ^TMP("MDHSP",$J,I)
- ; VPRCN = ^GMR(123,consult,0)
- ; VPRTIU(field#,"I") = TIU data field
- I '$D(^TMP("MDHSP",$J)) D
- . S:'DFN DFN=+$$GET1^DIQ(702,IEN,.01,"I")
- . N DLIST D CPROCS^VPRSDAQ
- S I=+$G(^TMP("MDHSP",$J,"IEN",IEN)),VPRCP=$G(^TMP("MDHSP",$J,I))
- I VPRCP="" S DDEOUT=1 Q
- ; undo date formatting
- N X,Y,%DT,VPRD
- S X=$P(VPRCP,U,6) I $L(X) S %DT="STX" D ^%DT S:Y>0 $P(VPRCP,U,6)=Y
- ; get supporting data from Consult, TIU note
- S X=+$P(VPRCP,U,13) I X D  K VPRD
- . D DOCLIST^GMRCGUIB(.VPRD,X) S VPRCN=$G(VPRD(0)) M VPRCN=VPRD(50)
- S X=+$P(VPRCP,U,14) I X D  K VPRD
- . D EXTRACT^TIULQ(X,"VPRD",,".03;.05;1202;1211;1212",,,"I")
- . M VPRTIU=VPRD(X)
+NOQ ; -- no query
  Q
+ ;
  ;
 VIT1(IEN) ; -- get info for one Vital measurement
  ; returns VPRV array, VPRGMV=VPRV(0), VPRANGE, VPRTYPE to entity
@@ -218,45 +197,3 @@ VITCODE(IEN,SFN) ; -- return [first] code for vital type
  S IENS=$O(VPRC(SFN_1,""))
  S Y=$S($L(IENS):$G(VPRC(SFN_1,IENS,.01,"I")),1:"")
  Q Y
- ;
-FIM1(IEN) ; -- get info for one set of measurements
- ; Returns VPRSITE, VPRM arrays to entity
- I '$D(VPRSITE) D PRM^RMIMRP(.VPRSITE) I '$O(VPRSITE(1)) S DDEOUT=1 Q
- D GC^RMIMRP(.VPRM,IEN)
- ; S:'$G(DFN) ??
- N NOTE S NOTE=+$P($G(VPRM(1)),U,12) K VPRTIU
- D EXTRACT^TIULQ(NOTE,"VPRTIU",,"1201;1202;1302",,,"I")
- M VPRM("TIU")=VPRTIU(NOTE)
- Q
- ;
-FIMS ; -- get DLIST(#)=name^value of each score
- ; Returns VPRFIMS = Assessment type(s) for ProblemDetail
- N I,J,N,X,NAMES,SCORES,SUM,TYPE
- S N=0,VPRFIMS=""
- S NAMES="Eating^Grooming^Bathing^Dressing - Upper Body^Dressing - Lower Body^Toileting^Bladder Management^Bowel Management^Bed, Chair, Wheelchair^Toilet^Tub, Shower^Walk/Wheelchair^Stairs"
- S NAMES=NAMES_"^Comprehension^Expression^Social Interaction^Problem Solving^Memory"
- S NAMES=NAMES_"^walkMode^comprehendMode^expressMode^Z"
- F I=5:1:9 I VPRM(I)'?1."^" D  ;has data
- . S SCORES=VPRM(I),SUM=$$TOTAL(SCORES) Q:'SUM
- . S TYPE=$S(I=5:"Admission",I=6:"Discharge",I=7:"Interim",I=8:"Follow up",1:"Goals")
- . S VPRFIMS=VPRFIMS_$S(VPRFIMS'="":", ",1:"")_TYPE
- . ; add score set to list
- . S N=N+1,DLIST(N)="Assessment Type^"_TYPE
- . F J=1:1:21 S X=$P(SCORES,U,J),N=N+1,DLIST(N)=$P(NAMES,U,J)_U_X
- . S N=N+1,DLIST(N)="FIM Total^"_SUM
- S:$L(VPRFIMS) VPRFIMS=VPRFIMS_" Assessment"_$S(VPRFIMS[",":"s",1:"")
- Q
- ;
-TOTAL(NODE) ; -- Return total of scores, or "" if incomplete
- N SUM,I,X
- S SUM=0 F I=1:1:18 S X=$P(NODE,U,I) S:X SUM=SUM+X I X<1 S SUM="" Q
- Q SUM
- ;
-WVPL1(IEN) ; -- set up pregnancy API array (IEN will be DFN)
- ; Returns VPRPREG array to entity
- I $G(IEN)<1 S DDEOUT=1 Q
- D:'$D(^TMP("WVPREGST",$J,"BASELINE")) BASELINE^WVRPCVPR(IEN)
- I '$D(^TMP("WVPREGST",$J,"BASELINE")) S DDEOUT=1 Q
- M VPRPREG=^TMP("WVPREGST",$J,"BASELINE")
- S DFN=IEN,IEN=$G(^TMP("WVPREGST",$J,"BASELINE","EXTERNAL ID"))
- Q

@@ -1,5 +1,5 @@
-EDPBCF ;SLC/KCM - Display Board Configuration
- ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
+EDPBCF ;SLC/KCM - Display Board Configuration ; 3/29/23 12:17pm
+ ;;2.0;EMERGENCY DEPARTMENT;**6,23**;Feb 24, 2012;Build 4
  ;
 LOAD(AREA) ; Load General Configuration for an Area
  N I,NODE
@@ -42,6 +42,7 @@ LOADBRD(AREA,IEN) ; Load Named Board Spec
  S:'IEN IEN=$O(^EDPB(231.9,AREA,4,0)) Q:'IEN
  ;
  D READL^EDPBLK(AREA,"board",.TOKEN)  ; read lock the board config
+ D LOAD^EDPBPM(AREA) ;Load Parameters *23
  D XML^EDPX("<boardToken>"_TOKEN_"</boardToken>")
  D BRDLST(AREA)
  S X("boardID")=IEN,X("boardName")=$P(^EDPB(231.9,AREA,4,IEN,0),U)
@@ -112,10 +113,12 @@ UPDBRD(AREA,EDPIEN,NAME,SPEC,MSG) ; Add/Update a Spec
  . I $D(DIERR) S MSG="save board spec failed: "_$G(EDPIEN)
  D CLEAN^DILF
  Q
+ ;bwf - 3/1/2013 removed below lines from column list per request from Dr. T
+ ;;Patient X9999^@last4^Patient
+ ;;Alerts^@alerts^Alerts
 COLUMNS ;; Available Columns
  ;;Room / Bed^@bedNm^Room
  ;;Patient Name^@ptNm^Patient
- ;;Patient X9999^@last4^Patient
  ;;Visit Created^@visit^Visit
  ;;Clinic^@clinicNm^Clinic
  ;;Complaint^@complaint^Complaint
@@ -130,4 +133,6 @@ COLUMNS ;; Available Columns
  ;;New (Unverified) Orders^@ordNew^New
  ;;Total Minutes^@emins^E Mins
  ;;Minutes at Location^@lmins^Mins
+ ;;Disposition^@disposition^Disposition
+ ;;Admittance Delay^@amins^Adm Delay
  ;;zzzzz

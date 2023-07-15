@@ -1,5 +1,5 @@
-XPDIB ;SFISC/RSD - Backup installed Package ; Oct 19, 2022@08:32:56
- ;;8.0;KERNEL;**10,58,108,178,713,738,750,755,768,778**;Jul 10, 1995;Build 4
+XPDIB ;SFISC/RSD - Backup installed Package ; Mar 20, 2023@14:49:13
+ ;;8.0;KERNEL;**10,58,108,178,713,738,750,755,768,778,785**;Jul 10, 1995;Build 5
  ;Per VHA Directive 2004-038, this routine should not be modified.
 EN ;
  ;p713 - added support to create Build from Transport Global to create a backup
@@ -159,8 +159,8 @@ ROUTINE ;Packman msg
 KRN(FILE,XPDY) ;FILE=file #, XPDY=^XPD(9.6,XPDA,"KRN",XPDFILE,"NM",XPDOLDA,0)
  N DA,FGR,X
  S X=$P(XPDY,U)
- ;$P(XPDY,U,2) is file # for FileMan templates, reset name in Y0 before getting DA
- S:$P(XPDY,U,2) $P(Y0,U)=$P(Y0,"    FILE #")
+ ;$P(XPDY,U,2) is file # for FileMan templates, reset name in XPDY before getting DA
+ S:$P(XPDY,U,2) $P(XPDY,U)=$P(XPDY,"    FILE #") ;p785
  S FGR=$$FILE^XPDV(FILE),DA=$$ENTRY^XPDV(XPDY) ;DA=ien or 0 if doesn't exists
  ;If X exists, set to 0 - send, else set to 1 - delete
  S $P(XPDY,U,3)='DA

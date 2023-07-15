@@ -1,5 +1,5 @@
-EDPBPM ;SLC/KCM - Parameters for Tracking Area
- ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
+EDPBPM ;SLC/KCM - Parameters for Tracking Area ; 4/18/23 8:00am
+ ;;2.0;EMERGENCY DEPARTMENT;**23**;Feb 24, 2012;Build 4
  ;
 LOAD(AREA) ; load parameters for area
  N X,X1,TOKEN
@@ -17,7 +17,11 @@ LOAD(AREA) ; load parameters for area
  S X("clinics")=$P(X1,U,9)
  S X("ambulance")=$P(X1,U,11)
  S X("dfltroom")=$P(X1,U,12)
- D XML^EDPX($$XMLA^EDPX("params",.X))
+ D XML^EDPX($$XMLA^EDPX("params",.X,""))
+ D XML^EDPX("<waittxt1><![CDATA["_$G(^EDPB(231.9,AREA,232))_"]]></waittxt1>")
+ D XML^EDPX("<waittxt2><![CDATA["_$G(^EDPB(231.9,AREA,233))_"]]></waittxt2>")
+ D XML^EDPX("<waittxtupd><![CDATA["_$G(^EDPB(231.9,AREA,234))_"]]></waittxtupd>")
+ D XML^EDPX("</params>")
  D READU^EDPBLK(AREA,"param",.TOKEN)  ; read param config -- UNLOCK
  Q
 SAVE(AREA,PARAM) ; save updated parameters
@@ -44,12 +48,16 @@ SAVE(AREA,PARAM) ; save updated parameters
  S FDA(231.9,AREA,1.9)=FLD("clinics")
  S FDA(231.9,AREA,1.11)=FLD("ambulance")
  S FDA(231.9,AREA,1.12)=FLD("dfltroom")
+ S FDA(231.9,AREA,2)=FLD("waittxt1")
+ S FDA(231.9,AREA,5)=FLD("waittxt2")
+ S FDA(231.9,AREA,6)=FLD("waittxtupd")
  D FILE^DIE("","FDA","ERR")
  D SAVEU^EDPBLK(+AREA,"param",.TOKEN)         ; save param config -- UNLOCK
  ;
  I $D(DIERR) D SAVERR^EDPX("fail",$G(ERR("DIERR",1,"TEXT",1))) Q
  D XML^EDPX("<save status='ok' />")
  D LOAD(+AREA)
+ K ERR,REC
  Q
 TZSAVE(AREA,TZDIFF) ; save time zone difference in minutes
  N FDA,FDAIEN,DIERR

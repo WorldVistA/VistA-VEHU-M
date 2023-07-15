@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: FILE
 ZWR
-^DIC(0)="FILE^1^19200.112^2868"
+^DIC(0)="FILE^1^19200.112^2867"
 ^DIC(.11,0)="INDEX^.11"
 ^DIC(.11,0,"DD")="^"
 ^DIC(.11,0,"DEL")="^"
@@ -7665,7 +7665,7 @@ ZWR
 ^DIC(70,"%D",101,0)="  RA OUTSIDE LIST     RA OUTSIDE LIST"
 ^DIC(70,"%D",102,0)=" "
 ^DIC(70,"%D",103,0)="Also, the modification of the other sort templates is not recommended."
-^DIC(70,"%MSC")=3220612.135625
+^DIC(70,"%MSC")=3230714.234806
 ^DIC(70.2,0)="NUC MED EXAM DATA^70.2PIA"
 ^DIC(70.2,0,"DD")="@"
 ^DIC(70.2,0,"GL")="^RADPTN("
@@ -8172,7 +8172,7 @@ ZWR
 ^DIC(73.2,"%D",12,0)="PROCEDURE TYPES nationally for performance monitors and performance"
 ^DIC(73.2,"%D",13,0)="measures, because not all sites are assigning the same Type of Imaging to"
 ^DIC(73.2,"%D",14,0)="the same CPT Code via the RAD/NUC MED PROCEDURES file (#71)."
-^DIC(73.2,"%MSC")=3220918.135147
+^DIC(73.2,"%MSC")=3230714.234817
 ^DIC(74,0)="RAD/NUC MED REPORTS^74I"
 ^DIC(74,0,"DD")="#"
 ^DIC(74,0,"DEL")="#"
@@ -13151,7 +13151,7 @@ ZWR
 ^DIC(100,"%D",0)="^^2^2^2950424^^^^"
 ^DIC(100,"%D",1,0)="This is the file of orders/requisitions made for any package through the"
 ^DIC(100,"%D",2,0)="Order Entry Option (OR)."
-^DIC(100,"%MSC")=3220624.203821
+^DIC(100,"%MSC")=3230714.233117
 ^DIC(100.01,0)="ORDER STATUS^100.01I"
 ^DIC(100.01,0,"GL")="^ORD(100.01,"
 ^DIC(100.01,0,"GL")="^ORD(100.01,"
@@ -16537,7 +16537,7 @@ ZWR
 ^DIC(160,"%D",1,0)="Demographic and followup data concerning Oncology patients is stored"
 ^DIC(160,"%D",2,0)="in this file.  (Tumor-related data is stored in the Primary File)."
 ^DIC(160,"%D",3,0)="Data is NOT exported with this file, but it is populated on site."
-^DIC(160,"%MSC")=3220624.225031
+^DIC(160,"%MSC")=3230714.233913
 ^DIC(160.1,0)="ONCOLOGY SITE PARAMETERS^160.1I"
 ^DIC(160.1,0,"GL")="^ONCO(160.1,"
 ^DIC(160.1,0,"GL")="^ONCO(160.1,"
@@ -16549,7 +16549,7 @@ ZWR
 ^DIC(160.1,"%D",2,0)="for the followup system to work, and that will enable ACOS reporting."
 ^DIC(160.1,"%D",3,0)="Data is input from the facility by the user and should be the first file"
 ^DIC(160.1,"%D",4,0)="that is populated before any other data is collected."
-^DIC(160.1,"%MSC")=3220606.221735
+^DIC(160.1,"%MSC")=3230714.233913
 ^DIC(160.12,0)="TYPE OF RECURRENCE^160.12"
 ^DIC(160.12,0,"AUDIT")="@"
 ^DIC(160.12,0,"DD")="@"
@@ -16624,7 +16624,7 @@ ZWR
 ^DIC(160.16,0,"WR")="@"
 ^DIC(160.16,"%D",0)="^^1^1^2990419^^"
 ^DIC(160.16,"%D",1,0)="This file contains the ONCOLOGY Data Extract Formats."
-^DIC(160.16,"%MSC")=3221126.160733
+^DIC(160.16,"%MSC")=3230714.233913
 ^DIC(160.17,0)="ONCOLOGY PCE EXTRACT FORMAT^160.17"
 ^DIC(160.17,0,"AUDIT")="@"
 ^DIC(160.17,0,"DD")="@"
@@ -16663,7 +16663,7 @@ ZWR
 ^DIC(160.2,"%D",2,0)="instructions for procedures that must be followed such as making a"
 ^DIC(160.2,"%D",3,0)="disk for ACOS. It comes with at least one form, but can be added to by"
 ^DIC(160.2,"%D",4,0)="the IRM as needed, and used in later versions of the package."
-^DIC(160.2,"%MSC")=3220624.225031
+^DIC(160.2,"%MSC")=3230714.233913
 ^DIC(160.3,0)="PRIMARY PAYER AT DIAGNOSIS^160.3"
 ^DIC(160.3,0,"AUDIT")="@"
 ^DIC(160.3,0,"DD")="@"
@@ -17817,7 +17817,7 @@ ZWR
 ^DIC(164.44,"%D",1,0)="This file contains the Grade codes for the GRADE CLINICAL (#24.3),"
 ^DIC(164.44,"%D",2,0)="GRADE PATHOLOGICAL (#24.4) and GRADE POST THERAPY (#24.5) fields of the"
 ^DIC(164.44,"%D",3,0)="ONCOLOGY PRIMARY (#165.5) file."
-^DIC(164.44,"%MSC")=3220624.225031
+^DIC(164.44,"%MSC")=3230714.233913
 ^DIC(164.45,0)="AJCC STAGE GROUP^164.45"
 ^DIC(164.45,0,"AUDIT")="@"
 ^DIC(164.45,0,"DD")="@"
@@ -17864,6 +17864,7 @@ ZWR
 ^DIC(164.46,"%D",4,0)=" "
 ^DIC(164.46,"%D",5,0)="This file comes with data, which overwrite the site's data.  It is not"
 ^DIC(164.46,"%D",6,0)="recommended that sites modify this file."
+^DIC(164.46,"%MSC")=3230714.233913
 ^DIC(164.47,0)="ONCOLOGY SCHEMA DISCRIMINATOR CODES^164.47"
 ^DIC(164.47,0,"AUDIT")="@"
 ^DIC(164.47,0,"DD")="@"
@@ -18104,6 +18105,7 @@ ZWR
 ^DIC(165,"%D",0)="^^2^2^2920816^^^^"
 ^DIC(165,"%D",1,0)="File for Oncology contacts. Populated by  the user, partly  automatically by"
 ^DIC(165,"%D",2,0)="Follow-up options, and by the user. Used only for patient follow-up."
+^DIC(165,"%MSC")=3230714.233913
 ^DIC(165.1,0)="FOLLOW-UP FORM LETTER^165.1I"
 ^DIC(165.1,0,"GL")="^ONCO(165.1,"
 ^DIC(165.1,0,"GL")="^ONCO(165.1,"
@@ -18160,7 +18162,7 @@ ZWR
 ^DIC(165.5,"%D",1,0)="Tumor-related data for Oncology patients is stored in this file."
 ^DIC(165.5,"%D",2,0)="(Demographic and follow-up data is in the Oncology Patient File)."
 ^DIC(165.5,"%D",3,0)="File is populated in the field by using the abstracting options."
-^DIC(165.5,"%MSC")=3221126.160734
+^DIC(165.5,"%MSC")=3230714.233913
 ^DIC(165.55,0)="CONVERSION FLAGS^165.55"
 ^DIC(165.55,0,"AUDIT")="@"
 ^DIC(165.55,0,"DD")="@"
@@ -18231,7 +18233,7 @@ ZWR
 ^DIC(165.8,"%D",1,0)="This file contains the T, N and M codes as well as the T Suffixes and"
 ^DIC(165.8,"%D",2,0)="N Suffixes and AJCC Chapter and Name for the AJCC Cancer Staging Manual"
 ^DIC(165.8,"%D",3,0)="8th Edition."
-^DIC(165.8,"%MSC")=3220624.225032
+^DIC(165.8,"%MSC")=3230714.233913
 ^DIC(165.9,0)="ONCOLOGY EOD SCHEMAS^165.9"
 ^DIC(165.9,0,"AUDIT")="@"
 ^DIC(165.9,0,"DD")="@"
@@ -18250,7 +18252,7 @@ ZWR
 ^DIC(165.9,"%D",0)="^^2^2^3190308^"
 ^DIC(165.9,"%D",1,0)="This file contains the site-specific codes and descriptions for the"
 ^DIC(165.9,"%D",2,0)="SEER EOD (Extent of Disease) data items."
-^DIC(165.9,"%MSC")=3221126.160734
+^DIC(165.9,"%MSC")=3230714.233914
 ^DIC(166,0)="CASEFINDING SOURCE^166"
 ^DIC(166,0,"AUDIT")="@"
 ^DIC(166,0,"DD")="@"
@@ -18537,7 +18539,7 @@ ZWR
 ^DIC(169.3,"%D",0)="^^2^2^3010523^"
 ^DIC(169.3,"%D",1,0)="This file contains the International Classification of Diseases for Oncology,"
 ^DIC(169.3,"%D",2,0)="Third Edition (ICD-O-3) morphology codes and code descriptions."
-^DIC(169.3,"%MSC")=3220626.120639
+^DIC(169.3,"%MSC")=3230714.233914
 ^DIC(169.99,0)="ONCOLOGY PACKAGE STATUS^169.99"
 ^DIC(169.99,0,"AUDIT")="@"
 ^DIC(169.99,0,"DD")="@"
@@ -19814,7 +19816,7 @@ ZWR
 ^DIC(231.9,"%D",2,0)="tracking software.  It also contains XML descriptions that are used by "
 ^DIC(231.9,"%D",3,0)="the client display board software to control column appearance, row "
 ^DIC(231.9,"%D",4,0)="content, and cell color."
-^DIC(231.9,"%MSC")=3181025.171409
+^DIC(231.9,"%MSC")=3230714.234414
 ^DIC(232.1,0)="EDP REPORT TEMPLATE^232.1"
 ^DIC(232.1,0,"AUDIT")="@"
 ^DIC(232.1,0,"DD")="@"
@@ -28772,7 +28774,7 @@ ZWR
 ^DIC(409.2,"%D",1,0)="This file contains the cancellation reasons to be used in the Scheduling"
 ^DIC(409.2,"%D",2,0)="Package.  The MAS SIUG determined the allowable reasons.  This file should"
 ^DIC(409.2,"%D",3,0)="not be added to or have entries deleted from it."
-^DIC(409.2,"%MSC")=3221113.204236
+^DIC(409.2,"%MSC")=3230714.233901
 ^DIC(409.3,0)="SD WAIT LIST^409.3"
 ^DIC(409.3,0,"AUDIT")="@"
 ^DIC(409.3,0,"DD")="@"
@@ -29750,7 +29752,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3230617.120452
+^DIC(409.93,"%MSC")=3230714.23385
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
@@ -44993,6 +44995,13 @@ ZWR
 ^DIC(2005.66,"%D",16,0)=" +---------------------------------------------------------------+"
 ^DIC(2005.66,"%D",17,0)=" "
 ^DIC(2005.66,"%D",18,0)="This file contains information about duplicate UIDs."
+^DIC(2005.67,0)="NEW IMAGING FILE CLEANUP LOG^2005.67"
+^DIC(2005.67,0,"GL")="^MAGV(2005.67,"
+^DIC(2005.67,0,"GL")="^MAGV(2005.67,"
+^DIC(2005.67,"%",0)="^1.005^^0"
+^DIC(2005.67,"%D",0)="^1.001^1^1^3220913^^^"
+^DIC(2005.67,"%D",1,0)="This file contains duplicate and corrupt entries from Imaging files."
+^DIC(2005.67,"%MSC")=3230714.234827
 ^DIC(2005.71,0)="IMAGING DICOM FIELDS^2005.71"
 ^DIC(2005.71,0,"AUDIT")="@"
 ^DIC(2005.71,0,"DD")="@"
@@ -53886,6 +53895,7 @@ ZWR
 ^DIC(8991.6,0,"LAYGO")="@"
 ^DIC(8991.6,0,"RD")="@"
 ^DIC(8991.6,0,"WR")="@"
+^DIC(8991.6,"%MSC")=3230714.233033
 ^DIC(8991.7,0)="XUEPCS PSDRPH AUDIT^8991.7"
 ^DIC(8991.7,0,"AUDIT")="@"
 ^DIC(8991.7,0,"DD")="@"
@@ -59603,6 +59613,7 @@ ZWR
 ^DIC("B","NETWORK LOCATION",2005.2)=""
 ^DIC("B","NETWORK SENDERS REJECTED",4.501)=""
 ^DIC("B","NETWORK TRANSACTION",4.5)=""
+^DIC("B","NEW IMAGING FILE CLEANUP LOG",2005.67)=""
 ^DIC("B","NEW PERSON",200)=""
 ^DIC("B","NEW PERSON TREATING FACILITY L",391.92)=""
 ^DIC("B","NEW RAD PROCEDURE WORKUP",71.11)=""
