@@ -1,5 +1,5 @@
 VAFHLZPD ;ALB/KCL/PHH,TDM,KUM - Create generic HL7 ZPD segment ; 8/15/08 11:42am
- ;;5.3;Registration;**94,122,160,220,247,545,564,568,677,653,688,1002,1064,1085**;Aug 13, 1993;Build 13
+ ;;5.3;Registration;**94,122,160,220,247,545,564,568,677,653,688,1002,1064,1085,1093**;Aug 13, 1993;Build 12
  ;
  ;
  ;ICRs
@@ -226,16 +226,21 @@ GETDATA(DFN,VAFSTR,ARRAY) ;Get info needed to build segment
  ; Sequence 41 - VOA Attachments Indicator - Not used - Added to make sure Seq 42 to 45 communication to ES
  I VAFSTR[41 S X="",@ARRAY@(41)=$S(X]"":X,1:HLQ)
  ;
- N VAFINDARR
- D GETS^DIQ(2,DFN,".571:.574","I","VAFINDARR")
+ ; KUM - DG*5.3*1093 - Making null value for 42, 43, 44, 45
+ I VAFSTR[42 S @ARRAY@(42)=HLQ
+ I VAFSTR[43 S @ARRAY@(43)=HLQ
+ I VAFSTR[44 S @ARRAY@(44)=HLQ
+ I VAFSTR[45 S @ARRAY@(45)=HLQ
+ ;N VAFINDARR
+ ;D GETS^DIQ(2,DFN,".571:.574","I","VAFINDARR")
  ; Sequence 42 - Indian Self Identification
- I VAFSTR[42 S X=VAFINDARR(2,DFN_",",.571,"I"),X=$S(X="Y":1,X="N":0,1:""),@ARRAY@(42)=$S(X]"":X,1:HLQ)
+ ;I VAFSTR[42 S X=VAFINDARR(2,DFN_",",.571,"I"),X=$S(X="Y":1,X="N":0,1:""),@ARRAY@(42)=$S(X]"":X,1:HLQ)
  ; Sequence 43 - Indian Attestation Date
- I VAFSTR[43 S X=VAFINDARR(2,DFN_",",.573,"I"),X1=$$HLDATE^HLFNC(X),@ARRAY@(43)=$S(X1]"":X1,1:HLQ)
+ ;I VAFSTR[43 S X=VAFINDARR(2,DFN_",",.573,"I"),X1=$$HLDATE^HLFNC(X),@ARRAY@(43)=$S(X1]"":X1,1:HLQ)
  ; Sequence 44 - Indian Start Date
- I VAFSTR[44 S X=VAFINDARR(2,DFN_",",.572,"I"),X1=$$HLDATE^HLFNC(X),@ARRAY@(44)=$S(X1]"":X1,1:HLQ)
+ ;I VAFSTR[44 S X=VAFINDARR(2,DFN_",",.572,"I"),X1=$$HLDATE^HLFNC(X),@ARRAY@(44)=$S(X1]"":X1,1:HLQ)
  ; Sequence 45 - Indian End Date
- I VAFSTR[45 S X=VAFINDARR(2,DFN_",",.574,"I"),X1=$$HLDATE^HLFNC(X),@ARRAY@(45)=$S(X1]"":X1,1:HLQ)
+ ;I VAFSTR[45 S X=VAFINDARR(2,DFN_",",.574,"I"),X1=$$HLDATE^HLFNC(X),@ARRAY@(45)=$S(X1]"":X1,1:HLQ)
  ; DG*5.3*1085
  ; Retrieve Preferred Language and Preferred Language Date/Time
  N DGDATE,DGDA,DGLANGNM,DGLANGDT,DG85IEN

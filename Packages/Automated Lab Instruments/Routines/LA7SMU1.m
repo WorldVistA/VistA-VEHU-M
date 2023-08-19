@@ -1,5 +1,5 @@
 LA7SMU1 ;DALOI/JMC - Shipping Manifest Utility (Cont'd) ;Jun 14, 2022@18:38
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**27,46,65,64,74,101**;Sep 27, 1994;Build 6
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**27,46,65,64,74,101,103**;Sep 27, 1994;Build 3
  ;
  Q
  ;
@@ -218,6 +218,25 @@ DOT(LA7CODE,LA7NCS,LA7UID,LA7628,LA7629) ; Determine ordered tests
  . . . ;Should not be null, but checking to be sure.
  . . . Q:LA7PRX=""
  . . . I LA764,$P($G(^LAB(60,LA7PRX,64)),"^")=LA764 S LA760=LA7PRX
+ . . ;LA*5.2*103 begin:
+ . . ;If a non-VistA (i.e. Quest) interface, shipping manifest has
+ . . ;not been sent and National VA Lab code also not sent, check
+ . . ;to see if vendor sent a defined Non-NLT Test Order Code.
+ . . Q:LA7629
+ . . N LA7628X
+ . . S LA7628X=$P(^LRO(68,LA7AAX,1,LA7ADX,1,LA7ANX,4,LA7TSTX,0),"^",10)
+ . . ;If this test was not sent on a shipping manifest identifier, cannot
+ . . ;determine ordered test. Status will remain at "Test shipped" on the
+ . . ;Incomplete Test Status Report.
+ . . Q:LA7628X=""
+ . . ;Adding $G just in case the manifest was deleted, which is unlikely.
+ . . S LA7629=$P($G(^LAHM(62.8,LA7628X,0)),U,2)
+ . . Q:LA7629=""
+ . . S LA7629TX=$O(^LAHM(62.9,LA7629,60,"B",LA7TSTX,"")) Q:LA7629TX=""
+ . . I LA7CODE=$P($G(^LAHM(62.9,LA7629,60,LA7629TX,5)),"^") S LA760=LA7TSTX
+ . . ;If the vendor did not send a defined Non-NLT Test Order Code, the status
+ . . ;on the Incomplete Test Status Report will remain at "Test shipped".
+ . . ;LA*5.2*103 end.
  Q LA760
  ;
 HLP62(LR62) ; Display help for collection sample/topography

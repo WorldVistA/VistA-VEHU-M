@@ -1,5 +1,5 @@
 YTQRQAD8 ;BAL/KTL - RESTful Calls to set/get MHA Note ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**199,207,202,204**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**199,207,202,204,208**;Dec 30, 1994;Build 23
  ;
  ; Reference to TIUCNSLT in ICR #5546
  ; Reference to TIUPUTU in ICR #3351
@@ -30,7 +30,8 @@ FILPNOT(ASGN,ADMIN,CONSULT,DATA,TMPYS,FRMDEL) ;File the aggregate Progress Note
  ;I '$D(^XTMP(NOD)) D SETERROR^YTQRUTL(400,"Assignment Not Found") Q 1  ;If no ^XTMP, must be only instrument
  S YSADMIN=$G(^XTMP(NOD,2,"PNOTE","ADMINS",1))
  I +YSADMIN'=0 D  ;Previously filed first admin, override incoming parameters
- . S CONSULT=$P(YSADMIN,U,2),COSIGNER=$P(YSADMIN,U,3),ADMIN=$P(YSADMIN,U)
+ . S CONSULT=$P(YSADMIN,U,2),ADMIN=$P(YSADMIN,U)
+ . I $P(YSADMIN,U,3)'="",(COSIGNER="") S COSIGNER=$P(YSADMIN,U,3)  ;Only use if main assignment cosigner not set
  I +ADMIN=0 D SETERROR^YTQRUTL(400,"No Admin for Note") Q 2
  S CNT=$O(^XTMP(NOD,2,"PNOTE","TXT",""),-1)
  M YS=^XTMP(NOD,2,"PNOTE","TXT")

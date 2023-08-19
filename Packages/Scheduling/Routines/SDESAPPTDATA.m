@@ -1,5 +1,5 @@
-SDESAPPTDATA ;ALB/TAW,BWF,MGD,RRM,ANU,LAB,DJS - VISTA Appointment data getter ;FEB 28, 2023@11:38
- ;;5.3;Scheduling;**788,814,815,820,823,827,837,838,839**;Aug 13, 1993;Build 3
+SDESAPPTDATA ;ALB/TAW,BWF,MGD,RRM,LAB,DJS,ANU - VISTA Appointment data getter ;JUNE 05, 2023@11:38
+ ;;5.3;Scheduling;**788,814,815,820,823,827,837,838,839,846**;Aug 13, 1993;Build 12
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to ^VA(200 in ICR #10060
@@ -23,7 +23,7 @@ SUMMARY(APPTDATA,IEN) ;
  N DATETIME,NUM,STATPOINTER,CLINICARY,STAT,CLINICDATA,PROV,CLINICAPPT
  K APPTDATA
  S FN=409.84,IENS=IEN_",",OVERBOOK=0
- D GETS^DIQ(FN,IENS,".01;.02;.03;.04;.05;.06;.07;.12;.13;.121;.122;.14;.16;.17;.18;.22;1;3;100","IE","APPTARY","SDMSG") ;SD,814-Added 100 for the EAS Tracking Number
+ D GETS^DIQ(FN,IENS,".01;.02;.03;.04;.05;.06;.07;.12;.13;.121;.122;.14;.16;.17;.18;.22;1;3;4;100","IE","APPTARY","SDMSG") ;SD,814-Added 100 for the EAS Tracking Number
  S RESOURCEIEN=$G(APPTARY(FN,IENS,.07,"I"))
  S CLINICIEN=$$GET1^DIQ(409.831,RESOURCEIEN,.04,"I")
  S APPTDATA("StartTime")=$G(APPTARY(FN,IENS,.01,"E"))
@@ -96,6 +96,8 @@ SUMMARY(APPTDATA,IEN) ;
  S APPTDATA("Patient","EligibilityIEN")=$$GET1^DIQ(2,SDDFN_",",.361,"I")
  S APPTDATA("Patient","Name")=$$GET1^DIQ(2,SDDFN_",",.01,"E")
  ;
+ ; patient comments
+ D GETPATCOMMENTS(.APPTDATA,IEN)
  ; provider data elements
  S PROV=$G(APPTARY(FN,IENS,.16,"I"))
  S APPTDATA("Provider","ID")=PROV
@@ -151,7 +153,7 @@ SUMMARY2(APPTDATA,IEN) ;
  I '$D(APPTDATA("CancelledByUser")) S APPTDATA("CancelledByUser",1)=""
  ;
  ; patient comments
- I $D(^SDEC(409.84,IEN,6,0)) D GETPATCOMMENTS(.APPTDATA,IEN)
+ D GETPATCOMMENTS(.APPTDATA,IEN)
  ;
  ; Resource / Clinic data elements
  S APPTDATA("ResourceIEN")=RESOURCEIEN
@@ -201,5 +203,6 @@ GETPATCOMMENTS(APPTDATA,IEN) ;
  F  S SUBIEN=$O(^SDEC(409.84,IEN,6,SUBIEN)) Q:'SUBIEN  D
  .S COUNT=COUNT+1
  .S APPTDATA("PatientComments",COUNT)=$$GET1^DIQ(409.846,SUBIEN_","_IEN_",",.01,"E")
+ I '$D(APPTDATA("PatientComments")) S APPTDATA("PatientComments",1)=""
  Q
  ;

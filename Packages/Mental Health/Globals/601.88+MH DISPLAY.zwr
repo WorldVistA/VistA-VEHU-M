@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MH DISPLAY
 ZWR
-^YTT(601.88,0)="MH DISPLAY^601.88^81372^13626"
+^YTT(601.88,0)="MH DISPLAY^601.88^81373^13627"
 ^YTT(601.88,1,0)="1^Verdana^N^N^N^12^clRed^L^0^^4^LI"
 ^YTT(601.88,42,0)="42^Arial^N^N^N^8^clWindowText^L^0"
 ^YTT(601.88,43,0)="43^Arial^N^N^N^8^clWindowText^L^7"
@@ -10185,6 +10185,7 @@ ZWR
 ^YTT(601.88,81370,0)="81370^MS Sans Serif^N^N^N^8^clWindowText^L^8^1200|||^1^RA"
 ^YTT(601.88,81371,0)="81371^MS Sans Serif^N^N^N^8^clWindowText^L^3^^0"
 ^YTT(601.88,81372,0)="81372^MS Sans Serif^N^N^N^8^clWindowText^L^2^^0"
+^YTT(601.88,81373,0)="81373^MS Sans Serif^N^N^N^8^clWindowText^L^30^NA^0^TR"
 ^YTT(601.88,82431,0)="82431^MS Sans Serif^N^N^N^10^clWindowText^L^3"
 ^YTT(601.88,82432,0)="82432^MS Sans Serif^N^N^N^10^clWindowText^L^3"
 ^YTT(601.88,82433,0)="82433^MS Sans Serif^N^N^N^10^clWindowText^L^8^662|||^2^RA"
@@ -23811,6 +23812,7 @@ ZWR
 ^YTT(601.88,"B",81370,81370)=""
 ^YTT(601.88,"B",81371,81371)=""
 ^YTT(601.88,"B",81372,81372)=""
+^YTT(601.88,"B",81373,81373)=""
 ^YTT(601.88,"B",82431,82431)=""
 ^YTT(601.88,"B",82432,82432)=""
 ^YTT(601.88,"B",82433,82433)=""
