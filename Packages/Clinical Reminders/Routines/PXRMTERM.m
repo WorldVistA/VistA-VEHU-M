@@ -1,5 +1,5 @@
 PXRMTERM ;SLC/PKR - Handle reminder terms. ;03/31/2022
- ;;2.0;CLINICAL REMINDERS;**4,6,11,18,26,47,42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**4,6,11,18,26,47,42,65**;Feb 04, 2005;Build 438
  ;
  ;=============================================
 COPY(NOCC,SDIR,TFIEVAL,DATEORDR,FINDING,FIEVAL,STF) ;Copy the NOCC date ordered

@@ -1,5 +1,5 @@
-PXAIVSTV ;ISL/JVS,PKR ISA/KWP - VALIDATE THE VISIT DATA ;11/28/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**9,15,19,74,111,116,130,124,168,211**;Aug 12, 1996;Build 340
+PXAIVSTV ;ISL/JVS,PKR ISA/KWP - VALIDATE THE VISIT DATA ;09/09/2020
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**9,15,19,74,111,116,130,124,168,211**;Aug 12, 1996;Build 454
  ;
  Q
 ERRSET ;Set the rest of the error data.
@@ -10,7 +10,8 @@ ERRSET ;Set the rest of the error data.
  ;
 VAL ;--Validate the input.
  ;If a valid Visit pointer has been input no further validation is
- ;required.
+ ;required, when this is called the Visit pointer has already been
+ ;validated.
  I $G(PXAVISIT) Q
  ;
  ;If it is a deletion then no further validation is required.
@@ -106,58 +107,59 @@ VAL ;--Validate the input.
  . D ERRSET
  ;
  ;Is the Checkout D/T valid?
- I $G(PXAA("CHECKOUT D/T"))'="" D
- .;Is it a valid FileMan date?
- . I $$VFMDATE^PXDATE(PXAA("CHECKOUT D/T"),"ESTXR")=-1 D  Q
- .. S PXAERR(9)="CHECKOUT D/T"
- .. S PXAERR(11)=PXAA("CHECKOUT D/T")
- .. S PXAERR(12)="The checkout date and time is not a valid FileMan date and time."
- .. D ERRSET
- . I $G(STOP)=1 Q
- .;The checkout D/T should not be before the visit D/T.
- . I PXAA("CHECKOUT D/T")<PXAA("ENC D/T") D
- .. S PXAERR(9)="CHECKOUT D/T"
- .. S PXAERR(11)=PXAA("CHECKOUT D/T")
- .. S PXAERR(12)="The checkout D/T is before the encounter D/T."
- .. D ERRSET
- I $G(STOP)=1 Q
+ ;* I $G(PXAA("CHECKOUT D/T"))'="" D
+ ;* .;Is it a valid FileMan date?
+ ;* . I $$VFMDATE^PXDATE(PXAA("CHECKOUT D/T"),"ESTXR")=-1 D  Q
+ ;* .. S PXAERR(9)="CHECKOUT D/T"
+ ;* .. S PXAERR(11)=PXAA("CHECKOUT D/T")
+ ;* .. S PXAERR(12)="The checkout date and time is not a valid FileMan date and time."
+ ;* .. D ERRSET
+ ;* . I $G(STOP)=1 Q
+ ;* .;The checkout D/T should not be before the visit D/T.
+ ;* . I PXAA("CHECKOUT D/T")<PXAA("ENC D/T") D
+ ;* .. S PXAERR(9)="CHECKOUT D/T"
+ ;* .. S PXAERR(11)=PXAA("CHECKOUT D/T")
+ ;* .. S PXAERR(12)="The checkout D/T is before the encounter D/T."
+ ;* .. D ERRSET
+ ;* I $G(STOP)=1 Q
  ;
  ;Is the pointer to the eligibility file valid?
- I $G(PXAA("ELIGIBILITY"))'="",'$D(^DIC(8,PXAA("ELIGIBILITY"),0)) D  Q
- . S PXAERR(9)="ELIGIBILITY"
- . S PXAERR(11)=PXAA("ELIGIBILITY")
- . S PXAERR(12)=PXAA("ELIGIBILITY")_" is not a valid pointer to the Eligibility file #8."
- . D ERRSET
+ ;* I $G(PXAA("ELIGIBILITY"))'="",'$D(^DIC(8,PXAA("ELIGIBILITY"),0)) D  Q
+ ;* . S PXAERR(9)="ELIGIBILITY"
+ ;* . S PXAERR(11)=PXAA("ELIGIBILITY")
+ ;* . S PXAERR(12)=PXAA("ELIGIBILITY")_" is not a valid pointer to the Eligibility file #8."
+ ;* . D ERRSET
  ;
  ;Is the pointer to the Location valid?
- I $G(PXAA("INSTITUTION"))'="",'$D(^AUTTLOC(PXAA("INSTITUTION"),0)) D  Q
- . S PXAERR(9)="INSTITUTION"
- . S PXAERR(11)=PXAA("INSTITUTION")
- . S PXAERR(12)=PXAA("INSTITUTION")_" is not a valid pointer to the Location file #9999999.06."
- . D ERRSET
+ ;* I $G(PXAA("INSTITUTION"))'="",'$D(^AUTTLOC(PXAA("INSTITUTION"),0)) D  Q
+ ;* . S PXAERR(9)="INSTITUTION"
+ ;* . S PXAERR(11)=PXAA("INSTITUTION")
+ ;* . S PXAERR(12)=PXAA("INSTITUTION")_" is not a valid pointer to the Location file #9999999.06."
+ ;* . D ERRSET
  ;
  ;Is the Outside Location valid?
- I $G(PXAA("OUTSIDE LOCATION"))'="",(($L(PXAA("OUTSIDE LOCATION"))<2)!($L(PXAA("OUTSIDE LOCATION"))>50)) D  Q
- . S PXAERR(9)="OUTSIDE LOCATION"
- . S PXAERR(11)=PXAA("OUTSIDE LOCATION")
- . S PXAERR(12)="The length of the Outside Location is either less than 2 or greater than 50."
- . D ERRSET
+ ;* I $G(PXAA("OUTSIDE LOCATION"))'="",(($L(PXAA("OUTSIDE LOCATION"))<2)!($L(PXAA("OUTSIDE LOCATION"))>50)) D  Q
+ ;* . S PXAERR(9)="OUTSIDE LOCATION"
+ ;* . S PXAERR(11)=PXAA("OUTSIDE LOCATION")
+ ;* . S PXAERR(12)="The length of the Outside Location is either less than 2 or greater than 50."
+ ;* . D ERRSET
  ;
  ;Is the Comment valid?
- I $G(PXAA("COMMENT"))'="",(($L(PXAA("COMMENT"))<1)!($L(PXAA("COMMENT"))>245)) D  Q
- . S PXAERR(9)="COMMENT"
- . S PXAERR(11)=PXAA("COMMENT")
- . S PXAERR(12)="The length of the Comment is either less than 2 or greater than 245."
- . D ERRSET
+ ;* I $G(PXAA("COMMENT"))'="",(($L(PXAA("COMMENT"))<1)!($L(PXAA("COMMENT"))>245)) D  Q
+ ;* . S PXAERR(9)="COMMENT"
+ ;* . S PXAERR(11)=PXAA("COMMENT")
+ ;* . S PXAERR(12)="The length of the Comment is either less than 2 or greater than 245."
+ ;* . D ERRSET
  ;
  ;If an Encounter Type is being input validate it.
- I $G(PXAA("ENCOUNTER TYPE"))'="" D
- . N EXTERNAL,MSG
- . S EXTERNAL=$$EXTERNAL^DILFD(9000010,15003,"",PXAA("ENCOUNTER TYPE"),"MSG")
- . I (EXTERNAL=""),$D(MSG) D
- .. S PXAERR(12)=MSG("DIERR",1,"TEXT",1)
- .. S PXAERR(13)=MSG("DIERR",1,"TEXT",2)
- .. D ERRSET
+ ;* I $G(PXAA("ENCOUNTER TYPE"))'="" D
+ ;* . N EXTERNAL,MSG
+ ;* . S EXTERNAL=$$EXTERNAL^DILFD(9000010,15003,"",PXAA("ENCOUNTER TYPE"),"MSG")
+ ;* . I (EXTERNAL=""),$D(MSG) D
+ ;* .. S PXAERR(9)="ENCOUNTER TYPE"
+ ;* .. S PXAERR(12)=MSG("DIERR",1,"TEXT",1)
+ ;* .. S PXAERR(13)=MSG("DIERR",1,"TEXT",2)
+ ;* .. D ERRSET
  Q
  ;
 VALSCC ;--VALIDATE SERVICE CONNECTIVENESS

@@ -1,5 +1,5 @@
 PXPXRMI2 ; SLC/PKR,SCK - Build indexes for the V files (continued). ;03/16/2020
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**119,194,199,211,217**;Aug 12, 1996;Build 135
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**119,194,199,211,217**;Aug 12, 1996;Build 134
  ;DBIA 4113 supports PXRMSXRM entry points.
  ;DBIA 4114 supports setting and killing ^PXRMINDX
  ; Reference to ICDEX supported by ICR #5747.

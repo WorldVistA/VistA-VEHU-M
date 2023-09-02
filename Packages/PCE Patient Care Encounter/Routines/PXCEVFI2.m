@@ -1,5 +1,5 @@
 PXCEVFI2 ;ISL/dee,ESW - Supporting routines for editing a visit or v-file entry ;Jun 19, 2018@15:13
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,73,95,96,124,158,184,215,211,217**;Aug 12, 1996;Build 135
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,73,95,96,124,158,184,215,211,217**;Aug 12, 1996;Build 134
  ;
  Q
 ASK(PXCVIEN,PXCFIEN,PXCEAUPN,PXCCATT,PXCCODE) ; -- Display a selection list from one V-File for this visit

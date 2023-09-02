@@ -1,5 +1,5 @@
-PXMCEVNT ;SLC/PKR - Mapped codes linking and unlinking event routines. ;10/16/2017
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
+PXMCEVNT ;SLC/PKR - Mapped codes linking and unlinking event routines. ;09/21/2020
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 454
  ;
  ;==========================================
 ADDEVENT(VFILENUM,VSCIEN) ;Setup for protocol event for adding a code.
@@ -46,7 +46,7 @@ TSKEVENT(PXKCO) ;Task the PCE event point.
  S ZTREQ="@"
  S ZTSAVE("PXKCO(")=""
  S ZTSAVE("^TMP(""PXKCO"",$J,")=""
- S ZTRTN="EVENTTASK^PXKMAIN"
+ S ZTRTN="EVENT^PXKMAIN"
  S ZTDESC="PXK VISIT DATA EVENT"
  S ZTDTH=$$NOW^XLFDT
  S ZTIO=""

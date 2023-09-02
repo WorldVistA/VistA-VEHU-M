@@ -1,5 +1,5 @@
-PXAIVST ;ISL/JVS,KWP,ESW - GET A VISIT FROM ENCOUNTER NODE ;11/14/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**5,9,15,74,111,96,130,124,164,168,211**;Aug 12, 1996;Build 340
+PXAIVST ;ISL/JVS,KWP,ESW - GET A VISIT FROM ENCOUNTER NODE ;12/28/2020
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**5,9,15,74,111,96,130,124,164,168,211**;Aug 12, 1996;Build 454
  Q
  ;
 VST ;--CREATE A VISIT
@@ -35,8 +35,14 @@ SETVARA ;--SET VISIT VARIABLES
  ;PX*1*96 - Set TYPE (Piece #3) according to following;
  ; 1. If OUTSIDE LOCATION then TYPE is "O"
  ; 2. If no OUTSIDE LOCATION but INSTITUTION then TYPE is "V"
- ; 3. Else set to value of DUZ("AG")
- S $P(AFTER0,U,3)=$S($G(PXAA("OUTSIDE LOCATION"))'="":"O",$G(PXAA("INSTITUTION"))'="":"V",1:DUZ("AG"))
+ ; 3. If DUZ("AG") is defined set TYPE to it.
+ ; 4. If still not defined and DUZ(2) is defined try to use the
+ ; Institutioon's Agency Code, ICR #10090.
+ ; 5. If still not defined set TYPE to "O"
+ S TEMP=$S($G(PXAA("OUTSIDE LOCATION"))'="":"O",$G(PXAA("INSTITUTION"))'="":"V",1:$G(DUZ("AG")))
+ I TEMP="",$G(DUZ(2))'="" S TEMP=$$GET1^DIQ(4,DUZ(2)_",",95,"I")
+ I TEMP="" S TEMP="O"
+ S $P(AFTER0,U,3)=TEMP
  S (PATIENT,$P(AFTER0,U,5))=$G(PXAA("PATIENT"))
  S $P(AFTER0,U,6)=$G(PXAA("INSTITUTION"))
  S $P(AFTER0,U,7)=$G(PXAA("SERVICE CATEGORY"))
@@ -111,7 +117,8 @@ SPKGSRC(PXAVISIT,EPKG,PXAPKG,ESOURCE,PXASOURC,PXAERRF,PXAERR) ;Save Package and
  I $D(MSG) D  Q
  . S PXAERR(9)="PACKAGE AND SOURCE"
  . S PXAERR(12)=MSG("DIERR",1,"TEXT",1)
- . S PXAERR(13)=MSG("DIERR",1,"TEXT",2)
+ .;The second line of the error text may not always be defined.
+ . S PXAERR(13)=$G(MSG("DIERR",1,"TEXT",2))
  . D ERRSET^PXAIVSTV
  S ^TMP("PXK",$J,"VST",1,812,"AFTER")=U_PXAPKG_U_PXASOURC
  Q

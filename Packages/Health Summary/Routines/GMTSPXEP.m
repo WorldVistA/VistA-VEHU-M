@@ -1,5 +1,5 @@
 GMTSPXEP ; SLC/SBW,KER,PKR - PCE Patient Education comp ; 04/15/2022
- ;;2.7;Health Summary;**8,10,28,35,56,122,115**;Oct 20, 1995;Build 191
+ ;;2.7;Health Summary;**8,10,28,35,56,122,115**;Oct 20, 1995;Build 190
  ;
  ; External References
  ;   DBIA  3063  EDUC^PXRHS08

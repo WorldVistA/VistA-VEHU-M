@@ -1,5 +1,5 @@
 PXRHS08 ;ISL/SBW,PKR - PCE Visit Patient Education data extract ;03/21/2022
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**13,16,211,217**;Aug 12, 1996;Build 135
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**13,16,211,217**;Aug 12, 1996;Build 134
 EDUC(DFN,BEGDT,ENDDT,OCCLIM,CATCODE) ; Control branching
  ;INPUT  : DFN      - Pointer to PATIENT file (#2)
  ;         BEGDT    - Beginning date/time in internal FileMan format

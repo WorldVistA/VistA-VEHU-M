@@ -1,5 +1,5 @@
 PXRMOUTM ; SLC/PKR - MyHealtheVet output. ;04/01/2022
- ;;2.0;CLINICAL REMINDERS;**4,6,17,47,46,42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**4,6,17,47,46,42,65**;Feb 04, 2005;Build 438
  ;
  ;================================================
 FOUT(INDENT,IFIEVAL,NLINES,TEXT) ;Do output for individual findings 

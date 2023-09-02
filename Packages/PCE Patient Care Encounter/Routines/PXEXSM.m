@@ -1,5 +1,5 @@
 PXEXSM ;SLC/PKR - Exam ScreenMan routines ;06/14/2022
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211,217**;Aug 12, 1996;Build 135
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211,217**;Aug 12, 1996;Build 134
  ;
  ;===================================
 CODEPAOC(DA) ;Code Post-Action On Change.

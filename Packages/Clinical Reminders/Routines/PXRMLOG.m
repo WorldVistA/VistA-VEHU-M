@@ -1,5 +1,5 @@
 PXRMLOG ;SLC/PKR - Clinical Reminders logic routines. ;03/31/2022
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17,18,26,47,42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**4,6,12,17,18,26,47,42,65**;Feb 04, 2005;Build 438
  ;==========================================================
 CRSTATUS(DEFARR,FIEVAL) ;Determine the contraindicated/refused status.
  N CONTRALOGIC,CONTRASTRING,CRSTATUS,DCONTRALOGIC,IND,FF,FI,FINDING,FLIST,NUM,TEMP,TEST

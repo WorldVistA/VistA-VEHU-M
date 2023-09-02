@@ -1,5 +1,5 @@
 PXRMTXSM ;SLC/PKR - Reminder Taxonomy ScreenMan routines ;06/14/2022
- ;;2.0;CLINICAL REMINDERS;**26,47,42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**26,47,42,65**;Feb 04, 2005;Build 438
  ;
  ;===============
 CODELIST(TAXIEN) ;See if the temporary list of selected codes exists,

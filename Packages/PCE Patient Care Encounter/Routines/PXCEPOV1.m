@@ -1,5 +1,5 @@
-PXCEPOV1 ;ISL/dee - Used to edit and display V POV ;06/11/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**134,149,124,170,203,199,211**;Aug 12, 1996;Build 340
+PXCEPOV1 ;ISL/dee - Used to edit and display V POV ;12/23/2020
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**134,149,124,170,203,199,211**;Aug 12, 1996;Build 454
  ;;
  ;Reference to ICDEX supported by ICR #5747.
  ;
@@ -17,16 +17,7 @@ DINJHELP ;Date of Injury help.
  ;Special cases for display.
  ;
 DNARRAT(PNAR,PXCEDT) ;Provider Narrative for ICD-9 / ICD-10
- N PXCEPNAR,PXDXDATE,SNARR
- I PNAR<0 Q ""
- S PXCEPNAR=$P(^AUTNPOV(PNAR,0),"^")
- I $G(VIEW)="B",$D(ENTRY)>0 D
- . N DIC,DR,DA,DIQ,PXCEDIQ1
- . S DA=$P(ENTRY(0),"^",1)
- . S PXDXDATE=$S($D(PXCEVIEN)=1:$$CSDATE^PXDXUTL(PXCEVIEN),$D(PXCEAPDT)=1:PXCEAPDT,1:DT)
- . S SNARR=$P($$ICDDATA^ICDXCODE("DIAG",DA,PXDXDATE,"I"),"^",4)
- . S:SNARR=PXCEPNAR PXCEPNAR=""
- Q PXCEPNAR
+ Q $P(^AUTNPOV(PNAR,0),U,1)
  ;
  ;********************************
 DPRIMSEC(PRIMSEC,PXCEDT) ;
@@ -120,7 +111,7 @@ EINJURY ;Date/Time of Injury
  Q
  ;
  ;********************************
-EVDTHELP ;Event Date and Time help.
+EVENTDTHELP ;Event Date and Time help.
  N ERR,RESULT,TEXT
  S RESULT=$$GET1^DID(9000010.07,1201,"","DESCRIPTION","TEXT","ERR")
  D BROWSE^DDBR("TEXT(""DESCRIPTION"")","NR","V POV Event Date and Time Help")
@@ -133,12 +124,13 @@ ICDCODE ;Enter ICD code using Lexicon.
  ;Prompt the user for the Lexicon search term.
  S SRCHTERM=$$GETST^PXLEX
  I SRCHTERM="" S DIRUT=1,(X,Y)="" Q
- ;Prompt the user for the Event Date and Time.
+ ;Prompt the user for the Event Date and Time. This is only
+ ;for new entries because it is used in the Lexicon search
+ ;to ensure only codes active on that date are returned.
  S TEMP=^AUPNVSIT(PXCEVIEN,0)
  S SERVCAT=$P(TEMP,U,7)
- S HELP="D EVDTHELP^PXCEPOV1"
- ;For historical encounters use Date Visit Created
- S EVENTDT=$S(SERVCAT="E":$P(TEMP,U,2),1:$$EVENTDT^PXDATE(HELP))
+ S HELP="D EVENTDTHELP^PXCEPOV1"
+ S EVENTDT=$$EVENTDT^PXDATE("",HELP)
  S PXCEDT=EVENTDT
  ;If the Event Date and Time is null use the Visit Date.
  I PXCEDT="" S PXCEDT=$P(TEMP,U,1)

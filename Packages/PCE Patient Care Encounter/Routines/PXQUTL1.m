@@ -1,5 +1,5 @@
 PXQUTL1 ;ISL/JVS - DEBUGGING UTILITIES ;May 17, 2018@09:20
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**4,29,163,211**;Aug 12 1996;Build 340
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**4,29,163,211**;Aug 12 1996;Build 454
  ;
 DEC(VISIT,FLENUM,VISUAL,PXQFORM) ;Test looking through DD to find fields pointing to the visit entries.
  Q:'$D(DUZ) ""

@@ -1,5 +1,5 @@
 PXRMUID ;SLC/PKR - Coding systems that can be used in a dialog. ;05/22/2017
- ;;2.0;CLINICAL REMINDERS;**42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**42,65**;Feb 04, 2005;Build 438
  ;
  ;=========================================
 UIDOK(CODESYS) ;List of coding systems that can be in a dialog.

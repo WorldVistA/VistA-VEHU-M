@@ -1,5 +1,5 @@
-PXP211I ;SLC/PKR - Init routine for PX*1.0*211 ;11/27/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
+PXP211I ;SLC/PKR - Init routine for PX*1.0*211 ;08/27/2020
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 454
  ;======================
 ADDDS ;Add entries to PCE DATA SOURCE.
  I $O(^PX(839.7,"B","PCE CODE MAPPING",0))>0 Q
@@ -111,14 +111,24 @@ GENPNAME ;For any entry missing a print names generate one.
  ;
  ;======================
 HFCAT ;Append "[C]" to the .01 of all category factors.
- N CNAME,IEN,LEN,L3C,NAME
- D BMES^XPDUTL("Appending [C] to the .01 of all category health factors")
- S IEN=""
+ N CNAME,CNAMEIEN,IEN,LEN,L3C,NAME,NRPT,REPOINT
+ D BMES^XPDUTL("Appending [C] to the .01 of all category health factors.")
+ S IEN="",NRPT=0
  F  S IEN=+$O(^AUTTHF("AD","C",IEN)) Q:IEN=0  D
  . S NAME=$P(^AUTTHF(IEN,0),U,1)
  . S LEN=$L(NAME),L3C=$E(NAME,(LEN-2),LEN)
  . I L3C="[C]" Q
  . S CNAME=NAME_" [C]"
+ .;Does CNAME already exist?
+ . S CNAMEIEN=+$$FIND1^DIC(9999999.64,"","BXU",CNAME)
+ . I CNAMEIEN>0 D  Q
+ .. W !!,"CNAME AND NAME BOTH EXIST"
+ .. W !,"NAME=",NAME," IEN=",IEN
+ .. W !,"CNAME=",CNAME," CNAMEIEN=",CNAMEIEN
+ ..;Keep the entry with the lowest IEN.
+ .. S NRPT=NRPT+1
+ .. I IEN<CNAMEIEN S REPOINT(NRPT)=CNAMEIEN_U_IEN
+ .. E  S REPOINT(NRPT)=IEN_U_CNAMEIEN
  . D RENAME^PXUTIL(9999999.64,NAME,CNAME)
  Q
  ;
@@ -265,8 +275,13 @@ HFREPA(REPA) ;Establish the replacements for health factor print names.
 MVTREAT ;Move Treatment from sequence 13 to 15 on PXCE ADD/EDIT MENU.
  N IENM,IENT,IND
  S IENM=$$FIND1^DIC(101,"","BX","PXCE ADD/EDIT MENU")
+ I IENM="" D  Q
+ . D BMES^XPDUTL("The PXCE ADD/EDIT MENU does not exist.")
  S IENT=$$FIND1^DIC(101,"","BX","PXCE TREATMENT ADD")
+ I IENT="" D  Q
+ . D BMES^XPDUTL("PXCE TREATMENT ADD does not exist.")
  S IND=$O(^ORD(101,IENM,10,"B",IENT,""))
+ I IND="" Q
  S $P(^ORD(101,IENM,10,IND,0),U,3)=15
  Q
  ;
@@ -289,6 +304,12 @@ POST ;Post-init
  D PROVNARB^PXP211I
  D RBLDBI^PXP211I
  D RMNCTE^PXP211I
+ ;HMP has been decomissioned so remove this protocol.
+ N RESULT
+ S RESULT=$$DELETE^XPDPROT("PXK VISIT DATA EVENT","HMP PCE EVENTS")
+ D SDPCE^PXP211I
+ D RMPNSCREEN
+ D TASKBOTH^PXPNARR
  Q
  ;
  ;======================
@@ -332,12 +353,40 @@ RMNCTE ;Remove the national class entries that were created for testing.
  ;======================
 RMOLDDDS ;Remove old data dictionaries.
  N DIU,TEXT
- D EN^DDIOL("Removing old data dictionaries.")
+ D BMES^XPDUTL("Removing old data dictionaries.")
  S DIU(0)=""
- F DIU=815,839.7,9000010,900010.07,900010.11,900010.12,9000010.13,9000010.16,900010.18,900010.23,9000010.71,9999999.09,9999999.15,99999999.27,9999999.64 D
+ F DIU=815,839.7,9000010,9000010.07,9000010.11,9000010.12,9000010.13,9000010.16,9000010.18,9000010.23,9000010.71,9999999.09,9999999.15,9999999.27,9999999.64 D
  . S TEXT=" Deleting data dictionary for file # "_DIU
- . D EN^DDIOL(TEXT)
+ . D MES^XPDUTL(TEXT)
  . D EN^DIU2
+ Q
+ ;
+ ;======================
+RMPNSCREEN ;Remove the incorrect Provider Narrative screens.
+ ;ICR #6256
+ ;V CPT
+ K ^DD(9000010.18,.04,12)
+ K ^DD(9000010.18,.04,12.1)
+ ;V POV
+ K ^DD(9000010.07,.04,12)
+ K ^DD(9000010.07,.04,12.1)
+ Q
+ ;
+ ;======================
+SDPCE ;Edit the Description and Entry Action of the protocol SDAM PCE EVENT.
+ ;ICR #7110.
+ N FDA,IEN,IENS,MSG,WPTMP
+ S IEN=+$$FIND1^DIC(101,"","","SDAM PCE EVENT","","","MSG")
+ I IEN=0 Q
+ S WPTMP(1)="This protocol is the event handler attached to the PXK VISIT DATA EVENT protocol."
+ S WPTMP(2)=""
+ S WPTMP(3)="The protocol processes scheduled appointment check out data made available by this PCE event point. PCE currently obtains this check out data from MCCR data capture pilots and also a manual entry module within the PCE package."
+ S WPTMP(4)=""
+ S WPTMP(5)="To allow processing of the other items attached to PXK VISIT DATA EVENT as a TaskMan job, the call to EN^SDPCE was moved to EVENT^PXKMAIN in patch PX*1*211."
+ S IENS=IEN_","
+ S FDA(101,IENS,3.5)="WPTMP"
+ S FDA(101,IENS,20)=";D EN^SDPCE"
+ D FILE^DIE("","FDA","MSG")
  Q
  ;
  ;======================

@@ -1,5 +1,5 @@
 PXLOCK ;SLC/PKR - PCE Locking/Unlocking utility; 09/28/2017
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;AUG 12, 1996;Build 340
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;AUG 12, 1996;Build 454
  ;
  ;====================
 FINDLOCK(VISITIEN,ERROR) ;Try to determine who has the lock on the

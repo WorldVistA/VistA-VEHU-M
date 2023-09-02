@@ -1,5 +1,5 @@
 PXRMFF ;SLC/PKR - Clinical Reminders function finding evaluation. ;05/31/2022
- ;;2.0;CLINICAL REMINDERS;**4,6,11,18,22,24,26,47,42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**4,6,11,18,22,24,26,47,42,65**;Feb 04, 2005;Build 438
  ;===========================================
 EVAL(DEFARR,FIEVAL) ;Evaluate function findings.
  N ARGLIST,FFIND,FFN,FN,FUN,FUNIND,FUNN,FVALUE,JND

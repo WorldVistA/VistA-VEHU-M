@@ -1,5 +1,5 @@
 PXRMHF ;SLC/PKR - Handle Health Factor findings. ;04/05/2022
- ;;2.0;CLINICAL REMINDERS;**6,17,18,42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**6,17,18,42,65**;Feb 04, 2005;Build 438
  ;
  ;=====================================================
 CATSORT(FIEVAL,FIND0,FARR) ;Sort all the true health factor findings

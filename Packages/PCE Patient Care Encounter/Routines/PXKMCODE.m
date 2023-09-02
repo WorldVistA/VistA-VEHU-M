@@ -1,5 +1,5 @@
-PXKMCODE ;SLC/PKR Store mapped codes in the appropriate file ;12/07/2017
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
+PXKMCODE ;SLC/PKR Store mapped codes in the appropriate file ;11/22/2019
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 454
  ;================================
 EN ;General entry point.
  ;  VARIABLES
@@ -31,7 +31,7 @@ ERRORLM(SUBJECT,MSG) ;Error display if error occurred while in List Manager.
  ;
  ;================================
 HF(ACTION) ;
- N CODE,CODEDT,CODESYS,HFIEN,IND,VFDATA,ZNODE
+ N CODE,CODEDT,CODESYS,HFIEN,IND,TEMP,VFDATA,ZNODE
  S ZNODE=$S(ACTION="ADD":PXKAFT(0),1:PXKBEF(0))
  S HFIEN=$P(ZNODE,U,1)
  S VFDATA("DFN")=$P(ZNODE,U,2)
@@ -55,7 +55,7 @@ HF(ACTION) ;
  ;
  ;================================
 PED(ACTION) ;
- N CODE,CODEDT,CODESYS,EDUIEN,IND,VFDATA,ZNODE
+ N CODE,CODEDT,CODESYS,EDUIEN,IND,TEMP,VFDATA,ZNODE
  S ZNODE=$S(ACTION="ADD":PXKAFT(0),1:PXKBEF(0))
  S EDUIEN=$P(ZNODE,U,1)
  S VFDATA("DFN")=$P(ZNODE,U,2)
@@ -166,7 +166,7 @@ VSCDUP(CODESYS,CODE,VISITIEN,CODEDT,MSOURCE) ;Determine if the standard code is
  ;
  ;================================
 XAM(ACTION) ;
- N CODE,CODEDT,CODESYS,EXAMIEN,IND,VFDATA,ZNODE
+ N CODE,CODEDT,CODESYS,EXAMIEN,IND,TEMP,VFDATA,ZNODE
  S ZNODE=$S(ACTION="ADD":PXKAFT(0),1:PXKBEF(0))
  S EXAMIEN=$P(ZNODE,U,1)
  S VFDATA("DFN")=$P(ZNODE,U,2)

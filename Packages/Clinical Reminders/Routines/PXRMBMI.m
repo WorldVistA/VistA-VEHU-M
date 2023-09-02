@@ -1,5 +1,5 @@
-PXRMBMI ;SLC/PKR - National BMI and BSA computed finding. ;11/13/2017
- ;;2.0;CLINICAL REMINDERS;**12,18,42**;Feb 04, 2005;Build 132
+PXRMBMI ;SLC/PKR - National BMI and BSA computed finding. ;08/21/2019
+ ;;2.0;CLINICAL REMINDERS;**12,18,42**;Feb 04, 2005;Build 245
  ;================================
 BMI(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,DATA,TEXT) ;Multi-occurrence computed
  ;finding for BMI.
@@ -21,7 +21,7 @@ BSA(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,DATA,TEXT) ;Multi-occurrence computed
  ;finding for BSA. The coefficients have been adjusted for heights
  ;in cm and weights in kg expect for Boyd where the weight is grams.
  ;The default is to use the Mosteller formula.
- N BSA,FORMULA,HT,IND,TDATE,TYPE,WHL,WT
+ N BSA,FORMULA,HDATE,HT,IND,TDATE,TYPE,WHL,WT
  S TYPE=$S(TEST="":"M",TEST="M":"M",TEST="D":"D",TEST="H":"H",TEST="G":"G",TEST="B":"B",1:"M")
  S FORMULA=$S(TYPE="M":"Mosteller",TYPE="B":"Boyd",TYPE="D":"DuBois and Dubois",TYPE="H":"Haycock",TYPE="G":"Gehan and George",1:"Mosteller")_" formula"
  ;Get the list of weight and height measurements.

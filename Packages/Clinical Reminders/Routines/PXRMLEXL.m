@@ -1,5 +1,5 @@
 PXRMLEXL ;SLC/PKR - List Manager routines for Taxonomies and Lexicon. ;08/16/2018
- ;;2.0;CLINICAL REMINDERS;**26,47,42**;Feb 04, 2005;Build 132
+ ;;2.0;CLINICAL REMINDERS;**26,47,42**;Feb 04, 2005;Build 245
  ;
  ;=========================================
 ADDSEL(ENUM,UID) ;Add entry ENUM to the selected list and highlight it.
@@ -22,9 +22,6 @@ BLDLIST ;Build the Lexicon list.
  S CODESYS=^TMP("PXRMLEXTC",$J,"CODESYS")
  S TAXIEN=^TMP("PXRMLEXTC",$J,"TAX IEN")
  S TERM=^TMP("PXRMLEXTC",$J,"LEX TERM")
- ;Clear the display.
- D KILL^VALM10
- K ^TMP("PXRMLEXL",$J)
  I '$D(^TMP("PXRMLEXS",$J,TERM,CODESYS)) D
  . D LEXLIST(TAXIEN,TERM,CODESYS,.NCODES,.NLINES,.TEXT)
  . M ^TMP("PXRMTEXT",$J,TERM,CODESYS,"TEXT")=TEXT

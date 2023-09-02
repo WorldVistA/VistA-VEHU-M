@@ -1,5 +1,5 @@
 PXRMFF0 ;SLC/PKR - Clinical Reminders function finding routines. ;02/22/2022
- ;;2.0;CLINICAL REMINDERS;**4,6,12,18,47,42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**4,6,12,18,47,42,65**;Feb 04, 2005;Build 438
  ;
  ;============================================
 COUNT(LIST,FIEVAL,COUNT) ;

@@ -1,5 +1,5 @@
-GMPLX ; ISL/MKB,AJB,JER,TC,PKR -- Problem List Problem Utilities ;08/16/2018
- ;;2.0;Problem List;**7,23,26,28,27,36,42,40,49,53**;Aug 25, 1994;Build 47
+GMPLX ; ISL/MKB,AJB,JER,TC,PKR -- Problem List Problem Utilities ;03/30/2020
+ ;;2.0;Problem List;**7,23,26,28,27,36,42,40,49,53**;Aug 25, 1994;Build 159
  ;
  ; External References
  ;  DBIA   446 ^AUTNPOV(
@@ -30,7 +30,10 @@ SEARCH(X,Y,PROMPT,UNRES,VIEW) ; Search Lexicon for Problem X
  Q
  ;
 PROVNARR(X,CL) ; Returns IFN^Text of Narrative (#9999999.27)
- Q $$PROVNARR^PXAPI(X,9000011,CL)
+ N RESULT
+ S RESULT=$$PROVNARR^PXAPI(X,9000011,CL)
+ I $P(RESULT,U,1)=-1 S RESULT=$$PROVNARR^PXAPI("Invalid narrative passed",9000011)
+ Q $P(RESULT,U,1)
  ;
 PROBTEXT(IFN) ; Returns Display Text
  N X,Y,ICD,SCTC,GMPL0,GMPL800,GMPL802,GMPLEXP,GMPLPOV,GMPLSO,GMPLTXT,GMPLDT,GMPLCSYS,GMPLILBL

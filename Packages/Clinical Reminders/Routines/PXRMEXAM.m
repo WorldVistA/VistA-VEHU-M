@@ -1,5 +1,5 @@
 PXRMEXAM ;SLC/PKR - Handle examination findings. ;04/15/2022
- ;;2.0;CLINICAL REMINDERS;**42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**42,65**;Feb 04, 2005;Build 438
  ;
  ;=============================================================
 EVALFI(DFN,DEFARR,ENODE,FIEVAL) ;Evaluate examination findings.

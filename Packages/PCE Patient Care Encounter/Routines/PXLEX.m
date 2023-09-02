@@ -1,5 +1,5 @@
-PXLEX ;SLC/PKR - Routines for PCE Lexicon functionality. ;06/12/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
+PXLEX ;SLC/PKR - Routines for PCE Lexicon functionality. ;09/29/2020
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 454
  ;
  ;Reference to LEXU supported by ICR #5679.
  ;
@@ -10,10 +10,10 @@ CODESYSL(CODESYSL,MAP) ;Return the list of Lexicon coding systems supported
  I 'MAP S CODESYSL(0)=1 Q
  ;If MAP is true then add the addtional coding systems that can be
  ;used for mapping.
- S CODESYSL("10D")=""
+ S CODESYSL("10D")="",CODESYSL("10P")=""
  S CODESYSL("CPC")="",CODESYSL("CPT")=""
- S CODESYSL("ICD")=""
- S CODESYSL(0)=5
+ S CODESYSL("ICD")="",CODESYSL("ICP")=""
+ S CODESYSL(0)=7
  Q
  ;
  ;=========================================

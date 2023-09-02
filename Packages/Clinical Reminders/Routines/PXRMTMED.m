@@ -1,5 +1,5 @@
 PXRMTMED ; SLC/PKR/PJH - Edit a reminder term. ;Aug 18, 2020@11:19:40
- ;;2.0;CLINICAL REMINDERS;**1,4,6,12,26,45,42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**1,4,6,12,26,45,42,65**;Feb 04, 2005;Build 438
  ;
  ;=======================================================
  N CS1,CS2,DA,DIC,DLAYGO,DTOUT,DUOUT,Y

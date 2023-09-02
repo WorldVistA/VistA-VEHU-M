@@ -1,5 +1,5 @@
 PXRMDATE ;SLC/PKR - Clinical Reminders date utilities. ;06/28/2022
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17,18,24,26,47,42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**4,6,12,17,18,24,26,47,42,65**;Feb 04, 2005;Build 438
  ;
  ;====================
 CEFD(FDA) ;Called by the Exchange Utility only if the input packed

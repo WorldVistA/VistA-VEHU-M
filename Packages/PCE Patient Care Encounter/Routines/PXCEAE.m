@@ -1,5 +1,5 @@
-PXCEAE ;ISL/dee,ISA/KWP - Main routine for the List Manager display of a visit and related v-files ;09/27/2017
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**37,67,99,147,156,172,195,215,211**;Aug 12, 1996;Build 340
+PXCEAE ;ISL/dee,ISA/KWP - Main routine for the List Manager display of a visit and related v-files ;11/08/2019
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**37,67,99,147,156,172,195,215,211**;Aug 12, 1996;Build 454
  ;; ;
  Q
 EN ;+ -- main entry point for PXCE DISPLAY VISIT
@@ -21,8 +21,7 @@ EN ;+ -- main entry point for PXCE DISPLAY VISIT
  I '$D(PXCEHLOC) N PXCEHLOC S PXCEHLOC=$P($G(^AUPNVSIT(PXCEVIEN,0)),"^",22)
  ;Get Visit date/time if exists - PX*195
  I '$D(PXCEAPDT) N PXCEAPDT S PXCEAPDT=$P($G(^AUPNVSIT(PXCEVIEN,0)),"^")
- ;+If not called from encounter viewer lock ^PXLCKUSR
- ;+and create ^XTMP("PXLCKUSR",VISIEN)=DUZ
+ ;If not called from encounter viewer lock the encounter.
  I PXCEKEYS'["V" D
  .N PXRESVAL,PXVISIEN
  . S PXVISIEN=PXCEVIEN
@@ -39,6 +38,12 @@ GETVIEN ;Ask the user which visit.
  S:PXCEVIDX'>0 PXCEVIDX=$$SEL1^PXCE("")
  Q:PXCEVIDX'>0
  S PXCEVIEN=$G(^TMP("PXCEIDX",$J,PXCEVIDX))
+ ;Some encounters can be deleted by Scheduling, called from the PXK
+ ;VISTA DATA EVENT protocl, so check that the encounter exists.
+ I '$D(^AUPNVSIT(PXCEVIEN)) D  Q
+ . D FULL^VALM1
+ . W !,"This encounter has been deleted by a background process." H 2
+ . D EXIT^PXCEAE
  ;Check that it is not related to a no show or canceled apppointment
  D APPCHECK^PXCESDAM(.PXCEVIEN)
  Q:'$D(PXCEVIEN)
@@ -100,7 +105,8 @@ EXIT ; -- exit code
  ;
  D CLEAN^VALM10
  K ^TMP("PXCEAE",$J),^TMP("PXCEAEIX",$J)
- D EVENT^PXKMAIN
+ ;If the Visit does not exist do not firs the protocol event.
+ I $D(^AUPNVSIT(PXCEVIEN)) D EVENT^PXKMAIN
  K PXCEVIEN,PXCEAPPM
  Q
  ;

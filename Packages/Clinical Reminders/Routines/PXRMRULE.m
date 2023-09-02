@@ -1,5 +1,5 @@
 PXRMRULE ;SLC/PJH - Build Patient list from Rule Set ;08/16/2018
- ;;2.0;CLINICAL REMINDERS;**4,6,42**;Feb 04, 2005;Build 132
+ ;;2.0;CLINICAL REMINDERS;**4,6,42**;Feb 04, 2005;Build 245
  ; 
  ; Called from PXRM PATIENT LIST CREATE protocol
  ;

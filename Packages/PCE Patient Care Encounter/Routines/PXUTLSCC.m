@@ -1,5 +1,5 @@
-PXUTLSCC ;ISL/dee,ISA/KWP - Validates and corrects the Service Connected Conditions ;03/13/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**74,107,111,130,168,211**;Aug 12, 1996;Build 340
+PXUTLSCC ;ISL/dee,ISA/KWP - Validates and corrects the Service Connected Conditions ;11/21/2019
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**74,107,111,130,168,211**;Aug 12, 1996;Build 454
  Q
  ;
 CLEANMSG(ERRMSG) ;Cleanup the error message by removing fields with no error.
@@ -39,7 +39,7 @@ SCC(PXUPAT,PXUDT,PXUHLOC,PXUTLVST,PXUIN,PXUOUT,PXUERR) ;
  ;+     -2   ::= value must be null
  ;+     -3   ::= must be null because SC is yes
  ;
- N PXUITEM,PXUPSCC,PXUSC,PXUAO,PXUIR,PXUEC,PXUMST,PXUHNC,PXUSHAD
+ N PXUCV,PXUITEM,PXUPSCC,PXUSC,PXUAO,PXUIR,PXUEC,PXUMST,PXUHNC,PXUSHAD
  D SCCOND(PXUPAT,PXUDT,PXUHLOC,$G(PXUTLVST),.PXUPSCC) ;Set up array of the patients SCC
  S PXUOUT=PXUIN
  S PXUERR="0^0^0^0^0^0^0^0"

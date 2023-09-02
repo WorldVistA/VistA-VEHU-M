@@ -1,5 +1,5 @@
 PXSINQ ;SLC/PKR - Simple inquiry routines ;06/20/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 454
  ;===================================
 BROWSE(FILENUM,FLDLIST,IEN) ;Display the details of an entry using the
  ;FileMan Browser.

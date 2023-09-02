@@ -1,11 +1,11 @@
-PXAICPTV ;ISL/JVS,PKR ISA/KWP,SCK - VALIDATE PROCEDURES(CPT) ;01/03/2019
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**15,73,74,111,121,130,168,194,199,211**;Aug 12, 1996;Build 340
+PXAICPTV ;ISL/JVS,PKR ISA/KWP,SCK - VALIDATE PROCEDURES(CPT) ;02/04/2021
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**15,73,74,111,121,130,168,194,199,211**;Aug 12, 1996;Build 454
  ;
  ;Reference to ICDEX supported by ICR #5747.
  ;
 ERRSET ;Set the rest of the error data.
  S STOP=1
- S PXAERRF=1
+ S PXAERRF("CPT")=1
  S PXADI("DIALOG")=8390001.001
  S PXAERR(7)="PROCEDURE"
  Q
@@ -37,19 +37,24 @@ VAL ;Validate the input.
  ;If this is a deletion no further validation is required.
  I $G(PXAA("DELETE"))=1 Q
  ;
- ;Check that the code is active.
- S CODE=$P(CPTDATA,U,2)
- S SOURCE=$P(CPTDATA,U,5)
- S CODESYS=$S(SOURCE="C":"CPT",SOURCE="H":"CPC",1:"")
- I CODESYS="" D  Q
- . S PXAERR(9)="CODING SYSTEM"
- . S PXAERR(12)=PXAERR(11)_" does not have a valid coding system"
- . D ERRSET
+ ;If Event D/T is input verify it is a valid FileMan date and not in
+ ;the future.
+ ;* I $G(PXAA("EVENT D/T"))'="",'$$EVENTDT^PXAIVAL(PXAA("EVENT D/T"),"T",.PXAERR) D  Q
+ ;* . D ERRSET
  ;
- I '$$ISCACT^PXLEX(CODESYS,CODE,EVENTDT) D  Q
- . S PXAERR(9)="CPT CODE"
- . S PXAERR(12)=PXAERR(11)_" is not an active CPT code"
- . D ERRSET
+ ;Check that the code is active.
+ ;* S CODE=$P(CPTDATA,U,2)
+ ;* S SOURCE=$P(CPTDATA,U,5)
+ ;* S CODESYS=$S(SOURCE="C":"CPT",SOURCE="H":"CPC",1:"")
+ ;* I CODESYS="" D  Q
+ ;* . S PXAERR(9)="CODING SYSTEM"
+ ;* . S PXAERR(12)=PXAERR(11)_" does not have a valid coding system"
+ ;* . D ERRSET
+ ;
+ ;* I '$$ISCACT^PXLEX(CODESYS,CODE,EVENTDT) D  Q
+ ;* . S PXAERR(9)="CPT CODE"
+ ;* . S PXAERR(12)=PXAERR(11)_" is not an active CPT code"
+ ;* . D ERRSET
  ;
  ;If the number of times is missing set it to one.
  I +$G(PXAA("QTY"))'>0 S PXAA("QTY")=1
@@ -97,71 +102,81 @@ VAL ;Validate the input.
  .. I FMT="E" S PXAA(DIAGSTR)=CODEIEN
  ;
  ;If a Provider Narrative is passed check the length.
- I $G(PXAA("NARRATIVE"))'="",'$$TEXT^PXAIVAL("NARRATIVE",PXAA("NARRATIVE"),2,245,.PXAERR) D  Q
- . D ERRSET
+ ;* I $G(PXAA("NARRATIVE"))'="",'$$TEXT^PXAIVAL("PROVIDER NARRATIVE",PXAA("NARRATIVE"),2,245,.PXAERR) D  Q
+ ;* . D ERRSET
+ ;*Control characters are not allowed.
+ ;*I '$$VPNARR^PXPNARR(PXAA("NARRATIVE")) D  Q
+ ;*. S PXAERR(9)="PROVIDER NARRATIVE"
+ ;*. S PXAERR(11)=PXAA("NARRATIVE")
+ ;*. S PXAERR(12)="Control characters are not allowed."
+ ;*. D ERRSET
  ;
  ;If a Provider Narrative Category is passed check the length.
- I $G(PXAA("CATEGORY"))'="",'$$TEXT^PXAIVAL("CATEGORY",PXAA("CATEGORY"),2,245,.PXAERR) D  Q
- . D ERRSET
+ ;* I $G(PXAA("CATEGORY"))'="",'$$TEXT^PXAIVAL("CATEGORY",PXAA("CATEGORY"),2,245,.PXAERR) D  Q
+ ;* . D ERRSET
+ ;*Control characters are not allowed.
+ ;*I '$$VPNARR^PXPNARR(PXAA("CATEGORY")) D  Q
+ ;*. S PXAERR(9)="PROVIDER NARRATIVE CATEGORY"
+ ;*. S PXAERR(11)=PXAA("CATEGORY")
+ ;*. S PXAERR(12)="Control characters are not allowed."
+ ;*. D ERRSET
  ;
  ;If an Ordering Provider is passed verify it is valid.
- I $G(PXAA("ORD PROVIDER"))'="",'$$PRV^PXAIVAL(PXAA("ORD PROVIDER"),"ORD",.PXAA,.PXAERR,PXAVISIT) D  Q
- . D ERRSET
+ ;* I $G(PXAA("ORD PROVIDER"))'="",'$$PRV^PXAIVAL(PXAA("ORD PROVIDER"),"ORD",.PXAA,.PXAERR,PXAVISIT) D  Q
+ ;* . D ERRSET
  ;
  ;If an Encounter Provider is passed verify it is valid.
- I $G(PXAA("ENC PROVIDER"))'="",'$$PRV^PXAIVAL(PXAA("ENC PROVIDER"),"ENC",.PXAA,.PXAERR,PXAVISIT) D  Q
- . D ERRSET
+ ;* I $G(PXAA("ENC PROVIDER"))'="",'$$PRV^PXAIVAL(PXAA("ENC PROVIDER"),"ENC",.PXAA,.PXAERR,PXAVISIT) D  Q
+ ;* . D ERRSET
  ;
  ;If an Order Reference is passed verify it is valid.
- I $G(PXAA("ORD REFERENCE"))'="",'$D(^OR(100,PXAA("ORD REFERENCE"),0)) D  Q
- . S PXAERR(9)="ORDER REFERENCE"
- . S PXAERR(11)=PXAA("ORD REFERENCE")
- . S PXAERR(12)=PXAA("ORD REFERENCE")_" is not a valid pointer to the Order file #100."
- . D ERRSET
- ;
- ;If Event D/T is input verify it is a valid FileMan date and not in
- ;the future.
- I $G(PXAA("EVENT D/T"))'="",'$$EVENTDT^PXAIVAL(PXAA("EVENT D/T"),"T",.PXAERR) D  Q
- . D ERRSET
+ ;* I $G(PXAA("ORD REFERENCE"))'="",'$D(^OR(100,PXAA("ORD REFERENCE"),0)) D  Q
+ ;* . S PXAERR(9)="ORDER REFERENCE"
+ ;* . S PXAERR(11)=PXAA("ORD REFERENCE")
+ ;* . S PXAERR(12)=PXAA("ORD REFERENCE")_" is not a valid pointer to the Order file #100."
+ ;* . D ERRSET
  ;
  ;If PFSS is on and Department is passed verify it is valid.
- I $$SWSTAT^IBBAPI,$G(PXAA("DEPARTMENT"))'="",'$D(^DIC(40.7,PXAA("DEPARTMENT"),0)) D  Q
- . S PXAERR(9)="DEPARTMENT"
- . S PXAERR(11)=PXAA("DEPARTMENT")
- . S PXAERR(12)=PXAA("DEPARTMENT")_" is not a valid Clinic Stop."
+ ;* I $$SWSTAT^IBBAPI,$G(PXAA("DEPARTMENT"))'="",'$D(^DIC(40.7,PXAA("DEPARTMENT"),0)) D  Q
+ ;* . S PXAERR(9)="DEPARTMENT"
+ ;* . S PXAERR(11)=PXAA("DEPARTMENT")
+ ;* . S PXAERR(12)=PXAA("DEPARTMENT")_" is not a valid Clinic Stop."
  ;
  ;If Comment is passed check the length.
- I $G(PXAA("COMMENT"))'="",'$$TEXT^PXAIVAL("COMMENT",PXAA("COMMENT"),1,245,.PXAERR) D  Q
- . D ERRSET
+ ;* I $G(PXAA("COMMENT"))'="",'$$TEXT^PXAIVAL("COMMENT",PXAA("COMMENT"),1,245,.PXAERR) D  Q
+ ;* . D ERRSET
  ;
  ;If PKG is input verify it.
- I $G(PXAA("PKG"))'="" D
- . N PKG
- . S PKG=$$VPKG^PXAIVAL(PXAA("PKG"),.PXAERR)
- . I PKG=0 S PXAERR(9)="PKG" D ERRSET Q
- . S PXAA("PKG")=PKG
- I $G(STOP)=1 Q
+ ;* I $G(PXAA("PKG"))'="" D
+ ;* . N PKG
+ ;* . S PKG=$$VPKG^PXAIVAL(PXAA("PKG"),.PXAERR)
+ ;* . I PKG=0 S PXAERR(9)="PKG" D ERRSET Q
+ ;* . S PXAA("PKG")=PKG
+ ;* I $G(STOP)=1 Q
  ;
  ;If SOURCE is input verify it.
- I $G(PXAA("SOURCE"))'="" D
- . N SRC
- . S SRC=$$VSOURCE^PXAIVAL(PXAA("SOURCE"),.PXAERR)
- . I SRC=0 S PXAERR(9)="SOURCE" D ERRSET Q
- . S PXAA("SOURCE")=SRC
- I $G(STOP)=1 Q
+ ;* I $G(PXAA("SOURCE"))'="" D
+ ;* . N SRC
+ ;* . S SRC=$$VSOURCE^PXAIVAL(PXAA("SOURCE"),.PXAERR)
+ ;* . I SRC=0 S PXAERR(9)="SOURCE" D ERRSET Q
+ ;* . S PXAA("SOURCE")=SRC
+ ;* I $G(STOP)=1 Q
  Q
  ;
-VAL04 ;Setup error array for missing Provider Narrative.
- S PXAERR(9)="NARRATIVE"
+VAL04 ;Setup error array for missing or invalid Provider Narrative.
+ S PXAERR(9)="PROVIDER NARRATIVE"
  S PXAERR(11)=$G(PXAA("NARRATIVE"))
- S PXAERR(12)="We are unable to retrieve a narrative from the PROVIDER NARRATIVE file #9999999.27"
+ S PXAERR(12)="We are unable to retrieve a provider narrative from the PROVIDER NARRATIVE file #9999999.27"
  D ERRSET
  Q
  ;
-VAL802 ;Setup error array for missing Provider Narrative Category.
- S PXAERR(9)="NARRATIVE CATEGORY"
+VAL802 ;Setup error array for missing or invalid Provider Narrative Category.
+ ;Provider Narrative Category is not required, so make this a warning.
+ S PXAERR(9)="PROVIDER NARRATIVE CATEGORY"
  S PXAERR(11)=$G(PXAA("CATEGORY"))
- S PXAERR(12)="We are unable to retrieve a narrative category from the PROVIDER NARRATIVE file #9999999.27"
- D ERRSET
+ S PXAERR(12)="We are unable to retrieve a provider narrative category from the PROVIDER NARRATIVE file #9999999.27"
+ S PXADI("DIALOG")=8390001.002
+ S PXAERR(7)="PROCEDURE"
+ S PXAERRW("CPT")=1
  Q
  ;

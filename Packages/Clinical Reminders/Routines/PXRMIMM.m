@@ -1,5 +1,5 @@
 PXRMIMM ;SLC/PKR - Handle immunization findings. ;03/31/2022
- ;;2.0;CLINICAL REMINDERS;**42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**42,65**;Feb 04, 2005;Build 438
  ;
  ;   API                   ICR#
  ;PATICR^PXAPIIM           6387

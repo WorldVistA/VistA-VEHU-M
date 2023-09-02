@@ -1,17 +1,5 @@
-PXRMUTIL ;SLC/PKR/PJH - Utility routines for use by PXRM. ;08/16/2018
- ;;2.0;CLINICAL REMINDERS;**4,6,11,12,17,18,24,26,47,42**;Feb 04, 2005;Build 132
- ;
- ;=================================
-ATTVALUE(STRING,ATTR,SEP,AVSEP) ;STRING contains a list of attribute value
- ;pairs. Each pair is separated by SEP and the attribute value pair
- ;is separated by AVSEP. Return the value for the attribute ATTR.
- N AVPAIR,IND,NUMAVP,VALUE
- S NUMAVP=$L(STRING,SEP)
- S VALUE=""
- F IND=1:1:NUMAVP Q:VALUE'=""  D
- . S AVPAIR=$P(STRING,SEP,IND)
- . I AVPAIR[ATTR S VALUE=$P(AVPAIR,AVSEP,2)
- Q VALUE
+PXRMUTIL ;SLC/PKR/PJH - Utility routines for use by PXRM. ;02/25/2021
+ ;;2.0;CLINICAL REMINDERS;**4,6,11,12,17,18,24,26,47,42**;Feb 04, 2005;Build 245
  ;
  ;=================================
 ACOPY(REF,OUTPUT) ;Copy all the descendants of the array reference into a linear
@@ -65,6 +53,18 @@ APRINT(REF) ;Write all the descendants of the array reference.
  I $D(XPDNM) D MES^XPDUTL(.APTEXT)
  E  D EN^DDIOL(.APTEXT)
  Q
+ ;
+ ;=================================
+ATTVALUE(STRING,ATTR,SEP,AVSEP) ;STRING contains a list of attribute value
+ ;pairs. Each pair is separated by SEP and the attribute value pair
+ ;is separated by AVSEP. Return the value for the attribute ATTR.
+ N AVPAIR,IND,NUMAVP,VALUE
+ S NUMAVP=$L(STRING,SEP)
+ S VALUE=""
+ F IND=1:1:NUMAVP Q:VALUE'=""  D
+ . S AVPAIR=$P(STRING,SEP,IND)
+ . I AVPAIR[ATTR S VALUE=$P(AVPAIR,AVSEP,2)
+ Q VALUE
  ;
  ;=================================
 AWRITE(REF) ;Write all the descendants of the array reference, including the
@@ -311,23 +311,13 @@ PROTCOLS(ACTION,DISTEXT) ;Disable/enable protocols.
  ;=================================
 RENAME(FILENUM,OLDNAME,NEWNAME) ;Rename entry OLDNAME to NEWNAME in
  ;file number FILENUM.
- N DA,DIE,DR,NIEN,PXRMINST,MSG
- S DA=$$FIND1^DIC(FILENUM,"","BXU",OLDNAME,"","","MSG")
- I DA=0 Q
- I $D(MSG) D  Q
- . N TEXT
- . S TEXT(1)="Renaming "_OLDNAME_" in file #"_FILENUM_" failed."
- . S TEXT(2)="Examine the following error message for the reason."
- . S TEXT(3)=""
- . S TEXT(4)="The test update failed, UPDATE^DIE returned the following error message:"
- . D MES^XPDUTL(.TEXT)
- . D AWRITE^PXRMUTIL("MSG")
- . H 2
+ N IEN,NIEN,MSG,PXRMINST
+ S IEN=+$$FIND1^DIC(FILENUM,"","BXU",OLDNAME)
+ I IEN=0 Q
  S PXRMINST=1
- S NIEN=$$FIND1^DIC(FILENUM,"","BXU",NEWNAME) I NIEN>0 Q
- S DIE=FILENUM
- S DR=".01///^S X=NEWNAME"
- D ^DIE
+ S NIEN=+$$FIND1^DIC(FILENUM,"","BXU",NEWNAME) I NIEN>0 Q
+ S FDA(FILENUM,IEN_",",.01)=NEWNAME
+ D FILE^DIE("ET","FDA","MSG")
  Q
  ;
  ;=================================
@@ -406,7 +396,11 @@ SSPAR(FIND0,NOCC,BDT,EDT) ;Set the finding search parameters.
  ;Convert the dates to FileMan dates.
  S BDT=$S(BDT="":0,BDT=0:0,1:$$CTFMD^PXRMDATE(BDT))
  I EDT="" S EDT="T"
- S EDT=$$CTFMD^PXRMDATE(EDT)
+ I $G(PXRMDEBG)=1 D
+ . N TIME S TIME=$P(PXRMDATE,".",2)
+ . I TIME'="" S TIME="."_TIME
+ . S EDT=$S(EDT="T":PXRMDATE,1:$$CTFMD^PXRMDATE(EDT)_TIME)
+ E  S EDT=$$CTFMD^PXRMDATE(EDT)
  ;If EDT does not contain a time set it to the end of the day.
  I (EDT'=-1),EDT'["." S EDT=EDT_".235959"
  I $G(PXRMDDOC)'=1 Q

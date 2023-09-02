@@ -1,5 +1,5 @@
 PXRMEXLR ; SLC/PKR/PJH - List Manager routines for Exchange file actions. ;08/16/2018
- ;;2.0;CLINICAL REMINDERS;**6,17,26,42**;Feb 04, 2005;Build 132
+ ;;2.0;CLINICAL REMINDERS;**6,17,26,42**;Feb 04, 2005;Build 245
  ;==================================================
 CHF ;Create a host file containing repository entries.
  N IND,FILE,LIST,LENH2,NL,PATH,SUCCESS,TEMP

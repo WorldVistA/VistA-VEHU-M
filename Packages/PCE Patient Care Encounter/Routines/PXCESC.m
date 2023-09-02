@@ -1,5 +1,5 @@
-PXCESC ;SLC/PKR - Used to edit and display V STANDARD CODES ;06/12/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 340
+PXCESC ;SLC/PKR - Used to edit and display V STANDARD CODES ;12/15/2020
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211**;Aug 12, 1996;Build 454
  ;
  ;Reference to LEXU supported by ICR #5679.
  ;
@@ -36,12 +36,13 @@ ADDCODE(VISITIEN,VSCIEN) ;Let the user select and add codes.
  ;Prompt the user for the Lexicon search term.
  S SRCHTERM=$$GETST^PXLEX
  I SRCHTERM="" S PXCELOOP=1 Q
- ;Prompt the user for the Event Date and Time.
+ ;Prompt the user for the Event Date and Time.  This is only
+ ;for new entries because it is used in the Lexicon search
+ ;to ensure only codes active on that date are returned.
  S HELP="D EVDTHELP^PXCESC"
  S TEMP=^AUPNVSIT(VISITIEN,0)
  S SERVCAT=$P(TEMP,U,7)
- ;For historical encounters use Date Visit Created
- S EVENTDT=$S(SERVCAT="E":$P(TEMP,U,2),1:$$EVENTDT^PXDATE(HELP))
+ S EVENTDT=$$EVENTDT^PXDATE("",HELP)
  S PXCEDT=EVENTDT
  I PXCEDT="" S PXCEDT=$P(TEMP,U,1)
  ;Let the user select the code(s), only return active codes.
@@ -149,5 +150,3 @@ VSCDATE(VIEN,VSCZNODE) ;If the EVENT D/T exists return it, otherwise
  . I ZN=VSCZNODE S VSCIEN=IEN Q
  S DATE=$P($G(^AUPNVSC(VSCIEN,12)),U,1)
  I DATE="" S DATE=$P(^AUPNVSIT(VIEN,0),U,1)
- Q DATE
- ;

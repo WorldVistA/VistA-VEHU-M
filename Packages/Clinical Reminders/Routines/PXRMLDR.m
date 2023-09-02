@@ -1,5 +1,5 @@
 PXRMLDR ;SLC/PKR - Load Definitions and terms for evaluation. ;04/01/2022
- ;;2.0;CLINICAL REMINDERS;**18,26,47,42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**18,26,47,42,65**;Feb 04, 2005;Build 438
  ;
  ;===================================
 DEF(DEFID,DEFARR) ;Load those portions of the definition needed for

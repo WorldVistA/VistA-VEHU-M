@@ -1,5 +1,5 @@
 VSITKIL ;ISL/ARS,JVS - NON INTERACTIVE CHECK DEPENDENT ENTRY COUNT ;May 17, 2017@12:01
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**76,204,211**;Aug 12, 1996;Build 340
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**76,204,211**;Aug 12, 1996;Build 454
  ; Patch PX*1*76 changes the 2nd line of all VSIT* routines to reflect
  ; the incorporation of the module into PCE.  For historical reference,
  ; the old (VISIT TRACKING) 2nd line is included below to reference VSIT

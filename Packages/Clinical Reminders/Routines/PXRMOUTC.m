@@ -1,5 +1,5 @@
 PXRMOUTC ; SLC/PKR - Clinical Maintenance output. ;05/26/2022
- ;;2.0;CLINICAL REMINDERS;**4,6,17,26,47,46,42,65**;Feb 04, 2005;Build 439
+ ;;2.0;CLINICAL REMINDERS;**4,6,17,26,47,46,42,65**;Feb 04, 2005;Build 438
  ;================================================
 CM(DEFARR,PXRMPDEM,PCLOGIC,RESLOGIC,RESDATE,FIEVAL,OUTTYPE) ;Prepare the 
  ;Clinical maintenance (OUTTYPE=5) and order check (OUTTPYPE=55)

@@ -1,5 +1,5 @@
-PXCECPT ;ISL/dee,ISA/Zoltan,esw - Used to edit and display V CPT ;04/16/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**14,27,73,89,112,121,136,124,170,164,182,199,211**;Aug 12, 1996;Build 340
+PXCECPT ;ISL/dee,ISA/Zoltan,esw - Used to edit and display V CPT ;12/23/2020
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**14,27,73,89,112,121,136,124,170,164,182,199,211**;Aug 12, 1996;Build 454
  ;; ;
  Q
  ;
@@ -60,15 +60,9 @@ DISPMOD(PXCECPT,PXCEDT) ;
  . S MODIEN=$P($G(^AUPNVCPT(PXCECPT,1,SIEN,0)),"^")
  . S $P(OUTSTR,U,MODS)=$$MODTEXT(MODIEN)
  Q OUTSTR
+ ;
 DNARRAT(PNAR,PXCEDT) ;+Display Provider Narrative for procedure in V CPT file.
- I PNAR="" Q ""
- N PXCEPNAR
- S PXCEPNAR=$P(^AUTNPOV(PNAR,0),"^")
- I $G(VIEW)="B",$D(ENTRY)>0 D
- . N CPTSTR
- . S CPTSTR=$$CPT^ICPTCOD($P(ENTRY(0),U),PXCEDT)
- . S:$P(CPTSTR,U,3)=PXCEPNAR PXCEPNAR=""
- Q PXCEPNAR
+ Q $P(^AUTNPOV(PNAR,0),U,1)
  ;+
  ;+********************************
  ;+Special cases for edit.
@@ -77,7 +71,7 @@ ECPTCODE(VCPTIEN,VISITIEN) ;+Code to edit CPT Code in V CPT file.
  K DIRUT
  N DIC,DA,HELP,PXCPTDT,PXDFLT
  S X=""
- S HELP="D EVDTHELP^PXCECPT"
+ S HELP="D EVENTDTHELP^PXCECPT"
  S Y=$$GETCODE^PXCPTAPI(HELP)
  I Y="@" S X="@" Q
  I Y<0 S DIRUT=1 Q
@@ -181,7 +175,7 @@ EPOV ;Edit the Associated DX
  Q
  ;+
  ;********************************
-EVDTHELP ;Event Date and Time help.
+EVENTDTHELP ;Event Date and Time help.
  N ERR,RESULT,TEXT
  S RESULT=$$GET1^DID(9000010.18,1201,"","DESCRIPTION","TEXT","ERR")
  D BROWSE^DDBR("TEXT(""DESCRIPTION"")","NR","V CPT Event Date and Time Help")

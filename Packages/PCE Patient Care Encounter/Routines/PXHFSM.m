@@ -1,5 +1,5 @@
 PXHFSM ;SLC/PKR - Health Factor ScreenMan routines ;06/14/2022
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**211,217**;Aug 12, 1996;Build 135
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**211,217**;Aug 12, 1996;Build 134
  ;
  ;===============
 CATNDVAL(NAME) ;Name data validation for PX HF CATEGORY.
