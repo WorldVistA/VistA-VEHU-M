@@ -1,5 +1,5 @@
 VPRDJT ;SLC/MKB -- Test VistA data JSON RPC ;10/18/12 6:26pm
- ;;1.0;VIRTUAL PATIENT RECORD;**2**;Sep 01, 2011;Build 317
+ ;;1.0;VIRTUAL PATIENT RECORD;**2,32**;Sep 01, 2011;Build 6
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -8,11 +8,11 @@ VPRDJT ;SLC/MKB -- Test VistA data JSON RPC ;10/18/12 6:26pm
  ; DIR                          10026
  ;
 EN ; -- test GET^VPRDJ, write results to screen
- N DFN,TYPE,TEXT,START,STOP,MAX,ID,IN,OUT,IDX
+ N DFN,TYPE,TEXT,START,STOP,MAX,ID,IN,OUT,IDX,QUIT
  F  S DFN=$$PATIENT Q:DFN<1  D 
  . F  S TYPE=$$DOMAIN Q:"^"[TYPE  D
  .. D RPC W !!
- .. K IN,TEXT,START,STOP,MAX
+ .. K IN,TEXT,START,STOP,MAX,QUIT
  Q
  ;
 RPC ; -- get search parameters, run and display
@@ -31,8 +31,20 @@ RPC ; -- get search parameters, run and display
  S:$D(ID) IN("id")=ID
  D GET^VPRDJ(.OUT,.IN)
  ;
- S IDX=OUT W !
- F  S IDX=$Q(@IDX) Q:IDX'?1"^TMP(""VPR"","1.N.E  Q:+$P(IDX,",",2)'=$J  W !,@IDX
+ W ! F IDX=.5:.1:.9 W:$D(@OUT@(IDX)) !,@OUT@(IDX) ;version and total
+ F  S IDX=$O(@OUT@(IDX)) Q:IDX<1  D  Q:$G(QUIT)
+ . I $G(@OUT@(IDX))="]}}" W !,@OUT@(IDX) S QUIT=1 Q
+ . D READ Q:$G(QUIT)  W !!
+ . S I=.9 F  S I=$O(@OUT@(IDX,I)) Q:I<1  W @OUT@(IDX,I)
+ K @OUT
+ ;S IDX=OUT W !
+ ;F  S IDX=$Q(@IDX) Q:IDX'?1"^TMP(""VPR"","1.N.E  Q:+$P(IDX,",",2)'=$J  W !,@IDX
+ Q
+ ;
+READ ; -- continue?
+ N X K QUIT
+ W !!,"Press <return> to continue or ^ to exit results ..." R X:DTIME
+ S:X["^" QUIT=1
  Q
  ;
 PATIENT() ; -- select patient

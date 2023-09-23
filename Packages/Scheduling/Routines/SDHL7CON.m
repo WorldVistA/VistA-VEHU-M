@@ -1,10 +1,11 @@
 SDHL7CON ;MS/TG/MS/PB - TMP HL7 Routine;JULY 05, 2018
- ;;5.3;Scheduling;**704,773,812**;May 29, 2018;Build 17
+ ;;5.3;Scheduling;**704,773,812,858**;May 29, 2018;Build 2
  ;
  ;  Integration Agreements:
  ;
  ;SD*5.3*773 - Removed unused function TMCONV
  ;SD*5.3*812 - Removed code that sent AA for "No consults found" and then quit the process
+ ;SD*5.3*858 - Filter out a MRTC type RTC from being returned to TMP till a future patch restores this feature.
  Q
  ;
 PARSEQ13 ;Process QBP^Q13 messages from the "TMP VISTA" Subscriber protocol
@@ -240,6 +241,7 @@ RTCLIST(SDY,SDPT,SDSDT,SDEDT) ; return patient's "Return to Clinic" appointment 
  . S:$P($G(^SDEC(409.85,IEN,3)),"^")=1 MRTC=$P($G(^SDEC(409.85,IEN,3)),"^",3),RTCINT=$P($G(^SDEC(409.85,IEN,3)),"^",2),RTCPAR=$P($G(^SDEC(409.85,IEN,3)),"^",5)
  . S:$G(RTCPAR)="" RTCPAR=IEN
  . S:$G(MRTC)="" MRTC=0 S:$G(RTCINT)="" RTCINT=0
+ . Q:$P($G(^SDEC(409.85,IEN,3)),U,1)    ;858 this Requests rec is MRTC related do not return.
  . I +CLINID D
  . . S CLINNM=$$GET1^DIQ(44,CLINID_",",".01")
  . . S STOP=$$GET1^DIQ(44,CLINID_",",8)_","_$$GET1^DIQ(44,CLINID_",",2503)

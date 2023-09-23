@@ -1,5 +1,5 @@
 PSBPXLP ;BIR/RMS - BCMA2PCE FOR IMMUNIZATIONS, TASKED ; 6/23/09 4:16pm
- ;;3.0;BAR CODE MED ADMIN;**47,76**;Mar 2004;Build 10
+ ;;3.0;BAR CODE MED ADMIN;**47,76,142**;Mar 2004;Build 12
  ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified.
  ;
  ; Reference/IA
@@ -12,7 +12,9 @@ PSBPXLP ;BIR/RMS - BCMA2PCE FOR IMMUNIZATIONS, TASKED ; 6/23/09 4:16pm
  ;Geri Wittenberg (Hines, now at North Chicago) are acknowledged.
  ;--------------------------------------------------------------
  ;
-TASK I $D(ZTQUEUED) G TASK2
+TASK ;
+ Q  ;p142 bcma2pce sunset
+ I $D(ZTQUEUED) G TASK2
  N %DT,DTOUT,X,X1,X2,Y,PSBDTB,PSBUDT
  S X1=DT,X2=-1 D C^%DTC S PSBDTB=X\1
  W !,"Immunizations Documentation by BCMA",!

@@ -1,5 +1,5 @@
-XQALDATA ;ISC/JLI ISD/HGW - PROVIDE DATA ON ALERTS ; Feb 01, 2023@14:51
- ;;8.0;KERNEL;**207,285,443,513,602,653,734,662,772**;Jul 10, 1995;Build 5
+XQALDATA ;ISC/JLI ISD/HGW - PROVIDE DATA ON ALERTS ; Mar 23, 2023@8:00
+ ;;8.0;KERNEL;**207,285,443,513,602,653,734,662,772,784**;Jul 10, 1995;Build 6
  ;Per VHA Directive 2004-038, this routine should not be modified
  Q
 GETUSER(ROOT,XQAUSER,FRSTDATE,LASTDATE) ; SR. ICR #4834 (private OE/RR)
@@ -100,20 +100,32 @@ GETUSER1(ROOT,XQAUSER,FRSTDATE,LASTDATE,FLAG) ;Add FLAG to check for deferred al
  . S @ROOT=NCNT
  . Q
  Q
+ ;
+ ;
+ ; Get XQAUSER's PROCESSED alerts where the processed date is between FRSTDATE and LASTDATE
+ ;   If MAXRET is passed, only return up to MAXRET alerts. MAXRET must be > 0 or it will default to 1 P784
+ ;   The PROONLY and FLAG parameters are not used
+ ;   Hard code the returned processed alerts to descending order P784
 GETUSER2(ROOT,XQAUSER,FRSTDATE,LASTDATE,MAXRET,PROONLY,FLAG) ;Get PROCESSED alerts rather than pending alerts p662
- N NCNT,KEY,TYPNODE,RTYP,SURRFOR,PROCBY,SURRDA,FWDNM,FWDDT,LASTTYPE
- N RETURN
- S NCNT=0 K @ROOT
- S @ROOT=NCNT
+ I '$D(ROOT) Q    ;Quit if ROOT is undefined P784
+ K @ROOT
+ S @ROOT=0
+ I ($G(XQAUSER)'>0)&($G(DUZ)'>0) Q    ;Quit is XQAUSER and DUZ are '> 0 P784
  S:$G(XQAUSER)'>0 XQAUSER=DUZ
  S:$G(FRSTDATE)'>0 FRSTDATE=0
  S:$G(LASTDATE)'>0 LASTDATE=0
- S:$G(FLAG)'>0 FLAG=0
+ S:$G(MAXRET)'>0 MAXRET=1    ;Default to 1 record returned if no parameter passed p784
+ N NCNT,RECIPDA,PDATE
+ S NCNT=0
  I $$ACTVSURO^XQALSURO(XQAUSER)'>0 D RETURN^XQALSUR1(XQAUSER)
- N X,X1,X2,X3,X4,X20,XDEF,XCKUSER,PDATE,RECIPDA,XDA,XMDA
  S RECIPDA=XQAUSER Q:'$D(^XTV(8992.1,"PAR",XQAUSER))  D
- . S PDATE=FRSTDATE I PDATE'=0 S PDATE=PDATE-.000001
- . F  S PDATE=$O(^XTV(8992.1,"PAR",RECIPDA,PDATE)) Q:PDATE>LASTDATE!(PDATE="")  D
+ . N XDA,XMDA,X,X1,X2,X3,X4,X20
+ . N KEY,TYPNODE,RTYP,SURRFOR,PROCBY,SURRDA,RETURN,FWDNM,FWDDT,LASTTYPE
+ . ;p784
+ . ;    Add the ",-1" parameter to the $O command for descending order
+ . ;    Initialize PDATE to LASTDATE and add a small offset so that LASTDATE is included
+ . S PDATE=LASTDATE I PDATE'=0 S PDATE=PDATE+.000001
+ . F  S PDATE=$O(^XTV(8992.1,"PAR",RECIPDA,PDATE),-1) Q:PDATE<FRSTDATE!(PDATE="")  D
  . . S XDA="" F  S XDA=$O(^XTV(8992.1,"PAR",RECIPDA,PDATE,XDA)) Q:XDA=""  I $D(^XTV(8992.1,XDA)) D
  . . . S XMDA="" F  S XMDA=$O(^XTV(8992.1,"PAR",RECIPDA,PDATE,XDA,XMDA)) Q:XMDA=""  D
  . . . . S X=$G(^XTV(8992.1,XDA,0)),X1=$G(^(1)),X2=$G(^(2)),X3=$G(^(3)),X4=$G(^(4))
@@ -141,10 +153,13 @@ GETUSER2(ROOT,XQAUSER,FRSTDATE,LASTDATE,MAXRET,PROONLY,FLAG) ;Get PROCESSED aler
  . . . . I SURRDA]"" S SURRFOR=$P($G(^VA(200,SURRDA,0)),U)
  . . . . S NCNT=NCNT+1
  . . . . I MAXRET,NCNT>MAXRET Q
- . . . . S KEY=$S($P(X3,U)'="":"G  ",X4>1:"L  ",$P(X1,U,3,4)="^ ":"I  ",1:"R  "),@ROOT@(NCNT)=KEY_$P(X1,U)_U_$P(X,U),@ROOT@(NCNT,"PROCESSED")=$P(X20(0),U,2)_U_$P(X20(0),U,3)_U_$P(X20(0),U,4)_U_$P(X20(0),U,5)_U_RTYP_U_PROCBY_U_SURRFOR_U_FWDNM
+ . . . . S KEY=$S($P(X3,U)'="":"G  ",X4>1:"L  ",$P(X1,U,3,4)="^ ":"I  ",1:"R  ")
+ . . . . S @ROOT@(NCNT)=KEY_$P(X1,U)_U_$P(X,U)
+ . . . . S @ROOT@(NCNT,"PROCESSED")=$P(X20(0),U,2)_U_$P(X20(0),U,3)_U_$P(X20(0),U,4)_U_$P(X20(0),U,5)_U_RTYP_U_PROCBY_U_SURRFOR_U_FWDNM
  I MAXRET,NCNT>MAXRET S NCNT=MAXRET
  S @ROOT=NCNT
  Q
+ ;
 DEFALERT(ROOT,XQAUSER1,DEFDATE,ALERTID) ;ADD DEFERRED DATE/TIME TO ALERT; FOR CPRS USE P653
  ;ROOT            =Global created to store the information
  ;XQAUSER1        =User responsible for the alert

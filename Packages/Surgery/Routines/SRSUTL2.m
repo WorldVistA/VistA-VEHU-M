@@ -1,5 +1,5 @@
 SRSUTL2 ;B'HAM ISC/MAM - MISC. UTILITIES ; [ 04/28/97  1:40 PM ]
- ;;3.0; Surgery ;**34,67,107**;24 Jun 93
+ ;;3.0;Surgery;**34,67,107,211**;24 Jun 93;Build 3
  ;
  ; Reference to ^TMP("CSLSUR1" supported by DBIA #3498
  ;
@@ -16,7 +16,8 @@ UPDTCC S SRSCC=1 Q:SRBOTH'=1  S SRTN=$P(^SRF(SRTOLD,"CON"),"^"),DR="17////"_$P(^
  S SRSDOC=$P(^SRF(SRTN,.1),"^",4),SRSOP=$P(^SRF(SRTN,"OP"),"^"),$P(^SRF(SRTN,31),"^",4)="",$P(^(31),"^",5)=""
  Q
 NOCC ; no longer concurrent cases
- S DA=$P(^SRF(SRTN,"CON"),"^"),DIE=130,DR="35///@" D ^DIE S SROERR=$P(^SRF(SRTN,"CON"),"^") D ^SROERR0 S DA=SRTN D ^DIE S SROERR=SRTN,^TMP("CSLSUR1",$J)="" D ^SROERR0
+ S DA=$P(^SRF(SRTN,"CON"),"^"),DIE=130,DR="35///@" D ^DIE S SROERR=$P(^SRF(SRTN,"CON"),"^") D ^SROERR0 ;SR*3*211
+ S DA=SRTN,DIE=130,DR="35///@" D ^DIE S SROERR=SRTN,^TMP("CSLSUR1",$J)="" D ^SROERR0                   ;SR*3*211
  I $D(SRTNEW) S DA=SRTNEW D ^DIE S SROERR=SRTNEW,^TMP("CSLSUR1",$J)="" D ^SROERR0
  Q
 TIMES ; calculated times

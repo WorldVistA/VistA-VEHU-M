@@ -1,5 +1,5 @@
 PSOSPML0 ;BIRM/MFR - Scheduled Batch Export ;1/6/21  12:58
- ;;7.0;OUTPATIENT PHARMACY;**408,451,625,630,696**;DEC 1997;Build 4
+ ;;7.0;OUTPATIENT PHARMACY;**408,451,625,630,696,724**;DEC 1997;Build 3
  ;
 AUTO ; SPMP Scheduled Background Job Edit
  N DIC,Y S DIC(0)="XZM",DIC="^DIC(19.2,",X="PSO SPMP SCHEDULED EXPORT" D ^DIC
@@ -196,7 +196,7 @@ SENDMAIL(BATCHIEN,BATTYPE,DEA) ; ASAP 1995 Only - Mailman message about Return T
  I (BATTYPE="ZY") D
  . S XMSUB=STANAME_" SPMP Controlled Substance Zero Report: "_$$FMTE^XLFDT($$GET1^DIQ(58.42,BATCHIEN,4,"I")\1,"5Z")
  . S PSOMSG(1)="No prescriptions met the submission criteria for Pharmacies using DEA#"_DEA
- . S PSOMSG(2)="A Zero Report has been transmitted to the state."
+ . S PSOMSG(2)="A Zero Report has been created for transmission to the state."
  ;
  ;Zero Report NOT Sent
  I (BATTYPE="ZN") D

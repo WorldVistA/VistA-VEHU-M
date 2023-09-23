@@ -1,17 +1,27 @@
-RAHLRU ;HISC/GJC - utilities for HL7 messaging ;10 Sep 2019 3:57 PM
- ;;5.0;Radiology/Nuclear Medicine;**10,25,81,103,47,125,162**;Mar 16, 1998;Build 2
+RAHLRU ;HISC/GJC - utilities for HL7 messaging ; Apr 26, 2023@12:41:24
+ ;;5.0;Radiology/Nuclear Medicine;**10,25,81,103,47,125,162,203**;Mar 16, 1998;Build 1
  ;
  ; 08/13/2010 BP/KAM RA*5*103 Outside Report Status Code needs 'F'
  ;Integration Agreements
  ;----------------------
  ;$$GET1^DIQ(2056); $$HLDATE^HLFNC(10106); INIT^HLFNC2(2161)
  ;GENERATE^HLMA(2164); $$NOW^XLFDT(10103); $$PATCH^XPDUTL(10141)
- ;$$VERSION^XPDUTL(10141)
+ ;$$VERSION^XPDUTL(10141); $$HLNAME^XLFNAME(3065)
  ;
  ;IA:  global read .01 field, file ^HL(771,
  ;IA:  global read .01 field, file ^HL(771.2,
  ;IA:  global read .01 field, file ^HL(771.5,
  ;IA:  global read .01 field, file ^HL(779.001,
+ ;
+ ; RA*5.0*203 update NSR 20230216 gjc 04/26/23
+OBR16 ;set OBR-16 Requesting Physician from the exam 70.03;14
+ ;RAZXAM is the zero node for the exam (70.03)
+ ;called from RAHLR1A & RAHLRPT1
+ K RAZNME S RAZNME("FILE")=200,RAZNME("IENS")=$P(RAZXAM,U,14)
+ S RAZNME("FIELD")=.01
+ S RAOBR(17)=$P(RAZXAM,U,14)_$E(HLECH)_$$HLNAME^XLFNAME(.RAZNME,"S",$E(HLECH,1))
+ K RAZNME
+ Q
  ;
 OBX11 ; set OBX-11, = 12th piece of string where piece 1 is "OBX"
  N RARPTIEN,Y

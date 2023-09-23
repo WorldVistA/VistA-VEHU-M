@@ -11224,7 +11224,7 @@ ZWR
 ^DMSQ("OF",5619,0)="D_DELETED_I_INAC_M_MERGED^2^Set output format"
 ^DMSQ("OF",5619,1)="$P($P("";D:DELETED;I:INACTIVATED;M:MERGED;"","";""_{B}_"":"",2),"";"")"
 ^DMSQ("OF",5620,0)="I_I_C_C_T_T_O_O_6_6_P_V_V_A_AF^2^Set output format"
-^DMSQ("OF",5620,1)="$P($P("";I:IHS;C:CONTRACT;T:TRIBAL;O:OTHER;6:638 PROGRAM;V:VA;AF:AIR FORCE;N:NAVY;E:EHR;"","";""_{B}_"":"",2),"";"")"
+^DMSQ("OF",5620,1)="$P($P("";I:IHS;C:CONTRACT;T:TRIBAL;O:OTHER;6:638 PROGRAM;V:VA;AF:AIR FORCE;N:NAVY;E:EHR;ARMY:ARMY;USCG:COAST GUARD;"","";""_{B}_"":"",2),"";"")"
 ^DMSQ("OF",5621,0)="A_A_H_H_I_I_H_C_C_R_T_T_N_N_FS^2^Set output format"
 ^DMSQ("OF",5622,0)="N0_ACTIVE_1_DELETED^2^Set output format"
 ^DMSQ("OF",5622,1)="$P($P("";0:ACTIVE;1:DELETED;"","";""_{B}_"":"",2),"";"")"

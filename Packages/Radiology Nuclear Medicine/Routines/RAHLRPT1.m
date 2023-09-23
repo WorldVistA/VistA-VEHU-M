@@ -1,5 +1,5 @@
-RAHLRPT1 ;HISC/GJC-Compiles HL7 'ORU' Message Type ;05 Dec 2017 2:43 PM
- ;;5.0;Radiology/Nuclear Medicine;**47,144,150**;Mar 16, 1998;Build 2
+RAHLRPT1 ;HISC/GJC-Compiles HL7 'ORU' Message Type ; Apr 26, 2023@12:37:36
+ ;;5.0;Radiology/Nuclear Medicine;**47,144,150,203**;Mar 16, 1998;Build 1
  ;
  ;Integration Agreements
  ;----------------------
@@ -55,12 +55,11 @@ OBR ;Compile 'OBR' Segment
  S RAZPMOD=$$SPECSRC^RAHLRU1(+$P(RAZXAM,U,11))
  S:$L(RAZPMOD) RAOBR(16)=$$REPEAT^RAHLRU1($E(HLECH),4)_$E(HLECH,4)_RAZPMOD
  ;
- ;Ordering Provider OBR-16 (REQUESTING PHYSICIAN) 75.1;14
- I $P(RAZORD,U,14),($$GET1^DIQ(200,$P(RAZORD,U,14),.01)'="") D
- .K RAZNME S RAZNME("FILE")=200,RAZNME("IENS")=$P(RAZORD,U,14)
- .S RAZNME("FIELD")=.01
- .S RAOBR(17)=$P(RAZORD,U,14)_$E(HLECH)_$$HLNAME^XLFNAME(.RAZNME,"S",$E(HLECH,1))
- .Q
+ ;RA*5.0*203 update NSR 20230216 gjc 04/26/23
+ ;From: Req. Physician on the order (75.1;14)
+ ;  To: Req. Physician on the exam (70.03;14)
+ ;Ordering Provider OBR-16 (REQUESTING PHYSICIAN) 70.03;14
+ I $P(RAZXAM,U,14),($$GET1^DIQ(200,$P(RAZXAM,U,14),.01)'="") D OBR16^RAHLRU
  ;
  ;Call Back Phone numbers of Ordering Provider OBR-17
  D

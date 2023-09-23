@@ -1,5 +1,5 @@
 VPRD ;SLC/MKB -- Serve VistA data as XML via RPC ;8/2/11  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**1,2,4,5,6**;Sep 01, 2011;Build 2
+ ;;1.0;VIRTUAL PATIENT RECORD;**1,2,4,5,6,32**;Sep 01, 2011;Build 6
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -7,6 +7,7 @@ VPRD ;SLC/MKB -- Serve VistA data as XML via RPC ;8/2/11  15:29
  ; ^DPT                         10035
  ; ^SC                          10040
  ; ^USC(8932.1)                  4984
+ ; ^VA(200                      10060
  ; DIQ                           2056
  ; MPIF001                       2701
  ; VASITE                       10112
@@ -125,11 +126,13 @@ ADD(X) ; Add a line @VPR@(n)=X
  ;
 STRING(ARRAY) ; -- Return text in ARRAY(n) or ARRAY(n,0) as a string
  N I,X,Y S Y=""
+ N CRLF S CRLF=+$G(FILTER("nowrap")) ;1=insert CRLF between lines
  S I=+$O(ARRAY("")) I I=0 S I=+$O(ARRAY(0))
  S Y=$S($D(ARRAY(I,0)):ARRAY(I,0),1:$G(ARRAY(I)))
  F  S I=$O(ARRAY(I)) Q:I<1  D
  . S X=$S($D(ARRAY(I,0)):ARRAY(I,0),1:ARRAY(I))
  . I $E(X)=" " S Y=Y_$C(13,10)_X Q
+ . I CRLF S Y=Y_$C(13,10)_X Q
  . S Y=Y_$S($E(Y,$L(Y))=" ":"",1:" ")_X
  Q Y
  ;

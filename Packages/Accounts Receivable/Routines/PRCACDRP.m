@@ -1,6 +1,6 @@
 PRCACDRP ;ALB/YG - Catastrophically Disabled Exempt Copay Charge Report; July 25, 2019@21:06
- ;;4.5;Accounts Receivable;**350,386**;Mar 20, 1995;Build 6
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;;4.5;Accounts Receivable;**350,386,414**;Mar 20, 1995;Build 2
+ ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Routine was cloned from IBOCDRPT and moved to AR (PRCA) namespace
  ;
@@ -43,7 +43,6 @@ DQ U IO
  . . S IBZ=$G(^IB(IBX,0)),DFN=+$P(IBZ,"^",2),PRCAAR1=IBX,(PRCAADMT,PRCAAR1)=""   ;PRCA*4.5*386
  . . I $P(IBZ,U,16) D   ;PRCA*4.5*386
  . . . S PRCAAR1=$G(^IB($P(IBZ,U,16),0))
- . . I $G(IBZ),":201:202:203:"[(":"_$P(IBZ,U,3)_":") Q   ;PRCA*4.5*386
  . . I +PRCAAR1,":55:56:"[(":"_+$P(PRCAAR1,U,3)_":") S PRCAADMT=$P(PRCAAR1,U,17)   ;PRCA*4.5*386
  . . S PRGRP=$$PRIORITY^DGENA(DFN)
  . . S IBDT=$S($E($P(IBZ,"^",4),1,2)=52:IBDDT,$P(IBZ,"^",8)="RX COPAYMENT":IBDDT,$P(IBZ,"^",15):$P(IBZ,"^",15),1:$P(IBZ,"^",14))\1 S:PRCAADMT IBDT=PRCAADMT
@@ -61,7 +60,7 @@ DQ U IO
  . . S IBARBILL=$S(IBARX:$$BILL^RCJIBFN2(IBARX),1:"")  ; IA# 1452
  . . K IBARDATA
  . . I IBARX D DIQ^RCJIBFN2(IBARX,"8,77:79;141;203;255.1","IBARDATA") ; IA# 1452
- . . S IBDATA=$$GETIB^RCDMCR4B(IBX,0)
+ . . S IBDATA=$$GETIB^RCDMCR4B(IBX,0) I +IBDATA=0 Q  ; PRCA*4.5*414
  . . S MCDT=$P(IBDATA,U,2) S:MCDT="" MCDT=$P(IBDATA,U,3)
  . . S RXDT=$P(IBDATA,U,4)
  . . S EOCDT=$S(RXDT>MCDT:RXDT,1:MCDT)

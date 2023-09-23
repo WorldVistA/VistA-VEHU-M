@@ -1,5 +1,5 @@
-XUSAML ;ISD/HGW Kernel SAML Token Implementation ; Apr 18, 2022@15:39
- ;;8.0;KERNEL;**655,659,630,701,731,771**;Jul 10, 1995;Build 8
+XUSAML ;ISD/HGW - Kernel SAML Token Implementation ; Apr 18, 2022@15:39
+ ;;8.0;KERNEL;**655,659,630,701,731,771,779**;Jul 10, 1995;Build 5
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Implements the Kernel SAML Token message framework for the Identification and
@@ -261,7 +261,7 @@ IDPASS(XUA) ;Intrinsic Function. Extract Application ID
  I $G(RETURN)'="" D
  . S ^XTMP("XUSAMLAPPID",0)=XTE_"^"_XTD_"^SAML Application ID" ;capture and log application ID from SAML token
  . S ^XTMP("XUSAMLAPPID",0,RETURN)=""
- . S RETURN=$$LOW^XLFSTR(RETURN)
+ ;. S RETURN=$$LOW^XLFSTR(RETURN)  p779
  Q RETURN
 CONVTIME(TIME) ;Intrinsic Function. Convert XML time to FileMan format
  ;ZEXCEPT: %DT ;environment variable

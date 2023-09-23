@@ -1,5 +1,5 @@
 PSORRX2 ;AITC/BWF - Remote RX driver ;8/30/16 12:00am
- ;;7.0;OUTPATIENT PHARMACY;**454,479,497,541,643**;DEC 1997;Build 35
+ ;;7.0;OUTPATIENT PHARMACY;**454,479,497,541,643,728**;DEC 1997;Build 5
  ;
  Q
  ; read response from refill site
@@ -133,7 +133,7 @@ REFRXD(DATA,HLDAT,TYPE)  ;
  S ($P(@HLDAT@("RX0"),U,9),PSOHLSV("# OF REFILLS"))=$P(DATA,ORFS,9),$P(@HLDAT@("RX0"),U,11)="W"
  S $P(@HLDAT@("RX0"),U,18)=$P(DATA,ORFS,23)  ; Copies
  S ($P(@HLDAT@("RX2"),U,6),PSOHLSV("EXP DT"))=$P(DATA,ORFS,20)  ; Rx Expiration Date 
- S PSOHLSV("ROUTING")=$P(DATA,ORFS,13) ;Routing (Mail/Window)
+ S PSOHLSV("ROUTING")="WINDOW" ;All OneVA fills are Window
  S PSOHLSV("CAP")=$P($P(DATA,ORFS,15),"~",2) ;Safety Cap
  S PSOHLSV("HOST RX LOG IEN")=$P($P(DATA,ORFS,8),":",5)
  S PSOHLSV("TOTAL FILLS")=PSOHLSV("# OF REFILLS")+1

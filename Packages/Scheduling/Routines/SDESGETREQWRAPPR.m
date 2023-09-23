@@ -1,5 +1,5 @@
-SDESGETREQWRAPPR ;ALB/BLB,MGD,JAS - VISTA SCHEDULING RPCS ;Apr 4, 2023
- ;;5.3;Scheduling;**815,818,820,823,825,831,838,842,843**;Aug 13, 1993;Build 9
+SDESGETREQWRAPPR ;ALB/BLB,MGD,JAS,LAB,TJB - VISTA SCHEDULING GET REQUEST RPCS ;JUL 18, 2023
+ ;;5.3;Scheduling;**815,818,820,823,825,831,838,842,843,847,851**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -63,6 +63,7 @@ SDESGETREQWRAPPR ;ALB/BLB,MGD,JAS - VISTA SCHEDULING RPCS ;Apr 4, 2023
  ;("Request",1,"PatientIndicatedDate")
  ;("Request",1,"PatientName")
  ;("Request",1,"PatientStatus")
+ ;("Request",1,"PIDChangeAllowed")
  ;("Request",1,"Priority")
  ;("Request",1,"ProviderIEN")
  ;("Request",1,"ProviderName")
@@ -193,6 +194,7 @@ APPTREQUEST(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"CommentMultiple",1)=""
  S REQUEST("Request",NUM,"RequestComments")=""
  S REQUEST("Request",NUM,"ServiceConnectedPercentage")=""
+ S REQUEST("Request",NUM,"PIDChangeAllowed")=""
  Q
  ;
 SDECONTACT(REQUEST,NUM) ;
@@ -201,7 +203,7 @@ SDECONTACT(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"SdecContactNumberOfTextContact")=""
  S REQUEST("Request",NUM,"SdecContactNumberOfSecureMessage")=""
  S REQUEST("Request",NUM,"SdecContactDateOfLastLetterSent")=""
- S REQUEST("Request",NUM,"SdecContactNumberOfContacts")=""
+ S REQUEST("Request",NUM,"SdecContactNumberOfContacts")=0
  Q
  ;
 RECALL(REQUEST,NUM) ;

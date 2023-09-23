@@ -1,5 +1,5 @@
 VPRDJ ;SLC/MKB -- Serve VistA data as JSON via RPC ;10/18/12 6:26pm
- ;;1.0;VIRTUAL PATIENT RECORD;**2**;Sep 01, 2011;Build 317
+ ;;1.0;VIRTUAL PATIENT RECORD;**2,32**;Sep 01, 2011;Build 6
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -20,6 +20,7 @@ GET(VPR,FILTER) ; -- Return search results as JSON in @VPR@(n)
  ;       FILTER("max")       = maximum number of items to return [opt]
  ;       FILTER("id")        = single item id to return          [opt]
  ;       FILTER("uid")       = single record uid to return       [opt]
+ ;       FILTER("nowrap")    = include line breaks in comments   [opt]
  ;
  N ICN,DFN,VPRSYS,VPRTYPE,VPRSTART,VPRSTOP,VPRMAX,VPRI,VPRID,VPRTEXT,VPRP,VPRTN,VPRERR
  S VPR=$NA(^TMP("VPR",$J)),VPRI=0 K @VPR
@@ -47,15 +48,15 @@ GET(VPR,FILTER) ; -- Return search results as JSON in @VPR@(n)
  S VPRTEXT=+$G(FILTER("text"),1) ;default = true/text
  ;
  ; extract data
- I VPRTYPE="new",$L($T(EN^VPRDJX)) D EN^VPRDJX(VPRID,VPRMAX) Q  ;data updates
+ ;I VPRTYPE="new",$L($T(EN^VPRDJX)) D EN^VPRDJX(VPRID,VPRMAX) Q  ;HMP
  F VPRP=1:1:$L(VPRTYPE,";") S TYPE=$P(VPRTYPE,";",VPRP) I $L(TYPE) D
  . S VPRTN=$$TAG(TYPE)_"^VPRDJ0" Q:'$L($T(@VPRTN))
  . D @VPRTN
  ;
 GTQ ; add item count and terminating characters
  S @VPR@(.5)="{""apiVersion"":""1.01"",""params"":{"_$$SYS_"},"
- I $D(VPRERR) S @VPR@(1)="""error"":{""message"":"""_VPRERR_"""}}" Q
- I '$D(@VPR)!'$G(VPRI) S @VPR@(1)="""data"":{""totalItems"":0,""items"":[]}}" Q
+ I $D(VPRERR) S @VPR@(.7)="""error"":{""message"":"""_VPRERR_"""}}" Q
+ I '$D(@VPR)!'$G(VPRI) S @VPR@(.6)="""data"":{""totalItems"":0,""items"":[]}}" Q
  ;
  S @VPR@(.6)="""data"":{""updated"":"""_$$HL7NOW_""",""totalItems"":"_VPRI_",""items"":["
  S VPRI=VPRI+1,@VPR@(VPRI)="]}}"

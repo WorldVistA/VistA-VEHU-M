@@ -1,5 +1,5 @@
 VPRDPSOR ;SLC/MKB -- Medication extract by order ;8/2/11  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**1,4,18,28**;Sep 01, 2011;Build 6
+ ;;1.0;VIRTUAL PATIENT RECORD;**1,4,18,28,32**;Sep 01, 2011;Build 6
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -28,13 +28,15 @@ EN(DFN,BEG,END,MAX,ORIFN) ; -- find a patient's orders
  I $G(ORIFN) D EN1(ORIFN,.VPRITM),XML^VPRDPS(.VPRITM):$D(VPRITM) Q
  ;
  ; get all orders
- N TYPE,ORDG,ORVP,ORLIST,VPRITM,VPRCNT,VPRN,ORLIST,ORIFN,X3,X4,DAD
+ N TYPE,ORDG,ORFLG,ORVP,ORLIST,VPRITM,VPRCNT,VPRN,ORLIST,ORIFN,X3,X4,DAD
  S TYPE=$G(FILTER("vaType")) S:$L(TYPE) TYPE=$S(TYPE="N":"NV",TYPE="V":"IV",1:TYPE)_" "
  S ORDG=+$O(^ORD(100.98,"B",TYPE_"RX",0)),ORVP=DFN_";DPT("
- D EN^ORQ1(ORVP,ORDG,6,,BEG,END)
+ S ORFLG=+$G(FILTER("view"),6)   ;default = Released Orders
+ I 7<ORFLG,ORFLG<22,ORFLG'=18 Q  ;action, event views not supported
+ D EN^ORQ1(ORVP,ORDG,ORFLG,,BEG,END)
  K ^TMP("VPROR",$J) S (VPRCNT,VPRN)=0
- F  S VPRN=$O(^TMP("ORR",$J,ORLIST,VPRN)) Q:VPRN<1  S ORIFN=$G(^(VPRN)) D  Q:VPRCNT'<MAX
- . Q:$D(^TMP("VPROR",$J,+ORIFN))  Q:$P(ORIFN,";",2)>1  S ORIFN=+ORIFN
+ F  S VPRN=$O(^TMP("ORR",$J,ORLIST,VPRN)) Q:VPRN<1  S ORIFN=+$G(^(VPRN)) D  Q:VPRCNT'<MAX
+ . Q:$D(^TMP("VPROR",$J,ORIFN))  ;Q:$P(ORIFN,";",2)>1  S ORIFN=+ORIFN
  . S X3=$G(^OR(100,ORIFN,3)),X4=$G(^(4))
  . Q:$P(X3,U,3)=13  I X4["P",$P(X3,U,3)=1 Q  ;cancelled
  . S DAD=$P(X3,U,9) I DAD Q:$D(^TMP("VPROR",$J,DAD))  S ORIFN=DAD
@@ -48,6 +50,7 @@ EN1(IFN,MED) ; -- return an order in MED("attribute")=value [from EN]
  N ORUPCHUK,ORVP,ORPCL,ORPK,ORDUZ,ORODT,ORSTRT,ORSTOP,ORL,ORTO,ORSTS,ORNP,ORPV,ORTX
  N CLS,OI,X,LOC,DRUG,DA,CNT,VPRESP K MED
  S IFN=+$G(IFN) I IFN<1!'$D(^OR(100,IFN)) Q
+ I $G(DFN),+$P($G(^OR(100,IFN,0)),U,2)'=DFN Q
  S ORPK=$$PKGID^ORX8(IFN)
  S X=$S(ORPK:$E(ORPK,$L(ORPK)),1:"Z") S:X=+X X="R" ;last char = PS file
  S CLS=$S("RSN"[X:"O","UV"[X:"I",1:$$GETCLS) ; p18 added package check in new function

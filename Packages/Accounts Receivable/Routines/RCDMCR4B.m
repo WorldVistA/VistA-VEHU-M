@@ -1,5 +1,5 @@
 RCDMCR4B ;ALB/YG - 0 - 40 Percent SC Change Reconciliation Report - Collect Data; Apr 9, 2019@21:06
- ;;4.5;Accounts Receivable;**347**;Mar 20, 1995;Build 47
+ ;;4.5;Accounts Receivable;**347,414**;Mar 20, 1995;Build 2
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; See RCDMCR4A for detailed description
@@ -140,6 +140,7 @@ GETIB(IBIEN,IBMODE) ; Get all Outpatient Dates, Inpatient Dates and RX Dates/dru
  S DFN=$P(I0,U,2)
  I 'DFN Q OUT
  S ACTTYPE=$P(I0,U,3)
+ I $$GET1^DIQ(350.1,ACTTYPE_",",.01,"E")["URGENT CARE" Q OUT  ; skip urgent care charges  PRCA*4.5*414
  S DTBILLFR=$P(I0,U,14)
  S STATUS=$P(I0,U,5)
  S PARENT=$$PARENTC^RCDMCR5B(IBIEN),CHGAMT=$P($G(^IB(PARENT,0)),U,7)

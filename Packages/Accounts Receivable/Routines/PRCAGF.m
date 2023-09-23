@@ -1,5 +1,5 @@
 PRCAGF ;WASH-ISC@ALTOONA,PA/CMS-Print Form Letters ;5/1/95  3:04 PM
-V ;;4.5;Accounts Receivable;**1,48,141,190,225,259**;Mar 20, 1995;Build 9
+V ;;4.5;Accounts Receivable;**1,48,141,190,225,259,415**;Mar 20, 1995;Build 1
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
 EN(DEB,SB,PRNT) ;entry send Debtor number and statemet bal
  NEW PRCABN,CR,NOT,STAT
@@ -10,7 +10,7 @@ EN(DEB,SB,PRNT) ;entry send Debtor number and statemet bal
  .D LT(PRCABN,$G(SB))
  Q
 LT(PRCABN,SB,REPNOT) ;find which letter to print needs Site variable
- NEW BY,CAT,CE,CN,EH,EXE,FR,I,INE,IOP,LET,LT,PG,TO,VEN,X,TOPLTR
+ NEW BY,CAT,CE,CN,CU,CV,EH,EXE,FR,I,INE,IOP,LET,LT,PG,TO,VEN,X,TOPLTR
  I '$D(^PRCA(430,PRCABN,0)) Q
  S:'$D(CR) (NOT,CR)="" S:'$G(DEB) DEB=+$P(^PRCA(430,PRCABN,0),U,9)
  S CAT=$P($G(^PRCA(430,PRCABN,0)),U,2),LET=$G(^PRCA(430,PRCABN,6)) Q:CAT=""
@@ -19,10 +19,11 @@ LT(PRCABN,SB,REPNOT) ;find which letter to print needs Site variable
  I SB<0 Q:CR  S LT=$O(^RC(343,"B","CREDIT",0)) D PRT(LT,PRCABN) S CR=1 Q
  I $P($G(^PRCA(430,PRCABN,1)),U,1),$P($G(^RCD(340,$P(^PRCA(430,PRCABN,0),U,9),0)),U,1)[";DPT" Q
  I $G(REPNOT)>0 S:REPNOT=4 REPNOT=3 S $P(LET,U,REPNOT)=""
- I NOT=0 F CN=24,29,30 I CAT=$O(^PRCA(430.2,"AC",CN,0)),$P(LET,U,3)="" D
+ I NOT=0,+$$GET1^DIQ(430.2,CAT_",",1.07,"I") D  ; PRCA*4.5*415
  .I SITE("SUP") S NOT=1 Q
  .S LT=$S('$G(BBAL("INT")):"FL 4-513",1:"FL 4-513w")
  .S LT=$O(^RC(343,"B",LT,0)) D PRT(LT,PRCABN) S NOT=1
+ .Q
  S INE=$O(^PRCA(430.2,"AC",20,0)),EH=$O(^PRCA(430.2,"AC",25,0)),CV=$O(^PRCA(430.2,"AC",34,0))
  S CU=$O(^PRCA(430.2,"AC",38,0))
  I CAT=INE!(CAT=CV)!(CAT=CU),$P(LET,U,1)="" S LT=$O(^RC(343,"B","FL 4-480",0)) D PRT(LT,PRCABN) Q

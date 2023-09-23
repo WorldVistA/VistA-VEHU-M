@@ -1,5 +1,5 @@
 PSOHLDS5 ;BIR/MV - Misc HL7 function ; 8/30/21 3:21pm
- ;;7.0;OUTPATIENT PHARMACY;**643**;DEC 1997;Build 35
+ ;;7.0;OUTPATIENT PHARMACY;**643,728**;DEC 1997;Build 5
  ;External reference to ^PS(50.606 supported by DBIA 2174
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference to ^PS(51.2 supported by DBIA 2226
@@ -234,7 +234,7 @@ RXE(PSI) ;
  S $P(RXE,"|",3)="" I $G(PSOXN)="" S PSOXN=""""""
  S $P(RXE,"|",5)=PSOXN_CS_$S($G(PSOUNIT)'="":$G(PSOUNIT),1:"""""")_CS_"99PSU"
  S PSOIPTR=$P($G(^PSDRUG(PSOLDRUG,2)),"^") I PSOIPTR S PSODOSE=$P($G(^PS(50.7,PSOIPTR,0)),"^",2),PSODOSEN=$P($G(^PS(50.606,PSODOSE,0)),"^")
- I 'PSOIPTR S PSODOSE=$P(PSOXNDF1,"^"),PSODOSEN=$P(PSOXNDF1,"^",2)
+ I 'PSOIPTR,$G(PSOXNDF1)'="" S PSODOSE=$P(PSOXNDF1,"^"),PSODOSEN=$P(PSOXNDF1,"^",2)
  I $G(PSODOSE) S $P(RXE,"|",6)=PSODOSE_CS_PSODOSEN_CS_"99PSF"
  I '$G(PSODOSE) S $P(RXE,"|",6)=""""""
  S $P(RXE,"|",8)=""""""

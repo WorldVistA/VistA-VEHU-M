@@ -1,5 +1,5 @@
-SDESGETPATAPPT ;ALB/BLB - VISTA SCHEDULING RPCS ;DEC 29, 2021@14:48
- ;;5.3;Scheduling;**809**;Aug 13, 1993;Build 10
+SDESGETPATAPPT ;ALB/BLB,ANU - VISTA SCHEDULING RPCS ;JUNE 27, 2023@14:48
+ ;;5.3;Scheduling;**809,847**;Aug 13, 1993;Build 4
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -101,7 +101,7 @@ GETAPPT(SDPATAPPT,DFN,DATETIME) ; get patient appointment from file
  S SDPATAPPT("PatientAppt",NUM,"FollowUpVisit")=$G(APPTARY(F,IENS,28,"E"))
  S SDPATAPPT("PatientAppt",NUM,"SchedulingApplication")=$G(APPTARY(F,IENS,29,"I"))
  S SDPATAPPT("PatientAppt",NUM,"SchedulerName")=$G(APPTARY(F,IENS,30,"E"))
- S SDPATAPPT("PatientAppt",NUM,"CurrentStatus")=$G(APPTARY(F,IENS,100,"E"))
+ ;S SDPATAPPT("PatientAppt",NUM,"CurrentStatus")=$G(APPTARY(F,IENS,100,"E"))
  I $D(SDPATAPPT) Q 1
  Q 0
  ;

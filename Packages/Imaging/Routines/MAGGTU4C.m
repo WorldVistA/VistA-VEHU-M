@@ -1,6 +1,6 @@
-MAGGTU4C ;WOIFO/GEK/SG/NST/JSL/DAC/JSJ - VERSION CONTROL (CLINICAL CAPTURE) ; May 20, 2022@10:13:54
- ;;3.0;IMAGING;**93,94,106,117,122,129,140,151,178,189,211,215,223,233,226,264,267,321**;Mar 19, 2002;Build 27
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGGTU4C ;WOIFO/GEK/SG/NST/JSL/DAC/JSJ/MKN - VERSION CONTROL (CLINICAL CAPTURE) ; Feb 22, 2023@12:37:45
+ ;;3.0;IMAGING;**93,94,106,117,122,129,140,151,178,189,211,215,223,233,226,264,267,321,291**;Mar 19, 2002;Build 61
+ ;; Per VA Directive 6402, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -24,9 +24,9 @@ CLVERCT ;***** VERSION CONTROL TABLE FOR THE CLINICAL CAPTURE CLIENTS
  ;;==================================================================
  ;;| Version |Build|Seq #|                Comment                   |
  ;;|---------+-----+------------------------------------------------|
- ;;| 3.0.321 |   2 |  ?? | Apr 2022                                 |
+ ;;| 3.0.291 |   4 |  90 | Mar 2023                                 |
+ ;;| 3.0.321 |   2 |  87 | Apr 2022                                 |
  ;;| 3.0.267 |   2 |  86 | Apr 2021                                 |
- ;;| 3.0.264 |   1 |  85 | Jul 2020                                 |
  ;;==================================================================
  ;
  ; Each row of the version control table contains the version and
@@ -35,8 +35,10 @@ CLVERCT ;***** VERSION CONTROL TABLE FOR THE CLINICAL CAPTURE CLIENTS
  ; Sort order of the rows does not matter. However, the reversed
  ; order of patch sequential numbers is recommended.
  ; NOTE:
+ ;  Patch 291 removed support for
+ ;     3.0.321 |   2 |  87 | Apr 2020
  ;  Patch 321 removed support for
- ;     3.0.226 |   2 |  84 | Sep 2019                                 |
+ ;     3.0.267 |   2 |  86 | Apr 2021                                 |
  ;  Patch 267 removed support for
  ;     3.0.251 |   3 |  86 | Dec 2020
  ;  Patch 251 removed support for (deleted patch)

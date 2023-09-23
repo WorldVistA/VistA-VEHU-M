@@ -1,5 +1,5 @@
 PSBPXFL ;BIR/RMS - BCMA TO PCE LINK FOR IMMUNIZATIONS ; 4/11/14 2:30pm
- ;;3.0;BAR CODE MED ADMIN;**47,76**;Mar 2004;Build 10
+ ;;3.0;BAR CODE MED ADMIN;**47,76,142**;Mar 2004;Build 12
  ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified.
  ;
  ; Reference/IA
@@ -9,6 +9,7 @@ PSBPXFL ;BIR/RMS - BCMA TO PCE LINK FOR IMMUNIZATIONS ; 4/11/14 2:30pm
  ; ^SC(/10040
  ;
 BCMA2PCE(PSBDFN,PSBIMM,PSBDX,PSBDT,PSBWHO,PSBLOC) ;
+ Q  ;p142 bcma2pce sunset
  D CLEAN
  D SETUP
  Q:$G(PSBSTOP)

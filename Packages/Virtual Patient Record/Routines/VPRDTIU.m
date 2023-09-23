@@ -1,5 +1,5 @@
 VPRDTIU ;SLC/MKB -- TIU extract ;8/2/11  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**1,2,4,5**;Sep 01, 2011;Build 21
+ ;;1.0;VIRTUAL PATIENT RECORD;**1,2,4,5,32**;Sep 01, 2011;Build 6
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -139,9 +139,10 @@ TEXT(VPRIFN) ; -- Get document IFN text, return temp array name
  ;
 INFO(IFN) ; -- Returns ien^localTitle^natlTitle^VUID
  ; or -1^STATUS if not viewable
- N X,Y,VPRTIU,LT,NT,VUID,I,J S IFN=+$G(IFN)
- I '$D(^TIU(8925,IFN,0)) Q "-1^DELETED"
- D EXTRACT^TIULQ(IFN,"VPRTIU",,".01;.05")
+ N X,Y,VPRTIU,VPRERR,LT,NT,VUID,I,J S IFN=+$G(IFN)
+ ;I '$D(^TIU(8925,IFN,0)) Q "-1^DELETED"
+ D EXTRACT^TIULQ(IFN,"VPRTIU",.VPRERR,".01;.05")
+ I $G(VPRERR) Q "-1^ERROR"
  I VPRTIU(IFN,.05,"I")<7!(VPRTIU(IFN,.05,"I")>13) Q "-1^"_VPRTIU(IFN,.05,"E")
  S LT=$G(VPRTIU(IFN,.01,"E")),VUID=""
  I $P(LT," ")="Addendum" Q "-1^ADDENDUM"
@@ -256,6 +257,9 @@ MATCH(DOC) ; -- Return 1 or 0, if document DA matches search criteria
  ; both parent + addenda returned by TIU if any match search criteria
  ; include addenda if pulling only unsigned items:
  I $P(DOC,U,2)?1"Addendum ".E,STATUS'=2 G MQ
+ ; skip any child if getting text, unless unsigned
+ ; piece 14 = parent ien, or context (1-5) if no parent
+ I $P(DOC,U,14)>5,$G(VPRTEXT),STATUS'=2 G MQ
  ; remove completed parent notes from TIU unsigned list:
  I CTXT=2,$P(DOC,U,7)'="unsigned" G MQ
  ; remove Uncosigned notes from 'complete' view:

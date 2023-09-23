@@ -1,5 +1,5 @@
 RCDMCR7A ;ALB/YG - 10-40% SC Medical Care Copayment Exempt Charge Reconciliation Report - Input/output; Apr 9, 2019@21:06
- ;;4.5;Accounts Receivable;**347,386**;Jan 29, 2019;Build 6
+ ;;4.5;Accounts Receivable;**347,386,414**;Jan 29, 2019;Build 2
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;This routine is being implemented for the AR Cross-Servicing Project
@@ -106,7 +106,6 @@ REPORT ;Print report
  . . . . . . S RCDIBPNT=$P(RCDIBREC,U,16)
  . . . . . . S RCDIBRC1=$G(^IB(RCDIBPNT,0))
  . . . . . . I ":10:11:"[(":"_$P(RCDIBREC,U,5)_":") S RCDEND=1  ;PRCA*4.5*386
- . . . . . I ":201:202:203:"[(":"_$P(RCDIBREC,U,3)_":") S RCDEND=1  ;PRCA*4.5*386
  . . . . . I +RCDIBRC1,":55:56:"[(":"_+$P(RCDIBRC1,U,3)_":") S RCDADMIT=$P(RCDIBRC1,U,17)  ;PRCA*4.5*386
  . . . . Q:RCDEND   ;PRCA*4.5*386
  . . . . S SERVDT=$P(NODE,U,1)

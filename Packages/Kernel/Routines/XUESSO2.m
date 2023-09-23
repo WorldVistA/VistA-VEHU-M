@@ -1,5 +1,5 @@
 XUESSO2 ;ISD/HGW - Enhanced Single Sign-On Utilities ; Apr 19, 2022@14:57
- ;;8.0;KERNEL;**655,659,630,701,731,771**;Jul 10, 1995;Build 8
+ ;;8.0;KERNEL;**655,659,630,701,731,771,779**;Jul 10, 1995;Build 5
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; This utility will identify a VistA user for auditing and HIPAA requirements.
@@ -275,6 +275,19 @@ GETCNTXT(XAPHRASE) ;Function. Identify the REMOTE APPLICATION
  . S XUENTRY=$$FIND1^DIC(8994.5,"","X",XUCODE,"ACODE")
  . I XUENTRY>0 D
  . . S XUCODE=$$SHAHASH^XUSHSH(256,$G(XAPHRASE),"B") ; ICR #6189
+ . . N FDR
+ . . S FDR(8994.5,XUENTRY_",",.03)=XUCODE
+ . . D FILE^DIE("E","FDR")
+ ;If not found, check with lowercase hash (called by ^XUSAML) p779
+ I XUENTRY'>0 D
+ . S XUCODE=$$SHAHASH^XUSHSH(256,$$LOW^XLFSTR($G(XAPHRASE)),"B") ; ICR #6189
+ . S XUENTRY=$$FIND1^DIC(8994.5,"","X",XUCODE,"ACODE")
+ ;If not found, check with old hash (using lowercase) and replace with SHA256 hash if found p779
+ I XUENTRY'>0 D
+ . S XUCODE=$$EN^XUSHSH($$LOW^XLFSTR($G(XAPHRASE))) ; IA #10045
+ . S XUENTRY=$$FIND1^DIC(8994.5,"","X",XUCODE,"ACODE")
+ . I XUENTRY>0 D
+ . . S XUCODE=$$SHAHASH^XUSHSH(256,$$LOW^XLFSTR($G(XAPHRASE)),"B") ; ICR #6189
  . . N FDR
  . . S FDR(8994.5,XUENTRY_",",.03)=XUCODE
  . . D FILE^DIE("E","FDR")

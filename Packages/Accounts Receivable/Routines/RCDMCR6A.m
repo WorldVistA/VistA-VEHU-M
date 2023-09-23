@@ -1,5 +1,5 @@
 RCDMCR6A ;ALB/YG - 50-100 Percent SC Exempt Charge Reconciliation Report - Input/output; Apr 9, 2019@21:06
- ;;4.5;Accounts Receivable;**347,386**;Mar 20, 1995;Build 6
+ ;;4.5;Accounts Receivable;**347,386,414**;Mar 20, 1995;Build 2
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;This routine is being implemented for the AR Cross-Servicing Project
@@ -97,14 +97,13 @@ REPORT ;Print report
  . . . . N NODE,SERVDT,RXDT,ELIG,EXEMPTDT,RXNUM,RXNAM,STATUS
  . . . . S NODE=$G(^TMP($J,"RCDMCR6","DETAIL",NAME,SSN,BILLNO,IBIEN))
  . . . . S (RCDADMIT,RCDIBRC1)=""   ;PRCA*4.5*386
- . . . . S SERVDT=$P(NODE,U,1),RCSTS=" " D:BILLNO   ;PRCA*4.5*386
+ . . . . S SERVDT=$P(NODE,U,1) D:BILLNO   ;PRCA*4.5*386
  . . . . . S RCDIEN=$O(^IB("ABIL",BILLNO,0)) Q:'RCDIEN
  . . . . . S RCDIBREC=$G(^IB(RCDIEN,0)) Q:'RCDIBREC
  . . . . . I $P(RCDIBREC,U,16) D    ;PRCA*4.5*386
  . . . . . . S RCDIBPNT=$P(RCDIBREC,U,16)
  . . . . . . S RCDIBRC1=$G(^IB(RCDIBPNT,0)),RCDADMIT=""
  . . . . . I ":10:11:"[(":"_$P(RCDIBREC,U,5)_":") S RCDEND=1 Q  ;PRCA*4.5*386
- . . . . . I ":201:202:203:"[(":"_$P(RCDIBREC,U,3)_":") S RCDEND=1 Q  ;PRCA*4.5*386
  . . . . . I +RCDIBRC1,":55:56:"[(":"_+$P(RCDIBRC1,U,3)_":") S RCDADMIT=$P(RCDIBRC1,U,17)   ;PRCA*4.5*386
  . . . . Q:RCDEND   ;PRCA*4.5*386
  . . . . S SERVDT=$P(NODE,U,1)

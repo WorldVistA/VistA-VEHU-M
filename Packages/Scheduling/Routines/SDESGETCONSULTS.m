@@ -1,5 +1,5 @@
-SDESGETCONSULTS ;ALB/BLB,MGD,RRM,BWF,CGP - VISTA SCHEDULING RPCS GET CONSULTS ;Mar 15, 2023
- ;;5.3;Scheduling;**815,820,824,837,842**;Aug 13, 1993;Build 17
+SDESGETCONSULTS ;ALB/BLB,MGD,RRM,BWF,CGP,BLB - VISTA SCHEDULING RPCS GET CONSULTS ;Mar 15, 2023
+ ;;5.3;Scheduling;**815,820,824,837,842,847**;Aug 13, 1993;Build 4
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
@@ -146,17 +146,9 @@ GETCONSULT(REQUSET,CONSULTIEN) ;Build a consult record for every consult
  S REQUEST("Request",NUM,"ProviderSecID")=$$GET1^DIQ(200,PROVIDERIEN_",",205.1,"E")
  S REQUEST("Request",NUM,"ConsultServiceRenderedAs")=$G(CONDATA(123,CONSULTIEN_",",14,"E"))
  S REQUEST("Request",NUM,"ConsultProhibitedClinicFlag")=$S($$GET1^DIQ(44,+CLINICIEN_",",2500,"I")="Y":1,1:0)
- ;
  S REQUEST("Request",NUM,"CPRSStatus")=$$GET1^DIQ(123,CONSULTIEN,8,"E")
- ;
- I $D(^SDEC(409.87,"B",CONSULTIEN)) D
- .S PID=$$GETPID(CONSULTIEN)
- .S REQUEST("Request",NUM,"ConsultClinicIndicatedDate")=$$FMTISO^SDAMUTDT(PID)
- I '$D(^SDEC(409.87,"B",CONSULTIEN)) D
- .S REQUEST("Request",NUM,"ConsultClinicIndicatedDate")=$$FMTISO^SDAMUTDT($G(CONDATA(123,CONSULTIEN_",",17,"I")))
- ;
- S CANCHANGEPID=$$CONSCANCELCHECK(CONSULTIEN,DFN)
- S REQUEST("Request",NUM,"ConsultCanEditPid")=CANCHANGEPID
+ S REQUEST("Request",NUM,"ConsultClinicIndicatedDate")=$$FMTISO^SDAMUTDT($G(CONDATA(123,CONSULTIEN_",",17,"I")))
+ S REQUEST("Request",NUM,"ConsultCanEditPid")=0
  ; build appointment request and recall
  I '$$GETCONTIEN^SDESCONTACTS(.ERRORS,CONSULTIEN,"C") D
  .D SDECONTACT^SDESGETREQWRAPPR(.REQUEST,NUM)

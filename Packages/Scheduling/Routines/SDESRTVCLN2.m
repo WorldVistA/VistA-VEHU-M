@@ -1,5 +1,5 @@
-SDESRTVCLN2 ;ALB/MGD,ANU,LAB,MGD,ANU,JAS,LAB - Get Clinic Info based on Clinic IEN ;FEB 13,2023
- ;;5.3;Scheduling;**823,825,827,828,833,836**;Aug 13, 1993;Build 20
+SDESRTVCLN2 ;ALB/MGD,ANU,LAB,MGD,ANU,JAS,LAB,DJS - Get Clinic Info based on Clinic IEN ;JUN 30, 2023
+ ;;5.3;Scheduling;**823,825,827,828,833,836,851**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -27,6 +27,7 @@ JSONCLNINFO(RETSDCLNJSON,SDCLNIEN,SDEAS,HASHFLG) ;Get Clinic info
  ;"CheckinCheckoutTime": "",
  ;"ClinicIEN": 2174,
  ;"ClinicName": "STPDN-M",
+ ;"ClinicStatus": "ACTIVE" or "INACTIVE"
  ;"CreditStopCodeAMISNum": "",
  ;"CreditStopCodeName": "",
  ;"CreditStopCodeNum": "",
@@ -133,7 +134,7 @@ VALIDATEHASHFLG(ERRORS,HASHFLG) ;
  ;
 BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  ;
- N SDFIELDS,SDDATA,SDMSG,SDX,SDC,TIMEZONE,TIMEZONEEXC,USRCNT,USRIEN
+ N SDFIELDS,SDDATA,SDMSG,SDX,SDC,TIMEZONE,TIMEZONEEXC,USRCNT,USRIEN,STATUS,SDSTATUS
  S SDECI=$G(SDECI,0)
  S SDFIELDS=".01;1;3.5;8;9;10;24;60;61;62;1914;2502;2504;2505;2506;2507;2802;99;99.1;2000;2000.5;2508;2509;2510;2511;2801;30;2001;2002;1918.5;2503;2500;1916;1918;20;21;1912;1913;1917"
  D GETS^DIQ(44,SDCLNIEN_",",SDFIELDS,"IE","SDDATA","SDMSG")
@@ -150,6 +151,8 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  S SDCLNSREC("Clinic","NonCountClinic")=$G(SDDATA(44,SDCLNIEN_",",2502,"E")) ;NON-COUNT CLINIC? (Y OR N)
  S SDCLNSREC("Clinic","DivisionIEN")=$G(SDDATA(44,SDCLNIEN_",",3.5,"I")) ;Division
  S SDCLNSREC("Clinic","DivisionName")=$G(SDDATA(44,SDCLNIEN_",",3.5,"E")) ;Division
+ S STATUS=$$INACTIVE^SDESUTIL(SDCLNIEN,DT),SDSTATUS=$S(STATUS=0:"ACTIVE",1:"INACTIVE") ;Get status of clinic
+ S SDCLNSREC("Clinic","ClinicStatus")=SDSTATUS
  S SDCLNSREC("Clinic","StopCodeName")=$G(SDDATA(44,SDCLNIEN_",",8,"E")) ;Stop Code Name
  S SDCLNSREC("Clinic","StopCodeNum")=$G(SDDATA(44,SDCLNIEN_",",8,"I")) ;Stop Code IEN
  S SDCLNSREC("Clinic","StopCodeAMISNum")=$$GET1^DIQ(40.7,$G(SDDATA(44,SDCLNIEN_",",8,"I")),1) ;Stop Code AMIS Number

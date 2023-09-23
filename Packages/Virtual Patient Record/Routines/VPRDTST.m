@@ -1,5 +1,5 @@
 VPRDTST ;SLC/MKB -- Test VistA data XML RPC ;10/18/12 6:26pm
- ;;1.0;VIRTUAL PATIENT RECORD;**4,5**;Sep 01, 2011;Build 21
+ ;;1.0;VIRTUAL PATIENT RECORD;**4,5,32**;Sep 01, 2011;Build 6
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -8,15 +8,16 @@ VPRDTST ;SLC/MKB -- Test VistA data XML RPC ;10/18/12 6:26pm
  ; DIR                          10026
  ;
 EN ; -- test GET^VPRD, write results to screen
- N DFN,TYPE,TEXT,START,STOP,MAX,ID,IN,OUT,IDX
+ N DFN,TYPE,TEXT,CRLF,START,STOP,MAX,ID,IN,OUT,IDX,X,QUIT
  F  S DFN=$$PATIENT Q:DFN<1  D
  . F  S TYPE=$$DOMAIN Q:"^"[TYPE  D
- .. D RPC W !!
- .. K TEXT,START,STOP,MAX,IN,ID
+ .. D RPC W !
+ .. K TEXT,CRLF,START,STOP,MAX,IN,ID,QUIT
  Q
  ;
 RPC ; -- get search parameters, run and display
- I $$DOC(TYPE) S TEXT=$$SHOW Q:TEXT="^"
+ I $$DOC(TYPE) S TEXT=$$SHOW Q:TEXT="^"  I 1
+ E  S CRLF=$$NOWRAP Q:CRLF="^"
  N DONE S DONE=0
  I TYPE'="patient",TYPE'="flag",TYPE'="reminder" D  Q:DONE
  . S START=$S(TYPE'["insurance":$$START,1:"") I START="^" S DONE=1 Q
@@ -27,10 +28,24 @@ RPC ; -- get search parameters, run and display
  ;
  Q:DONE
  S:$L($G(TEXT)) IN("text")=TEXT
+ S:$L($G(CRLF)) IN("nowrap")=CRLF
  D GET^VPRD(.OUT,+$G(DFN),$G(TYPE),$G(START),$G(STOP),$G(MAX),$G(ID),.IN)
  ;
- S IDX=OUT W !
- F  S IDX=$Q(@IDX) Q:IDX'?1"^TMP(""VPR"","1.N.E  Q:+$P(IDX,",",2)'=$J  W !,@IDX
+ S TYPE=$S(TYPE="pharmacy":"med",TYPE="clinicalProcedure":"procedure",1:TYPE)
+ W ! F IDX=1,2 W !,$G(@OUT@(IDX)) ;version and total
+ F  S IDX=$O(@OUT@(IDX)) Q:IDX<1  D  Q:$G(QUIT)
+ . S X=$G(@OUT@(IDX))
+ . I X=("<"_TYPE_">") D READ Q:$G(QUIT)
+ . W !,@OUT@(IDX)
+ K @OUT
+ ;S IDX=OUT W !
+ ;F  S IDX=$Q(@IDX) Q:IDX'?1"^TMP(""VPR"","1.N.E  Q:+$P(IDX,",",2)'=$J  W !,@IDX
+ Q
+ ;
+READ ; -- continue?
+ N X K QUIT
+ W !!,"Press <return> to continue or ^ to exit results ..." R X:DTIME
+ S:X["^" QUIT=1 W !
  Q
  ;
 PATIENT() ; -- select patient
@@ -110,6 +125,15 @@ DOC(X) ; -- Returns 1 or 0, if type X includes a document
 SHOW() ; -- true/false to include body of note
  N X,Y,DIR,DUOUT,DTOUT
  S DIR(0)="YAO",DIR("A")="Include the text of each document? "
+ S DIR("?")="Enter YES to return the body of the note, or NO to omit"
+ D ^DIR S:$D(DTOUT) Y="^"
+ Q Y
+ ;
+NOWRAP() ; -- true/false to include CRLF in $$STRING
+ I "^allergy^flag^lab^panel^"'[(U_TYPE_U) Q ""
+ N X,Y,DIR,DUOUT,DTOUT
+ S DIR(0)="YAO",DIR("A")="Preserve breaks in multi-line comments? "
+ S DIR("?")="Enter YES to preserve the line structure, or NO to wrap the text"
  D ^DIR S:$D(DTOUT) Y="^"
  Q Y
  ;
@@ -135,12 +159,13 @@ TOTAL() ; -- select the max# to return
  Q Y
  ;
 FILTERS(LIST) ; -- define additional filters for domain
- I "^document^insurancePolicy^lab^accession^panel^med^pharmacy^order^problem^"'[(U_TYPE_U) S Y="" G FQ
+ I "^document^insurancePolicy^lab^accession^panel^med^pharmacy^order^problem^procedure^"'[(U_TYPE_U) S Y="" G FQ
  N X,Y,DIR,DUOUT,DTOUT,NAME
 F1 S DIR(0)="FAO^1:20",DIR("A")="Select FILTER: "
  S DIR("?")="Enter the name of an attribute, to filter this domain."
  D ^DIR S:$D(DTOUT) Y="^" I "^^"[Y G FQ
- S NAME=$$LOW^XLFSTR(Y),DIR("A")="        VALUE: " K X,Y
+ S NAME=$$LOW^XLFSTR(Y) S:NAME="vatype" NAME="vaType"
+ S DIR("A")="        VALUE: " K X,Y
  S DIR("?")="Enter the value of the attribute, to filter this domain."
  D ^DIR S:$D(DTOUT) Y="^" I "^^"[Y G FQ
  S LIST(NAME)=Y G F1
