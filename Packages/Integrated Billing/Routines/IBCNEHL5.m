@@ -1,5 +1,5 @@
 IBCNEHL5 ;DALOI/KML - HL7 Process Incoming RPI Msgs (cont.) ; 1-APRIL-2013
- ;;2.0;INTEGRATED BILLING;**497,549,702,743**;21-MAR-94;Build 18
+ ;;2.0;INTEGRATED BILLING;**497,549,702,743,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -110,7 +110,9 @@ EBFILE(DFN,IEN312,RIEN,AFLG) ;EP
  ;
  ; IB*2.0*549 - File the pointer to the IIV RESPONSE (file 365)
  D UPDT365(RIEN,IEN312_","_DFN_",")
- S DR="8.01///"_RSRVDT_";8.02///"_RSTYPE_";8.03///"_RIEN
+ ;IB*752/DW-TAZ use //// for field 8.02 since /// changes the IEN of the code found in file #365.1
+ ;       to an IEN of another code since it treats it as an external value (corrupts data) 
+ S DR="8.01///"_RSRVDT_";8.02////"_RSTYPE_";8.03///"_RIEN
  D ^DIE
  ; /IB*2.0*506 End
  ;

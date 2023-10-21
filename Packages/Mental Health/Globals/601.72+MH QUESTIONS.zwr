@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MH QUESTIONS
 ZWR
-^YTT(601.72,0)="MH QUESTIONS^601.72^8843^8155"
+^YTT(601.72,0)="MH QUESTIONS^601.72^9058^8159"
 ^YTT(601.72,1,0)=1
 ^YTT(601.72,1,1,0)="^601.721^1^1^3070507^^^"
 ^YTT(601.72,1,1,1,0)="Facial and Oral Movements"
@@ -34584,6 +34584,22 @@ ZWR
 ^YTT(601.72,8946,1,0)="^^1^1^3230415"
 ^YTT(601.72,8946,1,1,0)="Day to day activities, such as chores, errands, finances, health"
 ^YTT(601.72,8946,2)="2487^1^15103^0^0^N"
+^YTT(601.72,9055,0)=9055
+^YTT(601.72,9055,1,0)="^^1^1^3231021"
+^YTT(601.72,9055,1,1,0)="Can you live alone without any assistance from another person?  (e.g. independently being able to eat, walk, use the toilet and manage routine daily hygiene)"
+^YTT(601.72,9055,2)="2520^1^15123^0^0^Y"
+^YTT(601.72,9056,0)=9056
+^YTT(601.72,9056,1,0)="^^1^1^3231021"
+^YTT(601.72,9056,1,1,0)="Are there duties/activities at home or at work which you are no longer able to perform yourself?"
+^YTT(601.72,9056,2)="2520^1^15124^0^0^Y"
+^YTT(601.72,9057,0)=9057
+^YTT(601.72,9057,1,0)="^^1^1^3231021"
+^YTT(601.72,9057,1,1,0)="Do you suffer from symptoms, pain, depression or anxiety?"
+^YTT(601.72,9057,2)="2520^1^15125^0^0^Y"
+^YTT(601.72,9058,0)=9058
+^YTT(601.72,9058,1,0)="^^1^1^3231021"
+^YTT(601.72,9058,1,1,0)="Do you need to avoid or reduce duties/activities or spread these over time?"
+^YTT(601.72,9058,2)="2520^1^15126^0^0^Y"
 ^YTT(601.72,"ACT",1,1)=""
 ^YTT(601.72,"ACT",1,2)=""
 ^YTT(601.72,"ACT",1,3)=""
@@ -38400,6 +38416,10 @@ ZWR
 ^YTT(601.72,"ACT",15103,8944)=""
 ^YTT(601.72,"ACT",15103,8945)=""
 ^YTT(601.72,"ACT",15103,8946)=""
+^YTT(601.72,"ACT",15123,9055)=""
+^YTT(601.72,"ACT",15124,9056)=""
+^YTT(601.72,"ACT",15125,9057)=""
+^YTT(601.72,"ACT",15126,9058)=""
 ^YTT(601.72,"ACT",22929,3903)=""
 ^YTT(601.72,"ACT",22930,3904)=""
 ^YTT(601.72,"ACT",22931,3905)=""
@@ -50548,3 +50568,7 @@ ZWR
 ^YTT(601.72,"B",8944,8944)=""
 ^YTT(601.72,"B",8945,8945)=""
 ^YTT(601.72,"B",8946,8946)=""
+^YTT(601.72,"B",9055,9055)=""
+^YTT(601.72,"B",9056,9056)=""
+^YTT(601.72,"B",9057,9057)=""
+^YTT(601.72,"B",9058,9058)=""

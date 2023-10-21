@@ -1,5 +1,5 @@
-RASITE ;HISC/CAH,FPT,GJC AISC/MJK,RMO - IRM Menu ; Sep 28, 2022@11:23:18
- ;;5.0;Radiology/Nuclear Medicine;**137,185,194**;Mar 16, 1998;Build 1
+RASITE ;HISC/CAH,FPT,GJC AISC/MJK,RMO - IRM Menu ; Jun 29, 2023@13:46:33
+ ;;5.0;Radiology/Nuclear Medicine;**137,185,194,205**;Mar 16, 1998;Build 1
  ;
  ; Note: tag DD71 code removed with RA*5.0*194 
  ;
@@ -11,12 +11,13 @@ RASITE ;HISC/CAH,FPT,GJC AISC/MJK,RMO - IRM Menu ; Sep 28, 2022@11:23:18
  . Q
  I %=-1 D Q2 QUIT
  I %=1 D DEVHLP
-21 ; Select a location and answer the default printer prompts.
- W ! S DIC="^RA(79.1,",DIC(0)="AELMQ",DIC("A")="Select Imaging Location: ",DLAYGO=79.1 D ^DIC K DIC,DLAYGO G Q2:Y<0
+21 ; Select an existing imaging location & answer the default printer prompts.
+ ; *** INC27764882: P205/Ski Removes LAYGO access & references to the variable 'DLAYGO'. *** 
+ W ! S DIC="^RA(79.1,",DIC(0)="AEMQ",DIC("A")="Select Imaging Location: " D ^DIC K DIC G Q2:Y<0
  S DA=+Y,DIE="^RA(79.1,",DR="[RA SITE MANAGER]" D ^DIE
  D ARP ;After hours printer parameters (set/delete) ;P185/KLM
  K DE,DQ,DIE,DR D Q2 G 21
-Q2 K %,%W,%X,%Y,C,D,D0,D1,DA,DI,DIWF,DIWL,DIW,DIWR,DIWT,DLAYGO,DN,I,POP,RAI,RAJ,X,Y,Z
+Q2 K %,%W,%X,%Y,C,D,D0,D1,DA,DI,DIWF,DIWL,DIW,DIWR,DIWT,DN,I,POP,RAI,RAJ,X,Y,Z
  K DISYS,RA791,RA792
  Q
  ;

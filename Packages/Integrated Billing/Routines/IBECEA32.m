@@ -1,6 +1,6 @@
-IBECEA32 ;ALB/CPM-Cancel/Edit/Add... Add Utilities; 02-APR-93
- ;;2.0;INTEGRATED BILLING ;**57,188**; 21-MAR-94
- ;;Per VHA Directive 10-93-142, this routine should not be modified.
+IBECEA32 ;ALB/CPM-Cancel/Edit/Add... Add Utilities ; Aug 09, 2023
+ ;;2.0;INTEGRATED BILLING ;**57,188,704**; 21-MAR-94;Build 49
+ ;Per VA Directive 6402, this routine should not be modified
  ;
 CLUPD ; Handle the updating of the billing clock when adding a charge.
  I IBXA=5!(IBCLDA&(IBXA=4)) G CLOCKQ
@@ -29,15 +29,16 @@ CHMPVAQ K IBPM,IBSL,IBCVA
  Q
  ;
 ADD ; Prompt user to add a new billing clock.
- N DIE,DA,DR,DIR,DIRUT,DUOUT,DTOUT,X,Y
+ N DIE,DA,DR,DIR,DIRUT,DUOUT,DTOUT,X,Y,IBCCUPDF
  W !!,"Since this patient has no active clock to cover this charge, I would like to",!,"set up an active clock as follows:"
  W !!?5,"Clock Begin Date: ",$$DAT1^IBOUTL(IBFR),! W:IBXA=1!(IBXA=2) ?4,"1st 90 days copay: $",IBCHG,! W:IBXA=3 ?5,"# Inpatient days: ",IBUNIT,!
  S DIR(0)="Y",DIR("A")="Is it okay to set up a new clock with "_$S(IBXA=4:"this",1:"these")_" value"_$E("s",IBXA'=4),DIR("?")="Enter 'Y' or 'YES' to create a new clock, or 'N', 'NO', or '^' to quit."
  D ^DIR I 'Y!($D(DIRUT))!($D(DUOUT)) W !,"A new clock will not be established.  Be sure this patient's clock is correct." Q
  W !!,"Creating a new, active billing clock...  "
- S IBCLDT=IBFR D CLADD^IBAUTL3 Q:IBY<0
- I IBXA'=4 S DIE="^IBE(351,",DA=IBCLDA,DR=$S(IBXA=3:.09,1:.05)_"////"_$S(IBXA=3:IBUNIT,1:IBCHG)_";13////"_DUZ_";14///NOW" D ^DIE
+ S IBCLDT=IBFR,IBCCUPDF=1 D CLADD^IBAUTL3 Q:IBY<0
+ I IBXA'=4 S DIE="^IBE(351,",DA=IBCLDA,DR=$S(IBXA=3:.09,1:.05)_"////"_$S(IBXA=3:IBUNIT,1:IBCHG)_";13////"_DUZ_";14///NOW;16///1" D ^DIE
  W "done."
+ D EN^IBECECU1(DFN,IBCLDA)
  Q
  ;
 FEPR ; Issue prompts for Inpatient Fee Services

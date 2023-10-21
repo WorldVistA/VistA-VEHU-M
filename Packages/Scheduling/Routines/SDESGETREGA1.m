@@ -1,5 +1,5 @@
-SDESGETREGA1 ;ALB/LAB,RRM - Get registration info JSON format ; July 19, 2022
- ;;5.3;SCHEDULING;**823,824**;AUG 13, 1993;Build 3
+SDESGETREGA1 ;ALB/LAB,RRM,ANU,DJS - Get registration info JSON format ; July 29, 2023
+ ;;5.3;SCHEDULING;**823,824,853**;AUG 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
@@ -18,7 +18,7 @@ GETREGA(SDECY,DFN,SDEAS) ;return basic reg info/demographics for given patient i
  ; SDEAS - [optional] Enterprise Appointment Scheduling (EAS) Tracking Number associated to an appointment.
  ;Returns:
  ; json formatted output (need to add)
- NEW POP,SDINFO,SDDFN,SDPATARR,SDDEMO,PRACE,PRACEN,PETH,PETHN,SDMHP,SDPCP,GAF,GAFR,SDZIP,PREREGTIM
+ NEW POP,SDINFO,SDDFN,SDPATARR,SDDEMO,PRACE,PRACEN,PETH,PETHN,SDMHP,SDPCP,GAF,GAFR,SDZIP,PREREGTIM,SDDOD
  S POP=0
  D VALIDATE D:POP BUILDER Q:POP
  D GETREG
@@ -60,6 +60,7 @@ ASSIGNVALS ;assign values to be used to build output
  Q
  ;
 GETREG ;
+ N PATIENTLIST
  S SDINFO("Patient","DataFileNumber")=DFN
  S SDINFO("Patient","ICN")=$$GETPATICN^SDESINPUTVALUTL(DFN)
  D ASSIGNVALS ;assign all values needed to build SDINFO array
@@ -186,4 +187,15 @@ GETREG ;
  S SDINFO("Patient","EmergencyContact","Address","State")=$G(SDPATARR(2,SDDFN,.337,"E"))
  S SDINFO("Patient","EmergencyContact","Address","Zip")=$G(SDPATARR(2,SDDFN,.338,"E"))
  S SDINFO("Patient","EmergencyContact","Address","Zip4")=$G(SDPATARR(2,SDDFN,.2201,"E"))
+ ; 853
+ ; Elig
+ ;
+ D GETELIGIBILITY^SDESPATSEARCH(.PATIENTLIST,DFN,1)
+ M SDINFO("Patient")=PATIENTLIST("Patient",1)
+ ;
+ ; 853
+ ; Date Of Death
+ ;
+ S SDDOD=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,DFN_",",.351,"I")),SDDOD=$E(SDDOD,1,10)
+ S SDINFO("Patient","DateOfDeath")=SDDOD
  Q

@@ -1,5 +1,5 @@
 PSDOPT0 ;BIR/JPW,LTL,BJW - Outpatient Rx Entry (cont'd) ;Jun 22, 1998@12:15
- ;;3.0;CONTROLLED SUBSTANCES ;**10,30,37,39,45,48,66,79,90**;13 Feb 97;Build 4
+ ;;3.0;CONTROLLED SUBSTANCES ;**10,30,37,39,45,48,66,79,90,93**;13 Feb 97;Build 6
  ;Reference to PS(52.5 supported by DBIA #786
  ;Reference to PS(59.7 supported by DBIA #1930
  ;References to ^PSD(58.8 are covered by DBIA #2711
@@ -66,15 +66,19 @@ CHKALL ;Check to see if any left to post or release
  S CNT=0 K DIR
  G CHK^PSDOPT
  ;
-PSDREPR(PSDRXIN) ;p90 return 1 (true) if type RETURNED TO STOCK
- N PSDREC,PREVTYPE K PSDTT("OR"),PSDTT("RS")
- S PSDTT("OR")=$O(^PSD(58.84,"B","OUTPATIENT RX",0)),PSDTT("RS")=$O(^PSD(58.84,"B","RETURNED TO STOCK",0))
- S PSDREC=0
- ; Cycle through accountability trans records to obtain if last trans type was OUTPATIENT RX or RETURNED TO STOCK
- F  S PSDREC=$O(^PSD(58.81,"AOP",PSDRXIN,PSDREC)) Q:PSDREC=""  D
- . S:$P($G(^PSD(58.81,PSDREC,0)),"^",2)=PSDTT("OR") PREVTYPE=$P($G(^PSD(58.81,PSDREC,0)),"^",2)
- . S:$P($G(^PSD(58.81,PSDREC,0)),"^",2)=PSDTT("RS") PREVTYPE=$P($G(^PSD(58.81,PSDREC,0)),"^",2)
- I $G(PREVTYPE)=PSDTT("RS") Q 1 ; return true if last type is RTS
+PSDREPR(PSDRXIN) ; p93
+ ; Function should return zero to kill PSDSEL("OR") and RXNUM("OR") arrays
+ Q:$G(^PSRX(PSDRXIN,"RTS",0))="" 0 ;Rx was not RTS
+ N PSDTT,PSDTRANS,PSDREC,PSDTYPE,PSDLAST,PSDFILL
+ S PSDTT("POSTED")=$O(^PSD(58.84,"B","OUTPATIENT RX",0)),PSDTT("RTS")=$O(^PSD(58.84,"B","RETURNED TO STOCK",0))
+ S PSDTRANS=0 F  S PSDTRANS=$O(^PSD(58.81,"AOP",PSDRXIN,PSDTRANS)) Q:'PSDTRANS  D
+ . S PSDFILL=$P($G(^PSD(58.81,PSDTRANS,6)),"^",2) Q:PSDFILL
+ . S PSDREC=$G(^PSD(58.81,PSDTRANS,0)),PSDTYPE=$P(PSDREC,"^",2)
+ . Q:(PSDTYPE'=PSDTT("POSTED"))&(PSDTYPE'=PSDTT("RTS"))
+ . S PSDLAST=PSDTYPE
+ Q:'$G(PSDLAST) 1 ; quit if not posted or not RTS
+ ; if last trans was RTS then reset post flag in PSDSEL(0) to zero to allow posting
+ I $P($G(PSDSEL("OR")),"^",3),$G(PSDLAST)=PSDTT("RTS") S $P(PSDSEL("OR"),"^",3)=0 Q 1 ; remove posted flag
  Q 0
 PSDRTS(PSDRX,PSDNUM,PSDSITE,PSDQTY) ; API for Outpatient Pharmacy; Patch PSD*3*30
  ; This subroutine is called each time an Rx is returned to stock

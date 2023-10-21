@@ -1,5 +1,5 @@
 IBCNERP8 ;DAOU/BHS - IBCNE eIV STATISTICAL REPORT COMPILE ;11-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,345,416,506,621,631,668,687,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**184,271,345,416,506,621,631,668,687,737,752**;21-MAR-94;Build 20
   ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; eIV - Insurance Verification Interface
@@ -13,8 +13,8 @@ IBCNERP8 ;DAOU/BHS - IBCNE eIV STATISTICAL REPORT COMPILE ;11-JUN-2002
  ;  of the following (not all)
  ;  2 - Outgoing data, inq trans stats
  ;  3 - Incoming data, resps rec'd stats
- ;  4 - Current status, pending resps, queued inqs, deferred inqs, payer
- ;      stats, ins buf stats
+ ;  4 - Current status, pending resps, queued inqs, payer stats, ins buf stats ;IB*752/DTG removed Deferred
+ ;
  ; IBCNESPC("MM") = "" - do not generate MailMan message OR MAILGROUP to
  ;  send report to Mail Group as defined in the IB site parameters
  ;Output vars:
@@ -26,9 +26,10 @@ IBCNERP8 ;DAOU/BHS - IBCNE eIV STATISTICAL REPORT COMPILE ;11-JUN-2002
  ; 1 OR contains 3 --> 
  ; ^TMP($J,RTN,"IN")=TotResp^InsBufExtSubtotal^PreRegExtSubtotal^...
  ;  NonVerifInsExtSubtotal^NoActInsExtSubtotal
+ ;IB*752/DTG remove deferred inquiries, while maintaining piece integrity
  ; 1 OR contains 4 --> 
  ; ^TMP($J,RTN,"CUR")=TotPendingResponses^TotQueuedInquiries^...
- ;  TotDeferredInquiries(Hold)^TotInsCosw/oNationalID^...
+ ;                    NULL (was Deferred)^TotInsCosw/oNationalID^...
  ;  ToteIVPyrsDisabldLocally^TotUserActReq^TotInsBufVerified^TotalManVerified...
  ;  TotaleIVVerified^TotInsBufUnverified^! InsBufSubtotal^...
  ;  ? InsBufSubtotal^- InsBufSubtotal^Other InsBufSubtotal^...
@@ -248,14 +249,17 @@ CUR(RTN,BDT,EDT,TOT) ; Current Status - stats - timeframe independent
  I $G(ZTSTOP) G CURX
  ;
  ; Queued inquiries (Ready to Transmit - 1/Retry - 6) and 
- ; Deferred inquiries (Hold - 4)
- F IBSTS=1,6,4 D  Q:$G(ZTSTOP)
+ ; IB*752/DTG REMOVED ; Deferred inquiries (Hold - 4)
+ ;F IBSTS=1,6,4 D  Q:$G(ZTSTOP)
+ F IBSTS=1,6 D  Q:$G(ZTSTOP)  ; IB*752/DTG remove (4) Deferred
  . S TQIEN=0
  . F  S TQIEN=$O(^IBCN(365.1,"AC",IBSTS,TQIEN)) Q:'TQIEN  D  Q:$G(ZTSTOP)
  . .  S TOT=TOT+1
  . .  I $D(ZTQUEUED),TOT#100=0,$$S^%ZTLOAD() S ZTSTOP=1 QUIT
- . .  I IBSTS'=4 S $P(RPTDATA,U,2)=$P(RPTDATA,U,2)+1 Q
- . .  S $P(RPTDATA,U,3)=$P(RPTDATA,U,3)+1
+ . .  ; IB*752/DTG remove Deferred
+ . .  ;I IBSTS'=4 S $P(RPTDATA,U,2)=$P(RPTDATA,U,2)+1 Q
+ . .  ;S $P(RPTDATA,U,3)=$P(RPTDATA,U,3)+1
+ . .  S $P(RPTDATA,U,2)=$P(RPTDATA,U,2)+1
  ;
  I $G(ZTSTOP) G CURX
  ;

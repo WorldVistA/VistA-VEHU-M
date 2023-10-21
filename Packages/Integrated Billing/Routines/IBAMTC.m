@@ -1,11 +1,14 @@
 IBAMTC ;ALB/CPM - MEANS TEST NIGHTLY COMPILATION JOB ; 07 Jun 2021  4:17 PM
- ;;2.0;INTEGRATED BILLING;**34,52,70,93,100,118,115,132,150,153,137,176,215,275,321,312,457,519,549,614,703,706,630**;21-MAR-94;Build 39
+ ;;2.0;INTEGRATED BILLING;**34,52,70,93,100,118,115,132,150,153,137,176,215,275,321,312,457,519,549,614,703,706,630,704**;21-MAR-94;Build 49
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 INIT ; Entry point - initialize variables and parameters
  ;
  ;***
  ;S XRTL=$ZU(0),XRTN="IBAMTC-1" D T0^%ZOSV ;start rt clock
+ ;Set Nightly task flag for Billing Clock query
+ N IBNGHTSK
+ S IBNGHTSK=1
  D CANCEL($$FMADD^XLFDT(DT,-7),$$NOW^XLFDT(),1) ; cancel copays (covid relief)   IB*2.0*706
  ;
  D UPDT^IBARXEPS($$FMADD^XLFDT(DT,-30),DT,1)

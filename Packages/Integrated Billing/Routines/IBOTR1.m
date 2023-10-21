@@ -1,5 +1,5 @@
 IBOTR1 ;ALB/CPM - INSURANCE PAYMENT TREND REPORT - USER INTERFACE ;5-JUN-91
- ;;2.0;INTEGRATED BILLING;**21,42,72,100,118,128,528,743**;21-MAR-94;Build 18
+ ;;2.0;INTEGRATED BILLING;**21,42,72,100,118,128,528,743,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;MAP TO DGCROTR1
@@ -30,7 +30,9 @@ CANC I $G(IBAF)=16 G QDATE ; Skip if CANCEL BILL? field was selected.
  ;
 QDATE S DIR(0)="SA^1:DATE BILL PRINTED;2:TREATMENT DATE"
  S DIR("A")="Print report by 1-DATE BILL PRINTED or 2-TREATMENT DATE: "
- S DIR("B")="1",DIR("T")=20,DIR("?")="^S IBOFF=25 D HELP^IBOTR11"
+ ;IB*752/TAZ - Removed the DIR("T") variable so that DIR would honor DTIME for the timeout.
+ ;S DIR("B")="1",DIR("T")=20,DIR("?")="^S IBOFF=25 D HELP^IBOTR11"
+ S DIR("B")="1",DIR("?")="^S IBOFF=25 D HELP^IBOTR11"
  W ! D ^DIR K DIR G:Y=""!(X="^") END S IBDF=Y,IBDFN=Y(0)
 BEGDT S %DT="AEPX",%DT("A")="   Start with "_IBDFN_": "
  D ^%DT K %DT G:Y<0 END S IBBDT=Y
@@ -49,12 +51,23 @@ INS W !,"Run ",$S("MS"[IBPRNT:"report",1:"totals")
  R X:DTIME G:'$T!(X["^") END S:X="" X="R" S X=$E(X)
  I "RSrs"'[X S IBOFF=38 D HELP^IBOTR11 G INS
  W "  ",$S("Ss"[X:"SPECIFIC",1:"RANGE") G:"Rr"[X INSO1 K IBICPT
-INSO S DIC="^DIC(36,",DIC(0)="AEQMZ",DIC("S")="I '$G(^(5))"
- S DIC("A")="   Select "_$S($G(IBICPT):"another ",1:"")_"INSURANCE CO.: "
- D ^DIC K DIC I Y'>0 G END:'$G(IBICPT),INSO3
- I $D(IBICPT(+Y)) D  G INSO
- .W !!?3,"Already selected. Choose another insurance company.",!,*7
- S IBICPT(+Y)="",IBICPT=$G(IBICPT)+1 G INSO
+ ;IB*752/DTG - change to be case insensitive
+INSO ;S DIC="^DIC(36,",DIC(0)="AEQMZ",DIC("S")="I '$G(^(5))"
+ ;S DIC("A")="   Select "_$S($G(IBICPT):"another ",1:"")_"INSURANCE CO.: "
+ ;D ^DIC K DIC I Y'>0 G END:'$G(IBICPT),INSO3
+ ;I $D(IBICPT(+Y)) D  G INSO
+ ;.W !!?3,"Already selected. Choose another insurance company.",!,*7
+ ;S IBICPT(+Y)="",IBICPT=$G(IBICPT)+1 G INSO
+ ;
+ S IBSCR="I '$G(^DIC(36,+Y,5))"
+ D INSOCAS^IBCNINSC(.IBRET,0,,.IBSCR)  ;IB*752 - use new lookup
+ G END:'$G(IBRET)
+ S IBI=0 F  S IBI=$O(IBRET(IBI)) Q:'IBI  S IBICPT(IBI)="",IBICPT=$G(IBICPT)+1
+ K IBRET
+ G INSO3
+ ;
+ ; IB*752/DTG end - change from standard DIC call for upper/lower
+ ;
  ;IB*743/TAZ - Updated INSO1 to FileMan Read and to accept NULL to mean beginning of list.
 INSO1 ;
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
@@ -65,6 +78,9 @@ INSO1 ;
  D ^DIR
  I $D(DTOUT)!$D(DUOUT)!$D(DIROUT) G END
  S IBICF=Y
+ ; IB*752/DTG change user's response to upper case
+ S IBICFU=IBICF I (('IBICF)&(IBICF'="@")&(IBICF'="")) S IBICFU=$$UP^XLFSTR(IBICF)
+ ;
  ;IB*743/TAZ - Updated FD2 to FileMan Read and to accept NULL to mean end of list.
 INSO2 ;
  W !!,"Enter Go To value or Press <ENTER> to finish at the end of the list.",!
@@ -73,12 +89,20 @@ INSO2 ;
  S DIR("?")="^S IBOFF=49 D HELP^IBOTR11"
  D ^DIR
  I $D(DTOUT)!$D(DUOUT)!$D(DIROUT) G END
- I Y="" S IBICL="zzzzz" S:IBICF="" IBIC="ALL" G INSO3
- I Y="@",IBICF="@" S IBICL="@",IBIC="NULL" G INSO3
+ ;IB*752/DTG change user's response to upper case
+ ;I Y="" S IBICL="zzzzz" S:IBICF="" IBIC="ALL" G INSO3
+ ;I Y="@",IBICF="@" S IBICL="@",IBIC="NULL" G INSO3
+ I Y="" S IBICL="zzzzz",IBICLU=IBICL S:IBICF="" IBIC="ALL" G INSO3
+ I Y="@",IBICF="@" S IBICL="@",IBICLU=IBICL,IBIC="NULL" G INSO3
  ;
- I IBICF'="@",IBICF]Y D  G INSO1
+ I (('Y)&(Y'="@")&(Y'="zzzzz")) S Y=$$UP^XLFSTR(Y)  ; IB*752/DTG
+ ;
+ ;I IBICF'="@",IBICF]Y D  G INSO1
+ I IBICFU'="@",IBICFU]Y D  G INSO1
  .W *7,!!?3,"The Go To INSURANCE COMPANY must follow the Start With INSURANCE COMPANY.",!
- S IBICL=Y
+ ;S IBICL=Y
+ S (IBICL,IBICLU)=Y
+ ;
 INSO3 I IBPRNT="G" S IBSORT="I" S:$G(IBICPT)!($G(IBIC)'="ALL") IBG=1 G EXRC
  I $G(IBICPT)=1 S IBSORT="I" G EXRC
  W !,"Sort by AMOUNT (O)WED, AMOUNT (P)AID, or (I)NSURANCE CO.: I// "
@@ -95,8 +119,10 @@ EXRC S DIR(0)="Y",DIR("B")="NO"
  ;Select report type
  K IBOUT
  S IBOUT=$$OUT
+ I IBOUT["^" G END  ;IB*752/DTG - quit if upcaret
  ;
 DEV I IBOUT="R" W !!,"You will need a 132 column printer for this report!"
+ I IBOUT="E" W !!,"To avoid undesired wrapping, please enter ""0;256;999"" at the 'DEVICE:' prompt.",!
  N %ZIS,ZTRTN,ZTDESC,ZTSAVE,ZTSK
  S %ZIS="QM" D ^%ZIS G:POP END
  I $D(IO("Q")) D  G END
@@ -118,5 +144,5 @@ OUT() ; Prompt to allow users to select output format
  S DIR(0)="SA^E:Excel;R:Report"
  S DIR("A")="(E)xcel Format or (R)eport Format: "
  S DIR("B")="Report"
- D ^DIR I $D(DIRUT) S STOP=1 Q ""
+ D ^DIR I $D(DIRUT)!($E(Y)=U) S STOP=1 Q U  ;IB*752/DTG send upcaret if stop
  Q Y

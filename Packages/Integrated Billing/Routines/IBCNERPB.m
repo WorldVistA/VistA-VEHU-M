@@ -1,5 +1,5 @@
 IBCNERPB ;DAOU/RO - PAYER LINK REPORT - Prompts ;AUG-2003
- ;;2.0;INTEGRATED BILLING;**184,252,271,416,528,668,687,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**184,252,271,416,528,668,687,737,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to EN^XUTMDEVQ in ICR #1519
@@ -144,7 +144,8 @@ R60 ; PRIMARY sort
 R100 ; 132 width.
  I IBCNESPC("POUT")="R" W !!!,"*** This report is 132 characters wide ***",!
  I IBCNESPC("POUT")="E" W !!!,"*** To avoid wrapping, enter '0;256;999' at the 'DEVICE' prompt. ***",!
- D DEVICE(IBCNERTN,.IBCNESPC) I STOP G:$$STOP^IBCNINSU REXIT  G:(IBCNESPC("POUT")="E") R50  G:(IBCNESPC("PTYPE")=1) R60  G:(IBCNESPC("PPYR")'="") R50  G R60
+ ;D DEVICE(IBCNERTN,.IBCNESPC) I STOP G:$$STOP^IBCNINSU REXIT  G:(IBCNESPC("POUT")="E") R50  G:(IBCNESPC("PTYPE")=1) R60  G:(IBCNESPC("PPYR")'="") R50  G R60
+ D DEVICE(IBCNERTN,.IBCNESPC) I STOP G REXIT  ;IB*752/DTG remove step back if upcaret and go to exit
  ;
 REXIT ; Exit pt
  Q

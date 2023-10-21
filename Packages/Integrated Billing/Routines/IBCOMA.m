@@ -1,5 +1,5 @@
 IBCOMA ;ALB/CMS/JNM - IDENTIFY ACTIVE POLICIES W/NO EFFECTIVE DATE; 09-29-2015
- ;;2.0;INTEGRATED BILLING;**103,528,549,743**;21-MAR-94;Build 18
+ ;;2.0;INTEGRATED BILLING;**103,528,549,743,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
 EN ;Entry point from option
@@ -15,14 +15,16 @@ EN ;Entry point from option
  ; IBSIN - 1 (Verified Policies), 2 (Non-Verified Policies) or 3 (Both)
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,IBAIB,IBAPPTE,IBAPPTS,IBBDT,IBEDT,IBEXCEL,IBRF
  N IBRL,IBPTYPE,IBQUIT,IBSIN,X,Y
+ N IBRFU,IBRLU  ;IB*752/DTG added for case insensitive
 STRT ;
+ S (IBRFU,IBRLU)=""
  S (IBAIB,IBBDT,IBEDT,IBRF,IBRL,IBSIN,IBQUIT,IBAPPTS,IBAPPTE,IBEXCEL)=""
  W !!,?10,"Identify Active Policies with NO Effective Date",!
- S DIR("A",1)="Sort report by"
+ S DIR("A",1)="Filter report by"  ;IB*752/DTG change Sort to Filter
  S DIR("A",2)="  1  - Patient Name Range"
  S DIR("A",3)="  2  - Terminal Digit Range"
  S DIR("A",4)="  "
- S DIR(0)="SAXB^1:Patient Name;2:Terminal Digit"
+ S DIR(0)="SAB^1:Patient Name;2:Terminal Digit"  ;IB*752/DTG change SAXB to SAB to allow lower case
  S DIR("A")="  Select Number: ",DIR("B")="1",DIR("??")="^D ENH^IBCOMA"
  D ^DIR
  I +Y'>0 G EXIT
@@ -30,7 +32,8 @@ STRT ;
  K DIR,DIROUT,DTOUT,DUOUT,DIRUT
  W !!
  D @$S(IBAIB=1:"NR",1:"TR")
- I IBQUIT=1 G EXIT
+ ;I IBQUIT=1 G EXIT
+ I IBQUIT=1 G STRT
  ;
 PATLIFE ; IB*2*549 - Prompt for Living/Deceased Patient filter
  W !!
@@ -40,7 +43,7 @@ PATLIFE ; IB*2*549 - Prompt for Living/Deceased Patient filter
  S DIR("A",3)="    2 - Deceased Patients"
  S DIR("A",4)="    3 - Both"
  S DIR("A",5)=" "
- S DIR(0)="SAXB^1:Living Patients;2:Deceased Patients;3:Both"
+ S DIR(0)="SAB^1:Living Patients;2:Deceased Patients;3:Both"  ;IB*752/DTG change SAXB to SAB to allow lower case
  S DIR("A")="    Select Number: ",DIR("B")="1",DIR("??")="^D PATLIFEH^IBCOMA"
  D ^DIR
  I $D(DUOUT) G STRT
@@ -55,7 +58,7 @@ VER ;
  S DIR("A",3)="    2  - Non-Verified Policies"
  S DIR("A",4)="    3  - Both"
  S DIR("A",5)="    "
- S DIR(0)="SAXB^1:Verified Policies;2:Non-Verified Policies;3:Both"
+ S DIR(0)="SAB^1:Verified Policies;2:Non-Verified Policies;3:Both"  ;IB*752/DTG change SAXB to SAB to allow lower case
  S DIR("A")="      Select Number: ",DIR("B")="1",DIR("??")="^D ICH^IBCOMA" D ^DIR
  I $D(DUOUT) G PATLIFE
  I +Y'>0 G EXIT
@@ -70,7 +73,7 @@ FILTYPE ; IB.2.0.549 added method
  S DIR("A",2)="  1 - Policy Verification Date"
  S DIR("A",3)="  2 - Last Appointment Date"
  S DIR("A",4)="  "
- S DIR(0)="SAXB^1:Policy Verification Date;2:Last Appointment Date"
+ S DIR(0)="SAB^1:Policy Verification Date;2:Last Appointment Date"  ;IB*752/DTG change SAXB to SAB to allow lower case
  S DIR("A")="  Select Number: ",DIR("B")="1",DIR("??")="^D FILTYPEH^IBCOMA"
  D ^DIR
  I $D(DUOUT) G VER
@@ -98,6 +101,7 @@ FORMAT ;  Prompt for Excel or Report Format
  S DIR("A")="(E)xcel Format or (R)eport Format: "
  S DIR("B")="Report",DIR("??")="^D FORMATH^IBCOMA"
  D ^DIR
+ S Y=$$UP^XLFSTR(Y)  ; make sure answer is upper case
  S IBEXCEL=$S(Y="E":1,Y="R":0,1:-1)
  I IBEXCEL<0 G EXIT
  ;
@@ -124,14 +128,21 @@ NRR ;
  S DIR("?")="^D NRRHLP^IBCOMN(""BEGIN"")"
  D ^DIR I ($D(DTOUT))!($D(DUOUT)) S IBQUIT=1 Q
  S IBRF=Y
+ S IBRFU=$$UP^XLFSTR(IBRF)  ;IB*752/DTG - change user's response to upper case
  ;
  ;IB*743/TAZ - Updated code to accept NULL to mean end of list.
  W !!,"Enter Go To value or Press <ENTER> to finish at the end of the list.",!
  S DIR(0)="FO",DIR("A")="GO TO PATIENT NAME"
  S DIR("?")="^D NRRHLP^IBCOMN(""END"")"
- D ^DIR I ($D(DTOUT))!($D(DUOUT)) S IBQUIT=1 Q
+ ;IB*752/DTG go back to NRR instead of quit on '^'
+ ;D ^DIR I ($D(DTOUT))!($D(DUOUT)) S IBQUIT=1 Q
+ D ^DIR
+ I ($D(DTOUT))!($D(DUOUT)) G NRR
  S:Y="" Y="zzzzzz" S IBRL=Y
- I $G(IBRL)']$G(IBRF) W !!,?5,"* The Go to Patient Name must follow after the Start with Name. *",! G NRR
+ ;IB*752/DTG - change user's response to upper case
+ S IBRLU=IBRL I IBRL'="zzzzzz" S IBRLU=$$UP^XLFSTR(IBRL)
+ ;I $G(IBRL)']$G(IBRF) W !!,?5,"* The Go to Patient Name must follow after the Start with Name. *",! G NRR
+ I $G(IBRLU)']$G(IBRFU) W !!,?5,"* The Go to Patient Name must follow after the Start with Name. *",! G NRR
  Q
  ;
 NRRHLP(LEVEL) ; ?? Help for the Range Prompt
@@ -142,13 +153,17 @@ NRRHLP(LEVEL) ; ?? Help for the Range Prompt
  ;
 TR ; Ask Terminal Digit Range
  N DIR,DIRUT,DUOUT,DTOUT,X,Y
+TRR ; IB*752/DTG new tag for return to if '^' on go to prompt
  S DIR(0)="FO^1:9^K:X'?1.9N X"
  S DIR("?")="Enter up to 9 digits of the Terminal Digit to include in Report"
  S DIR("B")="0000",DIR("A")="  Start with Terminal Digit"
  D ^DIR I ($D(DTOUT))!($D(DUOUT)) S IBQUIT=1 Q
  S IBRF=$E((Y_"000000000"),1,9)
  S DIR("B")="9999",DIR("A")="  GO to Terminal Digit"
- D ^DIR I ($D(DTOUT))!($D(DUOUT)) S IBQUIT=1 Q
+ ;IB*752/DTG go to TRR instead of quit on '^'
+ ;D ^DIR I ($D(DTOUT))!($D(DUOUT)) S IBQUIT=1 Q
+ D ^DIR
+ I ($D(DTOUT))!($D(DUOUT)) G TRR
  S IBRL=$E((Y_"999999999"),1,9)
  I IBRF>IBRL W !!,?5,"* The Go to Terminal Digit must follow after the Start with Digit. *",! G TR
  Q
@@ -176,7 +191,13 @@ VRBDT ; - get begin date
  S %DT="AEX",%DT("A")="        Start with DATE: " D ^%DT K %DT G VRQ:Y<0 S STRTDATE=Y
  ;
 VREDT ; - get ending date
- S %DT="EX" R !,"        Go to DATE: ",X:DTIME S:X=" " X=STRTDATE G VRQ:(X="")!(X["^") D ^%DT G VREDT:Y<0 S ENDDATE=Y I Y<STRTDATE W *7," ??",!,"ENDING DATE must follow BEGINNING DATE." G VRBDT
+ ;IB*752/DTG go back to VRBDT if '^'
+ ;S %DT="EX" R !,"        Go to DATE: ",X:DTIME S:X=" " X=STRTDATE G VRQ:(X="")!(X["^") D ^%DT G VREDT:Y<0 S ENDDATE=Y I Y<STRTDATE W *7," ??",!,"ENDING DATE must follow BEGINNING DATE." G VRBDT
+ S %DT="EX" R !,"        Go to DATE: ",X:DTIME S:X=" " X=STRTDATE
+ I X="" G VRQ
+ I X["^" G VRBDT
+ D ^%DT G VREDT:Y<0 S ENDDATE=Y
+ I Y<STRTDATE W *7," ??",!,"ENDING DATE must follow BEGINNING DATE." G VRBDT
  ;  
 VRQ ;
  I (STRTDATE="")!(ENDDATE="") W "     <Date Range not entered>" Q 0
@@ -197,13 +218,17 @@ ICH ; Search criteria help Text
  Q
 QUE ; Ask Device
  N POP,%ZIS,ZTRTN,ZTSAVE,ZTDESC
- W !,?10,"You may want to queue this report!"
- W !,?10,"Report requires 132 columns.",!
+ I 'IBEXCEL D
+ .W !,?10,"You may want to queue this report!"
+ .W !,?10,"Report requires 132 columns.",!
+ I IBEXCEL D
+ .W !,"To avoid undesired wrapping, please enter ""0;256;999"" at the 'DEVICE:' prompt.",!
  S %ZIS="QM" D ^%ZIS G:POP QUEQ
  I $D(IO("Q")) K IO("Q") D  G QUEQ
  . S ZTRTN="BEG^IBCOMA1",ZTSAVE("IBRF")="",ZTSAVE("IBRL")=""
  . S ZTSAVE("IBAIB")="",ZTSAVE("IBBDT")="",ZTSAVE("IBEDT")="",ZTSAVE("IBSIN")=""
  . S ZTSAVE("IBPTYPE")="",ZTSAVE("IBAPPTS")="",ZTSAVE("IBAPPTE")="",ZTSAVE("IBEXCEL")=""
+ . S ZTSAVE("IBRFU")="",ZTSAVE("IBRLU")=""  ;IB*752/DTG - include in ZTSAVE
  . S ZTDESC="IB - Identify Active Policies w/no Effective Date"
  . D ^%ZTLOAD
  . K ZTSK
@@ -217,5 +242,6 @@ QUEQ ; EXIT CLEAN-UP
  W !
  D ^%ZISC
  K IBAIB,IBRF,IBRL,IBSIN,IBPTYPE,IBAPPTS,IBAPPTE,IBEXCEL,^TMP("IBCOMA",$J)
+ K IBRFU,IBRLU  ;IB*752/DTG var's for case insensitive
  Q
  ;IBCOMA

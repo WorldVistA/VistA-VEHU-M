@@ -1,10 +1,10 @@
 SDHL7APT ;MS/TG,PH - TMP HL7 Routine;AUG 17, 2018
- ;;5.3;Scheduling;**704,714,754,773,780,798,810,817,821,848**;AUG 17, 2018;Build 1
+ ;;5.3;Scheduling;**704,714,754,773,780,798,810,817,821,848,850**;AUG 17, 2018;Build 12
  ;
  ;  Integration Agreements:
  Q
  ;
-PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
+PROCSIU ;Process SI^S12 messages from the "TMP VISTA" Subscriber protocol
  ;ENT ;
  ;EN ;
  ;
@@ -46,9 +46,9 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  D PARSEMSG^SDHL7APU(MSGROOT,.HL)
  ;
  N APPTYPE,AILNTE,DFN,RET,CNT,PID,PV1,RGS,AIS,AIG,AISNTE,OVB,OFFSET,AIP,RTCID,AIPNTE,INP,SETID,EXTIME,SCHNTE,SCH,SDMTC,QRYDFN,MSGCONID,LST,MYRESULT,HLA,PTIEN,SCPER,ATYPIEN
- N AIGNTE,AIL,AILNTE,ARSETE,CURDTTM,ERROR,FLMNFMT,EESTAT,GRPCNT,GRPNO,OBX,PREVSEG,PTIEN,SCHDFN,SCPERC,SDDDT,SDECATID,SDUSER,CHILD,MSAHDR,SDECTYP
+ N AIGNTE,AIL,ARSETE,CURDTTM,ERROR,FLMNFMT,EESTAT,GRPCNT,GRPNO,OBX,PREVSEG,PTIEN,SCHDFN,SCPERC,SDDDT,SDECATID,SDUSER,CHILD,MSAHDR,SDECTYP
  N SDECCR,SDECEND,SDECLEN,SDECNOTE,SDECRES,SDECSTART,SDECY,SDEKG,SDEL,SDID,SDLAB,SDMRTC,SDPARENT,SDCHILD,SDECAPTID,SDECDATE,FIRST
- N SDREQBY,SDSVCP,SDSVCPR,SDECCR,INTRA,SDXRAY,SEGTYPE,INST,FLMNFMT2,SDAPTYP,SETID,STA,STATUS,STOP,PROVIEN,ERRCND,ERRSND,ERRTXT,URL,MSH,SDECNOT,RTN,SDCL
+ N SDREQBY,SDSVCP,SDSVCPR,INTRA,SDXRAY,SEGTYPE,INST,FLMNFMT2,SDAPTYP,STA,STATUS,STOP,PROVIEN,ERRCND,ERRSND,ERRTXT,URL,MSH,SDECNOT,RTN,SDCL
  ;
  S (MSGCONID,SCHDFN)=""
  S CNT=1,SETID=1,PREVSEG="",GRPCNT=0,PTIEN="",ERRTXT="",ERRSND=""
@@ -76,7 +76,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  .I SEGTYPE="NTE",(PREVSEG="AIL") M AILNTE(SETID)=@MSGROOT@(CNT) Q 
  .I SEGTYPE="AIP" M AIP(SETID)=@MSGROOT@(CNT) Q
  .I SEGTYPE="NTE",(PREVSEG="AIP") M AIPNTE(SETID)=@MSGROOT@(CNT)
- I $G(AIL(2,4))="R" D  ;Check to see if this is an intrafacility rtc order and set the rtc number to null on the second AIL second so both appointments file.
+ I $G(AIL(2,4))="R" D  ;Check to see if this is an intrafacility rtc order and set the rtc number to null on the second AIL second so both appts file.
  .I $G(AIL(2,4))=$G(AIL(1,4)) S AIL(2,4)="",AIL(2,4)=""
  ;
  S MSAHDR="MSA^1^^100^AE^"
@@ -89,6 +89,10 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  N MSGARY,SDCL,SDCL2,SDCL3
  D MSH^SDHL7APU(.MSH,.INP,.MSGARY)
  D SCH^SDHL7APU(.SCH,.INP,.MSGARY)
+ I +ERR D  Q   ;850-check Cancel Reason
+ .S ERR=$G(MSAHDR)_$E(ERRTXT,1,52)
+ .D SENDERR^SDHL7APU(ERR)
+ .K @MSGROOT
  D SCHNTE^SDHL7APU(.SCHNTE,.INP,.MSGARY)
  D PID^SDHL7APU(.PID,.INP,.MSGARY)
  D PV1^SDHL7APU(.PV1,.INP,.MSGARY)
@@ -143,6 +147,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ;IF a regular appt, not rtc or consult check to see if the appointment is in 409.85
  I $P(SDAPTYP,"|",1)="A" D
  .Q:$$UPPER^SDUL1(MSGARY("HL7EVENT"))'="S12"
+ .I $G(AIL(2,4,1,4))=$G(SDPARENT) S (INP(25),SCH(24,1,1),SDPARENT)=""  ;850 prevent adding parent in ARSET below
  .S:INP(3)="" INP(3)=DT S RTN=0 D ARSET^SDECAR2(.RTN,.INP)
  .S REQIEN=+$P(RTN,$c(30),2),SDAPTYP="A|"_REQIEN      ;817- define REQIEN for later  ;810- SDECAR2 routine should be used instead of SDHLAPT1 version of ARSET
  .I $G(SDMTC)=1 D CHKCHILD^SDHL7APU ; if multi check to see if the child order is in 409.85, if not add it
@@ -186,6 +191,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  N TMPARR,LEN
  S LEN=0,ERRSND=0,ERRTXT="",MSGROOT="SDTMPHL"
  K @MSGROOT
+ ;
  ; Loop to send RGS>1 groups to remote facilities. Abort entire SIU if any facility returns AE from remote.
  F GRPNO=2:1:GRPCNT D  Q:+ERRSND
  .K @MSGROOT
@@ -292,7 +298,7 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  S:$G(DUZ)="" (PROVIEN,DUZ)=.5
  S:$G(DUZ(2))="" DUZ(2)=$G(MSGARY("HLTHISSITE"))
  S (INP(11),SDDDT)=$G(SCH(11,1,8))
- ;Begin S12 processing (make)
+ ;   Begin S12 processing (make)
  I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S12" D
  .S URL=$G(AILNTE)
  .I $P($G(SDAPTYP),"|")="A"&($G(SDAPT)>0) D
@@ -327,10 +333,10 @@ PROCSIU ;Process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
  ....S INP(1)=$P(^SDEC(409.85,SDPARENT,2,X12,0),"^"),INP(2)="MC",INP(3)=$G(DUZ),DUZ(2)=$G(STA)
  ....S INP(4)=$$FMTE^XLFDT(DT)
  ....D ARCLOSE^SDECAR(.RET,.INP)
- ;Begin S15 processing (cancel)
+ ;  Begin S15 processing (cancel)
  I $$UPPER^SDUL1(MSGARY("HL7EVENT"))="S15" D
  .N XDT,%D,X,Y,STARTDT,ERRTXT,ERRCND
- .S SDECCR="",SDUSER=$G(MSGARY("DUZ"))
+ .S SDECCR=$G(SCH(6,1,2)),SDUSER=$G(MSGARY("DUZ"))
  .S:$G(SDUSER)="" SDUSER=.5
  .S %DT="RXT",X=SDECSTART D ^%DT S STARTDT=Y
  .S SDECAPTID=$$GETAPP^SDHLAPT1(DFN,SDECRES,STARTDT)

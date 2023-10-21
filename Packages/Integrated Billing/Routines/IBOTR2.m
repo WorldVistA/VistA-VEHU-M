@@ -1,5 +1,5 @@
 IBOTR2 ;ALB/CPM - INSURANCE PAYMENT TREND REPORT - COMPILATION ;5-JUN-91
- ;;2.0;INTEGRATED BILLING;**21,42,52,80,100,118,128,451,447,529**;21-MAR-94;Build 49
+ ;;2.0;INTEGRATED BILLING;**21,42,52,80,100,118,128,451,447,529,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;MAP TO DGCROTR2
@@ -26,6 +26,9 @@ ENQ I $D(ZTQUEUED) S ZTREQ="@" Q
  Q
  ;
 COMP ; - Compile Bill-Accounts Receivable records for report.
+ ; IB*752/DTG - new var for insurance company range check
+ N IBINCKN S IBINCKN=""
+ ;
  S IBD=$G(^DGCR(399,IBDA,0)) I IBD="" Q
  ;
  ; - Get division, if necessary.
@@ -54,7 +57,10 @@ COMP ; - Compile Bill-Accounts Receivable records for report.
  I IBINS="" S IBINS="UNKNOWN" G CANC
  I $G(IBIC)="ALL" G CANC
  I IBICF="@",IBICL="zzzzz" G CANC
- I IBICF]IBINS!(IBINS]IBICL) Q
+ ; IB*752/DTG - new var for insurance company range check
+ S IBINCKN=$$UP^XLFSTR(IBINS)
+ ;I IBICF]IBINS!(IBINS]IBICL) Q
+ I IBICFU]$E(IBINCKN,1,$L(IBICFU))!($E(IBINCKN,1,$L(IBICLU))]IBICLU) Q
  ;
 CANC ; - Keep cancelled bills if CANCEL BILL? field was selected or answer
  ;   to 'Do you want to include cancelled receivables?' prompt was YES.
@@ -84,8 +90,11 @@ PTDE ; - Perform Printed/Treatment date edits.
  I $D(IBAFZ) Q:IBAFZ="ALL"&(IB="")  Q:IBAFZ="NULL"&(IB]"")
  I IB=""!($G(IBAFZ)="ALL") G BUILD
  I IBAFF="@",IBAFL="" G BUILD
+ ; IB*752/DTG if name (#.02) make IB upper case before check
+ I ($G(IBAF)=".02"&('IB)) S IB=$$UP^XLFSTR(IB)
  I +IBAFF=IBAFF,+IBAFL=IBAFL Q:IB<IBAFF!(IB>IBAFL)
- E  Q:IBAFF]IB!(IB]IBAFL)
+ ;E  Q:IBAFF]IB!(IB]IBAFL)
+ I '((+IBAFF=IBAFF)&(+IBAFL=IBAFL)) Q:IBAFFO]$E(IB,1,$L(IBAFFO))!($E(IB,1,$L(IBAFLO))]IBAFLO)
  ;
 BUILD ; - Retrieve A/R data and build sort global.
  N IBGRP

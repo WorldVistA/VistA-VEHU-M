@@ -1,5 +1,5 @@
 IBCOMA1 ;ALB/CMS/JNM - IDENTIFY ACTIVE POLICIES W/NO EFFECTIVE DATE (CON'T) ; 09-29-2015
- ;;2.0;INTEGRATED BILLING;**103,516,528,549,743**;21-MAR-94;Build 18
+ ;;2.0;INTEGRATED BILLING;**103,516,528,549,743,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
 BEG ; Entry to run Active Policies w/no Effective Date Report
@@ -23,6 +23,7 @@ BEG ; Entry to run Active Policies w/no Effective Date Report
  N APPTDATA,CAPPT,CDOD,CGRP,CINS,CLVBY,CLVDAT,CSSN,DFN,IBC,IBC0,IBCDA
  N IBCDA0,IBCDA1,IBI,IBPAGE,IBQUIT,IBTD,IBTMP,IBX,IDX,LASTAPPT,LASTVER
  N LVDATE,MAXGRP,MAXINS,MAXPT,MAXRPT,MAXVERBY,VA,VADM,VAERR,X,Y
+ N IBVANM S IBVANM=""  ;IB*752/DTG - new variable for case insensitive
  ;
  ; Set starting max field sizes to length of header text
  F IDX=1:1:2 S MAXPT(IDX)=12,MAXINS(IDX)=13,MAXGRP(IDX)=9,MAXVERBY(IDX)=5
@@ -48,14 +49,18 @@ BEG ; Entry to run Active Policies w/no Effective Date Report
  . . ; IB*2*549 If Pt. deceased and not showing deceased patients quit 
  . . I IBPTYPE=1,($G(VADM(6))>0) Q
  . . ;
- . . ; IB*2*549 If Pt. not deceased and not showing living patients quit 
+ . . ; IB*2*549 If Pt. not deceased and not showing living patients quit
  . . I IBPTYPE=2,($G(VADM(6))'>0) Q
  . . S VADM(1)=$P($G(VADM(1)),U,1)
  . . ;
  . . ; I Pt. name out of range quit
  . . Q:VADM(1)=""
- . . I IBAIB=1,VADM(1)]IBRL Q
- . . I IBAIB=1,IBRF]VADM(1) Q
+ . . ;IB*752/DTG - case insensitive check inclusive
+ . . S IBVANM=$$UP^XLFSTR(VADM(1))
+ . . ;I IBAIB=1,VADM(1)]IBRL Q
+ . . ;I IBAIB=1,IBRF]VADM(1) Q
+ . . I IBAIB=1,$E(IBVANM,1,$L(IBRLU))]IBRLU Q
+ . . I IBAIB=1,IBRFU]$E(IBVANM,1,$L(IBRFU)) Q
  . . ;
  . . ; I Terminal Digit out of range quit
  . . I IBAIB=2 S IBTD=$$TERMDG^IBCONS2(DFN) S:IBTD="" IBTD="000000000" I (+IBTD>IBRL)!(IBRF>+IBTD) Q
@@ -115,14 +120,23 @@ BEG ; Entry to run Active Policies w/no Effective Date Report
  I '$D(^TMP("IBCOMA",$J)) D  G QUEQ
  . D HD(1)
  . W !!,"** NO RECORDS FOUND **"
- . D ASK^IBCOMC2
+ . D EOR,ASK^IBCOMC2  ; IB*752/DTG - print EOR then pause
  D WRT
- W !!,"** END OF REPORT **",!
+ ;IB*752/DTG - end of report then pause
+ ;W !!,"** END OF REPORT **",!
+ I '$G(IBQUIT) D EOR,ASK^IBCOMC2
  ;
 QUEQ ; Exit clean-UP
  W !
  D ^%ZISC
  K IBAIB,IBAPPTE,IBAPPTS,IBEXCEL,IBPTYPE,IBRF,IBRL,IBSIN,IBTMP,VA,VADM,VAERR,^TMP("IBCOMA",$J)
+ K IBVANM  ;IB*752/DTG - variable for case insensitive
+ Q
+ ;
+ ;IB*752/DTG - end of report
+EOR ; end of report
+ ;
+ W !!,"** END OF REPORT **",!
  Q
  ;
 HD(IBA) ; Write Heading
@@ -142,9 +156,12 @@ HD(IBA) ; Write Heading
  ; IB*2.0*549 changed include Appoint Date filtering and
  ;   dynamic column width based on actual data sizes
  I IBEXCEL D  I 1
+ . I +IBPAGE>0 Q  ;IB*752/DTG correct header
  . D PGHD(0)
- . W !!,"Patient Name^SSN^Insurance Co.^Group No.^Last VC^VC By^Last Apt^DoD"
- E  D
+ . W !,"Patient Name^SSN^Insurance Co.^Group No.^Last VC^VC By^Last Apt^DoD"
+ ;IB*752/DTG remove excel else
+ ;E  D
+ I 'IBEXCEL D
  . S IBPAGE=IBPAGE+1
  . D PGHD(IBPAGE)
  . W !!,"Patient Name",?CSSN(IBA),"SSN",?CINS(IBA),"Insurance Co.",?CGRP(IBA),"Group No."
@@ -174,12 +191,26 @@ PGHD(IBPAGE) ; Print Report Page Header
  W:IBPAGE @IOF
  W:'IBPAGE !!
  W "Active Policies with no Effective Date Report "
- I 'IBPAGE D
+ ;IB*752/DTG correct header for excel
+ I IBEXCEL D  Q
  . W "          Run On: ",IBHDT
- E  D
- . W ?IOM-34,IBHDT,?IOM-10,"Page: ",IBPAGE
- I IBPAGE W !,?5,"Sorted by: "
- E  W !,?6,"Contains: "
+ . W !,"Filtered by: "  ;IB*752/DTG - change sort to filter
+ . W "  Range: "_$S(IBRF="":"FIRST",1:IBRF)_" to "_$S(IBRL="zzzzzz":"LAST",1:IBRL)
+ . I IBBDT>0 D
+ . . W !,"Include: Verification Date Range: "_$$FMTE^XLFDT(IBBDT,"Z")
+ . . W " to "_$$FMTE^XLFDT(IBEDT,"Z")
+ . I IBAPPTS>0 D
+ . . W !,"Include: Last Appointment Date Range: "_$$FMTE^XLFDT(IBAPPTS,"Z")
+ . . W " to "_$$FMTE^XLFDT(IBAPPTE,"Z")
+ . W !,"Filter: "
+ . W $S(IBPTYPE=1:"Living Patients",IBPTYPE=2:"Deceased Patients",1:"Both Living & Deceased Patients")
+ . W ", "_$S(IBSIN=1:"Verified Policies",IBSIN=2:"Non-Verified Policies",1:"Both Verified & Non-Verified Policies")
+ ;E  D
+ ;. W ?IOM-34,IBHDT,?IOM-10,"Page: ",IBPAGE
+ W ?IOM-34,IBHDT,?IOM-10,"Page: ",IBPAGE
+ ;I IBPAGE W !,?5,"Filtered by: "  ;IB*752/DTG - change sort to filter
+ W !,?5,"Filtered by: "  ;IB*752/DTG - change sort to filter
+ ;E  W !,?6,"Contains: "
  W $S(IBAIB=1:"Patient Name",1:"Terminal Digit")
  ;IB*743/TAZ - Modified Check on IBRF.
  ;W "  Range: "_$S(IBRF="A":"FIRST",1:IBRF)_" to "_$S(IBRL="zzzzzz":"LAST",1:IBRL)
@@ -195,13 +226,18 @@ PGHD(IBPAGE) ; Print Report Page Header
  Q
  ;
 WRT ; Write data lines
- N IBA,IBCDA,IBDA,IBFIRST,IBDFN,IBINS,IBNA,IBPOL,IBPT,X,Y
- S IBQUIT=0,IBFIRST=1
+ N IBA,IBCDA,IBDA,IBFIRST,IBDFN,IBINS,IBLS,IBNA,IBPOL,IBPT,X,Y
+ S IBQUIT=0,IBFIRST=1,IBLS=""  ;IB*752/DTG added in IBLS for track of IBA change
  S IBA=0 F  S IBA=$O(^TMP("IBCOMA",$J,IBA)) Q:('IBA)!(IBQUIT=1)  D
  . I IBPAGE D ASK^IBCOMC2 I IBQUIT=1 Q
- . I IBEXCEL,IBFIRST D
- . . D HD(IBA)
- . . S IBFIRST=0
+ . ;IB*752/DTG change for proper excel header
+ . ;I IBEXCEL,IBFIRST D
+ . ;. D HD(IBA)
+ . ;. S IBFIRST=0
+ . I IBEXCEL D
+ . . I IBFIRST D
+ . . . D HD(IBA)
+ . . . S IBFIRST=0
  . ;
  . I 'IBEXCEL D
  . . D HD(IBA)
@@ -219,12 +255,15 @@ WRT ; Write data lines
  . . . . ;
  . . . . S IBCDA=0 F  S IBCDA=$O(^TMP("IBCOMA",$J,IBA,IBNA,IBDFN,IBDA,IBCDA)) Q:('IBCDA)!(IBQUIT=1)   D
  . . . . . S IBPOL=$G(^TMP("IBCOMA",$J,IBA,IBNA,IBDFN,IBDA,IBCDA))
- . . . . . I IBEXCEL D  I 1
+ . . . . . ;IB*752/DTG correct if and else to if's
+ . . . . . ;I IBEXCEL D  I 1
+ . . . . . I IBEXCEL D
  . . . . . . W !,$P(IBPT,U,1),U,$P(IBPT,U,2),U,$P(IBINS,U,1),U,$P(IBPOL,U,3),U
  . . . . . . I $P(IBPOL,U,1)'=0 W $P(IBPOL,U,1)
  . . . . . . W U_$P(IBPOL,U,2)_U
  . . . . . . W $P(IBPT,U,4),U,$P(IBPT,U,3)
- . . . . . E  D
+ . . . . . ;E  D
+ . . . . . I 'IBEXCEL D
  . . . . . . W !,$E($P(IBPT,U,1),1,MAXPT(IBA)),?CSSN(IBA),$P(IBPT,U,2),?CINS(IBA)
  . . . . . . W $E($P(IBINS,U,1),1,MAXINS(IBA)),?CGRP(IBA),$E($P(IBPOL,U,3),1,MAXGRP(IBA))
  . . . . . . I IBA=1 W ?CLVDAT(IBA),$P(IBPOL,U,1),?CLVBY(IBA),$E($P(IBPOL,U,2),1,MAXVERBY(IBA))
@@ -243,15 +282,15 @@ SETMAX(NAME,MAX,IBI) ; Get max length of data
  ;
 CALCCOLS ; Truncates the patient and insurance name field lengths if the total
  ; field lengths will not fit on the report (132 columns)
- ; Input:   MAXGRP(IBA)     - Maximum width of the 'Group No' column for 
+ ; Input:   MAXGRP(IBA)     - Maximum width of the 'Group No' column for
  ;                            verified (IBA=1) and non-verified (IBA=2) policies
- ;          MAXINS(IBA)     - Current Maximum width of the 'Insurance Co' column for 
+ ;          MAXINS(IBA)     - Current Maximum width of the 'Insurance Co' column for
  ;                            verified (IBA=1) and non-verified (IBA=2) policies
  ;          MAXPT(IBA)      - Current Maximum width of the 'Patient Name' column for
  ;                            verified (IBA=1) and non-verified (IBA=2) policies
- ;          MAXVERBY(IBA)   - Maximum width of the 'VC By' column for 
+ ;          MAXVERBY(IBA)   - Maximum width of the 'VC By' column for
  ;                            verified (IBA=1) policies
- ; Output:  MAXINS(IBA)     - Updated Maximum width of the 'Insurance Co' column for 
+ ; Output:  MAXINS(IBA)     - Updated Maximum width of the 'Insurance Co' column for
  ;                            verified (IBA=1) and non-verified (IBA=2) policies
  ;          MAXPT(IBA)      - Updated Maximum width of the 'Patient Name' column for
  ;                            verified (IBA=1) and non-verified (IBA=2) policies
@@ -272,9 +311,9 @@ CALCCOLS ; Truncates the patient and insurance name field lengths if the total
 SETCOLS(IDX) ; Sets the column positions based on maximum data sizes
  ; Input:   IDX             - 1 - Verified policies section of the report
  ;                            2 - Non-Verified policies section of the report
- ;          MAXGRP(IBA)     - Maximum width of the 'Group No' column for 
+ ;          MAXGRP(IBA)     - Maximum width of the 'Group No' column for
  ;                            verified (IBA=1) and non-verified (IBA=2) policies
- ;          MAXINS(IBA)     - Maximum width of the 'Insurance Co' column for 
+ ;          MAXINS(IBA)     - Maximum width of the 'Insurance Co' column for
  ;                            verified (IBA=1) and non-verified (IBA=2) policies
  ;          MAXPT(IBA)      - Maximum width of the 'Patient Name' column for
  ;                            verified (IBA=1) and non-verified (IBA=2) policies

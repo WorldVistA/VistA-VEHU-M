@@ -1,5 +1,5 @@
 IBCNERP3 ;DAOU/BHS - IBCNE eIV RESPONSE REPORT PRINT ; 03-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,416,528,602,702,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**184,271,416,528,602,702,737,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; eIV - Insurance Verification
@@ -38,7 +38,8 @@ IBCNERP3 ;DAOU/BHS - IBCNE eIV RESPONSE REPORT PRINT ; 03-JUN-2002
  ; Must call at appropriate tag
  Q
  ;
-PRINT(RTN,BDT,EDT,PYR,PAT,TYP,SRT,PGC,PXT,MAX,CRT,TRC,EXP,IPRF,IBRDT,IBOUT) ; Print data
+ ;IB*752/DTG added param IBFEED to input
+PRINT(RTN,BDT,EDT,PYR,PAT,TYP,SRT,PGC,PXT,MAX,CRT,TRC,EXP,IPRF,IBRDT,IBOUT,IBFEED) ; Print data
  ; Input: RTN="IBCENRP1", BDT=start dt, EDT=end dt, PYR=pyr ien,
  ;  PAT= pat ien, TYP=A/M, SRT=1/2, PGC=page ct, PXT=exit flg,
  ; MAX=max line ct/pg, CRT=1/0, TRC=trc#, EXP=earliest expiration date,IBRDT=today's date/time formatted 
@@ -48,6 +49,7 @@ PRINT(RTN,BDT,EDT,PYR,PAT,TYP,SRT,PGC,PXT,MAX,CRT,TRC,EXP,IPRF,IBRDT,IBOUT) ; Pr
  S EORMSG="*** END OF REPORT ***"
  S NONEMSG="* * * N O  D A T A  F O U N D * * *"
  S (SORT1,SORT2)=""
+ S IBFEED=$G(IBFEED) S:IBFEED="" IBFEED=MAX  ;IB*752/DTG if IBFEED is null set to MAX
  ;
  ; IB*702/DTG start no form feed between no data the header and end of report
  ;D PHDL:IBOUT="E" I $G(ZTSTOP)!PXT G PRINTX
@@ -73,7 +75,7 @@ PRINT(RTN,BDT,EDT,PYR,PAT,TYP,SRT,PGC,PXT,MAX,CRT,TRC,EXP,IPRF,IBRDT,IBOUT) ; Pr
  ;
  I $G(ZTSTOP)!PXT G PRINTX
  S (CNFLG,ERFLG)=0
- I $Y+1>MAX!('PGC) D HEADER I $G(ZTSTOP)!PXT G PRINTX
+ I $Y+1>IBFEED!('PGC) D HEADER:IBOUT="R" I $G(ZTSTOP)!PXT G PRINTX
  ; IB*702/DTG start EOR message
 PRINTEOR ; IB*702 come here for eor if no data
  W ! W:$G(IBOUT)="R" ?30 W EORMSG W:$G(IBOUT)="R" !
@@ -87,12 +89,16 @@ XLDATA ; Excel output  ; 528
  S PYRNM=$P(RPTDATA(0),U,3),PYRNM=$$GET1^DIQ(365.12,PYRNM,.01)
  S DFN=$P(RPTDATA(0),U,2),PTNM=$$GET1^DIQ(2,DFN,.01)
  S PTSSN=$E($$GETSSN^IBCNEDE5(DFN),6,9),PTDOB=$$GETDOB^IBCNEDEQ(DFN)
- W !,$S(SRT=1:PYRNM,1:PTNM)_U_$S(SRT=1:PTNM,1:PYRNM)_U_PTSSN_U_PTDOB_U_$P(RPTDATA(13),U)_U_$P(RPTDATA(13),U,2)_U_$P(RPTDATA(1),U,2)_U_$P(RPTDATA(1),U,3)_U_$P(RPTDATA(1),U,4)_U_$P(RPTDATA(14),U)_U_$P(RPTDATA(14),U,2)_U_$P(RPTDATA(1),U,8)
- W U_RPTDATA(8)_U_$P(RPTDATA(1),U,18)_U_$P(RPTDATA(1),U,13)_U_$P(RPTDATA(1),U,10)_U_$P(RPTDATA(1),U,16)_U_$P(RPTDATA(1),U,11)_U_$P(RPTDATA(1),U,17)
- W U_$P(RPTDATA(1),U,12)_U_$P(RPTDATA(1),U,19)_U_$P(RPTDATA(0),U,7)_U_$P(RPTDATA(0),U,9)_U_$P(RPTDATA(1),U,20)_U
- D DATA^IBCNERPE(.DISPDATA)   ; Build Elig. Ben. global
- D GTDT
- W $G(REFQ)_U_$G(REFID)_U_$G(RFIDSC)_U_$G(PROCD)_U_$G(REFID2)_U_$G(PRIDC)_U_$G(MLIST)_U_$G(EMPST)_U_$G(GOVAFL)_U_$G(DTMP)_U_$G(SRVRNK)_U_$G(MDESC)
+ ;IB*752/TAZ - Removed unnecessary columns from Excel report
+ ;W !,$S(SRT=1:PYRNM,1:PTNM)_U_$S(SRT=1:PTNM,1:PYRNM)_U_PTSSN_U_PTDOB_U_$P(RPTDATA(13),U)_U_$P(RPTDATA(13),U,2)_U_$P(RPTDATA(1),U,2)_U_$P(RPTDATA(1),U,3)_U_$P(RPTDATA(1),U,4)_U_$P(RPTDATA(14),U)_U_$P(RPTDATA(14),U,2)_U_$P(RPTDATA(1),U,8)
+ ;W U_RPTDATA(8)_U_$P(RPTDATA(1),U,18)_U_$P(RPTDATA(1),U,13)_U_$P(RPTDATA(1),U,10)_U_$P(RPTDATA(1),U,16)_U_$P(RPTDATA(1),U,11)_U_$P(RPTDATA(1),U,17)
+ ;W U_$P(RPTDATA(1),U,12)_U_$P(RPTDATA(1),U,19)_U_$P(RPTDATA(0),U,7)_U_$P(RPTDATA(0),U,9)_U_$P(RPTDATA(1),U,20)_U
+ ;D DATA^IBCNERPE(.DISPDATA)   ; Build Elig. Ben. global
+ ;D GTDT
+ ;W $G(REFQ)_U_$G(REFID)_U_$G(RFIDSC)_U_$G(PROCD)_U_$G(REFID2)_U_$G(PRIDC)_U_$G(MLIST)_U_$G(EMPST)_U_$G(GOVAFL)_U_$G(DTMP)_U_$G(SRVRNK)_U_$G(MDESC)
+ W !,$S(SRT=1:PYRNM,1:PTNM)_U_$S(SRT=1:PTNM,1:PYRNM)_U_PTSSN_U_PTDOB_U_$P(RPTDATA(13),U)_U_$P(RPTDATA(13),U,2)_U_$P(RPTDATA(1),U,2)_U_$P(RPTDATA(1),U,4)_U_$P(RPTDATA(14),U)_U_$P(RPTDATA(14),U,2)
+ W U_RPTDATA(8)_U_$P(RPTDATA(1),U,18)_U_$P(RPTDATA(1),U,16)_U_$P(RPTDATA(1),U,11)
+ W U_$P(RPTDATA(1),U,12)_U_$P(RPTDATA(0),U,7)_U_$P(RPTDATA(0),U,9)_U_$P(RPTDATA(1),U,20)
  Q
  ;
 GTDT ; Get Eligibility/Group Plan Information
@@ -139,7 +145,7 @@ GTDT ; Get Eligibility/Group Plan Information
 HEADER ; Print hdr info
  N X,Y,DIR,DTOUT,DUOUT,OFFSET,HDR,LIN,HDR
  I CRT,PGC>0,'$D(ZTQUEUED) D  I PXT G HEADERX
- . I MAX<51 F LIN=1:1:(MAX-$Y) W !
+ . I MAX<51 F LIN=1:1:(IBFEED-$Y) W !  ;IB*752/DTG change MAX to IBFEED
  . S DIR(0)="E" D ^DIR K DIR
  . I $D(DTOUT)!($D(DUOUT)) S PXT=1 Q
  I $D(ZTQUEUED),$$S^%ZTLOAD() S ZTSTOP=1 G HEADERX
@@ -259,10 +265,15 @@ PHDL ; - Print the header line for the Excel spreadsheet  ; 528
  K EHDR
  ; IB*602/HN end
  S PGC=1
- S X=$S(SRT=1:"Payer",1:"Patient")_U_$S(SRT=1:"Patient",1:"Payer")_"^Patient SSN^Patient DOB^Subscriber^Subscriber ID^Subscriber DOB^Subscriber SSN^Subscriber Sex^Group Name^Group ID"
- S X=X_"^Whose Insurance^Pt Relationship to Subscriber^Member ID^COB^Service Date^Date of Death^Effective Date^Certification Date^Expiration Date^Payer Updated Policy"
- S X=X_"^Response Date^Trace #^Policy Number^Reference ID Qualifier^Reference ID^Reference ID Description^Provider Code^Reference ID^Primary Diagnosis Code^Military Info Status"
- W X
- S X="^Employment Status^Government Affiliation^Date Time Period^Service Rank^Desc"
+ ;IB*752/TAZ - Removed unnecessary column headers from Excel report
+ ;S X=$S(SRT=1:"Payer",1:"Patient")_U_$S(SRT=1:"Patient",1:"Payer")_"^Patient SSN^Patient DOB^Subscriber^Subscriber ID^Subscriber DOB^Subscriber SSN^Subscriber Sex^Group Name^Group ID"
+ ;S X=X_"^Whose Insurance^Pt Relationship to Subscriber^Member ID^COB^Service Date^Date of Death^Effective Date^Certification Date^Expiration Date^Payer Updated Policy"
+ ;S X=X_"^Response Date^Trace #^Policy Number^Reference ID Qualifier^Reference ID^Reference ID Description^Provider Code^Reference ID^Primary Diagnosis Code^Military Info Status"
+ ;W X
+ ;S X="^Employment Status^Government Affiliation^Date Time Period^Service Rank^Desc"
+ ;W X
+ S X=$S(SRT=1:"Payer",1:"Patient")_U_$S(SRT=1:"Patient",1:"Payer")_"^Patient SSN^Patient DOB^Subscriber^Subscriber ID^Subscriber DOB^Subscriber Sex^Group Name^Group ID"
+ S X=X_"^Pt Relationship to Subscriber^Member ID^Date of Death^Effective Date^Expiration Date"
+ S X=X_"^Response Date^Trace #^Policy Number"
  W X
  Q

@@ -1,5 +1,5 @@
 IBCNERP7 ;DAOU/BHS - eIV STATISTICAL REPORT ;10-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,416,528,621,687**;21-MAR-94;Build 88
+ ;;2.0;INTEGRATED BILLING;**184,416,528,621,687,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; eIV - Insurance Verification Interface
@@ -50,7 +50,8 @@ S20 D SECTS I STOP G:$$STOP^IBCNERP1 EXIT G S10
  ; Select report type  528 - baa
 S30 S IBOUT=$$OUT I STOP G:$$STOP^IBCNERP1 EXIT G S20
  ; Select the output device
-S50 D DEVICE^IBCNERP1(IBCNERTN,.IBCNESPC,IBOUT) I STOP G:$$STOP^IBCNERP1 EXIT G S20
+S50 ;D DEVICE^IBCNERP1(IBCNERTN,.IBCNESPC,IBOUT) I STOP G:$$STOP^IBCNERP1 EXIT G S20
+ D DEVICE^IBCNERP1(IBCNERTN,.IBCNESPC,IBOUT) I STOP G EXIT  ;IB*752/DTG - remove step back if upcaret and go to exit
  ;
 EXIT ; Quit this routine
  Q
@@ -121,13 +122,14 @@ SECTS ; Prompt to allow users to include the available sections in the report
  S DIR("?",8)="        timeframe by extract type."
  S DIR("?",9)="  4  -  Include statistics on the Current Status of the system and Payer"
  S DIR("?",10)="        Activity. The totals in the Current Status section--including responses"
- S DIR("?",11)="        pending, queued inquiries, deferred inquiries, insurance companies"
+ ;IB*752/DTG remove reference to deferred inquiries
+ ;S DIR("?",11)="        pending, queued inquiries, deferred inquiries, insurance companies"
+ S DIR("?",11)="        pending, queued inquiries, insurance companies without national ID,"
  ;/ckb-IB*2,0*687 - Reworded the text for the line below and adjusted the following lines accordingly.
  ;S DIR("?",12)="        without national ID, eIV Payers disabled locally, and insurance buffer"
- S DIR("?",12)="        without national ID, eIV Payers locally enabled is NO, and insurance"
- S DIR("?",13)="        buffer entries--are independent of the report date range. The totals"
- S DIR("?",14)="        in the Payer Activity section reflect activity during the report date"
- S DIR("?",15)="        range."
+ S DIR("?",12)="        eIV Payers locally enabled is NO, and insurance buffer entries--are"
+ S DIR("?",13)="        independent of the report date range. The totals in the Payer Activity"
+ S DIR("?",14)="        section reflect activity during the report date range."
  S DIR("?")=" "
  D ^DIR K DIR
  I $D(DIRUT) S STOP=1 G SECTSX

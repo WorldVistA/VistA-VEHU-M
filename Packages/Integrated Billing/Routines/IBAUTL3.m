@@ -1,6 +1,6 @@
-IBAUTL3 ;ALB/CPM-MEANS TEST BILLING UTILITIES (CON'T.) ; 05-SEP-91
- ;;2.0;INTEGRATED BILLING;**176,656**;21-MAR-94;Build 17
- ;;Per VHA Directive 10-93-142, this routine should not be modified.
+IBAUTL3  ;ALB/CPM - MEANS TEST BILLING UTILITIES (CON'T.) ; 31 May 2022  12:59 PM
+ ;;2.0;INTEGRATED BILLING;**176,656,704**;21-MAR-94;Build 49
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
 DED ; Find Medicare deductible rate on the billing clock date.
  ;  Input:   IBSERV, IBCLDT    Output:  IBMED - Medicare deductible
@@ -40,7 +40,7 @@ EVUPD ; Update event record.  Input: IBEVDA, IBEVCLD
  I $D(IBDR) S DR=IBDR_DR
  S DIE="^IB(",DA=IBEVDA D ^DIE K DIE,DA,DR Q
  ;
-CLADD ; Add a new billing clock in File #351.
+CLADD ; Add a new billing clock in File #351.  (Rewritten in IB*2*704)
  ;  Input:  IBSITE, DFN, IBCLDT, IBSERV    Output: IBCLDA, IBMED
  L +^IBE(351,0):10 E  S IBY="-1^IB014" G CLADDQ
  S X=$P($S($D(^IBE(351,0)):^(0),1:"^^-1"),"^",3)+1 I 'X S IBY="-1^IB015" G CLADDQ
@@ -48,6 +48,9 @@ CLADD ; Add a new billing clock in File #351.
  F X=X:1 I X>0,'$D(^IBE(351,X)) L +^IBE(351,X):1 I $T,'$D(^IBE(351,X)) S DINUM=X,X=+IBSITE_X D FILE^DICN I +Y>0 Q
  S (DA,IBCLDA)=+Y,DIE="^IBE(351,",DR=".02////"_DFN_";.03////"_IBCLDT_";.04////1;11////"_$S($D(DUZ):DUZ,1:.5)_";12///NOW;13////"_$S($D(DUZ):DUZ,1:.5)_";14///NOW"
  D ^DIE K DA,DR,DIE L -^IBE(351,IBCLDA)
+ ;
+ ;Add a call to fire of an HL7 message to synchronize billing 365 day clocks    IB*2*704
+ I '$G(IBCCUPDF) D EN^IBECECQ1(DFN)
  S IBY=$S('$D(Y):1,1:"-1^IB028") D:IBY>0 DED
 CLADDQ L -^IBE(351,0) K DO,DD,DINUM,DIC Q
  ;
@@ -73,4 +76,12 @@ CLOCKCL ; Close out the current billing clock.
 CLUPD ; - update billing clock.  Input:  IBCLDA, IBCLDOL, IBCLDAY
  D NOW^%DTC
  S $P(^IBE(351,IBCLDA,0),"^",$S(IBCLDAY<91:5,IBCLDAY<181:6,IBCLDAY<271:7,1:8))=IBCLDOL,$P(^(0),"^",9)=IBCLDAY,$P(^(1),"^",3,4)=$S($D(DUZ):DUZ,1:.5)_"^"_%
- S DIK="^IBE(351,",DA=IBCLDA D IX1^DIK K DIK,DA Q
+ S DIK="^IBE(351,",DA=IBCLDA D IX1^DIK K DIK,DA   ; Remove the QUIT if we use the code below)
+ ;LINE BELOW IS FOR IB*2.0*704
+ I $P($G(^IBE(351,IBCLDA,1)),U,5)="" S IBNGHTSK=1 D EN^IBECECQ1(DFN) D  Q
+ .S ZTRTN="EN^IBECECU1("_DFN_","_IBCLDA_")",ZTSAVE("*")="",ZTDESC="Queue Billing Clock Sync update to allow time for query to run."
+ .S ZTDTH=$$HADD^XLFDT($H,,,30,),ZTIO="" D ^%ZTLOAD
+ ;Add a call to send an HL7 message to synchronize billing 365 day clocks    IB*2*704
+ ;
+ I +$P($G(^IBE(351,IBCLDA,1)),U,5)>0 D EN^IBECECU1(DFN,IBCLDA)  ; IB*2*704
+ Q

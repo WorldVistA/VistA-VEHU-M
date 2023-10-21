@@ -1,5 +1,5 @@
 YTQAPI17 ;ALB/ASF - MHA REMOTE PROCEDURES IMPORT ;3/18/10 3:16pm
- ;;5.01;MENTAL HEALTH;**96,217,235**;Dec 30, 1994;Build 1
+ ;;5.01;MENTAL HEALTH;**96,217,235,233**;Dec 30, 1994;Build 13
  ;
  ;No external references in this routine
  ;
@@ -26,6 +26,7 @@ SAVEALL(YSDATA,YS) ;save all answers from an administration
  . S ^YTT(601.85,"B",YSIENS,YSIENS)=""
  . S ^YTT(601.85,"AC",YSAD,YSQN,YSIENS)=""
  . S ^YTT(601.85,"AD",YSAD,YSIENS)=""
+ . K ^YTT(601.85,YSIENS,1)  ; reset ANSWERS wp field since saving over it
  . S N1=0 F  S N1=$O(YS(N,N1)) Q:N1'>0  S ^YTT(601.85,YSIENS,1,N1,0)=YS(N,N1),^YTT(601.85,YSIENS,1,0)=U_U_N1_U_N1_U_DT_U
  . L -^YTT(601.85,YSIENS)
  . S YSDATA(2)=N_"^OK"

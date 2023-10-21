@@ -1,5 +1,5 @@
 IBCNERP9 ;DAOU/BHS - eIV STATISTICAL REPORT PRINT ;12-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,416,506,528,621,687,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**184,271,416,506,528,621,687,737,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; eIV - Insurance Verification Interface
@@ -27,14 +27,15 @@ IBCNERP9 ;DAOU/BHS - eIV STATISTICAL REPORT PRINT ;12-JUN-2002
  ;   1 OR contains 3 --> 
  ;    ^TMP($J,RTN,"IN")=TotResp^InsBufExtSubtotal^PreRegExtSubtotal^...
  ;                       NonVerifInsExtSubtotal^NoActInsExtSubtotal
- ;   1 OR contains 4 --> 
+ ; IB*752/DTG Removing Deferred
+ ;   1 OR contains 4 -->
  ;    ^TMP($J,RTN,"CUR")=TotOutstandingInq^TotInqRetries^...
  ;                       TotInqCommFailure^TotInsBufVerified^...
  ;                       ManVerifedSubtotal^eIVProcessedSubtotal...
  ;                       TotInsBufUnverified^! InsBufSubtotal^...
  ;                       ? InsBufSubtotal^- InsBufSubtotal^...
  ;                       Other InsBufSubtotal^TQReadyToTransmit^...
- ;                       TQHold^TQRetry
+ ;                       NULL (was Deferred)^TQRetry
  ;    and ^TMP($J,RTN","PYR",APP,PAYER NAME,IEN of file 365.12)="" ;IB*2*687
  ;    IBOUT = "E" for Excel or "R" for report format
  ;
@@ -138,8 +139,9 @@ LINEX ; LINE exit pt
  Q
  ;
 DATA(DISPDATA,LINECT,RTN,TYPE,MM,IBOUT) ; Format lines of data to be printed
- ; IB*528 - baa : added code to output to Excel 
- N DASHES,PEND,RPTDATA,CT,DEFINQ,INSCOS,PAYERS,QUEINQ,TXT,TYPE1
+ ; IB*528 - baa : added code to output to Excel
+ ; IB*752 removed DEFINQ from NEW statement
+ N DASHES,PEND,RPTDATA,CT,INSCOS,PAYERS,QUEINQ,TXT,TYPE1
  ;
  S $P(DASHES,"=",14)="",TYPE1=TYPE ; IB*2*621
  I LINECT>0,MM="" S LINECT=LINECT+1,DISPDATA(LINECT)=""
@@ -210,11 +212,12 @@ DATA(DISPDATA,LINECT,RTN,TYPE,MM,IBOUT) ; Format lines of data to be printed
  . I IBOUT="E" S DISPDATA(LINECT)=TXT_U_QUEINQ
  . I IBOUT="R" S DISPDATA(LINECT)=$$FO^IBCNEUT1(TXT_":",46)_$$FO^IBCNEUT1(QUEINQ,14,"R")
  . ;
- . S DEFINQ=+$P(RPTDATA,U,3)
- . S LINECT=LINECT+1
- . S TXT="Deferred Inquiries:"
- . I IBOUT="E" S DISPDATA(LINECT)=TXT_U_DEFINQ
- . I IBOUT="R" S DISPDATA(LINECT)=$$FO^IBCNEUT1(TXT,46)_$$FO^IBCNEUT1(DEFINQ,14,"R")
+ . ; IB*752/DTG remove Deferred (RPTDATA,U,3)
+ . ;S DEFINQ=+$P(RPTDATA,U,3)
+ . ;S LINECT=LINECT+1
+ . ;S TXT="Deferred Inquiries:"
+ . ;I IBOUT="E" S DISPDATA(LINECT)=TXT_U_DEFINQ
+ . ;I IBOUT="R" S DISPDATA(LINECT)=$$FO^IBCNEUT1(TXT,46)_$$FO^IBCNEUT1(DEFINQ,14,"R")
  . ;
  . S INSCOS=+$P(RPTDATA,U,4)
  . S LINECT=LINECT+1

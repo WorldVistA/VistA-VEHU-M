@@ -1,5 +1,5 @@
 VPREVNT ;SLC/MKB -- VistA event listeners ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,15,17,19,21,20,26,25,27,29,31**;Sep 01, 2011;Build 3
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,15,17,19,21,20,26,25,27,29,31,34**;Sep 01, 2011;Build 2
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; External References               DBIA#
@@ -217,8 +217,8 @@ IBCN ; -- IBCN NEW INSURANCE EVENTS listener
  Q
 IBDIFF() ; -- return 1 or 0, if key matching values changed
  I +$G(IBEVTP0)'=+$G(IBEVTA0) Q 1
- I +$P($G(IBEVTP0),U,18)'=+$P($G(IBEVTA0),U,18) Q 1
- I +$P($G(IBEVTP7),U,2)'=+$P($G(IBEVTA7),U,2) Q 1
+ I $P($G(IBEVTP0),U,18)'=$P($G(IBEVTA0),U,18) Q 1
+ I $P($G(IBEVTP7),U,2)'=$P($G(IBEVTA7),U,2) Q 1
  Q 0
 IBTASK ; -- tasked update
  Q:'$G(DFN)  Q:'$G(ID)

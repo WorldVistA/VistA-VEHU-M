@@ -1,6 +1,6 @@
-IBAMTD ;ALB/CPM - MOVEMENT EVENT DRIVER INTERFACE ;21-OCT-91
-V ;;2.0;INTEGRATED BILLING;**45,52,93,115,132,153,164,156,234,312,339**;21-MAR-94;Build 2
- ;;Per VHA Directive 2004-038, this routine should not be modified.
+IBAMTD ;ALB/CPM - MOVEMENT EVENT DRIVER INTERFACE ; 21-OCT-91
+ ;;2.0;INTEGRATED BILLING;**45,52,93,115,132,153,164,156,234,312,339,704**;21-MAR-94;Build 49
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
  I $G(DGPMA)="",$G(DGPMP)="" Q
  ;
@@ -12,6 +12,9 @@ EN ; Process events from the Movement Event Driver.
  ;
  ; -- add admissions to claims tracking
  D INP^IBTRKR
+ ;
+ ; -- run billing clock query
+ D ADM^IBECECQ1
  ;
  ; -- update Transfer Pricing
  D ^IBATEI

@@ -1,5 +1,5 @@
 PSOORED3 ;BIR/SAB-edit finished orders through backdoor ;Apr 08, 2020@09:09:53
- ;;7.0;OUTPATIENT PHARMACY;**46,78,99,117,133,148,249,251,379,378,372,416,313,444,402,515,574,441**;DEC 1997;Build 209
+ ;;7.0;OUTPATIENT PHARMACY;**46,78,99,117,133,148,249,251,379,378,372,416,313,444,402,515,574,441,725**;DEC 1997;Build 1
  ;External reference to PS(51.1 supported by DBIA 2225
  ;External reference to PS(51.2 supported by DBIA 2226
  ;called from psoored2
@@ -94,7 +94,8 @@ MW S PSOEXQ=0
  .I $G(DTOUT)!($G(DUOUT)) S PSOEXQ=1 Q
  .S PSORXED("MAIL/WINDOW")=PRKMW
  I $G(PSOSIGFL)=1 S PSORXED("ENT")=ENT,SIGOK=1 G EX1
- K QTYHLD Q:$G(PSOVER)!($G(PSOREEDQ))
+ ;PSO*7*725 exit thru EX1 to kill vars
+ K QTYHLD G:$G(PSOVER)!($G(PSOREEDQ)) EX1
 UDSIG I $O(SIG(0)) D
  .S D=0 F  S D=$O(SIG(D)) Q:'D  S ^PSRX(PSORXED("IRXN"),"SIG1",D,0)=SIG(D),$P(^PSRX(PSORXED("IRXN"),"SIG1",0),"^",3)=+$P($G(^PSRX(PSORXED("IRXN"),"SIG1",0)),"^",3)+1,$P(^(0),"^",4)=+$P($G(^(0)),"^",4)+1 Q:'$O(SIG(D))
  .S (A,I)=0 F  S I=$O(^PSRX(PSORXED("IRXN"),"A",I)) Q:'I  S A=A+1

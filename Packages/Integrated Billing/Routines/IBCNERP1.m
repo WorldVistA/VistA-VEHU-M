@@ -1,5 +1,5 @@
 IBCNERP1 ;DAOU/BHS - IBCNE USER IF eIV RESPONSE REPORT ; 03-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,416,528,549,668,702,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**184,271,416,528,549,668,702,737,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; eIV - Insurance Verification Interface
@@ -56,7 +56,7 @@ EN(IPRF) ; Main entry pt
  . W !,"response detail."
  ;
  ; Rpt by Date Range or Trace #
-R05 I '$G(IPRF) D RTYPE I STOP G:$$STOP EXIT G R05
+R05 I '$G(IPRF) D RTYPE I STOP G EXIT  ;IB*752/CKB - if user entered '^', exit option
  ; If rpt by Trace # - no other criteria is necessary
  I $G(IBCNESPC("TRCN")) G R60
  ; Date Range params
@@ -87,9 +87,9 @@ R60 S IBOUT=$$OUT I STOP G:$$STOP EXIT G R50
  ; IB*702/DTG start go back 1 if up caret and no to quit
 R100 ;D DEVICE(IBCNERTN,.IBCNESPC,IBOUT) I STOP Q:+$G(IBFRB)&($G(IBOUT)="E")  G:$$STOP EXIT G:$G(IBCNESPC("TRCN"))'="" R05 G R50
  D DEVICE(IBCNERTN,.IBCNESPC,IBOUT)
- I STOP Q:+$G(IBFRB)&($G(IBOUT)="E")  G:$$STOP EXIT G:$G(IBCNESPC("TRCN"))'="" R05 G R60
- ; IB*702/DTG start go back 1 if up caret and no to quit
- G EXIT
+ ;IB*752/DTG remove step back if upcaret and go to exit
+ ;I STOP Q:+$G(IBFRB)&($G(IBOUT)="E")  G:$$STOP EXIT G:$G(IBCNESPC("TRCN"))'="" R05 G R60  ; IB*702/DTG start go back 1 if up caret and no to quit
+ I STOP G EXIT
  ;
 EXIT ; Exit pt
  Q

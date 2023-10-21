@@ -1,5 +1,5 @@
 IBCNEHLU ;DAOU/ALA - HL7 Utilities ;10-JUN-2002  ; Compiled December 16, 2004 15:36:12
- ;;2.0;INTEGRATED BILLING;**184,300,416,438,497,549,702**;21-MAR-94;Build 53
+ ;;2.0;INTEGRATED BILLING;**184,300,416,438,497,549,702,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 HLP(PROTOCOL) ;  Find the Protocol IEN
@@ -281,8 +281,12 @@ CODECHK(RSUPDT) ;  IB*2*497
  ; example: RSUPDT(365.02,IENS,".02") = data to be filed into 365.02 subfile at field .02
  ; order through the RSUPDT array and determine if pointer to file
  ; if pointer to file then pass file name and value of code/qualifier
- N IENS,FLD,FILE,RES,TOFILE,NEWARRY,Z,ZIENS
+ ;
+ ; IB*752 Fix existing bug - only allow certain files to be updated. See array XXFILE.
+ ;
+ N IENS,FLD,FILE,FSCMSG,RES,SITE,SITENUM,TOFILE,NEWARRY,XX,XXFILE,Z,ZIENS
  S (IENS,FILE,FLD)="",Z=0
+ F XX=22:1:29,31:1:39,41:1:46 S XXFILE("365.0"_XX)=""
  F  S FILE=$O(RSUPDT(FILE)) Q:FILE=""  F  S IENS=$O(RSUPDT(FILE,IENS))  Q:IENS=""  D
  . F  S FLD=$O(RSUPDT(FILE,IENS,FLD)) Q:FLD=""  D
  . . Q:RSUPDT(FILE,IENS,FLD)=""   ; value was not sent by payer; no need to continue
@@ -290,11 +294,18 @@ CODECHK(RSUPDT) ;  IB*2*497
  . . Q:RES("POINTER")=""  ; field is not defined as a pointer to a file
  . . S TOFILE=$P($P(RES("POINTER"),","),"(",2)  ; example: RES("POINTER")="IBE(365.011,"
  . . Q:+TOFILE=0
+ . . I '$D(XXFILE(TOFILE)) Q  ;IB*752
  . . Q:$$FIND1^DIC(TOFILE,"","X",RSUPDT(FILE,IENS,FLD))  ; code is already in file.  No need to update the pointed-to-file
  . . S Z=Z+1,ZIENS="+"_Z_","
- . . S NEWARRY(TOFILE,ZIENS,.01)=RSUPDT(FILE,IENS,FLD) ; code passed into VistA from 271 message
+ . . S NEWARRY(TOFILE,ZIENS,.01)=RSUPDT(FILE,IENS,FLD)   ; code passed into VistA from 271 message
  . . S NEWARRY(TOFILE,ZIENS,.02)="OTHER"  ; Description of code
- . . S NEWARRY(TOFILE,ZIENS,.03)=0   ; INACTIVE FLAG
+ . . S NEWARRY(TOFILE,ZIENS,.03)=0        ; INACTIVE FLAG
+ . . S NEWARRY(TOFILE,ZIENS,.05)=0        ; FSC CONTROLLED  ;IB*752 indicate not controlled
+ . . ;IB*752/CKB - notify FSC that a new code was learned on the fly
+ . . S SITE=$$SITE^VASITE,SITENUM=$P(SITE,U,3)
+ . . S FSCMSG=TOFILE_U_SITENUM_U_RSUPDT(FILE,IENS,FLD)_U_$$GET1^DIQ(365,$G(RIEN)_",",.09)
+ . . D MSG005^IBCNEMS1(FSCMSG)
+ . . D MSG^IBCNEUT5("FSCECADMIN@domain.ext","X12 271 VistA tables, site #"_SITENUM_" new code added","MSG(")
  I $D(NEWARRY) D UPDATE^DIE("","NEWARRY")
  Q
  ;

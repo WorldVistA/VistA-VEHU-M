@@ -1,5 +1,5 @@
 IBCNEMS1 ;AITC/DM - Consolidated Mailman messages; 12-JUNE-2018
- ;;2.0;INTEGRATED BILLING;**621,631,659**;21-MAR-94;Build 16
+ ;;2.0;INTEGRATED BILLING;**621,631,659,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; 
@@ -74,3 +74,19 @@ MSG004(MSG,SITE) ;  Create a message that the IIV EC logical link is stuck/down.
  S MSG(3)="The IIV EC logical link needs to be bounced or turned on."
  Q
  ;
+ ;IB*752/CKB - Notify FSC when a new code was learned ON THE FLY
+MSG005(IBMSG) ; Create a message providing FSC with the following info:
+ ; file # ^ site # ^ code being added ^ associated trace #
+ ;
+ S MSG(1)="A new X12 code was added on the fly. Contact the Payer to"
+ S MSG(2)="determine if it is a valid code. If it is a valid code, add it"
+ S MSG(3)="to the appropriate table in FSC with the proper description so"
+ S MSG(4)="all sites get this new code. If it is an invalid code, please"
+ S MSG(5)="advise the payer so they do not send it again in the future."
+ S MSG(6)=""
+ S MSG(7)="      Site Number: "_$P(IBMSG,U,2)
+ S MSG(8)="VistA File Number: "_$P(IBMSG,U)
+ S MSG(9)="   New Code Added: "_$P(IBMSG,U,3)
+ S MSG(10)="     Trace Number: "_$P(IBMSG,U,4)
+ S MSG(11)=" "
+ Q

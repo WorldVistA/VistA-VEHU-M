@@ -1,5 +1,5 @@
 IBCNAU ;ALB/KML/AWC - USER EDIT REPORT (DRIVER) ;6-APRIL-2015
- ;;2.0;INTEGRATED BILLING;**528,664,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**528,664,737,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;IB*737/CKB - references to 'eIV Payer' should be changed to 'Payer' in order
@@ -24,6 +24,7 @@ EN ;
  ; ALLUSERS=0  -- user ID selection (subset of users on the report that made edits)
  ; ALLUSERS=1  -- run report that shows edits from all users
  N I,ALLINS,ALLPLANS,ALLPYRS,ALLUSERS,PLANS,QUIT,REPTYP,DATE,EXCEL,WIDTH  ;/vd-IB*2*664 - Added ALLPYRS,REPTYP,WIDTH
+ N IBA,IBI,IBTMPINS  ;IB*752/DTG added for case insensitive insurance lookup
  S QUIT=0
  ;
  ;/vd-IB*2*664 - Replaced the following 4 lines with the code below:
@@ -117,7 +118,15 @@ GP(ALLINS,ALLPLANS,PLANS) ; Gather plans for all selected companies.
  ; -- allow user to select insurance companies and select group plans
  I 'ALLINS,'ALLPLANS,PLANS D  G GPQ
  . N IBINSCO
- . D INSCO^IBCNINSL(.IBINSCO) Q:Y<0
+ . ;IB*752/DTG start 1 of 3 change to case insensitive
+ . ;D INSCO^IBCNINSL(.IBINSCO) Q:Y<0
+ . K IBINSCO,IBTMPINS
+ . D INSOCAS^IBCNINSC(.IBTMPINS)
+ . I +IBTMPINS<1!($E(IBTMPINS,1)=U) S Y=-1 K IBTMPINS Q
+ . S IBI=0 F  S IBI=$O(IBTMPINS(IBI)) Q:'IBI  D
+ . . S IBA=$G(IBTMPINS(IBI)),IBA=$P(IBA,U,2) I IBA'="" S IBINSCO(IBI)=IBA
+ . S IBI=0,IBI=$O(IBINSCO(IBI)) I +IBI<1 S Y=-1 K IBTMPINS Q
+ . ;IB*752/DTG stop 1 of 3 change to case insensitive
  . S IBCNS="" F  S IBCNS=$O(IBINSCO(IBCNS)) Q:IBCNS=""  D
  . . S IBTXT=$E(IBINSCO(IBCNS),1,25) I IBTXT]"" S ^TMP("IBINC",$J,IBTXT,IBCNS)=""
  . ;
@@ -141,14 +150,30 @@ GP(ALLINS,ALLPLANS,PLANS) ; Gather plans for all selected companies.
  ; -- allow user to select insurance companies and no group plans
  I 'ALLINS,'ALLPLANS,'PLANS D  G GPQ
  . N IBINSCO
- . D INSCO^IBCNINSL(.IBINSCO) Q:Y<0
+ . ;IB*752/DTG start 2 of 3 change to case insensitive
+ . ;D INSCO^IBCNINSL(.IBINSCO) Q:Y<0
+ . K IBINSCO,IBTMPINS
+ . D INSOCAS^IBCNINSC(.IBTMPINS)
+ . I +IBTMPINS<1!($E(IBTMPINS,1)=U) S Y=-1 K IBTMPINS Q
+ . S IBI=0 F  S IBI=$O(IBTMPINS(IBI)) Q:'IBI  D
+ . . S IBA=$G(IBTMPINS(IBI)),IBA=$P(IBA,U,2) I IBA'="" S IBINSCO(IBI)=IBA
+ . S IBI=0,IBI=$O(IBINSCO(IBI)) I +IBI<1 S Y=-1 K IBTMPINS Q
+ . ;IB*752/DTG stop 2 of 3 change to case insensitive
  . S IBCNS="" F  S IBCNS=$O(IBINSCO(IBCNS)) Q:IBCNS=""  S IBTXT=$E(IBINSCO(IBCNS),1,25) I IBTXT]"" S ^TMP("IBINC",$J,IBTXT,IBCNS)=""
  . ;
  ;
  ; -- allow user to select insurance companies and and add all group plans
  I 'ALLINS,ALLPLANS,PLANS D  G GPQ
  . N IBINSCO
- . D INSCO^IBCNINSL(.IBINSCO) Q:Y<0
+ . ;IB*752/DTG start 3 of 3 change to case insensitive
+ . ;D INSCO^IBCNINSL(.IBINSCO) Q:Y<0
+ . K IBINSCO,IBTMPINS
+ . D INSOCAS^IBCNINSC(.IBTMPINS)
+ . I +IBTMPINS<1!($E(IBTMPINS,1)=U) S Y=-1 K IBTMPINS Q
+ . S IBI=0 F  S IBI=$O(IBTMPINS(IBI)) Q:'IBI  D
+ . . S IBA=$G(IBTMPINS(IBI)),IBA=$P(IBA,U,2) I IBA'="" S IBINSCO(IBI)=IBA
+ . S IBI=0,IBI=$O(IBINSCO(IBI)) I +IBI<1 S Y=-1 K IBTMPINS Q
+ . ;IB*752/DTG stop 3 of 3 change to case insensitive
  . S IBCNS="" F  S IBCNS=$O(IBINSCO(IBCNS)) Q:IBCNS=""  S IBTXT=$E(IBINSCO(IBCNS),1,25) I IBTXT]"" S ^TMP("IBINC",$J,IBTXT,IBCNS)="" D
  . . S IBPN=0 F  S IBPN=$O(^IBA(355.3,"B",IBCNS,IBPN)) Q:'IBPN  I +$$GET1^DIQ(355.3,IBPN,.11,"I")=IBAPF S ^TMP("IBINC",$J,IBTXT,IBCNS,IBPN)=""
  . ;

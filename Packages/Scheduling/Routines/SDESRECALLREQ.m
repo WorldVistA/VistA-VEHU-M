@@ -1,5 +1,5 @@
 SDESRECALLREQ ;ALB/BWF/BLB - VISTA SCHEDULING RECALL/APPT REQUEST RPCS ; Dec 29, 2022
- ;;5.3;Scheduling;**835,847**;Aug 13, 1993;Build 4
+ ;;5.3;Scheduling;**835,847,853**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  Q
 REOPEN(RETURN,APPTIEN,SDAPTYP,NEWPID,SDECTYP) ;for Recall Requests
@@ -46,7 +46,7 @@ REOPEN(RETURN,APPTIEN,SDAPTYP,NEWPID,SDECTYP) ;for Recall Requests
  ; update PID history
 APPREQLINK(APPTIEN,IEN40985,REQLINK) ; Associate new APPT Req vs. old RECALL Req
  N FDA
- S FDA(409.84,APPTIEN,.22)=REQLINK
+ S FDA(409.84,APPTIEN_",",.22)=REQLINK
  D FILE^DIE(,"FDA") K FDA
  Q
 WPSTR(ARR)  ;convert WP field array to single string   ;alb/sat 658

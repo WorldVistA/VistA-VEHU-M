@@ -1,5 +1,5 @@
-RMPREO ;HINES/HNC  SUSPENSE PROCESSING ; 10-MARCH-2005;11/06/2017
- ;;3.0;PROSTHETICS;**45,55,83,182,191**;Feb 09, 1996;Build 1
+RMPREO ;HINES/HNC - SUSPENSE PROCESSING; MARCH 10, 2005
+ ;;3.0;PROSTHETICS;**45,55,83,182,191,212**;Feb 09, 1996;Build 5
  ;
  ;HNC #83, add free text ordering provider 3/10/05
  ;
@@ -14,12 +14,16 @@ RMPREO ;HINES/HNC  SUSPENSE PROCESSING ; 10-MARCH-2005;11/06/2017
  ;RMPR*3.0*191 Ensure array element RMPR("STA") is defined
  ;             before further processing.
  ;
+ ;RMPR*3.0*212 Resorts List by SUSPENSE DATE (RMPREO NEW) 
+ ;             rather than by IEN (RMPREO).
+ ;
 EN ; -- main entry point for RMPREO
  D ^%ZISC
  N STRING,CLREND,COLUMN,LINE,ON,OFF
  ;get patient to test with
  K ^TMP($J,"RMPREO")
  K ^TMP($J,"RMPREOEE")
+ K ^TMP($J,"RMPREO NEW")
  ;ask station
  I '$D(RMPRSITE)!'$D(RMPR("STA")) D DIV4^RMPRSIT Q:$D(X)    ;RMPR*3.0*182, 191
  I '$D(RMPRDFN) D GETPAT^RMPRUTIL Q:'$D(RMPRDFN)
@@ -39,6 +43,7 @@ INIT ; -- init variables and list array
  K ^TMP($J,"RMPREO"),^TMP($J,"RMPREOEE")
  D HDR
  N RMPRA,CDATE,LINE,X,RMPRSTAT     ;RMPR*3*182
+ N SDATE                           ;RMPR*3*212
  ;start loop
  ;
  K ADATE,PDAY
@@ -50,6 +55,7 @@ INIT ; -- init variables and list array
  .S RRX=$$SETFLD^VALM1(LINE,RRX,"LINE")
  .S RMPRSTAT="" I $P($G(^RMPR(668,RMPRA,8)),U,5)["STAT" S RMPRSTAT="!"    ;RMPR*3*182
  .S CDATE=$P(^RMPR(668,RMPRA,0),U,1),CDATE=$$DAT1^RMPRUTL1(CDATE)_RMPRSTAT    ;RMPR*3*182
+ .S SDATE=$P(^RMPR(668,RMPRA,0),U) ;RMPR*3*212
  .S RRX=$$SETFLD^VALM1(CDATE,RRX,"DATE")
  .S WHO1=""
  .I $P(^RMPR(668,RMPRA,0),U,11)'="" S WHO1=$$WHO^RMPREOU($P(^RMPR(668,RMPRA,0),U,11),12,RMPRA)
@@ -79,8 +85,19 @@ INIT ; -- init variables and list array
  .S RRX=$$SETFLD^VALM1($$STATUS^RMPREOU(RMPRA,7),RRX,"STATUS")
  .S ^TMP($J,"RMPREO",LINE,0)=RRX
  .S ^TMP($J,"RMPREOEE",LINE,0)=RMPRA
+ .S ^TMP($J,"RMPREO NEW",SDATE,LINE,RMPRA)=RRX ;resort array for RMPR*3*212
+ ;resort RMPREO using RMPREO NEW;RMPR*3*212
+ I $D(^TMP($J,"RMPREO NEW")),$$SORT(SDATE) K ^TMP($J,"RMPREO NEW")
  Q
  ;
+SORT(SDATE) ;reorder RMPREO using RMPREO NEW;RMPR*3*212
+ N NL,SD,LINE,X,RMPRN K ^TMP($J,"RMPREO"),^TMP($J,"RMPREOEE")
+ S SD="",NL=1 F  S SD=$O(^TMP($J,"RMPREO NEW",SD),-1) Q:SD<1  D
+ .S LINE=0 F  S LINE=$O(^TMP($J,"RMPREO NEW",SD,LINE)) Q:LINE<1  D
+ ..S RMPRN=$O(^TMP($J,"RMPREO NEW",SD,LINE,0))
+ ..S X=^TMP($J,"RMPREO NEW",SD,LINE,RMPRN),^TMP($J,"RMPREOEE",NL,0)=RMPRN
+ ..S X=$$SETFLD^VALM1(NL,X,"LINE"),^TMP($J,"RMPREO",NL,0)=X,NL=NL+1
+ Q 1
  ;
 SET(STRING,LINE,COLUMN,CLREND,ON,OFF) ;set array
  I '$D(@VALMAR@(LINE,0)) D SET^VALM10(LINE,$J("",80))
@@ -96,6 +113,8 @@ HELP ; -- help code
 EXIT ; -- exit code
  ;NOT XUSCLEAN
  K ^TMP($J,"RMPREO")
+ K ^TMP($J,"RMPREOEE")
+ K ^TMP($J,"RMPREO NEW")
  K RMPRDFN
  Q
  ;

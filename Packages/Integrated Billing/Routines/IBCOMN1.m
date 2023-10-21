@@ -1,5 +1,5 @@
 IBCOMN1 ;ALB/CMS - PATIENTS NO COVERAGE VERIFIED REPORT (CON'T);10-09-98
- ;;2.0;INTEGRATED BILLING;**103,528,602,743**;21-MAR-94;Build 18
+ ;;2.0;INTEGRATED BILLING;**103,528,602,743,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -16,6 +16,7 @@ BEG ; Entry to run Patients w/no Coverage Verification Report
  ;         "R"= report format        "E"= Excel format
  ;
  N DFN,IBDT,IBGP,IBI,IBQUIT,IBPAGE,IBTMP,IBTD,IBX,VA,VADM,VAERR,X,Y
+ N IBVANM S IBVANM=""  ;IB*752/DTG - new variable for case insensitive
  ;
  I "^R^E^"'[(U_$G(IBOUT)_U) S IBOUT="R"
  K ^TMP("IBCOMN",$J) S IBPAGE=0,IBQUIT=0
@@ -26,8 +27,12 @@ BEG ; Entry to run Patients w/no Coverage Verification Report
  ..;
  ..;  I Pt. name out of range quit
  ..S VADM(1)=$P($G(VADM(1)),U,1) I VADM(1)="" Q
- ..I IBAIB=1,VADM(1)]IBRL Q
- ..I IBAIB=1,IBRF]VADM(1) Q
+ ..;IB*752/DTG - case insensitive check
+ ..S IBVANM=$$UP^XLFSTR(VADM(1))
+ ..;I IBAIB=1,VADM(1)]IBRL Q
+ ..;I IBAIB=1,IBRF]VADM(1) Q
+ ..I IBAIB=1,$E(IBVANM,1,$L(IBRLU))]IBRLU Q
+ ..I IBAIB=1,IBRFU]$E(IBVANM,1,$L(IBRFU)) Q
  ..;
  ..;  I Terminal Digit out of range quit
  ..I IBAIB=2 S IBTD=$$TERMDG^IBCONS2(DFN) I (+IBTD>IBRL)!(IBRF>+IBTD) Q
@@ -41,7 +46,7 @@ BEG ; Entry to run Patients w/no Coverage Verification Report
  ..S ^TMP("IBCOMN",$J,$S(IBAIB=2:IBTD,1:VADM(1)),DFN)=IBTMP
  ..;
  ;
- I '$D(^TMP("IBCOMN",$J)) D HD W !!,"** NO RECORDS FOUND **" D ASK G QUEQ
+ I '$D(^TMP("IBCOMN",$J)) D HD W !!,"** NO RECORDS FOUND **" D EOR,ASK G QUEQ
  D HD,WRT
  ;
 QUEQ ; Exit clean-UP
@@ -50,19 +55,18 @@ QUEQ ; Exit clean-UP
  ;
 HD ;Write Heading
  S IBPAGE=IBPAGE+1
- ; IB*602/HN ; Add report headers to Excel Spreadsheets 
+ ; IB*602/HN ; Add report headers to Excel Spreadsheets
  I IBOUT="E" D  W:($E(IOST,1,2)["C-") ! W "Patient Name^SSN^Age^DOB^Phone^Verified" Q
- .W !,"Patients w/No Coverage Verification Date Report^"_$$FMTE^XLFDT($$NOW^XLFDT,"Z")
+ .W !,"Patients w/No Coverage Verification Date Report     "_$$FMTE^XLFDT($$NOW^XLFDT,"Z")
  .W !,"Verification Date Range: "_$$FMTE^XLFDT(IBBDT,"Z")_" to "_$$FMTE^XLFDT(IBEDT,"Z")
- .W !," Sorted by: "_$S(IBAIB=1:"Patient Name",1:"Terminal Digit")_" Range: "_$S(IBRF="":"FIRST",1:IBRF)_" to "_$S(IBRL="zzzzzz":"LAST",1:IBRL)
+ .W !," Filtered by: "_$S(IBAIB=1:"Patient Name",1:"Terminal Digit")_" Range: "_$S(IBRF="":"FIRST",1:IBRF)_" to "_$S(IBRL="zzzzzz":"LAST",1:IBRL)  ;IB*752/DTG - sort to filter
  .W !,"(* - Patient Deceased)"
- ; IB*602/HN end 
- I IBOUT="E" W:($E(IOST,1,2)["C-") ! W "Patient Name^SSN^Age^DOB^Phone^Verified" Q
+ ; IB*602/HN end
  W @IOF,!,"Patients w/No Coverage Verification Date Report",?50,$$FMTE^XLFDT($$NOW^XLFDT,"Z"),?70," Page ",IBPAGE
  W !,?5,"Verification Date Range: "_$$FMTE^XLFDT(IBBDT,"Z")_" to "_$$FMTE^XLFDT(IBEDT,"Z")
  ;IB*743/TAZ - Modified Check of IBRF
  ;W !,?5,"  Sorted by: "_$S(IBAIB=1:"Patient Name",1:"Terminal Digit")_"  Range: "_$S(IBRF="A":"FIRST",1:IBRF)_" to "_$S(IBRL="zzzzzz":"LAST",1:IBRL)
- W !,?5,"  Sorted by: "_$S(IBAIB=1:"Patient Name",1:"Terminal Digit")_"  Range: "_$S(IBRF="":"FIRST",1:IBRF)_" to "_$S(IBRL="zzzzzz":"LAST",1:IBRL)
+ W !,?5,"  Filtered by: "_$S(IBAIB=1:"Patient Name",1:"Terminal Digit")_"  Range: "_$S(IBRF="":"FIRST",1:IBRF)_" to "_$S(IBRL="zzzzzz":"LAST",1:IBRL)  ;IB*752/DTG - sort to filter
  W !,?20,"(*  - Patient Deceased)"
  W !,"Patient Name",?31,"SSN",?38,"Age",?43,"DOB",?55,"Phone",?70,"Verified"
  W ! F IBX=1:1:79 W "="
@@ -83,7 +87,8 @@ WRT ;Write data lines
  ..; Report Output
  ..W !,$E($P(IBPT,U,1),1,30),?31,$E($P(IBPT,U,1),1,1),$P(IBPT,U,2),?38,$J($P(IBPT,U,3),3),?43,$P(IBPT,U,4),?55,$E($P(IBPT,U,5),1,15),?70,$P(IBPT,U,6)
  ..;
- I 'IBQUIT D ASK
+ ;I 'IBQUIT D ASK
+ I 'IBQUIT D EOR,ASK  ;IB*752/DTG - EOR message
  Q
  ;
 ASK ; Ask to Continue with display
@@ -91,4 +96,8 @@ ASK ; Ask to Continue with display
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
  S DIR(0)="E" D ^DIR
  I ($D(DIRUT))!($D(DUOUT)) S IBQUIT=1
+ Q
+ ;
+EOR ;  End of report  ;IB*752/DTG
+ W !,"   ** END OF REPORT **",!
  Q

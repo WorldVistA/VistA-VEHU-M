@@ -1,5 +1,5 @@
 IBCNEHL6 ;EDE/DM - HL7 Process Incoming RPI Continued ; 19-OCT-2017
- ;;2.0;INTEGRATED BILLING;**601,621,737,743**;21-MAR-94;Build 18
+ ;;2.0;INTEGRATED BILLING;**601,621,737,743,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -51,6 +51,18 @@ FIL ; Finish processing the response message - file into insurance buffer
  ;. ; update freshness date by same delta
  ;. D SAVFRSH^IBCNEUT5(TQN,+$$FMDIFF^XLFDT(RSRVDT,TQSRVDT,1))
  ;
+ ; Moved everything related to CALLEDBY variable higher up in the tag ;IB*752/DJW
+ ; ** Very important:  Variable 'CALLEDBY' must be set for this routine so
+ ;    that when a payer response is saved to the buffer either as an
+ ;    update to an existing buffer entry or as a new buffer entry a new
+ ;    eIV inquiry is not automatically triggered and resent to the payer again.
+ ;    When certain fields are changed in file #355.33 a trigger calls routine
+ ;    ^IBCNERTQ which can create and send a new inquiry in real time to the payer.
+ ;    We want this to occur in all cases _EXCEPT_ when it is a payer response.
+ ;    Which means _EXCEPT_ when it is triggered as a result of this routine.
+ ;
+ S CALLEDBY="IBCNEHL1"
+ ;
  ;  Check for error action
  ; IB*2*601/DM, IB*2.0*621/DM  If the response is MBI or EICD verification, keep processing after error
  I $G(ERACT)'=""!($G(ERTXT)'="") D  G:('IBISMBI)&('IBEICDV) FILX
@@ -68,18 +80,6 @@ FIL ; Finish processing the response message - file into insurance buffer
  . S FILEIT=0
  I 'FILEIT G FILX
  ;
- ; -
- ; ** Very important:  Variable 'CALLEDBY' must be set for this routine so
- ;    that when a payer response is saved to the buffer either as an
- ;    update to an existing buffer entry or as a new buffer entry a new
- ;    eIV inquiry is not automatically triggered and resent to the payer again.
- ;    When certain fields are changed in file #355.33 a trigger calls routine
- ;    ^IBCNERTQ which can create and send a new inquiry in real time to the payer.
- ;    We want this to occur in all cases _EXCEPT_ when it is a payer response.
- ;    Which means _EXCEPT_ when it is triggered as a result of this routine.
- ;
- S CALLEDBY="IBCNEHL1"
- ;
  ;  If there is an associated buffer entry & one or both of the following
  ;  is true, stop filing (don't update buffer entry)
  ;  1) buffer status is not 'Entered'
@@ -96,10 +96,10 @@ FIL ; Finish processing the response message - file into insurance buffer
  ;
  ;  If there is an associated buffer entry, update the buffer entry w/
  ;  response data
-  ;IB*743/CKB - add the locking of the Buffer
+ ;IB*743/CKB - add the locking of the Buffer
  ;I BUFF'="" D RP^IBCNEBF(RIEN,"",BUFF)
  N BUFDONE,BUFLOCK,BUFSTAT
- S (BUFDONE,BUFLOCK)=0  ; BUFDONE indicates that a user processed the entry already 
+ S (BUFDONE,BUFLOCK)=0  ; BUFDONE indicates that a user processed the entry already
  I BUFF'="" D
  . ;If STATUS (#355.33,.04) is NOT ENTERED, ABORT - DON'T touch the buffer entry
  . ; (#355.33), and continue normal processing
@@ -179,8 +179,8 @@ UPDBUF(BUFF,SYMBOL) ; Update the IIV PROCESSED DATE (#355.33,.15) and update Buf
  ;
  ; Per eBiz eInsurance 12/2022 - If there is a Buffer entry & the lock is NOT acquired, do the
  ;  following if the buffer status is ENTERED:  Set the eIV Processed Date so that the trace #
- ;  will display, the 'magic sentence' saying the service date and STC the response is based on 
- ;  is displayed, the eligibility benefit info associated with the response is displayed and 
+ ;  will display, the 'magic sentence' saying the service date and STC the response is based on
+ ;  is displayed, the eligibility benefit info associated with the response is displayed and
  ;  available when accepting the buffer entry.  DO NOT set the other fields in the buffer such
  ;  as effective date, group #/name, etc on the buffer entry as eBiz wants to the buffer fields
  ;  set to the values that they were 1 second before the eIV response arrived back at the site.

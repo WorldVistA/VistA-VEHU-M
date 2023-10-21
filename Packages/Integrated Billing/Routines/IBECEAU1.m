@@ -1,6 +1,6 @@
 IBECEAU1 ;ALB/CPM - Cancel/Edit/Add... Clock Utilities ; 12-MAR-93
- ;;Version 2.0 ; INTEGRATED BILLING ;**57**; 21-MAR-94
- ;;Per VHA Directive 10-93-142, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**57,704**;21-MAR-94;Build 49
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
 CLSTR(DFN,DATE) ; Find the billing clock in effect on DATE.
  ;   Input:      DFN  --  Pointer to the patient in file #2
@@ -41,6 +41,7 @@ CLINP(BEG,DIF,IBCLDA) ; Update Billing Clock Inpatient Days
  I 'Y!($D(DIRUT))!($D(DUOUT)) W !,"The billing clock has not been updated." G CLINPQ
  S DIE="^IBE(351,",DA=IBCLDA,DR=".09////"_DAYS_";13////"_DUZ_";14///NOW" D ^DIE
  W !,"The clock has been updated."
+ I $$GET1^DIQ(351,IBCLDA_",",16,"I")=1 D EN^IBECECU1(DFN,IBCLDA)  ;IB*2.0*704 - Update billing clocks as other sites
 CLINPQ S IBF=0 F I=90,180,270 I BEG'>I,DAYS>I S IBF=1 Q
  I IBF W !!,*7,"   ** Please review to see if this patient requires a new copay charge. **"
 CLINPQ1 Q
@@ -60,4 +61,5 @@ CLAMT(STR,AMT,IBCLDA) ; Update Billing Clock Medicare Deductible co-payments
  I 'Y!($D(DIRUT))!($D(DUOUT)) W !,"The billing clock has not been updated." G CLAMTQ
  S DIE="^IBE(351,",DA=IBCLDA,DR=".0"_PTR_"////"_NEWAMT_";13////"_DUZ_";14///NOW" D ^DIE
  W !,"The clock has been updated."
+ I $$GET1^DIQ(351,IBCLDA_",",16,"I")=1 D EN^IBECECU1(DFN,IBCLDA)  ;IB*2.0*704 - Update billing clocks as other sites
 CLAMTQ Q

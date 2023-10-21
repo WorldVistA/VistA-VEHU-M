@@ -1,5 +1,5 @@
 YTQRQAD2 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181,199,202,204,208**;Dec 30, 1994;Build 23
+ ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181,199,202,204,208,233**;Dec 30, 1994;Build 13
  ;
 SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  ; loop through DATA to create ANS array, then YSDATA array
@@ -126,8 +126,8 @@ GETADM(ARGS,RESULTS) ; get answers for administration identified by ARGS("adminI
  . . I VAL=1155!(VAL=1156)!(VAL=1157) S TYP=1           ; skipped values
  . . I TYP=1 S TMP(+SEQ)=QID_U_"c"_VAL QUIT             ; mult choice
  . . S VAL=$G(^YTT(601.85,ANS,1,1,0))                   ; integer, etc.
- . . I TYP'=5 S TMP(+SEQ)=QID_U_VAL QUIT
- . . S (N,L)=0 F  S N=$O(^YTT(601.85,ANS,1,N)) Q:'N  D  ; memo fields
+ . . I TYP'=5,(TYP'=11) S TMP(+SEQ)=QID_U_VAL QUIT
+ . . S (N,L)=0 F  S N=$O(^YTT(601.85,ANS,1,N)) Q:'N  D  ; memo and checkbox fields
  . . . S VAL=$G(^YTT(601.85,ANS,1,N,0))
  . . . I '$D(TMP(+SEQ)) S TMP(+SEQ)=QID_U_$TR(VAL,"|",$C(10)) I 1
  . . . E  S L=L+1,TMP(+SEQ,L)=$TR(VAL,"|",$C(10))

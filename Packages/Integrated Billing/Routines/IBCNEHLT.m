@@ -1,5 +1,5 @@
 IBCNEHLT ;DAOU/ALA - HL7 Process Incoming MFN Messages ; 15 Mar 2016  3:00 PM
- ;;2.0;INTEGRATED BILLING;**184,251,271,300,416,438,506,549,582,601,621,664,668,687,732**;21-MAR-94;Build 13
+ ;;2.0;INTEGRATED BILLING;**184,251,271,300,416,438,506,549,582,601,621,664,668,687,732,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -25,16 +25,14 @@ EN ;  Entry Point
  ;            approved by the VA HL7 team. Just adding a table number here does
  ;            absolutely nothing without involving the other teams.
  ;
+ ;IB*2*644/DW - corrected arrays of file numbers X12TABLE array and EIV table array are for different purposes.
+ ;              Which modified some changes made by IB*506 and IB*549
  ;IB*2.0*668/TAZ - Moved the setup of X12TABLE(365.021) to this line.
- F D=11:1:18,21 S X12TABLE("365.0"_D)=""
- ;IB*2.0*668/TAZ - Changed 21 to 22 to match the warning.
- ;F D=22:1:28 S X12TABLE("365.0"_D)=""  ; FSC does not update files #365.022 through #365.028
- ;
- ;S X12TABLE(350.9)=""     ; IB*2.0*506   ; IB*2*664/dw  moved to different array as it is not a X12 file 
- ;S X12TABLE(350.9002)=""  ; IB*2.0*549   ; IB*2*664/dw  moved to different array as it is not a X12 file 
- ;IB*2.0*668/TAZ - removed EIV(365.12) node.  It isn't used.
- ;S EIV(350.9)="",EIV(350.9002)="",EIV(365.12)=""    ; IB*2*664/dw
- S EIV(350.9)="",EIV(350.9002)=""    ; IB*2*668/dw  drop file 365.12 from array, it is handled another way
+ F D=11:1:18,21 S X12TABLE("365.0"_D)="" ;original set of files that FSC controlled (prior to year 2022)
+ ; IB*752/DTG - extended FSC control through 365.046
+ F D=22:1:29,31:1:39,41:1:46 S X12TABLE("365.0"_D)=""
+ ;IB*2.0*668/TAZ - removed EIV(365.12) node. As this file is handled differently.
+ S EIV(350.9)="",EIV(350.9002)=""
  ;
  S APP=""
  S HCT=0,ERFLG=0
@@ -219,6 +217,8 @@ TFIL ;  eIV Site Parameter table filer & X12 Code List table filer
  . D ^DIE
  . S IBACK="AA"
  ;
+ ;ANYTHING below is related to updating files listed in the X12TABLE array
+ ;
  ;IB*582/TAZ - Add new entries and update existing entries
  ;
  S DIC(0)="X",X=ID,DIC=$$ROOT^DILFD(FLN)
@@ -226,11 +226,13 @@ TFIL ;  eIV Site Parameter table filer & X12 Code List table filer
  ; don't update existing entries
  ;I IEN>0 Q
  ;Add new entry to table
- I IEN<1 D
+ I IEN<1 D  I IEN<1 Q
  . S DLAYGO=FLN,DIC(0)="L"
  . K DD,DO D FILE^DICN K DO
+ . S IEN=+Y
+ . I IEN<1 S IBACK="AE"
  ;
- ;Update Description
+ ;Update fields: Description & FSC Controlled ;IB*752/CKB
  ;
  D FIELD^DID(FLN,.02,,"FIELD LENGTH","MAX")
  I MAX("FIELD LENGTH")>0 S DESC=$E(DESC,1,MAX("FIELD LENGTH")) ; restriction of the field in the DD
@@ -240,7 +242,7 @@ TFIL ;  eIV Site Parameter table filer & X12 Code List table filer
  ;K DD,DO D FILE^DICN K DO
  ;IB*2*601/HN corrected use of the DR variable 
  ;S DIE=DIC,DA=IEN,DIC("DR")=".02///^S X=DESC" D ^DIE
- S DIE=DIC,DA=IEN,DR=".02///^S X=DESC" D ^DIE
+ S DIE=DIC,DA=IEN,DR=".02///^S X=DESC;.05///^S X=1" D ^DIE ;IB*752/DW Added field .05
  S IBACK="AA"
  Q
  ;

@@ -1,5 +1,5 @@
 IBCNSC ;ALB/NLR - INSURANCE COMPANY EDIT ;6/1/05 9:42am
- ;;2.0;INTEGRATED BILLING;**46,137,184,276,320,371,400,488,547,592,668**;21-MAR-94;Build 28
+ ;;2.0;INTEGRATED BILLING;**46,137,184,276,320,371,400,488,547,592,668,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;also used for IA #4694
@@ -130,16 +130,29 @@ EXIT ; -- exit code
  ;
 INSCO ; -- select insurance company
  ;JWS;IB*2.0*592;new of DR
- NEW DLAYGO,DIC,DR,X,Y,DTOUT,DUOUT,IBCNS3
- I '$D(IBCNS) D  G:$D(VALMQUIT) INSCOQ
- .S DIC="^DIC(36,",DIC(0)="AEQMZ",DIC("S")="I '$G(^(5))"
- .I '$G(IBVIEW) S DLAYGO=36,DIC(0)=DIC(0)_"L"
- .D ^DIC K DIC
- .S IBCNS=+Y
- .;/Beginning of IB*2.0*488 (vd)
- .I +IBCNS I $P($G(^DIC(36,+IBCNS,3)),"^",1)="" D     ; Set default for EDI=Transmit? to YES-LIVE
- ..S DR="3.01////1",DIE="^DIC(36,",DA=IBCNS D ^DIE K DIE
- ..;/End of IB*2.0*488 (vd)
+ ;IB*752/TAZ - Restructured to call new utility for case insensitive lookups
+ NEW ARRAY,DLAYGO,DIC,DR,X,Y,DTOUT,DUOUT,IBCNS3,SCR
+ I '$D(IBCNS) D  G:$D(VALMQUIT) INSCOQ G:'$D(IBCNS) INSCO
+ . S SCR="I '$G(^DIC(36,+Y,5))"
+ . D INSOCAS^IBCNINSC(.ARRAY,1,,.SCR)
+ . I $D(ARRAY)>1 S IBCNS=$O(ARRAY("")) Q
+ . I ARRAY="^"!(ARRAY="") S VALMQUIT=1 Q
+ . S IBCNS=ARRAY
+ . ; Quit if lookup was successful
+ . I IBCNS Q
+ . ; lookup was not successful,quit if View only.
+ . I $G(IBVIEW) W !,"Insurance Company not found." K IBCNS Q
+ . ; Add new entry in upper case only
+ . S DIC="^DIC(36,",DIC(0)="BEQZL",DLAYGO=36
+ . ;Force upper case before calling ^DIC before 
+ . S X=$$UP^XLFSTR(ARRAY)
+ . D ^DIC K DIC
+ . I +Y<0 W !,"Insurance Company was not added." K IBCNS Q
+ . S IBCNS=+Y
+ . ;  /Beginning of IB*2.0*488 (vd)
+ . I +IBCNS I $P($G(^DIC(36,+IBCNS,3)),"^",1)="" D     ; Set default for EDI=Transmit? to YES-LIVE
+ .. S DR="3.01////1",DIE="^DIC(36,",DA=IBCNS D ^DIE K DIE
+ .. ;  /End of IB*2.0*488 (vd)
  I $G(IBCNS)<1 K IBCNS S VALMQUIT="" G INSCOQ
 INSCOQ ;
  K DIC

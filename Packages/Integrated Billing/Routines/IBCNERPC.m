@@ -1,5 +1,5 @@
 IBCNERPC ;DAOU/RO - PAYER LINK REPORT - Compile & Print;AUG-2003
- ;;2.0;INTEGRATED BILLING;**184,252,271,416,528,668,687,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**184,252,271,416,528,668,687,737,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to EN^XUTMDEVQ in ICR #1519
@@ -260,7 +260,8 @@ HEADER(APP,HDRNAME,HDRDATE) ; Report header
  W @IOF,!,HDRNAME,?OFFSET1,HDRDET,?OFFSET2,HDRDATE
  W !
  I PPYR'="" W ?1,APP," Payer: ",$P(PPYR,"^",2)
- W !,?46,"# Linked",?63,"Nationally",?82,"Locally"
+ ;W !,?46,"# Linked",?63,"Nationally",?82,"Locally"
+ W !,?46,"# Linked",?63,$S(APP="IIU":"IIU",1:"EIV")," Nationally",?82,$S(APP="IIU":"IIU",1:"EIV")," Locally"  ;IB*752/DTG to tell which is IIU and EIV
  W ?98,$S(APP="IIU":"Receive",1:"Auto")
  W ?113,"Prof/Inst.",?126,"Also"
  ; IB*2*687/DTG start remove ':' from payer name

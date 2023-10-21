@@ -1,5 +1,5 @@
 IBCOMC1 ;ALB/CMS - IDENTIFY PT BY AGE WITH OR WITHOUT INSURANCE (CON'T);10-09-98
- ;;2.0;INTEGRATED BILLING;**103,183,528**;21-MAR-94;Build 163
+ ;;2.0;INTEGRATED BILLING;**103,183,528,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -25,6 +25,8 @@ BEG ; Entry to run Identify Patients with/without Insurance Report
  N DFN,IBC,IBC0,IBDLT,IBGP,IBI,IBINS,IBINSV,IBPAGE,IBQUIT
  N IBTMP,IBTD,IBX,IBXX,SDCNT,VA,VADM,VAERR,VAPA,X,Y
  ;
+ N IBVANM,IBINSNAM,IBOK S (IBVANM,IBINSNAM,IBOK)=""  ;IB*752/DTG - new var's for case insensitive
+ ;
  I "^R^E^"'[(U_$G(IBOUT)_U) S IBOUT="R"
  K ^TMP("IBCOMC",$J) S IBPAGE=0,IBQUIT=0,IBINSV=""
  ;
@@ -45,8 +47,12 @@ BEG ; Entry to run Identify Patients with/without Insurance Report
  .;
  .;  I Pt. name out of range quit
  .S VADM(1)=$P($G(VADM(1)),U,1) I VADM(1)="" Q
- .I IBAIB=1,VADM(1)]IBRL Q
- .I IBAIB=1,IBRF]VADM(1) Q
+ .;IB*752/DTG changing to uppercase, inclusive
+ .S IBVANM=$$UP^XLFSTR(VADM(1))
+ .;I IBAIB=1,VADM(1)]IBRL Q
+ .;I IBAIB=1,IBRF]VADM(1) Q
+ .I IBAIB=1,$E(IBVANM,1,$L(IBRLU))]IBRLU Q
+ .I IBAIB=1,IBRFU]$E(IBVANM,1,$L(IBRFU)) Q
  .;
  .;  I Age out of range quit
  .I IBAGEF I (+VADM(4)<IBAGEF)!(+VADM(4)>IBAGEL) Q
@@ -62,14 +68,35 @@ BEG ; Entry to run Identify Patients with/without Insurance Report
  .S IBX=0 F  S IBX=$O(IBINS(IBX)) Q:'IBX  D
  ..S IBC=IBINS(IBX,0)
  ..S IBC0=$G(^DIC(36,+IBC,0))
- ..I IBSIN=1,$P(IBC0,U,1)]IBSINF,IBSINL]$P(IBC0,U,1) D SET Q
- ..I IBSIN=2 F IBXX=1:1:6 I $G(IBSIN(IBXX)),+IBC=+IBSIN(IBXX) D SET
+ ..;IB*752/DTG - change user's response to upper case
+ ..S IBINSNAM=$$UP^XLFSTR($P(IBC0,U,1))
+ ..;I IBSIN=1,$P(IBC0,U,1)]IBSINF,IBSINL]$P(IBC0,U,1) D SET Q
+ ..I IBSIN=1 S IBOK="" D  I IBOK=1 D SET Q
+ ...I $E(IBINSNAM,1,$L(IBSINFU))]IBSINFU,IBSINLU]$E(IBINSNAM,1,$L(IBSINLU)) S IBOK=1 Q
+ ...I $E(IBINSNAM,1,$L(IBSINLU))=IBSINLU S IBOK=1 Q
+ ...I $E(IBINSNAM,1,$L(IBSINFU))=IBSINFU&(IBSINLU]$E(IBINSNAM,1,$L(IBSINLU))) S IBOK=1 Q
+ ..;
+ ..;IB*752/DTG change from 6 insurances to many
+ ..;I IBSIN=2 F IBXX=1:1:6 I $G(IBSIN(IBXX)),+IBC=+IBSIN(IBXX) D SET
+ ..I IBSIN=2 S IBXX=0 F  S IBXX=$O(IBSIN(IBXX)) Q:'IBXX  I $G(IBSIN(IBXX)),+IBC=+IBSIN(IBXX) D SET
  .;
- I '$O(^TMP("IBCOMC",$J,0)) D HD^IBCOMC2 W !!,"** NO RECORDS FOUND **" D ASK^IBCOMC2 G QUEQ
+ ;IB*752/DTG - correct for EOR
+ ;I '$O(^TMP("IBCOMC",$J,0)) D HD^IBCOMC2 W !!,"** NO RECORDS FOUND **" D ASK^IBCOMC2 G QUEQ
+ I '$O(^TMP("IBCOMC",$J,0)) D  G QUEQ
+ .D HD^IBCOMC2 W !!,"** NO RECORDS FOUND **"
+ .D EOR,ASK^IBCOMC2
+ ;
  D HD^IBCOMC2,WRT^IBCOMC2
+ I 'IBQUIT D EOR,ASK^IBCOMC2  ;IB*752/DTG EOR & pause
  ;
 QUEQ ; Exit clean-UP
  W ! D ^%ZISC K IBTMP,IBAIB,IBRF,IBRL,IBSIN,IBAGEF,IBAGEL,IBBDT,IBEDT,IBOUT,IBSINF,IBSINL,VA,VAERR,VADM,VAPA,^TMP("IBCOMC",$J)
+ K IBVANM,IBINSNAM,IBOK  ;IB*752/DTG - new var's for case insensitive
+ Q
+ ;
+EOR ; end of report IB*752/DTG
+ ;
+ W !,"** END OF REPORT **",!
  Q
  ;
 SET ;   set data line for global

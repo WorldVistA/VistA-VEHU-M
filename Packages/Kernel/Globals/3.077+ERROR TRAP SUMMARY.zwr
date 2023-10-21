@@ -1,12 +1,6 @@
 OSEHRA ZGO Export: ERROR TRAP SUMMARY
 ZWR
-^%ZTER(3.077,0)="ERROR TRAP SUMMARY^3.077^7^7"
-^%ZTER(3.077,4,0)="POST+31~WEBG012P, Fall-through to a label with formallist is not allowed,150374442,-%YDB-E-FALLINTOFLST^3230617.120732^3230617.120732"
-^%ZTER(3.077,4,4,0)="^3.0775"
-^%ZTER(3.077,4,4,66642,0)="~~~~~~~~~~~~1"
-^%ZTER(3.077,5,0)="POST+31~WEBG013P, Fall-through to a label with formallist is not allowed,150374442,-%YDB-E-FALLINTOFLST^3230714.234444^3230714.234444"
-^%ZTER(3.077,5,4,0)="^3.0775"
-^%ZTER(3.077,5,4,66669,0)="~~~~~~~~~~~~~~~~~~~~~~~1"
+^%ZTER(3.077,0)="ERROR TRAP SUMMARY^3.077^7^5"
 ^%ZTER(3.077,6,0)="IDLE1+4~%ZTM, JOB command failure'%YDB-I-TEXT' Job error in routine specification. Label and offset not found in created process,150373114,-%YDB-E-JOBFAIL^3230902.161615^3230902.161615"
 ^%ZTER(3.077,6,4,0)="^3.0775"
 ^%ZTER(3.077,6,4,66719,0)="~~~~~~~~~~~~~~~~1"
@@ -14,6 +8,4 @@ ZWR
 ^%ZTER(3.077,7,4,0)="^3.0775"
 ^%ZTER(3.077,7,4,66719,0)="~~~~~~~~~~~~~~~~226~41"
 ^%ZTER(3.077,"B","IDLE1+4~%ZTM, JOB command fail",6)=""
-^%ZTER(3.077,"B","POST+31~WEBG012P, Fall-through",4)=""
-^%ZTER(3.077,"B","POST+31~WEBG013P, Fall-through",5)=""
 ^%ZTER(3.077,"B","SUBCHK+1~%ZTM5, JOB command fa",7)=""

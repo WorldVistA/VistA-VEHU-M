@@ -1,7 +1,8 @@
 SDHL7APU ;MS/TG,PH - TMP HL7 Routine;OCT 16, 2018
- ;;5.3;Scheduling;**704,714,773,780,798,810**;AUG 17, 2018;Build 3
+ ;;5.3;Scheduling;**704,714,773,780,798,810,850**;AUG 17, 2018;Build 12
  ;
  ;  Integration Agreements:
+ ;
  Q
  ;
  ;Helper routine to process SIU^S12 messages from the "TMP VISTA" Subscriber protocol
@@ -18,7 +19,7 @@ SCH(SCH,INP,MSGARY) ;
  S MSGARY("EVENT")=$G(SCH(6,1,1))  ;if the appointment is canceled check for cancel code and cancel reason, they are required
  S (SDECCR,CANCODE)=$G(SCH(6,1,2))
  I $G(MSGARY("EVENT"))="CANCELED" D
- . Q:$G(SDECCR)=""
+ . I $G(SDECCR)="" S ERR=1,ERRTXT="Cancel Reason was null and is required" Q     ;850-add reject condition
  . S SDECCR=$O(^SD(409.2,"B",$G(CANCODE),0))
  . S:(SDECCR)="" SDECCR=11
  . S SDECTYP=$G(SCH(6,1,4))

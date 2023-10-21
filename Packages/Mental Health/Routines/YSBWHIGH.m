@@ -1,5 +1,5 @@
 YSBWHIGH ;SLC/DJE - MHA DASHBOARD ; Apr 01, 2021@16:33
- ;;5.01;MENTAL HEALTH;**202,208**;Dec 30, 1994;Build 23
+ ;;5.01;MENTAL HEALTH;**202,208,221**;Dec 30, 1994;Build 11
  ;
  ; Routine retrieves high risk widget data
  ;
@@ -30,7 +30,7 @@ HIGHRISK(DATAOUT) ;
  .S DCDT=""
  .K PRFDATA,PATDATA,INSTDATA
  .S PRFFOUND=$$PRFDATA(DFN,.SITES,.PRFDATA)
- .Q:'PRFFOUND  ;not a at user's site
+ .Q:'PRFFOUND  ;no PRFDATA found
  .S HRFND=1
  .S HRIDX=HRIDX+1
  .S DATAOUT("data",HRIDX,"widget")="HIGH RISK"
@@ -74,7 +74,7 @@ PRFDATA(DFN,SITES,PRFDATA) ;
  S DONE=0
  S I=0 F  S I=$O(PRFFULL(I)) Q:'I  D  Q:DONE
  .Q:$P(PRFFULL(I,"FLAG"),U)'="2;DGPF(26.15,"
- .Q:'$D(SITES(+PRFFULL(I,"OWNER")))  ;only high risk flags from user's site
+ .;Q:'$D(SITES(+PRFFULL(I,"OWNER")))  ;only high risk flags from user's site
  .S DONE=1
  .M PRFDATA=PRFFULL(I)
  Q DONE

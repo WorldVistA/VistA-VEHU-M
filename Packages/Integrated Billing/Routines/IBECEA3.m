@@ -1,5 +1,5 @@
 IBECEA3 ;ALB/CPM - Cancel/Edit/Add... Add a Charge ;30-MAR-93
- ;;2.0;INTEGRATED BILLING;**7,57,52,132,150,153,166,156,167,176,198,188,183,202,240,312,402,454,563,614,618,646,651,656,663,677,678,682,728,716**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**7,57,52,132,150,153,166,156,167,176,198,188,183,202,240,312,402,454,563,614,618,646,651,656,663,677,678,682,728,716,704**;21-MAR-94;Build 49
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 ADD ; Add a Charge protocol
@@ -138,7 +138,7 @@ FR ; - ask 'bill from' date
  I IBXA=2 S IBDT=IBFR D COPAY^IBAUTL2 G ADDQ:IBY<0 S:IBGMT>0 IBGMTR=1,IBCHG=$$REDUCE^IBAGMT(IBCHG) I IBCHG+IBCLDOL<IBMED W *7,"   ($",IBCHG,"/day)" W:IBGMTR " GMT Rate"
  ;
  ; - find the correct clock from the 'bill from' date (ignore LTC)
- I IBXA'=8,IBXA'=9,('IBCLDA!(IBCLDA&(IBFR<IBCLDT))) D NOCL^IBECEA33 G:IBY<0 ADDQ
+ I IBXA'=8,IBXA'=9,('IBCLDA!(IBCLDA&(IBFR<IBCLDT))!'$$GET1^DIQ(351,IBCLDA_",",16,"I")) D NOCL^IBECEA33 G:IBY<0 ADDQ
  ;
 UCPAY ;IB*2.0*646 Added to allow for skip of clock checks - required for Urgent Care Copays
  ; - perform outpatient edits

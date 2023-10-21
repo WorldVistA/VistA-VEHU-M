@@ -1,5 +1,5 @@
 YTQAPI5A ;DXC/ART - Save MH Administration Record API ;10/23/2017
- ;;5.01;MENTAL HEALTH;**132**;Dec 30, 1994;Build 2
+ ;;5.01;MENTAL HEALTH;**132,221**;Dec 30, 1994;Build 11
  ;
  QUIT
  ;
@@ -15,5 +15,7 @@ SAVEADM(YSDATA,YS) ; Create a new or update an existing administration
  ;Output: YSDATA(1)=[DATA] or [ERROR]
  ;
  SET YS("FILEN")=601.84 ; force to MH ADMINISTRATION
+ N I S I=0
+ F  S I=$O(YS(I)) Q:'I  I $P(YS(I),U)="15" S YS(I)="15^`"_$$SRC^YTQAPI1($P(YS(I),U,2))
  DO EDAD^YTQAPI1(.YSDATA,.YS) ; then call previous entry point
  QUIT

@@ -1,5 +1,5 @@
 IBCNERPD ;DAOU/RO - INSURANCE COMPANY LINK REPORT ;AUG-2003
- ;;2.0;INTEGRATED BILLING;**184,252,416,521,528,595,602,687**;21-MAR-94;Build 88
+ ;;2.0;INTEGRATED BILLING;**184,252,416,521,528,595,602,687,752**;21-MAR-94;Build 20
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; eIV - Insurance Verification Interface
@@ -44,7 +44,6 @@ R10 ; Prompt to select linked vs unlinked insurance companies report option
  ;
  S DIR(0)="S^1:Unlinked insurance companies;2:Linked insurance companies"
  S DIR("A")="Select type of companies to display"
- S DIR("B")=""
  S DIR("?",1)="  1 - Only insurance companies that are not currently linked to a payer"
  S DIR("?")="  2 - Only insurance companies that are currently linked to a payer"
  D ^DIR K DIR
@@ -52,24 +51,58 @@ R10 ; Prompt to select linked vs unlinked insurance companies report option
  S IBCNESPD("ITYPE")=Y
  I Y=1 S IBCNESPD("ISORT")=1   ; If Unlinked report the sort defaults to the primary sort and skip the sort prompt.
  ;
+ ;IB*752/TAZ - Modified prompt to add Select Ins Co.
+R15 ;Prompt for All, Keyword search or Select Ins Co.
+ ;
+ N DIR,X,Y,DIRUT
+ W !
+ S DIR(0)="S^1:ALL insurance companies;2:Keyword search in insurance companies;3:Select insurance companies"
+ S DIR("A")="Select companies to display"
+ S DIR("?",1)="  Enter 1 - Select ALL insurance companies"
+ S DIR("?",2)="  Enter 2 - Text entered into the search keyword field will"
+ S DIR("?",3)="            result in the report selecting all insurance"
+ S DIR("?",4)="            companies that contain the entered text in the"
+ S DIR("?",5)="            insurance company name."
+ S DIR("?",6)="  Enter 3 - Individually select insurance companies"
+ S DIR("?")="            (multiple companies allowed)"
+ D ^DIR K DIR
+ I $D(DUOUT)!$D(DTOUT) S Y="" S STOP=1 G:$$STOP^IBCNERP1 EXIT G R10
+ I Y=1 S IBCNESPD("IMAT")="" G R30
+ I Y=2 G R20
+ G R25
+ ;
+ ; IB*752/TAZ - Modified for Select Ins Co.
+R20 ; Prompt for Insurance Company Search 
+ N DIR,X,Y,DIRUT
+ ;
  W !!,"Text entered into the search keyword field will result in"
  W !,"the report selecting all insurance companies that contain"
  W !,"the entered text in the insurance company name."
- ;
-R20 ; Prompt for Insurance Company Search 
- N DIR,X,Y,DIRUT
  W !
- S DIR(0)="FO"
- S DIR("A")="Enter an insurance company search keyword (RETURN for ALL)"
- S DIR("B")=""
+ S DIR(0)="F"
+ S DIR("A")="Enter an insurance company search keyword"
  S DIR("?",1)="     Enter a keyword to search insurance company names that"
- S DIR("?",2)="     contain the keyword or simply hit RETURN to select ALL"
- S DIR("?",3)="     insurance companies. Examples of keyword: ('CIGNA' would"
- S DIR("?",4)="     return CIGNA, CIGNA HICN, NATIONAL CIGNA, REGION 1 CIGNA"
+ S DIR("?",2)="     contain the keyword. Examples of keyword: ('CIGNA' would"
+ S DIR("?",3)="     return CIGNA, CIGNA HICN, NATIONAL CIGNA, REGION 1 CIGNA"
  S DIR("?")="     and any others with the term 'CIGNA' in it)"
  D ^DIR K DIR
- I $D(DUOUT)!$D(DTOUT) S Y="" S STOP=1 G:$$STOP^IBCNERP1 EXIT G R10
+ I $D(DUOUT)!$D(DTOUT) S Y="" S STOP=1 G:$$STOP^IBCNERP1 EXIT G R15
  S IBCNESPD("IMAT")=Y
+ G R30
+ ;
+ ; IB*752/TAZ - Modified for Select Ins Co.
+R25 ;Initialize Prompt for insurance companies.
+ N ARRAY
+ ;
+R26 ; Prompt for multiple insurance companies
+ ;
+ D INSOCAS^IBCNINSC(.ARRAY)
+ ;
+ I $G(ARRAY)="^" S STOP=1 G:$$STOP^IBCNERP1 EXIT G R15
+ I '$G(ARRAY) W !,"This is a required response. Enter '^' to exit" G R26
+ ;
+ S ARRAY=""
+ M IBCNESPD("IMAT")=ARRAY
  ;
 R30 ; Prompt to allow users to select output format
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
@@ -80,7 +113,7 @@ R30 ; Prompt to allow users to select output format
  S DIR("B")="Report"
  D ^DIR K DIR
  I $D(DIRUT) S STOP=1
- I STOP S IBCNESPD("ISORT")="" G:$$STOP^IBCNERP1 EXIT G R20
+ I STOP S IBCNESPD("ISORT")="" G:$$STOP^IBCNERP1 EXIT G R15
  S (IBOUT,IBCNESPD("IBOUT"))=Y
  ;
  ; If the report is in EXCEL format, set the sort to the primary sort and skip the Sort Prompt.
@@ -104,11 +137,12 @@ R50 ; Proceed to compilation of the data and then generate the output of the rep
  . W ! I IBCNESPD("ITYPE")=2 W !,"*** This report is 132 characters wide ***",!
  I IBOUT="E" W !!!,"*** To avoid wrapping, enter '0;256;999' at the 'DEVICE' prompt. ***",!
  D DEVICE(IBCNERTN,.IBCNESPD)
- I STOP D  G @DEST
- . I $$STOP^IBCNERP1 S DEST="EXIT" Q
- . I IBCNESPD("ITYPE")=1 S DEST="R30" Q
- . I IBCNESPD("IBOUT")="E" S DEST="R30" Q
- . S DEST="R40"
+ ;IB*752/TAZ - When ^ entered, don't return to prompts.
+ ;I STOP D  G @DEST
+ ;. I $$STOP^IBCNERP1 S DEST="EXIT" Q
+ ;. I IBCNESPD("ITYPE")=1 S DEST="R30" Q
+ ;. I IBCNESPD("IBOUT")="E" S DEST="R30" Q
+ ;. S DEST="R40"
  ;
 EXIT ; Exit pt
  Q
@@ -127,7 +161,8 @@ DEVICE(IBCNERTN,IBCNESPD) ; Device Handler and possible TaskManager calls
  S ZTSAVE("IBCNERTN")=""
  S ZTSAVE("IBOUT")=""
  D EN^XUTMDEVQ(ZTRTN,ZTDESC,.ZTSAVE)
- I POP S STOP=1
+ ;IB*752/TAZ - STOP Variable no longer required since not moving to previous prompts.
+ ;I POP S STOP=1
  Q
  ;
 COMPILE(IBCNERTN,IBCNESPD) ;
@@ -162,7 +197,8 @@ COMPDATA(IBCNERTN,IBCNESPD) ; Compile data
  ;
  S IBTYP=$G(IBCNESPD("ITYPE"))
  S IBSORT=$G(IBCNESPD("ISORT"))
- S IBMAT=$G(IBCNESPD("IMAT"))
+ ; IB*752/TAZ - Modified for Select Ins Co.
+ M IBMAT=IBCNESPD("IMAT")
  S (SORT1,SORT2,SORT3)=""
  ;
  ; Loop thru the Insurance company file
@@ -172,6 +208,8 @@ COMPDATA(IBCNERTN,IBCNESPD) ; Compile data
  . S IBINAME=$$GET1^DIQ(36,IBINS,.01,"I")
  . I IBINAME="" Q
  . I IBMAT'="",'$F($$UP^XLFSTR(IBINAME),$$UP^XLFSTR(IBMAT)) Q  ; ICR #10104
+ . ; IB*752/TAZ - Modified for Select Ins Co.
+ . I $D(IBMAT)>10,'$D(IBMAT(IBINS)) Q   ;IB*743/TAZ - Not a selected insurance co.
  . ; Get active group count
  . S (IBI,IBGRP)=0 F  S IBI=$O(^IBA(355.3,"B",IBINS,IBI)) Q:'IBI  I '$$GET1^DIQ(355.3,IBI,.11,"I") S IBGRP=IBGRP+1
  . ;
@@ -237,7 +275,8 @@ OUTPUT(IBCNERTN,IBCNESPD) ; Sets IO params for printing
  ;
  S IBTYP=$G(IBCNESPD("ITYPE"))
  S IBSORT=$G(IBCNESPD("ISORT"))
- S IBMAT=$G(IBCNESPD("IMAT"))
+ ; IB*752/TAZ - Modified for Select Ins Co.
+ M IBMAT=IBCNESPD("IMAT")
  ;
  S (CRT,IBPGC,IBPXT,MAXCNT)=0  ;S (IBPXT,IBPGC)=0
  ;
@@ -357,8 +396,9 @@ HEADER ; Report format Header
  S OFFSET=$S(IBTYP=2:131,1:79)-$L(HDR)
  W ?OFFSET,HDR
  W !
+ ; IB*752/TAZ - Modified for Select Ins Co.
  S HDR=$S(IBTYP=1:"Unlinked Insurance Companies",1:"Linked Insurance Companies")
- S HDR=HDR_" - "_$S(IBMAT="":"ALL",1:"that contains: "_IBMAT)
+ S HDR=HDR_" - "_$S(($D(IBMAT)>10):"Selected",IBMAT="":"ALL",1:"that contain: "_IBMAT)
  S OFFSET=$S(IBTYP=2:131,1:79)-$L(HDR)/2
  W ?OFFSET,HDR
  W !
@@ -384,7 +424,8 @@ EHDR ; - Excel format Header
  S X="Insurance Company Link Report^"_$$FMTE^XLFDT($$NOW^XLFDT,1)
  W X,!
  S HDR=$S(IBTYP=1:"Unlinked Insurance Companies",1:"Linked Insurance Companies")
- S HDR=HDR_" - "_$S(IBMAT="":"ALL",1:"that contains: "_IBMAT)
+ ; IB*752/TAZ - Modified for Select Ins Co.
+ S HDR=HDR_" - "_$S(($D(IBMAT)>10):"Selected",IBMAT="":"ALL",1:"that contain: "_IBMAT)
  W HDR
  S X="Insurance Company^Street Address^City^State^Zip^# Active Groups^Claims Prof EDI#^Claims Inst EDI#"
  ; Unlinked Report

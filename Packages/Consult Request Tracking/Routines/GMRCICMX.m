@@ -1,0 +1,175 @@
+GMRCICMX ;SLC/WAS - IFC Possible Erroneous Comments Excel Report; Jul 31,2023@08:53:03
+ ;;3.0;CONSULT/REQUEST TRACKING;**199**;DEC 27, 1997;Build 52
+ ;
+ ;
+ Q
+EN ; Main
+ N DASHES,TAB
+ N GEXIT,GMRCO,GMRCISIT,GMRCRO,GMRCACT,GMRCSITE,GMRCX,GMRCX2,GMRCX3,GMBEG,GIDX
+ N GMRCDA,GMRCDA0,GMRCDA2,GMRCDA3,GMRCTYPE,GMRCCMT,GMRCLINE,REMNUM,ANS,GMRCPG
+ N DLM,GACT,GACTDT,GACTENT,GACTNUM,GACTRP,GHDR1,GHDR2,GHDR3,GHDR4,GLINE1,GLINE2,PTID
+ N ACTCNT,TOTCNT,ACTTYPE,PTNM,PTSSN,REMSIT,ZTQUEUED,ZTREQ,GMRCNM,GMRCODT,RCNT,TIUDOC
+ N %ZIS,POP,IO,GEXIT,HDRFLG,SVIOM,IOL,NMIDX,GMRCNM,GLENCMT,RPTLEN
+ S SVIOM=IOM
+ D BEGDT
+ S %ZIS="QM" D ^%ZIS
+ I POP D HOME^%ZIS Q
+ I $D(IO("Q")) D  D ^%ZISC,HOME^%ZIS Q
+ . N ZTRTN,ZTSK,ZTIO,ZTDTH,ZTDESC
+ . S ZTRTN="MAKERPT^GMRCICMX"_"("_GMBEG_")",ZTDESC="IFC Possible Erroneous Comments Excel Report"
+ . S ZTIO=ION,ZTDTH=$H
+ . D ^%ZTLOAD
+ . I $G(ZTSK) W !,"Queued to Print, Task # ",ZTSK
+ . E  W !,"Sorry, Try again Later"
+ I '$D(IO("Q")) D
+ . D MAKERPT(GMBEG)
+ . D ^%ZISC,HOME^%ZIS
+ S IOM=SVIOM
+ Q
+BEGDT ;
+ N %DT,X,Y
+ S GEXIT=0,GMBEG=""
+ W @IOF
+ W !!,"Enter beginning date for the IFC selection:",!
+ K %DT
+ S %DT="AEX"
+ S %DT("B")="07/01/2020"
+ S %DT("A")="Beginning Date: "
+ D ^%DT S GMBEG=+$G(Y)
+ I Y<1 S GEXIT=1 Q
+ I GMBEG'>0 D
+ . S %DT("B")=$$FMTE^XLFDT(GMBEG,"5Z")
+ W @IOF
+ Q
+MAKERPT(GMBEG) ;
+ K ^TMP("GMRCICMX",$J)
+ S IOM=20000
+ S IOL=999999
+ S HDRFLG=0
+ D GETIFCS
+ I $D(ZTQUEUED) S ZTREQ="@"
+ U IO
+ S REMNUM=0,ANS="",GMRCPG=0,ACTCNT=0,DLM="|",RPTLEN=253
+ ; Loop the ^TMP global of selected IFCs and write records
+ ; ^TMP("GMRCICMX",$J,SITE,CSLT,GMRCACT,0)="" <-- Selected IFCs
+ ; GMRCO = consult internal entry number
+ ; GMRCDA = activity internal entry number
+ I '$D(^TMP("GMRCICMX",$J)) S GMBEG="" S TOTCNT=0 D HDR,NOREC Q
+ S TOTCNT=^TMP("GMRCICMX",$J,"TOTCNT")
+ S GMRCSITE=0
+ F  S GMRCSITE=$O(^TMP("GMRCICMX",$J,GMRCSITE)) Q:('GMRCSITE)  D
+ . S GMRCO=0
+ . F  S GMRCO=$O(^TMP("GMRCICMX",$J,GMRCSITE,+GMRCO)) Q:('GMRCO)  D
+ .. S GMRCDA=0
+ .. F  S GMRCDA=$O(^TMP("GMRCICMX",$J,GMRCSITE,+GMRCO,+GMRCDA)) Q:('GMRCDA)  D
+ ... D RPTACT
+ ... Q
+ .. Q
+ . Q
+ W !,"End of Report",!
+ K ^TMP("GMRCICMX",$J)
+ Q
+GETIFCS ; Get IFCs
+ S GMRCO="",GMRCISIT="",GMRCRO="",TOTCNT=0,ACTCNT=0,GIDX=0
+ S GMRCISIT=0
+ F  S GMRCISIT=$O(^GMR(123,"AIFC",GMRCISIT)) Q:'GMRCISIT  D
+ . S GMRCRO=0
+ . F  S GMRCRO=$O(^GMR(123,"AIFC",GMRCISIT,GMRCRO)) Q:'GMRCRO  D
+ .. S GMRCO=$O(^GMR(123,"AIFC",GMRCISIT,GMRCRO,0))
+ .. I $P($G(^GMR(123,GMRCO,12)),U,5)="P" D ACTS
+ . Q
+ Q
+ACTS ; Get IFC activities
+ S GMRCACT=0
+ F  S GMRCACT=$O(^GMR(123,GMRCO,40,GMRCACT)) Q:'GMRCACT  D
+ . S GIDX=GIDX+1 H:'(GIDX#10000) 1
+ . ; Get only COMPLETE/UPDATE activities
+ . S ACTTYPE=$P(^GMR(123,GMRCO,40,GMRCACT,0),U,2)
+ . Q:ACTTYPE'=10
+ . ; Do not include any IFCs before the begin date
+ . S GMRCX=$P(^GMR(123,GMRCO,40,GMRCACT,0),U,1)
+ . Q:(GMRCX<GMBEG)
+ . ; Look for associated results or remote associated results to screen out admin completes
+ . I ($D(^GMR(123,GMRCO,50,"AR")))!($D(^GMR(123,GMRCO,51,"AR"))) D
+ .. I $G(^GMR(123,GMRCO,40,GMRCACT,1,1,0))'="" D
+ ... S GMRCSITE=$P(^GMR(123,GMRCO,0),U,23)
+ ... S ^TMP("GMRCICMX",$J,GMRCISIT,GMRCO,GMRCACT,0)="" S TOTCNT=TOTCNT+1
+ .. Q
+ . Q
+ S ^TMP("GMRCICMX",$J,"TOTCNT")=TOTCNT
+ Q
+RPTACT ; 
+ S GMRCACT="",GMRCLINE="",GMRCX="",GMRCX2="",GMRCISIT=0
+ S TAB=$$REPEAT^XLFSTR(" ",22)
+ S GMRCODT=$P(^GMR(123,+GMRCO,0),"^",1)
+ S X=GMRCODT D REGDTM^GMRCU
+ S GMRCODT=X
+ S NMIDX=$P(^GMR(123,+GMRCO,0),U,5)
+ S GMRCNM=$P($G(^GMR(123.5,NMIDX,0)),U,1)
+ S GMRCDA0=$G(^GMR(123,+GMRCO,40,+GMRCDA,0))
+ S GMRCTYPE=$P(GMRCDA0,"^",2)
+ I GMRCTYPE'=10 Q
+ S GMRCDA2=$G(^GMR(123,+GMRCO,40,+GMRCDA,2))
+ S GMRCDA3=$G(^GMR(123,+GMRCO,40,+GMRCDA,3))
+ I $D(^GMR(123,+GMRCO,40,+GMRCDA,2)) D
+ . S GMRCISIT=$P(^GMR(123,+GMRCO,0),U,23) Q:'GMRCISIT
+ . S GMRCISIT=$$GET1^DIQ(4,GMRCISIT,.01)
+ ; Only report if comments exist
+ I $D(^GMR(123,+GMRCO,40,+GMRCDA,1)) D
+ . D RPTCSLT
+ . D RPTCMTS
+ Q
+RPTCSLT ;
+ I HDRFLG=0 D HDR
+ S ACTCNT=ACTCNT+1
+ S RCNT=$TR($J(ACTCNT,10)," ")_"/"_$TR($J(TOTCNT,10)," ")
+ S PTNM=$$GET1^DIQ(123,+GMRCO,.02,"E")
+ S PTSSN=$$GET1^DIQ(2,$P(^GMR(123,+GMRCO,0),U,2),.09)
+ S PTID=$E(PTNM,1,1)_$E(PTSSN,6,9)
+ S REMSIT=$$GET1^DIQ(4,$P(^GMR(123,+GMRCO,0),U,23),.01)
+ S REMNUM=$P(^GMR(123,+GMRCO,0),U,22)
+ S GACT=$P($G(^GMR(123.1,+GMRCTYPE,0)),"^",1) I $TR(GACT,"")="" S GACT=GMRCTYPE
+ S GACTNUM=+GMRCDA
+ S GMRCX="" S GMRCX=$P($O(^GMR(123,+GMRCO,50,"AR",GMRCX)),";",1)
+ I GMRCX="" S GMRCX=$P($O(^GMR(123,+GMRCO,51,"AR",GMRCX)),";",1)
+ S TIUDOC=GMRCX
+ ;Date/time of Actual Activity, Who's Responsible for Activity, and Who entered activity
+ S X=$P(GMRCDA0,"^",3) D REGDTM^GMRCU
+ S GMRCX2=X_" "_$S($P(GMRCDA2,"^",3)]"":$P(GMRCDA2,"^",3),1:$E(TAB,1,3))
+ S GMRCX=$S($P(GMRCDA2,"^",2)]"":$E($P(GMRCDA2,"^",2),1,27),$P(GMRCDA0,"^",4):$E($P($G(^VA(200,$P(GMRCDA0,"^",4),0)),"^"),1,27),1:$E(TAB,1,20))
+ S GMRCX3=$S($P(GMRCDA2,"^")]"":$E($P(GMRCDA2,"^"),1,27),$P(GMRCDA0,"^",5):$E($P($G(^VA(200,$P(GMRCDA0,"^",5),0)),"^"),1,27))
+ S GACTDT=GMRCX2
+ S GACTRP=GMRCX
+ Q
+RPTCMTS ;
+ S GMRCCMT=0,GLENCMT=0,GMRCLINE="",GLINE1="",GLINE2=""
+ F  S GMRCCMT=$O(^GMR(123,+GMRCO,40,+GMRCDA,1,GMRCCMT)) Q:'+GMRCCMT  D
+ . I $D(^GMR(123,+GMRCO,40,+GMRCDA,1,GMRCCMT,0)) D
+ .. I GMRCLINE="" S GMRCLINE=$G(^GMR(123,+GMRCO,40,+GMRCDA,1,GMRCCMT,0))
+ .. E  S GMRCLINE=GMRCLINE_DLM_$G(^GMR(123,+GMRCO,40,+GMRCDA,1,GMRCCMT,0))
+ I GMRCLINE'="" D
+ .S GLINE1=RCNT_DLM_GMRCODT_DLM_GMRCNM_DLM_PTID_DLM_REMSIT_DLM_REMNUM_DLM_+GMRCO_DLM_GACTNUM_DLM_TIUDOC_DLM_GACTDT
+ .S GLENCMT=RPTLEN-$L(GLINE1)
+ W !,GLINE1_DLM_$E(GMRCLINE,1,GLENCMT)
+ Q
+NOREC ; Print the no records found message
+ W !!,"No IFC possible erroneous comments to report",!
+ Q
+HDR ; Print the header
+ ;
+ S HDRFLG=1
+ S GHDR1="",GHDR2="",GHDR3="",GHDR4=""
+ W !,"IFC Possible Erroneous Comments Report"
+ W !,""
+ S GMRCX="Total IFC Activities to Review: "_TOTCNT
+ I TOTCNT>0 D
+ .W !,GMRCX,!
+ .W !,"No automated modification will be made to inter-facility consults that are "
+ .W !,"identified with possible erroneous comments at this time.",!
+ .;
+ .S GHDR1="Counter"_DLM_"Entry Date/Time"_DLM_"Service Name"_DLM_"PTID"
+ .S GHDR2="Receiving Site"_DLM_"Remote Consult #"_DLM_"Consult #"_DLM_"Activity #"
+ .S GHDR3="TIU Document #"_DLM_"Activity Date"_DLM_"Possible Erroneous Comments"
+ .W !,GHDR1_DLM_GHDR2_DLM_GHDR3
+ .W !,""
+ Q

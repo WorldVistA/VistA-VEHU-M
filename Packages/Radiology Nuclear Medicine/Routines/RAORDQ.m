@@ -1,5 +1,5 @@
-RAORDQ ;HISC/CAH,FPT AISC/RMO-Queue Exam Request ; Jun 25, 2020@13:06:05
- ;;5.0;Radiology/Nuclear Medicine;**13,15,169**;Mar 16, 1998;Build 2
+RAORDQ ;HISC/CAH,FPT AISC/RMO-Queue Exam Request ; Jun 30, 2023@10:36:10
+ ;;5.0;Radiology/Nuclear Medicine;**13,15,169,205**;Mar 16, 1998;Build 1
  ;
  ;w/RA*5.0*169 backdoor orders rejected by CPRS still prints
  ;a request (the RIS files pending before CPRS returns the
@@ -7,9 +7,13 @@ RAORDQ ;HISC/CAH,FPT AISC/RMO-Queue Exam Request ; Jun 25, 2020@13:06:05
  I $D(RADERR)#2 K RADERR Q  ;gjc RA5P169
  S:$D(RALOCFLG) RALOC=+$P(RAORD0,"^",20)
  ; Find 1st Imaging Location for Imaging Type, or default to 1st on file.
+ ;
+ ;*** P205/GJC from: ^RA(79.1,RALOC,"DIV")=+RADIV     ***
+ ;***            to: $G(^RA(79.1,RALOC,"DIV"))=+RADIV ***
+ ;
  I '$D(RALOCFLG) D  S:RALOC="" RALOC=+$O(^RA(79,+RADIV,"L",0))
  .S RALOC=""
- .F  S RALOC=$O(^RA(79.1,"BIMG",RAIMGTYI,RALOC)) Q:RALOC=""  I $P(^RA(79.1,RALOC,0),U,16)]"",^RA(79.1,RALOC,"DIV")=+RADIV Q
+ .F  S RALOC=$O(^RA(79.1,"BIMG",RAIMGTYI,RALOC)) Q:RALOC=""  I $P(^RA(79.1,RALOC,0),U,16)]"",$G(^RA(79.1,RALOC,"DIV"))=+RADIV Q
  S RAREQPRT=$S($D(^RA(79.1,+RALOC,0)):$P(^(0),"^",16),1:"")
  Q:RAREQPRT']""
  S RAREQPRT=$P($G(^%ZIS(1,RAREQPRT,0)),"^") Q:RAREQPRT']""

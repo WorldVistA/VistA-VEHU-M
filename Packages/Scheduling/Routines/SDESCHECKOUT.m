@@ -1,5 +1,5 @@
-SDESCHECKOUT ;ALB/BWF,CGP - Checkout Appointment - VISTA SCHEDULING RPCS ;Jan 24, 2023
- ;;5.3;Scheduling;**826,827,836**;Aug 13, 1993;Build 20
+SDESCHECKOUT ;ALB/BWF,CGP,ANU - Checkout Appointment - VISTA SCHEDULING RPCS ;AUG 07, 2023
+ ;;5.3;Scheduling;**826,827,836,853**;Aug 13, 1993;Build 9
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Reference to MAS PARAMETERS in ICR #483
  ; Reference to WARD LOCATION in ICR #1377
@@ -118,7 +118,10 @@ CHKOUT(DFN,APPTDTTM,CLINICIEN,SDDA,SDASK,CHKOUTDT,SDCOACT,SDLNE,SDECAPTID,SDQUIE
  ;-- if new encounter, pass to PCE
  I $$NEW(APPTDTTM) D  Q
  .N SDCOED
- .S SDOE=$$GETAPT(DFN,APPTDTTM,CLINICIEN)
+ .;ANU - Add ERRORS parameter
+ .S SDOE=$$GETAPT(DFN,APPTDTTM,CLINICIEN,.ERRORS)
+ .I $D(ERRORS) Q
+ .;
  .S SDCOED=$$CHK($TR($$STATUS(DFN,APPTDTTM,CLINICIEN,SDATA,SDDA),";","^"))
  .; -- appt has already been checked out
  .I $$CODT(DFN,APPTDTTM,CLINICIEN,SDDA)!(SDCOED) D  Q
@@ -143,7 +146,8 @@ NEW(DATE) ;-- This function will return 1 if SD is turned on for
  I SDX,SDY S SDRES=1
  Q SDRES
  ;
-GETAPT(DFN,SDT,SDCL,SDVIEN) ;Look-up Outpatient Encounter IEN for Appt
+GETAPT(DFN,SDT,SDCL,SDVIEN,ERRORS) ;Look-up Outpatient Encounter IEN for Appt
+ ; ANU - Added ERRORS parameter
  ; This utility will return the existing IEN for an Outpatient
  ; Encounter. If it fails to find an existing encounter,
  ; it will create a new Encounter and return the new IEN.
@@ -155,23 +159,31 @@ GETAPT(DFN,SDT,SDCL,SDVIEN) ;Look-up Outpatient Encounter IEN for Appt
  ; Output -- Outpatient Encounter file IEN
  N Y
  S Y=$$GET1^DIQ(2.98,SDT_","_DFN_",",21,"I")
- I 'Y D APPT(DFN,SDT,SDCL,$G(SDVIEN)) S Y=$$GET1^DIQ(2.98,SDT_","_DFN_",",21,"I")
+ ;ANU
+ ;I 'Y D APPT(DFN,SDT,SDCL,$G(SDVIEN)) S Y=$$GET1^DIQ(2.98,SDT_","_DFN_",",21,"I")
+ I 'Y D APPT(DFN,SDT,SDCL,$G(SDVIEN),.ERRORS)
+ I $D(ERRORS) Q +$G(Y)
+ I '$D(ERRORS) S Y=$$GET1^DIQ(2.98,SDT_","_DFN_",",21,"I")
+ ;
  I Y D VIEN(Y,$G(SDVIEN))
  Q +$G(Y)
  ;
  ; FROM APPT^SDVSIT
-APPT(DFN,SDT,SDCL,SDVIEN) ; -- process appt
+ ; Anu - Add Errros parameter 
+APPT(DFN,SDT,SDCL,SDVIEN,ERRORS) ; -- process appt
  ; input        DFN = ien of patient file entry
  ;              SDT = visit date internal format
  ;             SDCL = ien of hospital location file entry
  ;           SDVIEN = Visit file pointer [optional]
  ;
- N SDVSIT,SDOE,DA,DIE,DR,SDPT,SDSC,SDCL0,SDDA,SDLOCK
+ N SDVSIT,SDOE,DA,DIE,DR,SDPT,SDSC,SDCL0,SDDA,SDLOCK,SDLCKS
  ;
  ; -- set lock data and lock
  S SDLOCK("DFN")=DFN
  S SDLOCK("EVENT DATE/TIME")=SDT
- D LOCK(.SDLOCK)
+ ;ANU
+ ;D LOCK(.SDLOCK)
+ I '$$LOCK(.SDLOCK) D ERRLOG^SDESJSON(.ERRORS,174) Q
  ;
  ; -- set node vars
  S SDPT=$G(^DPT(DFN,"S",SDT,0))
@@ -199,9 +211,14 @@ APPT(DFN,SDT,SDCL,SDVIEN) ; -- process appt
  D UNLOCK(.SDLOCK)
  Q
  ; FROM LOCK^SDVSIT
+ ; Anu - Make it extrinsic function to return lock error to user
+ ; Return Status = 1 if success, 0 if fail
 LOCK(SDLOCK) ; -- lock "ADFN" node
- F  L +^SCE("ADFN",+$G(SDLOCK("DFN")),+$G(SDLOCK("EVENT DATE/TIME"))):$G(DILOCKTM,3) Q:$T  ;LLS - 05-JAN-15 - SD*5.3*630 added timeout on lock
- Q
+ N SDC
+ ;F  L +^SCE("ADFN",+$G(SDLOCK("DFN")),+$G(SDLOCK("EVENT DATE/TIME"))):$G(DILOCKTM,3) Q:$T  ;LLS - 05-JAN-15 - SD*5.3*630 added timeout on lock
+ F SDC=1:1:5 L +^SCE("ADFN",+$G(SDLOCK("DFN")),+$G(SDLOCK("EVENT DATE/TIME"))):$G(DILOCKTM,3) Q:$T
+ I $T Q 1
+ Q 0
  ; FROM UNLOCK^SDVSIT
 UNLOCK(SDLOCK) ; -- unlock "ADFN" node
  L -^SCE("ADFN",+$G(SDLOCK("DFN")),+$G(SDLOCK("EVENT DATE/TIME")))
