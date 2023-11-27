@@ -1,5 +1,5 @@
 IBCCPT ;ALB/LDB - MCCR OUTPATIENT VISITS LISTING CONT. ;29 MAY 90
- ;;2.0;INTEGRATED BILLING;**55,62,52,91,106,125,51,148,174,182,245,266,260,339,432,592**;21-MAR-94;Build 58
+ ;;2.0;INTEGRATED BILLING;**55,62,52,91,106,125,51,148,174,182,245,266,260,339,432,592,742**;21-MAR-94;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;MAP TO DGCRCPT
@@ -53,18 +53,15 @@ FILE1 ;  file procedures, if BASC, only for 1 visit date
  S DIE=DIC D ^DIE
  D:$P(DGNOD,U,10)'="" ADDMOD(IBIFN,IBPROCP,$P(DGNOD,U,10))
  ;
- K DR
- S DR="16"
+ ; (CPT MODIFIER SEQUENCE).
+ ;K DR
+ ;S DR="16"
+ ;S DIC=IBDICSAV  ; IB*2.0*432 BI
+ ;S DIE=DIC D ^DIE  ; DEM;432 - DR=16 (CPT MODIFIER SEQUENCE)
+ K DA
+ S DA(1)=IBIFN,DA=IBPROCP  ;WCJ;IB*2.0*742;
+ D EN^IBCU7C(IBPROCP)   ;WCJ;IB*2.0*742;
  ;
- ; DEM;432 - $P(DGNOD,"^",8) is the provider pointer for
- ;           this outpatient procedure, and if present will
- ;           be the default RENDERING PROVIDER for this
- ;           procedure if the RENDERING PROVIDER doesn't
- ;           already exist for this procedure in file 399.0404.
- ;
- ; D:$P(DGNOD,"^",8)  ; DEM;432 - Outpatient procedure has provider.
- S DIC=IBDICSAV  ; IB*2.0*432 BI
- S DIE=DIC D ^DIE  ; DEM;432 - DR=16 (CPT MODIFIER SEQUENCE).
  ;JWS;IB*2.0*592; add Dental fields - IOC issue
  I IBFT=7 D
  . N IBDENH0,STOP,IBDENH,IBVST,IBPSC,IBPSC2,TARGET0

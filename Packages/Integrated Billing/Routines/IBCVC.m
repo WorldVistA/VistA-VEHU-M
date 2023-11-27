@@ -1,5 +1,5 @@
 IBCVC ;ALB/WCJ - VALUE CODE FUNCTIONALITY ;25-JUN-07
- ;;2.0;INTEGRATED BILLING;**371,400,432,718,732**;21-MAR-94;Build 13
+ ;;2.0;INTEGRATED BILLING;**371,400,432,718,732,742**;21-MAR-94;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  G AWAY
 AWAY Q
@@ -31,7 +31,8 @@ HELP ;
  Q:'$D(^DGCR(399.1,VCPTR,1))
  N LOOP
  S LOOP=0 F  S LOOP=$O(^DGCR(399.1,VCPTR,1,LOOP)) Q:'+LOOP  D
- . W !,$G(^(LOOP,0))
+ .; W !,$G(^(LOOP,0))  ;IB742;WCJ
+ . D EN^DDIOL($G(^(LOOP,0)),"","!")  ;IB742;WCJ
  Q
  ;
 FORMCHK(X,DA) ; Check to make sure that the VALUE is in the correct format base on the VALUE CODE.
@@ -44,7 +45,9 @@ FORMCHK(X,DA) ; Check to make sure that the VALUE is in the correct format base 
  ; returns
  ; 0 = invalid format
  ; 1 = valid format
- ; 
+ ;
+ Q:$L(X)<1 0   ; WCJ;IB*2.0*742;v4
+ Q:$L(X)>10 0  ; WCJ;IB*2.0*742;v4
  Q:'$G(DA) 0
  Q:'$G(DA(1)) 0
  Q:'$D(^DGCR(399,DA(1),"CV",DA,0)) 0

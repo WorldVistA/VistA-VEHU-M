@@ -1,9 +1,11 @@
 ECXBCM1 ;ALB/JAP-Bar Code Medical Administration Extract Cont. ;2/14/20  08:49
- ;;3.0;DSS EXTRACTS;**154,170,174,178,181,184**;Dec 22, 1997 ;Build 124
+ ;;3.0;DSS EXTRACTS;**154,170,174,178,181,184,187**;Dec 22, 1997 ;Build 163
  ;
  ; Reference to ^XMD in ICR #10113
  ; Reference to ^XMB("NETNAME") in ICR #1131
  ; Reference to ^TMP($J) in SACC 2.3.2.5.1
+ ; Reference to $$TSDATA^DGACT in ICR #2248
+ ; Reference to IX1^DIK in ICR #10013
  ; 
 FILE ;file the extract record
  ;node0
@@ -71,6 +73,7 @@ FILE ;file the extract record
  I ECXLOGIC>2014 S ECODE(3)=ECODE(3)_U_ECXSVCI_U_ECXSVCL ;149
  I ECXLOGIC>2019 S ECODE(3)=ECODE(3)_U_ECXDEA ;174
  I ECXLOGIC>2022 S ECODE(3)=ECODE(3)_U_ECXNMPI_U_ECXFDK_U_ECXPPDU_U_ECXSIGI ;184
+ I ECXLOGIC>2023 S ECODE(3)=ECODE(3)_U_ECXDUNIT ;187
  ;
  N DA,DIK,X S X=""
  F X=0:1:3 S ^ECX(ECFILE,EC7,X)=ECODE(X)

@@ -1,5 +1,5 @@
 YTQRQAD ;SLC/KCM - RESTful Calls for Instrument Admin ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,158,181,187,199,204,208**;Dec 30, 1994;Build 23
+ ;;5.01;MENTAL HEALTH;**130,141,158,181,187,199,204,208,223**;Dec 30, 1994;Build 22
  ;
  ; Reference to ^DIC(3.1) in ICR #1234
  ; Reference to ^DIC(49) in ICR #10093
@@ -75,7 +75,7 @@ GETSPEC(ARGS,RESULTS) ; get an instrument specification
  I $D(^YTT(601.712,SPEC,1))<10 D  QUIT
  . D SETERROR^YTQRUTL(404,"Specification missing")
  D MV2TMP(SPEC)
- I TESTNM="AUDC",$G(ARGS("assignmentid")) D VARYAUDC(ARGS("assignmentid"))
+ I TESTNM="AUDC",$L($G(ARGS("assignmentid"))) D VARYAUDC(ARGS("assignmentid"))
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
 MV2TMP(SPEC) ; Load spec into ^TMP("YTQ-JSON",$J), cleaning up line feeds
@@ -101,8 +101,9 @@ WRCLOSE(ARGS,DATA) ; noop call for closing Delphi wrapper
  Q "/api/wrapper/close/ok"
  ;
 VARYAUDC(ASMT) ; modify the AUDC based on patient sex in ^TMP("YTQ-JSON",$J)
- N DFN,I,DONE,X0,X1,X2
- S DFN=+$G(^XTMP("YTQASMT-SET-"_ASMT,1,"patient","dfn")) QUIT:'DFN
+ N NODE,DFN,I,DONE,X0,X1,X2
+ S NODE=$S(ASMT?36ANP:"YTQCPRS-",1:"YTQASMT-SET-")_ASMT
+ S DFN=+$G(^XTMP(NODE,1,"patient","dfn")) QUIT:'DFN
  I $P($G(^DPT(DFN,0)),U,2)'="F" QUIT  ; only need to change for female
  ; looking for the 3rd question, so start checked at about line 25
  S DONE=0,I=25 F  S I=$O(^TMP("YTQ-JSON",$J,I)) Q:'I  D  Q:DONE

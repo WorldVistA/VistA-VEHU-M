@@ -1,6 +1,7 @@
-TIUHSOBJ ;SLC/AJB,AGP - Health Summary to TIU Object; 10/28/02
- ;;1.0;TEXT INTEGRATION UTILITIES;**135**;Jun 20, 1997
+TIUHSOBJ ;SLC/AJB,AGP - Health Summary to TIU Object;Jun 07, 2023@14:57
+ ;;1.0;TEXT INTEGRATION UTILITIES;**135,359**;Jun 20, 1997;Build 17
  ;
+ ;Reference to $$CRE^GMTSOBJ in ICR #3813
  Q
  ;
 CREATE ; create a TIU object
@@ -19,7 +20,7 @@ CREATE ; create a TIU object
  S DIR("?",4)=""
  S DIR("?")="* "" (TIU)"" will be appended to the name entered to differentiate how the object was created.  Example:  OBJECT becomes OBJECT (TIU)"
  ;
- F  Q:$G(TIUDA)=0  W ! D ^DIR S X=$$UP^XLFSTR(X) D:'$D(DIRUT)  I $D(DIRUT) W ! K DIR S DIR("A")="Enter RETURN to abort TIU Object creation...",DIR(0)="EA" D ^DIR S DIRUT="" Q 
+ F  Q:$G(TIUDA)=0  W ! D ^DIR S X=$$UP^XLFSTR(X) D:'$D(DIRUT)  I $D(DIRUT) W ! K DIR S DIR("A")="Enter RETURN to abort TIU Object creation...",DIR(0)="EA" D ^DIR S DIRUT="" Q
  . S TIUDA=$$FIND1^DIC(8925.1,"","AMX",X,"D^C^B","I $P(^TIU(8925.1,+Y,0),U,4)=""O""","ERR")
  . I TIUDA'=0 W !!,"The object name ",X," already exists." K X,Y,TIUDA Q
  . I ($A($E(X,1))'<48&($A($E(X,1))'>57))!($A($E(X,1))'<65&($A($E(X,1))'>90))!($A($E(X,1))=32)
@@ -62,7 +63,7 @@ PE ;
  S FDA(8925.1,"+1,",.04)="O"
  S FDA(8925.1,"+1,",.05)=DUZ
  S FDA(8925.1,"+1,",.07)="11"
- S FDA(8925.1,"+1,",9)="S X=$$TIU^GMTSOBJ(DFN,"_TIUHS_")"
+ S FDA(8925.1,"+1,",9)=$$METHOD(TIUHS)
  S FDA(8925.1,"+1,",99)=$H
  ;
  D UPDATE^DIE("","FDA","FDAIEN","MSG")
@@ -91,3 +92,11 @@ EXIST(HSNUM) ; entry point for Health Summary to verify if a HS Object is used i
  N EXIST,TIUDA S (EXIST,TIUDA)=0
  F  S TIUDA=$O(^TIU(8925.1,TIUDA)) Q:TIUDA=""  I +$P($G(^TIU(8925.1,TIUDA,9)),",",2)=HSNUM S EXIST=1
  Q EXIST
+METHOD(TIUHSOBJ) ; Return the method to execute the Health Summary object
+ ;PARAMETER: TIUHSOBJ - Pointer to HEALTH SUMMARY OBJECTS file (#142.5) entry
+ ;                      OR NAME field (#.01) value of entry
+ N TIUERROR
+ S TIUHSOBJ=$G(TIUHSOBJ)
+ I TIUHSOBJ="" S TIUHSOBJ=0
+ I TIUHSOBJ'?1.N S TIUHSOBJ=+$$FIND1^DIC(142.5,,"BX",TIUHSOBJ,"B",,"TIUERROR")
+ Q "S X=$$TIU^GMTSOBJ(DFN,"_TIUHSOBJ_")"

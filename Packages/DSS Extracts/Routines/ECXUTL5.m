@@ -1,5 +1,13 @@
 ECXUTL5 ;ALB/JRC - Utilities for DSS Extracts ;5/9/19  16:31
- ;;3.0;DSS EXTRACTS;**71,84,92,103,105,120,136,166,170,174,181,184**;Dec 22, 1997;Build 124
+ ;;3.0;DSS EXTRACTS;**71,84,92,103,105,120,136,166,170,174,181,184,187**;Dec 22, 1997;Build 163
+ ;
+ ; Reference to ^DPT( in ICR #1850
+ ; Reference to $$CVEDT^DGCV in ICR #4156
+ ; Reference to $$GETACT^DGPFAPI in ICR #3860 
+ ; Reference to ALL^PSJ59P5 Supported #4819
+ ; Reference to DATA^PSS50 Supported #4533
+ ; Reference to DIQ^PSODI in ICR #4858
+ ; Reference to ^TMP($J supported by SACC 2.3.2.5.1
  ;
 REPEAT(CHAR,TIMES) ;REPEAT A STRING
  ;INPUT  : CHAR - Character to repeat
@@ -239,5 +247,7 @@ SSN(SSN,FILE) ; extended validation of ssn
  I (SSN="123456789")!(SSN="111111111")!(SSN="222222222")!(SSN="333333333")!(SSN="444444444")!(SSN="555555555")!($E(SSN,1,3)="666")!($E(SSN,4,5)="00")!($E(SSN,1,3)="000") Q 0
  I SSN="777777777"!(SSN="888888888")!(SSN="999999999") Q 0  ;136 adding new exclusions for the 7, 8, and 9 series where the numbers repeat
  I $E(SSN,6,9)="0000" Q 0  ;170 Added filtering of last 4 being all zeros
+ I $TR(SSN,"0123456789")'="" Q 0  ;187 SSN is not all numeric.
+ I $L(SSN)'=9 Q 0  ;187 Length of SSN is NOT 9
  Q 1
  ;

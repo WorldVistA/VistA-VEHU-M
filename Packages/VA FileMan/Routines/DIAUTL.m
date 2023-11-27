@@ -1,5 +1,5 @@
-DIAUTL ;GFT/MSC - UTILITIES TO TURN ON AND TO ANALYZE FILEMAN AUDITS;18MAR2016
- ;;22.2;VA FileMan;;Jan 05, 2016;Build 42
+DIAUTL ;GFT/MSC - UTILITIES TO TURN ON AND TO ANALYZE FILEMAN AUDITS; May 01, 2023@08:35:32
+ ;;22.2;VA FileMan;**25**;Jan 05, 2016;Build 6
  ;;Per VA Directive 6402, this routine should not be modified.
  ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
  ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
@@ -37,12 +37,20 @@ DDHD S DDHD="DATA DICTIONARY CHANGES, "_$P($G(^DIC(DIA,0)),U)_" FILE(#"_DIA_")" 
  Q
  ;
  ;
-TURNON(DIFILE,FLDS,DIMODE) ;Turn on AUDITING for the FLDS named   --MODE is either "y", "n" or "e"
+TURNON(DIFILE,FLDS,DIMODE,DICOND) ;Turn on AUDITING
+ ;Input: DIFILE=file #, FLDS=fields to audit, DIMODE=mode("y","n","e"), DICOND=audit condition ;p25
+ ;DICOND is only set if FLDS=single field
  N D,DIFIELD,DIE,DR,DA,DIQUIET,DIEZS,D0,DQ,DI,DIC,X
  K:$G(DIMODE)=1 DIMODE S DIMODE=$E($G(DIMODE,"y"))
  I DIMODE'="y",DIMODE'="e",DIMODE'="n" D BLD^DIALOG(200) Q
  S DIQUIET=1,DIEZS=1 Q:DIFILE<1.11&(DIFILE-.4)&(DIFILE-.401)&(DIFILE-.402)&(DIFILE-.403)&(DIFILE-.5)&(DIFILE-.7)&(DIFILE-.84)&(DIFILE-.847)
  D DT^DICRW
+ I $G(DICOND)]"",FLDS=+FLDS,FLDS'=.001 D  Q  ;add Audit Condition to a field ;p25
+ . S DIFIELD=FLDS D ON
+ . Q:DIMODE="n"  ;quit if no audit
+ . S DR="1.2////"_DICOND,DIE="^DD("_DIFILE_",",DA(1)=DIFILE,DA=DIFIELD
+ . D ^DIE
+ . Q
  F DIFIELD=0:0 S DIFIELD=$O(^DD(DIFILE,DIFIELD)) Q:'DIFIELD  D:$$FLDSINC(DIFILE,FLDS,DIFIELD) ON
  Q
 ON N DIOLD
@@ -51,6 +59,7 @@ ON N DIOLD
  I D D TURNON(+D,"**",DIMODE) Q  ;Recursive!
  S DR="1.1////"_DIMODE,DIE="^DD("_DIFILE_",",DA(1)=DIFILE,DA=DIFIELD
  I DA=.001,DIMODE="y" Q  ;CAN'T AUDIT NUMBER FIELD!!
+ S:DIMODE="n" DR=DR_";1.2////@" ;delete Audit Condition if not auditing
  D ^DIE
  D IN^DIU0(DIFILE,DIFIELD),DDAUDIT(DIFILE,DIFIELD,1.1,DIOLD,DIMODE)
  I $G(^DD(DIFILE,0,"DIK"))]"" D EN2^DIKZ(DIFILE,"",^("DIK")) ;Recompile CROSS-REFS if auditing changes

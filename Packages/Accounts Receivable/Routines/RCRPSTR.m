@@ -1,5 +1,5 @@
 RCRPSTR ;EDE/YMG - REPAYMENT PLAN STATUS REPORT; 11/30/2020
- ;;4.5;Accounts Receivable;**381,390,396,378**;Mar 20, 1995;Build 54
+ ;;4.5;Accounts Receivable;**381,390,396,378,389**;Mar 20, 1995;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -15,7 +15,7 @@ EN ; entry point
  ; export to Excel?
  S EXCEL=$$ASKEXCEL^RCRPRPU() I EXCEL<0 Q
  ;Device settings printout
- I EXCEL D EXCMSG^RCTCSJR    ; Display Excel display message I EXCEL
+ I EXCEL D EXCMSG^RCTCSJR    ; Display Excel display message
  I 'EXCEL W !!,"This report requires 132 column display.",!
  ; ask for device
  K IOP,IO("Q")
@@ -43,7 +43,7 @@ ASKSORT() ; display "sort by" prompt
 ASKFLTR() ; display "filter by" prompt
  ;
  ; returns "N ^ start name ^ end name" for debtor name,
- ;         "S ^ selected statuses ^ days in status" for status,
+ ;         "S ^ selected statuses ^ min days in status ^ max days in status" for status,
  ;         "U" for no filter,
  ;         -1 for user exit / timeout
  ;
@@ -63,7 +63,9 @@ ASKFLTR() ; display "filter by" prompt
  ..S Z=$$ASKSTAT() I (Z=-1)!(Z="Q") S RES=-1,STOP=1 Q
  ..S $P(RES,U,2)=Z
  ..S Z=$$ASKDAYS() I Z=-1 S RES=-1,STOP=1 Q
- ..S $P(RES,U,3)=Z,STOP=1
+ ..S $P(RES,U,3)=Z
+ ..S Z=$$ASKDAYS1($P(RES,U,3)) I Z=-1 S RES=-1,STOP=1 Q  ; PRCA*4.5*389
+ ..S $P(RES,U,4)=Z,STOP=1
  ..Q
  .S STOP=1
  .Q
@@ -96,7 +98,7 @@ ASKSTAT() ; display "which statuses" prompt
  S DIR("A",3)="  (A)ll, (N)ew, (C)urrent, (L)ate, (D)elinquent, (P)aid in Full, Clo(S)ed,"
  S DIR("A",4)="         De(F)aulted, (T)erminated,"
  S DIR("A",5)=""
- S DIR("A",6)="Statuses currently selected: None"
+ S DIR("A",6)=""
  S DIR("A",7)=""
  S DIR("A")="Select Status to add, Enter to continue or (Q)uit? "
  S (RES,SEL)="",STOP=0 F  D  Q:STOP
@@ -119,9 +121,9 @@ ASKSTAT() ; display "which statuses" prompt
  .Q
  Q $S(RES="":-1,1:RES)
  ;
-ASKDAYS() ; display "days in status" prompt
+ASKDAYS() ; display "min. days in status" prompt
  ;
- ; returns # of days in status or -1 for no selection / user exit / timeout
+ ; returns min. # of days in status or -1 for no selection / user exit / timeout
  ;
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
  W !
@@ -130,15 +132,27 @@ ASKDAYS() ; display "days in status" prompt
  D ^DIR I $D(DIRUT)!$D(DTOUT)!$D(DUOUT)!$D(DIROUT) Q -1
  Q Y
  ;
+ASKDAYS1(MINDAYS) ; display "max. days in status" prompt  PRCA*4.5*389
+ ;
+ ; returns max. # of days in status or -1 for no selection / user exit / timeout
+ ;
+ N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
+ W !
+ S DIR(0)="NAO^"_MINDAYS_":999:0"
+ S DIR("A")="Enter the Maximum # of Days in Status or ^ to quit: "
+ D ^DIR I $D(DTOUT)!$D(DUOUT)!$D(DIROUT) Q -1
+ Q Y
+ ;
 COMPILE ; compile report
- N BEGDT,CNT,NAME,RPIEN,STATDT,STATUS,STLIST,Z
+ N BEGDT,CNT,ENDDT,NAME,RPIEN,STATDT,STATUS,STLIST,Z
  ;
  S CNT=0
  I $P(FILTER,U)="S" D
  .; filtering by statuses
  .S BEGDT=$$FMADD^XLFDT(DT,-$P(FILTER,U,3),,1) ; date to begin the search with
+ .S Z=$P(FILTER,U,4),ENDDT="" I Z>0 S ENDDT=$$FMADD^XLFDT(DT,-$P(FILTER,U,4),,-1) ; date to end the search with  PRCA*4.5*389
  .S STLIST=$P(FILTER,U,2) F Z=1:1:$L(STLIST,",") S STATUS=$P(STLIST,",",Z) D
- ..S STATDT=BEGDT F  S STATDT=$O(^RCRP(340.5,"D",STATUS,STATDT),-1) Q:'STATDT  D
+ ..S STATDT=BEGDT F  S STATDT=$O(^RCRP(340.5,"D",STATUS,STATDT),-1) Q:'STATDT!(ENDDT'=""&(STATDT<ENDDT))  D  ; PRCA*4.5*389
  ...S RPIEN="" F  S RPIEN=$O(^RCRP(340.5,"D",STATUS,STATDT,RPIEN)) Q:'RPIEN  S CNT=CNT+1 D GETDATA(RPIEN,CNT)
  ...Q
  ..Q
@@ -160,22 +174,22 @@ GETDATA(RPIEN,CNT) ; fetch data and put it into ^TMP global
  ; RPIEN - file 340.5 ien
  ; CNT   - sequential # of ^TMP entry to create
  ;
- N AMNT,DAYS,DEBTOR,N0,SSN,TMPSTR,Z,ORPLNDT,AMTPM,RMNOPY
+ N AMNT,DAYS,DEBTOR,N0,MED,SSN,TMPSTR,Z,ORPLNDT,RMNOPY
  I RPIEN'>0!(CNT'>0) Q
- S N0=^RCRP(340.5,RPIEN,0)                   ; 0-node in file 340.5
- S DEBTOR=$P(N0,U,2)                         ; pointer to file 340
- S ORPLNDT=$P(N0,U,3)                        ; Original Plan Date (Creation Date)
- S NAME=$$NAM^RCFN01(DEBTOR) Q:NAME=""       ; debtor name
- S SSN=$$SSN^RCFN01(DEBTOR)                  ; debtor SSN
- S AMNT=+$P(N0,U,11)-$$PMNTS^RCRPINQ(RPIEN)  ; amount owed
- S DAYS=$$FMDIFF^XLFDT(DT,$P(N0,U,8))        ; days in status
- S AMTPM=$P(N0,U,6)                          ; amount per month payment
- S RMNOPY=AMNT\AMTPM+$S(AMNT#AMTPM:1,1:0)    ; remaining # payments
- ; each entry is: debtor name ^ ssn ^ repayment plan ID ^ status (internal) ^ status date ^ days in status ^ last payment date ^ # of payments ^
- ;                remaining balance ^ at CS? ^ # of forbearances
+ S N0=^RCRP(340.5,RPIEN,0)                    ; 0-node in file 340.5
+ S DEBTOR=$P(N0,U,2)                          ; pointer to file 340
+ S ORPLNDT=$P(N0,U,3)                         ; Original Plan Date (Creation Date)
+ S NAME=$$NAM^RCFN01(DEBTOR) Q:NAME=""        ; debtor name
+ S MED=1 I DEBTOR>0,$P($P(^RCD(340,DEBTOR,0),U),";",2)'="DPT(" S MED=0  ; non-medical debt  PRCA*4.5*389
+ S SSN=$$SSN^RCFN01(DEBTOR)                   ; debtor SSN
+ S AMNT=$$CBAL^RCRPU3(RPIEN,+$P(N0,U,11))     ; amount owed
+ S DAYS=$$FMDIFF^XLFDT(DT,$P(N0,U,8))         ; days in status
+ S RMNOPY=$$REMPMNTS^RCRPU3(RPIEN,$P(N0,U,6)) ; remaining # payments
+ ; each entry is: debtor name ^ ssn ^ repayment plan ID ^ Original Plan Date ^ status (internal) ^ status date ^ days in status ^ last payment date ^ # of payments ^
+ ;                remaining balance ^ at CS? ^ # of forbearances ^ medical debt (1/0)
  S TMPSTR=NAME_U_SSN_U_$P(N0,U)_U_ORPLNDT_U_$P(N0,U,7)_U_$P(N0,U,8)_U_DAYS
  S TMPSTR=TMPSTR_U_$O(^RCRP(340.5,RPIEN,3,"B",""),-1) ; last payment date
- S TMPSTR=TMPSTR_U_RMNOPY_U_AMNT_U_$P($G(^RCRP(340.5,RPIEN,1)),U,4)_U_$P(N0,U,9)
+ S TMPSTR=TMPSTR_U_RMNOPY_U_AMNT_U_$P($G(^RCRP(340.5,RPIEN,1)),U,4)_U_$P(N0,U,9)_U_MED
  ; add a new entry to ^TMP global
  S ^TMP("RCRPSTR",$J,CNT)=TMPSTR
  S Z=$S(SORT="N":NAME,SORT="S":$$EXTERNAL^DILFD(340.5,.07,,$P(N0,U,7)),1:AMNT) Q:Z=""
@@ -183,14 +197,14 @@ GETDATA(RPIEN,CNT) ; fetch data and put it into ^TMP global
  Q
  ;
 PRINT ; print report
- N ATCS,BAL,CNT,DATA,DAYS,EXTDT,LN,PAGE,SSN,STATUS,Z,Z1,QUIT
+ N ATCS,BAL,CNT,DATA,DAYS,EXTDT,LN,NAME,PAGE,SSN,STATUS,Z,Z1,QUIT
  U IO
  S PAGE=0
  S EXTDT=$$FMTE^XLFDT(DT)
  S QUIT=0
  I EXCEL D
- .W !,"Repayment Plan Status Report;",EXTDT,";",$$FLTRSTR(),";",$$SORTSTR()
- .W !,"Name;SSN;RPP ID;Orig Plan date;Status;Status date;Days in status;Last payment;Current plan length;Remaining balance;CS;Forbearances"
+ .W !,"Repayment Plan Status Report^",EXTDT,U,$$FLTRSTR(),U,$$SORTSTR()  ; PRCA*4.5*389
+ .W !,"Name^SSN^RPP ID^Orig Plan date^Status^Status date^Days in status^Last payment^Current plan length^Remaining balance^CS^Forbearances"  ; PRCA*4.5*389
  .Q
  I 'EXCEL D
  .I $E(IOST,1,2)["C-",'$D(ZTQUEUED) W @IOF
@@ -203,7 +217,7 @@ PRINT ; print report
  S Z="" F  S Z=$O(^TMP("RCRPSTR",$J,"IDX",Z)) Q:Z=""  D  Q:$G(QUIT)
  .S DAYS="" F  S DAYS=$O(^TMP("RCRPSTR",$J,"IDX",Z,DAYS),-1) Q:DAYS=""  D  Q:$G(QUIT)
  ..S CNT=0 F  S CNT=$O(^TMP("RCRPSTR",$J,"IDX",Z,DAYS,CNT)) Q:'CNT  D  Q:$G(QUIT)
- ...S DATA=^TMP("RCRPSTR",$J,CNT)
+ ...S DATA=^TMP("RCRPSTR",$J,CNT),NAME=$S($P(DATA,U,13):"",1:"*")_$P(DATA,U)  ; PRCA*4.5*389
  ...; convert status code
  ...S Z1=$P(DATA,U,5),STATUS=$S(Z1=1:"NEW",Z1=2:"CURR",Z1=3:"LATE",Z1=4:"DELQ",Z1=5:"DEF",Z1=6:"TERM",Z1=7:"CLOS",Z1=8:"PAID",1:"")
  ...; format remaining balance
@@ -213,12 +227,12 @@ PRINT ; print report
  ...; format SSN to last 4 digits
  ...S Z1=$P(DATA,U,2),SSN=$E(Z1,$L(Z1)-3,$L(Z1)) I SSN'>0 S SSN="N/A"
  ...I EXCEL D  Q
- ....W !,$P(DATA,U),";",SSN,";",$P(DATA,U,3),";",$$FMTE^XLFDT($P(DATA,U,4),"2DZ"),";",STATUS,";",$$FMTE^XLFDT($P(DATA,U,6),"2DZ"),";",$P(DATA,U,7),";"
- ....W $$FMTE^XLFDT($P(DATA,U,8),"2DZ"),";",$P(DATA,U,9),";",BAL,";",ATCS,";",$P(DATA,U,12)
+ ....W !,NAME,U,SSN,U,$P(DATA,U,3),U,$$FMTE^XLFDT($P(DATA,U,4),"2DZ"),U,STATUS,U,$$FMTE^XLFDT($P(DATA,U,6),"2DZ"),U,$P(DATA,U,7),U  ; PRCA*4.5*389
+ ....W $$FMTE^XLFDT($P(DATA,U,8),"2DZ"),U,$P(DATA,U,9),U,BAL,U,ATCS,U,$P(DATA,U,12)  ; 
  ....Q
  ...S LN=LN+1
- ...W !,$E($P(DATA,U),1,30),?31,SSN,?37,$P(DATA,U,3),?57,$$FMTE^XLFDT($P(DATA,U,4),"2DZ"),?67,STATUS,?73,$$FMTE^XLFDT($P(DATA,U,6),"2DZ"),?83,$P(DATA,U,7),?92
- ...W $$FMTE^XLFDT($P(DATA,U,8),"2DZ"),?102,$P(DATA,U,9),?112,$$CJ^XLFSTR("$"_BAL,13),?123,ATCS,?127,$P(DATA,U,12)
+ ...W !,$E(NAME,1,30),?31,SSN,?37,$P(DATA,U,3),?57,$$FMTE^XLFDT($P(DATA,U,4),"2DZ"),?67,STATUS,?73,$$FMTE^XLFDT($P(DATA,U,6),"2DZ"),?83,$P(DATA,U,7),?92  ; PRCA*4.5*389
+ ...W $$FMTE^XLFDT($P(DATA,U,8),"2DZ"),?102,$P(DATA,U,9),?112,$$CJ^XLFSTR("$"_BAL,13),?123,ATCS,?127,$P(DATA,U,12)  ; PRCA*4.5*389
  ...I LN>(IOSL-3) D HDR I $G(QUIT) Q
  ...Q
  ..Q
@@ -228,10 +242,11 @@ PRINT ; print report
  ;
 HDR ; print header
  I PAGE>0,'$D(ZTQUEUED) D PAUSE^RCRPU W @IOF I $G(QUIT) Q
- S PAGE=PAGE+1,LN=7
+ S PAGE=PAGE+1,LN=9  ; PRCA*4.5*389
  W !,"Repayment Plan Status Report",?66,EXTDT,?120,"Page: ",PAGE
  W !,$$FLTRSTR()
  W !,$$SORTSTR()
+ W !!,"* Indicates a non-medical debt repayment plan"  ; PRCA*4.5*389
  W !!,"                                                                                                                               For-"
  W !,"                                                         Original        Status    Days in   Last     Cur plan  Remaining      bear-"
  W !,"Name                           SSN        RPP ID         Plan Dt   Stat   date     status   payment    length    balance   CS  ances"
@@ -246,7 +261,8 @@ FLTRSTR() ; returns "Filtered by" string to print
  I $P(FILTER,U)="S" D
  .S STR=STR_"Status ("
  .F Z=1:1:$L($P(FILTER,U,2),",") S STR=STR_$S(Z>1:", ",1:"")_$$EXTERNAL^DILFD(340.5,.07,,$P($P(FILTER,U,2),",",Z))  ; PRCA*4.5*378
- .S STR=STR_"), at least "_$P(FILTER,U,3)_" days in status"
+ .S STR=STR_"), "_$S(+$P(FILTER,U,4)>0:"from "_$P(FILTER,U,3)_" to "_$P(FILTER,U,4),1:"at least "_$P(FILTER,U,3))  ; PRCA*4.5*389
+ .S STR=STR_" days in status"  ; PRCA*4.5*389
  .Q 
  Q STR
  ;

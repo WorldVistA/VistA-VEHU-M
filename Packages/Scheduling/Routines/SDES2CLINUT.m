@@ -1,5 +1,5 @@
 SDES2CLINUT ;ALB/BWF - SDES2 Clinic Save utilities ;JUL 18, 2023
- ;;5.3;Scheduling;**853**;Aug 13, 1993;Build 9
+ ;;5.3;Scheduling;**853,857**;Aug 13, 1993;Build 14
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -11,7 +11,7 @@ SAVEPROVIDERS(ERRORS,SDCLINIC,SDIEN) ;
  .I ACTION="@" D  Q
  ..I '$D(^SC(SDIEN,"PR","B",PROVIEN)) Q
  ..S DELIEN=$O(^SC(SDIEN,"PR","B",PROVIEN,0)) Q:'DELIEN
- ..S FDA(44.1,DELIEN_",",SDIEN,.01)="@" D FILE^DIE(,"FDA") K FDA
+ ..S FDA(44.1,DELIEN_","_SDIEN_",",.01)="@" D FILE^DIE(,"FDA") K FDA
  .; default provider
  .I $D(SDCLINIC("PROVIDER",PROVIEN,"DEFAULT")) D  Q
  ..S CURDEFPROV=$$DEFPROV(SDIEN)

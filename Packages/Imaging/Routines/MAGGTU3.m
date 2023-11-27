@@ -1,5 +1,5 @@
-MAGGTU3 ;WOIFO/GEK/SG/NST - Silent calls for Imaging ; 21 Sep 2010 8:56 AM
- ;;3.0;IMAGING;**7,8,48,45,20,46,59,93,117,151**;Mar 19, 2002;Build 21;Dec 19, 2016
+MAGGTU3 ;WOIFO/GEK/SG/NST - Silent calls for Imaging ; 21 Jun, 2023@13:43:01
+ ;;3.0;IMAGING;**7,8,48,45,20,46,59,93,117,151,356**;Mar 19, 2002;Build 9
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -57,7 +57,7 @@ USERINF2(MAGRY,MAGWRKID) ;RPC [MAGGUSER2] Return user info.
  ; MAGRY(13)=Clinical Display User Manual URL
  ; MAGRY(14)=Clinical Capture User Manual URL
  ;  
- N J,K,Y,MAGPLC,MAGWARN,MAGWARN1,VSRV,PHYREF,X ; DBI - SEB 9/20/2002
+ N J,K,Y,MAGPLC,MAGWARN,MAGWARN1,VSRV,PHYREF,X,XUSAPP,ISTELER ; SEB 9/20/2002 - P356 CD 06/20/2023
  S MAGPLC=0
  I $D(DUZ(2)) S MAGPLC=+$$PLACE^MAGBAPI(DUZ(2)) ; DBI - SEB 9/20/2002
  ;
@@ -96,7 +96,13 @@ USERINF2(MAGRY,MAGWRKID) ;RPC [MAGGUSER2] Return user info.
  S MAGRY(8)=$S($L($T(PROD^XUPROD)):+$$PROD^XUPROD,1:0)
  S VSRV=$P($G(^MAG(2006.1,MAGPLC,"NET")),"^",5)
  I VSRV I +$P($G(^MAG(2005.2,VSRV,0)),"^",6) S PHYREF=$P($G(^MAG(2005.2,VSRV,0)),"^",2)
- S MAGRY(9)=$G(PHYREF)
+ ; Start Site Service URL (9) for TeleReader Client, otherwise PHYREF - P356 CD 06/21/2023 
+ S XUSAPP=$P($G(DUZ("REMAPP")),U,2)
+ S:XUSAPP'="" ^TMP($J,"MAGTELER")=0
+ S ISTELER=$S(XUSAPP="VISTA IMAGING TELEREADER":1,$G(^TMP($J,"MAGTELER")):1,1:0)
+ S MAGRY(9)=$S(ISTELER:$$GET^XPAR("SYS","MAG TELER SSERV URL",1,"Q"),1:$G(PHYREF))
+ K ^TMP($J,"MAGTELER") ; Kill TeleReader Boolean set in MAGGTU4 - P356 CD 06/21/2023
+ ; End of Site Service URL (9) setting with custom TeleReader handling - P356 CD 06/21/2023
  S MAGRY(10)=$$KSP^XUPARAM("WHERE")
  S MAGRY(11)=$P($$SITE^VASITE(),"^")
  S MAGRY(12)=$P($$SITE^VASITE(),"^",3)

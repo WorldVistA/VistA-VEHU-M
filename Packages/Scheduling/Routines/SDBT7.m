@@ -1,7 +1,7 @@
-DGRPX712 ; ;01/20/23
+SDBT7 ; ;11/27/23
  D DE G BEGIN
-DE S DIE="^DPT(D0,.373,",DIC=DIE,DP=2.05,DL=2,DIEL=1,DU="" K DG,DE,DB Q:$O(^DPT(D0,.373,DA,""))=""
- I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,1) S:%]"" DE(1)=% S %=$P(%Z,U,2) S:%]"" DE(2)=%
+DE S DIE="^SC(D0,""SI"",",DIC=DIE,DP=44.03,DL=2,DIEL=1,DU="" K DG,DE,DB Q:$O(^SC(D0,"SI",DA,""))=""
+ I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,1) S:%]"" DE(1)=%
  K %Z Q
  ;
 W W !?DL+DL-2,DLB_": "
@@ -48,16 +48,11 @@ SAVEVALS S @DIEZTMP@("V",DP,DIIENS,DIFLD,"O")=$G(DE(DQ)) S:$D(^("F"))[0 ^("F")=$
  Q
 NKEY W:'$D(ZTQUEUED) "??  Required key field" S X="?BAD" G QS
 KEYCHK() Q:$G(DE(DW,"KEY"))="" 1 Q @DE(DW,"KEY")
-BEGIN S DNM="DGRPX712",DQ=1+D G B
-1 S DW="0;1",DV="MFX",DU="",DIFLD=.01,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
+BEGIN S DNM="SDBT7",DQ=1+D G B
+1 S DW="0;1",DV="F",DU="",DIFLD=.01,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
  G RE:'D S DQ=2 G 2
-X1 K:$L(X)>30!($L(X)<1) X
+X1 K:$L(X)>80!($L(X)<1) X
  I $D(X),X'?.ANP K X
  Q
  ;
-2 S DW="0;2",DV="NJ3,0X",DU="",DIFLD=.02,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
- G RE
-X2 K:+X'=X!(X>100)!(X<0)!(X?.E1"."1N.N) X
- Q
- ;
-3 G 1^DIE17
+2 G 1^DIE17

@@ -1,14 +1,24 @@
-ORWPCE3 ; SLC/KCM/REV/JM/TC - Get a PCE encounter for a TIU document ;Dec 20, 2022@07:42:47
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,190,280,306,371,361,385,377,498,405,598**;Dec 17, 1997;Build 5
+ORWPCE3 ; SLC/KCM/REV/JM/TC - Get a PCE encounter for a TIU document ;Mar 03, 2023@13:09:31
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,190,280,306,371,361,385,377,498,405,598,588**;Dec 17, 1997;Build 29
  ;
  ; Reference to $$GETENC^PXAPI in ICR #1894
  ; Reference to ENCEVENT^PXAPI in ICR #6488
  ; Reference to $$ICDDATA^ICDXCODE in ICR #5747
  ; Reference to VSKIN^PXPXRM in ICR #4250
+ ; Reference to VIMM^PXPXRM in ICR #4250
+ ; Reference to VICR^PXPXRM in ICR #4250
  ; Reference to ^AUTNPOV( in ICR #1593
  ; Reference to GETFIND^PXRMRPCG in ICR #6839
  ; Reference to ICDDESC^ICDXCODE in ICR #5747
  ; Reference to $$SENTENCE^XLFSTR in ICR #10104
+ ; Reference to ^AUPNVSIT( in ICR #2028
+ ; Reference to ^AUTTEDT( in ICR #1987
+ ; Reference to ^AUTTEXAM( in ICR #1988
+ ; Reference to ^AUTTHF( in ICR #1989
+ ; Reference to ^TIU(8925, in ICR #2937
+ ; Reference to $$CODECS^ICDEX in ICR #5747
+ ; Reference to $$CSI^ICDEX in ICR #5747
+ ; Reference to $$SAB^ICDEX in ICR #5747
  ;
 PCE4NOTE(LST,IEN,DFN,VSITSTR) ; Return encounter for an associated note   IA#4214,6132,6614
  ; LST(1)=HDR^AllowEdit^CPTRequired^VStr^Author^hasCPT^VisitIEN
@@ -19,9 +29,16 @@ PCE4NOTE(LST,IEN,DFN,VSITSTR) ; Return encounter for an associated note   IA#421
  N ORPARR,ORPVAL,ORSUB,TOPLST,IST,X220,MAG,UCUM,PRIMARY,SUB,TEMP,SYSTEM,SYSIEN
  S PRIMARY=0
  I +$G(IEN)<1 D  I 1 ; Get PCE Data on a new note not yet saved
+ . N VISIT2,CAT,VCAT
  . S (X0,X12)=""
  . S VISIT=$$GETENC^PXAPI(DFN,$P(VSITSTR,";",2),$P(VSITSTR,";"))
  . S VSTR=VSITSTR
+ . S VISIT2=+$P(VISIT,U,2),VISIT=+VISIT
+ . I VISIT'>0 Q
+ . S CAT=$P(VSITSTR,";",3),VCAT=$P($G(^AUPNVSIT(VISIT,0)),U,7)
+ . I VISIT2>0 D  Q
+ . . I CAT'=VCAT S VISIT=VISIT2
+ . I VISIT>0,CAT'="E",VCAT="E" S VISIT=-1
  E  D
  . S X0=$G(^TIU(8925,IEN,0)),X12=$G(^(12))
  . ;make sure DFN is defined for Reminder call at the end of the routine.

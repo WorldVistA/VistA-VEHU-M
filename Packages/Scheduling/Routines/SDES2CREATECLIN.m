@@ -1,5 +1,5 @@
-SDES2CREATECLIN ;ALB/MGD - SDES2 CREATE CLINIC MAIN DRIVER ;JUNE 08,2023
- ;;5.3;Scheduling;**853**;Aug 13, 1993;Build 9
+SDES2CREATECLIN ;ALB/MGD - SDES2 CREATE CLINIC MAIN DRIVER ;SEPT 20,2023
+ ;;5.3;Scheduling;**853,860**;Aug 13, 1993;Build 12
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; The SDCONTEXT array is controlled by the Acheron application and its fields are

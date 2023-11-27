@@ -1,5 +1,9 @@
 ECXUTL3 ;ALB/GTS - Utilities for DSS Extracts ;9/4/18  13:18
- ;;3.0;DSS EXTRACTS;**11,24,32,33,35,37,39,42,46,92,105,120,144,149,154,166,170,184**;Dec 22,1997;Build 124
+ ;;3.0;DSS EXTRACTS;**11,24,32,33,35,37,39,42,46,92,105,120,144,149,154,166,170,184,187**;Dec 22,1997;Build 163
+ ;
+ ; Reference to ^DPT( in ICR #1850
+ ; Reference to $$GETSTAT^DGMSTAPI in ICR #2716
+ ; Reference to $$PTR2CODE^DGUTL4,$$PTR2TEXT^DGUTL4 in ICR #3799
  ;
 OUTPTTM(ECXDFN,ECXDT) ;* Return PC Team from PCMM files or DPT
  ; Variables -
@@ -65,8 +69,10 @@ PAT(ECXDFN,ECXDATE,ECXDATA,ECXPAT) ;Return basic patient data for extract
  ;         ECXPAT(  Local array with patient data.
  ;
  N SSN,I,ECXCOD,ECXDAT,DFN,VAPA,VADM,VAEL,VAPD,VASV,STR,ECXAR,DIC,DIQ,RCNUM,RCVAL,COLMETH
- N DA,DR,PELG,MELIG,ZIP,MPI
+ N DA,DR,PELG,MELIG,ZIP,MPI,PTNAME ;187 Added PTNAME
  I ECXDFN="" Q 0
+ S PTNAME=$$GET1^DIQ(2,ECXDFN,.01,"I") ;187
+ I $E(PTNAME,1,2)="ZZ" Q 0 ;187 - exclude patient whose name started with "ZZ"
  S SSN=$$GET1^DIQ(2,ECXDFN,.09,"I"),DFN=ECXDFN,ECXPAT=0
  ;I $E(SSN,1,3)="000"!(SSN="") K ECXPAT Q 0  ;154 removed as these checks are done in ECXUTL5 ;test patient
  ;test patient extended checks; mtl extract excluded

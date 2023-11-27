@@ -1,6 +1,12 @@
-ORCHART ;SLC/MKB/REV-OE/RR ; 11 March 2003 14:02
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,27,48,70,72,92,141,181**;Dec 17, 1997
+ORCHART ;SLC/MKB/REV-OE/RR ;Jul 10, 2023@09:19:48
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,27,48,70,72,92,141,181,588**;Dec 17, 1997;Build 29
 EN ; -- main entry point
+ ;
+ I $$ONEHR^ORACCESS D  Q
+ . W !,"Site has migrated to Electronic Health Record."
+ . W !,"CPRS List Manager access not allowed."
+ . H 2
+ ;
  K ^TMP("OR",$J) ;ensure fresh start
  D EN^ORQPT Q:+$G(ORVP)'>0
  D EN^VALM("OR CHART") G:'$G(OREXIT) EN
@@ -69,7 +75,7 @@ ITEMHELP ; -- help code for action menus
  Q
  ;
 EXIT ; -- exit code
- I $G(ORVP),$$MORE^ORCMENU2 D  ;unsig orders
+ I $G(ORVP),$$MORE^ORCMENU2 D  ;unsigned orders
  . ;I '$D(^TMP("ORNEW",$J)),'$D(^XUSEC("ORES",DUZ)) Q  ;msg like 2.5??
  . W !!,"You have new or unsigned orders for this patient!" H 1
  . S ORRV=1 D EN1^ORCMENU2,NOTIF^ORCMENU2 ;sign, notif if not all signed
@@ -169,7 +175,7 @@ REV(ORVP) ; -- Review orders for patient
  S ORTAB="ORDERS" D EN^VALM("OR CHART")
  Q
  ;
-VIEW() ; -- return line 3 of header w/current view of tab 
+VIEW() ; -- return line 3 of header w/current view of tab
  N BEGIN,END,ITEMS,STS,TEXT,X
  I $G(ORTAB)']"" Q ""
  S X=$P($G(^TMP("OR",$J,ORTAB,0)),U,3),TEXT=""

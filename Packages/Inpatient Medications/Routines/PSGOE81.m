@@ -1,8 +1,8 @@
-PSGOE81 ;BIR/CML3 - NON-VERIFIED ORDER EDIT (CONT.) ;12 June 2019 09:31:53
- ;;5.0;INPATIENT MEDICATIONS;**26,50,64,58,82,110,111,136,113,267,315,334,373,366,327**;16 DEC 97;Build 114
+PSGOE81 ;BIR/CML - NON-VERIFIED ORDER EDIT (CONT.) ;May 03, 2023@17:45
+ ;;5.0;INPATIENT MEDICATIONS;**26,50,64,58,82,110,111,136,113,267,315,334,373,366,327,441**;16 DEC 97;Build 1
  ;Per VHA Directive 2004-038, this routine should not be modified.
- ; Reference to ^PS(50.7 via DBIA# 2180
- ; Reference to ^PS(51.1 via DBIA 2177.
+ ;Reference to ^PS(50.7 in ICR #2180
+ ;Reference to ^PS(51.1 in ICR #2177
  ;
 39 ; admin times
  N PSGDOA
@@ -272,7 +272,8 @@ WRITE ;
  Q
  ;
 ASK ;
- N Y
+ ;PSJ*5.0*441: Add DIR to N string.
+ N Y,DIR
  S DIR("A")="Is this correct",DIR(0)="Y" D ^DIR I $D(DUOUT)!$D(DTOUT) W:'$T $C(7) S PSGOEE=0 K PSGDUR G DONE
  I 'Y K X S PSGDUR=-1 G A39
  N P S P=1,PSGRMVT=$P(PSGRARR(P),"(",1)

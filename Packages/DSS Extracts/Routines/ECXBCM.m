@@ -1,8 +1,10 @@
 ECXBCM ;ALB/JAP-Bar Code Medical Administration Extract ;6/13/19  12:36
- ;;3.0;DSS EXTRACTS;**107,127,132,136,143,144,148,149,154,160,161,166,170,174,181,184**;Dec 22, 1997 ;Build 124
+ ;;3.0;DSS EXTRACTS;**107,127,132,136,143,144,148,149,154,160,161,166,170,174,181,184,187**;Dec 22, 1997 ;Build 163
  ;
- ; Reference to ^TMP($J) in SACC 2.3.2.5.1
+ ; Reference to ^TMP($J) and ^TMP("PSJ",$J) in SACC 2.3.2.5.1
  ; Reference to $$LJ^XLFSTR in ICR #10104
+ ; Reference to $$GET^XUA4A72 in ICR #1625
+ ; Reference to $$NPI^XUSNPI in ICR #4532 
  ;
 BEG ;entry point from option
  ;ECFILE=^ECX(727.833,
@@ -30,6 +32,7 @@ START ; start package specific extract
 GET(ECSD,ECED) ;get extract data
  N ECXESC,ECXECL,ECXCLST,ECXASIH,ECXDEA ;144,170,174
  N ECXNMPI,ECXSIGI ;184
+ N ECXDUNIT,ECXPPDU ;187
  S (ACTDT,ECXADT,ECXAMED,ECXASTA,ECXATM,ECXORN,ECXORT,ECXOSC,ECPRO,PLACEHLD,ECXFAC,DRG,ECXESC,ECXECL,ECXCLST)="" ;144
  ; get needed YYYYDD variable
  I $G(ECXYM)="" S ECXYM=$$ECXYM^ECXUTL(DT)
@@ -77,7 +80,7 @@ GET(ECSD,ECED) ;get extract data
  ;
 CMPT ; during component/sequence processing, retrieve rest of data record then file it.
  S (ECXSCADT,ECXOS,ECXIVID,ECXIR,SCADT,ECXSCADT,ECXSCATM,DRUG,ECVNDC,ECINV,ECVACL,ECXVAP,ECXDEA)="" ;143,174
- S (ECXFDK,ECXPPDU)="" ;184
+ S (ECXFDK,ECXPPDU,ECXDUNIT)="" ;184,187 Added Dispense Unit
  I $G(DRG) D
  .S DRUG=$$PHAAPI^ECXUTL5(DRG)
  .S ECVNDC=$P(DRUG,U,3)
@@ -92,6 +95,7 @@ CMPT ; during component/sequence processing, retrieve rest of data record then f
  .I ECXLOGIC>2022 D  ;184
  ..S ECXPPDU=+$P(DRUG,U,7) ;set ECXPPDU to Price Per Dispense Unit
  ..S ECXFDK=$$RJ^XLFSTR($TR(ECXVAP," ",""),5,0)_$$RJ^XLFSTR($P(ECVNDC,"-"),6,0)_$$RJ^XLFSTR($P(ECVNDC,"-",2),4,0)_$$RJ^XLFSTR($P(ECVNDC,"-",3),2,0) ;184 Feeder Key=DRG ien_NDC
+ .I ECXLOGIC>2023 S ECXDUNIT=$P(DRUG,U,8) ;187 Added Dispense Unit
  S SCADT=$$GET1^DIQ(53.79,RIEN,.13,"I")
  S ECXSCADT=$$ECXDATE^ECXUTL(SCADT,ECXYM)
  S ECXSCATM=$$ECXTIME^ECXUTL(SCADT)

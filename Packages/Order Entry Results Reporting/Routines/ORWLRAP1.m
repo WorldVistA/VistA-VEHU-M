@@ -1,5 +1,5 @@
-ORWLRAP1 ;DSS/TFF - LAB ANATOMIC PATHOLOGY CONFIGURATION SUPPORT ;Jul 13, 2022@09:31:55
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**539,569**;Dec 17, 1997;Build 23
+ORWLRAP1 ;DSS/TFF - LAB ANATOMIC PATHOLOGY CONFIGURATION SUPPORT ;Sep 19, 2022@15:48
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**539,569,588**;Dec 17, 1997;Build 29
  ;
  ;
  ; Reference to COLL^LR7OR3 in ICR #2428
@@ -146,16 +146,18 @@ END ; Clean Up
  K:$O(@RET@(""),-1) @RET@(0)
  Q
  ;
-APOITEMS(Y,QOCALL,SHOWALL,CODE,NATFLAG) ; Subset of AP orderable items
+APOITEMS(Y,QOCALL,SHOWALL,CODE,NATFLAG,ACCESS) ; Subset of AP orderable items
  ; Y(n)=IEN^.01 Name^.01 Name  -or-  IEN^Synonym <.01 Name>^.01 Name
  ; QOCALL = Allow quick orders
  ; SHOWALL = Show inactive entries
  ; CODE: 0 = List only entries already in File 101.45
  ;       1 = List only entries not already in File 101.45
  ; NATFLAG = Add National Standard flag as piece 4 of the data
+ ; ACCESS - List of allowed display groups
  ;
- N I,IEN,X,CURTM,FROM,XREF,LABIEN,INACTIVE
+ N I,IEN,X,CURTM,FROM,XREF,LABIEN,INACTIVE,CHKACCESS,LRCODE
  S QOCALL=+$G(QOCALL),CODE=+$G(CODE),NATFLAG=+$G(NATFLAG),SHOWALL=+$G(SHOWALL)
+ S ACCESS=$G(ACCESS),CHKACCESS=($L(ACCESS)>1)
  S I=0,FROM="",XREF="S.AP",CURTM=$$NOW^XLFDT
  F  S FROM=$O(^ORD(101.43,XREF,FROM)) Q:FROM=""  D
  . S IEN="" F  S IEN=$O(^ORD(101.43,XREF,FROM,IEN)) Q:'IEN  D
@@ -165,6 +167,9 @@ APOITEMS(Y,QOCALL,SHOWALL,CODE,NATFLAG) ; Subset of AP orderable items
  . . I CODE=0,'LABIEN Q
  . . I CODE=1,LABIEN Q
  . . I 'SHOWALL,INACTIVE Q
+ . . I CHKACCESS D  I ACCESS'[(U_LRCODE_U) Q
+ . . . S LRCODE=$P($G(^ORD(101.43,IEN,"LR")),U,6)
+ . . . I LRCODE="" S LRCODE="CH"
  . . S X=$G(^ORD(101.43,XREF,FROM,IEN))
  . . I +$P(X,U,3),$P(X,U,3)<CURTM Q
  . . I 'QOCALL,$P(X,U,5) Q
@@ -193,8 +198,8 @@ OK4CPRS(ORDITEM,QUICK) ; Determines if an orderable item is allowed for AP Dialo
  . S OK=1
  Q OK
  ;
-APORDITM(Y,QOCALL) ; Subset of AP orderable items
- D APOITEMS(.Y,$G(QOCALL))
+APORDITM(Y,QOCALL,ACCESS) ; Subset of AP orderable items
+ D APOITEMS(.Y,$G(QOCALL),,,,$G(ACCESS))
  Q
  ;
 APDLGS ; Update AP Order Dialogs - Entry point for Option ORCM UPDATE AP DIALOGS

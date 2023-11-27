@@ -1,11 +1,11 @@
 RCRPENTR ;EDE/SAB - CREATE NEW REPAYMENT PLAN;11/16/2020  7:40 AM
- ;;4.5;Accounts Receivable;**377,381,378**;Mar 20, 1995;Build 54
+ ;;4.5;Accounts Receivable;**377,381,378,389**;Mar 20, 1995;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
 ENTER ; Main Entry Point
  ;
- N RCAUTO,RCDBTR,RCCTS,RCACPL,RCTOT,RCBLCH,RCALLFLG,RCDONE,RCSVFLG
+ N RCAUTO,RCDBTR,RCCTS,RCACPL,RCTOT,RCBLCH,RCALLFLG,RCDONE,RCSVFLG,Z
  ;
  F  D  Q:+RCDBTR=0
  . ;
@@ -52,9 +52,9 @@ ENTER ; Main Entry Point
  . S RCSVFLG=$$GETDET^RCRPU(RCBLCH,RCTOT,RCDBTR,RCAUTO)
  . Q:RCSVFLG<1
  . ;Display bills at CS and recall them if necessary
- . D DISPREF^RCRPU2(0)
+ . D ASKRCL^RCRPU2  ; PRCA*4.5*389
  . ;Display bills at TOP/DMC
- . D DISPREF^RCRPU2(1)
+ . S Z=$$DISPREF^RCRPU2(1)  ; PRCA*4.5*389
  ;
  ;Clear working array when exiting.
  K ^TMP("RCRPP",$J)
@@ -78,62 +78,63 @@ GETPLAN() ;Get the Plan IEN using Debtor or Repayment Plan ID.
  ;
  S RCEXIT=0
  F  D  Q:RCEXIT<0
- . W @IOF
- . S RCIEN=$$SELRPP^RCRPU1()
- . I +RCIEN<1 S RCEXIT=-1 Q
- . ;
- . ; don't allow editing of plans in "closed", "paid in full", and "terminated" status
- . I "^6^7^8^"[$$GET1^DIQ(340.5,RCIEN_",",.07,"I")_U W !!,"Can't edit a closed repayment plan.",! D PAUSE^RCRPRPU S RCEXIT=0 Q
- . ;
- . F  D  Q:RCEXIT1<1
- . . S (RCDATA,RCERROR)="",RCIENC=RCIEN_","
- . . ;Get the Plan information
- . . K RCDATA N RCDATA  ; Clear and redefine RCDATA before reprinting screen
- . . D GETS^DIQ(340.5,RCIENC,"**","EI","RCDATA","RCERROR")
- . . ;
- . . ;Get the Base info
- . . S RCRPID=RCDATA(340.5,RCIENC,.01,"E")
- . . S RCDBTRN=RCDATA(340.5,RCIENC,.02,"E")
- . . S RCDBTR=RCDATA(340.5,RCIENC,.02,"I")
- . . S RCSTDT=RCDATA(340.5,RCIENC,.04,"I")
- . . S RCMNAMT=RCDATA(340.5,RCIENC,.06,"E")
- . . S RCLNG=RCDATA(340.5,RCIENC,.05,"E")
- . . S RCSTAT=RCDATA(340.5,RCIENC,.07,"E")
- . . S RCAFLG=RCDATA(340.5,RCIENC,.12,"E")
- . . ; 
- . . ;Calculate the # payments remaining
- . . S RCLP="",RCMSCT=0
- . . F  S RCLP=$O(RCDATA(340.52,RCLP)) Q:'RCLP  D
- . . . S RCPYMD=RCDATA(340.52,RCLP,1,"I"),RCPYFB=RCDATA(340.52,RCLP,2,"I")
- . . . I 'RCPYMD,'RCPYFB S RCMSCT=RCMSCT+1
- . . ;
- . . ;Display the Plan summary information
- . . W @IOF,!,"--------------------------------------------------------------------------------"
- . . W !,"Repayment Plan Overview for AR Debtor: ",RCDBTRN,!
- . . W !,?23,"Repayment Plan ID: ",RCRPID,!
- . . W !,"Monthly Repayment Amount:",?32,"$",$J(RCMNAMT,0,2)
- . . W ?45,"Original # of Payments:",?70,RCLNG
- . . W !,"# of Remaining Payments:",?32,RCMSCT
- . . W ?45,"Current Status:",?70,RCSTAT
- . . W !,"Date First Payment Due:",?32,$$FMTE^XLFDT(RCSTDT,"5DZ")
- . . W ?45,"Auto Add New Bills:",?70,RCAFLG
- . . W !,"--------------------------------------------------------------------------------",!
- . . ;
- . . ;Ask user what to edit (Close Plan, Edit Monthly Payment, or Allow Auto Adding of Bills
- . . S RCEXIT1=0
- . . S RCEDTYPE=$$GETTYPE
- . . I RCEDTYPE=-1 S RCEXIT1=0 Q   ; Time out or user "^" to exit option
- . . ;
- . . ; PRCA*4.5*378 - Added 2 new user prompts
- . . I RCEDTYPE="Q" S RCEXIT1=0 Q     ;User requested Exit pla using prompt
- . . ;
- . . I RCEDTYPE="C" D CLOSE(RCIEN) K ^TMP($J,"RPPFLDNO") S RCEXIT1=0 Q
- . . ;
- . . I RCEDTYPE="E" D EDMN(RCDBTR,RCIEN,RCMSCT) S RCEXIT1=1 Q
- . . ;
- . . I RCEDTYPE="A" S RCAUTO=$$AUTOADD^RCRPU1 D:RCAUTO'<0 UPDAUTO^RCRPU1(RCIEN,RCAUTO) S RCEXIT1=1 Q
+ .W @IOF
+ .S RCIEN=$$SELRPP^RCRPU1()
+ .I +RCIEN<1 S RCEXIT=-1 Q
+ .D EDITPLAN(RCIEN)  ; PRCA*4.5*389
+ .Q
  ;
  Q RCEXIT
+ ;
+EDITPLAN(RCIEN) ; edit selected plan, entry point from repayment plan worklist  PRCA*4.5*389
+ ;
+ ; RCIEN - file 340.5 ien
+ ;
+ N RCAFLG,RCDBTR,RCDBTRN,RCERROR,RCEXIT1,RCIENC,RCLNG,RCLP,RCMNAMT,RCMSCT,RCPYMD,RCRPID,RCSTAT,RCSTDT
+ ; don't allow editing of plans in "closed", "paid in full", and "terminated" status
+ I "^6^7^8^"[$$GET1^DIQ(340.5,RCIEN_",",.07,"I")_U W !!,"Can't edit a closed repayment plan.",! D PAUSE^RCRPRPU Q
+ F  D  Q:RCEXIT1<1
+ .S (RCDATA,RCERROR)="",RCIENC=RCIEN_","
+ .; Get the Plan information
+ .K RCDATA N RCDATA ; Clear and redefine RCDATA before reprinting screen
+ .D GETS^DIQ(340.5,RCIENC,"**","EI","RCDATA","RCERROR")
+ .; Get the Base info
+ .S RCRPID=RCDATA(340.5,RCIENC,.01,"E")
+ .S RCDBTRN=RCDATA(340.5,RCIENC,.02,"E")
+ .S RCDBTR=RCDATA(340.5,RCIENC,.02,"I")
+ .S RCSTDT=RCDATA(340.5,RCIENC,.04,"I")
+ .S RCMNAMT=RCDATA(340.5,RCIENC,.06,"E")
+ .S RCLNG=RCDATA(340.5,RCIENC,.05,"E")
+ .S RCSTAT=RCDATA(340.5,RCIENC,.07,"E")
+ .S RCAFLG=RCDATA(340.5,RCIENC,.12,"E")
+ .; Calculate the # payments remaining
+ .S RCLP="",RCMSCT=0
+ .F  S RCLP=$O(RCDATA(340.52,RCLP)) Q:'RCLP  D
+ ..S RCPYMD=RCDATA(340.52,RCLP,1,"I"),RCPYFB=RCDATA(340.52,RCLP,2,"I")
+ ..I 'RCPYMD,'RCPYFB S RCMSCT=RCMSCT+1
+ ..Q
+ .; Display the Plan summary information
+ .W @IOF,!,"--------------------------------------------------------------------------------"
+ .W !,"Repayment Plan Overview for AR Debtor: ",RCDBTRN,!
+ .W !,?23,"Repayment Plan ID: ",RCRPID,!
+ .W !,"Monthly Repayment Amount:",?32,"$",$J(RCMNAMT,0,2)
+ .W ?45,"Original # of Payments:",?70,RCLNG
+ .W !,"# of Remaining Payments:",?32,RCMSCT
+ .W ?45,"Current Status:",?70,RCSTAT
+ .W !,"Date First Payment Due:",?32,$$FMTE^XLFDT(RCSTDT,"5DZ")
+ .W ?45,"Auto Add New Bills:",?70,RCAFLG
+ .W !,"--------------------------------------------------------------------------------",!
+ .; Ask user what to edit (Close Plan, Edit Monthly Payment, or Allow Auto Adding of Bills
+ .S RCEXIT1=0
+ .S RCEDTYPE=$$GETTYPE
+ .I RCEDTYPE=-1 S RCEXIT1=0 Q   ; Time out or user "^" to exit option
+ .; PRCA*4.5*378 - Added 2 new user prompts
+ .I RCEDTYPE="Q" S RCEXIT1=0 Q     ;User requested Exit pla using prompt
+ .I RCEDTYPE="C" D CLOSE(RCIEN) K ^TMP($J,"RPPFLDNO") S RCEXIT1=0 Q
+ .I RCEDTYPE="E" D EDMN(RCDBTR,RCIEN,RCMSCT) S RCEXIT1=1 Q
+ .I RCEDTYPE="A" S RCAUTO=$$AUTOADD^RCRPU1 D:RCAUTO'<0 UPDAUTO^RCRPU1(RCIEN,RCAUTO) S RCEXIT1=1
+ .Q
+ Q 
  ;
 GETTYPE() ;Get the user requested type of editing.
  ;
@@ -182,7 +183,7 @@ EDMN(RCDBTR,RCIEN,RCORLN) ;Edit the monthly payment
  ;
  ;Update Audit Log with Supervisor Approvals, if any.
  D:$G(^TMP("RCRPP",$J,"SUP25")) UPDAUDIT^RCRPU2(RCIEN,RCCRDT,"E","SA")
- D:$G(^TMP("RCRPP",$J,"SUP36")) UPDAUDIT^RCRPU2(RCIEN,RCCRDT,"E","SM")
+ D:$G(^TMP("RCRPP",$J,"SUP36")) UPDFLG36^RCRPU1(RCIEN,1),UPDAUDIT^RCRPU2(RCIEN,RCCRDT,"E","SM")  ; PRCA*4.5*389
  ;
  ;Update the schedule, removing any extra payments not needed.
  I RCORLN'=$P(RCPLN,U,2) D ADJSCHED(RCIEN,RCORLN,$P(RCPLN,U,2))
@@ -240,7 +241,7 @@ ADJSCHED(RCIEN,RCORLN,RCNEWLN) ; Add or subtract payments from a plan's Schedule
  ;        RCORLN - Original Term Length of the payments
  ;        RCNEWLN - New Term Length
  ;
- N RCLP,RCLP1,RCPD,RCSTDT,RCSUB,RCFB,RCFBCT
+ N RCFBFLG,RCLP,RCLP1,RCPD,RCSTDT,RCSUB,RCFB,RCFBCT,RCORIEN
  ;
  ;Clear RPP Temp array
  K ^TMP("RCRPP",$J)

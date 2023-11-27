@@ -1,5 +1,5 @@
-RAHLTCPX ;HIRMFO/RTK,RVD,GJC - Rad/Nuc Med HL7 TCP/IP Bridge;02/11/08 ; Dec 29, 2022@09:55:42
- ;;5.0;Radiology/Nuclear Medicine;**47,114,129,141,144,157,195**;Mar 16, 1998;Build 2
+RAHLTCPX ;HIRMFO/RTK,RVD,GJC - Rad/Nuc Med HL7 TCP/IP Bridge; Sep 21, 2023@07:58:28
+ ;;5.0;Radiology/Nuclear Medicine;**47,114,129,141,144,157,195,207**;Mar 16, 1998;Build 2
  ;
  ; this is a modified copy of RAHLTCPB for HL7 v2.4
  ;
@@ -102,34 +102,39 @@ OBR ; Pick data off the 'OBR' segment.
  I $L(RARRR) K ^TMP(RARRR,$J)  M ^TMP(RARRR,$J)=^TMP("RARPT-REC",$J) ;Merge if OBR without Report
  S:'$L(RARRR) RARRR="RARPT-REC"
  N RAX,RAX1,RAX2,RAI,RARR,RAVERF,RARSDNT,RATRANSC,ARR
+ ;
  ;OBR-3/PAR(4) for v2.4: site specific accession # (SSS-DDDDDD-CCCCC)
  ;Note: if SSAN parameter switch is off format is old # (DDDDDD-CCCCC)
- D:$L($G(PAR(4)))
- .S RALONGCN=$P(PAR(4),HLCS)
- .I RALONGCN="" Q
- .I $L(RALONGCN,"-")=2 D  ;if old format get data from "ADC" x-ref
- ..S RADTI=$O(^RADPT("ADC",RALONGCN,RADFN,"")) Q:RADTI=""
- ..S RACNI=$O(^RADPT("ADC",RALONGCN,RADFN,RADTI,"")) Q:RACNI=""
- .;
- .;if new format & the "ADC1" x-ref exists (reg'd/b'cast under v2.4)
- .I $L(RALONGCN,"-")=3,($D(^RADPT("ADC1",RALONGCN))\10=1) D
- ..S RADTI=$O(^RADPT("ADC1",RALONGCN,RADFN,"")) Q:RADTI=""
- ..S RACNI=$O(^RADPT("ADC1",RALONGCN,RADFN,RADTI,"")) Q:RACNI=""
- .;
- .;if new format & the "ADC1" x-ref does not exist
- .;(reg'd under v2.3 & b'cast/resent under v2.4) p129
- .I $L(RALONGCN,"-")=3,($D(^RADPT("ADC1",RALONGCN))\10=0) D
- ..S RADTI=$O(^RADPT("ADC",$P(RALONGCN,"-",2,3),RADFN,"")) Q:RADTI=""
- ..S RACNI=$O(^RADPT("ADC",$P(RALONGCN,"-",2,3),RADFN,RADTI,"")) Q:RACNI=""
- ..S RALONGCN=$P(RALONGCN,"-",2,3) ;KLM/P144 strip off site prefix if SSANs are not enabled
- .;
- .Q:RADTI=""
- .Q:RACNI=""
- .S ^TMP(RARRR,$J,RASUB,"RALONGCN")=RALONGCN ;p144 - moved, set after we know about SSANs
- .S ^TMP(RARRR,$J,RASUB,"RADTI")=RADTI
- .S ^TMP(RARRR,$J,RASUB,"RACNI")=RACNI
- I $G(RADTI)'>0 S RAERR="Invalid exam registration timestamp" D XIT Q
- I $G(RACNI)'>0 S RAERR="Invalid exam record IEN" D XIT Q
+ ;---- begin accession # format check (null or delimited incorrectly) *** begin p207 ***
+ K RADLIMLEN S RALONGCN=$P($G(PAR(4)),HLCS),RADLIMLEN=$L(RALONGCN,"-")
+ I RADLIMLEN'=2,(RADLIMLEN'=3) S RAERR="Invalid or missing accession number." K RADLIMLEN Q
+ ;---- end accession # format check (null or delimited incorrectly)
+ ;
+ ;---- begin accession # component check
+ I RADLIMLEN=2 D  ;if old format get data from "ADC" x-ref
+ .S RADTI=$O(^RADPT("ADC",RALONGCN,RADFN,"")) Q:RADTI=""
+ .S RACNI=$O(^RADPT("ADC",RALONGCN,RADFN,RADTI,"")) Q:RACNI=""
+ .Q
+ ;if new format & the "ADC1" x-ref exists (reg'd/b'cast under v2.4)
+ I RADLIMLEN=3,($D(^RADPT("ADC1",RALONGCN))\10=1) D
+ .S RADTI=$O(^RADPT("ADC1",RALONGCN,RADFN,"")) Q:RADTI=""
+ .S RACNI=$O(^RADPT("ADC1",RALONGCN,RADFN,RADTI,"")) Q:RACNI=""
+ .Q
+ ;if new format & the "ADC1" x-ref does not exist
+ ;(reg'd under v2.3 & b'cast/resent under v2.4) p129
+ I RADLIMLEN=3,($D(^RADPT("ADC1",RALONGCN))\10=0) D
+ .S RADTI=$O(^RADPT("ADC",$P(RALONGCN,"-",2,3),RADFN,"")) Q:RADTI=""
+ .S RACNI=$O(^RADPT("ADC",$P(RALONGCN,"-",2,3),RADFN,RADTI,"")) Q:RACNI=""
+ .S RALONGCN=$P(RALONGCN,"-",2,3) ;KLM/P144 strip off site prefix if SSANs are not enabled
+ .Q
+ I $G(RADTI)'>0 S RAERR="Invalid or missing exam registration timestamp" K RADLIMLEN Q
+ I $G(RACNI)'>0 S RAERR="Invalid or missing exam record IEN" K RADLIMLEN Q
+ S ^TMP(RARRR,$J,RASUB,"RALONGCN")=RALONGCN ;p144 - moved, set after we know about SSANs
+ S ^TMP(RARRR,$J,RASUB,"RADTI")=RADTI
+ S ^TMP(RARRR,$J,RASUB,"RACNI")=RACNI
+ K RADLIMLEN
+ ;---- end accession # component check *** end p207 ***
+ ;
  ;OBR-25/PAR(26) STATUS: 'C'orrected, 'F'inal, or 'R'esults filed, not verified & 'VAQ' NTP releases the study back to the VA
  I '$L($G(PAR(26))) S RAERR="Missing Report Status",RAEXIT=1 Q
  I "^C^F^R^VAQ^"'[("^"_PAR(26)_"^") S RAERR="Invalid Report Status: "_PAR(26),RAEXIT=1 Q

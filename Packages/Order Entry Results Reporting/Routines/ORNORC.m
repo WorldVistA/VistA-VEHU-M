@@ -1,19 +1,34 @@
-ORNORC ; SLC/AJB - New Order Checks for Cancelled Orders ;Oct 15, 2018@05:49
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**377**;Dec 17, 1997;Build 582
+ORNORC ; SLC/AJB - New Order Checks for Cancelled Orders ;Mar 03, 2023@13:15:07
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**377,588**;Dec 17, 1997;Build 29
+ ;
+ ; Reference to ^DD( in ICR #999
+ ;
  Q
+ ;
 CANCEL(CHECKS,DFN,PACKAGE,LOC,DATA,STRT) ; capture a cancelled order
- N ORDATA,ORIEN,ORITEMS,ORMSG
- S ORDATA(100.3,"+1,",.01)=$$NOW^XLFDT
- S ORDATA(100.3,"+1,",.02)=DFN
- S ORDATA(100.3,"+1,",.03)=DUZ
- S ORDATA(100.3,"+1,",.04)=+LOC
- S ORDATA(100.3,"+1,",.05)="C"
- S ORDATA(100.3,"+1,",.06)=PACKAGE
- S ORDATA(100.3,"+1,",.08)=STRT
- D UPDATE^DIE("","ORDATA","ORIEN","ORMSG") I +$D(ORMSG) Q
+ N ORDATA,ORDITM,ORIEN,ORIENS,ORITEMS,ORMSG
+ S (ORIEN(1),ORITEMS)=""
+ ;Check for no previous Cancel entry and create a new entry if needed
+ S ORIEN(1)=$O(^XTMP("ORCHECK-"_DUZ,$J,DFN,$$DT^XLFDT,ORIEN(1)),-1)
+ I $G(ORIEN(1))="" D
+ . K ORIEN(1)
+ . S ORDATA(100.3,"+1,",.01)=$$NOW^XLFDT
+ . S ORDATA(100.3,"+1,",.02)=DFN
+ . S ORDATA(100.3,"+1,",.03)=DUZ
+ . S ORDATA(100.3,"+1,",.04)=+LOC
+ . S ORDATA(100.3,"+1,",.05)="C"
+ . S ORDATA(100.3,"+1,",.06)=PACKAGE
+ . S ORDATA(100.3,"+1,",.08)=STRT
+ . D UPDATE^DIE("","ORDATA","ORIEN","ORMSG") I +$D(ORMSG) Q
  ; get orderable item(s)
+ S ORDITM=0
+ F  S ORDITM=$O(^OR(100.3,+ORIEN(1),1,ORDITM)) Q:+ORDITM=0  D
+ . S ORITEMS=$S(ORITEMS="":+$G(^OR(100.3,+ORIEN(1),1,ORDITM,0)),1:U_+$G(^OR(100.3,+ORIEN(1),1,ORDITM,0)))
  N NUM S NUM=0 F  S NUM=$O(DATA(NUM)) Q:'+NUM  D
- . I NUM=1 S (ORITEMS,ORDATA(100.31,"+1,"_ORIEN(1)_",",.01))=+DATA(NUM)
+ . I NUM=1 D
+ . . I ORITEMS[+DATA(NUM) Q
+ . . S ORDATA(100.31,"+1,"_ORIEN(1)_",",.01)=+DATA(NUM)
+ . . S ORITEMS=$S(ORITEMS="":+DATA(NUM),1:ORITEMS_U_+DATA(NUM))
  . I $P(DATA(NUM),U,2)="ORDERABLE",ORITEMS'[$P(DATA(NUM),U,4) D
  . . S ORDATA(100.31,"+1,"_ORIEN(1)_",",.01)=$P(DATA(NUM),U,4)
  . . S ORITEMS=$S(ORITEMS="":$P(DATA(NUM),U,4),1:ORITEMS_U_$P(DATA(NUM),U,4))
@@ -29,10 +44,11 @@ CANCEL(CHECKS,DFN,PACKAGE,LOC,DATA,STRT) ; capture a cancelled order
  . . S ORDATA(100.32,"+1,"_ORIEN(1)_",",1)=$P(ORDATA(100.32,"+1,"_ORIEN(1)_",",1),"&",2)
  . . D GETXTRA^ORCHECK(.DATA,ORXTRA,ORDATA(100.32,"+1,"_ORIEN(1)_",",1))
  . D UPDATE^DIE("","ORDATA","IEN","ORMSG") I +$D(ORMSG) Q
- . I +$D(DATA) D WP^DIE(100.32,IEN(1)_","_ORIEN(1)_",",2,,"DATA","ORMSG") I +$D(ORMSG) Q
+ . D WP^DIE(100.32,IEN(1)_","_ORIEN(1)_",",2,,"DATA","ORMSG") I +$D(ORMSG) Q
  ; set raw order data
- D WP^DIE(100.3,ORIEN(1)_",",3,,"DATA","ORMSG") I +$D(ORMSG) Q
+ D WP^DIE(100.3,ORIEN(1)_",",3,,"DATA","ORMSG")
  ; set xtmp to find entries to be removed (#100.03) if order is initially accepted
+ I '+ORIEN(1) Q
  S ^XTMP("ORCHECK-"_DUZ,0)=$$FMADD^XLFDT($$DT^XLFDT,1)_U_$$DT^XLFDT
  S ^XTMP("ORCHECK-"_DUZ,$J,DFN,$$DT^XLFDT,ORIEN(1))=ORITEMS
  Q

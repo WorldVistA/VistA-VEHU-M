@@ -1,9 +1,9 @@
-ORPDMP ;SLC/AGP - PDMP Code ;Jul 13, 2021@20:28:13
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**519,405**;Dec 17, 1997;Build 212
- ;
- ; This routine uses the following ICRs:
- ;  #7143 - File 200, Field 205.5
- ;  #5541 - REQCOS^TIUSRVA
+ORPDMP ;SLC/AGP - PDMP Code ;Jul 10, 2023@14:58:48
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**519,405,588**;Dec 17, 1997;Build 29
+ ; SAC EXEMPTION 20200131-02 : Vendor Specific Code is used
+ ; SAC EXEMPTION 202211140901-02 : Non-standard $Z special variable used
+ ; Reference to ^VA(200, in ICR #7143
+ ; Reference to REQCOS^TIUSRVA in ICR #5541
  ;
  Q
  ;
@@ -13,10 +13,12 @@ GETPAR(ORRESULTS,ORUSER) ;
  N ORNOTE,ORREQCOSIG
  ;
  S ORRESULTS("PDMP","turnedOn")=+$$GET^XPAR("ALL","OR PDMP TURN ON",1,"I")
+ ; Check if Note write access is disabled
+ I ORRESULTS("PDMP","turnedOn"),'$$GET^XPAR("ALL","OR CPRS TABS WRITE ACCESS","N") S ORRESULTS("PDMP","turnedOn")=0
  S ORRESULTS("PDMP","delegateFeatureEnabled")=+$$GET^XPAR("ALL","OR PDMP DELEGATION ENABLED",1,"I")
  S ORRESULTS("PDMP","useDefaultBrowser")=+$$GET^XPAR("ALL","OR PDMP USE DEFAULT BROWSER",1,"I")
  S ORRESULTS("PDMP","pollingInterval")=+$$GET^XPAR("ALL","OR PDMP POLLING INTERVAL",1,"I")
- S ORRESULTS("PDMP","showButton")=$$GET^XPAR("ALL","OR PDMP SHOW BUTTON",1,"I")
+ S ORRESULTS("PDMP","showButton")="ALWAYS"
  S ORRESULTS("PDMP","daysBetweenReview")=+$$GET^XPAR("ALL","OR PDMP DAYS BETWEEN REVIEWS",1,"I")
  S ORRESULTS("PDMP","commentLimit")=+$$GET^XPAR("ALL","OR PDMP COMMENT LIMIT",1,"I")
  S ORRESULTS("PDMP","pasteEnabled")=+$$GET^XPAR("ALL","OR PDMP COPY/PASTE ENABLED",1,"I")
@@ -67,6 +69,11 @@ STRTPDMP(ORRESULTS,ORUSER,ORCOSIGNER,DFN,ORVSTR) ;
  . S ^TMP(ORSUB,$J,0)="-1"
  . S ^TMP(ORSUB,$J,1)="The PDMP functionality has been DISABLED."
  ;
+ ; Check if Note write access is disabled
+ I '$$GET^XPAR("ALL","OR CPRS TABS WRITE ACCESS","N") D  Q
+ . S ^TMP(ORSUB,$J,0)="-1"
+ . S ^TMP(ORSUB,$J,1)="CPRS write access for 'Notes' has been disabled."
+ ;
  I 'ORAUTHUSER,'$$GET^XPAR("ALL","OR PDMP DELEGATION ENABLED",1,"I") D  Q
  . S ^TMP(ORSUB,$J,0)="-1"
  . S ^TMP(ORSUB,$J,1)="The PDMP delegate feature has been disabled. Only authorized healthcare providers can run a PDMP query."
@@ -78,7 +85,7 @@ STRTPDMP(ORRESULTS,ORUSER,ORCOSIGNER,DFN,ORVSTR) ;
  . S ^TMP(ORSUB,$J,2)=" "
  . S ^TMP(ORSUB,$J,3)="You can log back into CPRS using your PIV card to link your VistA account with your PIV card, and that should populate your VistA account with your domain email address."
  ;
- ; Check if authorized user, or if delegate, if user chosen ia an authorized user
+ ; Check if authorized user, or if delegate, if user chosen is an authorized user
  I 'ORAUTHUSER,'$$ISAUTH(+ORCOSIGNER) D  Q
  . S ^TMP(ORSUB,$J,0)="-1"
  . S ^TMP(ORSUB,$J,1)="You need to be an authorized healthcare provider to run a PDMP query, or if you are a delegate, you need to select an authorized healthcare provider."
@@ -431,7 +438,7 @@ VIEWEDREPORT(ORRESULT,ORLOGIENS,ORSTATUS,ORNOTE,ORERRINFO) ;
  ;
  Q
  ;
- ; Does ORUSER have thier domain email define?
+ ; Does ORUSER have their domain email defined?
 HASEMAIL(ORUSER) ;
  N OREMAIL
  D GETEMAIL(.OREMAIL,ORUSER)

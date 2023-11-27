@@ -1,0 +1,19 @@
+TIUP359 ;ISP/RFR - Install TIU Objects ;Jun 07, 2023@15:11
+ ;;1.0;TEXT INTEGRATION UTILITIES;**359**;Jun 20, 1997;Build 17
+ Q
+POST ; Install TIU/Health Summary objects
+ N TIUSTATUS,TIULINE,TIUOBJ
+ F TIULINE=1:1  D  Q:TIUOBJ=""
+ .S TIUOBJ=$P($T(OBJECTS+TIULINE),";;",2)
+ .Q:TIUOBJ=""
+ .D BMES^XPDUTL("  Creating object for "_TIUOBJ_"...")
+ .S TIUSTATUS=$$CRTIUHS^TIUCROBJ(TIUOBJ,1)
+ .I TIUSTATUS=1 D MES^XPDUTL("    Successfully created")
+ .I '+TIUSTATUS D MES^XPDUTL("    "_$P(TIUSTATUS,U,2))
+ Q
+OBJECTS ; List of TIU/Health Summary objects to install
+ ;;VA-MAS DEM PRONOUNS (TIU)
+ ;;VA-MAS DEM GENDER IDENTITY (TIU)
+ ;;VA-MAS DEM SEXUAL ORIENTATION (TIU)
+ ;;
+ Q

@@ -1,5 +1,8 @@
-ORWDXC ; SLC/KCM - Utilities for Order Checking ;Apr 12, 2022@12:09:48
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,141,221,243,280,346,345,311,395,269,469,377,539,405**;Dec 17, 1997;Build 212
+ORWDXC ; SLC/KCM - Utilities for Order Checking ;Jul 10, 2023@09:25:01
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,141,221,243,280,346,345,311,395,269,469,377,539,405,588**;Dec 17, 1997;Build 29
+ ;Reference to $$ENDCM^PSJORUTL,ENDDIV^PSJORUTL in ICR #2403
+ ;Reference to DOSE^PSSOPKI1 in ICR #3739
+ ;Reference to DOSE^PSSORUTL in ICR #3233
  ;
 ON(VAL) ; returns E if order checking enabled, otherwise D
  S VAL=$$GET^XPAR("DIV^SYS^PKG","ORK SYSTEM ENABLE/DISABLE")
@@ -20,30 +23,40 @@ DISPLAY(LST,DFN,FID) ; Return list of Order Checks for a FillerID (namespace)
  D EN^ORKCHK(.ORY,DFN,.ORX,"DISPLAY")
  S I=0 F  S I=$O(ORY(I)) Q:I'>0  S LST(I)=$P(ORY(I),U,4)
  Q
-ALLERGY(LST,DFN,FID,OIL,ORDRNUM) ; Return list of allergy Order Checks on select medication
+ALLERGY(LST,DFN,FID,OIL,ORDRNUM,ORL) ; Return list of allergy Order Checks on select medication
  ; DFN = Patient IEN
  ; FID = PSI   (Inpatient)
  ;       PSO   (Outpatient)
  ;       PSH   (Non-VA)
  ; OIL = Orderable Item #
  ; ORDRNUM = Order # (file 100)
+ ; ORL = Ordering Location (only passed when being performed on orderable item selection - not required)
  I +ORDRNUM,+OIL Q  ;Only OIL or ORDRNUM is allowed, not both
+ S ORL=$G(ORL) I +ORL>0 S ORL=+ORL_";SC"
  S FID=$S(FID="PSH":FID,FID="PSX":"PSH",FID="PSO":FID,FID="PSIV":"PSIV",1:"PSI")
  K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"ORDSGCHK_CACHE")
  K ^TMP($J,"ORENHCHK")
- N X,Y,USID,ORCHECK,ORI,ORX,ORY,%DT,ORDODSG,CNT,ORL,RSLT,OILORD,ORALLCHKNM
+ N X,Y,USID,ORCHECK,ORI,ORX,ORY,%DT,ORDODSG,CNT,RSLT,OILORD,ORALLCHKNM
+ N ORDRGNAM
  S ORALLCHKNM="ORALLERGYCHK"
  S OILORD=$S(+OIL:+OIL,1:+ORDRNUM)
  K ORX,ORY
  I OILORD>0 K ^TMP(ORALLCHKNM,$J,DFN,OILORD)
- S ORL=""
+ S ORDRGNAM=""
  ; do the ALLERGY order checks
  I +OIL D
+ . N ORDRGNM,ORDRGSM
  . D FNDDRUG(.USID,+OIL,DFN,FID)
+ . S ORDRGSM=1
  . I FID="PSX" S FID="PSO"
  . S (CNT,ORX)=0
  . F  S CNT=$O(USID(CNT)) Q:CNT=""  D
  . . S ORX(CNT)=+OIL_"|"_FID_"|"_USID(CNT)_"|",ORX=ORX+1,ORI=1
+ . . I ORDRGSM=1 D
+ . . . S ORDRGNM=$P($G(USID(CNT)),U,5),ORDRGNM=$P(ORDRGNM," ",1)_" "_$P(ORDRGNM," ",3)
+ . . . I $L($TR(ORDRGNM," ","")) D
+ . . . . I ORDRGNAM="" S ORDRGNAM=ORDRGNM Q
+ . . . . I ORDRGNAM'=ORDRGNM S ORDRGSM=0,ORDRGNAM=""
  I +ORDRNUM D
  . I FID="PSX" S FID="PSO"
  . D FNDDRG(.ORX,+ORDRNUM,FID)
@@ -53,9 +66,14 @@ ALLERGY(LST,DFN,FID,OIL,ORDRNUM) ; Return list of allergy Order Checks on select
  I $D(ORY) D RETURN^ORCHECK   ; expects ORY, ORCHECK
  ; return ORCHECK as 1 dimensional list
  D FDBDOWN^ORCHECK(0)
- I $D(ORY),OILORD>0 M ^TMP(ORALLCHKNM,$J,DFN,OILORD)=ORY
  D CHK2LST
  K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"DD"),^TMP($J,"ORDSGCHK_CACHE")
+ I $D(LST) D
+ . N DATA
+ . S DATA(1)=OIL_U_FID
+ . S DATA(2)=FID_U_"ORDERABLE"_U_U_OIL_U_ORDRGNAM
+ . D CANCEL^ORNORC(.LST,DFN,FID,ORL,.DATA,"") ; TDP add order check data to 100.3
+ I $D(ORY),OILORD>0 M ^TMP(ORALLCHKNM,$J,DFN,OILORD)=ORY
  Q
 REASON(LST,TYP,DFN,OID) ;Return list of pre-defined override reasons
  N ORRSN,RSNI,RSNTYP,ORDT,ORVP,ORIFN,ORLAST
@@ -118,7 +136,7 @@ ACCEPT(LST,DFN,FID,STRT,ORL,OIL,ORIFN,ORREN,ORRENFLDS,ALLACC)    ; Return list o
  D CHK2LST
  D CHECKIT(.LST)
  K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"DD"),^TMP($J,"ORDSGCHK_CACHE")
- D CANCEL^ORNORC(.LST,DFN,FID,ORL,.OIL,STRT) ; ajb add order check data to 100.3
+ I $D(LST) D CANCEL^ORNORC(.LST,DFN,FID,ORL,.OIL,STRT) ; ajb add order check data to 100.3
  Q
 DELAY(LST,DFN,FID,STRT,ORL,OIL) ; Return list of Order Checks on Accept Delayed
  K ^TMP($J,"OROCOUTO;"),^TMP($J,"OROCOUTI;"),^TMP($J,"DD"),^TMP($J,"ORDSGCHK_CACHE")
@@ -240,7 +258,7 @@ LST2CHK ; create ORCHECK array from list passed by broker and
  . Q:+ORIFN<1
  . S ORCOMMENTS(ORIFN)=$P(LST("ORCOMMENTS",ILST),U,2)
  Q
-CHECKIT(X) ;remove uncessesary duplication of Duplicate Therapy checks
+CHECKIT(X) ;remove unnecessary duplication of Duplicate Therapy checks
  N I,J,K,Y,Z
  S I=0 F  S I=$O(X(I)) Q:'I  I $P(X(I),U,2)=17 D
  .Q:$P($G(^ORD(100.8,17,0)),U)'="DUPLICATE DRUG THERAPY"

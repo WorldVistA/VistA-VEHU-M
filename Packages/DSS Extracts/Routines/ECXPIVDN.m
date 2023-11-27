@@ -1,8 +1,10 @@
 ECXPIVDN ;ALB/JAP,BIR/DMA,CML,PTD-Extract from IV EXTRACT DATA File (#728.113) ;5/13/19  11:25
- ;;3.0;DSS EXTRACTS;**10,11,8,13,24,33,39,46,49,71,84,96,92,107,105,112,120,127,136,143,144,149,166,170,174,181,184**;Dec 22, 1997;Build 124
+ ;;3.0;DSS EXTRACTS;**10,11,8,13,24,33,39,46,49,71,84,96,92,107,105,112,120,127,136,143,144,149,166,170,174,181,184,187**;Dec 22, 1997;Build 163
  ;
  ; Reference to ^TMP($J in SACC 2.3.2.5.1
  ; Reference to $$LJ^XLFSTR in ICR #10104
+ ; Reference to $$DSS^PSNAPIS in ICR #2531
+ ; Reference to $$NPI^XUSNPI in ICR #4532
  ;
 BEG ;entry point from option
  D SETUP I ECFILE="" Q
@@ -23,23 +25,24 @@ START ; start package specific extract
  .F  S DA=$O(^ECX(728.113,"A",ECD,DFN,ON,DA)) Q:'DA  Q:QFLG  I $D(^ECX(728.113,DA,0)) S EC=^(0) D  Q:QFLG
  ..S DRG=$P(EC,U,4) I $P(EC,U,8)]"" D
  ...I '$D(^TMP($J,"A",DRG)) S ^(DRG)=$P(EC,U,7,8),^(DRG,1)=0,^(2)=$P(EC,U,12)
- ...S ^(1)=^TMP($J,"A",DRG,1)+$S($P(EC,U,6)=1:1,$P(EC,U,6)=4:0,1:-1)
+ ...S ^(1)=^TMP($J,"A",DRG,1)+$S($P(EC,U,6)=1:1,$P(EC,U,6)=4:-1,1:-1) ; 187 deduct 1 from the count if transaction type is 4 (canceled)
  ..I $P(EC,U,9) D
  ...I '$D(^TMP($J,"S",DRG)) S ^(DRG)=$P(EC,U,9)_"^ML",^(DRG,1)=0,^(2)=$P(EC,U,12),ECVOL=$P(EC,U,9)+ECVOL
- ...S ^(1)=^TMP($J,"S",DRG,1)+$S($P(EC,U,6)=1:1,$P(EC,U,6)=4:0,1:-1)
+ ...S ^(1)=^TMP($J,"S",DRG,1)+$S($P(EC,U,6)=1:1,$P(EC,U,6)=4:-1,1:-1) ;187 deduct 1 from the count if transaction type is 4 (canceled)
  ..S ECTYP=$P(EC,U,11),ECTOTC=0,ECDTTM=$$ECXTIME^ECXUTL($P(EC,U,5))
  .;looped thru all DAs for this order - now put it together
  .;leave the next line in case the decision is made to send volume designations
  .;I ECTYP="H" S ECTYP=ECTYP_$S(ECVOL'>1000:1,ECVOL'>2000:2,1:3)
  .S ECXDSSI=""
  .;loop thru tmp global and call pharmacy drug file (#50) api
- .F SA="S","A" S DRG="" F  S DRG=$O(^TMP($J,SA,DRG)) Q:DRG=""  S ECXPHA="",ECXPHA=$$PHAAPI^ECXUTL5(DRG) I $P(ECXPHA,U)'="" D STUFF Q:QFLG
+ .F SA="S","A" S DRG="" F  S DRG=$O(^TMP($J,SA,DRG)) Q:DRG=""  S ECXPHA="",ECXPHA=$$PHAAPI^ECXUTL5(DRG) I ($P(ECXPHA,U)'=""),$G(^TMP($J,SA,DRG,1))>0 D STUFF Q:QFLG  ;187 - Exclude records that have 0 quantity.
  I $D(^TMP($J,"ECXIVPM")) D SENDMSG^ECXPIVD2 ;181 - Send messages with list of clinics with NO/Inactive Stop Code
  K ^TMP($J),CLIN,DA,DFN,DIC,DIK,DRG,ON,SA,X,Y,P1,P3
  Q
 STUFF ;get data
  N ECORDST,ECXASIH ;170
  N ECXCERN,ECXNMPI,ECXSIGI ;184 New fields added
+ N ECXDUNIT,ECXPPDU ;187 Added Dispense Unit and Price Per Dispense Unit
  S ECXERR=0 D PAT(DFN,$P(EC,U,5),.ECXERR) ;166 get patient information
  Q:ECXERR  ;166 Quit if issue with patient
  S ECST=^TMP($J,SA,DRG),ECXCNT=^(DRG,1),ECXCOST=^(2),ECVACL=$P(ECXPHA,U,2),ECORDST=""
@@ -100,6 +103,7 @@ STUFF ;get data
  ;set national patient record flag if exist
  S ECXDFN=DFN D NPRF^ECXUTL5 K ECXDFN
  I $G(ECXASIH) S ECXA="A" ;170
+ S ECXDUNIT=$P(ECXPHA,U,8),ECXPPDU=$P(ECXPHA,U,7) ;187
  D:ECXENC'="" FILE^ECXPIVD2 K P1,P3
  Q
 PAT(ECXDFN,ECXDATE,ECXERR) ;get patient demographics, primary care, and inpatient data

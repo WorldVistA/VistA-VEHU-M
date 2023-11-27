@@ -1,5 +1,14 @@
 ECXPRO1 ;ALB/GTS - Prosthetics Extract for DSS (Continued) ;2/27/19  15:47
- ;;3.0;DSS EXTRACTS;**9,11,13,15,21,24,33,37,39,100,105,112,132,154,174**;Dec 22, 1997;Build 33
+ ;;3.0;DSS EXTRACTS;**9,11,13,15,21,24,33,37,39,100,105,112,132,154,174,187**;Dec 22, 1997;Build 163
+ ;
+ ; Reference to ^RMPR(600, in ICR #2528
+ ; Reference to EN^DIQ1 in ICR #10015
+ ; Reference to GET1^DIQ in ICD #2056
+ ; Reference to ^DIC(4 in ICR #10090
+ ; Reference to ^RMPR(661.1 in ICR #5754
+ ; Reference to ^TMP supported by SACC 2.3.2.5.1 
+ ; Reference to $$CPT^ICPTCOD in ICR # 1995
+ ; Reference to ^ICPT( in ICR #5408
  ;
 NTEG(ECXDFN,ECXLNE,ECXPIEN,ECXN0,ECXNLB,ECINST,ECXFORM) ;** Check for required fields
  ;   Input
@@ -20,13 +29,16 @@ NTEG(ECXDFN,ECXLNE,ECXPIEN,ECXN0,ECXNLB,ECINST,ECXFORM) ;** Check for required f
  ;    ECXHCPCS               - CPT/HCPCS code for prosthesis
  ;    ECXRQST                - Requesting Station
  ;    ECXRCST                - Receiving Station
- ;    ECXPHCPC               - PSAS HCPCS code; if 'unknown', then use CPT/HCPCS code 
+ ;    ECXPHCPC               - PSAS HCPCS code; if 'unknown', then use CPT/HCPCS code
+ ;    ECXPHPCD               - PSAS HCPCS Code Description ;187
  ;    ECXNPPDC               - NPPD code for repairs or new issues
+ ;    ECXHCPCD               - PSAS HCPCS/CPT HCPCS Description
  ;   Output (KILLed by NTEG)
  ;    ECXMISS                - 1 indicates missing information
  ;    ECXGOOD                - 0 indicates record should not be extracted
  ;
  N ECXGOOD,ECXMISS
+ N CPTSTR ;187
  S (ECXRCST,ECXRQST,ECXNPPDC)="",ECXGOOD=1,ECXSTAT2=$P(ECXN0,U,10)
  I ECXSTAT2]"" D
  .K ECXDIC
@@ -48,8 +60,14 @@ NTEG(ECXDFN,ECXLNE,ECXPIEN,ECXN0,ECXNLB,ECINST,ECXFORM) ;** Check for required f
  .;get nppd code for repairs and new issues 10 characters in length.
  .I "X5"[ECXTYPE S ECXNPPDC=$TR($$GET1^DIQ(661.1,ECXPHCPC_",",5)," ","_")
  .I "ISR"[ECXTYPE S ECXNPPDC=$TR($$GET1^DIQ(661.1,ECXPHCPC_",",6)," ","_")
- .I +ECXPHCPC S ECXPHCPC=$E($P($G(^RMPR(661.1,ECXPHCPC,0)),U,1),1,5)
- .I ECXPHCPC="UNKNOWN" S ECXPHCPC=$E(ECXHCPCS,1,5)
+ .I +ECXPHCPC D  ;187 Get PSAS HCPC Code and Code Description
+ ..S DA=ECXPHCPC,DIC="^RMPR(661.1,",DIQ(0)="I",DIQ="ECXDIC",DR=".01;.02"
+ ..D EN^DIQ1
+ ..S ECXPHCPC=ECXDIC(661.1,DA,.01,"I") ;Code
+ ..S ECXPHCPD=ECXDIC(661.1,DA,.02,"I") ;Description
+ ..K DIC,DIQ,DA,DR,ECXDIC
+ .I ECXPHCPC="UNKNOWN" S ECXPHCPC=$E(ECXHCPCS,1,5) D
+ .. S ECXPHPCD=$P($$CPT^ICPTCOD(ECXPHCPC,""),U,3) ; 187 Get the versioned shortname
  ;
  ;* Get Requesting Station Number
  I ECXFORM["-3" D

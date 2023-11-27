@@ -1,5 +1,5 @@
 YTQRQAD1 ;SLC/KCM - RESTful Calls to handle MHA assignments ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,178,182,181,187,199,207,204**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**130,141,178,182,181,187,199,207,204,223**;Dec 30, 1994;Build 22
  ;
  ; Reference to VADPT in ICR #10061
  ; Reference to XLFDT in ICR #10103
@@ -8,6 +8,8 @@ YTQRQAD1 ;SLC/KCM - RESTful Calls to handle MHA assignments ; 1/25/2017
  ; Reference to XQCHK in ICR #10078
  ;
 ASMTBYID(ARGS,RESULTS) ; get assignment identified by assignmentId
+ I $G(ARGS("assignmentId"))?36ANP G GETASMT^YTQRCRW ; CPRS DLL
+ ;
  N ASMT,ADMIN,TEST,I
  S ASMT="YTQASMT-SET-"_$G(ARGS("assignmentId"))
  I '$D(^XTMP(ASMT)) D SETERROR^YTQRUTL(404,"Not Found: "_ARGS("assignmentId")) QUIT
@@ -180,6 +182,8 @@ DELIDX(ASMT,DFN,ORDBY) ; return true if able to remove "AC", "AD" indexes
  Q 1
  ;
 DELTEST(ARGS) ; remove an instrument from an assignment
+ I $L($G(ARGS("assignmentId")))=32 G GETASMT^YTQRCRW ; CPRS DLL
+ ;
  N ASMT,TEST,TSLIST,II,DELFASGN
  S ASMT=$G(ARGS("assignmentId"))
  S DELFASGN=$G(ARGS("delfrmassign"))  ;Flag to Delete Instrument from Assignment
@@ -249,7 +253,7 @@ ADMEXPD(ADMIN,TEST) ; return 1 if incomplete admin has expired
  Q 0
  ;
 DELADMIN(YSADM) ; delete an admin & associated records
- N DIK,DA,YSANS,YSRSLT
+ N X,Y,DIK,DA,YSANS,YSRSLT
  ; delete the admin record
  S DIK="^YTT(601.84,",DA=YSADM D ^DIK
  ; delete the answer records

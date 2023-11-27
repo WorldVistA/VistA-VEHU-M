@@ -1,7 +1,9 @@
-TIUALRT ; SLC/JER,AJB - SEND ALERTS ;04/06/23  06:16
- ;;1.0;TEXT INTEGRATION UTILITIES;**21,84,79,88,58,61,151,158,175,221,227,259,355,358**;Jun 20, 1997;Build 16
+TIUALRT ; SLC/JER,AJB - SEND ALERTS ;Jun 12, 2023@07:00:42
+ ;;1.0;TEXT INTEGRATION UTILITIES;**21,84,79,88,58,61,151,158,175,221,227,259,355,358,353**;Jun 20, 1997;Build 20
  ;
+ ; Reference to ONEHR^ORACCESS in ICR #7356
  ; Reference to ^DPT( supported by IA #10035
+ ; Reference to $D(^VA(200 in ICR #4329
  ;
  Q
 SEND(DA,OVERDUE,TIUXQA) ;
@@ -40,8 +42,8 @@ SEND(DA,OVERDUE,TIUXQA) ;
  I TIU("Expected Co-signer"),'TIU("Co-signature Date/Time"),TIU("Status")<7 D
  . I '$P(TIUDPRM(0),U,20),$P(TIUDPRM(0),U,4),'TIU("Signature Date/Time") Q  ;           send co-signer alert, require author to sign, unsigned
  . S XQA(TIU("Expected Co-signer"))=""
- I ADDENDUM,'TIUAAALRT D SENDADD(DA) ;                                                  if from nightly task, do not send addendum added alert
 TPA S TIUXQA=0 F  S TIUXQA=$O(TIUXQA(TIUXQA)) Q:'TIUXQA  S XQA(TIUXQA)="" ;                set third party alert recipients
+ I ADDENDUM,'TIUAAALRT D SENDADD(DA) ;                                                  if from nightly task, do not send addendum added alert
  Q:'$D(XQA)&'$O(^TIU(8925.7,"B",DA,0))  ;                                               quit, no recipients or additional signers
  N D0,PT,XQALERR D PATVADPT^TIULV(.PT,$P(NODE(0),U,2)) ;                                get patient demographics
  ; if recipients, setup alert data and send alert
@@ -66,6 +68,10 @@ XQADATA(DA,PT,AS) ; setup message text
  Q
 ACT ; Act on alerts
  N TIUQUIK,TIUDA,TIUPRM0,TIUPRM1,TIUPRM3,RSTOK S TIUQUIK=1 K XQAKILL
+ I $$ONEHR^ORACCESS D  Q
+ . W !,"Site has migrated to Electronic Health Record."
+ . W !,"TIU List Manager access not allowed."
+ . I $$READ^TIUU("EA","RETURN to continue...")
  S TIUDA=$P(XQADATA,U)
  I '$D(^TIU(8925,+TIUDA,0)) D ALERTDEL(TIUDA) Q
  S RSTOK=$$DOCCHK^TIULRR(TIUDA)

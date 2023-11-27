@@ -1,0 +1,70 @@
+PXP236 ;ISP/RFR - CREATE NEW-STYLE XREF ;Sep 08, 2023@15:42
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**236**;Aug 12, 1996;Build 17
+ ;
+ N PXXR,PXRES,PXOUT,PXMSG,PXERROR,PXMESSAGE,PXLINE
+ S PXMSG(1)="   Creating the AB index definition in the V IMM CONTRA/REFUSAL EVENTS file"
+ S PXMSG(2)="   (#9000010.707)..."
+ D BMES^XPDUTL(.PXMSG)
+ S PXXR("FILE")=9000010.707
+ S PXXR("NAME")="AB"
+ S PXXR("TYPE")="R"
+ S PXXR("USE")="S"
+ S PXXR("EXECUTION")="R"
+ S PXXR("ACTIVITY")="IR"
+ S PXXR("SHORT DESCR")="Sort entries by patient, then by immunization, then by visit date."
+ S PXXR("DESCR",1)="This cross-reference sorts contraindication/refusal events in sequence by"
+ S PXXR("DESCR",2)="patient, immunization, and then visit date."
+ S PXXR("VAL",1)=.02
+ S PXXR("VAL",1,"SUBSCRIPT")=1
+ S PXXR("VAL",1,"COLLATION")="F"
+ S PXXR("VAL",2)=.04
+ S PXXR("VAL",2,"SUBSCRIPT")=2
+ S PXXR("VAL",2,"COLLATION")="F"
+ S PXXR("VAL",3)=.03
+ S PXXR("VAL",3,"SUBSCRIPT")=3
+ S PXXR("VAL",3,"COLLATION")="F"
+ S PXXR("VAL",3,"XFORM FOR STORAGE")="S X=$P(+^AUPNVSIT(X,0),""."",1)"
+ D CREIXN^DDMOD(.PXXR,"W",.PXRES,"PXOUT","PXERROR")
+ I $G(PXRES)="" D  Q
+ .D BMES^XPDUTL("   FAILED to create the AB index.")
+ .D MSG^DIALOG("WE",.PXMESSAGE,($G(IOM,80)-7),,"PXERROR")
+ .F PXLINE=1:1:PXMESSAGE  D
+ ..D MES^XPDUTL("   "_PXMESSAGE(PXLINE))
+ K PXMSG
+ S PXMSG(1)="      DONE",PXMSG(2)=" "
+ S PXMSG(3)="   Queueing a task to populate the AB index..."
+ D MES^XPDUTL(.PXMSG)
+ N ZTRTN,ZTDESC,ZTDTH,ZTIO,ZTUCI,ZTCPU,ZTPRI,ZTSAVE,ZTKIL,ZTSYNC,ZTSK,ZTSAVE
+ S ZTRTN="INDEX^PXP236",ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT,0,0,5),ZTIO=""
+ S ZTDESC="PCE V IMM CONTRA/REFUSAL EVENTS FILE AB CROSS-REFERENCE BUILDER"
+ S ZTSAVE("PXPERSON")=DUZ
+ D ^%ZTLOAD
+ I $G(ZTSK)>0,$G(ZTSK("D"))>0 D  Q
+ .D MES^XPDUTL("      Task #"_ZTSK_" scheduled to run at "_$$HTE^XLFDT(ZTSK("D")))
+ K PXMSG
+ S PXMSG(1)="   FAILED to task the cross-reference builder"
+ S PXMSG(2)="   Execute DO INDEX^PXP236 from the programmer's prompt."
+ D BMES^XPDUTL(.PXMSG)
+ Q
+INDEX ;BUILD AB INDEX
+ N DIK,DA,PXMSG
+ S DIK="^AUPNVICR(",DIK(1)=".02"_U_"AB"
+ I $D(^AUPNVICR("AB")) D ENALL2^DIK
+ D ENALL^DIK
+ S PXMSG(2,0)="(#9000010.707)"
+ I $P($G(^AUPNVICR(0)),U,4)>0 D
+ .I $D(^AUPNVICR("AB")) S PXMSG(1,0)="Successfully built"
+ .E  S PXMSG(1,0)="Failed to build"
+ .S PXMSG(1,0)=PXMSG(1,0)_" the AB index in the V IMM CONTRA/REFUSAL EVENTS file"
+ .S PXMSG(2,0)=PXMSG(2,0)_"."
+ I $P($G(^AUPNVICR(0)),U,4)<1 D
+ .S PXMSG(1,0)="There are no entries in the V IMM CONTRA/REFUSAL EVENTS file"
+ .S PXMSG(2,0)=PXMSG(2,0)_" to add to the new AB index."
+ N XMDUZ,XMSUB,XMTEXT,XMY,XMZ,XMMG,XMSTRIP,XMROU,DIFROM,XMYBLOB,XMERR
+ S XMDUZ="PCE PATCH 236",XMSUB="AB CROSS-REFERENCE TASK",XMTEXT="PXMSG(",XMY("I:"_PXPERSON)=""
+ D ^XMD
+ I $G(XMMG)'="" D
+ .N %ZT S %ZT("^TMP(""XMERR"",$J)")=""
+ .D APPERROR^%ZTER("PCE ERROR SENDING STATUS MESSAGE")
+ S ZTREQ="@"
+ Q

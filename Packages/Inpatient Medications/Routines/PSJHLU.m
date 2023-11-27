@@ -1,5 +1,5 @@
 PSJHLU ;BIR/RLW - UTILITIES USED IN BUILDING HL7 SEGMENTS ;4/24/12 2:52pm
- ;;5.0;INPATIENT MEDICATIONS;**1,56,72,102,134,181,267,285,317,339,364**;16 DEC 97;Build 47
+ ;;5.0;INPATIENT MEDICATIONS;**1,56,72,102,134,181,267,285,317,339,364,446**;16 DEC 97;Build 1
  ;
  ; Reference to ^PS(52.6 is supported by DBIA# 1231.
  ; Reference to ^PS(52.7 is supported by DBIA# 2173.
@@ -9,6 +9,8 @@ PSJHLU ;BIR/RLW - UTILITIES USED IN BUILDING HL7 SEGMENTS ;4/24/12 2:52pm
  ;*267 Change NTE|21 so it can send over the Long Wp Special Inst/
  ;     Other Prt Info fields if populated.
  ;*364 Add HAZ Handle & Haz Dispose flags to new ZZZ segment for BCBU
+ ;*446 Fix infusion rate evaluation in ENI tag to determine when to add
+ ;     "ml/hr". Continuous orders with rate < 1 were adding extra "ml/hr".
  ;
 INIT ; set up HL7 application variables
  S PSJHLSDT="PS",PSJHINST=$P($$SITE^VASITE(),"^")
@@ -111,7 +113,10 @@ ENI ;Calculate Frequency for IV orders
  .S X=X1_"="_X2
  ;*285 - Allow for decimals with trailing zeroes
  I X'?.N.1".".N,($P($TR(X," ml/hr",""),"@",2,999)'=+$P($TR(X," ml/hr",""),"@",2,999)!(+$P(X,"@",2,999)<0)),($P(X," ml/hr")'?.N.1".".N!(+$P(X," ml/hr")<0)) Q:(X>0&($E(X)=0))  K X Q
- I X=+X!(X>0&($E(X)=0)) S:$S(X'["ml/hr":0,X["@":0,1:1) X=X_" ml/hr" D SPSOL S FREQ=$S('X:0,1:SPSOL\X*60+(SPSOL#X/X*60+.5)\1) K SPSOL Q
+ ; *446 - Fix infusion rate evaluation below
+ ; I X=+X!(X>0&($E(X)=0)) S:$S(X'["ml/hr":0,X["@":0,1:1) X=X_" ml/hr" D SPSOL S FREQ=$S('X:0,1:SPSOL\X*60+(SPSOL#X/X*60+.5)\1) K SPSOL Q
+ I (X=+X)!(X>0&($E(X)=0)) S X=$S(((X'["ml/hr")&(X'["@")):X_" ml/hr",1:X) D SPSOL S FREQ=$S('X:0,1:SPSOL\X*60+(SPSOL#X/X*60+.5)\1) K SPSOL Q
+ ; *446 End
  I X[" ml/hr" D SPSOL S FREQ=$S('X:0,1:SPSOL\X*60+(SPSOL#X/X*60+.5)\1) K SPSOL Q
  S SPSOL=$P(X,"@",2) S:$P(X,"@")=+X $P(X,"@")=$P(X,"@")_" ml/hr" S FREQ=$S('SPSOL:0,1:1440/SPSOL\1) K SPSOL
  Q

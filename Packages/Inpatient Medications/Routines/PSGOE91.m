@@ -1,10 +1,10 @@
-PSGOE91 ;BIR/CML3 - ACTIVE ORDER EDIT (CONT.) ;12 June 2019 09:31:53
- ;;5.0;INPATIENT MEDICATIONS;**50,64,58,110,111,136,113,179,265,267,285,315,334,373,366,327**;16 DEC 97;Build 114
+PSGOE91 ;BIR/CML - ACTIVE ORDER EDIT (CONT.) ;May 03, 2023@17:45
+ ;;5.0;INPATIENT MEDICATIONS;**50,64,58,110,111,136,113,179,265,267,285,315,334,373,366,327,441**;16 DEC 97;Build 1
  ;;Per VHA Directive 2004-038, this routine should not be modified.
- ; Reference to ^PS(55 is supported by DBIA #2191.
- ; Reference to ^PS(50.7 is supported by DBIA# 2180
- ; Reference to ^PS(51.1 is supported by DBIA 2177.
- ; External reference YSCLTST2 supported by DBIA 4556
+ ;Reference to ^PS(55 in ICR #2191.
+ ;Reference to ^PS(50.7 in ICR #2180
+ ;Reference to ^PS(51.1 in ICR #2177
+ ;Reference to YSCLTST2 in ICR #4556
  ;
 41 ; admin times
  ;S MSG=0,PSGF2=41,ORIG=$G(PSGAT) S:PSGOEEF(PSGF2) BACK="41^PSGOE91"
@@ -266,7 +266,8 @@ WRITE ;
  Q
  ;
 ASK ;
- N Y
+ ;PSJ*5.0*441: Add DIR to the N string.
+ N Y,DIR
  S DIR("A")="Is this correct",DIR(0)="Y" D ^DIR I $D(DUOUT)!$D(DTOUT) W:'$T $C(7) S PSGOEE=0 K PSGDUR G DONE
  I 'Y K X S PSGDUR=-1,PSGFOK(8)="" G A41
  N P S P=1,PSGRMVT=$P(PSGRARR(P),"(",1)

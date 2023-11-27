@@ -1,5 +1,5 @@
-SRONRPT0 ;BIR/ADM - NURSE INTRAOP REPORT ;05/31/06
- ;;3.0;Surgery;**100,129,147,153,157,175,176,182,184**;24 Jun 93;Build 35
+SRONRPT0 ;BIR/ADM - NURSE INTRAOP REPORT; MAY 5, 2006
+ ;;3.0;Surgery;**100,129,147,153,157,175,176,182,184,212**;24 Jun 93;Build 1
  ;** NOTICE: This routine is part of an implementation of a nationally
  ;**         controlled procedure. Local modifications to this routine
  ;**         are prohibited.
@@ -85,7 +85,7 @@ POS S SRLF=1,SRLINE="Surgery Position(s): " I '$O(^SRF(SRTN,42,0)),SRALL D LINE(
  D LINE(1) S @SRG@(SRI)="ESU Cutting Range:         "_SRCT
  D LINE(1) S @SRG@(SRI)="Electroground Position(s): "_SRELP
  I SRELP2'="" D LINE(1) S @SRG@(SRI)=$$SPACE(27)_SRELP2
-LAB S SRLF=1 I $O(^SRF(SRTN,9,0))!SRALL D LAB1
+LAB S SRLF=1 I $O(^SRF(SRTN,9,0))!$O(^SRF(SRTN,41,0))!SRALL D LAB1 ;SR212 - add check for CULTURES (41)
  S SRLF=1 I $O(^SRF(SRTN,6,0)) D LINE(1) S @SRG@(SRI)="Anesthesia Technique(s):" S ANE=0 F  S ANE=$O(^SRF(SRTN,6,ANE)) Q:'ANE  D ANE
  I '$O(^SRF(SRTN,6,0)),SRALL D LINE(1) S @SRG@(SRI)="Anesthesia Technique(s): N/A"
  D ^SRONRPT1

@@ -1,5 +1,5 @@
 YTQREST0 ;SLC/KCM - RESTful API front controller v0 ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,178,182,187**;Dec 30, 1994;Build 74
+ ;;5.01;MENTAL HEALTH;**130,178,182,187,223**;Dec 30, 1994;Build 22
  ;
  ; .HTTPREQ: HTTP-formatted request and JSON body (if present)
  ; .HTTPRSP: HTTP-formatted response and JSON body (if present)
@@ -36,11 +36,15 @@ QENTRY(HTTPRSP,HTTPREQ) ; questionnaire entry for patient
  ;;GET /api/mha/patient/:dfn/identifiers PID^YTQRQAD
  ;;GET /api/mha/instrument/:instrumentName GETSPEC^YTQRQAD
  ;;GET /api/mha/assignment/:assignmentId?1.N ASMTBYID^YTQRQAD1
+ ;;GET /api/mha/assignment/:assignmentId?36ANP ASMTBYID^YTQRQAD1
  ;;GET /api/mha/checks/:instrumentName GETCHKS^YTQRQAD2
  ;;GET /api/mha/instrument/admin/:adminId?1.N GETADM^YTQRQAD2
+ ;;GET /api/mha/instrument/admin/:adminId?36ANP1"-".N GETADM^YTQRQAD2
  ;;POST /api/mha/instrument/admin SAVEADM^YTQRQAD2
  ;;GET /api/mha/assignment/cat/:assignmentId?1.N GCATINFO^YTQRCAT
+ ;;GET /api/mha/assignment/cat/:assignmentId?36ANP GCATINFO^YTQRCAT
  ;;POST /api/mha/assignment/cat/:assignmentId?1.N PCATINFO^YTQRCAT
+ ;;POST /api/mha/assignment/cat/:assignmentId?36ANP PCATINFO^YTQRCAT
  ;;GET /api/mha/cat/interview/:interviewId GETCATI^YTQRCAT
  ;;POST /api/mha/cat/interview/:interviewId SETCATI^YTQRCAT
  ;;DELETE /api/mha/assignment/:assignmentId/:instrument/:delfrmassign DELTEST^YTQRQAD1

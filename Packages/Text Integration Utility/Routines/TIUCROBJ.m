@@ -1,22 +1,23 @@
-TIUCROBJ ;SPFO/AJB - Create Objects ;Jul 14, 2021@07:12:36
- ;;1.0;TEXT INTEGRATION UTILITIES;**341**;Jun 20, 1997;Build 23
+TIUCROBJ ;SPFO/AJB - Create Objects ;Jun 07, 2023@17:39
+ ;;1.0;TEXT INTEGRATION UTILITIES;**341,359**;Jun 20, 1997;Build 17
  ;
  ; $$FIND1^DIC     ICR#2051          UPDATE^DIE     ICR#2053
  ;  $$GET1^DIQ     ICR#2056            $$UP^XLFSTR  ICR#10104
  ;        ^DIM     ICR#10016
  Q
  ; Parameter List:
- ;   NAME   object name
- ;   ABBR   abbreviation   [optional], default null
- ;   PNAME  print name     [optional], default NAME
- ;   METHOD object method  [optional], default null
- ;   POWNER personal owner [optional], default null
+ ;   NAME      object name
+ ;   ABBR      abbreviation      [optional], default null
+ ;   PNAME     print name        [optional], default NAME
+ ;   METHOD    object method     [optional], default null
+ ;   POWNER    personal owner    [optional], default null
+ ;   NSTANDARD national standard [optional], default null
  ;
  ; Basic Settings:
  ;   CLASS OWNER set to "CLINCAL COORDINATOR", default if no personal owner
  ;   STATUS set to ACTIVE
  ;
-CROBJ(NAME,ABBR,PNAME,METHOD,POWNER) ; create objects
+CROBJ(NAME,ABBR,PNAME,METHOD,POWNER,NSTANDARD) ; create objects
  ; verify name
  S NAME=$$UP^XLFSTR($G(NAME)) Q:NAME="" "0^NAME missing."
  Q:NAME?1P.E "0^NAME must not start with punctuation."
@@ -48,10 +49,15 @@ CROBJ(NAME,ABBR,PNAME,METHOD,POWNER) ; create objects
  S:+POWNER TIU(8925.1,"+1,",.05)=POWNER
  S:+CLOWNER TIU(8925.1,"+1,",.06)=CLOWNER
  S TIU(8925.1,"+1,",.07)=11
+ S:+$G(NSTANDARD)=1 TIU(8925.1,"+1,",.13)=NSTANDARD
  S:$G(METHOD)'="" TIU(8925.1,"+1,",9)=METHOD
  S TIU(8925.1,"+1,",99)=$H
  D UPDATE^DIE("","TIU","TIUDA","TIUERR")
- I $D(TIUERR) S TIUERR=$G(TIUERR("DIERR",1,"TEXT",1)),TIUERR=$S(TIUERR'="":"0^"_TIUERR,1:"0^Object NOT created.")
+ I $D(TIUERR) D
+ .N TIUMESSAGE,TIULINE
+ .D MSG^DIALOG("AET",.TIUMESSAGE,,,"TIUERR")
+ .F TIULINE=1:1:TIUMESSAGE  S TIUERR=$S($G(TIUERR)'="":TIUERR_" ",1:"")_TIUMESSAGE(TIULINE)
+ .S TIUERR=$S(TIUERR'="":"0^"_TIUERR,1:"0^Object NOT created.")
  Q $S($D(TIUERR):TIUERR,1:1)
  ;
 CHKNAME(NAME,XREF) ; check if name is in use
@@ -61,3 +67,16 @@ CHKNAME(NAME,XREF) ; check if name is in use
  ;
 LU(FILE,NAME,FLAGS,SCREEN,INDEXES) ;
  Q $$FIND1^DIC(FILE,"",$G(FLAGS),NAME,$G(INDEXES),$G(SCREEN))
+ ;
+CRTIUHS(TIUHSOBJ,TIUSTANDARD) ; Create TIU/Health Summary Object
+ ;PARAMETER: TIUHSOBJ - NAME field (#.01) value of entry in
+ ;                      HEALTH SUMMARY OBJECTS file (#142.5)
+ ;           TIUSTANDARD - Boolean; 1 to prevent sites from editing object
+ ;                                  0 to allow sites to edit object
+ S TIUHSOBJ=$G(TIUHSOBJ)
+ I TIUHSOBJ="" Q "0^No object specified"
+ N TIUMETHOD,TIUOBJNAME
+ S TIUMETHOD=$$METHOD^TIUHSOBJ(TIUHSOBJ)
+ I $E(TIUMETHOD,$L(TIUMETHOD)-2,$L(TIUMETHOD))=",0)" Q "0^Health Summary object does not exist"
+ S TIUOBJNAME=$P(TIUHSOBJ," (TIU)",1)
+ Q $$CROBJ(TIUOBJNAME,"",TIUOBJNAME,TIUMETHOD,,+$G(TIUSTANDARD))

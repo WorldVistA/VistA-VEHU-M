@@ -1,5 +1,5 @@
-ORERRH ; SLC/AGP - Error handling routines;10/09/18
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**377**;Dec 17, 1997;Build 582
+ORERRH ; SLC/AGP - Error handling routines;Jul 10, 2023@09:19:48
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**377,588**;Dec 17, 1997;Build 29
  ;
 ACOPY(REF,OUTPUT) ;Copy all the descendants of the array reference into a linear
  ;array. REF is the starting array reference, for example A or
@@ -41,6 +41,10 @@ BUILDMSG(TYPE,ERROR) ;
  .s CNT=CNT+1,^TMP("OR MSG",$J,CNT,0)="LOCATION: "_+$G(ORLOC)
  .D ACOPY("PCELIST","ERR()")
  .S INDEX=0 F  S INDEX=$O(ERR(INDEX)) Q:INDEX'>0  S CNT=CNT+1,^TMP("OR MSG",$J,CNT,0)=ERR(INDEX)
+ I TYPE=2 D  Q
+ .S CNT=$O(^TMP($J,"ORORDRPT ERRORS",""),-1)+1
+ .S CNT=CNT+1,^TMP($J,"ORORDRPT ERRORS",CNT)=""
+ .S CNT=CNT+1,^TMP($J,"ORORDRPT ERRORS",CNT)="Patient: "_$G(ORERRARR("PATIENT"))_"  Order #: "_ORERRARR("IEN")
  Q
  ;
  ;=================================================================
@@ -51,7 +55,7 @@ ERRHRLR(TYPE,HEADER) ;PCE Save Data error handler. Send a MailMan message to the
  S ERROR=$$EC^%ZOSV
  ;Ignore the "errors" the unwinder creates.
  I ERROR["ZTER" D UNWIND^%ZTER
- ;Make sure we don't loop if there is an error during procesing of
+ ;Make sure we don't loop if there is an error during processing of
  ;the error handler.
  N $ET S $ET="D ^%ZTER,CLEAN^ORERRH,UNWIND^%ZTER"
  ;
@@ -60,11 +64,11 @@ ERRHRLR(TYPE,HEADER) ;PCE Save Data error handler. Send a MailMan message to the
  D ^%ZTER
  ;
  ;
- S XMDUZ="CPRS, SEARCH",XMSUB=HEADER,XMTEXT="^TMP(""OR MSG"",$J,",XMY(DUZ)="",XMY("G.OR CACS")=""
+ S XMDUZ="CPRS, SEARCH",XMSUB=$G(HEADER),XMTEXT="^TMP(""OR MSG"",$J,",XMY(DUZ)="",XMY("G.OR CACS")=""
  K ^TMP("OR MSG",$J)
  D BUILDMSG(TYPE,ERROR)
  ;
- D ^XMD
+ I TYPE'=2 D ^XMD
  ;
  D CLEAN
  S RESULT(0)="-1^"

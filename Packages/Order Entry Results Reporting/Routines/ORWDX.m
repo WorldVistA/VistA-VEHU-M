@@ -1,17 +1,17 @@
-ORWDX ; SLC/KCM/REV/JLI - Order dialog utilities ;Oct 12, 2021@10:33:09
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,125,131,132,141,164,178,187,190,195,215,246,243,283,296,280,306,350,424,421,461,490,397,377,539,405**;Dec 17, 1997;Build 212
+ORWDX ; SLC/KCM/REV/JLI - Order dialog utilities ;Oct 18, 2022@15:47
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,125,131,132,141,164,178,187,190,195,215,246,243,283,296,280,306,350,424,421,461,490,397,377,539,405,588**;Dec 17, 1997;Build 29
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ;Reference to DIC(9.4 supported by IA #2058
- ;Reference to ^SC( supported by ICR #10040
+ ;Reference to ^SC( supported by IA #10040
  ;
  ;Sep 18, 2015 - PB - modified to trigger an unsolicited sync action
  ;
-ORDITM(Y,FROM,DIR,XREF,QOCALL) ; Subset of orderable items
+ORDITM(Y,FROM,DIR,XREF,QOCALL,ACCESS) ; Subset of orderable items
  ; Y(n)=IEN^.01 Name^.01 Name  -or-  IEN^Synonym <.01 Name>^.01 Name
- N I,IEN,CNT,X,DTXT,CURTM,DEFROUTE,ORDSTART
+ N I,IEN,CNT,X,DTXT,CURTM,DEFROUTE,ORDSTART,CHKLAB,CODE
  S ORDSTART=$O(^ORD(101.43,XREF,FROM))
- S DEFROUTE=""
+ S DEFROUTE="",CHKLAB=(XREF="S.LAB")&($L($G(ACCESS))>1)
  S QOCALL=+$G(QOCALL)
  S I=0,CNT=44,CURTM=$$NOW^XLFDT
  F  Q:I'<CNT  S FROM=$O(^ORD(101.43,XREF,FROM),DIR) Q:FROM=""  D
@@ -20,22 +20,9 @@ ORDITM(Y,FROM,DIR,XREF,QOCALL) ; Subset of orderable items
  . . I +$P(X,U,3),$P(X,U,3)<CURTM Q
  . . I 'QOCALL,$P(X,U,5) Q
  . . I QOCALL,$P(X,U,5),FROM'=ORDSTART Q
- . . S I=I+1
- . . I 'X S Y(I)=IEN_U_$P(X,U,2)_U_$P(X,U,2)
- . . E  S Y(I)=IEN_U_$P(X,U,2)_$C(9)_"<"_$P(X,U,4)_">"_U_$P(X,U,4)
- Q
- ;
-APORDITM(Y,QOCALL) ; Subset of AP orderable items
- ; Y(n)=IEN^.01 Name^.01 Name  -or-  IEN^Synonym <.01 Name>^.01 Name
- N I,IEN,X,CURTM,FROM,XREF
- S QOCALL=+$G(QOCALL)
- S I=0,FROM="",XREF="S.AP",CURTM=$$NOW^XLFDT
- F  S FROM=$O(^ORD(101.43,XREF,FROM)) Q:FROM=""  D
- . S IEN="" F  S IEN=$O(^ORD(101.43,XREF,FROM,IEN)) Q:'IEN  D
- . . I '$D(^LAB(69.73,"B",IEN)) Q
- . . S X=^ORD(101.43,XREF,FROM,IEN)
- . . I +$P(X,U,3),$P(X,U,3)<CURTM Q
- . . I 'QOCALL,$P(X,U,5) Q
+ . . I CHKLAB D  I ACCESS'[(U_CODE_U) Q
+ . . . S CODE=$P($G(^ORD(101.43,IEN,"LR")),U,6)
+ . . . I CODE="" S CODE="CH"
  . . S I=I+1
  . . I 'X S Y(I)=IEN_U_$P(X,U,2)_U_$P(X,U,2)
  . . E  S Y(I)=IEN_U_$P(X,U,2)_$C(9)_"<"_$P(X,U,4)_">"_U_$P(X,U,4)

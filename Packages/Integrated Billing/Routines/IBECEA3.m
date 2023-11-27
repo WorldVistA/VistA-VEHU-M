@@ -1,5 +1,5 @@
 IBECEA3 ;ALB/CPM - Cancel/Edit/Add... Add a Charge ;30-MAR-93
- ;;2.0;INTEGRATED BILLING;**7,57,52,132,150,153,166,156,167,176,198,188,183,202,240,312,402,454,563,614,618,646,651,656,663,677,678,682,728,716,704**;21-MAR-94;Build 49
+ ;;2.0;INTEGRATED BILLING;**7,57,52,132,150,153,166,156,167,176,198,188,183,202,240,312,402,454,563,614,618,646,651,656,663,677,678,682,728,716,704,776**;21-MAR-94;Build 1
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 ADD ; Add a Charge protocol
@@ -162,11 +162,17 @@ UCPAY ;IB*2.0*646 Added to allow for skip of clock checks - required for Urgent 
  ;end IB*2.0*646
  ;
  I IBXA=4,'IBUC,$$CHKHRFS^IBAMTS3(DFN,IBFR,IBFR) W !!,"This patient is 'Exempt' from Outpatient Visit charges on that date of service.",! G ADDQ  ;IB*2.0*614 (no copayment if HRfS flag)
+ ;IB*2.0*776 start
+ ; get the copay amount
  I IBXA=4,'IBUC D  G ADDQ:IBY<0
  .   ;  for visits prior to 12/6/01 or FEE
  .   I IBFR<3011206!($G(IBAFEE)) D OPT^IBECEA33 Q
  .   ;  for visits on or after 12/5/01
+ .   I $G(IBUSNM)["OBSERVATION" D  Q
+ .   .   S IBCHG=50,IBUNIT=1  ;initial copay amount
+ .   .   S IBDESC=$G(IBUSNM),IBTO=IBFR  ;ensure that Billed To and Description are defined.
  .   D OPT^IBEMTSCU
+ ;IB*2.0*776 end
  ;
  S IBDUPIEN=0
  S IBDUPIEN=$$BFCHK^IBECEAU(DFN,IBFR)

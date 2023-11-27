@@ -1,5 +1,5 @@
 IBCEF78 ;ALB/WCJ - Provider ID functions ;13 May 2007
- ;;2.0;INTEGRATED BILLING;**371,516,592**;21-MAR-94;Build 58
+ ;;2.0;INTEGRATED BILLING;**371,516,592,742**;21-MAR-94;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;;
  G AWAY
@@ -22,6 +22,8 @@ PRIPAYID(IBXIEN,IBXRET) ; Primary Payer IDs
  ; 
  N RET,I
  S RET=$$PAYERID^IBCEF2(IBXIEN)
+ ;JWS;EBILL-3155;11/30/22;IB*2.0*742;if PayerID is all spaces, set to null to prevent sending PI qualifier with null PayerID to FSC
+ I $L($TR(RET," ",""))=0 S RET=""
  I RET]"" S IBXRET("CI_PID",1)="PI"_U_RET
  ;
  ; MRD;IB*2.0*516 - Added HPID here (CI) and below (OI).

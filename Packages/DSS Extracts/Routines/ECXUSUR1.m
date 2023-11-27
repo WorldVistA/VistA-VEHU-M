@@ -1,9 +1,12 @@
 ECXUSUR1 ;ALB/TJL-Surgery Pre-Extract Unusual Volume Report ;6/15/17  15:44
- ;;3.0;DSS EXTRACTS;**49,71,105,111,128,148,161,166,184,185**;Dec 22, 1997;Build 134
+ ;;3.0;DSS EXTRACTS;**49,71,105,111,128,148,161,166,184,185,187**;Dec 22, 1997;Build 163
  ;
  ; Reference to ^SRF in ICR #103
  ; Reference to ^SRO(137.45 in ICR #1855
  ; Reference to ^DG(40.8,"AD" in ICR #2817
+ ; Reference to $$FMDIFF^XLFDT in ICR #10103
+ ; Reference to ^TMP supported by SACC 2.3.2.5.1
+ ; Reference to ^DIC(45.3 in ICR #218
  ;
 EN ;
  N ECHEAD,COUNT,TIMEDIF,ECXPROC
@@ -18,6 +21,7 @@ EN ;
 STUFF ;gather data
  N J,DATA1,DATA2,DATAOP,ECXNONL,ECXSTOP,DATAPA ;161
  N ECXPDIV,ECDIV ;184
+ N ECNTIME,ECSA,ECSAPC,ECXPA,ECXPAPC,DATA3 ;187
  N ECXPDVNM,PRODVSTR,DIQ,DR,DA,DIC,INST,ECXDIV,ECDIVIEN ;185
  S ECXPDIV="" ;184
  S ECXDATE=ECD,ECXERR=0,ECXQ=""
@@ -27,6 +31,11 @@ STUFF ;gather data
  S DATA2=$S($D(^SRF(ECD0,.2)):^(.2),1:"")
  S DATAOP=$S($D(^SRF(ECD0,"OP")):^("OP"),1:"")
  S DATAPA=$S($D(^SRF(ECD0,1.1)):^(1.1),1:"")
+ S DATA3=$S($D(^SRF(ECD0,.3)):^(.3),1:"") ;187
+ S ECSA=$P(DATA3,U,4) ;187
+ S ECXPA=$P(DATA3,U) ;187
+ S ECSAPC=$$PRVCLASS^ECXUTL(ECSA,ECXDATE) ;187
+ S ECXPAPC=$$PRVCLASS^ECXUTL(ECXPA,ECXDATE) ;187
  S ECNO=$G(^SRF(ECD0,"NON"))
  S ECDIV=$S($D(^SRF(ECD0,8)):^(8),1:"") ;184
  ;S ECXPDIV=$$RADDIV^ECXDEPT(ECDIV) ;184 - Production Division; 185
@@ -58,17 +67,20 @@ STUFF ;gather data
  ;ecode0="recovery room time^pt hold area time^or clean time^patient
  ;time^operation time^anesthesia time
  S ECODE0=""
- F J="1,4","2,3","10,12","13,14","15,10" D
+ S ECNTIME="" ;187
+ F J="2,3","10,12","13,14","15,10","1,4" D  ;187 Anesthesia time is calculated last
  .S A2=$P(DATA2,U,$P(J,","))
  .S A1=$P(DATA2,U,$P(J,",",2))
  .S TIME=$$CHKTM(A2,A1) ;161
+ .I +J=1 D ANTIME^ECXSURG S:TIME="" TIME="NO TIMES" ;187
  .I A1&(A2)&(TIME="") D TIMEDIF(A1,A2) D  ;161
  ..I +J'=2 D TIME
+ ..I +J=10 S ECNTIME=TIME ;187
  ..I +J=2 D  ;-Operation Time
  ...S TIME=$TR($J(TIMEDIF,4,0)," ")
  ...;I TIME<0 S TIME="###"
  .S ECODE0=TIME_U_ECODE0 K TIME
- ;
+ S ECODE0=$P(ECODE0,U,2,5)_U_$P(ECODE0,U)_U ;187
  ;retrieve recovery room (PACU) time
  S A2=$P($G(DATAPA),U,7)
  S A1=$P($G(DATAPA),U,8)

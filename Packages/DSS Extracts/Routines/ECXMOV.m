@@ -1,5 +1,15 @@
-ECXMOV ;ALB/JAP,BIR/DMA,PTD-Transfer and Discharge Extract ;1/30/19  09:25
- ;;3.0;DSS EXTRACTS;**8,24,33,39,41,42,46,65,84,107,105,128,127,161,166,170,173,174,184**;Dec 22, 1997;Build 124
+ECXMOV ;ALB/JAP,BIR/DMA,PTD-Transfer and Discharge Extract ;Mar 03, 2023@17:01:12
+ ;;3.0;DSS EXTRACTS;**8,24,33,39,41,42,46,65,84,107,105,128,127,161,166,170,173,174,184,187**;Dec 22, 1997;Build 163
+ ;
+ ; Reference to DEM^VADPT in ICR #10061
+ ; Reference to ^DGPM in ICR #1865
+ ; Reference to $$LJ^XLFSTR in ICR #10104
+ ; Reference to $$FMTE^XLFDT in ICR #10103
+ ; Reference to ^XMD in ICR #10113
+ ; Reference to ^XMB("NETNAME") in ICR #1131
+ ; Reference to ^TMP supported by SACC 2.3.2.5.1
+ ; Reference to ^DIC(42 in ICR #1848
+ ;
 BEG ;entry point from option
  D SETUP I ECFILE="" Q
  D ^ECXTRAC,^ECXKILL
@@ -12,11 +22,14 @@ START ; start package specific extract
  K ECXDD D FIELD^DID(405,.19,,"SPECIFIER","ECXDD")
  S ECPRO=$E(+$P(ECXDD("SPECIFIER"),"P",2)) K ECXDD
  S ECED=ECED+.3,QFLG=0,YEARMON=$P(EC23,U) ;173 Set yearmon to extract year and month
- F ECM=2,3 S ECARG="ATT"_ECM,ECD=ECSD1 D  Q:QFLG
- .F  S ECD=$O(^DGPM(ECARG,ECD)),ECDA=0 Q:('ECD)!(ECD>ECED)  D  Q:QFLG
- ..F  S ECDA=$O(^DGPM(ECARG,ECD,ECDA)) Q:'ECDA  D GET  Q:QFLG
- S ECDA=0 F  S ECDA=$O(^TMP($J,"ASIH",ECDA)) Q:'+ECDA  S ECM=3 D DISASIH Q:QFLG
- S REC=0 F  S REC=$O(^XTMP("ECXMOV",YEARMON,REC)) Q:'+REC  S VAL=$$NEEDADR^ECXUTL6("TRAN",REC,"MOV") I +VAL S ECDA=$P(VAL,U,2) S ECM=3 D DISASIH ;173 Review patients that were still on ASIH last month 
+ ;187 - Begins. In the following lines, removed the check of QFLG to bypass records that had no admission date/time
+ F ECM=2,3 S ECARG="ATT"_ECM,ECD=ECSD1 D  ;Q:QFLG
+ .F  S ECD=$O(^DGPM(ECARG,ECD)),ECDA=0 Q:('ECD)!(ECD>ECED)  D  ;Q:QFLG
+ ..F  S ECDA=$O(^DGPM(ECARG,ECD,ECDA)) Q:'ECDA  D GET ;Q:QFLG
+ S ECDA=0 F  S ECDA=$O(^TMP($J,"ASIH",ECDA)) Q:'+ECDA  S ECM=3 D DISASIH ; Q:QFLG
+ ;187 - Ends
+ S REC=0 F  S REC=$O(^XTMP("ECXMOV",YEARMON,REC)) Q:'+REC  S VAL=$$NEEDADR^ECXUTL6("TRAN",REC,"MOV") I +VAL S ECDA=$P(VAL,U,2) S ECM=3 D DISASIH ;173 Review patients that were still on ASIH last month
+ I $D(^TMP($J,"ECXMOVMM")) D SENDMSG ;187
  D CLEAN ;173
  K ^TMP($J,"ASIH") ;170
  Q
@@ -27,14 +40,18 @@ GET ;170 Moved record creation to be under "GET"
  Q:'$D(^DGPM(ECDA,0))  S EC=^(0)
  S ECXDFN=+$P(EC,U,3),ECMT=$P(EC,U,18),ECXDATE=ECD
  K ECXPAT S OK=$$PAT^ECXUTL3(ECXDFN,$P(ECXDATE,"."),"1;",.ECXPAT)
- I 'OK K ECXPAT Q
+ I 'OK D SETTMP("INVALID SSN",ECDA,ECD,ECXDFN,"") K ECXPAT Q  ;187 Bypass records with BAD SSN.
  S ECXPNM=ECXPAT("NAME"),ECXSSN=ECXPAT("SSN"),(ECXNMPI,ECXMPI)=ECXPAT("MPI") ;184 Added ECXNMPI
  S ECXSIGI=ECXPAT("SIGI") ;184 Self Identified Gender
  S ECTM=$$ECXTIME^ECXUTL(ECD)
  S WTO=$P(EC,U,6),ECXWTO=$P($G(^DIC(42,+WTO,44)),U)
  ;
  ;reset EC to admission movement and hold discharge movement ECX*128
- S ECCA=$P(EC,U,14),EC=$G(^DGPM(ECCA,0)),ECA=$P(EC,U) I EC="" D MAIL(ECDA) S QFLG=1 Q
+ ;187 Begins
+ ;S ECCA=$P(EC,U,14),EC=$G(^DGPM(ECCA,0)),ECA=$P(EC,U) I EC="" D MAIL(ECDA) S QFLG=1 Q
+ S ECCA=$P(EC,U,14),EC=$G(^DGPM(ECCA,0)),ECA=$P(EC,U) I EC="" D SETTMP("MISSING ADMISSION RECORD",ECDA,ECD,ECXDFN,ECXSSN) Q
+ I ECMT="" D SETTMP("MISSING MOVEMENT TYPE",ECDA,ECD,ECXDFN,ECXSSN) Q  ;187 Missing Movement Type.
+ ;187 Ends
  ;
  ;if date of previous xfer movement is greater than admit date,
  ;then reset EC to that previous xfer movement
@@ -77,10 +94,10 @@ GET ;170 Moved record creation to be under "GET"
  .S ECDAPRNP=$P(ECXDSC,U,7),ECDPRNPI=$P(ECXDSC,U,4)
  ;
  ;Get production division ;p-46
- N ECXPDIV S ECXPDIV=$$GETDIV^ECXDEPT(ECXFAC) ;p-46 
+ N ECXPDIV S ECXPDIV=$$GETDIV^ECXDEPT(ECXFAC) ;p-46
  ;- Observation patient indicator (YES/NO)
  S ECXOBS=$$OBSPAT^ECXUTL4(ECXA,ECXTS)
- ; 
+ ;
   ; ******* - PATCH 127, ADD PATCAT CODE ********
  S ECXPATCAT=$$PATCAT^ECXUTL(ECXDFN)
  ;- If no encounter number, don't file record
@@ -121,8 +138,8 @@ FILE ;file the extract record
  I ECXLOGIC>2007 S ECODE1=ECODE1_U_$G(ECDAPRNP)_U_$G(ECDPRNPI)
  I ECXLOGIC>2010 S ECODE1=ECODE1_U_ECXPATCAT ;P-127 ADDED PATCAT
  I ECXLOGIC>2017 S ECODE1=ECODE1_U_ECXSTANO_U  ;tjl 166 ,184 - Added "^"
- I ECXLOGIC>2022 S ECODE2=$G(ECXCERN)_U,ECODE3=ECXNMPI_U_ECXSIGI ;184 - Added NMPI, SIGI 
- S ^ECX(ECFILE,EC7,0)=ECODE,^ECX(ECFILE,EC7,1)=ECODE1 ;184 Move the record count to below 
+ I ECXLOGIC>2022 S ECODE2=$G(ECXCERN)_U,ECODE3=ECXNMPI_U_ECXSIGI ;184 - Added NMPI, SIGI
+ S ^ECX(ECFILE,EC7,0)=ECODE,^ECX(ECFILE,EC7,1)=ECODE1 ;184 Move the record count to below
  S ^ECX(ECFILE,EC7,2)=$G(ECODE2),^ECX(ECFILE,EC7,3)=$G(ECODE3) ;184
  S ECRN=ECRN+1 ;184 - Move record count from above
  S DA=EC7,DIK="^ECX("_ECFILE_"," D IX1^DIK K DIK,DA
@@ -136,9 +153,9 @@ SETUP ;Set required input for ECXTRAC
  ;
 QUE ; entry point for the background requeuing handled by ECXTAUTO
  D SETUP,QUE^ECXTAUTO,^ECXKILL Q
-MAIL(ECXDA) ; 
+MAIL(ECXDA) ;
  ; Created to send a message pointing to a bad record ECX*128
- ; Input - ECXDA is the PATIENT MOVEMENT (#405) record number for the discharge that has no admission 
+ ; Input - ECXDA is the PATIENT MOVEMENT (#405) record number for the discharge that has no admission
  ; associated with it.  ECX*128
  N XMSUB,XMTEXT,XMY,MSGTEXT,LINENUM
  ;;Setup necessary variables to send the message
@@ -162,7 +179,8 @@ DISASIH ;170 Section added to create a discharge ASIH other facility record
  N ECXNMPI,ECXCERN,ECXSIGI ;184
  Q:'$D(^DGPM(ECDA,0))  S EC=^(0)
  S ECXDFN=+$P(EC,U,3),ECMT=$P(EC,U,18),ECXDATE=$P(EC,U)
- S OK=$$PAT^ECXUTL3(ECXDFN,$P(ECXDATE,"."),"1;",.ECXPAT) Q:'OK
+ S OK=$$PAT^ECXUTL3(ECXDFN,$P(ECXDATE,"."),"1;",.ECXPAT) ;Q:'OK  187 - Bad records, don't quit. Save the record and send MM at the end
+ I 'OK D SETTMP("INVALD SSN",ECDA,ECD,ECXDFN,"") Q  ;187 
  S ECXPNM=ECXPAT("NAME"),ECXSSN=ECXPAT("SSN"),(ECXNMPI,ECXMPI)=ECXPAT("MPI") ;184 Added ECXNMPI
  S ECXSIGI=ECXPAT("SIGI") ;184 Self Identified Gender
  S X=$$INP^ECXUTL2(ECXDFN,$$FMADD^XLFDT(ECXDATE,,,,-1))
@@ -172,6 +190,7 @@ DISASIH ;170 Section added to create a discharge ASIH other facility record
  S ECDI=$$ECXDATE^ECXUTL(ECD,ECXYM)
  S ECM=3
  S ECMT=$P(EC,U,18)
+ I ECMT="" D SETTMP("MISSING MOVEMENT TYPE",ECDA,ECA,ECXDFN,ECXSSN) Q  ;187 Missing Movement Type
  S ECTM=$$ECXTIME^ECXUTL(ECD)
  S (ECXWRD,WTO,ECXWTO,WARD,ECXFAC,ECXDSSD,ECXSTANO,ECXLOS,ECXDPCT,ECXDPR,ECXDAPR,ECXDPRPC,ECXDAPPC,ECXDSC,ECDAPRNP,ECDPRNPI)=""
  S ECXWRD=$$GET1^DIQ(405,ECDA,200)
@@ -193,4 +212,40 @@ CLEAN ;173 Retain the six most recent sets of entries for ASIH review
  F  S DATE=$O(^XTMP("ECXMOV",DATE)) Q:'+DATE  S CNT=CNT+1
  F NUM=CNT:-1:7 S DATE=$O(^XTMP("ECXMOV",0)) Q:DATE=""  K ^XTMP("ECXMOV",DATE) ;Maintain list at a maximum of six groupings/months
  S ^XTMP("ECXMOV",0)=$$FMADD^XLFDT(DT,365)_"^"_DT_"^"_"List of ASIH movements without a corresponding return movement" ;Set XTMP zero node as required
+ Q
+ ;
+SETTMP(ERRMSG,ECDA,ECDATE,DFN,SSN) ;187 Set TMP global for MM messages
+ N ECMOVDT,VADM,ECXSSN,PTNAME
+ S PTNAME=$$GET1^DIQ(2,DFN,.01,"I")
+ I PTNAME["ZZ" Q  ;don't include test patients
+ D DEM^VADPT
+ S ECMOVDT=$$FMTE^XLFDT(ECDATE,"2M")
+ I SSN="" S SSN=$P(VADM(2),U),ERRMSG="INVALID SSN"
+ S ^TMP($J,"ECXMOVMM",ERRMSG,DFN,ECDA)=VADM(1)_U_SSN_U_ECMOVDT_U_ECDA
+ Q
+ ;
+SENDMSG ; Added for patch 187.  SEND MM messages
+ N ERRMSG,ECMSG,ECDFN,ECSSN,ECSTR,ECDA,I,J,XMY,XMDUZ,XMSUB,XMTEXT
+ I '$D(^TMP($J,"ECXMOVMM")) Q
+ S XMSUB="RECORDS NOT PROCESSED in DSS-"_ECPACK_" Extract (#"_$P(EC23,U,2)_")"
+ K XMY S XMY("G.DSS-"_ECGRP_"@"_^XMB("NETNAME"))="",XMDUZ="DSS SYSTEM"
+ S ECMSG(1,0)="The DSS-"_ECPACK_" Extract (#"_$P(EC23,U,2)_") process for "_ECSDN_" through "_ECEDN
+ S ECMSG(2,0)="contains the records in the MOVEMENT file (#405) that were not extracted"
+ S ECMSG(3,0)="due to missing information."
+ S ECMSG(4,0)=""
+ S ERRMSG="",J=0
+ F I=1:1 S ERRMSG=$O(^TMP($J,"ECXMOVMM",ERRMSG)) Q:ERRMSG=""  D
+ . S ECMSG(5*I+J,0)="*** "_ERRMSG_" ***",J=J+1
+ . S ECMSG(5*I+J,0)="Patient Name                      SSN        MOVEMENT DATE/TIME    RECORD #",J=J+1
+ . S ECMSG(5*I+J,0)="-------------------------------------------------------------------------------",J=J+1
+ . S ECDFN=""
+ . F J=J:1 S ECDFN=$O(^TMP($J,"ECXMOVMM",ERRMSG,ECDFN)) Q:ECDFN=""  D
+ .. S ECDA=0
+ .. F  S ECDA=$O(^TMP($J,"ECXMOVMM",ERRMSG,ECDFN,ECDA)) Q:ECDA=""  D
+ ... S ECSTR=^TMP($J,"ECXMOVMM",ERRMSG,ECDFN,ECDA)
+ ... S ECMSG(5*I+J,0)=$$LJ^XLFSTR($P(ECSTR,U),30)_"  "_$$LJ^XLFSTR($P(ECSTR,U,2),11)_"  "_$$LJ^XLFSTR($P(ECSTR,U,3),20)_"  "_$$LJ^XLFSTR(ECDA,12),J=J+1
+ . S J=J+1,ECMSG(5*I+J,0)=""
+ S XMTEXT="ECMSG("
+ D ^XMD
+ K ^TMP($J,"ECXMOVMM")
  Q

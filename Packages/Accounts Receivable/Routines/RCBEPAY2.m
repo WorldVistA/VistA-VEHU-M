@@ -1,11 +1,11 @@
-RCBEPAY2 ;WISC/RFJ-create a payment transaction cont                 ;1 Jun 00
- ;;4.5;Accounts Receivable;**153,162,377**;Mar 20, 1995;Build 45
+RCBEPAY2 ;WISC/RFJ - create a payment transaction cont                 ;1 Jun 00
+ ;;4.5;Accounts Receivable;**153,162,377,389**;Mar 20, 1995;Build 36
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;
  ;
 SET ;  set the transactions and balances (continuation of rcbepay1)
- N COMMENT,DR,RCDATA3,RCLINE,RCREPAMT,RCREPDA,RCTOTAL,RCTYPE,X,RCRPIEN
+ N COMMENT,DR,RCDATA3,RCLINE,RCREPAMT,RCREPDA,RCTOTAL,RCTYPE,X,RCFLG60,RCRPIEN,RPMNTS
  ;
  ;  no payment amount
  S RCTOTAL=$G(RCPAY("PRIN"))+$G(RCPAY("INT"))+$G(RCPAY("ADM"))+$G(RCPAY("MF"))+$G(RCPAY("CC"))
@@ -58,6 +58,8 @@ SET ;  set the transactions and balances (continuation of rcbepay1)
  I +$G(^PRCA(430,RCBILLDA,4)) D
  .S RCRPIEN=$P($G(^PRCA(430,RCBILLDA,4)),U,5)
  .D UPDPAY^RCRPU1(RCRPIEN,RCTRANDA,RCTOTAL)
+ .S RCFLG60=$$GET1^DIQ(340.5,RCRPIEN_",",1.01,"I"),RPMNTS=$$REMPMNTS^RCRPU3(RCRPIEN)  ; PRCA*4.5*389
+ .I RCFLG60,RPMNTS'>57 D UPDRVW^RCRPU2(RCRPIEN,0)  ; if 60 months review flag is set and reamining # of payments is <=57, clear the flag  PRCA*4.5*389
  .Q
  ;
  ;  set 433 transaction with payment amounts

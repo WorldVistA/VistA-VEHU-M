@@ -1,5 +1,5 @@
-ORWOR ; SLC/KCM - Orders Calls ;08/19/11  05:01
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,141,163,187,190,215,243,307,330,280,347,306**;Dec 17, 1997;Build 43
+ORWOR ; SLC/KCM - Orders Calls ;Oct 24,2022@10:47
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,141,163,187,190,215,243,307,330,280,347,306,588**;Dec 17, 1997;Build 29
  ;
 CURRENT(LST,DFN) ; Get Current Orders for a Patient
  ; Returns two lists in ^TMP("ORW",$J), fields and text
@@ -115,6 +115,7 @@ EVENTS(LST,EVT) ; Return general delayed events categories for a patient
  Q
 UNSIGN(LST,ORVP,HAVE)   ; Return Unsigned Orders that are not on client
  N DC,DEL,DG,IFN,ACT,X0,X3,X8,ENT,LVL,TM,ILST,ORELSE,CS,PKG,ORCSPKG,OI
+ N DGIEN
  S ILST=0
  Q:'$D(^XUSEC("ORES",DUZ))&('$D(^XUSEC("ORELSE",DUZ))&'$D(^ORAM(103,+ORVP)))
  S ORVP=ORVP_";DPT("
@@ -131,7 +132,8 @@ UNSIGN(LST,ORVP,HAVE)   ; Return Unsigned Orders that are not on client
  . . . S X0=$G(^OR(100,IFN,0)),X3=$G(^OR(100,IFN,3))
  . . . S X8=$G(^OR(100,IFN,8,ACT,0))
  . . . ;determine Display Group
- . . . S DG=$P($G(^ORD(100.98,$P(X0,U,11),0)),U,2)
+ . . . S DGIEN=$P(X0,U,11)
+ . . . S DG=$P($G(^ORD(100.98,DGIEN,0)),U,2)
  . . . ;determine if DC
  . . . S DC=$S($P(X8,U,2)="DC":1,1:0)
  . . . ;determine if Delay
@@ -150,7 +152,7 @@ UNSIGN(LST,ORVP,HAVE)   ; Return Unsigned Orders that are not on client
  . . . I '$S(LVL=1&($P(X8,U,3)=DUZ):1,ORELSE&($P(X8,U,13)=DUZ):1,LVL=2:1,1:0) Q  ;chk user
  . . . ;if Nurse, and order is already released or held for signature, don't include in list
  . . . I ORELSE,$S((+$P(X8,U,16)>0):1,$D(^OR(100,IFN,5)):1,1:0) Q
- . . . S ILST=ILST+1,LST(ILST)=IFN_";"_ACT_U_$P(X8,U,3)_U_DG_U_DC_U_DEL_U_CS
+ . . . S ILST=ILST+1,LST(ILST)=IFN_";"_ACT_U_$P(X8,U,3)_U_DG_U_DC_U_DEL_U_CS_U_DGIEN
  Q
 PKIUSE(RETURN) ; RPC determines user can use PKI Digital Signature
  N ORPKIU

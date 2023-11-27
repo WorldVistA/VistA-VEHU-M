@@ -1,5 +1,5 @@
 IBCE837I ;EDE/JWS - OUTPUT FOR 837 FHIR TRANSMISSION ;5/23/18 10:48am
- ;;2.0;INTEGRATED BILLING;**623,641,650,665**;23-MAY-18;Build 28
+ ;;2.0;INTEGRATED BILLING;**623,641,650,665,742**;23-MAY-18;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 RES(RES) ;Set resource name correctly
@@ -103,7 +103,8 @@ SETD ; update ^TMP global
  S DONE=1
  D UP
  ;S @DATA1@(CT,":")=DATA_FILE_"-"_FLD_"-"_NAME_"("_X1_")"""  ; includes record # for testing
- S @DATA1@(CT,":")=DATA_FILE_"-"_FLD_$S($$REC(X1):"."_X2,1:"")_"-"_NAME_""""
+ ;JWS;6/20/23;EBILL-3508;IB*2.0*742v13;issue with multiple record counter and workaround record deletions.  Use IBRECCT(XREC) instead of X2 variable
+ S @DATA1@(CT,":")=DATA_FILE_"-"_FLD_$S($$REC(X1):"."_$G(IBRECCT(XREC)),1:"")_"-"_NAME_""""
  D UP
  S @DATA1@(CT,":")="""value"":"""_TASDATA_"""}"
  Q

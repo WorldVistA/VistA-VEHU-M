@@ -1,5 +1,5 @@
 DGPFLMA3 ;ALB/KCL - PRF ASSIGNMENT LM PROTOCOL ACTIONS CONT. ; 6/2/05 3:24pm
- ;;5.3;Registration;**425,623,554,650,864,951**;Aug 13, 1993;Build 135
+ ;;5.3;Registration;**425,623,554,650,864,951,1106**;Aug 13, 1993;Build 1
  ;     Last Edited: SHRPE/SGM - Sep 25, 2018 17:31
  ;NOTES:
  ; 1/23/2018 - with addition of DBRS, when to not complete action
@@ -212,6 +212,7 @@ EF ;Entry point for DGPF EDIT ASSIGNMENT action protocol.
  . ;setup remaining assignment history nodes for filing
  . S DGPFAH("ASSIGNDT")=$$NOW^XLFDT  ;current date/time
  . S DGPFAH("ENTERBY")=DUZ             ;current user
+ . S DGPFAH("ORIGFAC")=+$$SITE^VASITE ;DG 1106 site entering action
  . ;
  . ;calculate the default review date
  . S DGRDAT=$$GETRDT^DGPFAA3($P(DGPFA("FLAG"),U),DGPFAH("ASSIGNDT"))

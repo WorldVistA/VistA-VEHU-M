@@ -1,5 +1,9 @@
 ECXOPRX ;ALB/JAP,BIR/DMA,CML,PTD-Prescription Extract for DSS ;7/18/19  09:40
- ;;3.0;DSS EXTRACTS;**10,11,8,13,24,30,33,38,39,46,49,71,81,84,92,105,112,120,127,136,144,149,154,166,170,174,178,184**;Dec 22, 1997;Build 124
+ ;;3.0;DSS EXTRACTS;**10,11,8,13,24,30,33,38,39,46,49,71,81,84,92,105,112,120,127,136,144,149,154,166,170,174,178,184,187**;Dec 22, 1997;Build 163
+ ;
+ ; Reference to $$DSS^PSNAPIS in ICR #2531
+ ; Reference to DIQ^PSODI  in ICR #4858
+ ; Reference to $$NPI^XUSNPI in ICR #4532
  ;
 BEG ;entry point from option
  D SETUP I ECFILE="" Q
@@ -32,6 +36,7 @@ V6 ;version 6 or better
 STUFF ;get data
  N ECXPHA,DR,DIC,DA,DIQ,ECXASIH,ECXDIQ ;154,170
  N ECXNMPI,ECXCERN,ECXSIGI ;184 - Added new new  fields
+ N ECXDUNIT,ECXPPDU ;187 - Added Dispense Unit and Price Per Dispense Unit
  S ECDATA=$G(^PSRX(ECRX,0)),ECXPHA="" Q:'ECDATA
  I ECRFL S ECDATA1=$G(^PSRX(ECRX,ECREF,ECRFL,0)) I ECDATA1="" Q
  ;ecref set to 1 in extract+5 and v6+1 and to "P" in v6+2
@@ -105,6 +110,7 @@ STUFF ;get data
  S ECXRXREM=$$UP^XLFSTR($$GET1^DIQ(52,ECRX_",",12)) ;174 Get remark field
  S ECXCHOCE=$S(ECXRXREM["CHOICE"!(ECXRXREM["CCNRX"):"C",1:"") ;154,174 If remarks contain "choice" RX is filled by choice program. 174 add "CCNRX"
  I $G(ECXASIH) S ECXA="A" ;170
+ S ECXPPDU=$P(ECXPHA,U,7),ECXDUNIT=$P(ECXPHA,U,8) ;187
  I ECXENC'="" D FILE^ECXOPRX1
  Q
  ;

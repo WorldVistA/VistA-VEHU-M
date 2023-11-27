@@ -1,5 +1,10 @@
 ECXDRUG2 ;ALB/TMD-Pharmacy Extracts Incomplete Feeder Key Report ;5/9/19  17:13
- ;;3.0;DSS EXTRACTS;**40,68,84,105,111,144,174**;Dec 22, 1997;Build 33
+ ;;3.0;DSS EXTRACTS;**40,68,84,105,111,144,174,187**;Dec 22, 1997;Build 163
+ ;
+ ; Reference to ^PSDRUG( in ICR #4846
+ ; Reference to EXTRACT^PSO52EX in ICR #4902
+ ; Reference to $$RJ^XLFSTR in ICR #10104
+ ; Reference to ^TMP($J in SACC 2.3.2.5.1
  ;
 EN ; entry point
  N ECD,LINE,ECDRG,ECQTY,ECPRC
@@ -44,7 +49,7 @@ IVP ; entry point for IVP data
  ..S SA=$S($P(EC,U,8)]"":"A",$P(EC,U,9):"S",1:"")
  ..I SA'="" D
  ...I '$D(^TMP($J,SA,ECDRG)) S ^(ECDRG)=0,$P(^(ECDRG),U,2)=$P(EC,U,12)
- ...S $P(^TMP($J,SA,ECDRG),U)=$P(^TMP($J,SA,ECDRG),U)+$S($P(EC,U,6)=1:1,$P(EC,U,6)=4:0,1:-1)
+ ...S $P(^TMP($J,SA,ECDRG),U)=$P(^TMP($J,SA,ECDRG),U)+$S($P(EC,U,6)=1:1,$P(EC,U,6)=4:-1,1:-1) ;187 Deduct 1 if transaction type is cancel.
  .;looped thru all DAs for this order - now put it together
  .F SA="S","A" S ECDRG="" F  S ECDRG=$O(^TMP($J,SA,ECDRG)) Q:ECDRG=""  D
  ..S ECQTY=$P(^TMP($J,SA,ECDRG),U),ECPRC=$P(^(ECDRG),U,2)

@@ -1,5 +1,5 @@
-GMTSXPD1 ; SLC/KER - Health Summary Dist (Component)     ; 08/27/2002
- ;;2.7;Health Summary;**35,56**;Oct 20, 1995
+GMTSXPD1 ;SLC/KER - Health Summary Dist (Component)     ;Jul 24, 2023@17:26
+ ;;2.7;Health Summary;**35,56,144**;Oct 20, 1995;Build 17
  ;
  ; External References
  ;   DBIA  1023  $$FIRSTUP^VAQUTL50
@@ -13,10 +13,10 @@ GMTSXPD1 ; SLC/KER - Health Summary Dist (Component)     ; 08/27/2002
  ;   DBIA  2056  $$GET1^DIQ (file 200)
  ;   DBIA 10141  BMES^XPDUTL
  ;   DBIA 10141  MES^XPDUTL
- ;                     
+ ;
  Q
 ADD(GMTSINI) ; Add Health Summary Component
- ;                 
+ ;
  ;  ADD(<array>)
  ;     GMTSIEN   GMTSINI(0)     Internal Entry Number File 142.1
  ;     GMTSNAME  GMTSINI(.01)   Component Name
@@ -36,7 +36,7 @@ ADD(GMTSINI) ; Add Health Summary Component
  ;     GMTSPROV  GMTSINI(12)    Provider Narrative Text Applicable
  ;     GMTSPREF  GMTSINI(13)    Prefix
  ;     GMTSCPTM  GMTSINI(14)    CPT Modifiers Applicable
- ;                 
+ ;
  N GMTSENV S GMTSENV=$$ENV Q:'GMTSENV 0
  N GMTSIEN,GMTSNAME,GMTSMNM,GMTSABBR,GMTSTAG,GMTSRTN,GMTSTIML,GMTSOCCL,GMTSSELF
  N GMTSSKEY,GMTSDHDN,GMTSHOSL,GMTSICDT,GMTSPROV,GMTSDAF,GMTSOOM,GMTSINCL,GMTSPREF,GMTSCPTM
@@ -103,32 +103,70 @@ EXT(GMTSINI) ; Extract Routines
  . S GMTSD0=GMTSD0+1,GMTSN="^GMT(142.1,"_GMTSIEN_",.1,"_GMTSD0_",0)",GMTSD=$G(GMTSINI(1.1,GMTSD1)),@GMTSN=GMTSD
  . S GMTSN="^GMT(142.1,"_GMTSIEN_",.1,""B"","""_GMTSD_""","_GMTSD0_")",GMTSD="",@GMTSN=GMTSD
  Q
- ;              
+RENAME(GMTSOLD,GMTSNEW) ; Rename Health Summary Component
+ N GMTSNAME,GMTSABBR,GMTSFDA,GMTSERROR,GMTSMESSAGE,GMTSLINE,Y
+ S GMTSOLD("IEN")=+$G(GMTSOLD("IEN"),0),GMTSOLD("NAME")=$G(GMTSOLD("NAME"))
+ S GMTSOLD("ABBR")=$G(GMTSOLD("ABBR")),GMTSNEW("NAME")=$G(GMTSNEW("NAME"))
+ S GMTSNEW("ABBR")=$G(GMTSNEW("ABBR"))
+ I $P($G(^GMT(142.1,GMTSOLD("IEN"),0)),U,1)=GMTSNEW("NAME") Q 1
+ D INSTE(GMTSOLD("NAME"))
+ I '$D(^GMT(142.1,GMTSOLD("IEN"),0)) D NOTEXIST Q 0
+ I GMTSOLD("NAME")'=$P($G(^GMT(142.1,GMTSOLD("IEN"),0)),U,1) D BNAME Q 0
+ I GMTSOLD("ABBR")'=$P($G(^GMT(142.1,GMTSOLD("IEN"),0)),U,4) D BABBR Q 0
+ S GMTSNAME=$$NAME^GMTSXPD2(GMTSNEW("NAME")) I '$L($G(GMTSNAME)) D NNAME Q 0
+ S GMTSABBR=$$ABBR^GMTSXPD2(GMTSNEW("ABBR")) I '$L($G(GMTSABBR)) D NABBR Q 0
+ S GMTSFDA(142.1,GMTSOLD("IEN")_",",.01)=GMTSNAME
+ S GMTSFDA(142.1,GMTSOLD("IEN")_",",3)=GMTSABBR
+ D FILE^DIE("","GMTSFDA","GMTSERROR")
+ I $D(GMTSERROR) D  Q 0
+ .D MSG^DIALOG("AET",.GMTSMESSAGE,,,"GMTSERROR")
+ .F GMTSLINE=1:1:GMTSMESSAGE  D M(GMTSMESSAGE(GMTSLINE))
+ .D NOTE
+ S GMTSTIML=$$TIML^GMTSXPD2($P($G(^GMT(142.1,GMTSOLD("IEN"),0)),U,3))
+ S GMTSOCCL=$$OCCL^GMTSXPD2($P($G(^GMT(142.1,GMTSOLD("IEN"),0)),U,5))
+ D SCESE,PDX^GMTSXPD5(GMTSNAME,GMTSTIML,GMTSOCCL,"UPDATE")
+ Q 1
+ ;
  ; Messages
 INST ;   Installing Component
  N GMTST S GMTST=" Filing """_$$UP(GMTSMNM)_""" component in Health Summary" D BM(GMTST) Q
+INSTE(GMTSNAME) ; Updating Component
+ D BM(" Updating """_$$UP(GMTSNAME)_""" component in Health Summary") Q
  ;   Reasons to Abort Install
 HSVNF ;     Health Summary Version not found
  N GMTST S GMTST="   Health Summary Version 2.7 not found" D BM(GMTST) Q
 ALRDY ;     Component Already Installed
  N GMTST S GMTST="   Component has already been installed" D M(GMTST) Q
 NNAME ;     No Name
- N GMTST S GMTST="   No or invalid Health Summary Component name" D M(GMTST) D NOTI Q
-NRTN ;     No Routine
+ N GMTST S GMTST="   No or invalid Health Summary Component name" D M(GMTST)
+ I $D(GMTSINI) D NOTI
+ E  D NOTE
+ Q
+NABBR ;     No abbreviation
+ N GMTST S GMTST="   No or invalid Health Summary Component abbreviation" D M(GMTST),NOTE Q
+NRTN ;      No Routine
  N GMTST S GMTST="   No or invalid Health Summary display routine" D M(GMTST) D NOTI Q
-FAILED ;     Failed Installation
+FAILED ;    Failed Installation
  N GMTST S GMTST="   Failed to install component" D M(GMTST) Q
 EXIST ;     DINUMed entry Exist
  N GMTST S GMTST="   Can not add component, DINUM'ed entry already exist" D M(GMTST) Q
-NOTI ;     Not Installed
+NOTEXIST ;  DINUMed entry Does Not Exist
+ N GMTST S GMTST="   DINUM'ed entry does not exist" D M(GMTST),NOTE Q
+BNAME ;     Existing component has wrong name
+ N GMTST S GMTST="   Unexpected Health Summary Component name" D M(GMTST),NOTE Q
+BABBR ;     Existing component has wrong abbreviation
+ N GMTST S GMTST="   Unexpected Health Summary Component abbreviation" D M(GMTST),NOTE Q
+NOTI ;      Not Installed
  N GMTST S GMTST="   Could not install new component" D M(GMTST) Q
+NOTE ;      Not Edited/Updated
+ N GMTST S GMTST="   Could not edit/update component" D M(GMTST) Q
  ;   Success
 SCESS ;     Successfully Installed
  N GMTSD S GMTSD=0 D DISAB Q:+($G(GMTSD))
  N GMTST S GMTST="   Successfully installed new component" D M(GMTST) Q
 SCESE ;     Successfully Edited
  N GMTSD S GMTSD=0 D DISAB Q:+($G(GMTSD))
- N GMTST S GMTST="   Successfully edited/updated component" D M(GMTST) Q
+ N GMTST S GMTST="   Successfully updated component" D M(GMTST) Q
 DISAB ;     Disabled Component
  Q:+($G(GMTSIEN))=0  Q:$P($G(^GMT(142.1,+($G(GMTSIEN)),0)),"^",6)=""
  N GMTSF,GMTSM,GMTST S GMTSF=$P($G(^GMT(142.1,+($G(GMTSIEN)),0)),"^",6)
@@ -137,7 +175,7 @@ DISAB ;     Disabled Component
  S GMTST="   Componet """_$$UP(GMTSMNM)_""" is installed, but "_GMTSF_" disabled" D M(GMTST)
  S GMTST="" S:$L(GMTSM) GMTST="   Out of order message:  """_GMTSM_"""" D:$L(GMTST) M(GMTST)
  Q
- ;                 
+ ;
  ; Other
 ENV(X) ;   Environment check
  D HOME^%ZIS I '$D(^VA(200,+($G(DUZ)),0)) D BM("    User (DUZ) not defined"),M("") Q 0

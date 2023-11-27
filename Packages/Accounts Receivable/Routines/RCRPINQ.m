@@ -1,29 +1,34 @@
 RCRPINQ ;EDE/YMG - REPAYMENT PLAN INQUIRY; 12/10/2020
- ;;4.5;Accounts Receivable;**377,381,388,378**;Mar 20, 1995;Build 54
+ ;;4.5;Accounts Receivable;**377,381,388,378,389**;Mar 20, 1995;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
  ;
 EN ; entry point
- N POP,RPIEN,ZTDESC,ZTRTN,ZTSAVE,ZTSK,%ZIS
- N IOBOFF,IOBON,IORVON,IORVOFF,X,RCDONE
- F  D  Q:RPIEN<0
- .S RPIEN=$$SELRPP^RCRPU1() I RPIEN=-1 Q
- .I "^6^7^8^"[(U_$P($G(^RCRP(340.5,RPIEN,0)),U,7)_U) D
- ..S X="IOBON;IORVON;IOBOFF;IORVOFF" D ENDR^%ZISS
- ..W !!,IOBON,IORVON,$$CJ^XLFSTR("*** WARNING: YOU HAVE SELECTED A CLOSED REPAYMENT PLAN ***",80),IORVOFF,IOBOFF,!!
- ..Q
- .; ask for device
- .K IOP,IO("Q")
- .S %ZIS="MQ",%ZIS("B")="",POP=0 D ^%ZIS Q:POP
- .I $D(IO("Q")) D  Q  ; queued output
- ..S ZTDESC="Repayment Plan Inquiry",ZTRTN="PRINT^RCRPINQ"
- ..S ZTSAVE("RPIEN")="",ZTSAVE("ZTREQ")="@"
- ..D ^%ZTLOAD,HOME^%ZIS
- ..I $G(ZTSK) W !!,"Inquiry output has started with task# ",ZTSK,".",! D PAUSE^RCRPRPU
- ..Q
- .D PRINT
+ N RPIEN
+ F  S RPIEN=$$SELRPP^RCRPU1() D:RPIEN>0 EN1(RPIEN)  Q:RPIEN<0  ; PRCA*4.5*389
+ Q
+ ;
+EN1(RPIEN) ; entry point from repayment plan worklist, skips RPP selection  PRCA*4.5*389
+ ;
+ ; RPIEN - file 340.5 ien
+ ;
+ N POP,ZTDESC,ZTRTN,ZTSAVE,ZTSK,%ZIS
+ N IOBOFF,IOBON,IORVON,IORVOFF,X
+ I "^6^7^8^"[(U_$P($G(^RCRP(340.5,RPIEN,0)),U,7)_U) D
+ .S X="IOBON;IORVON;IOBOFF;IORVOFF" D ENDR^%ZISS
+ .W !!,IOBON,IORVON,$$CJ^XLFSTR("*** WARNING: YOU HAVE SELECTED A CLOSED REPAYMENT PLAN ***",80),IORVOFF,IOBOFF,!!
  .Q
+ ; ask for device
+ K IOP,IO("Q")
+ S %ZIS="MQ",%ZIS("B")="",POP=0 D ^%ZIS Q:POP
+ I $D(IO("Q")) D  Q  ; queued output
+ .S ZTDESC="Repayment Plan Inquiry",ZTRTN="PRINT^RCRPINQ"
+ .S ZTSAVE("RPIEN")="",ZTSAVE("ZTREQ")="@"
+ .D ^%ZTLOAD,HOME^%ZIS
+ .I $G(ZTSK) W !!,"Inquiry output has started with task# ",ZTSK,".",! D PAUSE^RCRPRPU
+ .Q
+ D PRINT
  Q
  ;
 PRINT ; display repayment plan data
@@ -71,19 +76,6 @@ FMTPHONE(PHONE) ; format phone number for display
  I $L(PHONE)=11 S RES=$E(PHONE)_"-"_"("_$E(PHONE,1,3)_")"_$E(PHONE,4,6)_"-"_$E(PHONE,7,10)
  Q RES
  ;
-PMNTS(RPIEN) ; calculate the sum of payments made for a given RPP
- ;
- ; RPIEN - file 340.5 ien
- ;
- ; returns sum of payments in sub-file 340.53
- ;
- N PMDT,PMIEN,RES
- S RES=0
- S PMDT=0 F  S PMDT=$O(^RCRP(340.5,RPIEN,3,"B",PMDT)) Q:'PMDT  D
- .S PMIEN="" F  S PMIEN=+$O(^RCRP(340.5,RPIEN,3,"B",PMDT,PMIEN)) Q:'PMIEN  S RES=RES+$P($G(^RCRP(340.5,RPIEN,3,PMIEN,0)),U,2)
- .Q
- Q RES
- ;
 WRTLN(STR,LN) ; write line
  ;
  ; STR - line to write
@@ -122,8 +114,8 @@ PRTHDR(RPIEN,LN) ; display header
  W !,"Address: ",$P(ADDRSTR,U)," ",$P(ADDRSTR,U,2)," ",$P(ADDRSTR,U,3),", ",$P(ADDRSTR,U,4),", ",$P(ADDRSTR,U,5)," ",$P(ADDRSTR,U,6)
  W !,"Phone: ",$S(DEBPHN>0:$$FMTPHONE^RCRPINQ(DEBPHN),1:"N/A"),!
  W !,"Plan #: ",$P(N0,U),?28,"Status: ",$$EXTERNAL^DILFD(340.5,.07,"",$P(N0,U,7)),?49,"Last status date: ",$$FMTE^XLFDT($P(N0,U,8),"5DZ"),!
- S CBAL=$P(N0,U,11)-$$PMNTS^RCRPINQ(RPIEN),RAMNT=$P(N0,U,6)
- W !,?2,"Current balance: $",$FN(CBAL,"",2),?37,"Number of payments remaining: ",CBAL\RAMNT+$S(CBAL#RAMNT:1,1:0)
+ S CBAL=$$CBAL^RCRPU3(RPIEN,$P(N0,U,11)),RAMNT=$P(N0,U,6)
+ W !,?2,"Current balance: $",$FN(CBAL,"",2),?37,"Number of payments remaining: ",$$REMPMNTS^RCRPU3(RPIEN,RAMNT)
  W !,?1,"Orig amount owed: $",$FN($P(N0,U,13),"",2),?38,"Original number of payments: ",$P(N0,U,14)
  W !,"Total amount owed: $",$FN($P(N0,U,11),"",2),?41,"Total number of payments: ",$P(N0,U,5)
  W !,?1,"Repayment amount: $",$FN(RAMNT,"",2),?47,"Auto-add New Bills: ",$$GET1^DIQ(340.5,RPIEN_",",.12,"E"),!
@@ -260,8 +252,9 @@ PRTAUDT(RPIEN,LN) ; print audit log
  S TMPDT=0 F  S TMPDT=$O(^RCRP(340.5,RPIEN,4,"B",TMPDT)) Q:'TMPDT  D  Q:'LN
  .S TMPIEN="" F  S TMPIEN=+$O(^RCRP(340.5,RPIEN,4,"B",TMPDT,TMPIEN)) Q:'TMPIEN  D  Q:'LN
  ..S TMP=$G(^RCRP(340.5,RPIEN,4,TMPIEN,0)) Q:TMP=""
- ..S RCRSNCD=$P(TMP,U,4),RCRSNTX=$P(TMP,U,5)
- ..S RCRSN=$S(RCRSNCD'="":$$EXTERNAL^DILFD(340.54,3,"",RCRSNCD),1:RCRSNTX)
+ ..S RCRSNCD=$P(TMP,U,6),RCRSNTX=$P(TMP,U,5)  ; PRCA*4.5*389
+ ..S RCRSN="N/A" S:RCRSNCD>0 RCRSN=$P(^RCRP(340.501,RCRSNCD,0),U,2)  ; PRCA*4.5*389
+ ..I RCRSNCD'>0,RCRSNTX'="" S RCRSN=RCRSNTX  ; PRCA*4.5*389
  ..S LN=$$WRTLN($$LJ^XLFSTR($$FMTE^XLFDT($P(TMP,U),"5DZ"),12)_$$LJ^XLFSTR($E($$EXTERNAL^DILFD(340.54,2,"",$P(TMP,U,3)),1,30),28)_$$LJ^XLFSTR($$EXTERNAL^DILFD(340.54,1,"",$P(TMP,U,2)),13)_RCRSN,LN)
  ..Q
  .Q

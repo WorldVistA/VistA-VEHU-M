@@ -1,0 +1,201 @@
+GMTSP144 ;ISP/RFR - Post Install GMTS*2.7*144 ;Jul 26, 2023@14:16
+ ;;2.7;Health Summary;**144**;Oct 20, 1995;Build 17
+ Q
+POST ;POST-INSTALL ITEMS
+ D CI
+ N GMTSTYS,GMTSTI,GMTSINST
+ S GMTSTYS="TYPEPRO;TYPEGEN;TYPESO;OBJPRO;OBJGEN;OBJSO"
+ F GMTSTI=1:1 Q:'$L($P(GMTSTYS,";",GMTSTI))  D  Q:'$G(GMTSINST)
+ .S GMTSINST=$$INSDATA^GMTSXPD6($P(GMTSTYS,";",GMTSTI),"GMTSP144")
+ Q
+CI ; Component Install/Update
+ N GMTSIN,GMTSLIM,GMTSINST,GMTSTL,GMTSINST,GMTSTOT,GMTSBLD,GMTSCPS,GMTSCP
+ N GMTSCI
+ S GMTSCPS="DEMP;DEMG"
+ F GMTSCI=1:1 Q:'$L($P(GMTSCPS,";",GMTSCI))  D
+ . S GMTSCP=$P(GMTSCPS,";",GMTSCI) K GMTSIN
+ . D ARRAY Q:'$D(GMTSIN)
+ . I $L($G(GMTSIN("TIM"))),+($G(GMTSIN(0)))>0 S GMTSLIM(+($G(GMTSIN(0))),"TIM")=$G(GMTSIN("TIM"))
+ . I $L($G(GMTSIN("OCC"))),+($G(GMTSIN(0)))>0 S GMTSLIM(+($G(GMTSIN(0))),"OCC")=$G(GMTSIN("OCC"))
+ . S GMTSINST=$$ADD^GMTSXPD1(.GMTSIN),GMTSTOT=+($G(GMTSTOT))+($G(GMTSINST))
+ N GMTSO,GMTSN,GMTSNAMES,GMTSNAME
+ S GMTSO("IEN")=272
+ S GMTSNAMES("MAS DEMOGRAPHICS OTHER")="CDEM"
+ S GMTSNAMES("MAS DEM. SEXUAL ORIENTATION")="DEMS"
+ S GMTSN("NAME")="MAS DEM SEXUAL ORIENTATION",GMTSN("ABBR")="DEMS"
+ S GMTSNAME="" F  S GMTSNAME=$O(GMTSNAMES(GMTSNAME)) Q:GMTSNAME=""  D
+ .I GMTSNAME'=$P($G(^GMT(142.1,GMTSO("IEN"),0)),U,1) Q
+ .S GMTSO("NAME")=GMTSNAME,GMTSO("ABBR")=GMTSNAMES(GMTSNAME)
+ .S GMTSINST=$$RENAME^GMTSXPD1(.GMTSO,.GMTSN)
+ N GMTSFDA,GMTSERROR,GMTSMESSAGE,GMTSLINE
+ D BMES^XPDUTL(" Adding DEFAULT HEADER value to "_GMTSN("NAME")_"...")
+ S GMTSFDA(142.1,GMTSO("IEN")_",",9)="Sexual Orientation"
+ D FILE^DIE("E","GMTSFDA","GMTSERROR")
+ I $D(GMTSERROR) D
+ .D MSG^DIALOG("WE",.GMTSMESSAGE,($G(IOM,80)-7),,"GMTSERROR")
+ .D MES^XPDUTL("   Error:")
+ .F GMTSLINE=1:1:GMTSMESSAGE  D
+ ..D MES^XPDUTL("   "_GMTSMESSAGE(GMTSLINE))
+ I '$D(GMTSERROR) D MES^XPDUTL("   Successfully updated the value")
+ ; Rebuild Ad Hoc Health Summary Type
+ D:+($G(GMTSTOT))>0 BUILD^GMTSXPD3
+ D LIM
+ I +$$ROK("GMTSXPS1")>0 D
+ . N GMTSHORT S GMTSHORT=1,GMTSINST="",GMTSBLD="GMTS*2.7*144" D SEND^GMTSXPS1
+ Q
+ARRAY ; Build Array
+ K GMTSIN N GMTSI,GMTSTXT,GMTSEX,GMTSFLD,GMTSUB,GMTSVAL,GMTSPDX S GMTSPDX=1,GMTSCP=$G(GMTSCP) Q:'$L(GMTSCP)
+ F GMTSI=1:1 D  Q:'$L(GMTSTXT)
+ . S GMTSTXT="",GMTSEX="S GMTSTXT=$T("_GMTSCP_"+"_GMTSI_")" X GMTSEX S:$L(GMTSTXT,";")'>3 GMTSTXT="" Q:'$L(GMTSTXT)
+ . S GMTSFLD=$P(GMTSTXT,";",2),GMTSUB=$P(GMTSTXT,";",3),GMTSVAL=$P(GMTSTXT,";",4)
+ . S:$E(GMTSFLD,1)=1&(+GMTSFLD<2) GMTSVAL=$P(GMTSTXT,";",4,5)
+ . S:$E(GMTSFLD,1)=" "!('$L(GMTSFLD)) GMTSTXT="" Q:GMTSTXT=""
+ . S:$L(GMTSFLD)&('$L(GMTSUB)) GMTSIN(GMTSFLD)=GMTSVAL Q:$L(GMTSFLD)&('$L(GMTSUB))  S:$L(GMTSFLD)&($L(GMTSUB)) GMTSIN(GMTSFLD,GMTSUB)=GMTSVAL
+ . S:$G(GMTSFLD)=7&(+($G(GMTSUB))>0) GMTSPDX=0
+ K:+($G(GMTSPDX))=0 GMTSIN("PDX")
+ Q
+LIM ; Limits
+ N GMTSI,GMTST,GMTSO,GMTSA S GMTSI=0 F  S GMTSI=$O(GMTSLIM(GMTSI)) Q:+GMTSI=0  D
+ . S GMTSA=$P($G(^GMT(142.1,+($G(GMTSI)),0)),"^",3),GMTST=$G(GMTSLIM(+GMTSI,"TIM")) S:'$L(GMTST) GMTST=$S(GMTSA="Y ":"1Y ",1:"")
+ . S GMTSA=$P($G(^GMT(142.1,+($G(GMTSI)),0)),"^",5),GMTSO=$G(GMTSLIM(+GMTSI,"OCC")) S:'$L(GMTSO) GMTSO=$S(GMTSA="Y ":"10 ",1:"")
+ . D TO^GMTSXPD3(GMTSI,GMTST,GMTSO)
+ Q
+ROK(X) ; Routine OK
+ S X=$G(X) Q:'$L(X) 0 N GMTSEX,GMTSTXT S GMTSEX="S GMTSTXT=$T(+1^"_X_")" X GMTSEX
+ Q:'$L(GMTSTXT) 0  Q 1
+ ;                
+DEMP ; Pronoun(s) Component Data
+ ;0;;273
+ ;.01;;MAS DEMOGRAPHICS PRONOUNS
+ ;1;;PRONOUN;GMTSDEMC
+ ;1.1;;1
+ ;1.1;1;
+ ;2;;
+ ;3;;DEMP
+ ;3.5;;1
+ ;3.5;1;This component displays a patient's pronouns.
+ ;4;;
+ ;5;;
+ ;6;;
+ ;7;;0
+ ;8;;
+ ;9;;Pronoun(s)
+ ;10;;
+ ;11;;
+ ;12;;
+ ;13;;VA
+ ;14;;
+ ;PDX;;1
+ ;
+ Q
+ ;
+DEMG ; Gender Identity Component Data
+ ;0;;274
+ ;.01;;MAS DEMOGRAPHICS GENDER ID
+ ;1;;SIGI;GMTSDEMC
+ ;1.1;;1
+ ;1.1;1;
+ ;2;;
+ ;3;;DEMG
+ ;3.5;;1
+ ;3.5;1;This component displays a patient's self-identified gender identity.
+ ;4;;
+ ;5;;
+ ;6;;
+ ;7;;0
+ ;8;;
+ ;9;;Gender Identity
+ ;10;;
+ ;11;;
+ ;12;;
+ ;13;;VA
+ ;14;;
+ ;PDX;;1
+ ;
+ Q
+ ;
+TYPEPRO ;Pronouns Type Data
+ ;;142;.01;VA-MAS DEM PRONOUNS
+ ;;142;.08;no
+ ;;142.01;.01;5
+ ;;142.01;1;MAS DEMOGRAPHICS PRONOUNS
+ ;;142.01;5;Pronoun(s)
+ ;;
+ Q
+ ;
+TYPEGEN ;Gender Identity Type Data
+ ;;142;.01;VA-MAS DEM GENDER IDENTITY
+ ;;142;.08;no
+ ;;142.01;.01;5
+ ;;142.01;1;MAS DEMOGRAPHICS GENDER ID
+ ;;142.01;5;Gender Identity
+ ;;
+ Q
+ ;
+TYPESO ;Sexual Orientation Type Data
+ ;;142;.01;VA-MAS DEM SEXUAL ORIENTATION
+ ;;142;.08;no
+ ;;142.01;.01;5
+ ;;142.01;1;MAS DEM SEXUAL ORIENTATION
+ ;;142.01;5;Sexual Orientation
+ ;;
+ Q
+ ;
+OBJPRO ;Pronouns Object Data
+ ;;142.5;.01;VA-MAS DEM PRONOUNS (TIU)
+ ;;142.5;.03;VA-MAS DEM PRONOUNS
+ ;;142.5;.05;NO
+ ;;142.5;.06;YES
+ ;;142.5;.07;NO
+ ;;142.5;.08;NO
+ ;;142.5;.09;NO
+ ;;142.5;.1;NO
+ ;;142.5;.11;NO
+ ;;142.5;.12;NO
+ ;;142.5;.13;NO
+ ;;142.5;.14;NO
+ ;;142.5;.15;NO
+ ;;142.5;.16;NO
+ ;;142.5;1;This object displays the patient's preferred pronoun(s).
+ ;;
+ Q
+ ;
+OBJGEN ;Gender Identity Object Data
+ ;;142.5;.01;VA-MAS DEM GENDER IDENTITY (TIU)
+ ;;142.5;.03;VA-MAS DEM GENDER IDENTITY
+ ;;142.5;.05;NO
+ ;;142.5;.06;YES
+ ;;142.5;.07;NO
+ ;;142.5;.08;NO
+ ;;142.5;.09;NO
+ ;;142.5;.1;NO
+ ;;142.5;.11;NO
+ ;;142.5;.12;NO
+ ;;142.5;.13;NO
+ ;;142.5;.14;NO
+ ;;142.5;.15;NO
+ ;;142.5;.16;NO
+ ;;142.5;1;This object displays the patient's self-identified gender identity.
+ ;;
+ Q
+ ;
+OBJSO ;Sexual Orientation Object Data
+ ;;142.5;.01;VA-MAS DEM SEXUAL ORIENTATION (TIU)
+ ;;142.5;.03;VA-MAS DEM SEXUAL ORIENTATION
+ ;;142.5;.05;NO
+ ;;142.5;.06;YES
+ ;;142.5;.07;NO
+ ;;142.5;.08;NO
+ ;;142.5;.09;NO
+ ;;142.5;.1;NO
+ ;;142.5;.11;NO
+ ;;142.5;.12;NO
+ ;;142.5;.13;NO
+ ;;142.5;.14;NO
+ ;;142.5;.15;NO
+ ;;142.5;.16;NO
+ ;;142.5;1;This object displays the patient's current and historical sexual 
+ ;;142.5;1;orientations.
+ ;;
+ Q
+ ;

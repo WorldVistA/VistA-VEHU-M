@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: REMINDER COMPUTED FINDINGS
 ZWR
-^PXRMD(811.4,0)="REMINDER COMPUTED FINDINGS^811.4OI^88^89"
+^PXRMD(811.4,0)="REMINDER COMPUTED FINDINGS^811.4OI^27^90"
 ^PXRMD(811.4,1,0)="VA-BMI^PXRMBMI^BMI^VA-Body Mass Index^M"
 ^PXRMD(811.4,1,1,0)="^^16^16^3091124"
 ^PXRMD(811.4,1,1,1,0)="The VA-BMI computed finding calculates the patient's body mass index. The"
@@ -847,6 +847,11 @@ ZWR
 ^PXRMD(811.4,26,110,1,1,0)="^^1^1^3050310"
 ^PXRMD(811.4,26,110,1,1,1,0)="Exchange Install"
 ^PXRMD(811.4,26,110,"B",3050310.08301,1)=""
+^PXRMD(811.4,27,0)="VA-CPRS WRITE ACCESS^PXRMEHR^CUTOVER^CPRS Write Access Functionality^M"
+^PXRMD(811.4,27,1,0)="^811.41^2^2^3230425^^"
+^PXRMD(811.4,27,1,1,0)="This computed finding returns the signed in user write access permission "
+^PXRMD(811.4,27,1,2,0)="for CPRS actions."
+^PXRMD(811.4,27,100)="N"
 ^PXRMD(811.4,28,0)="VA-SMART PATIENT HAS ALERT^PXRMCALT^ALERT^Smart Alert^M"
 ^PXRMD(811.4,28,1,0)="^^8^8^3170430^"
 ^PXRMD(811.4,28,1,1,0)="This computed finding will return true if the patient and provider have an"
@@ -2267,6 +2272,7 @@ ZWR
 ^PXRMD(811.4,"B","VA-CASCADE INDEX",43)=""
 ^PXRMD(811.4,"B","VA-COMBAT SERVICE",54)=""
 ^PXRMD(811.4,"B","VA-COMBAT VET ELIGIBILITY",49)=""
+^PXRMD(811.4,"B","VA-CPRS WRITE ACCESS",27)=""
 ^PXRMD(811.4,"B","VA-CURRENT INPATIENTS",48)=""
 ^PXRMD(811.4,"B","VA-DATE FOR AGE",61)=""
 ^PXRMD(811.4,"B","VA-DATE OF BIRTH",2)=""

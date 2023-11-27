@@ -1,5 +1,5 @@
-ORWDX2 ;SLC/JM/AGP - Order dialog utilities ;Oct 12, 2021@10:22:16
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**246,243,280,331,405**;Dec 17, 1997;Build 212
+ORWDX2 ;SLC/JM/AGP - Order dialog utilities ; Apr 20, 2023@17:49
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**246,243,280,331,405,588**;Dec 17, 1997;Build 29
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;Reference to $$DOSE^PSSORUTE supported by IA #4555
@@ -113,6 +113,8 @@ DCREASON(LST)   ; Return a list of DC reasons
  . I $P(X,U,4) Q                              ; inactive
  . I $P(X,U,5)'=+$O(^DIC(9.4,"C","OR",0)) Q   ; not OR pkg
  . I $P(X,U,7)=+$O(^ORD(100.02,"C","A",0)) Q  ; nature=auto
+ . I $P(X,U)="EHRM TRANSITIONED UTILITY" Q
+ . I $P(X,U)="EHRM TRANSITIONED",'$$ONEHR^ORACCESS() Q
  . S ARRAY($P(X,U))="i"_IEN_U_$P(X,U)
  D GETLST^XPAR(.SEQARR,"SYS","OR DC REASON LIST","Q",.ERROR)
  ;S CNT=0 F  S CNT=$O(SEQARR(CNT)) Q:CNT'>0  D

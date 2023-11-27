@@ -1,5 +1,5 @@
-DGRP7 ;ALB/MRL,CKN,ERC,RN,JAM - REGISTRATION SCREEN 7/ELIGIBILITY INFORMATION ; 7/25/06 12:06pm
- ;;5.3;Registration;**528,653,688,842,952,977,1016,1061,1075,1082**;Aug 13, 1993;Build 29
+DGRP7 ;ALB/MRL,CKN,ERC,RN,JAM,JDB - REGISTRATION SCREEN 7/ELIGIBILITY INFORMATION ; 7/25/06 12:06pm
+ ;;5.3;Registration;**528,653,688,842,952,977,1016,1061,1075,1082,1098**;Aug 13, 1993;Build 13
  ;
  N DGCASH,DGMBCK,DGEMHCNVT,DGPRVSPE
  ;DG*5.3*952 add .55 into DRPG array
@@ -13,7 +13,9 @@ DGRP7 ;ALB/MRL,CKN,ERC,RN,JAM - REGISTRATION SCREEN 7/ELIGIBILITY INFORMATION ; 
  W !?9,"Rated Incomp.: " S X=$$YN2^DG1010P0(DGRP(.29),12) W X D:X["Y"
  .W "   Date (CIVIL): ",$$DATENP^DG1010P0(DGRP(.29),2)
  .W "    Date (VA): ",$$DATENP^DG1010P0(DGRP(.29),1)
- S DGRPX=DGRP(.31) W !?10,"Claim Number: ",$S($P(DGRPX,"^",3)]"":$P(DGRPX,"^",3),1:DGRPU),!?11,"Folder Loc.: ",$$POINT^DG1010P0(DGRP(.31),4,4)
+ ;DG*5.3*1098 display Claim Number and Folder Loc. only when one or both are valued
+ ;S DGRPX=DGRP(.31) W !?10,"Claim Number: ",$S($P(DGRPX,"^",3)]"":$P(DGRPX,"^",3),1:DGRPU),!?11,"Folder Loc.: ",$$POINT^DG1010P0(DGRP(.31),4,4)
+ S DGRPX=DGRP(.31) I ($P(DGRPX,"^",3)]"")!($P(DGRPX,"^",4)]"") W !?10,"Claim Number: ",$S($P(DGRPX,"^",3)]"":$P(DGRPX,"^",3),1:DGRPU),!?11,"Folder Loc.: ",$$POINT^DG1010P0(DGRP(.31),4,4)
  S Z=2 D WW^DGRPV ;monetary benefits section
  ; Patch D*5.3*1075 - for the next 3 fields, if value is UNANSWERED, change it to NO for Non-Veteran
  ;W "   Aid & Attendance: " S Z=$$YN2^DG1010P0(DGRP(.362),12) D MBCK S Z1=31 D WW1^DGRPV

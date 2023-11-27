@@ -1,5 +1,5 @@
-GMTSXPD5 ; SLC/KER - Health Summary Dist (PDX)           ; 08/27/2002
- ;;2.7;Health Summary;**35,56**;Oct 20, 1995
+GMTSXPD5 ;SLC/KER - Health Summary Dist (PDX) ;Jun 05, 2023@17:01
+ ;;2.7;Health Summary;**35,56,144**;Oct 20, 1995;Build 17
  ;
  ; External References
  ;   DBIA  1023  $$FIRSTUP^VAQUTL50
@@ -11,24 +11,29 @@ GMTSXPD5 ; SLC/KER - Health Summary Dist (PDX)           ; 08/27/2002
  ;   DBIA 10141  MES^XPDUTL
  ;                     
  Q
-PDX(GMTSCOMP,GMTSTIM,GMTSOCC) ; Install PDX Data Segment
+PDX(GMTSCOMP,GMTSTIM,GMTSOCC,GMTSACT) ; Install PDX Data Segment
  ;                    
  ;  PDX( )
  ;          GMTSCOMP   Component Name (.01 of 142.1)
  ;          GMTSTIM    Time Limits Applicable
  ;          GMTSOCC    Occurrence Limits Applicable
+ ;          GMTSACT    Action to perform; INSTALL (default) or UPDATE
  ;               
  N GMTSENV S GMTSENV=$$ENV Q:'GMTSENV  N GMTSNAME,GMTSERR,GMTS Q:'$L(GMTSCOMP)
- S (GMTS,GMTSERR)="",GMTSTIM=$G(GMTSTIM),GMTSOCC=$G(GMTSOCC),GMTSNAME=$$FIRSTUP^VAQUTL50(GMTSCOMP)
+ S (GMTS,GMTSERR)="",GMTSTIM=$G(GMTSTIM),GMTSOCC=$G(GMTSOCC),GMTSACT=$G(GMTSACT,"INSTALL")
+ S GMTSNAME=$$FIRSTUP^VAQUTL50(GMTSCOMP)
  D INSP S GMTS=+$O(^GMT(142.1,"B",GMTSCOMP,0)) I ('GMTS) D NOPDX Q
- S GMTSERR=$$ADDSEG^VAQUTL50(GMTS,GMTSTIM,GMTSOCC)
+ I GMTSACT="INSTALL" S GMTSERR=$$ADDSEG^VAQUTL50(GMTS,GMTSTIM,GMTSOCC)
+ I GMTSACT="UPDATE" S GMTSERR=$$UPDSEG^VAQUTL50(GMTS,GMTSTIM,GMTSOCC)
  I (GMTSERR<0) D PDXER Q
  D PDXOK Q
  ;                    
  ; PDX Messages
 INSP ;   Installing PDX Segment
- N GMTST
- S GMTST=" Adding """_$$UP(GMTSNAME)_""" component to the PDX package" D BM(GMTST) Q
+ N GMTST,GMTSA,GMTSG
+ I GMTSACT="UPDATE" S GMTSA=" Updating",GMTSG="in"
+ E  S GMTSA=" Adding",GMTSG="to"
+ S GMTST=GMTSA_" """_$$UP(GMTSNAME)_""" component "_GMTSG_" the PDX package" D BM(GMTST) Q
 NOPDX ;   No PDX Segment Installed
  N GMTST
  S GMTST="   Component not found in Health Summary" D M(GMTST)
@@ -38,8 +43,9 @@ PDXER ;   Error filing PDX Segment
  S GMTST=$P($G(GMTSERR),"^",2) Q:'$L(GMTST)
  S GMTST="   "_GMTST D M(GMTST),M("") Q
 PDXOK ;   PDX Segment filled ok
- N GMTST
- S GMTST="   Component successfully added" D M(GMTST),M("") Q
+ N GMTST,GMTSA
+ S GMTSA=$S(GMTSACT="UPDATE":"updated",1:"added")
+ S GMTST="   Component successfully "_GMTSA D M(GMTST),M("") Q
  ;                    
  ; Misc
 ENV(X) ;   Environment check

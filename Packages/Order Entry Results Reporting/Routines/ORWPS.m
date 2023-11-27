@@ -1,5 +1,5 @@
-ORWPS ;SLC/KCM,JLI,REV,CLA - MEDS TAB ;Dec 06, 2021@15:47
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,132,141,173,203,190,195,265,275,243,280,350,498,405**;Dec 17, 1997;Build 212
+ORWPS ;SLC/KCM,JLI,REV,CLA - MEDS TAB ; May 15, 2023@16:02
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,132,141,173,203,190,195,265,275,243,280,350,498,405,588**;Dec 17, 1997;Build 29
  ;;Per VHA Directive 6402, this routine should not be modified.
 COVER(LST,DFN,FILTER) ; retrieve meds for cover sheet
  S FILTER=$G(FILTER,0)
@@ -24,7 +24,10 @@ DT(X) ; -- Returns FM date for X
  N Y,%DT S %DT="T",Y="" D:X'="" ^%DT
  Q Y
  ;
-ACTIVE(LST,DFN,USER,VIEW,UPDATE) ; retrieve active inpatient & outpatient meds
+ACTIVE(LST,DFN,USER,VIEW,UPDATE,ADDINFO) ; retrieve active inpatient & outpatient meds
+ ; ADDINFO adds additional pieces of data to the first line of each medication.
+ ; ADDINFO Value  Piece  Data
+ ;  1 or higher    20    Display Group IEN
  K ^TMP("PS",$J)
  K ^TMP("ORACT",$J)
  N BEG,DATE,END,ERROR,CTX,STVIEW,CTXOUT,CTXIN,BEGIN,ENDIN,BEGOUT,ENDOUT,DATEIN,DATEOUT,ORX
@@ -73,14 +76,14 @@ ACTIVE(LST,DFN,USER,VIEW,UPDATE) ; retrieve active inpatient & outpatient meds
  . I ENDOUT'>0 S DATEOUT=$$FMTE^XLFDT(ORX,1)_" and Later "
  . S LST(0)=LST(0)_DATE_U_DATEIN_U_DATEOUT
  D OCL^PSOORRL(DFN,BEGOUT,ENDOUT,VIEW,BEGIN,ENDIN)
- N ITMP,FIELDS,INSTRUCT,COMMENTS,REASON,NVSDT,TYPE,ILST,J
+ N ITMP,FIELDS,INSTRUCT,COMMENTS,REASON,NVSDT,TYPE,ILST,J,ORIFN
  S ILST=0,ITMP=""
  F  S ITMP=$O(^TMP("PS",$J,ITMP)) Q:'ITMP  D
  . K INSTRUCT,COMMENTS,REASON
  . K ^TMP("ORACT",$J,"COMMENTS")
  . S COMMENTS="^TMP(""ORACT"",$J,""COMMENTS"")"
- . S (INSTRUCT,@COMMENTS)="",FIELDS=^TMP("PS",$J,ITMP,0)
- . I +$P(FIELDS,"^",8),$D(^OR(100,+$P(FIELDS,"^",8),8,"C","XX")) D
+ . S (INSTRUCT,@COMMENTS)="",FIELDS=^TMP("PS",$J,ITMP,0),ORIFN=+$P(FIELDS,U,8)
+ . I ORIFN,$D(^OR(100,ORIFN,8,"C","XX")) D
  .. S $P(^TMP("PS",$J,ITMP,0),"^",2)="*"_$P(^TMP("PS",$J,ITMP,0),"^",2)
  . S TYPE=$S($P($P(FIELDS,U),";",2)="O":"OP",1:"UD")
  . I $D(^TMP("PS",$J,ITMP,"CLINIC",0)) S TYPE="CP"
@@ -93,7 +96,7 @@ ACTIVE(LST,DFN,USER,VIEW,UPDATE) ; retrieve active inpatient & outpatient meds
  . I (TYPE="UD")!(TYPE="CP") D UDINST(.INSTRUCT,ITMP)
  . I TYPE="OP" D
  . . D OPINST(.INSTRUCT,ITMP)
- . . D TITR(.INSTRUCT,+$P(FIELDS,"^",8))
+ . . D TITR(.INSTRUCT,ORIFN)
  . I TYPE="IV" D IVINST(.INSTRUCT,ITMP)
  . I TYPE="NV" D NVINST(.INSTRUCT,ITMP),NVREASON(.REASON,.NVSDT,ITMP)
  . I (TYPE="UD")!(TYPE="IV")!(TYPE="NV")!(TYPE="CP") D SETMULT(COMMENTS,ITMP,"SIO")
@@ -102,6 +105,9 @@ ACTIVE(LST,DFN,USER,VIEW,UPDATE) ; retrieve active inpatient & outpatient meds
  . S:TYPE="NV" $P(FIELDS,U,4)=$G(NVSDT)
  . I LOC S LST($$NXT)="~CP:"_LOCEX_U_FIELDS
  . E  S LST($$NXT)="~"_TYPE_U_FIELDS
+ . I +$G(ADDINFO)>0 D
+ . . I ADDINFO'<1 S $P(LST(ILST),U,20)=$P($G(^OR(100,ORIFN,0)),U,11)
+ . . ; I ADDINFO'<2 S $P(LST(ILST),U,21)=???    For future use...
  . S J=0 F  S J=$O(INSTRUCT(J)) Q:'J  S LST($$NXT)=INSTRUCT(J)
  . S J=0 F  S J=$O(COMMENTS(J)) Q:'J  S LST($$NXT)="t"_COMMENTS(J)
  . S J=0 F  S J=$O(REASON(J)) Q:'J  S LST($$NXT)="t"_REASON(J)

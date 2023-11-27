@@ -1,5 +1,5 @@
-DIAU ;SFISC/XAK-AUDIT OPTIONS ;19MAY2015
- ;;22.2;VA FileMan;;Jan 05, 2016;Build 42
+DIAU ;SFISC/XAK-AUDIT OPTIONS ; Apr 13, 2023@09:19:21
+ ;;22.2;VA FileMan;**25**;Jan 05, 2016;Build 6
  ;;Per VA Directive 6402, this routine should not be modified.
  ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
  ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
@@ -120,7 +120,12 @@ DANGLE(DIA) ;CLEAN DANGLERS
  I $P(Y(0),U,2) S DA(1)=+$P(Y(0),U,2),DIC="^DD("_DA(1)_"," G 52
  K DIC,DIR S DDA=+Y S:$D(^("AUDIT")) DIR("B")=^("AUDIT")
  S DIR(0)="0,1.1" D ^DIR I $D(DIRUT) Q:X'="@"  S Y="n"
- D TURNON^DIAUTL(DA(1),DDA,Y) I $D(DIRUT) K ^DD(DA(1),DDA,"AUDIT")
+ D TURNON^DIAUTL(DA(1),DDA,Y) I $D(DIRUT) K ^DD(DA(1),DDA,"AUDIT"),^("AX")
+ I $G(^DD(DA(1),DDA,"AUDIT"))]"" S X=^("AUDIT") D  ;p25 allow editing of AUDIT CONDITION
+ . I X="n" K ^DD(DA(1),DDA,"AX") Q
+ . K DIR S:$D(^DD(DA(1),DDA,"AX")) DIR("B")=^("AX")
+ . S DIR(0)="0,1.2" D ^DIR I $D(DIRUT)!(X="@") K ^DD(DA(1),DDA,"AX") Q
+ . S ^DD(DA(1),DDA,"AX")=X
  W !! G 51
  ;
 ALL S DIR(0)="Y",DIR("B")="NO"

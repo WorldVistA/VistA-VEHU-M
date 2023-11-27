@@ -1,5 +1,5 @@
-FHCTF5 ; HIOFO/REL/FAI - Check Inpatients for Monitors ;08/29/06  14:43
- ;;5.5;Dietetics;**4,8,20**;Jan 28, 2005;Build 7
+FHCTF5 ; HIOFO/REL/FAI - Check Inpatients for Monitors ;Jan 04, 2023@08:31:34
+ ;;5.5;DIETETICS;**4,8,20,55**;Jan 28, 2005;Build 7
  ;3/14/07 - patch 8 adds the nutrition assessment alert.
  ;12/29/09 - patch 20 adds support for CLINICIAN(S) field (#112) in NUTRITION
  ;           LOCATION file (#119.6) and bug fixes, refer to patch documentation 
@@ -129,11 +129,12 @@ FIL ; File Monitor
  . D FILE^FHCTF2 ;File tickler record
  ;Check to determine if monitor tickler alerts are enabled.
  ;If enabled, send tickler alert
- I (MONTX["BMI"),($P($G(^FH(119.6,WRD,1)),"^",5)="Y") D ALRT Q
- I (MONTX["Tubefeed"),($P($G(^FH(119.6,WRD,1)),"^",6)="Y") D ALRT Q
- I (MONTX["Hyperals"),($P($G(^FH(119.6,WRD,1)),"^",7)="Y") D ALRT Q
- I (MONTX["Albumin"),($P($G(^FH(119.6,WRD,1)),"^",8)="Y") D ALRT Q
- I (MONTX["NPO+Clr"),($P($G(^FH(119.6,WRD,1)),"^",9)="Y") D ALRT Q
+ ;PATCH 55 set a different code for each alert
+ I (MONTX["BMI"),($P($G(^FH(119.6,WRD,1)),"^",5)="Y") S FHCODE=3 D ALRT Q
+ I (MONTX["Tubefeed"),($P($G(^FH(119.6,WRD,1)),"^",6)="Y") S FHCODE=4 D ALRT Q
+ I (MONTX["Hyperals"),($P($G(^FH(119.6,WRD,1)),"^",7)="Y") S FHCODE=5 D ALRT Q
+ I (MONTX["Albumin"),($P($G(^FH(119.6,WRD,1)),"^",8)="Y") S FHCODE=6 D ALRT Q
+ I (MONTX["NPO+Clr"),($P($G(^FH(119.6,WRD,1)),"^",9)="Y") S FHCODE=7 D ALRT Q
  Q
  ;
 ALRT ;Send alerts
@@ -142,9 +143,10 @@ ALRT ;Send alerts
  . S FHDUZ=$P($G(^FH(119.6,WRD,2,A,0)),U,1)
  . I FHDUZ="" Q
  . S FHCLIN=$P($$GET1^DIQ(200,FHDUZ_",",.01),",")
- . S XQAID="FH,"_$J_","_$H
+ . ;S XQAID="FH,"_$J_","_$TR($H,",")
+ . S XQAID="FH,"_DFN_","_FHCODE ;p55
  . S XQA(FHDUZ)=""
- . S XQAOPT="FHCTF2"
+ . ;S XQAOPT="FHCTF2" p55
  . S XQAMSG=$E($P(FHPTNM,","),1,9)_" ("_$E(FHPTNM,1,1)_$P(FHSSN,"-",3)_"): "
  . S XQAMSG=XQAMSG_"  "_MONTX_" "_$E(DTE,4,5)_"/"_$E(DTE,6,7)_"/"_$E(DTE,2,3)_"    Clinician: "_$G(FHCLIN)
  . D SETUP^XQALERT

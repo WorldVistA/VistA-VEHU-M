@@ -1,16 +1,47 @@
 RCRPU1 ;EDE/SAB - REPAYMENT PLAN UTILITIES;12/11/2020  8:40 AM
- ;;4.5;Accounts Receivable;**377,381,378**;Mar 20, 1995;Build 54
+ ;;4.5;Accounts Receivable;**377,381,378,389,423**;Mar 20, 1995;Build 8
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
  ;
-UPDTERMS(RCRPIEN,RCPLNS,RCRVW) ; Update the terms of the plan.
+UPDTERMS(RCRPIEN,RCPLNS,RCRVW) ; Update the terms of the plan.  PRCA*4.5*389
  ;
  N DR,DIE,DA,X,Y
- S DR=".05////"_$P(RCPLNS,U,2)_";.06////"_+RCPLNS
+ N FLG36,FLG60,N1,PMNTS,RPMNTS
+ S N1=$G(^RCRP(340.5,RCRPIEN,1))
+ S FLG36=$P(N1,U,6)  ; 36 months review flag
+ S FLG60=$P(N1,U)  ; 60 months review flag
+ S PMNTS=+$P(RCPLNS,U,2)
+ S DR=".05////"_PMNTS_";.06////"_+RCPLNS
  S:$G(RCRVW) DR=DR_";1.01////1"
  S DIE="^RCRP(340.5,",DA=RCRPIEN
  D ^DIE
+ S RPMNTS=$$REMPMNTS^RCRPU3(RCRPIEN,+RCPLNS) D CHKFLGS(RCRPIEN,RPMNTS,FLG36,FLG60)  ; PRCA*4.5*423
+ Q
+ ;
+CHKFLGS(RCRPIEN,RPMNTS,FLG36,FLG60) ; check if we need to update 36 months and 60 months review flags  PRCA*4.5*423
+ ;
+ ; RCRPIEN - file 340.5 ien
+ ; RPMNTS  - # of payments remaining
+ ; FLG36   - current value of 36 months review flag
+ ; FLG60   - current value of 60 months review flag
+ ;
+ I RPMNTS>36,FLG36="" D UPDAUDIT^RCRPU2(RCRPIEN,DT,"E","SR",""),UPDFLG36(RCRPIEN,0)  ; set 36 months review flag to "needs approval" and update audit log
+ I RPMNTS<37,FLG36=2!(FLG36=0) D UPDFLG36(RCRPIEN,"")  ; clear "denied" or "needs approval" 36 months review flag
+ I RPMNTS>57,'FLG60 D UPDRVW^RCRPU2(RCRPIEN,1)  ; set 60 months review flag
+ I RPMNTS<58,FLG60 D UPDRVW^RCRPU2(RCRPIEN,0)  ; clear 60 months review flag 
+ Q
+ ;
+UPDFLG36(RCRPIEN,VAL) ; update 36 months review flag (field 340.5/1.06)  PRCA*4.5*389
+ ;
+ ; RCRPIEN - file 340.5 ien
+ ; VAL - new value for field 340.5/1.06 (internal)
+ ;
+ N FDA
+ L +^RCRP(340.5,RCRPIEN):10 I '$T Q
+ S FDA(340.5,RCRPIEN_",",1.06)=VAL
+ D FILE^DIE("","FDA")
+ L -^RCRP(340.5,RCRPIEN)
  Q
  ;
 GETRSN() ;  Get the reason the plan was closed.
@@ -134,7 +165,7 @@ UPDPAY(RCIEN,RCTRAN,RCAMT) ; Update the payment information, schedule, and statu
  D UPDPAYST^RCRPU(RCIEN)
  ;
  ;Calculate a new status and update if different.
- S RCCURST=$$GET1^DIQ(340.5,RCIEN_",",.07,"E")
+ S RCCURST=$$GET1^DIQ(340.5,RCIEN_",",.07,"I")  ; PRCA*4.5*389
  S RCSTAT=$$STATUS(RCIEN)
  D:RCCURST'=RCSTAT UPDSTAT(RCIEN,RCSTAT)
  Q
@@ -219,7 +250,7 @@ UPDBAL(RCBILLDA,RCTRANDA,RCSPFLG) ; Update the Plan Amount Owed (#.11) in the AR
  I RCNOMN'=RCNWLN D UPDTERMS(RCIEN,RCMNPY_U_RCNWLN),ADJSCHED^RCRPENTR(RCIEN,RCNOMN,RCNWLN)
  ;
  ;Check current balance.  If 0 or lower, close the plan as paid in full
- S RCPYMNTS=$$PMNTS^RCRPINQ(RCIEN)
+ S RCPYMNTS=$$PMNTS^RCRPU3(RCIEN)
  I (RCRMBAL-RCPYMNTS)'>0 D
  . D PAID(RCIEN,RCSPFLG)
  . I RCSPFLG=1 D TRAN^RCRPU(RCBILLDA,0,68)      ; file transaction if the bill which closed the plan was suspended.
@@ -236,7 +267,7 @@ UPDPAO(RCIEN,RCAMT) ; Update the PLAN AMOUNT OWE3D field
  ;
 PAID(RCIEN,RCSPFLG) ; Repayment Plan is paid in full, update the status to PAID IN FULL and attempt to remove plan information from bills in plan.
  ;
- N RCI,RCBILLDA,RCSTAT
+ N RCI,RCBILLDA,RCSTAT,RCPYFLG
  ;
  ;Update the plan status to Paid in Full. If not suspended
  I '+RCSPFLG D

@@ -1,27 +1,27 @@
-ORWU ; SLC/KCM - GENERAL UTILITIES FOR WINDOWS CALLS ;02/09/23  07:25
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,148,149,187,195,215,243,350,424,377,519,539,405,596**;Dec 17, 1997;Build 7
+ORWU ;SLC/KCM - GENERAL UTILITIES FOR WINDOWS CALLS ;Jul 10, 2023@09:32:14
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,148,149,187,195,215,243,350,424,377,519,539,405,596,588**;Dec 17, 1997;Build 29
  ;
- ; External reference to ^%ZIS(1 supported by IA 2963
- ; External reference to ^%ZIS(2 supported by IA 2964
- ; External reference to ^DIC(3.1 supported by IA 1234
- ; External reference to ^SC supported by IA 10040
- ; External reference to ^VA(200 supported by IA 10060
- ; External reference to ^XUSEC( supported by IA 10076
- ; External reference to ^%DT supported by IA 10003
- ; External reference to WIN^DGPMDDCF supported by IA 1246
- ; External reference to FIND^DIC supported by IA 2051
- ; External reference to ^DID IN ICR #2052
- ; External reference to ^DILFD supported by IA 2055
- ; External reference to $$SITE^VASITE supported by IA 10112
- ; External reference to ^XLFJSON supported by IA 6682
- ; External reference to ^XLFSTR supported by IA 10104
- ; External reference to ^XPAR supported by IA 2263
- ; External reference to ^XPDUTL supported by IA 10141
- ; External reference to ^XQCHK supported by IA 10078
- ; External reference to $$KSP^XUPARAM supported by IA 2541
- ; External reference to $$PROD^XUPROD supported by IA 4440
- ; External reference to ^XUSHSHP supported by IA 10045
- ; External reference to $$DECRYP^XUSRB supported by IA 12241
+ ; Reference to ^%ZIS(1 supported by IA #2963
+ ; Reference to ^%ZIS(2 supported by IA #2964
+ ; Reference to ^DIC(3.1 supported by IA #1234
+ ; Reference to ^SC supported by IA #10040
+ ; Reference to ^VA(200 supported by IA #10060
+ ; Reference to ^XUSEC( supported by IA #10076
+ ; Reference to ^%DT supported by IA #10003
+ ; Reference to WIN^DGPMDDCF supported by IA #1246
+ ; Reference to FIND^DIC supported by IA #2051
+ ; Reference to ^DID IN ICR #2052
+ ; Reference to ^DILFD supported by IA #2055
+ ; Reference to $$SITE^VASITE supported by IA #10112
+ ; Reference to ^XLFJSON supported by IA #6682
+ ; Reference to ^XLFSTR supported by IA #10104
+ ; Reference to ^XPAR supported by IA #2263
+ ; Reference to ^XPDUTL supported by IA #10141
+ ; Reference to ^XQCHK supported by IA #10078
+ ; Reference to $$KSP^XUPARAM supported by IA #2541
+ ; Reference to $$PROD^XUPROD supported by IA #4440
+ ; Reference to ^XUSHSHP supported by IA #10045
+ ; Reference to $$DECRYP^XUSRB supported by IA #12241
  ;
  Q
 DT(Y,X,%DT) ; Internal Fileman Date/Time
@@ -119,7 +119,7 @@ NPHASKEY(VAL,NP,KEY) ; returns TRUE if the person has the security key
  Q
 ORDROLE() ; returns the role a person takes in ordering
  ; VAL: 0=nokey, 1=clerk, 2=nurse, 3=physician, 4=student, 5=bad keys
- ;I '$G(ORWCLVER) Q 0  ; version of client is to old for ordering
+ ;I '$G(ORWCLVER) Q 0  ; version of client is too old for ordering
  I ($D(^XUSEC("OREMAS",DUZ))+$D(^XUSEC("ORELSE",DUZ))+$D(^XUSEC("ORES",DUZ)))>1 Q 5
  I $D(^XUSEC("OREMAS",DUZ)) Q 1                           ; clerk
  I $D(^XUSEC("ORELSE",DUZ)) Q 2                           ; nurse
@@ -316,8 +316,16 @@ JSYSPARM(RESULTS,USER) ;
  D GETPAR^ORDSTCTB(.TEMP,USER)
  ;Template Required Fields Identification Disabled
  S TEMP("tmRequiredFldsOff")=+$$GET^XPAR("ALL","TIU REQUIRED FIELDS DISABLE",1,"I")
- S TEMP("OverlayOn")=$$GET^XPAR("ALL","OR CPRS OVERLAY")
+ S TEMP("ResponsiveGUI")=$$GET^XPAR("ALL","ORWCH PAUSE INPUT")
  D GETSERIES^ORFEDT(.TEMP)
+ D ACCESS^ORACCESS(.TEMP,USER)
  ;D ENCODE^VPRJSON("TEMP","RESULTS","ERROR")
  D ENCODE^XLFJSON("TEMP",$NA(^TMP($J,"ORWU SYSPARAM")),"ERROR")
+ Q
+ ;
+FLDINFO(ORY,FILE,FIELD,FLAGS,ATTRIBS) ; Get field attributes
+ N IDX,OUT,LINE
+ D FIELD^DID(FILE,FIELD,FLAGS,ATTRIBS,"OUT","OUT")
+ S LINE=0,IDX="" F  S IDX=$O(OUT(IDX)) Q:IDX=""  D
+ . S LINE=LINE+1,ORY(LINE)=IDX_U_OUT(IDX)
  Q

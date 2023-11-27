@@ -1,12 +1,24 @@
 RCRPADD ;EDE/YMG - REPAYMENT PLAN FORBEARBANCE;03/31/2021  8:40 AM
- ;;4.5;Accounts Receivable;**381,388,378**;Mar 20, 1995;Build 54
+ ;;4.5;Accounts Receivable;**381,388,378,389**;Mar 20, 1995;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
  ;
+EN1(RCRPIEN) ; entry point from repayment plan worklist, called from ^RCRPWL1  PRCA*4.5*389
+ ;
+ ; RCRPIEN - file 340.5 ien
+ ;
+ N RCDONE,QUIT,RCDONE1,RCRVW,LN
+ N IOBOFF,IOBON,IORVON,IORVOFF,X
+ S (RCDONE,LN)=0,QUIT=""
+ D PROCPLN1
+ ;Clean up working TMP array when exiting
+ K ^TMP("RCRPP",$J)
+ Q
+ ;
 MAIN ; Entry point for Forbearance Option
  ;
- N RCDONE,QUIT,RCRVW,RCRPIEN,RCDONE1,LN
+ N RCDONE,RCFLG36,QUIT,RCRVW,RCRPIEN,RCDONE1,LN
  N IOBOFF,IOBON,IORVON,IORVOFF,X
  ;
  S (RCDONE,LN)=0,QUIT=""
@@ -20,15 +32,23 @@ PROCPLAN ;
  I $E(IOST,1,2)["C-" W @IOF
  S RCRPIEN=$$SELRPP^RCRPU1() S QUIT=0 I RCRPIEN=-1 S RCDONE=1 Q
  ;I RCRPIEN="" S RCDONE=1 Q
- I "^6^7^8^"[(U_$P($G(^RCRP(340.5,RCRPIEN,0)),U,7)_U) D  Q
- . S X="IOBON;IORVON;IOBOFF;IORVOFF" D ENDR^%ZISS
- . W !!,IOBON,IORVON,$$CJ^XLFSTR("*** WARNING: YOU HAVE SELECTED A CLOSED REPAYMENT PLAN ***",80),IORVOFF,IOBOFF,!!
- . S RCRVW=$$GET1^DIQ(340.5,RCRPIEN_",",1.01,"I")
- . I RCRVW D  Q
- . . W !,"The selected plan currently has more than 60 payments outstanding."
- . . W !,"Unable to add new bills to this plan until the plan's terms"
- . . W !,"are adjusted."
- . . D PAUSE^RCRPU
+ I "^6^7^8^"[(U_$P($G(^RCRP(340.5,RCRPIEN,0)),U,7)_U) D  S:QUIT RCDONE=1 Q  ; PRCA*4.5*389
+ .S X="IOBON;IORVON;IOBOFF;IORVOFF" D ENDR^%ZISS
+ .W !!,IOBON,IORVON,$$CJ^XLFSTR("*** WARNING: YOU HAVE SELECTED A CLOSED REPAYMENT PLAN ***",80),IORVOFF,IOBOFF,!!
+ .D PAUSE^RCRPU
+ .Q
+ S RCFLG36=$P($G(^RCRP(340.5,RCRPIEN,1)),U,6) I RCFLG36=0 D  S:QUIT RCDONE=1 Q  ; PRCA*4.5*389
+ .W !!,"This plan is pending review on the Repayment Plan Worklist."
+ .W !,"Unable to add new bills at this time.",!
+ .D PAUSE^RCRPU
+ .Q
+PROCPLN1 ; PRCA*4.5*389
+ S RCRVW=$$GET1^DIQ(340.5,RCRPIEN_",",1.01,"I") I RCRVW D  S:QUIT RCDONE=1 Q  ; PRCA*4.5*389
+ .W !!,"The selected plan currently has more than 60 payments outstanding."
+ .W !,"Unable to add new bills to this plan until the plan's terms"
+ .W !,"are adjusted.",!
+ .D PAUSE^RCRPU
+ .Q
  S LN=$$PRTHDR^RCRPINQ(RCRPIEN,LN)
  Q:'LN
  D PAUSE^RCRPU
@@ -89,8 +109,8 @@ PRTHDR(RPIEN) ; display repayment plan data
  W !,"Address: ",$P(ADDRSTR,U)," ",$P(ADDRSTR,U,2)," ",$P(ADDRSTR,U,3),", ",$P(ADDRSTR,U,4),", ",$P(ADDRSTR,U,5)," ",$P(ADDRSTR,U,6)
  W !,"Phone: ",$S(DEBPHN>0:$$FMTPHONE^RCRPINQ(DEBPHN),1:"N/A"),!
  W !,"Plan #: ",$P(N0,U),?28,"Status: ",$$EXTERNAL^DILFD(340.5,.07,"",$P(N0,U,7)),?49,"Last status date: ",$$FMTE^XLFDT($P(N0,U,8),"5DZ"),!
- S CBAL=$P(N0,U,11)-$$PMNTS^RCRPINQ(RPIEN),RAMNT=$P(N0,U,6)
- W !,?2,"Current balance: $",$FN(CBAL,"",2),?37,"Number of payments remaining: ",CBAL\RAMNT+$S(CBAL#RAMNT:1,1:0)
+ S CBAL=$$CBAL^RCRPU3(RPIEN,$P(N0,U,11)),RAMNT=$P(N0,U,6)  ; PRCA*4.5*389
+ W !,?2,"Current balance: $",$FN(CBAL,"",2),?37,"Number of payments remaining: ",$$REMPMNTS^RCRPU3(RPIEN,RAMNT)  ; PRCA*4.5*389
  W !,?1,"Orig amount owed: $",$FN($P(N0,U,13),"",2),?38,"Original number of payments: ",$P(N0,U,14)
  W !,"Total amount owed: $",$FN($P(N0,U,11),"",2),?41,"Total number of payments: ",$P(N0,U,5)
  W !,?1,"Repayment amount: $",$FN(RAMNT,"",2),?47,"Auto-add New Bills: ",$$GET1^DIQ(340.5,RPIEN_",",.12,"E"),!!
@@ -98,9 +118,9 @@ PRTHDR(RPIEN) ; display repayment plan data
  ;
 ADDNEW(RPIEN) ; Ask the user for the bills to add.
  ;
- N RCDONE,RCCTS,Y,DIRUT,RCALLFLG,RCBLCH,RCTOT,RCORBAL,RCNOMN,RCNWMN,RCDBTR,RCSPFLG
+ N RCDONE,RCCTS,Y,DIRUT,RCALLFLG,RCBLCH,RCTOT,RCORBAL,RCNOMN,RCNWMN,RCDBTR,RCSPFLG,RCFLG36
  N RCMNPAY,RCNEWTOT,RCNEWLN,RCBILLDA,RCACTDT,RCRMBAL,RCRMLN,RCPLNBL,RCNWMOD,QUIT
- S RCSPFLG=0
+ S RCSPFLG=0,RCFLG36=""  ; PRCA*4.5*389
  ;
  ;Clear ^TMP array
  K ^TMP("RCRPP",$J)
@@ -143,23 +163,28 @@ ADDNEW(RPIEN) ; Ask the user for the bills to add.
  S RCMNPAY=$$GET1^DIQ(340.5,RPIEN_",",.06,"I")
  ;
  ;Calculate the new Potential remaining balance
- S RCRMBAL=RCORBAL-$$PMNTS^RCRPINQ(RPIEN)
+ S RCRMBAL=$$CBAL^RCRPU3(RPIEN,RCORBAL)  ; PRCA*4.5*389
  S RCNEWTOT=RCTOT+RCRMBAL,RCNEWLN=RCNEWTOT/RCMNPAY
  ;
- ;If the new term length will become >60 months by adding these bills,
- ; display a warning message to the user, update the Review Flag on the Plan,
- ; and exit.
- I RCNEWLN>60 D  Q 0
- . W !,"Adding these bills will make the number of remaining payments on the"
- . W !,"plan > 60 months.  Unable to add new bills to this plan until the"
- . W !,"plan's terms are adjusted."
- . D UPDRVW^RCRPU2(RPIEN,1)
- . D PAUSE^RCRPU
+ ;If the new term length will become >57 months by adding these bills,
+ ; display a warning message to the user and exit.
+ I RCNEWLN>57 D  Q 1  ; PRCA*4.5*389
+ .W !,"Adding these bills will make the number of remaining payments on the"
+ .W !,"plan > 57 months.  Unable to add new bills to this plan until the"
+ .W !,"plan's terms are adjusted."
+ .D PAUSE^RCRPU
+ .Q
  ;
- I RCNEWLN>36,(RCNEWLN'>60) D
- . W !,"Adding these bills will make the number of remaining payments on the"
- . W !,"plan > 36 months. This requires supervisor approval."
- . S RCSPFLG=$$SUPAPPR^RCRPU(RPIEN,2)
+ I RCNEWLN>36 D  ; PRCA*4.5*389
+ .S RCFLG36=$$GET36^RCRPWLUT(RPIEN)
+ .I RCFLG36=2 D  ; denied 36 months approval
+ ..W !,"Adding these bills will make the number of remaining payments on the"
+ ..W !,"plan > 36 months. 36 months supervisor approval was denied for this"
+ ..W !,"plan - no bills may be added to it."
+ ..S RCSPFLG=-1
+ ..Q
+ .I RCFLG36=1 S RCSPFLG=1  ; already have 36 months approval
+ .Q
  I RCNEWLN>36,(RCSPFLG<1) Q -1 ; No Supervisor approval when required
  ;
  ; Add the Bill to the plan.
@@ -185,8 +210,8 @@ ADDNEW(RPIEN) ; Ask the user for the bills to add.
  .  D ADJSCHED^RCRPENTR(RPIEN,RCNOMN,RCNWMN)
  ;
  ;Update Audit Log
- I RCSPFLG<1 D UPDAUDIT^RCRPU2(RPIEN,$$DT^XLFDT,"A","")
- I RCSPFLG=1 D UPDAUDIT^RCRPU2(RPIEN,$$DT^XLFDT,"A","SM")
+ I RCSPFLG<1!(RCSPFLG=1&(RCFLG36=1)) D UPDAUDIT^RCRPU2(RPIEN,$$DT^XLFDT,"A","")  ; PRCA*4.5*389
+ I RCSPFLG=1,RCFLG36=0 D UPDAUDIT^RCRPU2(RPIEN,$$DT^XLFDT,"A","SM"),UPDFLG36^RCRPU1(RCRPIEN,1)  ; PRCA*4.5*389
  ;
  W !,"Bills successfully added to the Plan.",!
  ;

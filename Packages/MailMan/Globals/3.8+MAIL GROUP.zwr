@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MAIL GROUP
 ZWR
-^XMB(3.8,0)="MAIL GROUP^3.8^467^443"
+^XMB(3.8,0)="MAIL GROUP^3.8^469^445"
 ^XMB(3.8,1,0)="YS PSYCHTEST^PR^^^^0"
 ^XMB(3.8,1,1,0)="^3.81P^^0"
 ^XMB(3.8,1,2,0)="^^1^1^2921113^^"
@@ -2721,7 +2721,7 @@ ZWR
 ^XMB(3.8,302,6,0)="^3.812^^0"
 ^XMB(3.8,302,8,0)="^3.814P"
 ^XMB(3.8,302,9,0)="^3.815P"
-^XMB(3.8,303,0)="PXRM MANAGER^PR^n^5^3231021^0"
+^XMB(3.8,303,0)="PXRM MANAGER^PR^n^7^3231127^0"
 ^XMB(3.8,303,1,0)="^3.81P^3^3"
 ^XMB(3.8,303,1,1,0)=10000000020
 ^XMB(3.8,303,1,2,0)=11745
@@ -3710,6 +3710,18 @@ ZWR
 ^XMB(3.8,467,2,1,0)="eMail group to notify designated users via Outlook email of oversized "
 ^XMB(3.8,467,2,2,0)="statements waiting to be printed."
 ^XMB(3.8,467,3)=1
+^XMB(3.8,468,0)="RC REPAY TECH^PU^y^^^^.5"
+^XMB(3.8,468,2,0)="^^3^3^3220406^"
+^XMB(3.8,468,2,1,0)="This mail group contains external email addresses for technicians"
+^XMB(3.8,468,2,2,0)="who need to receive alerts about AR repayment plans. Mail sent using this "
+^XMB(3.8,468,2,3,0)="group must not contain any PII or PHI."
+^XMB(3.8,468,3)=1
+^XMB(3.8,469,0)="RC REPAY SUP^PU^y^^^^.5"
+^XMB(3.8,469,2,0)="^^3^3^3220406^"
+^XMB(3.8,469,2,1,0)="This mail group contains external email addresses for supervisors who need"
+^XMB(3.8,469,2,2,0)="to receive alerts about AR repayment plans. Mail sent using this group"
+^XMB(3.8,469,2,3,0)="must not contain any PII or PHI."
+^XMB(3.8,469,3)=1
 ^XMB(3.8,"AB",.5,120,1)=""
 ^XMB(3.8,"AB",.5,372,1)=""
 ^XMB(3.8,"AB",.5,428,1)=""
@@ -4389,6 +4401,8 @@ ZWR
 ^XMB(3.8,"AC",.5,463)=""
 ^XMB(3.8,"AC",.5,466)=""
 ^XMB(3.8,"AC",.5,467)=""
+^XMB(3.8,"AC",.5,468)=""
+^XMB(3.8,"AC",.5,469)=""
 ^XMB(3.8,"AC",1,228)=""
 ^XMB(3.8,"AC",1,343)=""
 ^XMB(3.8,"AC",1,347)=""
@@ -4953,6 +4967,8 @@ ZWR
 ^XMB(3.8,"B","RC RC REFERRALS",170)=""
 ^XMB(3.8,"B","RC REPAY PLAN EXTERNAL",463)=""
 ^XMB(3.8,"B","RC REPAY PLANS",238)=""
+^XMB(3.8,"B","RC REPAY SUP",469)=""
+^XMB(3.8,"B","RC REPAY TECH",468)=""
 ^XMB(3.8,"B","RCCPC EXTERNAL",467)=""
 ^XMB(3.8,"B","RCCPC STATEMENTS",166)=""
 ^XMB(3.8,"B","RCDP PAYMENTS",208)=""

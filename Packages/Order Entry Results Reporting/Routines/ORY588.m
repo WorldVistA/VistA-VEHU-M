@@ -1,0 +1,51 @@
+ORY588 ;ISL/AGP - INSTALLATION ACTIONS FOR CPRS READ ONLY ; Apr 24, 2023@10:13
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**588**;Dec 17, 1997;Build 29
+ ;
+ Q
+POST ;
+ N ORPAUSE
+ D POST^ORACCESS
+ S ORPAUSE=$$GET^XPAR("ALL","ORWCH PAUSE INPUT")
+ I ORPAUSE="" D
+ . D BMES^XPDUTL("Adding value for parameter: ORWCH PAUSE INPUT.")
+ . D ADD^XPAR("PKG","ORWCH PAUSE INPUT",,"YES")
+ ;
+ N FILE,NAME,IEN,ORFDA,ORERR,ORLIST,ENT,ERRORS
+ S ERRORS=0,FILE=8994,NAME="ORACCESS CERNERACTIVE"
+ S IEN=$$FIND1^DIC(FILE,,,NAME) I +IEN D
+ . D BMES^XPDUTL("Remote procedure "_NAME_" found.  Attempting to delete...")
+ . S ORFDA(FILE,IEN_",",.01)="@"
+ . D FILE^DIE("","ORFDA","ORERR") D ERRMSG
+ . I 'ERRORS D MES^XPDUTL("Delete successful.")
+ ;
+ S FILE=8989.51,NAME="OR SIMULATE ON CERNER"
+ S IEN=$$FIND1^DIC(FILE,,,NAME) I '+IEN Q
+ S ERRORS=0,ENT=""
+ D BMES^XPDUTL("Parameter "_NAME_" found.  Attempting to delete...")
+ D ENVAL^XPAR(.ORLIST,NAME,1,.ORERR) D ERRMSG2
+ I 'ERRORS,+$G(ORLIST) D
+ .;delete instances
+ . F  S ENT=$O(ORLIST(ENT)) Q:ENT=""  D
+ . . D DEL^XPAR(ENT,NAME,1,.ORERR) D ERRMSG2
+ . I 'ERRORS D MES^XPDUTL("Values have been removed.")
+ . ;delete parameter
+ I ERRORS Q
+ N DA,DIK
+ S DIK="^XTV(8989.51,",DA=IEN
+ D ^DIK
+ I +$G(DA)>0 D  I 1
+ . D MES^XPDUTL("Delete successful.")
+ E  S ORERR="Unknown error deleting "_NAME D ERRMSG
+ Q
+ ;
+ERRMSG2 ;
+ I $G(ORERR)=0 K ORERR
+ERRMSG ;
+ I '$D(ORERR) Q
+ S ERRORS=1
+ D MES^XPDUTL("*** Error ***")
+ I ($D(ORERR)=1)!($D(ORERR)=11) D MES^XPDUTL(ORERR)
+ I $D(ORERR)>9 D
+ . N I
+ . S I="" F  S I=$O(ORERR(I)) Q:I=""  D MES^XPDUTL(ORERR(I))
+ Q

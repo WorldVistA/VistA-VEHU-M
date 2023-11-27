@@ -1,5 +1,5 @@
-PXAPIIM ;ISP/LMT - PCE Immunization APIs ;Aug 05, 2021@07:18:12
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**210,215,217**;Aug 12, 1996;Build 135
+PXAPIIM ;ISP/LMT - PCE Immunization APIs ;Aug 16, 2023@14:05
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**210,215,217,236**;Aug 12, 1996;Build 17
  ;
  ; Reference to NAME in file .85 is supported by ICR #6062
  ;
@@ -43,14 +43,18 @@ VIS(PXRESULT,PXVIS,PXDATE) ;Called from VIS^PXAPI
  ;
  Q
  ;
-IMMGRP(PXRESULT,PXIMM) ;
+IMMGRP(PXRESULT,PXIMM,PXSKIPNOTLIMITED) ;
  ;
  ; Returns a list of immunizations that share the same CVX code and Vaccine Group
  ; Name(s) as PXIMM, as well as Contraindications that are limited to PXIMM.
  ;
  ;Input:
- ;  PXRESULT  (required) Return value (passed by reference)
- ;     PXIMM  (required) Pointer to #9999999.14
+ ;         PXRESULT  (required) Return value (passed by reference)
+ ;            PXIMM  (required) Pointer to #9999999.14
+ ; PXSKIPNOTLIMITED  (optional) Boolean flag to exclude (1) or include (0)
+ ;                              contraindications that are not limited to any
+ ;                              immunization; default is to include (0)
+ ;
  ;
  ;Returns:
  ;  PXRESULT("CVX",CVX_CODE,IMM_IEN) = Immunization Name
@@ -58,7 +62,7 @@ IMMGRP(PXRESULT,PXIMM) ;
  ;  PXRESULT("ICR",CONTRA_VIEN) = Contraindication Name
  ;
  I '$G(PXIMM) Q
- D IMMGRP^PXAPIIM2(.PXRESULT,.PXIMM)
+ D IMMGRP^PXAPIIM2(.PXRESULT,.PXIMM,.PXSKIPNOTLIMITED)
  ;
  Q
  ;
@@ -111,7 +115,7 @@ IMMBYNM(PXNAME) ; Finds Immunization that matches on PXNAME and returns IEN
  I PXIMM Q PXIMM
  Q 0
  ;
-PATICR(PXRESULT,DFN,PXIMM,PXBDT,PXEDT) ;
+PATICR(PXRESULT,DFN,PXIMM,PXBDT,PXEDT,PXSKIPFOUR) ;
  ;
  ; Finds all of a patient's contraindications/refusals using the following criteria:
  ;   1. Any current-dated contraindication/refusal for PXIMM AND any immunization
@@ -130,11 +134,14 @@ PATICR(PXRESULT,DFN,PXIMM,PXBDT,PXEDT) ;
  ;     <= PXEDT, and STOP is >= PXBDT.
  ;
  ;Input:
- ;  PXRESULT - (required) Return value (passed by reference)
- ;       DFN - (required) Pointer to #2
- ;     PXIMM - (required) Pointer to #9999999.14
- ;     PXBDT - (optional; defaults to TODAY) Begin Search Date
- ;     PXEDT - (optional; defaults to 9999999) End Search Date
+ ;   PXRESULT - (required) Return value (passed by reference)
+ ;        DFN - (required) Pointer to #2
+ ;      PXIMM - (required) Pointer to #9999999.14
+ ;      PXBDT - (optional; defaults to TODAY) Begin Search Date
+ ;      PXEDT - (optional; defaults to 9999999) End Search Date
+ ; PXSKIPFOUR - (optional; defaults to 0) Boolean flag to exclude (1) or
+ ;                                        include (0) criteria #4 above from
+ ;                                        search; default is include (0)
  ;
  ;Returns:
  ;  PXRESULT(DAS) = Visit IEN ^ Contra/Refusal variable pointer | Contra/Refusal Name
@@ -150,13 +157,14 @@ PATICR(PXRESULT,DFN,PXIMM,PXBDT,PXEDT) ;
  ;
  I '$G(DFN)!('$G(PXIMM)) Q
  ;
+ S PXSKIPFOUR=+$G(PXSKIPFOUR)
  S PXFILE=9000010.707
  ;
  I $G(PXEDT)="" S PXEDT=9999999
  I $G(PXBDT)="" S PXBDT=DT
  I PXBDT S PXBDT=PXBDT-.0000001
  ;
- D IMMGRP(.PXIMMGRP,PXIMM)
+ D IMMGRP(.PXIMMGRP,PXIMM,PXSKIPFOUR)
  ;
  ; >> Search based off criteria #1 & #2:
  ;

@@ -1,5 +1,5 @@
-PXRMDEDT ;SLC/PJH - Edit PXRM reminder dialog. ;08/31/2017
- ;;2.0;CLINICAL REMINDERS;**4,6,12,17,16,24,26,45**;Feb 04, 2005;Build 566
+PXRMDEDT ;SLC/PJH - Edit PXRM reminder dialog. ;Jan 31, 2023@08:13:33
+ ;;2.0;CLINICAL REMINDERS;**4,6,12,17,16,24,26,45,82**;Feb 04, 2005;Build 28
  ;
  ;Used by protocol PXRM SELECTION ADD/PXRM GENERAL ADD
  ;
@@ -96,6 +96,7 @@ EDIT(TYP,DA,OIEN) ;
  ..S SUB=0
  ..F  S SUB=$O(^PXRMD(801.41,"AD",DA,SUB)) Q:'SUB  Q:DINUSE  D
  ...I SUB'=PXRMDIEN S DINUSE=1
+ ..I DINUSE=0,DA'=PXRMDIEN W !,"Used by: Only used in this dialog",!
  I DINUSE D
  .W !,"Current dialog "_$S(TYP="S":"result group",1:"element/group")_" name: "_$P($G(^PXRMD(801.41,DA,0)),U)
  .I TYP="S" W !,"Used by:" D USE^PXRMDLST(DA,10,PXRMDIEN,"RG") Q
@@ -189,7 +190,7 @@ EADD(SEL,NSUB,PXRMDIEN) ;
  S FDA(801.412,IENS,.01)=SEL
  S FDA(801.412,IENS,2)=NSUB
  D UPDATE^DIE("","FDA","FDAIEN","ERRMSG")
- I $D(MSG) D AWRITE^PXRMUTIL("ERRMSG")
+ I $D(ERRMSG) D AWRITE^PXRMUTIL("ERRMSG")
  Q
  ;
  ;Change Dialog Element Type
@@ -219,7 +220,7 @@ PURGE(DIEN) ;
  ;
  Q
  ;
-VGROUP(DA,IEN) ;Check dialog index to see if group will point to itself 
+VGROUP(DA,IEN) ;Check dialog index to see if group will point to itself
  N FOUND
  S FOUND=0
  ;
@@ -231,7 +232,7 @@ VGROUP(DA,IEN) ;Check dialog index to see if group will point to itself
  .S FOUND=1
  .W !,"A group cannot be added to itself" H 2
  ;
- ;IEN is the dialog group being added to 
+ ;IEN is the dialog group being added to
  D VGROUP1(DA,IEN)
  Q FOUND
  ;
@@ -299,7 +300,7 @@ LOCK(DA) ;Lock the record
  .S DTYP=$P($G(^PXRMD(801.41,DA,0)),U,4)
  .;Allow limit edit of Result Elements that are not lock
  .I DTYP="T",+$P($G(^PXRMD(801.41,DA,100)),U,4)=0 Q
- .;Allow edit of findings but not component multiple on groups 
+ .;Allow edit of findings but not component multiple on groups
  .I DTYP="G",$G(PXRMDIEN),DA'=PXRMDIEN Q
  .I DTYP="G",$G(PXRMGTYP)="DLGE" Q
  .;Allow edit of element findings

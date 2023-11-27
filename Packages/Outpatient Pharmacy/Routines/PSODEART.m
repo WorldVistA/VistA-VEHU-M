@@ -1,10 +1,13 @@
 PSODEART ;FO-OAKAND/REM - EPCS Utilities and Reports; [5/7/02 5:53am] ;10/5/21  09:42
- ;;7.0;OUTPATIENT PHARMACY;**667,545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**667,545,714**;DEC 1997;Build 2
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002
  ;External reference to XUEPCS DATA file (#8991.6) is supported by DBIA 7015
  ;External reference to XUEPCS PSDRPH AUDIT file (#8991.7) is supported by DBIA 7016
  ;External reference to KEYS sub-file (#200.051) is supported by DBIA 7054
  ;
+ ; PSO*7.0*714 - Liberty ITS/RJH - Add K DIC commands to the PSDKEY tag to 
+ ;               prevent showing the "Enter User Name:" prompt incorrectly 
+ ;               upon exit of the option.
  Q
  ;
 PRESCBR(PSOSD0) ;called from print option - PSO EPCS PRIVS
@@ -77,11 +80,18 @@ PSDKEY ;Allocated/de-allocate the PSDRPH key option
  S:PSONS="PSDRPH" PSOBOSS=2 K PSONS,MSG
  S:(DUZ(0)["@"!($D(^XUSEC("XUMGR",DUZ)))!($D(^XUSEC("PSDRPH",DUZ)))) PSOBOSS=1
  I 'PSOBOSS W !,"You don't have privileges.  See your package coordinator or site manager." Q
- K DIC S DIC="^VA(200,",DIC(0)="AEMQZ",DIC("A")="Enter User Name: " D ^DIC Q:Y<0
- I PSOBOSS=2,(DUZ=+Y) W !!,$C(7),"==> Sorry, you can't give yourself keys.  See your IRM staff." Q
+ ;
+ ; *** Begin PSO*7.0*714 changes ***
+ ; K DIC S DIC="^VA(200,",DIC(0)="AEMQZ",DIC("A")="Enter User Name: " D ^DIC Q:Y<0
+ K DIC S DIC="^VA(200,",DIC(0)="AEMQZ",DIC("A")="Enter User Name: " D ^DIC I Y<0 K DIC Q
+ ; I PSOBOSS=2,(DUZ=+Y) W !!,$C(7),"==> Sorry, you can't give yourself keys.  See your IRM staff." Q
+ I PSOBOSS=2,(DUZ=+Y) W !!,$C(7),"==> Sorry, you can't give yourself keys.  See your IRM staff." K DIC Q
  S PSODA=+Y,PSONAME=$P(Y,U,2)
  D OWNSKEY^XUSRB(.PSONS,"PSDRPH",PSODA) S PSORET=PSONS(0) ;chk if user had key
- S OK=$$ASK(PSORET,PSONAME) I 'OK W !,"Nothing done..." Q
+ ; S OK=$$ASK(PSORET,PSONAME) I 'OK W !,"Nothing done..." Q
+ S OK=$$ASK(PSORET,PSONAME) K DIC I 'OK W !,"Nothing done..." Q
+ ; *** End PSO*7.0*714 changes ***
+ ;
  ;De-allocate key
  I PSORET K DIK S DIK="^VA(200,PSODA,51,",DA(1)=PSODA,DA=PSOKEY D ^DIK
  ;Allocate key

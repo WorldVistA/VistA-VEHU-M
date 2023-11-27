@@ -1,5 +1,5 @@
 RCRPU  ;EDE/SAB - REPAYMENT PLAN UTILITIES;11/16/2020  8:40 AM
- ;;4.5;Accounts Receivable;**377,381,388,378**;Mar 20, 1995;Build 54
+ ;;4.5;Accounts Receivable;**377,381,388,378,389**;Mar 20, 1995;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -48,8 +48,8 @@ PRTACTS(RCCTS) ;Display accounts in ARR
  ;
 PRTHDR() ;  Print the header for account listing
  ;
- W !,?50,"DATE OF",?70," AMOUNT",!
- W "No.",?5,"BILL NO.",?24,"AR CATEGORY",?50,"SERVICE",?61,"STATUS",?70,"OWED ($)",!
+ W !,?70," AMOUNT",!  ; PRCA*4.5*389
+ W "No.",?5,"BILL NO.",?24,"AR CATEGORY",?50,"BILL DATE",?61,"STATUS",?70,"OWED ($)",!  ; PRCA*4.5*389
  F X=1:1:(IOM-1) W "-"
  W !
  Q
@@ -210,7 +210,7 @@ GETDET(RCBLCH,RCTOT,RCDBTR,RCAUTO) ;Finish Gathering the details and File
  ;
  ;Set the day of the month a payment is due to the 28th
  S RCDAY=28
- S RCSVFLG=$$RPDIS($P(RCDBTR,U,2),RCPLN,RCSTDT,RCCRDT,RCTOT)
+ S RCSVFLG=$$RPDIS($P(RCDBTR,U,2),RCPLN,RCSTDT,RCCRDT,RCTOT,RCAUTO)  ; PRCA*4.5*389
  I 'RCSVFLG D  Q 0
  . W !,"Repayment Plan not Saved.",!
  . D PAUSE
@@ -220,7 +220,7 @@ GETDET(RCBLCH,RCTOT,RCDBTR,RCAUTO) ;Finish Gathering the details and File
  ;
  Q RCSVFLG
  ;
-RPDIS(RCDBTR,RCPLN,RCSTDT,RCCRDT,RCTOT) ;Display Repayment Plan
+RPDIS(RCDBTR,RCPLN,RCSTDT,RCCRDT,RCTOT,RCAUTO) ;Display Repayment Plan
  ;
  W !,"Summary of the Created Repayment Plan for AR Debtor: ",RCDBTR,!
  W "--------------------------------------------------------------------------------",!
@@ -228,7 +228,8 @@ RPDIS(RCDBTR,RCPLN,RCSTDT,RCCRDT,RCTOT) ;Display Repayment Plan
  W ?45,"Number of Payments:",?72,$P(RCPLN,U,2),!
  W "Date Plan Created:",?32,$$FMTE^XLFDT(RCCRDT,2)
  W ?45,"Due Date of First Payment:",?72,$$FMTE^XLFDT(RCSTDT,2),!
- W "Total Amount of Bills in Plan:",?32,"$",$J(RCTOT,0,2),!
+ W "Total Amount of Bills in Plan:",?32,"$",$J(RCTOT,0,2)
+ W ?45,"Auto-Add Bills?:",?72,$S(RCAUTO:"Yes",1:"No"),!  ; PRCA*4.5*389
  W "--------------------------------------------------------------------------------",!
  Q $$CORRECT()
  ;
@@ -365,7 +366,7 @@ SAVEPLAN(RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT,RCAUTO) ; Save the repaym
  ;
  ;Update Audit Log with Supervisor Approvals, if any.
  D:$G(^TMP("RCRPP",$J,"SUP25")) UPDAUDIT^RCRPU2(RCRPIEN,RCCRDT,"N","SA")
- D:$G(^TMP("RCRPP",$J,"SUP36")) UPDAUDIT^RCRPU2(RCRPIEN,RCCRDT,"N","SM")
+ D:$G(^TMP("RCRPP",$J,"SUP36")) UPDFLG36^RCRPU1(RCRPIEN,1),UPDAUDIT^RCRPU2(RCRPIEN,RCCRDT,"N","SM")  ; PRCA*4.5*389
  ;
  ;Update the Schedule Node
  S RCSUB=0
@@ -389,9 +390,7 @@ SAVEPLAN(RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT,RCAUTO) ; Save the repaym
  ;
  ;Update the Metrics File
  D UPDMET^RCSTATU(1.07,1)
- ;
- D PAUSE
- ;
+ D UPDMET^RCSTATU(1.35,1)  ; PRCA*4.5*389
  Q 1
  ;
 UPDSCHED(RCRPIEN,RCSUB)  ; Add a month to the schedule in the RPP file (#340.5)

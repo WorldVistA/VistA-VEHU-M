@@ -1,10 +1,10 @@
-PRCAPCL ;WASH-ISC@ALTOONA,PA/NYB-Print Bill Status Report ;8/19/94  10:21 AM
-V ;;4.5;Accounts Receivable;**72,63,143,154,315,342,368,391**;Mar 20, 1995;Build 10
+PRCAPCL ;WASH-ISC@ALTOONA,PA/NYB - Print Bill Status Report ;8/19/94  10:21 AM
+V ;;4.5;Accounts Receivable;**72,63,143,154,315,342,368,391,389**;Mar 20, 1995;Build 36
+ ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;PRCA*4.5*368 Instead of relying on the suspended tx for a bill
  ;             loop in reverse until the newest suspended tx is found
  ;
- ;;Per VA Directive 6402, this routine should not be modified.
  N BAL,BN,CAT,DEAD,DEBT,DIR,DIROUT,DUOUT,DP,DP2,HDR,IOP,N430
  N PAGE,POP,PRCAE,PRCATOT,PRCATOT2,PRCAT,PRCAT2,PRCY,RCDOJ,TDT,ST,STT
  S (PAGE,PRCAT,PRCAT2,PRCATOT,PRCATOT2,HDR)=0
@@ -44,7 +44,7 @@ TOP ;
  I $E(IOST)="C" S X="" S DIR(0)="E" D ^DIR Q:$D(DIROUT)!($D(DUOUT))
 Q2 Q
 PRNTL ;
- N BAL,DEAD,DEBT,ST
+ N BAL,DFN,DEAD,DEBT,ST
  S X=$S($D(^PRCA(430,PRCAE,0)):^(0),1:"") G:X="" PQ
  S BN=$P($G(X),U),DP=$P($G(X),U,14),PRCY=$P($G(X),U,2) G:BN="" PQ
  S BEG=+DAT-1,END=+$P(DAT,U,2)
@@ -87,6 +87,7 @@ STAT(SER) W ! ;Bill Status Listing
  K ^TMP($J)
  S DAT=$$DATE^RCEVUTL1("")
  Q:$G(DAT)=-1
+ S PRSELST=""  ; PRCA*4.5*389
  S BEG=+DAT,END=+$P(DAT,U,2)
  S SC1=$S(BEG=0:"First",1:BEG-1) I +$G(SC1) S Y=SC1+1 X ^DD("DD") S SC1=Y
  S SC2=$S(END=0:"Last",1:END) I +$G(SC2) S Y=SC2 X ^DD("DD") S SC2=Y

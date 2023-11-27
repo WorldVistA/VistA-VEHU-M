@@ -1,7 +1,7 @@
 DGPMV21 ;ALB/MRL/MIR - PASS/FAIL MOVEMENT DATE; 8 MAY 89
- ;;5.3;Registration;**40,95,131,1101**;Aug 13, 1993;Build 1
+ ;;5.3;Registration;**40,95,131,1105**;Aug 13, 1993;Build 9
  ;
- ;DG*5.3*1101 Created new ADMIT DATE Help doc minus future dates info 
+ ;DG*5.3*1105 Created new ADMIT DATE Help doc minus future dates info 
  ;            which are not allowed
  ;
  I $S('$D(DGPMY):1,DGPMY?7N:0,DGPMY'?7N1".".N:1,1:0) S DGPME="DATE EITHER NOT PASSED OR NOT IN EXPECTED VA FILEMANAGER FORMAT" G Q
@@ -33,7 +33,7 @@ PTF S PTF=+$P(DGPMAN,"^",16) I $S('PTF:1,'$D(^DGPT(PTF,0)):1,1:0) D NOPTF Q
  I $D(^DGP(45.84,PTF)) S DGPME="***" W !,"PTF record is closed for this admission...cannot edit" G Q
  Q
  ;
-NOPTF W *7 F I=1:1 S J=$P($T(NP+I),";;",2) Q:J="$$E4ND"  W !?4,J
+NOPTF W *7 F I=1:1 S J=$P($T(NP+I),";;",2) Q:J=""  W !?4,J
  S DGPME="***"
 Q S DGPMY=0 Q
  ;
@@ -47,8 +47,9 @@ NP ;
  ;;personnel  and/or your supervisor  will need to be notified
  ;;that the PTF record is missing as soon as possible in order
  ;;to continue processing this movement.
- ;;$$END
-HELPLP(CT) ;HELP display without future date info DG*5.3*1101
+ ;;
+ ;
+HELPLP(CT) ;HELP display without future date info DG*5.3*1105
  F I=1:1:CT S J=$P($T(HELP+I),";;",2) Q:J="$$END"  W !?4,J
  Q
 HELP ;
@@ -62,8 +63,8 @@ HELP ;
  ;;Follow the date with a time, such as JAN 20@10, T@10AM, 10:30, etc.
  ;;You may enter a time, such as NOON, MIDNIGHT or NOW.
  ;;Seconds may be entered as 10:30:30 or 103030AM.
- ;;Time cannot be in future and is REQUIRED in this response.
+ ;;Time cannot be in the future and is REQUIRED in this response.
  ;;
  ;;Future dates/time are not valid. For future dates/time please use option:
- ;;     Schedule an Admission
+ ;;     Schedule an Admission [DG SCHED ADMIT ENTRY]
  ;;$$END

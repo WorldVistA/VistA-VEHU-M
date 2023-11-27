@@ -1,5 +1,5 @@
 PRCAAPR ;WASH-ISC@ALTOONA,PA/RGY - PATIENT ACCOUNT PROFILE (CONT) ;3/9/94  8:41 AM
-V ;;4.5;Accounts Receivable;**198,221,276**;Mar 20, 1995;Build 87
+V ;;4.5;Accounts Receivable;**198,221,276,389**;Mar 20, 1995;Build 36
  ;;Per VHA Directive 2004-038, this routine should not be modified.
 EN(PRCATY) ;
  NEW DIC,X,Y,DEBT,PRCADB,DA,PRCA,COUNT,OUT,SEL,BILL,BAT,TRAN,DR,DXS,DTOUT,DIROUT,DIRUT,DUOUT
@@ -13,6 +13,21 @@ ASK N DPTNOFZY,DPTNOFZK S (DPTNOFZY,DPTNOFZK)=1
  S ^DISV(DUZ,"^RCD(340,")=+Y,PRCADB=$P(Y,"^",2),DEBT=+Y_"^"_$P(@("^"_$P(PRCADB,";",2)_+PRCADB_",0)"),"^")
  D COMP,HDR^PRCAAPR1,HDR2^PRCAAPR1,DIS^PRCAAPR1 G:'$D(DTOUT) ASK
 Q K ^TMP("PRCAAPR",$J) Q
+ ;
+EN1(DBTR) ; entry point from repayment plan worklist, called from ^RCRPWL1  PRCA*4.5*389
+ ;
+ ; DBTR - file 340 ien
+ ;
+ N BAT,BILL,COUNT,DEBT,PRCADB,PRCATY,OUT,TRAN,X,Y,Z
+ K ^TMP("PRCAAPR",$J)
+ S PRCATY="ALL",COUNT=0
+ S PRCADB=$P($G(^RCD(340,DBTR,0)),U)  ; field 340/.01
+ S ^DISV(DUZ,"^RCD(340,")=DBTR
+ S DEBT=DBTR_U_$P(@(U_$P(PRCADB,";",2)_+PRCADB_",0)"),U)  ; file 340 ien ^ debtor name
+ D COMP,HDR^PRCAAPR1,HDR2^PRCAAPR1,DIS^PRCAAPR1
+ K ^TMP("PRCAAPR",$J)
+ Q
+ ;
 COMP ;Compile patient bills
  K ^TMP("PRCAAPR",$J)
  NEW STAT,STAT1,CNT,Y

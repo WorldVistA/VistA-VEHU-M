@@ -1,0 +1,32 @@
+SDBT8 ; ;11/27/23
+ ;;
+1 N X,X1,X2 S DIXR=1346 D X1(U) K X2 M X2=X D X1("F") K X1 M X1=X
+ I $G(X(1))]"",$G(X(2))]"" D
+ . K ^SC("AG",X(1),X(2),DA)
+ K X M X=X2 I $G(X(1))]"",$G(X(2))]"" D
+ . S ^SC("AG",X(1),X(2),DA)=""
+ Q
+X1(DION) K X
+ S X(1)=$G(@DIEZTMP@("V",44,DIIENS,2,DION),$P($G(^SC(DA,0)),U,3))
+ S X(2)=$G(@DIEZTMP@("V",44,DIIENS,.01,DION),$P($G(^SC(DA,0)),U,1))
+ S X=$G(X(1))
+ Q
+2 N X,X1,X2 S DIXR=1547 D X2(U) K X2 M X2=X D X2("F") K X1 M X1=X
+ K X M X=X2 D
+ . N DIEZCOND,DIEXARR M DIEXARR=X S DIEZCOND=1
+ . S X=X1(1)'=""!X1(2)'=""!X1(3)'=""!X1(4)'=""!X1(5)'=""!X1(6)'=""!X1(7)'=""!X1(8)'=""!X1(9)'=""
+ . S DIEZCOND=$G(X) K X M X=DIEXARR Q:'DIEZCOND
+ . D EN^SDTMPHLB(DA)
+ Q
+X2(DION) K X
+ S X(1)=$G(@DIEZTMP@("V",44,DIIENS,.01,DION),$P($G(^SC(DA,0)),U,1))
+ S X(2)=$G(@DIEZTMP@("V",44,DIIENS,8,DION),$P($G(^SC(DA,0)),U,7))
+ S X(3)=$G(@DIEZTMP@("V",44,DIIENS,2503,DION),$P($G(^SC(DA,0)),U,18))
+ S X(4)=$G(@DIEZTMP@("V",44,DIIENS,9.5,DION),$P($G(^SC(DA,0)),U,20))
+ S X(5)=$G(@DIEZTMP@("V",44,DIIENS,9,DION),$P($G(^SC(DA,0)),U,8))
+ S X(6)=$G(@DIEZTMP@("V",44,DIIENS,16,DION),$P($G(^SC(DA,0)),U,13))
+ S X(7)=$G(@DIEZTMP@("V",44,DIIENS,1918,DION),$P($G(^SC(DA,"SL")),U,7))
+ S X(8)=$G(@DIEZTMP@("V",44,DIIENS,2505,DION),$P($G(^SC(DA,"I")),U,1))
+ S X(9)=$G(@DIEZTMP@("V",44,DIIENS,2506,DION),$P($G(^SC(DA,"I")),U,2))
+ S X=$G(X(1))
+ Q

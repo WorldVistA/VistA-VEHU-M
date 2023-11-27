@@ -1,5 +1,5 @@
-ORCB ;SLC/MKB-Notifications followup for LMgr chart ;4/5/01  21:32
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,36,48,70,108,116,243,334**;Dec 17, 1997;Build 7
+ORCB ;SLC/MKB-Notifications followup for LMgr chart ; Apr 20, 2023@17:45
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,36,48,70,108,116,243,334,588**;Dec 17, 1997;Build 29
  ;;Per VHA Directive 2004-038, this routine should not be modified
  ;DBIA reference section
  ;10035 - ^DPT
@@ -22,6 +22,10 @@ EN(DFN,ORFLG,DGRP,DEL) ; -- main entry point
  . N ADM S ADM=+$G(^DPT(DFN,.105)) S:ADM ADM=+$P($G(^DGPM(ADM,0)),U)
  . S END=$$NOW^XLFDT,BEG=$S(ADM:ADM,1:$$FMADD^XLFDT(END,-30))
  S ^TMP("OR",$J,"ORDERS",0)="^^"_BEG_";"_END_";"_ORFLG_";"_DGRP_";L"
+ I $$ONEHR^ORACCESS D  Q
+ . W !,"Site has migrated to Electronic Health Record."
+ . W !,"CPRS List Manager access not allowed."
+ . H 2
  D EN^VALM("ORCB NOTIFICATIONS")
  Q
  ;

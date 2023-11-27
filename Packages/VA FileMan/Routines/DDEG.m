@@ -1,5 +1,5 @@
 DDEG ;SPFO/RAM,MKB - Entity GET Extract ;1/26/23  10:37
- ;;22.2;VA FileMan;**9,16,17,18,20,21,24**;Jan 05, 2016;Build 3
+ ;;22.2;VA FileMan;**9,16,17,18,20,21,24,25**;Jan 05, 2016;Build 6
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -328,7 +328,7 @@ ELEMENT(STRING,NAME,VALUE,SEQ,OPTION,DTYPE) ; -- build an element STRING
  S SEQ=+$G(SEQ),OPTION=$G(OPTION,"addTags")
  ;
  ; does DataTYPE not require quotes?
- S DTYPE=$S($G(DTYPE)="C":1,$G(DTYPE)="L":1,"[{"[$E(VALUE):1,VALUE?1.N1"E"1N.E:0,VALUE?1.N1"e"1N.E:0,+VALUE=VALUE:1,1:0)
+ S DTYPE=$S($G(DTYPE)="C":1,$G(DTYPE)="L":1,"[{"[$E(VALUE):1,VALUE?0.1"-"1.N1"E"1N.E:0,VALUE?0.1"-"1.N1"e"1N.E:0,+VALUE=VALUE:1,1:0) ;p25
  N X,Y S X="""",Y=$S(DTYPE:"",1:"""")
  ;
  S DFORM=+$G(DFORM) ; JSON:0  XML:1  TEXT:2

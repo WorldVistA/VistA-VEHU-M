@@ -1,5 +1,5 @@
-MAGGTU4 ;WOIFO/GEK/SG/NST - VERSION CHECKS FOR IMAGING CLIENTS ; 25 May 2010 12:33 PM
- ;;3.0;IMAGING;**8,48,63,45,46,59,96,95,72,93,94**;Mar 19, 2002;Build 1744;May 26, 2010
+MAGGTU4 ;WOIFO/GEK/SG/NST - VERSION CHECKS FOR IMAGING CLIENTS ; 21 Jun, 2023@13:44:31
+ ;;3.0;IMAGING;**8,48,63,45,46,59,96,95,72,93,94,356**;Mar 19, 2002;Build 9
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -111,6 +111,8 @@ CHKVER(MAGRES,CLVER) ;RPC [MAG4 VERSION CHECK]
  . . ;--- Currently, the client application name must be provided
  . . S RC=$$ERROR^MAGUERR(-24,,CLNAME)
  . . Q
+ . ; If client states it is TeleReader then record this - P356 CD 06/21/2023
+ . I CLNAME="TELEREADER" S ^TMP($J,"MAGTELER")=1
  . ;
  . ;--- Check the client version
  . S CVRC=$$CHKVER1^MAGGTU41(.MAGVCD,CLNAME,.CLVER)

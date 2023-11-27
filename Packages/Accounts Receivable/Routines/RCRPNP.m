@@ -1,5 +1,5 @@
 RCRPNP ;EDE/SAB - REPAYMENT PLAN UTILITIES;12/31/2020  8:40 AM
- ;;4.5;Accounts Receivable;**378**;Mar 20, 1995;Build 54
+ ;;4.5;Accounts Receivable;**378,389,423**;Mar 20, 1995;Build 8
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -13,7 +13,7 @@ MAIN ; Entry Point for the nightly process
  ;
 UPDSTAT ;Review all active plans to determine their current status.
  ;
- N RCI,RCD0,RCCURST,RCNEWST,RCCRDT,RCSTSTRT,RCSTEND
+ N RCI,RCJ,RCD0,RCCURST,RCNEWST,RCCRDT,RCSTSTRT,RCSTEND
  ;Loop through the Repayment Plan file
  ;
  ; Start calculating execution time
@@ -47,6 +47,7 @@ UPDSTAT ;Review all active plans to determine their current status.
  . . . . Q:'RCBILLDA
  . . . . ;  remove fields 41 and 45 from the bill
  . . . . D RMVPLN^RCRPU1(RCBILLDA)
+ . . . . D TRAN^RCRPU(RCBILLDA,0,69)  ; file "RPP Terminated" transaction  PRCA*4.5*389
  . . . D UPDAUDIT^RCRPU2(RCI,RCCRDT,"C","S") ;Update Audit Log with System Termination Comment
  ;
  ; Update Processing time metrics
@@ -56,75 +57,81 @@ UPDSTAT ;Review all active plans to determine their current status.
  ;
 ADDBILLS ;Review a debtor and all non referred, Active bills to the plan.
  ;
- N RCACTDT,RCBILLDA,RCRPIEN,RCSTAT,RCACTIVE,RCDBTR,RCSTP,RCD0,RCRPSTAT,RCRVW,RCD7,RCAMT,RCMNPY,RCNOMN,RCNWLN,RCMBAL,RCRPD0
- N RCNWMN,RCPLNBL,RCRMLN,RCRMMOD,RCSTSTRT,RCSTEND
+ N RCACTDT,RCBILLDA,RCRPIEN,RCSTAT,RCACTIVE,RCDBTR,RCSTP,RCD0,RCRPSTAT,RCD7,RCAMT,RCMNPY,RCNOMN,RCNWLN,RCRPD0
+ N RCNWMN,RCPLNBL,RCRMLN,RCSTSTRT,RCSTEND,RCREV36
+ N RCFLG36,RCFLG60,RCQUIT  ; PRCA*4.5*423
  ;
  ; Start calculating execution time
  S RCSTSTRT=$H
  ;
  S RCACTDT=$$DT^XLFDT
- ;S RCBILLDA=0
- S RCRPIEN=0
+ S (RCREV36,RCRPIEN)=0  ; PRCA*4.5*389
  F  S RCRPIEN=$O(^RCRP(340.5,RCRPIEN)) Q:'RCRPIEN  D
- .  ;Check to see if the plan is active.  If not, skip it and grab the next
- .  S RCRPD0=$G(^RCRP(340.5,RCRPIEN,0))
- .  Q:RCRPD0=""
- .  Q:'+$P(RCRPD0,U,12)  ; Quit if the Repayment Plan's AUTO ADD field is not set to Yes (it is No or NULL)
- .  S RCRPSTAT=$P(RCRPD0,U,7)
- .  Q:RCRPSTAT>5   ;pLAN IS tERMINATED, CLOSED OR PAID IN FULL.
- .  ; If the plan is under review, don't attempt to add bills
- .  S RCRVW=+$$GET1^DIQ(340.5,RCRPIEN_",",1.01,"I")
- .  Q:RCRVW
- .  ; Find the Debtor.
- .  S RCDBTR=$$GET1^DIQ(340.5,RCRPIEN_",",.02,"I")
- .  ; Loop through the Active Bills for the Debtor
- .  S RCACTIVE=$O(^PRCA(430.3,"B","ACTIVE",""))  ; Get the Active Status IEN
- .  S RCBILLDA=0
- .  ; Loop through all bills or until plan is flagged for review.
- .  F  S RCBILLDA=$O(^PRCA(430,"AS",RCDBTR,RCACTIVE,RCBILLDA)) Q:'RCBILLDA  Q:+$$GET1^DIQ(340.5,RCRPIEN_",",1.01,"I")  D 
- .  .  ;Only look at First Party Bills
- .  .  Q:'$$FIRSTPAR(+RCBILLDA)
- .  .  ;Skip if bill already in plan.
- .  .  Q:+$$GET1^DIQ(430,RCBILLDA_",",45,"I")
- .  .  ;Exclude bills referred to CS, TOP, or DMC
- .  .  S RCCSDT=+$$GET1^DIQ(430,RCBILLDA_",",151,"I")    ; get CS Date referral date
- .  .  S RCCSRCDT=+$$GET1^DIQ(430,RCBILLDA_",",153,"I")  ; get CS Recall date
- .  .  I RCCSDT,'RCCSRCDT Q    ;If still at Cross Servicing, the don't add bill to plan.
- .  .  Q:+$$GET1^DIQ(430,RCBILLDA_",",121,"I")    ; Bill at DMC, quit, don't add bill to plan
- .  .  I +$$GET1^DIQ(430,RCBILLDA_",",141,"I"),+$$GET1^DIQ(430,RCDBTR_",",6.02,"I") Q    ; Bill still at TOP, quit, don't add bill to plan
- .  .  ; Add the Bill to the plan.
- .  .  D UPDBILL^RCRPU(RCRPIEN,RCBILLDA)
- .  .  ; Add Plan to the Bill
- .  .  D ADDPLAN^RCRPU(RCRPIEN,RCBILLDA,RCACTDT)
- .  .  ; Update the Total balance Owed.
- .  .  S RCD7=$G(^PRCA(430,RCBILLDA,7))
- .  .  S RCD0=$G(^PRCA(430,RCBILLDA,0))
- .  .  S RCAMT=$S(+RCD7:$P(RCD7,U,1)+$P(RCD7,U,2)+$P(RCD7,U,3)+$P(RCD7,U,4)+$P(RCD7,U,5),1:$P(RCD0,U,3))
- .  .  S RCPLNBL=$$GET1^DIQ(340.5,RCRPIEN_",",.11,"I")  ;get the current Plan amount Owed value.
- .  .  D UPDPAO^RCRPU1(RCRPIEN,RCAMT+RCPLNBL)
- .  .  ;Calculate the new remaining balance
- .  .  S RCPLNBL=$$GET1^DIQ(340.5,RCRPIEN_",",.11,"I")  ;get the new Plan amount Owed value.
- .  .  S RCRMBAL=RCPLNBL-$$PMNTS^RCRPINQ(RCRPIEN)
- .  .  ; Recalculate the total # payments.
- .  .  S RCMNPY=$$GET1^DIQ(340.5,RCRPIEN_",",.06,"I")
- .  .  S RCNOMN=$$GET1^DIQ(340.5,RCRPIEN_",",.05,"I")
- .  .  S RCNWMN=RCPLNBL\RCMNPY,RCNWMOD=RCRMBAL#RCMNPY
- .  .  I RCNWMOD>0 S RCNWMN=RCNWMN+1
- .  .  ; Calculate the # payments remaining
- .  .  S RCRMLN=RCRMBAL\RCMNPY,RCRMMOD=RCRMBAL#RCMNPY
- .  .  I RCRMMOD>0 S RCRMLN=RCRMLN+1
- .  .  ; If there is a change in term length, update the plan and the schedule.
- .  .  I RCNOMN'=RCNWMN D
- .  .  .  D UPDTERMS^RCRPU1(RCRPIEN,RCMNPY_"^"_RCNWMN)
- .  .  .  D ADJSCHED^RCRPENTR(RCRPIEN,RCNOMN,RCNWMN)
- .  .  ; If the new term length is > 57 months, set the Review flag.
- .  .  I RCRMLN>57 D UPDRVW^RCRPU2(RCRPIEN,1)
- .  .  ;
- .  .  ;Update Audit Log
- .  .  D UPDAUDIT^RCRPU2(RCRPIEN,$$DT^XLFDT,"A","")
- .  .  ;
- .  .  ;Update the AR Metrics File with activity
- .  .  D UPDMET^RCSTATU(1.02,1)
+ .; Check to see if the plan is active.  If not, skip it and grab the next
+ .S RCRPD0=$G(^RCRP(340.5,RCRPIEN,0)) Q:RCRPD0=""
+ .Q:'+$P(RCRPD0,U,12)  ; Quit if the Repayment Plan's AUTO ADD field is not set to Yes (it is No or NULL)
+ .S RCRPSTAT=$P(RCRPD0,U,7)
+ .Q:RCRPSTAT>5   ;Plan is TERMINATED, CLOSED or PAID IN FULL.
+ .; If the plan is under review, don't attempt to add bills
+ .S RCFLG60=+$$GET1^DIQ(340.5,RCRPIEN_",",1.01,"I") ;  PRCA*4.5*423
+ .S RCFLG36=$$GET36^RCRPWLUT(RCRPIEN) ;  PRCA*4.5*423
+ .S RCRMLN=$$REMPMNTS^RCRPU3(RCRPIEN,$$GET1^DIQ(340.5,RCRPIEN_",",.06,"I")) ;  PRCA*4.5*423
+ .D CHKFLGS^RCRPU1(RCRPIEN,RCRMLN,RCFLG36,RCFLG60)  ; PRCA*4.5*423
+ .I RCFLG60 Q  ; don't add bills if plan length > 57 months PRCA*4.5*423
+ .I RCRMLN>36,RCFLG36'=1 Q  ; don't add bills if plan length > 36 months and there's no approval PRCA*4.5*423
+ .; Find the Debtor.
+ .S RCDBTR=$$GET1^DIQ(340.5,RCRPIEN_",",.02,"I")
+ .; Loop through the Active Bills for the Debtor
+ .S RCACTIVE=$O(^PRCA(430.3,"B","ACTIVE",""))  ; Get the Active Status IEN
+ .S (RCQUIT,RCBILLDA)=0 ;  PRCA*4.5*423
+ .; Loop through all bills or until plan is flagged for review.
+ .F  S RCBILLDA=$O(^PRCA(430,"AS",RCDBTR,RCACTIVE,RCBILLDA)) Q:'RCBILLDA  Q:RCQUIT  D
+ ..; Only look at First Party Bills
+ ..Q:'$$FIRSTPAR(+RCBILLDA)
+ ..; Skip if bill already in plan.
+ ..Q:+$$GET1^DIQ(430,RCBILLDA_",",45,"I")
+ ..; Exclude bills referred to CS, TOP, or DMC
+ ..S RCCSDT=+$$GET1^DIQ(430,RCBILLDA_",",151,"I")    ; get CS Date referral date
+ ..S RCCSRCDT=+$$GET1^DIQ(430,RCBILLDA_",",153,"I")  ; get CS Recall date
+ ..I RCCSDT,'RCCSRCDT Q    ;If still at Cross Servicing, the don't add bill to plan.
+ ..Q:+$$GET1^DIQ(430,RCBILLDA_",",121,"I")    ; Bill at DMC, quit, don't add bill to plan
+ ..I +$$GET1^DIQ(430,RCBILLDA_",",141,"I"),+$$GET1^DIQ(430,RCDBTR_",",6.02,"I") Q    ; Bill still at TOP, quit, don't add bill to plan
+ ..; Add the Bill to the plan.
+ ..D UPDBILL^RCRPU(RCRPIEN,RCBILLDA)
+ ..; Add Plan to the Bill
+ ..D ADDPLAN^RCRPU(RCRPIEN,RCBILLDA,RCACTDT)
+ ..; Update the Total balance Owed.
+ ..S RCD7=$G(^PRCA(430,RCBILLDA,7))
+ ..S RCD0=$G(^PRCA(430,RCBILLDA,0))
+ ..S RCAMT=$S(+RCD7:$P(RCD7,U,1)+$P(RCD7,U,2)+$P(RCD7,U,3)+$P(RCD7,U,4)+$P(RCD7,U,5),1:$P(RCD0,U,3))
+ ..S RCPLNBL=$$GET1^DIQ(340.5,RCRPIEN_",",.11,"I")  ;get the current Plan amount Owed value.
+ ..D UPDPAO^RCRPU1(RCRPIEN,RCAMT+RCPLNBL)
+ ..;Calculate the new remaining balance
+ ..S RCPLNBL=$$GET1^DIQ(340.5,RCRPIEN_",",.11,"I")  ;get the new Plan amount Owed value.
+ ..; Recalculate the total # payments.
+ ..S RCMNPY=$$GET1^DIQ(340.5,RCRPIEN_",",.06,"I")
+ ..S RCNOMN=$$GET1^DIQ(340.5,RCRPIEN_",",.05,"I")
+ ..S RCNWMN=RCPLNBL\RCMNPY,RCNWMOD=RCPLNBL#RCMNPY
+ ..I RCNWMOD>0 S RCNWMN=RCNWMN+1
+ ..; Calculate the # payments remaining
+ ..S RCRMLN=$$REMPMNTS^RCRPU3(RCRPIEN,RCMNPY)  ; PRCA*4.5*389
+ ..; If there is a change in term length, update the plan and the schedule.
+ ..I RCNOMN'=RCNWMN D
+ ...D UPDTERMS^RCRPU1(RCRPIEN,RCMNPY_"^"_RCNWMN)
+ ...D ADJSCHED^RCRPENTR(RCRPIEN,RCNOMN,RCNWMN)
+ ...I RCNWMN>36,RCFLG36'=1 S RCREV36=1  ; PRCA*4.5*389
+ ...Q
+ ..D CHKFLGS^RCRPU1(RCRPIEN,RCRMLN,RCFLG36,RCFLG60)  ; PRCA*4.5*423
+ ..I +$$GET1^DIQ(340.5,RCRPIEN_",",1.01,"I")!($$GET36^RCRPWLUT(RCRPIEN)=0) S RCQUIT=1 ;  PRCA*4.5*423
+ ..;
+ ..;Update Audit Log
+ ..D UPDAUDIT^RCRPU2(RCRPIEN,$$DT^XLFDT,"A","")
+ ..;
+ ..;Update the AR Metrics File with activity
+ ..D UPDMET^RCSTATU(1.02,1)
+ ..Q
+ .Q
+ I RCREV36 D MSGREV^RCRPWLUT  ; send Mailman notification for plans that need 36 months review  PRCA*4.5*389
  ; Update Processing time metrics
  S RCSTEND=$H
  D UPDMET^RCSTATU(2.02,$$HDIFF^XLFDT(RCSTEND,RCSTSTRT,2))

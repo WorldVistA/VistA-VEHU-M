@@ -1,5 +1,5 @@
 RCRPFB ;EDE/SAB - REPAYMENT PLAN FORBEARBANCE;03/31/2021  8:40 AM
- ;;4.5;Accounts Receivable;**378**;Mar 20, 1995;Build 54
+ ;;4.5;Accounts Receivable;**378,389**;Mar 20, 1995;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -50,6 +50,18 @@ FORBEAR(RPIEN,LN) ; Ask the user for the month and year to move.
  . . W !,"The payment date entered is not in the repayment plan.",!
  . . W "Please try again.",!
  . . D PAUSE^RCRPU
+ . ; PRCA*4.5*389
+ . I $P(^RCRP(340.5,RPIEN,2,RCSCHIEN,0),U,2) D  Q
+ . . W !!,"This scheduled payment cannot be forborne because the payment has"
+ . . W !,"already been received."
+ . . W !,"Please select another month to forbear.",!
+ . . D PAUSE^RCRPU
+ . I $P(^RCRP(340.5,RPIEN,2,RCSCHIEN,0),U,3) D  Q
+ . . W !!,"This scheduled payment cannot be forborne because the forbearance"
+ . . W !,"has already been granted."
+ . . W !,"Please select another month to forbear.",!
+ . . D PAUSE^RCRPU
+ . ;
  . W !
  . S RCNEWDT=$$CALCNWDT(RPIEN)
  . S RCCONT=$$CORRECT($$FMTE^XLFDT(RCFBDT,2),$$FMTE^XLFDT(RCNEWDT,2))   ;Confirm that this is correct
@@ -65,6 +77,8 @@ FORBEAR(RPIEN,LN) ; Ask the user for the month and year to move.
  . ;
  . ;File Forbearance Node Entry
  . D UPDFORB(RPIEN,$$DT^XLFDT,RCFBDT,RCNEWDT,"H")
+ . ; update # of forbearances granted
+ . D INCFRBN(RPIEN)  ; PRCA*4.5*389
  . ;
  . S LN=13,LN=$$WRTLN^RCRPINQ($$CJ^XLFSTR("Forbearance granted successfully.",80),LN) Q:'LN
  . ;
@@ -158,4 +172,16 @@ UPDSCHED(RCRPIEN,RCNEWDT) ; Add another month to the schedule - For Forbearances
  ;Add the new month to the schedule
  D UPDSCHED^RCRPU(RCRPIEN,RCNEWDT)
  ;
+ Q
+ ;
+INCFRBN(RCPIEN) ; increase # of forbearances (340.5/.09) by 1  PRCA*4.5*389
+ ;
+ ; RCPIEN  - file 340.5 ien
+ ;
+ N DR,DIE,DA,X,Y
+ N CURNUM
+ Q:+$G(RCPIEN)'>0
+ S CURNUM=+$P(^RCRP(340.5,RCPIEN,0),U,9)
+ S DR=".09///"_(CURNUM+1),DA=RCPIEN,DIE="^RCRP(340.5,"
+ D ^DIE
  Q

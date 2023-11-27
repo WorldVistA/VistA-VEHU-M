@@ -1,5 +1,5 @@
 YTQREST ;SLC/KCM - RESTful API front controller ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,208**;Dec 30, 1994;Build 23
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,208,223**;Dec 30, 1994;Build 22
  ;
  ; .HTTPREQ: HTTP-formatted request and JSON body (if present)
  ; .HTTPRSP: HTTP-formatted response and JSON body (if present)
@@ -22,15 +22,15 @@ QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;POST /api/mha/assignment/edit/:assignmentId?1.N EDITASMT^YTQRQAD5
  ;;GET /api/mha/assignment/:assignmentId?1.N ASMTBYID^YTQRQAD1
  ;;GET /api/mha/assignment/:assignmentId?1.N/:division ASMTBYID^YTQRQAD1
- ;;GET /api/mha/assignment/:assignmentId?32AN ASMTBYID^YTQRQAD1
- ;;GET /api/mha/assignment/:assignmentId?32AN/:division ASMTBYID^YTQRQAD1
+ ;;GET /api/mha/assignment/:assignmentId?36ANP ASMTBYID^YTQRQAD1
+ ;;GET /api/mha/assignment/:assignmentId?36ANP/:division ASMTBYID^YTQRQAD1
  ;;GET /api/mha/assignment/graph/:dfn/:instrument GETGRAPH^YTQRQAD5
  ;;DELETE /api/mha/assignment/:assignmentId TRSASMT^YTQRQAD1
  ;;DELETE /api/mha/assignment/:assignmentId/:instrument/:delfrmassign DELTEST^YTQRQAD1
  ;;DELETE /api/mha/assignment/:assignmentId/:instrument DELTEST^YTQRQAD1
  ;;POST /api/mha/instrument/admin SAVEADM^YTQRQAD2
  ;;GET /api/mha/instrument/admin/:adminId?1.N GETADM^YTQRQAD2
- ;;GET /api/mha/instrument/admin/:adminId?32AN1"-".N GETADM^YTQRQAD2
+ ;;GET /api/mha/instrument/admin/:adminId?36ANP1"-".N GETADM^YTQRQAD2
  ;;GET /api/mha/instrument/report/:adminId?1.N REPORT^YTQRQAD3
  ;;GET /api/mha/instrument/note/:adminId?1.N GETNOTE^YTQRQAD3
  ;;POST /api/mha/instrument/note SETNOTE^YTQRQAD3
@@ -40,6 +40,7 @@ QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;GET /api/mha/instrument/list/:dfn?1.N GETLIST^YTQRQAD4
  ;;GET /api/mha/location/list GETLOCS^YTQRQAD4
  ;;GET /api/mha/location/list/:locmatch GETLOCS^YTQRQAD4
+ ;;GET /api/mha/location/name/:locId?1.N GETLNAM^YTQRQAD4
  ;;GET /api/mha/category/list GETCATA^YTQRQAD4
  ;;GET /api/mha/specialgraph/interptext GETINTRP^YTQRQAD4
  ;;GET /api/mha/assignment/list/:dfn?1.N ASMTLST^YTQRQAD4
@@ -63,9 +64,9 @@ QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;POST /api/mha/notes/noteprefs SETNP^YTQRQAD7
  ;;GET /api/mha/instrument/description/:instrumentName GINSTD^YTQRQAD
  ;;GET /api/mha/assignment/cat/:assignmentId?1.N GCATINFO^YTQRCAT
- ;;GET /api/mha/assignment/cat/:assignmentId?32AN GCATINFO^YTQRCAT
+ ;;GET /api/mha/assignment/cat/:assignmentId?36ANP GCATINFO^YTQRCAT
  ;;POST /api/mha/assignment/cat/:assignmentId?1.N PCATINFO^YTQRCAT
- ;;POST /api/mha/assignment/cat/:assignmentId?32AN PCATINFO^YTQRCAT
+ ;;POST /api/mha/assignment/cat/:assignmentId?36ANP PCATINFO^YTQRCAT
  ;;GET /api/mha/cat/interview/:interviewId GETCATI^YTQRCAT
  ;;POST /api/mha/cat/interview/:interviewId SETCATI^YTQRCAT
  ;;POST /api/wrapper/close WRCLOSE^YTQRQAD

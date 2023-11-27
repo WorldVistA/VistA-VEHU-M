@@ -1,5 +1,5 @@
 RCDPBPLM ;WISC/RFJ - bill profile ;1 Jun 99
- ;;4.5;Accounts Receivable;**114,153,159,241,276,303,301,315,388**;Mar 20, 1995;Build 13
+ ;;4.5;Accounts Receivable;**114,153,159,241,276,303,301,315,388,389**;Mar 20, 1995;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;
@@ -26,7 +26,7 @@ INIT ;  initialization for list manager list
  I $G(RCDPFXIT) S VALMQUIT=1 Q
  ;
  D DIQ430(RCBILLDA,".01:300")
- S RPIEN=+$$GET1^DIQ(430,RCBILLDA_",",45,"I") I RPIEN D GETS^DIQ(340.5,RPIEN_",",".01;.03;.05:.07",,"RPDATA")  ; PRCA*4.5*388
+ S RPIEN=+$$GET1^DIQ(430,RCBILLDA_",",45,"I") I RPIEN D GETS^DIQ(340.5,RPIEN_",",".01;.03;.05:.07;.11",,"RPDATA")  ; PRCA*4.5*389
  ;
  ;  set the listmanager line number
  S RCLINE=0

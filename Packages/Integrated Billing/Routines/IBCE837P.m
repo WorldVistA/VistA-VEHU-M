@@ -1,5 +1,5 @@
-IBCE837P ;EDE/JWSP - OUTPUT FOR 837 TRANSMISSION - CONTINUED ;
- ;;2.0;INTEGRATED BILLING;**718,727,743**;21-MAR-94;Build 18
+IBCE837P ;EDE/JWS POST EXECUTE - OUTPUT FOR 837 TRANSMISSION - CONTINUED ;
+ ;;2.0;INTEGRATED BILLING;**718,727,743,742**;21-MAR-94;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -12,7 +12,38 @@ POST ;POST execute for 837, called by IBCE837A@POST
  ;WCJ;IB718;SQA
  N I
  ;TPF;EBILL-2629;IB*2.0*718v20 remove EBILL-1641 (label 3 below) because of story implementation sequence issues
+ ;JWS;EBILL-2517;IB*2.0*742; added 11 to 837 POST execute loop for PayerIDSwitches.exe VistA implementation
+ ;JWS;EBILL-2517;IB*2.0*742; 11/1/2022: all subsequent FSC workarounds that modify PayerID MUST come after the call to 11^IBCE837Q.
+ ;                         ; also, they must be performed in the documented specified order, as currently executed by FSC 
  F I=1,2,6,7,9,8,10 D @I
+ ;JWS;IB*2.0*742;conditional call tag 11 to perform Payer ID switch based on value of field 8.23 in file 350.9. value of 1 is disabled
+ ; *** NOTE: all workarounds after PayerID switches need to be performed conditionally on [23] of file 350.9
+ ;           including RemoveAB3, RemoveLCAS, RemoveAAA, SvcFacilityAddress
+ I '$P($G(^IBE(350.9,1,8)),"^",23) D
+ . N IBPID,COB,IBOPID
+ . D 11^IBCE837Q  ;Payer ID Switches implementation
+ . ;IB*2.0*742v6;IBPID was getting set before Payer ID Switch occurred, needed to be after.
+ . S IBPID=$G(^TMP("IBXDATA",$J,1,37,1,3))
+ . ;{start}IB*2.0*742;JWS;EBILL-1637;Remove adj reason codes AB3 on secondary Institutional claims with PayerID IPRNT
+ . S COB=$$COBN^IBCEF(IBXIEN)
+ . ; primary other payer will always be the 1st OI6 record.
+ . S IBOPID=$G(^TMP("IBXDATA",$J,1,114,1,4))
+ . I COB=2,$$FT^IBCEF(IBXIEN)=3,IBPID'="IPRNT",IBOPID="12M61",$D(^TMP("IBXDATA",$J,1,135,1,2)) D 4
+ . ;{end} IB*2.0*742;EBILL-1637
+ . ;IB*2.0*742;re-implement;IB*2.0*718;JWS;12/8/21;EBILL-1641;Incorporate FSC Override #3 - if PAYER PRIMARY ID (CI5-3) is not 'IPRNT' or 'PPRNT' and
+ . ; claim Adjustment Group Code (LCAS-3) is 'LQ', then delete LCAS segment
+ . I IBPID'="IPRNT",IBPID'="PPRNT",$D(^TMP("IBXDATA",$J,1,200,1,2)) D 3
+ . ;JWS;IB*2.0*742;EBILL-1645;Remove adj reason code AAA on secondary claims with PayerID not equal to IPRNT or PPRNT
+ . ;skip if not a secondary (Medicare Supplemental) claim and perform if there is at least 1 LCAS record
+ . I COB=2,IBPID'="IPRNT",IBPID'="PPRNT",$F(",12M61,SMTX1,SMDEV",","_IBOPID),$D(^TMP("IBXDATA",$J,1,200,1,2)) D 5
+ . ;JWS;IB*2.0*742;EBILL-2321;copy Billing Provider info to Service Facility data;this needs to be after the AB3, AAA and LCAS segment modes
+ . ; only perform this workaround for PPRNT and null payer ids
+ . I IBPID=""!(IBPID="PPRNT") D 12^IBCE837Q
+ . ;JWS;IB*2.0*742v7;moved DME prof claim workaround inside the PayerIdSwitches check above for testing purposes.
+ . ;JWS;IB*2.0*742;EBILL-2852;remove provider info from DME professional claims;
+ . I IBPID="SMDEV",$$FT^IBCEF(IBXIEN)=2 D 13^IBCE837Q
+ . Q
+ ;
  Q
  ;;
 1 ;;IB*2.0*718;JWS;11/30/21;EBILL-1629;Incorporate FSC Override - clear PRF9 and PRF10 when there is an RX1 segment
@@ -73,27 +104,23 @@ POST ;POST execute for 837, called by IBCE837A@POST
 3 ;IB*2.0*718;JWS;12/8/21;EBILL-1641;Incorporate FSC Override #3 - if PAYER PRIMARY ID (CI5-3) is not 'IPRNT' or 'PPRNT' and claim
  ;;Adjustment Group Code (LCAS-3) is 'LQ', then delete LCAS segment
  ;;ref to var IBPID (IB Payer ID)
- N IBPID,X1
- N CNT,SEQTMP  ;TPF;EBILL-2629;IB*2.0*718v20
- S CNT=0
- S IBPID=$G(^TMP("IBXDATA",$J,1,37,1,3))
- I IBPID'="IPRNT",IBPID'="PPRNT",$D(^TMP("IBXDATA",$J,1,200)) D
+ N X1,CNT,SEQTMP,IBLQ  ;TPF;EBILL-2629;IB*2.0*718v20
+ S (IBLQ,CNT)=0
+ I $D(^TMP("IBXDATA",$J,1,200)) D
  . S X1=0 F  S X1=$O(^TMP("IBXDATA",$J,1,200,X1)) Q:X1=""  D
- .. ;I $G(^TMP("IBXDATA",$J,1,200,X1,3))="LQ" K ^TMP("IBXDATA",$J,1,200,X1)
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,3))="LQ" K ^TMP("IBXDATA",$J,1,200,X1) Q  ;TPF;EBILL-2629;IB*2.0*718v20
+ .. I $G(^TMP("IBXDATA",$J,1,200,X1,3))="LQ" S IBLQ=1 K ^TMP("IBXDATA",$J,1,200,X1) Q  ;TPF;EBILL-2629;IB*2.0*718v20
  .. S CNT=CNT+1
  .. M SEQTMP(CNT)=^TMP("IBXDATA",$J,1,200,X1)
  .. Q
  . Q
+ Q:'IBLQ
  K ^TMP("IBXDATA",$J,1,200)  ;TPF;EBILL-2629;IB*2.0*718v20
  M ^TMP("IBXDATA",$J,1,200)=SEQTMP
  Q
  ;
-4 ;IB*2.0*XXX;JWS;12/14/21;EBILL-1637;remove adjustment reason code (AB3) and associated amounts when not submitted on a paper Medicare
+4 ;IB*2.0*742;JWS;11/15/22;EBILL-1637;remove adjustment reason code (AB3) and associated amounts when not submitted on a paper Medicare
  ; secondary claim.  The AB3 value is used by HCCH for printing MRA files.  It should only appear for IPRINT claims
- N X1
- I $G(^TMP("IBXDATA",$J,1,37,1,3))="IPRNT" Q
- I '$D(^TMP("IBXDATA",$J,1,135)) Q
+ N X1,I
  S X1=0 F  S X1=$O(^TMP("IBXDATA",$J,1,135,X1)) Q:X1=""  D
  . I $G(^TMP("IBXDATA",$J,1,135,X1,4))="AB3" D
  .. K ^TMP("IBXDATA",$J,1,135,X1,4),^(5),^(6)
@@ -109,37 +136,27 @@ POST ;POST execute for 837, called by IBCE837A@POST
  .. K ^TMP("IBXDATA",$J,1,135,X1,19),^(20),^(21)
  . I $G(^TMP("IBXDATA",$J,1,135,X1,4))="",$G(^(7))="",$G(^(10))="",$G(^(13))="",$G(^(16))="",$G(^(19))="" K ^TMP("IBXDATA",$J,1,135,X1) Q
  . I $G(^TMP("IBXDATA",$J,1,135,X1,4))="" D
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,7))'="" D 41(4,7) Q
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,10))'="" D 41(4,10) Q
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,13))'="" D 41(4,13) Q
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,16))'="" D 41(4,16) Q
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,19))'="" D 41(4,19) Q
+ .. F I=7,10,13,16,19 I $G(^TMP("IBXDATA",$J,1,135,X1,I))'="" D 41(4,I) Q
  . I $G(^TMP("IBXDATA",$J,1,135,X1,7))="" D
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,10))'="" D 41(7,10) Q
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,13))'="" D 41(7,13) Q
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,16))'="" D 41(7,16) Q
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,19))'="" D 41(7,19) Q
+ .. F I=10,13,16,19 I $G(^TMP("IBXDATA",$J,1,135,X1,I))'="" D 41(7,I) Q
  . I $G(^TMP("IBXDATA",$J,1,135,X1,10))="" D
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,13))'="" D 41(10,13) Q
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,16))'="" D 41(10,16) Q
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,19))'="" D 41(10,19) Q
+ .. F I=13,16,19 I $G(^TMP("IBXDATA",$J,1,135,X1,I))'="" D 41(10,I) Q
  . I $G(^TMP("IBXDATA",$J,1,135,X1,13))="" D
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,16))'="" D 41(13,16) Q
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,19))'="" D 41(13,19) Q
- . I $G(^TMP("IBXDATA",$J,1,135,X1,16))="" D
- .. I $G(^TMP("IBXDATA",$J,1,135,X1,19))'="" D 41(16,19) Q
+ .. F I=16,19 I $G(^TMP("IBXDATA",$J,1,135,X1,I))'="" D 41(13,I) Q
+ . I $G(^TMP("IBXDATA",$J,1,135,X1,16))="",$G(^TMP("IBXDATA",$J,1,135,X1,19))'="" D 41(16,19)
  . Q
  Q 
  ;  
 41(XT,XF) ;shuffle adjustment reason codes
- S ^(XT)=^TMP("IBXDATA",$J,1,135,X1,XF),^(XT+1)=$G(^(XF+1)),^(XT+2)=$G(^(XF+2)) K ^(XF+1),^(XF+2),^(XF+3)
+ ; XF = adj reason code field to be moved
+ ; XT = field number of location to move the adj reason code info
+ S ^(XT)=^TMP("IBXDATA",$J,1,135,X1,XF),^(XT+1)=$G(^(XF+1)),^(XT+2)=$G(^(XF+2)) K ^(XF),^(XF+1),^(XF+2)
  Q
  ;
-5 ;IB*2.0*XXX;JWS;12/14/21;EBILL-1645;remove adjustment reason code (AAA) and associated amounts when not submitted on a paper Medicare
+5 ;IB*2.0*742;JWS;11/15/22;EBILL-1645;remove adjustment reason code (AAA) and associated amounts when not submitted on a paper Medicare
  ; secondary claim.  The AAA value is used by HCCH for printing MRA files.  It should only appear for IPRINT and PPRNT IDs
- N X1
- I $G(^TMP("IBXDATA",$J,1,37,1,3))="IPRNT"!($G(^(3))="PPRNT") Q
- I '$D(^TMP("IBXDATA",$J,1,200)) Q
+ N X1,I
+ ; seq=200 is LCAS segment
  S X1=0 F  S X1=$O(^TMP("IBXDATA",$J,1,200,X1)) Q:X1=""  D
  . I $G(^TMP("IBXDATA",$J,1,200,X1,4))="AAA" D
  .. K ^TMP("IBXDATA",$J,1,200,X1,4),^(5),^(6)
@@ -155,30 +172,21 @@ POST ;POST execute for 837, called by IBCE837A@POST
  .. K ^TMP("IBXDATA",$J,1,200,X1,19),^(20),^(21)
  . I $G(^TMP("IBXDATA",$J,1,200,X1,4))="",$G(^(7))="",$G(^(10))="",$G(^(13))="",$G(^(16))="",$G(^(19))="" K ^TMP("IBXDATA",$J,1,200,X1) Q
  . I $G(^TMP("IBXDATA",$J,1,200,X1,4))="" D
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,7))'="" D 51(4,7) Q
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,10))'="" D 51(4,10) Q
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,13))'="" D 51(4,13) Q
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,16))'="" D 51(4,16) Q
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,19))'="" D 51(4,19) Q
+ .. F I=7,10,13,16,19 I $G(^TMP("IBXDATA",$J,1,200,X1,I))'="" D 51(4,I) Q
  . I $G(^TMP("IBXDATA",$J,1,200,X1,7))="" D
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,10))'="" D 51(7,10) Q
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,13))'="" D 51(7,13) Q
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,16))'="" D 51(7,16) Q
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,19))'="" D 51(7,19) Q
+ .. F I=10,13,16,19 I $G(^TMP("IBXDATA",$J,1,200,X1,I))'="" D 51(7,I) Q
  . I $G(^TMP("IBXDATA",$J,1,200,X1,10))="" D
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,13))'="" D 51(10,13) Q
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,16))'="" D 51(10,16) Q
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,19))'="" D 51(10,19) Q
+ .. F I=13,16,19 I $G(^TMP("IBXDATA",$J,1,200,X1,I))'="" D 51(10,I) Q
  . I $G(^TMP("IBXDATA",$J,1,200,X1,13))="" D
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,16))'="" D 51(13,16) Q
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,19))'="" D 51(13,19) Q
- . I $G(^TMP("IBXDATA",$J,1,200,X1,16))="" D
- .. I $G(^TMP("IBXDATA",$J,1,200,X1,19))'="" D 51(16,19) Q
+ .. F I=16,19 I $G(^TMP("IBXDATA",$J,1,200,X1,I))'="" D 51(13,I) Q
+ . I $G(^TMP("IBXDATA",$J,1,200,X1,16))="",$G(^TMP("IBXDATA",$J,1,200,X1,19))'="" D 51(16,19) Q
  . Q
  Q 
  ;  
 51(XT,XF) ;shuffle adjustment reason codes
- S ^(XT)=^TMP("IBXDATA",$J,1,200,X1,XF),^(XT+1)=$G(^(XF+1)),^(XT+2)=$G(^(XF+2)) K ^(XF+1),^(XF+2),^(XF+3)
+ ; XF = adj reason code field to be moved
+ ; XT = field number of location to move the adj reason code info
+ S ^(XT)=^TMP("IBXDATA",$J,1,200,X1,XF),^(XT+1)=$G(^(XF+1)),^(XT+2)=$G(^(XF+2)) K ^(XF),^(XF+1),^(XF+2)
  Q
  ;
 6 ;IB*2.0*727;JWS;12/14/21;EBILL-1649;remove Secondary ID and Qualifier when Second ID Qualifier = '2U' and payer is Medicare
@@ -198,6 +206,8 @@ POST ;POST execute for 837, called by IBCE837A@POST
  N X1,X2,I
  S X1=0
  I $G(^TMP("IBXDATA",$J,1,37,1,3))="12M61" D  ;Medicare Part A payer ID (changeHealth care)
+ . ;JWS;3/20/23;EBILL-3282;need to modify billing provider secondary id qualifier for Part A - just like Part B; workaround doc error
+ . I $G(^TMP("IBXDATA",$J,1,28,1,6))="1C" S ^(6)="G2"  ;seq=28 : CI1A billing provider secondary id data
  . F I=2,4,6,8 D 71(98,1,I) D  ;seq=98 : OPR2 attending provider sec id
  . D 72(98,1,2)
  . F I=2,4,6,8 D 71(99,1,I)  ;seq=99 : OPR3 operating provider sec id
@@ -260,7 +270,8 @@ POST ;POST execute for 837, called by IBCE837A@POST
  .Q:$G(LCOBSEC)&($G(^TMP("IBXDATA",$J,1,195,X1,18))="S")   ;ALREADY PROCESSED A SECONDARY.
  .S LCOBPRIM=$G(^TMP("IBXDATA",$J,1,195,X1,18))="P"
  .S LCOBSEC=$G(^TMP("IBXDATA",$J,1,195,X1,18))="S"
- .;
+ .;seq=107 is OI1A record
+ .;seq=112 is OI4 record
  .I LCOBPRIM D
  ..S X2=0 F  S X2=$O(^TMP("IBXDATA",$J,1,107,X2)) Q:X2=""  D
  ...I $G(^TMP("IBXDATA",$J,1,107,X2,2))="P" D  Q
@@ -291,8 +302,8 @@ POST ;POST execute for 837, called by IBCE837A@POST
  . F I=2,4,6 I $G(^TMP("IBXDATA",$J,1,101,1,I))'="1G",$G(^(I))'="0B" K ^(I),^(I+1)  ;seq=101 : OPR5 referring provider secondary id
  . F I=2,4,6,8 I $G(^TMP("IBXDATA",$J,1,104.4,1,I))="1C" S ^(I)="G2"  ;seq=104.4 : OPRA rendering provider sec id
  . F I=7:1:12 K ^TMP("IBXDATA",$J,1,57,1,I)  ;seq=57 : SUB2 service facility data
- .;F I=2,4,6,8 I $G(^TMP("IBXDATA",$J,1,104,1,I))="EI" S ^(I)="G2"  ;seq=104 : OPR8 supervising provider secondary id data ; WCJ EBILL-3260;IB743
- . F I=2,4,6,8 I $G(^TMP("IBXDATA",$J,1,104,1,I))="EI" K ^(I),^(I+1)  ;seq=104 : OPR8 supervising provider secondary id data ; WCJ EBILL-3260;IB743
+ . ; WCJ EBILL-3260;3/17/23;workaround documentation error, EI needed removed not changed to G2
+ . F I=2,4,6,8 I $G(^TMP("IBXDATA",$J,1,104,1,I))="EI" K ^(I),^(I+1)  ;seq=104 : OPR8 supervising provider secondary id data
  . S X1=0 F  S X1=$O(^TMP("IBXDATA",$J,1,193.6,X1)) Q:X1=""  D  ;seq=193.6 : LPUR line purchase service provider data
  .. ;JWS;8/15/22;IB*2.0*727v12;FSC workaround documentation was incorrect - Set LPUR-6 = "1G" and LPUR-7 = 'VAD001'
  .. ;JWS;10/19/22;EBILL-2979;IB*2.0*727v14;should only set if LPUR line exists
@@ -323,4 +334,4 @@ POST ;POST execute for 837, called by IBCE837A@POST
  ; JWS;9/12/22;Changed to reverse $O because FSC wants External Injury codes before Other Diag codes
  S IBDT="",XCT=1 F  S IBDT=$O(X3(IBDT),-1) Q:IBDT=""  S X2="" F  S X2=$O(X3(IBDT,X2)) Q:X2=""  S XCT=XCT+1,X1(X2,1)="DC"_XCT_" " M ^TMP("IBXDATA",$J,1,90,XCT)=X1(X2)
  Q
- ; 
+ ;

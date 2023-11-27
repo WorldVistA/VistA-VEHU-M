@@ -1,5 +1,5 @@
 RCRPTLR ;EDE/YMG - REPAYMENT PLAN TERM LENGTH EXCEEDED REPORT; 11/23/2020
- ;;4.5;Accounts Receivable;**378**;Mar 20, 1995;Build 54
+ ;;4.5;Accounts Receivable;**378,423**;Mar 20, 1995;Build 8
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -37,8 +37,8 @@ COMPILE ; compile report
  ..S NAME=$$NAM^RCFN01(DEBTOR) Q:NAME=""  ; debtor name
  ..S SSN=$$SSN^RCFN01(DEBTOR) Q:SSN'>0    ; debtor SSN
  ..S RPPID=$P(N0,U)                       ; RPP ID
- ..; each entry is: ^TMP("RCRPTLR",$J,n) = RPP ID ^ name ^ ssn ^ term length (# of payments) ^ term limit exceeded date
- ..S CNT=CNT+1,^TMP("RCRPTLR",$J,CNT)=RPPID_U_NAME_U_SSN_U_$P(N0,U,5)_U_TEDT
+ ..; each entry is: ^TMP("RCRPTLR",$J,n) = RPP ID ^ name ^ ssn ^ term length (remaining # of payments) ^ term limit exceeded date
+ ..S CNT=CNT+1,^TMP("RCRPTLR",$J,CNT)=RPPID_U_NAME_U_SSN_U_$$REMPMNTS^RCRPU3(RPIEN,+$P(N0,U,6))_U_TEDT  ; PRCA*4.5*423
  ..S Z=$S(SORT="N":NAME,SORT="S":SSN,1:RPPID) Q:Z=""
  ..S Z=" "_Z    ;Add space to force correct sort order
  ..S ^TMP("RCRPTLR",$J,"IDX",Z,CNT)=""

@@ -1,5 +1,5 @@
-RCDPBPLI ;WISC/RFJ-bill profile (build array cont employee/vendor) ;1 Jun 99
- ;;4.5;Accounts Receivable;**114,153,301,315,350,372,388**;Mar 20, 1995;Build 13
+RCDPBPLI ;WISC/RFJ - bill profile (build array cont employee/vendor) ;1 Jun 99
+ ;;4.5;Accounts Receivable;**114,153,301,315,350,372,388,389**;Mar 20, 1995;Build 36
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -113,13 +113,15 @@ REJECT ;  ; prca*4.5*301 ; LEG
  ;
  ;
 REPAY ;  show repayment plan
+ N REMPMNTS
  S RCLINE=RCLINE+1 D SET^RCDPBPLM(" ",RCLINE,1,80)
  S RCLINE=RCLINE+1 D SET^RCDPBPLM("Repayment Plan Data",RCLINE,1,80,0,IOUON,IOUOFF)
  S RCLINE=RCLINE+1 D SET^RCDPBPLM("       Repayment Plan ID",RCLINE,1,80,.01,,,1)
  S RCLINE=RCLINE+1 D SET^RCDPBPLM("     Repayment Plan Date",RCLINE,1,80,.03,,,1)
  S RCLINE=RCLINE+1 D SET^RCDPBPLM("   Repayment Plan Status",RCLINE,1,80,.07,,,1)
  S RCLINE=RCLINE+1 D SET^RCDPBPLM("    Repayment Amount Due",RCLINE,1,80,.06,,,1)
- S RCLINE=RCLINE+1 D SET^RCDPBPLM("      Number of Payments",RCLINE,1,80,.05,,,1)
+ S REMPMNTS="" I $D(RPDATA) S REMPMNTS=$$REMPMNTS^RCRPU3(RPIEN,$G(RPDATA(340.5,RPIEN_",",.06)))  ; PRCA*4.5*389
+ I REMPMNTS'="" S RCLINE=RCLINE+1 D SET^RCDPBPLM("      Payments Remaining: "_REMPMNTS,RCLINE,1,80)  ; PRCA*4.5*389
  Q
  ;
  ;

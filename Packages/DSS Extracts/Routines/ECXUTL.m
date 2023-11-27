@@ -1,7 +1,10 @@
 ECXUTL ;ALB/JAP - Utilities for DSS Extracts ; 11/23/10 1:58pm
- ;;3.0;DSS EXTRACTS;**1,5,8,84,90,127,144,184**;Dec 22, 1997;Build 124
+ ;;3.0;DSS EXTRACTS;**1,5,8,84,90,127,144,184,187**;Dec 22, 1997;Build 163
  ;
  ; Reference to $$IEN2DATA^XUA4A72,$$GET^XUA4A72 in ICR #1625
+ ; Reference to ^DPT( in ICR #1850
+ ; Reference to EN^PSJBCMA1 in ICR #2829
+ ; Reference to ^TMP("PSJ" supported by SACC 2.3.2.5.1
  ;
 ECXYM(ECXFMDT) ;extrinsic function
  ;converts any FM internal format date or date/time to a 6-character string
@@ -65,6 +68,7 @@ ECXDATE(ECXFMDT,ECXYM) ;extrinsic function
  ;
  N MONTH,YEAR,CENTURY,DAY,ECXDATE
  ;
+ S ECXFMDT=+ECXFMDT ;187
  ;error checks
  I +ECXYM'=ECXYM S ECXDATE="000000" Q ECXDATE
  I $L(ECXYM)'=6 S ECXDATE="000000" Q ECXDATE
