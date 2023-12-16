@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: BPS NCPDP REJECT CODES
 ZWR
-^BPSF(9002313.93,0)="BPS NCPDP REJECT CODES^9002313.93I^1534^1533"
+^BPSF(9002313.93,0)="BPS NCPDP REJECT CODES^9002313.93I^1534^1532"
 ^BPSF(9002313.93,1,0)="01^M/I IIN Number"
 ^BPSF(9002313.93,2,0)="02^M/I Version/Release Number"
 ^BPSF(9002313.93,3,0)="03^M/I Transaction Code"
@@ -1403,7 +1403,6 @@ ZWR
 ^BPSF(9002313.93,1400,0)="982^Provide Pt Notice When Pt Care Delay Due to Claim Rej/Benefit Restrict"
 ^BPSF(9002313.93,1401,0)="984^Bill Dual Elig. Medicare Part B Pt. Cost Share to Alt Medicaid Benefit"
 ^BPSF(9002313.93,1402,0)="985^Beneficiary Has A Work Comp Medicare Set-Aside Arrangement (WCMSA)"
-^BPSF(9002313.93,1403,0)="Yes"
 ^BPSF(9002313.93,1404,0)="DA1^M/I Employer Contact Last Name"
 ^BPSF(9002313.93,1405,0)="DA2^M/I Employer Street Address Line 1"
 ^BPSF(9002313.93,1406,0)="DA3^M/I Employer Street Address Line 2"
@@ -3035,7 +3034,6 @@ ZWR
 ^BPSF(9002313.93,"B","YX",987)=""
 ^BPSF(9002313.93,"B","YY",988)=""
 ^BPSF(9002313.93,"B","YZ",989)=""
-^BPSF(9002313.93,"B","Yes",1403)=""
 ^BPSF(9002313.93,"B","Z0",990)=""
 ^BPSF(9002313.93,"B","Z1",991)=""
 ^BPSF(9002313.93,"B","Z2",992)=""

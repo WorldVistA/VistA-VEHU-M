@@ -1,6 +1,6 @@
 PSSDAWUT ;BIRM/MFR - ECME (BPS) Utilities ;10/15/04
- ;;1.0;PHARMACY DATA MANAGEMENT;**90**;9/30/97
- ;Reference to File #9002313.24 supported by DBIA 4715
+ ;;1.0;PHARMACY DATA MANAGEMENT;**90,260**;9/30/97;Build 14
+ ; Reference to File #9002313.24 in ICR #4715
  ;
 DAWEXT(CODE) ; Returns description for DAW code (Dispense as Written)
  N DIC,X,Y
@@ -10,11 +10,13 @@ DAWEXT(CODE) ; Returns description for DAW code (Dispense as Written)
 INPUT ; Input Transform for DAW CODE
  I $L(X)<1!($L(X)>2)!'$D(X) K X Q
  I X="?" X ^DD(50,81,4) Q
+ S DIC("S")="I $P($G(^(0)),""^"",3)'=1"
  S DIC(0)="QM",DIC="^BPS(9002313.24," D ^DIC
  S X=$P(Y,U,2) K:Y<0 X
  Q
  ;
 HLP ; Executable help for DAW CODE field
  N DIC,D,DO
+ S DIC("S")="I $P($G(^(0)),""^"",3)'=1"
  S DIC="^BPS(9002313.24,",D="B",DIC(0)="" D DQ^DICQ
  Q

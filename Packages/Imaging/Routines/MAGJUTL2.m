@@ -1,5 +1,5 @@
-MAGJUTL2 ;WIRMFO/JHC/DAC - VistRad subroutines for RPC calls ; 9 Jul 2018  4:05 PM
- ;;3.0;IMAGING;**18,65,76,104,120,220**;Mar 19, 2002;Build 2
+MAGJUTL2 ;WIRMFO/JHC/DAC - VistRad subroutines for RPC calls ; 10/17/2022
+ ;;3.0;IMAGING;**18,65,76,104,120,220,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJUTL2 ;WIRMFO/JHC/DAC - VistRad subroutines for RPC calls ; 9 Jul 2018  4:05 
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**99**
  Q
 IMGINFO(RARPT,RET) ; Fetch info from Image File for input RARPT:
  ; Input: RARPT: Rad Report pointer

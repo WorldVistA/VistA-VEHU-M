@@ -1,5 +1,5 @@
 IBNCPDP1 ;OAK/ELZ - IB BILLING DETERMINATION PROCESSING FOR NEW RX REQUESTS ;5/22/08
- ;;2.0;INTEGRATED BILLING;**223,276,339,363,383,405,384,411,434,437,435,455,452,473,494,534,550,617,624,636,647,648,649**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**223,276,339,363,383,405,384,411,434,437,435,455,452,473,494,534,550,617,624,636,647,648,649,712**;21-MAR-94;Build 14
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to CL^SDCO21 supported by IA# 406
@@ -26,6 +26,7 @@ RX(DFN,IBD) ; pharmacy package call, passing in IBD by ref
  N IBELIG,IBFEE,IBFIL,IBINGCOST,IBINS,IBINSXRES,IBIT,IBNEEDS,IBPRDATA
  N IBPRICE,IBPTYP,IBRES,IBRMARK,IBROIMAIBRS,IBRT,IBRXN,IBSAVE,IBT
  N IBTRKR,IBTRKRN,IBTRN,IBX
+ N BPS57,INSIEN,POLNO,STOP
  ;
  ; eligibility verification request flag - esg 9/9/10 IB*2*435
  S IBELIG=($G(IBD("RX ACTION"))="ELIG")
@@ -37,6 +38,30 @@ RX(DFN,IBD) ; pharmacy package call, passing in IBD by ref
  ;
  ; -- gather all active pharmacy insurance policies for patient on date of service
  D RXINS^IBNCPDPU(DFN,IBADT,.IBINS)
+ ;
+ ; If current action is a result of a resubmit from ECME User Screen
+ ; and the selected claim is not the primary claim or the patient
+ ; only has one insurance, reverse loop through BPS Log of Transaction
+ ; file looking for an entry related to PRO Option.  If PRO Option entry
+ ; exists, set Rate Type and Plan ID into IBD array. This will ensure the
+ ; rate type on the resubmit is the same rate type used during secondary
+ ; claims processing.
+ I ($G(BWHERE)="ERES"!($G(BWHERE)="ERWV"))&(($G(IBD("RXCOB"))>1)!($G(IBINS)=1)) D
+ . S STOP=0
+ . S BPS57=""
+ . F  S BPS57=$O(^BPSTL("AEC",BRXIEN,BPS57),-1) Q:BPS57=""!(STOP=1)  D
+ . . ; Skip this entry if not from PRO Option
+ . . I $$GET1^DIQ(9002313.57,BPS57,1201)'["P2" Q
+ . . S POLNO=$$GET1^DIQ(9002313.57,BPS57,1.05)
+ . . S INSIEN=""
+ . . F  S INSIEN=$O(^BPSTL(BPS57,10,INSIEN)) Q:INSIEN=""!(STOP=1)  D
+ . . . ; Skip entry if Policy # on the transaction does not match Policy # for 
+ . . . ; the insurance.  This is an extra check to be sure to use the data
+ . . . ; from the correct insurance - if more than one insurance exists.
+ . . . I POLNO'=$$GET1^DIQ(9002313.57902,INSIEN_","_BPS57,902.35) Q
+ . . . S IBD("RTYPE")=$$GET1^DIQ(9002313.57902,INSIEN_","_BPS57,902.29,"I")
+ . . . S IBD("PLAN")=$$GET1^DIQ(9002313.57902,INSIEN_","_BPS57,.01,"I")
+ . . . S STOP=1
  ;
  ; -- determine rate type
  S IBRT=$$RT^IBNCPDPU(DFN,IBADT,.IBINS,.IBPTYP)
@@ -274,7 +299,7 @@ SETINSUR(IBADT,IBRT,IBELIG,IBINS,IBD,IBRES) ; build insurance data array
  .. S IBRXPOL(IBX,IBT)=""
  .. ;
  .. S IBPLNTYP=$P($G(^IBE(355.1,+$P($G(IBINS(IBT,355.3)),U,9),0)),U,1)   ; type of plan name, insurance plan type
- .. I '$G(IBD("PLAN")) I '$D(IBD("INS",IBX)),$P(IBRT,U,3)="V",(IBPLNTYP["TRICARE"!(IBPLNTYP="CHAMPVA")) S IBERMSG(IBX)=IBPLNTYP_" coverage for a Veteran" Q
+ .. I "^ERES^ERWV^"'[("^"_$G(BWHERE)_"^"),'$G(IBD("PLAN")),'$D(IBD("INS",IBX)),$P(IBRT,U,3)="V",(IBPLNTYP["TRICARE"!(IBPLNTYP="CHAMPVA")) S IBERMSG(IBX)=IBPLNTYP_" coverage for a Veteran" Q
  .. ;
  .. S IBPIEN=+$G(^IBA(355.3,+IBPL,6))
  .. I 'IBPIEN S IBERMSG(IBX)="Plan not linked to the Payer" Q  ; Not linked

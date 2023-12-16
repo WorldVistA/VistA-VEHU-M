@@ -1,6 +1,6 @@
 RCDPEM2 ;ALB/TMK/PJH - MANUAL ERA AND EFT MATCHING ;Jun 11, 2014@13:24:36
- ;;4.5;Accounts Receivable;**173,208,276,284,293,298,303,304,321,326,332**;Mar 20, 1995;Build 40
- ;;Per VA Directive 6402, this routine should not be modified.
+ ;;4.5;Accounts Receivable;**173,208,276,284,293,298,303,304,321,326,332,409**;Mar 20, 1995;Build 17
+ ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
  ; PRCA*4.5*303 - Manually Match EFT from Worklist screen
@@ -283,9 +283,12 @@ UNMATCH ; Used to 'unmatch' an ERA matched in error
  ;
  ; PRCA*4.5*284 - Changed option name from 'Mark ERA Return to Payer' to 'Remove ERA from Active Worklist'
 RETN ; Entrypoint for Remove ERA from Active Worklist
- N DIR,X,Y,DTOUT,DUOUT,DIC,RCY,DIE,DA,DR,MSG,%
+ N DA,DIC,DIR,DR,DTOUT,DUOUT,EXC,RCY,REASON,DIE,MSG,X,XX,Y,%    ;PRCA*4.5*409 Added REASON,XX
  D OWNSKEY^XUSRB(.MSG,"RCDPE MARK ERA",DUZ)
- I 'MSG(0) W !!,"SORRY, YOU ARE NOT AUTHORIZED TO USE THIS OPTION",!,"This option is locked with RCDPE MARK ERA key.",! S DIR(0)="E" D ^DIR K DIR Q
+ I 'MSG(0) D  Q
+ . W !!,"SORRY, YOU ARE NOT AUTHORIZED TO USE THIS OPTION"
+ . W !,"This option is locked with RCDPE MARK ERA key.",!
+ . S DIR(0)="E" D ^DIR K DIR
  W !!,"Use this option to remove an ERA from the EEOB Worklist that should not have"
  W !,"been sent to your site by the payer; or the ERA cannot be removed off the"
  W !,"Worklist using the 'Update ERA Posted Using Paper EOB' option."
@@ -294,16 +297,37 @@ RETN ; Entrypoint for Remove ERA from Active Worklist
  W !,"accessed for processing, but can be viewed under the posted Worklist. For"
  W !,"auditing purposes, this option requires the user to enter a reason for"
  W !,"removing the ERA.",!
- S DIC="^RCY(344.4,",DIC(0)="AEMQ",DIC("S")="I '$P(^(0),U,9),'$P(^(0),U,14)" D ^DIC K DIC
+ S DIC="^RCY(344.4,",DIC(0)="AEMQ",DIC("S")="I '$P(^(0),U,9),'$P(^(0),U,14)"
+ D ^DIC K DIC
  Q:Y'>0
  S RCY=+Y
- S DIR(0)="YA",DIR("A",1)="THIS WILL REMOVE THE ERA # "_+Y_" FROM THE ACTIVE WORKLIST",DIR("A")="ARE YOU SURE YOU WANT TO CONTINUE? " W ! D ^DIR K DIR
+ S DIR(0)="YA"
+ S DIR("A",1)="THIS WILL REMOVE THE ERA # "_+Y_" FROM THE ACTIVE WORKLIST"
+ S DIR("A")="ARE YOU SURE YOU WANT TO CONTINUE? "
+ W !
+ D ^DIR K DIR
  W !
  I $D(DUOUT)!$D(DTOUT)!(Y=0) D NOCHNG^RCDPEMB Q
  S DIE="^RCY(344.4,",DA=RCY,DR=".18" D ^DIE
- I $D(Y) D NOCHNG^RCDPEMB Q
+ I $D(Y) D NOCHNG^RCDPEMB Q                     ; User didn't enter a removal reason
+ ;
  ; PRCA*4.5*284 Set EFT MATCH STATUS (#344.4,.09) as '4' FOR REMOVED rather than '2' FOR MATCHED TO PAPER CHECK
  D NOW^%DTC S DR=".14////4;.09////4;.16////"_DUZ_";.17////"_% D ^DIE
+ ;
+ ; PRCA*4.5*409 Start
+ ; Ask the user if they want to remove all data exceptions for the ERA
+ ; being removed from the worklist
+ S DIR(0)="YA"
+ S DIR("A")="Remove all Data Exceptions for ERA # "_RCY_" from the Exceptions Worklist? "
+ W !
+ D ^DIR K DIR
+ S EXC=$S(+Y:1,1:0)
+ S REASON=$P(^RCY(344.4,RCY,6),"^",3)
+ W !
+ I $D(DUOUT)!$D(DTOUT)!(Y=0) S EXC=0            ; Don't remove exceptions
+ I EXC=1 D REMEXC^RCDPEX31(RCY,REASON)          ; Remove any data exceptions
+ ; PRCA*4.5*409 End
+ ;
  S DIR(0)="EA",DIR("A")="Press ENTER to continue: "
  W ! D ^DIR
  Q

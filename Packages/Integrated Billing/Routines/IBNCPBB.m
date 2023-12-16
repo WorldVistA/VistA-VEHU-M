@@ -1,9 +1,9 @@
 IBNCPBB ;DALOI/AAT - ECME BACKBILLING ;24-JUN-2003
- ;;2.0;INTEGRATED BILLING;**276,347,384,435,575,624**;21-MAR-94;Build 10
+ ;;2.0;INTEGRATED BILLING;**276,347,384,435,575,624,712**;21-MAR-94;Build 14
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
- ; Reference to file #9002313.29 supported by IA# 4222
- ; Reference to DIC^PSODI supported by IA# 4858
+ ; Reference to file #9002313.29 in ICR #4222
+ ; Reference to DIC^PSODI in ICR #4858
  ;
  Q
 EN ;[IB GENERATE ECME RX BILLS] entry
@@ -297,6 +297,7 @@ DLYRC(DFLT) ; function, ask for NCPDP field 357-NV Delay Reason Code
  N IBDELAY,C,DIC,DIR,DIRUT,DIROUT,DUOUT,DTOUT,X,Y
  S IBDELAY=""
  I $G(DFLT)?1.2N,DFLT>0,DFLT<15 S DIR("B")=DFLT
+ S DIR("S")="I $P($G(^(0)),""^"",3)'=1"
  S DIR(0)="PO^9002313.29:EMZ" D ^DIR K DIR ; IA# TBD
  S IBDELAY=$S($D(DTOUT)!$D(DUOUT)!$D(DIROUT)!$D(DIRUT):"^",1:Y)
  S IBDELAY=+$P((IBDELAY),"^",1)

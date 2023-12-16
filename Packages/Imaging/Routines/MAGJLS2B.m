@@ -1,5 +1,5 @@
-MAGJLS2B ;WIRMFO/JHC VistARad RPC calls ; 29 Jul 2003  9:59 AM
- ;;3.0;IMAGING;**16,22,18,76,101,90**;Mar 19, 2002;Build 1764;Jun 09, 2010
+MAGJLS2B ;WIRMFO/JHC - VistARad RPC calls ; 10/17/2022
+ ;;3.0;IMAGING;**16,22,18,76,101,90,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJLS2B ;WIRMFO/JHC VistARad RPC calls ; 29 Jul 2003  9:59 AM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**99,101**
  Q
  ;
 PARAMS(X) ; Init some vars used for Exam Lists
@@ -24,7 +25,7 @@ PARAMS(X) ; Init some vars used for Exam Lists
  S X=^MAG(2006.631,LSTID,0)
  I '$P(X,U,6) S LSTID="LIST NOT ENABLED" Q  ;
  S LSTTL=$P(X,U),LSTREQ=$P(X,U,3),LSTPARAM=LSTREQ_U_$P(X,U,4),LASTEDIT=$P(X,U,5)
- S LSTTL=$S(LSTREQ="U":"UNREAD",LSTREQ="R":"RECENT",LSTREQ="A":"ACTIVE",LSTREQ="P":"PENDING",LSTREQ="N":"NEWLY INTERP",LSTREQ="H":"HISTORY",1:"")_" EXAMS: "_LSTTL
+ S LSTTL=$S(LSTREQ="U":"UNREAD",LSTREQ="R":"RECENT",LSTREQ="A":"ACTIVE",LSTREQ="P":"PENDING",LSTREQ="N":"NEWLY INTERP",LSTREQ="H":"HISTORY",LSTREQ="I":"INDEXED",1:"")_" EXAMS: "_LSTTL  ; ISI
  I $P(LSTPARAM,U,2)="" S $P(LSTPARAM,U,2)="ALL" ; dflt All ImagingTypes
  S X=$G(^MAG(2006.69,1,0)),BKGND=+$P(X,U,8),DELTA=+$P(X,U,$S(LSTREQ="U":9,1:13))*60
  I BKGND,'DELTA S DELTA=360 ;dflt Unread List compile cycle time secs
@@ -43,6 +44,7 @@ LSTVAR(LSTID) ; build output columns string
  F I=1:1:$L(MDLVAR,U) S XX=$P(MDLVAR,U,I) D
  . I +XX=12 I '$G(SNDREMOT) Q  ; exclude RC ind
  . I +XX=23 I '$G(SHOWPLAC) Q  ; exclude PLACE
+ . I +XX=201!(+XX=202)!(+XX=203) I '$G(ASIGENA) Q  ; ISI  exclude ASSIGN info?
  . S XOUT=XOUT_$S(XOUT="":"",1:U)_XX
  . S XOUT2=XOUT2_$S(XOUT2="":"",1:U)_$P(LSTHDR,U,I)
  S MDLVAR=XOUT,LSTHDR=XOUT2
@@ -55,6 +57,7 @@ SRTVAR(LSTID) ; build sort-vars string in SORTSS
  F I=1:1:$L(MDSVAR,U) S XX=$P(MDSVAR,U,I) D
  . I +XX=12 Q:'$G(SNDREMOT)   ; exclude RC ind
  . I +XX=23 I '$G(SHOWPLAC) Q  ; exclude PLACE
+ . I +XX=201!(+XX=202)!(+XX=203) I '$G(ASIGENA) Q  ; ISI  exclude ASSIGN info?
  . I 'HAVEONE S HAVEONE=(+XX=1)  ; 1 = Case #
  . S XOUT=XOUT_$S(XOUT="":"",1:U)_XX
  . S XX=$S(XX?1N.N1"-":"-",1:"")_"MD("_+XX_")"
@@ -112,6 +115,8 @@ LSTOUT(MAGGRY,LSTID,MAGLST,LSTAGE,WRNMSG) ; Build output list, w/ sort & selecti
  ;     WARD
  ;   Node 2 then appends 3 pipe-delim pieces that are passed through from list compiler (See svmag2a^magjls3)
  ;
+ ;  Node "ISI"--IEN's 201,ff from Data Elements dic  ;  ISI
+ ;
  ;    LSTAGE=optional List age from last compile, in seconds
  ;    WRNMSG=optional message to append to list title, to warn of possible compile problems
  ; Output: MAGGRY=Indirect ref to output file
@@ -120,14 +125,17 @@ LSTOUT(MAGGRY,LSTID,MAGLST,LSTAGE,WRNMSG) ; Build output list, w/ sort & selecti
  N RARPT,RAST,RADFN,RACNI,RADTI,T,WHOLOCK,XX,MYLOCK,DAYCASE,MODALITY
  N OUT,QX,SORT,SORTSS,LSTHDR,MD,MDLVAR,MDSVAR,REMONLY,REMOTCAS
  N SHOWPLAC,SORTLEN,STATPRIORITY
+ N XX2,XX9,ASIGENA,T ; ISI 
  S LSTAGE=$G(LSTAGE),WRNMSG=$G(WRNMSG)
  S SHOWPLAC=$$SHOWPLAC("") ; Show any Place (Site Code) that is NOT the Login Place
  S REMONLY=0
  S XX=$G(^MAG(2006.69,1,0)),SNDREMOT=+$P(XX,U,11)
  I $G(MAGJOB("REMOTE")) D  ; show remote cache only?
- . I MAGJOB("P32") S REMONLY=+$P(XX,U,10)
- . E  Q:(LSTREQ="H")  S REMONLY=+$G(MAGJOB("REMOTESCREEN"))  ; Hist list
+ . ;  ISI  remove deprecated logic
+ . Q:(LSTREQ="H")  S REMONLY=+$G(MAGJOB("REMOTESCREEN"))  ; Hist list  ; ISI
+ S XX=$G(^MAG(2006.69,1,"ISI")),ASIGENA=($P(XX,U,1)="Y") ; ISI
  D SETVARS(LSTID)
+ I LSTREQ="I",$G(DATA01)=9820 D SETVARS^ISIJLS2(.DIS,.MDCVAR,.LSTHDR,.MDLVAR) ; ISI -- Dynamic Query search & columns logic
  S MAGRACNT=0
  S SORT="^TMP("_$J_",""MAGJSORT""",SORTLEN=$L(SORT) K ^TMP($J,"MAGJSORT")
  K ^TMP($J,"RET") S ^TMP($J,"RET",0)="0^4~Getting Exam List"
@@ -135,23 +143,29 @@ LSTOUT(MAGGRY,LSTID,MAGLST,LSTAGE,WRNMSG) ; Build output list, w/ sort & selecti
  . I X="" S ^TMP($J,"RET",0)="0^4~Problem with Exams List Compile"
  . E  S ^TMP($J,"RET",0)=X
  S ILST=0
- F  S ILST=$O(@MAGLST@(ILST)) Q:'ILST  S XX=^(ILST,1),XX2=^(2) K MD D  ; contents described above
+ F  S ILST=$O(@MAGLST@(ILST)) Q:'ILST  S XX=^(ILST,1),XX2=^(2),XX9=$G(^("ISI")) K MD D  ; contents described above ; ISI
  . S XX=XX_U_$P(XX2,"|"),$P(XX2,"|")=""
+ . I ("UPA"[LSTREQ),$G(MAGJOB("CONSOLIDATED")) S RADIV=$P(XX,U,22) I RADIV]"",'$D(MAGJOB("DIVSCRN",RADIV)) Q  ; ISI new line loc'n for Jordan efficiency ; Screen Unread/Pending/Active exams for DIVision
+ . S T=$P(XX2,"|",2),RADFN=$P(T,U),RADTI=$P(T,U,2),RACNI=$P(T,U,3),RARPT=$P(T,U,4) ; ISI new line loc'n: make Key vars available to all subsequent logic
+ . S RAST=$P(XX,U,16)  ; ISI, ditto
  . S $P(XX,U,24)=$$RISTISME($P(XX,U,24)) ; calculate value @ list output time
+ . S $P(XX9,U,3)=$$ASIGME^ISIJUTL1($P(XX9,U,3),DATA01,RAST) ; ISI calc truth value based on ~assign status & to whom
  . ; Execute Selection logic
- . S X=0 F  S X=$O(MDCVAR(X)) Q:'X  S MD(X)=$P(XX,U,X) ; load needed data
+ . S X=0 F  S X=$O(MDCVAR(X)) Q:'X  D  ; ISI mod to handle ISI-added fields
+ . . I X<200 S MD(X)=$P(XX,U,X) ; load needed data
+ . . E  S MD(X)=$P(XX9,U,X-200) ; ISI added fields stored here
  . I 1 F I=1:1:$G(DIS(0)) X DIS(I) I  Q  ; quit if search logic True
  . E  Q  ; failed selection criteria--skip
- . S RAST=$P(XX,U,16)
- . S T=$P(XX2,"|",2),RADFN=$P(T,U),RADTI=$P(T,U,2),RACNI=$P(T,U,3),RARPT=$P(T,U,4)
+ . I ("UPA"[LSTREQ),'$P(XX9,U,3) Q  ; ISI - assigned, do not display to user acc to asigme fn above
  . I LSTREQ="U",'$D(^RADPT("AS",RAST,RADFN,RADTI,RACNI)) Q  ; No longer Unread!
- . I LSTREQ="U",$G(MAGJOB("CONSOLIDATED")) S RADIV=$P(XX,U,22) I RADIV]"",'$D(MAGJOB("DIVSCRN",RADIV)) Q  ; Screen Unread exams for DIVision
  . S REMOTCAS=$P(XX,U,12)
  . I REMONLY,'REMOTCAS Q  ; don't show if not routed
  . I REMONLY,REMOTCAS D  I 'T Q  ; don't show if not the remote reading site
  . . F I=1:1:$L(REMOTCAS,",")+1 S T=$P(REMOTCAS,",",I) I T,$D(MAGJOB("LOC",T)) Q
  . ; set up sort values, creating sort index w/ indirect reference to sort global
- . F I=1:1:$L(MDSVAR,U) S X=+$P(MDSVAR,U,I) S MD(X)=$P(XX,U,X) I MD(X)="" S MD(X)="~"
+ . F I=1:1:$L(MDSVAR,U) S X=+$P(MDSVAR,U,I) D  ; ISI mod to handle ISI-added fields
+ . . I X<200 S MD(X)=$P(XX,U,X) I MD(X)="" S MD(X)="~"  ; ISI
+ . . I X>200 S MD(X)=$P(XX9,U,X-200) I MD(X)="" S MD(X)="~"  ; ISI range start @201
  . I LSTREQ="H" S @(SORT_",ILST,"_SORTSS_")")=ILST_U_RARPT ; P18 adds ILST so History List can allow mult entries of same exam, in fifo order
  . E  S @(SORT_","_SORTSS_")")=ILST_U_RARPT
  . S MAGRACNT=MAGRACNT+1
@@ -160,7 +174,7 @@ LSTOUT(MAGGRY,LSTID,MAGLST,LSTAGE,WRNMSG) ; Build output list, w/ sort & selecti
  . S @(SORT_","_-9999999999_")")=0,QX=SORT_")" ; define $Query var.; init beginning w/ dummy entry
  . ; proceed thru sort index until the string contained in SORT is not present
  . ; get data w/ indirect refs to the stored data
- . F ILST=0:1 S QX=$Q(@QX) Q:($E(QX,1,SORTLEN))'=SORT  S XX=@MAGLST@(+(@QX),1),XX2=^(2),OUT="" D
+ . F ILST=0:1 S QX=$Q(@QX) Q:($E(QX,1,SORTLEN))'=SORT  S XX=@MAGLST@(+(@QX),1),XX2=^(2),XX9=$G(^("ISI")),OUT="" D  ; ISI
  . . I 'ILST D  Q       ; Header string
  . . . S T="" I LSTAGE?1N.N S T=LSTAGE\60 S T=" (List age: "_$S(T:T_" min, ",1:"")_(LSTAGE#60)_" sec)"
  . . . I WRNMSG]"" S T=T_"  **  "_WRNMSG_"  **"
@@ -168,11 +182,12 @@ LSTOUT(MAGGRY,LSTID,MAGLST,LSTAGE,WRNMSG) ; Build output list, w/ sort & selecti
  . . . S ^TMP($J,"RET",0)=XX
  . . S XX=XX_U_$P(XX2,"|"),$P(XX2,"|")=""
  . . S $P(XX,U,24)=$$RISTISME($P(XX,U,24)) ; calculate value @ list output time
+ . . S $P(XX9,U,3)=$$ASIGME^ISIJUTL1($P(XX9,U,3),DATA01,$P(XX9,U,16)) ; ISI calc value @ output time
  . . S RARPT=$P(@QX,U,2),DAYCASE=$P(XX,U)
  . . S T=$$CHKLOCK(RARPT,DAYCASE),WHOLOCK=$P(T,U),MYLOCK=$P(T,U,2)
  . . S $P(XX,U,2)=WHOLOCK
  . . S MODALITY=$P(XX,U,15),STATPRIORITY=0
- . . F IMD=1:1:$L(MDLVAR,U) S X=$P(MDLVAR,U,IMD),MD=$P(XX,U,+X) D
+ . . F IMD=1:1:$L(MDLVAR,U) S X=$P(MDLVAR,U,IMD),MD=$S(+X<200:$P(XX,U,+X),1:$P(XX9,U,X-200)) D  ; ISI
  . . . I +X=12,(MD]""),SNDREMOT D
  . . . . ; if site routes images, disp Remote Cache ind.
  . . . . N I,T S T="" F I=1:1:$L(MD,",") S T=T_$S(T="":"",1:",")_$P($G(^MAG(2005.2,$P(MD,",",I),3)),U,5)

@@ -1,5 +1,5 @@
-MAGJUTL6 ;WOIFO/JHC,NST - Imaging Utility for getting Radiology Printset; 14 Mar 2013 2:45 PM
- ;;3.0;IMAGING;**118**;Mar 19, 2002;Build 4525;May 01, 2013
+MAGJUTL6 ;WOIFO/JHC,NST - Imaging Utility for getting Radiology Printset; 10/17/2022
+ ;;3.0;IMAGING;**118,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,9 @@ MAGJUTL6 ;WOIFO/JHC,NST - Imaging Utility for getting Radiology Printset; 14 Mar
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ; Reference to ACCFIND^RAAPI in ICR #5020
+ ; Reference to EN2^RAUTL20 in ICR #3270
+ ;; ISI IMAGING;**99,102**
  Q
 DAYCASE(RADFN,RADTI,RACNI) ; return Acn # (or  "^" delimited list of for PRINTSET) for exam
  ; RADFN,RADTI,RACNI -- Pointers to Rad Exam
@@ -45,7 +48,7 @@ DAYCASE2(ACCN) ; return Acn # (or "^" delimited list of for PRINTSET) for exam
  N RADFN,RADTI,RACNI
  ;
  S ACNLIST=""
- S X=$$ACCFIND^RAAPI(ACCN,.RAA) ; Private IA (#5020)
+ S X=$$ACCFIND^RAAPI(ACCN,.RAA)
  I X>0 D  ; accession number found
  . ; For a given accession number, there will never be more than one set of values
  . ; for RADFN/RADTI/RACNI in RAA array
@@ -54,3 +57,11 @@ DAYCASE2(ACCN) ; return Acn # (or "^" delimited list of for PRINTSET) for exam
  . S ACNLIST=$$DAYCASE^MAGJUTL6(RADFN,RADTI,RACNI)  ; get all accession numbers
  . Q
  Q ACNLIST
+ ;
+DAYCASE3(ACCN) ; return RADFN_U_RADTI_U_RACNI for input accession #
+ ; ACCN -- Radiology Accession Number
+ N RAA,X,Y
+ S X=$$ACCFIND^RAAPI(ACCN,.RAA)
+ S Y=""
+ I X>0 S Y=RAA(1)  ; accession number found
+ Q Y

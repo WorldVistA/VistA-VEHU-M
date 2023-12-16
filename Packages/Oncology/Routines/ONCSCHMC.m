@@ -1,7 +1,16 @@
 ONCSCHMC ;HINES OIFO/RTK - Schema derivation, related code continued ;04/27/18
- ;;2.2;ONCOLOGY;**10,12,15,17**;Jul 31, 2013;Build 6
+ ;;2.2;ONCOLOGY;**10,12,15,17,18**;Jul 31, 2013;Build 5
  ;
  ; go through until hit is found, else return ONCSCMA=0
+ ;
+ ;MEDULLABLASTOMA:
+ ;https://staging.seer.cancer.gov/eod_public/schema/3.0/medulloblastoma_v9_2023/
+ I ((ONCT3>699)&(ONCT3<730)) D  I ONCSCMA'=0 Q
+ .I (HST14=9362)!((HST14>9469)&(HST14<9473))!((HST14>9473)&(HST14<9479))!((HST14>9500)&(HST14<9505))!(HST14=9508) S ONCSCMA="09724"
+ I ((ONCT3>699)&(ONCT3<723))!((ONCT3>723)&(ONCT3<730)) D  I ONCSCMA'=0 Q
+ .I (HST14=9473) S ONCSCMA="09724"
+ I ONCTPCD="C753" D  I ONCSCMA'=0 Q
+ .I (HST14=9362) S ONCSCMA="09724"
  ;
  ;MELANOMA CHOROID & CILIARY: C693 H8720-8790
  ;  or C694 H8720-8790 DISCRIM1=1

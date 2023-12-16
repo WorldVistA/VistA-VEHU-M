@@ -1,5 +1,5 @@
-MAGJUPD1 ;WOIFO/JHC - VistARad Update Exam Status ; 25 Mar 2013  5:22 PM
- ;;3.0;IMAGING;**16,22,18,76,101,120,133**;Mar 19, 2002;Build 5393;Sep 09, 2013
+MAGJUPD1 ;WOIFO/JHC - VistARad Update Exam Status ; 10/17/2022
+ ;;3.0;IMAGING;**16,22,18,76,101,120,133,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,10 @@ MAGJUPD1 ;WOIFO/JHC - VistARad Update Exam Status ; 25 Mar 2013  5:22 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ; Reference to EN2^RAUTL20 in ICR #3270
+ ; Reference to STUFPHY^RARIC1 #3317 
+ ; Reference to UP1^RAUTL1 in ICR #1180
+ ;; ISI IMAGING;**99,101,106**
  Q
  ; Subroutines for RPC's to update Exam Status to "Interpreted", and
  ;   for "Closing" a case that is open on the DX Workstation
@@ -42,7 +46,7 @@ STATUS(MAGGRY,PARAMS,DATA) ; rpc: MAGJ RADSTATUSUPDATE
  N RARPT,RADFN,RADTI,RACNI,RAEXT,RACNE,RADTE,RAINT,RAMDV,DIQUIET
  N RAONLINE,ZTQUEUED,RAOR,RASN,RASTI,RAPRTSET,LOGDATA,RSL,TIMESTMP
  N UPDPSKEY,MAGRET,MAGLST,REPLY,UPDFLAG,RADATA,RIST,MAGPSET,RACNILST,ACNLST
- N PSETLST
+ N PSETLST,RASTCAT  ; ISI P106
  S MAGLST="MAGJUPDATE"
  K MAGGRY S MAGGRY=$NA(^TMP($J,MAGLST)) K @MAGGRY  ; assign MAGGRY value
  S DIQUIET=1 D DT^DICRW
@@ -61,6 +65,7 @@ STATUS(MAGGRY,PARAMS,DATA) ; rpc: MAGJ RADSTATUSUPDATE
  S RADATA=$G(^TMP($J,"MAGRAEX",1,1))
  S RAEXT=$P(RADATA,U,12),RACNE=$P(RAEXT,"-",$L(RAEXT,"-")),RADTE=$P(RADATA,U,7) ; p133: $L for SSAN or old Acn
  S RAINT=RADTI_"-"_RACNI
+ S RASTCAT=$P($G(^TMP($J,"MAGRAEX",1,2)),U,11)  ; ISI P106
  I UPDPSKEY=2 D  G STATUSZ ; P101 update annotations only, if authorized (Resident workflow, or Sec Key Override)
  . I +MAGJOB("USER",1),'UPDFLAG,($D(DATA)>9) S REPLY="0^1~Case #"_RAEXT_" Closed; No Status Update; annotation updates performed."
  . E  S UPDPSKEY=0,REPLY="0^4~Invalid request to update annotations for Case #"_RAEXT_"."
@@ -82,7 +87,7 @@ STATUS(MAGGRY,PARAMS,DATA) ; rpc: MAGJ RADSTATUSUPDATE
  ; Else, update not allowed, so give warning msg
  ; Note that when the Exam was OPENed, it must have had status "Examined"
  I '$D(^RA(72,"AVC","E",$P(RADATA,U,11))) D  G STATUSX:(+$P(REPLY,U,2)=1),STATUSZ  ; Current Status MUST be "Examined" Category
- . I $P(RADATA,U,15)>2 D  ; assume update has otherwise been done, eg voice dictation or manual entry in Vista
+ . I $P(RADATA,U,15)>2&(RASTCAT'="R") D  ; assume update has otherwise been done, eg voice dictation or manual entry in Vista  ; ISI P106
  . . S RACNILST=RACNI,RASTI=$P(RADATA,U,11) ; need for code at tag statusx
  . . I RAPRTSET S REPLY="0^1~Printset Exams with Case #"_RAEXT_" have been updated"
  . . E  S REPLY="0^1~No Update done for Case #"_RAEXT_"--current status is "_$P(RADATA,U,14)
@@ -121,6 +126,7 @@ STATUSX ; Newly Interpreted exam:
  D LOG^MAGJUTL3("VR-INT",LOGDATA,PSETLST)
  ; Update Recent Exams List
  G STATUSZ:'$P(^MAG(2006.69,1,0),U,8)  ; no bkgnd compile enabled
+ G STATUSZ:$$MGRREV2^ISIJUTL9  ; ISI -- Rev-2 enabled, Recent compile n/a
  L +^XTMP("MAGJ2","RECENT"):5
  E  G STATUSZ
  N INDX F I=1:1:$L(RACNILST,U) S RACNI=$P(RACNILST,U,I) I RACNI D

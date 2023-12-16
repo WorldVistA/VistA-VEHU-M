@@ -1,5 +1,5 @@
 BPSRES ;BHAM ISC/BEE - ECME SCREEN RESUBMIT W/EDITS ;3/12/08  14:01
- ;;1.0;E CLAIMS MGMT ENGINE;**3,5,7,8,10,11,20,21,23,24,30,32**;JUN 2004;Build 15
+ ;;1.0;E CLAIMS MGMT ENGINE;**3,5,7,8,10,11,20,21,23,24,30,32,35**;JUN 2004;Build 14
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to $$RXRLDT^PSOBPSUT in ICR #4701
@@ -36,8 +36,9 @@ XRESED Q
  ;                  1 - Claim was resubmitted
  ;
 DOSELCTD(BPRXI) ;
- N BP02,BP59,BPADDLTXT,BPBILL,BPCLTOT,BPDFN,BPDOSDT,BPOVRIEN,BPQ,BPRXIEN,BPRXR,BPSTATUS,BPUPDFLG
- N BPCOB,BPSURE,BPPTRES,BPPHSRV,BPDLYRS,COBDATA,BPPRIOPN,BPSPCLS,BPMSG
+ N BP02,BP59,BPADDLTXT,BPBILL,BPCLTOT,BPDFN,BPDOSDT,BPOVRIEN,BPQ
+ N BPRXIEN,BPRXR,BPSTATUS,BPUPDFLG,BPCOB,BPSURE,BPPTRES,BPPHSRV
+ N BPDLYRS,COBDATA,BPPRIOPN,BPSPCLS,BPMSG
  S BPQ=""
  S BPADDLTXT=""
  S (BPCLTOT,BPUPDFLG)=0
@@ -84,14 +85,13 @@ DOSELCTD(BPRXI) ;
  . ; Get Primary claim status
  . S BPSPCLS=$$FINDECLM^BPSPRRX5(BPRXIEN,BPRXR,1)
  . I $P(BPSPCLS,U)>1 D
- .. Q:$$CLOSED^BPSSCRU1($P(BPSPCLS,U,2))
- .. W !,"The secondary claim cannot be Resubmitted unless the primary is either payable",!,"or closed. Please resubmit or close the primary claim first."
- .. S BPPRIOPN=1
- ; Retrieve DOS
+ . . I $$CLOSED^BPSSCRU1($P(BPSPCLS,U,2)) Q
+ . . W !,"The secondary claim cannot be Resubmitted unless the primary is either payable",!,"or closed. Please resubmit or close the primary claim first."
+ . . S BPPRIOPN=1
+ ;
+ ; Retrieve Date of Service, then prompt for EDIT Information.
+ ;
  S BPDOSDT=$$DOSDATE^BPSSCRRS(BPRXIEN,BPRXR)
- ;
- ; Prompt for EDIT Information
- ;
  S BPOVRIEN=$$PROMPTS(BP59,BP02,BPRXIEN,BPRXR,BPCOB,.BPDOSDT,.COBDATA,.BPADDLTXT) I BPOVRIEN=-1 G XRES
  ;
  ; Submit the claim
@@ -105,13 +105,17 @@ DOSELCTD(BPRXI) ;
  I $P(BPBILL,U,2)="NEEDS SC DETERMINATION" S $P(BPBILL,U,2)="NEEDS SC/EI DETERMINATION"
  W $P(BPBILL,U,2)
  ;
- ;0 Prescription/Fill successfully submitted to ECME
- ;1 ECME did not submit prescription/fill
- ;2 IB says prescription/fill is not ECME billable or the data returned from IB is not valid
- ;3 ECME closed the claim but did not submit it to the payer
- ;4 Unable to queue the ECME claim
- ;5 Invalid input
- ;10 Reversal Processed But Claim Was Not Resubmitted
+ ; BPBILL[1] is a number representing the outcome of the attempted
+ ; claim submission.
+ ;   0  Prescription/Fill successfully submitted to ECME
+ ;   1  ECME did not submit prescription/fill
+ ;   2  IB concluded this Rx is not ECME billable, or the data returned
+ ;      from IB is not valid
+ ;   3  ECME closed the claim but did not submit it to the payer
+ ;   4  Unable to queue the ECME claim
+ ;   5  Invalid input
+ ;   6  ECME is currently inactive
+ ;   10 Reversal processed but claim was not resubmitted
  ;
  I +BPBILL=0 D
  . S BPMSG="ECME RED Resubmit Claim w/Edits"
@@ -145,9 +149,11 @@ XRES2 ;
  ;  Output Value -> BPQ  - -1 - The user chose to quit
  ;                         "" - The user completed the EDITS
 PROMPTS(BP59,BP02,BPRXIEN,BPRXR,BPCOB,BPDOSDT,BPSECOND,BPADDLTXT) ;
- N %,BP300,BP35401,BPCLCD1,BPCLCD2,BPCLCD3,BPFDA,BPFLD,BPOVRIEN,BPMED,BPPSNCD
- N BPPREAUT,BPPRETYP,BPQ,BPRELCD,BPRELEASEDT,DIC,DIR,DIROUT,DTOUT,DUOUT,X,Y,DIRUT,DUP
- N BPCLCDN,BPCLCDX,BPSX,BPSADDLFLDS,BPDFN,BPGENDER,BPSEX,BPSIG
+ N %,BP300,BP35401,BPSADDLFLDS,BPCLCD1,BPCLCD2,BPCLCD3,BPCLCDN,BPCLCDX
+ N BPDFN,BPFDA,BPFLD,BPGENDER,BPMED,BPOVRIEN,BPPSNCD,BPPREAUT,BPPRETYP
+ N BPQ,BPRELCD,BPRELEASEDT,BPSEX,BPSIG,BPSX,DIC,DIR,DIROUT,DIRUT,DTOUT
+ N DUOUT,DUP,X,Y
+ ;
  S BPQ=""
  I +$G(BPCOB)=0 S BPCOB=1
  ;
@@ -167,13 +173,16 @@ PROMPTS(BP59,BP02,BPRXIEN,BPRXR,BPCOB,BPDOSDT,BPSECOND,BPADDLTXT) ;
  . I BPPHSRV="" S BPPHSRV=$TR($E($P($G(^BPSC(BP02,400,BPMED,140)),U,7),3,99)," ")
  . F BP35401=1:1:3 S @("BPCLCD"_BP35401)=$TR($E($P($G(^BPSC(BP02,400,BPMED,354.01,BP35401,1)),U),3,99)," ")
  . S BPCLCD1=+BPCLCD1 I BPCLCD1=0 S BPCLCD1=1
- S BPPTRES=$TR($E($P($G(^BPSC(BP02,380)),U,4),3,99)," ") I BPPTRES="" S BPPTRES=1
+ . Q
+ S BPPTRES=$TR($E($P($G(^BPSC(BP02,380)),U,4),3,99)," ")
+ I BPPTRES="" S BPPTRES=1
  I BPPHSRV="" S BPPHSRV=1
  ;
  ; Relationship Code
  ;
  S DIC("B")=BPRELCD
  S DIC(0)="QEAM",DIC=9002313.19,DIC("A")="Pharmacy Relationship Code: "
+ S DIC("S")="I $P($G(^(0)),""^"",3)'=1"
  D ^DIC
  I ($D(DUOUT))!($D(DTOUT)) S BPQ=-1 G XPROMPTS
  S BPRELCD=$P(Y,U,2)
@@ -200,6 +209,7 @@ PROMPTS(BP59,BP02,BPRXIEN,BPRXR,BPCOB,BPDOSDT,BPSECOND,BPADDLTXT) ;
  N X,DIC,Y
  S DIC("B")=+BPPRETYP
  S DIC(0)="QEAM",DIC=9002313.26,DIC("A")="Prior Authorization Type Code: "
+ S DIC("S")="I $P($G(^(0)),""^"",3)'=1"
  D ^DIC
  I ($D(DUOUT))!($D(DTOUT)) S BPQ=-1 G XPROMPTS
  S BPPRETYP=$P(Y,U,2)
@@ -223,6 +233,7 @@ PROMPTS(BP59,BP02,BPRXIEN,BPRXR,BPCOB,BPDOSDT,BPSECOND,BPADDLTXT) ;
  ;
  S DIC("B")=BPCLCD1
  S DIC(0)="QEAM",DIC=9002313.25,DIC("A")="Submission Clarification Code 1: "
+ S DIC("S")="I $P($G(^(0)),""^"",3)'=1"
  D ^DIC
  I ($D(DUOUT))!($D(DTOUT)) S BPQ=-1 G XPROMPTS
  S BPCLCD1=$P(Y,U,2)
@@ -232,6 +243,7 @@ PROMPTS(BP59,BP02,BPRXIEN,BPRXR,BPCOB,BPDOSDT,BPSECOND,BPADDLTXT) ;
  ;
  I +BPCLCD2 S BPCLCD2=+BPCLCD2 S DIC("B")=BPCLCD2
  S DIC(0)="QEAM",DIC=9002313.25,DIC("A")="Submission Clarification Code 2: ",DUP=0
+ S DIC("S")="I $P($G(^(0)),""^"",3)'=1"
  F  D  Q:BPQ=-1  Q:'DUP
  . D ^DIC
  . I ($D(DUOUT))!($D(DTOUT)) S BPQ=-1 Q
@@ -245,6 +257,7 @@ PROMPTS(BP59,BP02,BPRXIEN,BPRXR,BPCOB,BPDOSDT,BPSECOND,BPADDLTXT) ;
  I BPCLCD2'="" D  I BPQ=-1 G XPROMPTS
  . I +BPCLCD3 S BPCLCD3=+BPCLCD3 S DIC("B")=BPCLCD3
  . S DIC(0)="QEAM",DIC=9002313.25,DIC("A")="Submission Clarification Code 3: ",DUP=0
+ . S DIC("S")="I $P($G(^(0)),""^"",3)'=1"
  . F  D  Q:'DUP  I BPQ=-1 Q
  . . D ^DIC
  . . I ($D(DUOUT))!($D(DTOUT)) S BPQ=-1 Q
@@ -281,6 +294,7 @@ P1 ;
  N X,DIC,Y
  S DIC("B")=+BPPHSRV
  S DIC(0)="QEAM",DIC=9002313.28,DIC("A")="Pharmacy Service Type Code: "
+ S DIC("S")="I $P($G(^(0)),""^"",3)'=1"
  D ^DIC
  I ($D(DUOUT))!($D(DTOUT)) S BPQ=-1 G XPROMPTS
  S BPPHSRV=$P(Y,U,2)
@@ -291,6 +305,7 @@ P1 ;
  N X,DIC,Y
  S DIC("B")=BPDLYRS
  S DIC(0)="QEAM",DIC=9002313.29,DIC("A")="Delay Reason Code: "
+ S DIC("S")="I $P($G(^(0)),""^"",3)'=1"
  D ^DIC
  I ($D(DUOUT))!($D(DTOUT)) S BPQ=-1 G XPROMPTS
  S BPDLYRS=$P(Y,U,2)
@@ -320,24 +335,33 @@ P1 ;
  . S BPGENDER=$S(Y="M":1,Y="F":2,Y="N":0,1:3)
  . Q
  ;
- ;
  ; If secondary claim, setup secondary data and allow user to edit.
- ; Get data from the primary claim, if it exists.
  ;
  I BPCOB=2 D  I BPQ=-1 G XPROMPTS
  . N BPSPL59,BPRTTP59
+ . ;
+ . ; Get data from the primary claim, if it exists.
+ . ; If the primary claim data is missing, get data from the
+ . ; most recent secondary claim
+ . ;
  . S BPRET=$$PRIMDATA^BPSPRRX6(BPRXIEN,BPRXR,.BPSECOND)
- . ; If the primary claim data is missing, get data from the most recent secondary claim
  . I 'BPRET,$$SECDATA^BPSPRRX6(BPRXIEN,BPRXR,.BPSPL59,.BPSECOND,.BPRTTP59)
+ . ;
  . ; The PRIMARY BILL element is set by $$SECDATA.  If SECDATA is not
- . ; called, this element will be missing and we will need to create it
+ . ; called, this element will be missing and we will need to create it.
+ . ;
  . I '$D(BPSECOND("PRIMARY BILL")) D
- .. N BPBILL
- .. S BPBILL=$$PAYBLPRI^BPSUTIL2(BP59)
- .. I BPBILL>0 S BPSECOND("PRIMARY BILL")=BPBILL
- . ; Set flag telling BPSNCPDP not to recompile the data from the BPS Transaction and the secondary claim
+ . . N BPBILL
+ . . S BPBILL=$$PAYBLPRI^BPSUTIL2(BP59)
+ . . I BPBILL>0 S BPSECOND("PRIMARY BILL")=BPBILL
+ . ;
+ . ; Set flag telling BPSNCPDP not to recompile the data from the BPS
+ . ; Transaction and the secondary claim.
+ . ;
  . S BPSECOND("NEW COB DATA")=1
- . ; $$PROMPTS displays the data and allows the user edit the data.
+ . ;
+ . ; $$PROMPTS displays the data and allows the user to edit the data.
+ . ;
  . S BPQ=$$PROMPTS^BPSPRRX3(BPRXIEN,BPRXR,BPDOSDT,.BPSECOND)
  ;
  ; Allow user to add to the claim additional fields which are
@@ -388,18 +412,17 @@ ASKLINE(BPROMPT,BPERRMES) ;
  . I BPRET=-4 W "Invalid line number" ; (invalid RX line)"
  . I BPRET=-2 W "Please select Patient's summary line."
  . I BPRET=-3 W "Please specify RX line."
- . I ",-1,-8,-4,-2,-3,"'[(","_BPRET_",") W "Incorrect format." ; Corrupted array (",BPRET,")"
+ . I ",-1,-8,-4,-2,-3,"'[(","_BPRET_",") W "Incorrect format."
  Q BPRET
  ;
 EDITDT(DFLT,BPRXIEN,BPRXR,BP02) ;Prompt User to choose correct Date of Service
  ;
- ; Input value ->  DFLT - The data to use as the default value. If no default
- ;                        is provided, Current Date of Service will be used.
- ;
- ;                        1 - Current Date of Service
- ;                        2 - Fill Date
- ;                        3 - Release Date
- ;
+ ; Input value ->  DFLT - The data to use as the default value. If no
+ ;                        default is provided, the Current Date of
+ ;                        Service will be used.
+ ;                          1 - Current Date of Service
+ ;                          2 - Fill Date
+ ;                          3 - Release Date
  ;              BPRXIEN - Pointer to the PRESCRIPTION file (#52)
  ;                BPRXR - Refill number for prescription
  ;                 BP02 - Pointer to the BPS CLAIMS file (#9002313.02)
@@ -407,13 +430,14 @@ EDITDT(DFLT,BPRXIEN,BPRXR,BP02) ;Prompt User to choose correct Date of Service
  ; Output value -> Selected Date of Service in FileMan format
  ;
  N BPRLS,BPFIL,BPCUR,DIR,DIRUT,DIROUT,DTOUT,DUOUT,OPT,TMP,X,Y
- S BPRLS=$$RXRLDT^PSOBPSUT(BPRXIEN,BPRXR)\1 ;release date
- S BPFIL=$$RXFLDT^PSOBPSUT(BPRXIEN,BPRXR)\1 ;fill date
- S BPCUR=$$HL7TFM^XLFDT($$GET1^DIQ(9002313.02,BP02,401)) ;current date of service
+ S BPRLS=$$RXRLDT^PSOBPSUT(BPRXIEN,BPRXR)\1  ; release date
+ S BPFIL=$$RXFLDT^PSOBPSUT(BPRXIEN,BPRXR)\1  ; fill date
+ S BPCUR=$$HL7TFM^XLFDT($$GET1^DIQ(9002313.02,BP02,401))  ; current date of service
  S DFLT=$G(DFLT),DIR("B")=1,DIR("A")="Date of Service"
  I DFLT=2,BPFIL]"" S DIR("B")=2
  I DFLT=3,BPRLS]"" S DIR("B")=3
- S OPT=1,DIR(0)="S^"_OPT_":"_$$FMTE^XLFDT(BPCUR,"5D")_" Current Date of Service",TMP(OPT)=BPCUR
+ S OPT=1
+ S DIR(0)="S^"_OPT_":"_$$FMTE^XLFDT(BPCUR,"5D")_" Current Date of Service",TMP(OPT)=BPCUR
  I BPFIL'>DT,BPFIL<BPRLS S OPT=OPT+1,DIR(0)=DIR(0)_";"_OPT_":"_$$FMTE^XLFDT(BPFIL,"5D")_" Fill Date",TMP(OPT)=BPFIL
  I BPRLS'>DT S OPT=OPT+1,DIR(0)=DIR(0)_";"_OPT_":"_$$FMTE^XLFDT(BPRLS,"5D")_" Release Date",TMP(OPT)=BPRLS
  D ^DIR
@@ -441,6 +465,7 @@ BPSKIP(BPSRX,BPSFILL) ; Determine whether to skip the enter/edit of Submission C
  ;
  S BPSREJECT=0
  F  S BPSREJECT=$O(^PSRX(BPSRX,"REJ",BPSREJECT)) Q:'BPSREJECT  D
+ . ;
  . ; If a reject is not for the current fill, skip this one.
  . I $$GET1^DIQ(52.25,BPSREJECT_","_BPSRX,5)'=BPSFILL Q
  . ;
@@ -464,6 +489,7 @@ BPSKIP(BPSRX,BPSFILL) ; Determine whether to skip the enter/edit of Submission C
  ;
  S (BPSX,BPSACTIVITY,BPSECMEDATE)=0
  F  S BPSACTIVITY=$O(^PSRX(BPSRX,"A",BPSACTIVITY)) Q:'BPSACTIVITY  D
+ . ;
  . ; If the REASON is not "M" (=ECME), skip.
  . I $$GET1^DIQ(52.3,BPSACTIVITY_","_BPSRX,.02,"I")'="M" Q
  . ; 

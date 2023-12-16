@@ -1,5 +1,5 @@
-GMRCIUTL ;SLC/JFR - UTILITIES FOR INTER-FACILITY CONSULTS ; Oct 24, 2022@13:59:59
- ;;3.0;CONSULT/REQUEST TRACKING;**22,58,184**;DEC 27, 1997;Build 22
+GMRCIUTL ;SLC/JFR - UTILITIES FOR INTER-FACILITY CONSULTS ; May 01, 2023@10:38:56
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,58,184,185**;DEC 27, 1997;Build 16
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; #2051 DIC, #2053 DIE, #3015 VAFCPID, #10112 VASITE, #10103 XLFDT, #3065 XLFNAME, #2171 XUAF4, #2541 XUPARAM, #4648 VAFCTFU2
@@ -270,13 +270,14 @@ ADD2OBR(OBRSGMNT,CONSULT) ; P184
  ;  OBRSGMNT = OBR Segment to be enhanced
  ;  CONSULT  = Consult (pointer to #123)
  ;
- N FS,CS,STN,ORDERNUM,OBR16,ORDPRVDR,NAME,NPI,FILE,ID,CODING,OBR19,FIELD ;
+ N FS,CS,STN,ORDERNUM,OBR16,ORDPRVDR,NAME,NPI,FILE,ID,CODING,OBR19,FIELD,OBR20,OBR27 ;
  S FS=$G(HL("FS"),"|"),CS=$E($G(HL("ECH"),"^~\&"),1) ;
  ;
  ;  Populate OBR-2 with Cerner order number and station.  
  ;  Populate OBR-4.2 with procedure/service name.
  ;  Populate OBR-16 with saved provider data if IFC role is filler.
  ;  Populate OBR-19 with saved placer field 1 data if IFC role is filler.
+ ;  Populate OBR-20 and OBR-27.4 with saved data.
  ;
  I $$GET1^DIQ(123,CONSULT,.125,"I")="F" D  ;
  . ;
@@ -289,15 +290,16 @@ ADD2OBR(OBRSGMNT,CONSULT) ; P184
  . ;
  . S OBR16=$G(^GMR(123,CONSULT,"CERNER1")),$P(OBRSGMNT,FS,17)=OBR16 ;
  . S OBR19=$G(^GMR(123,CONSULT,"CERNER2")),$P(OBRSGMNT,FS,20)=OBR19 ; V10 WTC 6/28/22
+ . S OBR20=$P($G(^GMR(123,CONSULT,"CERNER")),U,11),$P(OBRSGMNT,FS,21)=OBR20 ; 185V2 WTC 4/24/23
+ . S OBR27=$P($G(^GMR(123,CONSULT,"CERNER")),U,12),$P(OBRSGMNT,FS,28)=CS_CS_CS_OBR27 ;
  ;
- ;  Populate OBR-2 with consult number and station.  
+ ;  Populate OBR-2 with consult number and VistA instance station number.  
  ;  Populate OBR-4.2 with procedure/service name.
  ;  Populate OBR-16 with ordering provider if IFC role is placer.
  ;
  I $$GET1^DIQ(123,CONSULT,.125,"I")="P" D  ;
  . ;
- . S STN=$P($G(^GMR(123,CONSULT,0)),U,21) ;
- . S STN=$$GET1^DIQ(4,STN,99,"E"),$P(OBRSGMNT,FS,3)=CONSULT_CS_STN_CS_"GMRCIFR" ;
+ . S STN=$$STA^XUAF4($$KSP^XUPARAM("INST")),$P(OBRSGMNT,FS,3)=CONSULT_CS_STN_CS_"GMRCIFR" ; 185v2 4/24/23
  . ;
  . S ID=$P($P(OBRSGMNT,FS,5),CS,1),CODING=$P($P(OBRSGMNT,FS,5),CS,3),FILE=$P(CODING,"VA",2)/10,NAME="" ; WTC 10.24.22
  . I FILE S FIELD=$S(FILE=123.5:133,FILE=123.3:127,1:.01),NAME=$$GET1^DIQ(FILE,ID,FIELD,"E") I $G(NAME)="" S NAME=$$GET1^DIQ(FILE,ID,.01,"E") ;

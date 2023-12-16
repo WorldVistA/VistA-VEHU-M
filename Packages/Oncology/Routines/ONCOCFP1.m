@@ -1,5 +1,5 @@
 ONCOCFP1 ;HINES OIFO/RVD - [PT Automatic Casefinding-PTF Search 1] ;09/10/15
- ;;2.2;ONCOLOGY;**7,10,13,14,17**;Jul 31, 2013;Build 6
+ ;;2.2;ONCOLOGY;**7,10,13,14,17,18**;Jul 31, 2013;Build 5
  ;
  ; rvd - 0403/12 p56. Use ICD API (#3990) instead of direct global call
 L10 ;
@@ -61,6 +61,7 @@ L10 ;
  W !?3,"                   and other CNS"
  W !,?3,"D72.11_           Hypereosonophilic syndrome (HES] (9964/3)"
  W !,?3,"K31.A22           Gastric intestinal metaplasia with high grade dysplasia"
+ W !,?3,"N85.02            Endometrial intaepithelial neoplasia (EIN)"
  W !?3,"R85.614           Cytologic evidence of malignacy on smear of anus"
  W !?3,"R87.614           Cytologic evidence of malignacy on smear of cervix"
  W !?3,"R86.624           Cytologic evidence of malignacy on smear of vagina"
@@ -82,7 +83,8 @@ FD10 ;Check for valid ICD10 CM code for Oncology.
  ;I (SBCIND="NO"),($E(IC10)="C") D  Q
  I ((IC10="D44.0")!(IC10="D44.1")!(IC10="D44.10")!(IC10="D44.11")!(IC10="D44.12")) S CI10=0 Q
  I ((IC10="D44.2")!(IC10="D44.6")!(IC10="D44.7")!(IC10="D44.9")) S CI10=0 Q
- I ((IC10="D35.0")!(IC10="D35.1")!(IC10="D35.5")!(IC10="D35.9")) S CI10=0 Q
+ I ($E(IC10,1,4)="D44.")!($E(IC10,1,6)="D72.11") S CI10=1 Q
+ I ($E(IC10,1,5)="D35.0")!(IC10="D35.1")!(IC10="D35.5")!(IC10="D35.9") S CI10=0 Q
  I ($E(IC10,1,2)="C0")!($E(IC10,1,4)="C43.")!($E(IC10,1,4)="C4A.")!($E(IC10,1,4)="C40.") S CI10=1 Q
  I ($E(IC10,1,4)="C45.")!($E(IC10,1,4)="C48.")!($E(IC10,1,4)="C49.")!($E(IC10,1,4)="C96.") S CI10=1 Q
  I ($E(IC10,1,4)="C46.")!($E(IC10,1,4)="C47.") S CI10=1 Q
@@ -106,15 +108,15 @@ FD10 ;Check for valid ICD10 CM code for Oncology.
  I ($E(IC10,1,4)="D00.")!($E(IC10,1,4)="D01.") S CI10=1 Q
  I ($E(IC10,1,4)="D02.")!($E(IC10,1,4)="D03.") S CI10=1 Q
  I ($E(IC10,1,4)="D04.")!($E(IC10,1,4)="D05.") S CI10=1 Q
- I ($E(IC10,1,4)="D07.")!($E(IC10,1,5)="D23.9") S CI10=1 Q
+ I ($E(IC10,1,4)="D07.")!($E(IC10,1,6)="D72.11") S CI10=1 Q
  I ($E(IC10,1,4)="D09.")!($E(IC10,1,6)="D47.Z1") S CI10=1 Q
  I ($E(IC10,1,3)="D32")!($E(IC10,1,6)="D18.02") S CI10=1 Q
  I ($E(IC10,1,3)="D42")!($E(IC10,1,3)="D33") S CI10=1 Q
  I ($E(IC10,1,3)="D45")!($E(IC10,1,4)="D43.") S CI10=1 Q
  I ($E(IC10,1,5)="D47.Z")!($E(IC10,1,5)="D47.1") S CI10=1 Q
  I ($E(IC10,1,5)="D47.3")!($E(IC10,1,5)="D47.4") S CI10=1 Q
- I ((IC10="D18.02")!(IC10="D35.2")!(IC10="D35.3")!(IC10="D35.4")!(IC10="D45")) S CI10=1 Q
- I ($E(IC10,1,4)="D35.")!($E(IC10,1,4)="D44.") S CI10=1 Q
+ ;I ((IC10="D18.02")!(IC10="D35.2")!(IC10="D35.3")!(IC10="D35.4")!(IC10="D45")) S CI10=1 Q
+ I ($E(IC10,1,4)="D44.")!($E(IC10,1,4)="D72.11") S CI10=1 Q
  I ((IC10="D72.110")!(IC10="D72.111")!(IC10="D72.118")!(IC10="D72.119")) S CI10=1 Q
  I ((IC10="D47.Z")!(IC10="D47.Z1")!(IC10="D47.Z9")!(IC10="D44.3")!(IC10="D44.4")!(IC10="D44.5")) S CI10=1 Q
  I ((IC10="D47.1")!(IC10="D47.3")!(IC10="D47.4")!(IC10="D47.02")!(IC10="D47.9")!(IC10="D49.6")!(IC10="D49.7")) S CI10=1 Q
@@ -124,7 +126,7 @@ FD10 ;Check for valid ICD10 CM code for Oncology.
  I ($E(IC10)="D"),(($E(IC10,2,7)>35.2000)&($E(IC10,2,7)<35.4001)) S CI10=1 Q
  I ($E(IC10)="D"),(($E(IC10,2,7)>41.9999)&($E(IC10,2,7)<43.9999)) S CI10=1 Q
  I ($E(IC10)="D"),(($E(IC10,2,7)>45.9999)&($E(IC10,2,7)<46.9999)) S CI10=1 Q
- ;I ($E(IC10)="Z"),((IC10="Z85")!($E(IC10,1,5)="Z85.0")) S CI10=1 Q
+ I $E(IC10,1,6)="N85.02" S CI10=1 Q  ;Patch #18
  ;I ($E(IC10)="Z"),(($E(IC10,1,5)="Z85.1")!($E(IC10,1,5)="Z85.2")) S CI10=1 Q
  ;I ($E(IC10)="Z"),(($E(IC10,1,5)="Z85.3")!($E(IC10,1,5)="Z85.4")) S CI10=1 Q
  ;I ($E(IC10)="Z"),(($E(IC10,1,5)="Z85.5")!($E(IC10,1,5)="Z85.6")) S CI10=1 Q

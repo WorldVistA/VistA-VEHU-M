@@ -1,5 +1,5 @@
 ONCSGA8C ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/17/19
- ;;2.2;ONCOLOGY;**10,12,13**;Jul 31, 2013;Build 7
+ ;;2.2;ONCOLOGY;**10,12,13,18**;Jul 31, 2013;Build 5
  ;
  ;
 60 ;KIDNEY
@@ -36,7 +36,7 @@ ONCSGA8C ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/17/19
  I T="T2",N="N0",M="M0" S SG=2 Q
  I T="T2a",N="N0",M="M0" S SG=2 Q
  I T="T2b",N="N0",M="M0" S SG=2 Q
- I ((T="T3a")!(T="T3b")!(T="T4a")),N="N0",M="M0" S SG="3A" Q
+ I ((T="T3")!(T="T3a")!(T="T3b")!(T="T4a")),N="N0",M="M0" S SG="3A" Q
  I ((T["T1")!(T["T2")!(T["T3")!(T["T4")),T'="T4b",N="N1",M="M0" S SG="3A" Q
  I ((T["T1")!(T["T2")!(T["T3")!(T["T4")),T'="T4b",((N="N2")!(N="N3")),M="M0" S SG="3B" Q
  I T="T4b",M="M0" S SG="4A" Q

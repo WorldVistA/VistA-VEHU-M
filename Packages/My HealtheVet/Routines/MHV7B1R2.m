@@ -1,5 +1,5 @@
 MHV7B1R2 ;MHV/JBM - HL7 message builder RTB^K13 Medications Profile ; 02/07/22
- ;;1.0;My HealtheVet;**74**;Aug 23, 2005;Build 42
+ ;;1.0;My HealtheVet;**74,91**;Aug 23, 2005;Build 4
  ;;Per VA Directive 6402, this routine should not be modified
  ;
  Q
@@ -132,12 +132,14 @@ RDT(MSGROOT,DATAROOT,CNT,LEN,HL) ;  Build RDT segments for Rx Profile data
  . S RDT(0)="RDT"
  . S RDT(1)=$P(RX,"^")                         ;Rx Number
  . S RDT(2)=$P(RXN,"^")                        ;Rx IEN
- . S RDT(3)=$$ESCAPE^MHV7U($P(RXN,"^",2),.HL)  ;Drug Name
+ . ;S RDT(3)=$$ESCAPE^MHV7U($P(RXN,"^",2),.HL)  ;Drug Name  cfs Modified per Jira MHV-48168
+ . S RDT(3)=$P(RXN,"^",2)  ;Drug Name
  . S RDT(4)=$$FMTHL7^XLFDT($P(RXN,"^",3))      ;Issue Date/Time
  . S RDT(5)=$$FMTHL7^XLFDT($P(RXN,"^",4))      ;Last Fill Date
  . S RDT(6)=$$FMTHL7^XLFDT($P(RXN,"^",5))      ;Release Date/Time
  . S RDT(7)=$$FMTHL7^XLFDT($P(RXN,"^",6))      ;Expiration
- . S RDT(8)=$$ESCAPE^MHV7U($P(RXN1,"^",1),.HL)  ;Status
+ . ;S RDT(8)=$$ESCAPE^MHV7U($P(RXN1,"^",1),.HL)  ;Status    cfs Modified per Jira MHV-48168
+ . S RDT(8)=$P(RXN1,"^",1)  ;Status
  . S RDT(9)=$P(RXN1,"^",2)                      ;Quantity
  . S RDT(10)=$P(RXN1,"^",3)                     ;Days Supply
  . S RDT(11)=$P(RXN1,"^",4)                     ;Number of Refills
@@ -145,17 +147,20 @@ RDT(MSGROOT,DATAROOT,CNT,LEN,HL) ;  Build RDT segments for Rx Profile data
  .. D FMTNAME2^MHV7BU(PIEN,200,.NAME,.HL,"XCN") ;Provider IEN
  .. M RDT(12,1)=NAME
  .. S RDT(12,1,1)=PIEN
- . S RDT(13)=$$ESCAPE^MHV7U($P(RXN1,"^",5),.HL)   ;Placer Order Number
+ . ;S RDT(13)=$$ESCAPE^MHV7U($P(RXN1,"^",5),.HL)   ;Placer Order Number   cfs Modified per Jira MHV-48168
+ . S RDT(13)=$P(RXN1,"^",5)   ;Placer Order Number 
  . S RDT(14)=$P(RXN1,"^",6)                       ;Mail/Window
  . S RDT(15)=$P(RXD,"^")                          ;Division
- . S RDT(16)=$$ESCAPE^MHV7U($P(RXD,"^",2),.HL)    ;Division Name
+ . ;S RDT(16)=$$ESCAPE^MHV7U($P(RXD,"^",2),.HL)    ;Division Name   cfs Modified per Jira MHV-48168
+ . S RDT(16)=$P(RXD,"^",2)   ;Division Name
  . S RDT(17)=$P(RX,"^",3)                         ;MHV status
  . S RDT(18)=$$FMTHL7^XLFDT($P(RX,"^",4))         ;MHV status date
  . ;Changed call to $$ESCAPE to used standard MHV7U
  . ;S RTXT=$$RMK("RMK")
  . ;S TXT=$$ESCAPE($E(RTXT,1,1024),.HL)            
  . ;S RDT(19)=$$SPACES(TXT)
- . S RDT(19)=$$SPACES($E($$ESCAPE^MHV7U($$RMK("RMK"),.HL),1,1024))     ;Remarks
+ . ;S RDT(19)=$$SPACES($E($$ESCAPE^MHV7U($$RMK("RMK"),.HL),1,1024))     ;Remarks   cfs Modified per Jira MHV-48168
+ . S RDT(19)=$$SPACES($E($$RMK("RMK"),1,1024))    ;Remarks
  . S RDT(20)=$P(RXN2,"^",1)                       ;Source
  . S RDT(21)=$P(RXN2,"^",2)                       ;NDC
  . S RDT(22)=$$FMTHL7^XLFDT($P(RXN2,"^",3))       ;Dispense Date
@@ -195,7 +200,8 @@ RDT(MSGROOT,DATAROOT,CNT,LEN,HL) ;  Build RDT segments for Rx Profile data
  . .;Fixed to call MHV7U escape utility jbm 07-07-2021
  . .;S TXT=$$ESCAPE($E(DTXT,1,1024),.HL)
  . .;S RDT(52)=$$SPACES(TXT)
- . .S RDT(51)=$$SPACES($E($$ESCAPE^MHV7U(DTXT,.HL),1,1024))
+ . .;S RDT(51)=$$SPACES($E($$ESCAPE^MHV7U(DTXT,.HL),1,1024))   ;cfs Modified per Jira MHV-48168
+ . .S RDT(51)=$$SPACES($E(DTXT,1,1024))
  . D RQUEUE
  . S RDT(52)=$P($$FMTHL7^XLFDT($G(RQARR(11,"I"))),"-",1)  ;Queue 52.43 - LOGIN DATE
  . S RDT(53)=$P($$FMTHL7^XLFDT($G(RQARR(5,"I"))),"-",1)   ;Queue 52.43 - PROCESS DATE
@@ -217,7 +223,12 @@ RDT(MSGROOT,DATAROOT,CNT,LEN,HL) ;  Build RDT segments for Rx Profile data
  . S RDT(62)=IND1
  . S RDT(63)=IND2
  . S RDT(64)=IND3
- . S RDT(65)=$$SPACES($E($$ESCAPE^MHV7U($$RMK("SIG"),.HL),1,1024))    ;Sig
+ . ;S RDT(65)=$$SPACES($E($$ESCAPE^MHV7U($$RMK("SIG"),.HL),1,1024))    ;Sig    cfs Modified per Jira MHV-48168
+ . S RDT(65)=$$SPACES($E($$RMK("SIG"),1,1024))   ;Sig
+ . ;cfs 08/23/2023 - Call the Escape Character Function on the array RDT and escape all fields. Jira MHV-48168
+ . N LASTRDT,INDX
+ . S LASTRDT="" S LASTRDT=$O(RDT(LASTRDT),-1) ;Get the last index of the RDT array.
+ . F INDX=1:1:LASTRDT I $G(RDT(INDX))'="" S RDT(INDX)=$$ESCAPE^MHV7U(RDT(INDX),.HL)
  . S CNT=CNT+1
  . S @MSGROOT@(CNT)=$$STRIP($$BLDSEG^MHV7U(.RDT,.HL))
  . S LEN=LEN+$L(@MSGROOT@(CNT))

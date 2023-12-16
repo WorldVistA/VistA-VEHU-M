@@ -1,5 +1,5 @@
-MAGJEX1B ;WIRMFO/JHC Rad. Workstation RPC calls ; 21 Apr 2011  5:32 PM
- ;;3.0;IMAGING;**16,22,18,65,76,104**;Mar 19, 2002;Build 2225;Jul 12, 2011
+MAGJEX1B ;WIRMFO/JHC - Rad. Workstation RPC calls ; 10/17/2022
+ ;;3.0;IMAGING;**16,22,18,65,76,104,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJEX1B ;WIRMFO/JHC Rad. Workstation RPC calls ; 21 Apr 2011  5:32 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**101**
  Q
  ; Subroutines for fetch exam images, exam lock/reserve, remove dangling locks
  ;
@@ -31,7 +32,7 @@ IMGLOOP ; get data for all the images
  . S MDL=$P(MAGS(IMAG),U,3)
  . I MDL="DR" S MDL="CR"  ; for now, hard code cx of non-standard code
  . S MAGXX=MAGIEN D
- . . I 'USETGA,($P(MAGS(IMAG),U,2)["BIG") D BIG^MAGFILEB Q
+ . . I $P(MAGS(IMAG),U,2)["BIG" D BIG^MAGFILEB Q  ;  ISI remove deprecated logic
  . . E  D VST^MAGFILEB
  . I MAGJOB("ALTPATH") S X=$P(MAGS(IMAG),U,6),P18ALTP="" I X]"" D
  . . F I=1:1:$L(X,",") S T=$P(X,",",I) I T S CURPATHS(T)="" I $D(MAGJOB("LOC",T)) S P18ALTP=P18ALTP_$S(P18ALTP="":"",1:",")_T

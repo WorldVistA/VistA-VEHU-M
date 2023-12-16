@@ -1,5 +1,5 @@
 RCDPURED ;WISC/RFJ - File 344 receipt/payment dd calls ;1 Jun 99
- ;;4.5;Accounts Receivable;**114,169,174,196,202,244,268,271,304,301,312,319,321,375,371**;Mar 20, 1995;Build 29
+ ;;4.5;Accounts Receivable;**114,169,174,196,202,244,268,271,304,301,312,319,321,375,371,409**;Mar 20, 1995;Build 17
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to $$REC^IBRFN supported by DBIA 2031
@@ -136,19 +136,19 @@ PNORBILL ;  called by the input transform in receipt file 344, transaction
  ;  patient not found, type of payment = check/mo or EDI LOCKBOX
  S RCPAY=$P($G(^RCY(344,DA(1),0)),"^",4)
  S RCLKFLG=$S(RCPAY=4:1,RCPAY=14:1,1:0)
- I +$G(Y)<0,RCLKFLG D
- .   S (X,Y)=$$REC^IBRFN(RCINPUT,.RCTYP,.RCDISP),(RCBILL,X)=X_";PRCA(430,"    ; DBIA 2031
- .   I Y>0 D
- .   .   N DIR,DIQ2,DIRUT,DTOUT,DUOUT,RCPRM
- .   .   S RCTYP=$G(RCTYP,1)
- .   .   S RCPRM=$S(RCTYP=1:"TRICARE reference number",RCTYP=2:"ECME Rx reference number",RCTYP=3:"prescription number",1:"reference number")
- .   .   S DIR("A")="Is this "_RCPRM_" - "_$S($G(RCDISP)'="":RCDISP,1:RCINPUT)
- .   .   S DIR("B")="No",DIR("A",1)=" "
- .   .   S DIR(0)="Y^O" D ^DIR S:'Y Y=-1
- .   .   I Y'>0 Q
- .   .   I '$G(RCSPRSS) W !!,$P($G(^PRCA(430,+RCBILL,0)),"^")," "  ;PRCA*4.5*304
- .   .   D DISPLAY(RCBILL)
- .   .   S X=RCBILL
+ I +$G(Y)<0 D                                   ; PRCA*4.5*409 Removed ,RCLKFLG from If statement
+ . S (X,Y)=$$REC^IBRFN(RCINPUT,.RCTYP,.RCDISP),(RCBILL,X)=X_";PRCA(430,"    ; DBIA 2031
+ . I Y>0 D
+ . . N DIR,DIQ2,DIRUT,DTOUT,DUOUT,RCPRM
+ . . S RCTYP=$G(RCTYP,1)
+ . . S RCPRM=$S(RCTYP=1:"TRICARE reference number",RCTYP=2:"ECME Rx reference number",RCTYP=3:"prescription number",1:"reference number")
+ . . S DIR("A")="Is this "_RCPRM_" - "_$S($G(RCDISP)'="":RCDISP,1:RCINPUT)
+ . . S DIR("B")="No",DIR("A",1)=" "
+ . . S DIR(0)="Y^O" D ^DIR S:'Y Y=-1
+ . . I Y'>0 Q
+ . . I '$G(RCSPRSS) W !!,$P($G(^PRCA(430,+RCBILL,0)),"^")," "  ;PRCA*4.5*304
+ . . D DISPLAY(RCBILL)
+ . . S X=RCBILL
  ;  output in variable X
  ;
  I +$G(Y)<0 K X Q

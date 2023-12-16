@@ -1,8 +1,10 @@
-PSOPRK ;BIR/EJW - park/unpark functionality ;Feb 24, 2022@12:17:42
- ;;7.0;OUTPATIENT PHARMACY;**441**;DEC 1997;Build 209
- ;External reference to ^DD(52-DBIA 999,  VA(200-DBIA 224, NA^ORX1-DBIA 2186, ^PSDRUG(-DBIA 221,
- ; L, UL, PSOL, and PSOUL^PSSLOCK-DBIA 2789, ^%DTC-DBIA 10000, ^DIE-DBIA 10018, ^DIR-DBIA 10026,
- ; ^DIK-DBIA 10013, ^VALM1-DBIA 10116, ^XUSEC(-DBIA 10076, NOW^XLFDT-DBIA 10103
+PSOPRK ;BIR/EJW - park/unpark functionality ; May 17, 2023@18:30:42
+ ;;7.0;OUTPATIENT PHARMACY;**441,712**;DEC 1997;Build 20
+ ;
+ ; Reference to ^DD(52 in ICR #999
+ ; Reference to ^PSDRUG( in ICR #221
+ ; Reference to $$L^PSSLOCK,PSOL^PSSLOCK,PSOUL^PSSLOCK,UL^PSSLOCK in ICR #2789
+ ;
 UNPARK ;
  N RXIEN,PSOOLDFILLDT
  I '$D(PSOPAR) D ^PSOLSET G:'$D(PSOPAR) EX
@@ -109,6 +111,7 @@ PARK(DA)  ;
  I $G(PSOBEDT) W $C(7),$C(7) S VALMSG="Invalid Action at this time !",VALMBCK="" Q
  I $G(PSONACT) W $C(7),$C(7) S VALMSG="No Pharmacy Orderable Item !",VALMBCK="" Q
  I $G(PSODRUG("DEA"))["D" W $C(7),$C(7) S VALMSG="This drug is not allowed to be parked!",VALMBCK="" Q
+ I $P(^PSDRUG($P(^PSRX(DA,0),"^",6),0),"^")["CLOZAPINE" W $C(7),$C(7) S VALMSG="This drug is not allowed to be parked!",VALMBCK="" Q
  I '$D(^XUSEC("PSORPH",DUZ))&'$D(^XUSEC("PSO TECH ADV",DUZ)) S VALMSG="Invalid Action Selection!",VALMBCK="" Q
  I $G(^PSRX(DA,"PARK")),+$G(^PSRX(DA,"STA"))=0 S VALMSG="Already parked!",VALMBCK="" Q
  S PSOPLCK=$$L^PSSLOCK(PSODFN,0) I '$G(PSOPLCK) D LOCK^PSOORCPY S VALMSG=$S($P($G(PSOPLCK),"^",2)'="":$P($G(PSOPLCK),"^",2)_" is working on this patient.",1:"Another person is entering orders for this patient."),VALMBCK="" K PSOPLCK Q
@@ -159,9 +162,10 @@ RXACT(RX,ACTION,REASON,OTHCOM,SUS) ; Adds PARK/UNPARK info to the Rx Activity Lo
  S COMM=$P($G(^DD(52,11,0)),"^")_" ("_$S(ACTION="UPK":"P",1:$G(BPMW))_"),"
  S PSOFILLDT=$S(RFL:$P($G(^PSRX(RX,1,RFL,0)),U,1),1:$P($G(^PSRX(RX,2)),U,2))
  I $D(PSOOLDFILLDT),PSOFILLDT'=PSOOLDFILLDT D
+ . N ZZ S ZZ=PSOOLDFILLDT S:ZZ ZZ=$E(ZZ,4,5)_"-"_$E(ZZ,6,7)_"-"_$E(ZZ,2,3)
  . S PSOFLDNM=$P($G(^DD(52,22,0)),U,1)
  . I RFL S PSOFLDNM=$P($G(^DD(52.1,.01,0)),U,1)
- . S COMM=COMM_PSOFLDNM_" ("_PSOOLDFILLDT_"),"
+ . S COMM=COMM_PSOFLDNM_" ("_ZZ_")"
  S DIC("DR")=".02////E;.03////"_DUZ_";.04///"_$S((RFL>5):RFL+1,1:RFL)_";.05///"_COMM
  D FILE^DICN
  ;
@@ -189,6 +193,7 @@ MWP(PSODA,PREVMWP,REFILL) ; UNHOLD;EDIT ROUTE - CHECK TO SEE IF SHOULD ALSO PROM
  N RESULTS,PSOPARKX
  S RESULTS="PSOPARKX" D GETPARK^PSORPC01()
  I $G(PSOPARKX(0))="YES" S PARK=1
+ I $P(^PSDRUG($P(^PSRX(PSODA,0),"^",6),0),"^")["CLOZAPINE" S PARK=0  ;*712
  S PSODRUG("DEA")=$P(^PSDRUG($P(^PSRX(PSODA,0),"^",6),0),"^",3) I PSODRUG("DEA")["D" S PARK=0
  K DIR,DIC
  S PRKMW=""

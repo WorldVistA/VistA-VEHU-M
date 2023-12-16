@@ -1,6 +1,6 @@
-MAGVUID ;WOIFO/RRB,NST,DAC - MAGV Duplicate UID Utilities and RPCs ; 24 Oct16 8:30 AM
- ;;3.0;IMAGING;**118,138,172**;Mar 19, 2002;Build 33
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGVUID ;WOIFO/RRB,NST,DAC,RRM - MAGV Duplicate UID Utilities and RPCs ; 24 Oct16 8:30 AM
+ ;;3.0;IMAGING;**118,138,172,345**;Mar 19, 2002;Build 2
+ ;; Per VA Directive 6402, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -30,9 +30,14 @@ STUDY(RESULT,DFN,ACNUMB,SITE,INSTR,STUDYUID,DUPEFLAG)  ; RPC - MAGV STUDY UID CH
  ; Check IMAGING DUPLICATE UID LOG (#2005.66) to determine if the Study UID has been replaced.  
  ; If it has return the replacement UID and quit.  Otherwise, continue with UID checking.
  ;
+ S RESULT=$$UIDCHECK(STUDYUID,TYPE) ; Check for illegal UID format and characters
  S UID=$$UIDLOOK^MAGVRS61(STUDYUID,DFN,ACNUMB,TYPE,STUDYUID)
- I UID'=0 S RESULT="1~LogUIDToUse~"_UID Q
+ I RESULT=1,+UID>0 S RESULT="3~Illegal UID Replacement~"_UID Q
+ I UID'=0 D  Q
+ . I $$STUDYUIDSTAT^MAGGETUIDSTATUS(UID)="I" S RESULT=0 Q  ;P345-check if the replaced UID is accessible
+ . S RESULT="1~LogUIDToUse~"_UID
  ;
+ I $$STUDYUIDSTAT^MAGGETUIDSTATUS(STUDYUID)="I" S RESULT=0 Q  ;P345-check if the original UID is accessible
  ;
  ; Check and replace illegal Study UID
  ; 
@@ -42,7 +47,7 @@ STUDY(RESULT,DFN,ACNUMB,SITE,INSTR,STUDYUID,DUPEFLAG)  ; RPC - MAGV STUDY UID CH
  . S RESULT=$S(+NEWUID=-1:NEWUID,1:RESULT_NEWUID)
  . Q
  ;
- S RESULT=$$UIDCHECK(STUDYUID,TYPE)  ; Check for illegal UID format and characters
+ ; S RESULT=$$UIDCHECK(STUDYUID,TYPE)  ; Check for illegal UID format and characters
  ;
  I RESULT=1 D  Q RESULT ; Replace UID having Illegal format or characters
  . S RESULT="3~Illegal UID Replacement~"
@@ -81,18 +86,26 @@ SERIES(RESULT,DFN,ACNUMB,SITE,INSTR,STUDYUID,SERIESUID,DUPEFLAG)  ; RPC - MAGV S
  ; Check IMAGING DUPLICATE UID LOG (#2005.66) to determine if the Series UID has been replaced.  
  ; If it has return the replacement UID and quit.  Otherwise, continue with UID checking.
  ;
- S UID=$$UIDLOOK^MAGVRS61(SERIESUID,DFN,ACNUMB,TYPE,STUDYUID)
- I UID'=0 S RESULT="1~LogUIDToUse~"_UID Q
+ ;  S UID=$$UIDLOOK^MAGVRS61(SERIESUID,DFN,ACNUMB,TYPE,STUDYUID)
+ ;  I UID'=0 S RESULT="1~LogUIDToUse~"_UID Q
  ;
+ S RESULT=$$UIDCHECK(SERIESUID,TYPE) ; Check for illegal UID format and characters
+ S UID=$$UIDLOOK^MAGVRS61(SERIESUID,DFN,ACNUMB,TYPE,STUDYUID)
+ I RESULT=1,+UID>0 S RESULT="3~Illegal UID Replacement~"_UID Q
+ I UID'=0 D  Q
+ . I $$GETSERIESUIDSTAT^MAGGETUIDSTATUS(UID)="I" S RESULT=0 Q  ;P345-check if the replaced UID is accessible
+ . S RESULT="1~LogUIDToUse~"_UID
+ ;
+ I $$GETSERIESUIDSTAT^MAGGETUIDSTATUS(SERIESUID)="I" S RESULT=0 Q  ;P345-check if the original UID is accessible
  ; Check and replace illegal Series UID
- ; 
+ ;
  I $L(SERIESUID)>64 D  Q RESULT ; Replace UID having Illegal Length
  . S RESULT="3~Illegal UID Replacement~"
  . S NEWUID=$$NEWUID(DFN,ACNUMB,SITE,INSTR,SERIESUID,TYPE,STUDYUID)
  . S RESULT=$S(+NEWUID=-1:NEWUID,1:RESULT_NEWUID)
  . Q
  ;
- S RESULT=$$UIDCHECK(SERIESUID,TYPE)  ; Check for illegal UID format and characters
+ ; S RESULT=$$UIDCHECK(SERIESUID,TYPE)  ; Check for illegal UID format and characters
  ;
  I RESULT=1 D  Q RESULT ; Replace UID having Illegal format or characters
  . S RESULT="3~Illegal UID Replacement~"
@@ -135,10 +148,13 @@ SOP(RESULT,DFN,ACNUMB,SITE,INSTR,STUDYUID,SERIESUID,SOPUID,DUPEFLAG)  ; RPC - MA
  ; If it has return the replacement UID and quit.  Otherwise, continue with UID checking.
  ;
  S UID=$$UIDLOOK^MAGVRS61(SOPUID,DFN,ACNUMB,TYPE,STUDYUID,SERIESUID)
- I UID'=0 S RESULT="2~RERUNLog~" Q
+ I UID'=0 D  Q
+ . I $$GETSOPUIDSTAT^MAGGETUIDSTATUS(UID)="I" S RESULT=0 Q  ;P345-check if the replaced UID is accessible
+ . S RESULT="2~RERUNLog~"
  ;
+ I $$GETSOPUIDSTAT^MAGGETUIDSTATUS(SOPUID)="I" S RESULT=0 Q  ;P345-check if the original UID is accessible
  ; Check and replace illegal SOP UID
- ; 
+ ;
  I $L(SOPUID)>64 D  Q RESULT ; Replace UID having Illegal Length
  . S RESULT="3~Illegal UID Replacement~"
  . S NEWUID=$$NEWUID(DFN,ACNUMB,SITE,INSTR,SOPUID,TYPE,STUDYUID,SERIESUID)
@@ -173,7 +189,7 @@ SOP(RESULT,DFN,ACNUMB,SITE,INSTR,STUDYUID,SERIESUID,SOPUID,DUPEFLAG)  ; RPC - MA
  . Q
  ;
  I (RESULT=1)&(DUPEFLAG) S RESULT=RESULT_"~NewUIDToUse~0" ; P172/DAC - If flag set do not store duplicate
- I RESULT=2 S RESULT=RESULT_"~RERUN"  ; Return RERUN message if on file and not duplicate UId
+ I RESULT=2 S RESULT=RESULT_"~RERUN" ; Return RERUN message if on file and not duplicate UId
  ;
  Q
  ;

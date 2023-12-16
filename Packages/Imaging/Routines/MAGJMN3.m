@@ -1,5 +1,5 @@
-MAGJMN3 ;WIRMFO/JHC - VRad Maint functions ; 9 Sep 2011  4:05 PM
- ;;3.0;IMAGING;**18,120**;Mar 19, 2002;Build 27;May 23, 2012
+MAGJMN3 ;WIRMFO/JHC - VRad Maint functions ; 10/17/2022
+ ;;3.0;IMAGING;**18,120,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJMN3 ;WIRMFO/JHC - VRad Maint functions ; 9 Sep 2011  4:05 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**99**
  Q
  ;
 YN(MSG,DFLT) ; get Yes/No reply
@@ -27,7 +28,7 @@ YN1 W !,MSG_" "_DFLT_"// "
  Q X
  ;
 EECPT ;Enter/Edit CPT MATCHING SET
- W @IOF,!!?10,"** Enter/Edit VistARad RAD CPT MATCHING CPT CODE **",!!
+ W @IOF,!!?10,"** Enter/Edit ISI Rad RAD CPT MATCHING CPT CODE **",!!  ; ISI
  N MAGIEN
  K DIC S (DIC,DLAYGO)=2006.67,DIC(0)="ALMEQN"
  D ^DIC I Y=-1 K DIC,DIE,DR,DLAYGO Q
@@ -37,7 +38,7 @@ EECPT ;Enter/Edit CPT MATCHING SET
  G EECPT
  Q
 INCPT ; Inquire MAG RAD CPT MATCHING
- W @IOF,!!?10,"** Inquire VistARad CPT MATCHING CPT CODE **"
+ W @IOF,!!?10,"** Inquire ISI Rad CPT MATCHING CPT CODE **",!!  ; ISI
  N DATA,I,ZJ
 INC1 W !! S DIC=2006.67,DIC(0)="AMEQ"
  D ^DIC I Y=-1 K DIC Q
@@ -49,7 +50,7 @@ INC1 W !! S DIC=2006.67,DIC(0)="AMEQ"
  Q
 PRCPT ;Print MAG RAD CPT MATCHING LOGIC
  N FLDS
- W @IOF,!!?10,"** Print VistARad CPT MATCHING CPT CODE **",!!
+ W @IOF,!!?10,"** Print ISI Rad CPT MATCHING CPT CODE **",!!  ; ISI
  W !! S DIC=2006.67,L=0,FLDS="[MAGJ CPT MATCH PRT]"
  D EN1^DIP
  R !,"Enter RETURN to continue: ",X:DTIME W !

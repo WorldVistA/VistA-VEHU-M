@@ -1,50 +1,62 @@
 RCDPUREC ;WISC/RFJ - receipt utilities ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**114,148,169,173,208,222,293,298,321,326,380,367,371**;Mar 20, 1995;Build 29
+ ;;4.5;Accounts Receivable;**114,148,169,173,208,222,293,298,321,326,380,367,371,409**;Mar 20, 1995;Build 17
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
-ADDRECT(TRANDATE,RCDEPTDA,PAYTYPDA) ;  add a receipt
+ADDRECT(TRANDATE,RCDEPTDA,PAYTYPDA) ;EP Add a receipt
+ ; Input:   TRANDATE    - Deposit Date in fileman format
+ ;          RCDEPTDA    - IEN in AR DEPOSIT file (#344.1)
+ ;          PAYTYPDA    - AR Event Type IEN (#341.1)
+ ; Returns: 0 - No receipt added or receipt IEN otherwise
  ;
- ;  if deposit or payment type is missing, do not add the receipt
+ ; If deposit or payment type is missing, do not add the receipt
  I 'RCDEPTDA!('PAYTYPDA) Q 0
  ;
  N DA,DATA,RCDPFLAG,RECEIPT,TYPE
- ;  if a receipt has already been added for this transmission date
- ;  and deposit number, do not add a new one
- ; PRCA*4.5*380 - Removed to allow for duplicate deposit number/date records
+ ;
+ ; If a receipt has already been added for this transmission date
+ ; and deposit number, do not add a new one
+ ;PRCA*4.5*380 - Removed to allow for duplicate deposit number/date records
  ;S DA=0 F  S DA=$O(^RCY(344,"AD",+RCDEPTDA,DA)) Q:'DA  S DATA=$G(^RCY(344,DA,0)) I $P($P(DATA,"^",3),".")=TRANDATE,$P(DATA,"^",4)=PAYTYPDA S RCDPFLAG=1 Q
  ;I $G(RCDPFLAG) Q DA
  ;
  Q $$BLDRCPT(TRANDATE,RCDEPTDA,PAYTYPDA)
  ;
-BLDRCPT(TRANDATE,RCDEPTDA,PAYTYPDA,RCDUZ) ; function, Build a receipt with/without deposit
+BLDRCPT(TRANDATE,RCDEPTDA,PAYTYPDA,RCDUZ) ;EP Build a receipt with/without deposit
  ; LAYGO new entry to AR BATCH PAYMENT file (#344)
- ; returns new IEN on success, else zero
+ ; Input:   TRANDATE    - Deposit Date in fileman format
+ ;          RCDEPTDA    - IEN in AR DEPOSIT file (#344.1)
+ ;          PAYTYPDA    - AR Event Type IEN (#341.1)
+ ;          RCDUZ       - User IEN (#200)
+ ; Returns: New IEN on success, else zero
  ;
  N GOTONE,RECEIPT,TYPE
- ; ATTMPT - count of attempts
- ; GOTONE - new receipt # flag
+ ; ATTMPT - Count of attempts
+ ; GOTONE - New receipt # flag
  S GOTONE=0
- ;  build unique receipt number for date
- S TYPE=$E($G(^RC(341.1,PAYTYPDA,0))) I TYPE="" S TYPE="Z"  ; ^RC(341.1,0) = AR EVENT TYPE
+ ;
+ ; Build unique receipt number for date
+ S TYPE=$E($G(^RC(341.1,PAYTYPDA,0)),1)         ;PRCA*4.5*409 '0' if PAYTYPDA=18 for OGC-EFT
+ I TYPE="" S TYPE="Z"                           ; ^RC(341.1,0) = AR EVENT TYPE
  I TYPE="C",$G(RCDEPTDA)["ERACHK" S RCDEPTDA=+RCDEPTDA,TYPE="E" ; ERA plus paper check EDI Lockbox receipt
  ;
  ; Accounts Receivable Nightly Process Background Job [PRCA NIGHTLY PROCESS]
  ; -----
  ;
  ;lockbox receipt in the form of L980901A0, do not include century
- F  D  Q:+GOTONE&$L(RECEIPT)  ; must be new and non-null
- .;find a unique receipt #
- .S RECEIPT=$$NEXT(TYPE_$E(TRANDATE,2,7))  ;get last two digits from 00 to ZZ 
- .I RECEIPT="" Q
- .I $D(^RCY(344,"B",RECEIPT)) Q  ; AR BATCH PAYMENT file (#344), RECEIPT # field (#.01)
- .I $D(^PRCA(433,"AF",RECEIPT)) Q  ; AR TRANSACTION file (#433), RECEIPT # field (#13)
- .S GOTONE=1
+ F  D  Q:+GOTONE&$L(RECEIPT)                    ; Must be new and non-null
+ . ;
+ . ; Find a unique receipt #
+ . S RECEIPT=$$NEXT(TYPE_$E(TRANDATE,2,7))      ; Get last two digits from 00 to ZZ 
+ . I RECEIPT="" Q
+ . I $D(^RCY(344,"B",RECEIPT)) Q                ; AR BATCH PAYMENT file (#344), RECEIPT # field (#.01)
+ . I $D(^PRCA(433,"AF",RECEIPT)) Q              ; AR TRANSACTION file (#433), RECEIPT # field (#13)
+ . S GOTONE=1
  ;
  ;
- L +^RCY(344,"B",RECEIPT):DILOCKTM E  Q 0 ; PRCA*4.5*298, if LOCK timeout return zero
+ L +^RCY(344,"B",RECEIPT):DILOCKTM E  Q 0       ;PRCA*4.5*298, if LOCK timeout return zero
  ;
- ; add entry to AR BATCH PAYMENT file (#344)
+ ; Add entry to AR BATCH PAYMENT file (#344)
  N %,%DT,D0,DA,DD,DI,DIC,DIE,DLAYGO,DO,DQ,DR,X,Y
  S DIC="^RCY(344,",DIC(0)="L",DLAYGO=344
  ;  .02 = opened by                  .03 = date opened = transmission dt
@@ -55,9 +67,8 @@ BLDRCPT(TRANDATE,RCDEPTDA,PAYTYPDA,RCDUZ) ; function, Build a receipt with/witho
  S X=RECEIPT
  D FILE^DICN
  L -^RCY(344,"B",RECEIPT)
- I Y>0 Q +Y  ; Y set by DICN, return new IEN
- Q 0  ; entry not created
- ;
+ I Y>0 Q +Y                                     ; Y set by DICN, return new IEN
+ Q 0                                            ; Entry not created
  ;
 NEXT(RECEIPT) ; function, get next 2 chars. in sequence 00 to ZZ for receipt
  ;
@@ -90,7 +101,9 @@ SELRECT(ADDNEW,RCDEPTDA) ;  select a receipt
  ;  if $g(rcdeptda) allow selection of receipts for the deposit only
  ;  if $g(addnew) and $g(rcdeptda) deposit number auto set for new receipt
  ;  returns -1 for timeout or ^, 0 for no selection, or ien of receipt
- N %,%Y,C,D0,DA,DG,DI,DIC,DIE,DIK,DLAYGO,DQ,DR,DTOUT,DUOUT,RC1,RC2,RCDE,RCHMP,RCLB,RCREFLUP,RCREQ,RCY,X,Y
+ N %,%Y,C,D0,DA,DG,DI,DIC,DIE,DIK,DLAYGO,DQ,DR,DTOUT,DUOUT
+ N RC1,RC2,RCDE,RCHMP,RCLB,RCPAYTYP,RCREFLUP,RCREQ,RCY,X,Y      ;PRCA*4.5*409 Added RCPAYTYP
+ S RCPAYTYP=""
  S DIC="^RCY(344,",DIC(0)="QEAM",DIC("A")="Select RECEIPT: "
  S DIC("W")="D DICW^RCDPUREC"
  ;  set screen to select receipts linked to deposit and to screen out
@@ -111,8 +124,10 @@ SELRECT(ADDNEW,RCDEPTDA) ;  select a receipt
  .   ; Next line use EFT picker utility instead of .17 in DR string - PRCA*4.5*326
  .   ; Do not delete DIC("W") from the DR string. It has a role in ^DIC flow if an EFT is not picked.
  .   ; PRCA*4.5*367 - If type is CHAMPVA, jump to setting receipt total then exit
- .   S DIC("DR")=DIC("DR")_";S RCLB=$$EDILBEV^RCDPEU(+X),RCHMP=$$ISCHMPVA^RCDPUREC(+$G(X)) S:'RCLB Y=""@6"" S:RCHMP Y=""@9"";I $G(RCDEPTDA) S Y=$S('RCDE:""@8"",1:""@6"");W !,RC2 S RCREQ=1,DIC(""W"")="""""
- .   S DIC("DR")=DIC("DR")_";D EFT344^RCDPEU2(""   AR BATCH PAYMENT EFT RECORD: "",DA);S Y=""@99"";@6;.06"_$S($G(RCDEPTDA):"////"_RCDEPTDA,1:"")_";S:'RCDE Y=""@99"";.17////"_+RCDE_";S Y=""@99"";@8;W *7,!,RC1 S Y=""@4"";@9;.22;@99"
+ .   ; PRCA*4.5*409 Added RCPAYTYP=+X,
+ .   S DIC("DR")=DIC("DR")_";S RCPAYTYP=+X,RCLB=$$EDILBEV^RCDPEU(RCPAYTYP),RCHMP=$$ISCHMPVA^RCDPUREC(+$G(X)) S:'RCLB Y=""@6"" S:RCHMP Y=""@9"";I $G(RCDEPTDA) S Y=$S('RCDE:""@8"",1:""@6"");W !,RC2 S RCREQ=1,DIC(""W"")="""""
+ .   ; PRCA*4.5*409 Added ,RCPAYTYP
+ .   S DIC("DR")=DIC("DR")_";D EFT344^RCDPEU2(""   AR BATCH PAYMENT EFT RECORD: "",DA,RCPAYTYP);S Y=""@99"";@6;.06"_$S($G(RCDEPTDA):"////"_RCDEPTDA,1:"")_";S:'RCDE Y=""@99"";.17////"_+RCDE_";S Y=""@99"";@8;W *7,!,RC1 S Y=""@4"";@9;.22;@99"
  .   S DIC("DR")=DIC("DR")_";"
  D ^DIC
  S RCY=Y
@@ -200,6 +215,17 @@ EDITREC(DA,DR) ;  edit the receipt (DR = string of fields to ask) in AR BATCH PA
  ;
  D LASTEDIT(RCDA)  ; update (#.11) LAST EDITED BY , (#.12) DATE/TIME LAST EDIT
  ;
+ Q
+ ;
+ ;PRCA*4.5*409 Added method
+EDITREC2(RCDA,OLDET,NEWEFT) ;EP from RCDPRPL3@EDITREC
+ ; Edit Receipt action for Recipts with a payment type of OGC-CHK
+ N DA,DR,DIE
+ S DA=RCDA,DIE="^RCY(344,",DR=".17////"_NEWEFT
+ D ^DIE
+ D EFTUPD(OLDEFT,0)                             ; Change EFT status to UNMATCHED, notify user.
+ D EFTUPD(NEWEFT,2)                             ; Change EFT status to PAPER EOB MATCH, notify user.
+ D LASTEDIT(RCDA)                               ; update (#.11) LAST EDITED BY , (#.12) DATE/TIME LAST EDIT
  Q
  ;
  ; PRCA*4.5*298 - updated comments in LBT
@@ -332,6 +358,14 @@ G17 ; Reprompt for new EFT
  N FDA,RCPROMPT,RCSCREEN,Y
  S RCPROMPT="  NEW EFT DETAIL RECORD: "
  S RCSCREEN="I ('$P(^(0),U,8))&($P($G(^(0)),U,7))&('$P($G(^(3)),U))"
+ ;
+ ;PRCA*4.5*409 Begin
+ I $P(^RCY(344,DA,0),"^",4)=18 D
+ . S RCSCREEN=RCSCREEN_",$E($P($G(^(0)),U,4),1,3)=""OGC"""
+ I $P(^RCY(344,DA,0),"^",4)=14 D
+ . S RCSCREEN=RCSCREEN_",$E($P($G(^(0)),U,4),1,3)'=""OGC"""
+ ;
+ ;PRCA*4.5*409 End
 G1 S Y=$$ASKEFT^RCDPEU2(RCPROMPT,RCSCREEN)
  I Y=-1 Q 0
  I Y=0 D  G G1

@@ -1,6 +1,6 @@
-MAGJUTL1 ;WIRMFO/JHC VistARad subroutines for RPC calls ; 3 Jul 2013  10:48 AM
- ;;3.0;IMAGING;**22,18,65,76,101,133**;Mar 19, 2002;Build 5393;Sep 09, 2013
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGJUTL1 ;WIRMFO/JHC - VistARad subroutines for RPC calls ; 10/17/2022
+ ;;3.0;IMAGING;**22,18,65,76,101,133,341**;Dec 21, 2022;Build 28
+ ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -8,6 +8,7 @@ MAGJUTL1 ;WIRMFO/JHC VistARad subroutines for RPC calls ; 3 Jul 2013  10:48 AM
  ;; | to execute a written test agreement with the VistA Imaging    |
  ;; | Development Office of the Department of Veterans Affairs,     |
  ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
@@ -15,6 +16,10 @@ MAGJUTL1 ;WIRMFO/JHC VistARad subroutines for RPC calls ; 3 Jul 2013  10:48 AM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ; Reference to EN1^RAO7PC1 in ICR #2268
+ ; Reference to SETDATA^RAO7PC1A in ICR #3509
+ ; Reference to D^RAUTL in ICR #3507
+ ;; ISI IMAGING;**99,102**
  Q
  ;<*>Notes on possible changes to ^RAO7PC1/1A for fetching rad pkg data:
  ; 1) Return also: Exam Status IEN, Order Request Urgency, & Pre-Op Date
@@ -109,6 +114,8 @@ GETEXSET(RADFN,EXID,MAGRET) ;
  N DAYCASE,REQLOC,REQLOCN,REQLOCA,REQLOCT,RIST,RIST1,RIST2,COMPLIC
  N RADIV,RISTISME,REQWARD,RASTCAT,CPTMOD,LRFLAG,MODTXT,LONGACN,TECH
  N MEDS,RDIOPHARM
+ N ASIGINI,ASIGNOTE,ASIGDUZ,FAVKWD1,FAVKWD2,FAVNOTE,PTAGE,PTDOB,PTSEX  ;  ISI
+ N RPTSTS  ;  ISI
  S MAGRET=0,RADTI=$P(EXID,"-"),RACNI=$P(EXID,"-",2)
  Q:'(RADTI&RACNI)
  S RADIV=""
@@ -119,6 +126,17 @@ GETEXSET(RADFN,EXID,MAGRET) ;
  S X=^RADPT(RADFN,"DT",RADTI,"P",RACNI,0),COMPLIC=$D(^("COMP")),PROCMOD=$D(^("M")),CPTMOD=$D(^("CMOD")),TECH=$D(^("TC")),MEDS=$D(^("RX"))  ; ICR #1172 (Private)
  S RAST=$P(X,U,3),REQLOC=$P(X,U,22),RIST1=$P(X,U,12),RIST2=$P(X,U,15),COMPLIC=$P(X,U,16)_"~"_COMPLIC
  S REQWARD=$P(X,U,6),LONGACN=$P(X,U,31),RDIOPHARM=$P(X,U,28)  ; ICR #1172 (Private)
+ ; ISI begin ...
+ S (FAVKWD1,FAVKWD2,FAVNOTE)=""  ; values are placeholders only inside this program
+ S (ASIGINI,ASIGNOTE,ASIGDUZ)=""
+ I $$UJOCHECK^ISIJUTL9() D  ; not implemented in VA--future mod required to store in ISI file (tbd)
+ . S X=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"ISI")) I +X D
+ . . S ASIGDUZ=+X,ASIGNOTE=$P(X,U,2)
+ . . S ASIGINI=$$USERINF^MAGJUTL3(ASIGDUZ,1) ; assignee initials
+ S RPTSTS="No Report" I +RARPT D
+ . S X=$P($G(^RARPT(RARPT,0)),U,5)
+ . I X]"" S RPTSTS=$S(X="V":"VERIFIED",X="D":"DRAFT",X="R":"REL./NOT VERIF.",X="PD":"PROBLEM DRAFT",X="EF":"ELECTRONICALLY FILED",X="X":"DELETED")
+ ; ISI ... end
  N CT,MODS,IEN,TT  ; Process Proc/CPT Modifier info
  S CT=0
  I PROCMOD D
@@ -167,13 +185,14 @@ GETEXSET(RADFN,EXID,MAGRET) ;
  I LONGACN]"" S DAYCASE=LONGACN
  S RASTP=RASTNM,RASTCAT=""
  I RAST S RASTCAT=$P($G(^RA(72,RAST,0)),U,9)
- S RANME=$P(^DPT(RADFN,0),U)
+ S RANME=$P(^DPT(RADFN,0),U),PTSEX=$P(^(0),U,2),PTDOB=$P(^(0),U,3),PTAGE="" ; ISI
  S DFN=RADFN D PID^VADPT6 S RASSN=$S(VAERR:"Unknown",1:VA("PID"))
  K VA("PID"),VA("BID"),VAERR
  S MAGRACNT=$G(MAGRACNT)+1
  I MAGRACNT=1 K ^TMP($J,"MAGRAEX")
  S ^TMP($J,"MAGRAEX",MAGRACNT,1)=RADFN_U_RADTI_U_RACNI_U_$E(RANME,1,30)_U_RASSN_U_RADATE_U_RADTE_U_RACN_U_$E(RAPRC,1,35)_U_RARPT_U_RAST_U_DAYCASE_U_RAELOC_U_RASTP_U_RASTORD_U_RADTPRT_U_RACPT_U_IMTYPABB
  S ^TMP($J,"MAGRAEX",MAGRACNT,2)=REQLOCA_U_$E(REQLOCN,1,25)_U_RIST_U_COMPLIC_U_RADIV_U_$P($$IMGSIT(RADIV),U,2)_U_RISTISME_U_MODTXT_U_REQLOCT_U_REQWARD_U_RASTCAT_U_LRFLAG_U_TECH_U_MEDS_U_RDIOPHARM
+ S ^TMP($J,"MAGRAEX",MAGRACNT,"ISI")=ASIGINI_U_ASIGNOTE_U_ASIGDUZ_U_FAVKWD1_U_FAVKWD2_U_FAVNOTE_U_PTAGE_U_PTSEX_U_PTDOB_U_RPTSTS  ; ISI
  S MAGRET=1
  Q
  ;

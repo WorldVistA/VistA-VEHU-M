@@ -1,5 +1,5 @@
-MAGJEX2 ;WIRMFO/JHC,NST - Rad. Workstation RPC calls; OCT 24, 2018@4:05 PM
- ;;3.0;IMAGING;**51,18,76,120,201**;Mar 19, 2002;Build 27;May 23, 2012
+MAGJEX2 ;WIRMFO/JHC,NST - Rad. Workstation RPC calls ; 10/17/2022
+ ;;3.0;IMAGING;**51,18,76,120,201,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJEX2 ;WIRMFO/JHC,NST - Rad. Workstation RPC calls; OCT 24, 2018@4:05 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**99,106**
  Q
  ; Subroutines for pre-fetch/ auto-route prior exams' images
  ; Entry Points:
@@ -51,10 +52,10 @@ PRIOR1(MAGGRY,DATA) ; review all exams for a patient to find "related" exams
  ;
  N $ETRAP,$ESTACK S $ETRAP="D ERR^MAGJEX2"
  K MAGGRY
- N RADFN,RADTI,RACNI,RARPT,RADATA
+ N RADFN,RADTI,RACNI,RARPT,RADATA,RADATA2  ; ISI P106
  N DAYCASE,DIQUIET,ACTION,CPT,HDR,MAGDFN,MAGDTI,MAGCNI,MAGRET,MAGRACNT
  S ACTION=$P(DATA,U)
- I ACTION="P"!(ACTION="A")!(ACTION="C")
+ I ACTION="P"!(ACTION="A")!(ACTION="C")!(ACTION="ISIP")  ; ISI new prefetch action ISIP
  E  S MAGGRY(0)="0^Invalid Request (Action code="_ACTION_")" G PRIOR1Z
  S MAGDFN=$P(DATA,U,2),MAGDTI=$P(DATA,U,3),MAGCNI=$P(DATA,U,4)
  I MAGDFN,MAGDTI,MAGCNI
@@ -70,7 +71,7 @@ PRIOR1(MAGGRY,DATA) ; review all exams for a patient to find "related" exams
  D GETEXAM2^MAGJUTL1(MAGDFN,MAGDTI,MAGCNI,"",.MAGRET) ; Current Exam only
  S RADFN=MAGDFN,RADTI=MAGDTI,RACNI=MAGCNI
  I 'MAGRET S MAGGRY(0)="0^Current Case is Not Accessible" G PRIOR1Z
- S RADATA=$G(^TMP($J,"MAGRAEX",1,1)) S DAYCASE=$P(RADATA,U,12) D SVMAG2A
+ S RADATA=$G(^TMP($J,"MAGRAEX",1,1)),RADATA2=$G(^(2)),DAYCASE=$P(RADATA,U,12) D SVMAG2A ; ISI P106
  I 'MAGGRY(0) S MAGGRY(0)="0^Current Case either has no CPT code, or has no rules defined for its CPT code." G PRIOR1Z
  S HDR=HDR_DAYCASE
  D SRCH(MAGDFN)  ;  Search prior exams for this patient
@@ -89,7 +90,7 @@ SRCH(RADFN) ; Traverse all exams for a patient, up to limits of age & total
  I BEGDT<2950101 S BEGDT=2950101 ; 2 yrs prior to earliest VistaPACS
  S MAGRACNT=1 D GETEXAM3^MAGJUTL1(RADFN,BEGDT,"",.MAGRACNT,.MAGRET,"",LIMEXAMS)
  I MAGRET N IDAT S IDAT=1 D
- . F  S IDAT=$O(^TMP($J,"MAGRAEX",IDAT)) Q:'IDAT  S RADATA=^(IDAT,1) D
+ . F  S IDAT=$O(^TMP($J,"MAGRAEX",IDAT)) Q:'IDAT  S RADATA=^(IDAT,1),RADATA2=$G(^(2)) D  ; ISI P106
  . . S RADTI=$P(RADATA,U,2),RACNI=$P(RADATA,U,3)
  . . I RADTI=MAGDTI&(RACNI=MAGCNI) Q  ; skip current case
  . . D SVMAG2A
@@ -98,12 +99,13 @@ SRCH(RADFN) ; Traverse all exams for a patient, up to limits of age & total
 SVMAG2A ; 2A and 2B used by subroutine at tag PRIOR1
  ; Find all the patient's exams whose CPT codes are related to the
  ; Current exam's CPT code, according to dictionary 2006.65
- N RAIMGTYP,X
+ N RAIMGTYP,X,RASTCAT  ; ISI P106
  N CPT,CPT3,CPT4,CPT5,CURCPTX,CURCPTS,HIT,MAGMATCH,MAGDTH,I
  S RARPT=+$P(RADATA,U,10)
+ S RASTCAT=$P(RADATA2,U,11)  ; ISI P106
  I MAGGRY(0) Q:'$P(MAGGRY(1),U)           ;  Cur Case CPT not in map file
  I  Q:(ACTION="P")&'$D(^RARPT(RARPT,2005))  ; nothing to pre-fetch
- I  Q:$P(RADATA,U,15)<2          ; Cancel or Waiting
+ I  Q:$P(RADATA,U,15)<2!(RASTCAT="R")          ; Cancel or Waiting ; or Ready for Interp ISI P106
  ;   Note: if no images, may still want to do Auto-Disp to get Report;
  ;      also, Current Case should still proceed
  S CPT=$P(RADATA,U,17)
@@ -161,6 +163,7 @@ SVMAG2B ; For exams whose CPTs match, select a subset that are within defined
  . . S MAGGRY(CT)="M08^"_CPT_"|"_$P(X,U,8,11)
  . . I ACTION="P"!(ACTION="A") S Y=$$JBFETCH^MAGJUTL2(RARPT)  ; fetch from jukebox
  . . I ACTION="C" S Y=$$CACHE^MAGNUTL2(RARPT)  ; precache exams
+ . . I ACTION="ISIP" S:$T(^ISINUTL2)'="" Y=$$FETCH^ISINUTL2(RARPT)  ;  ISI -- ISIX pre-fetch  
  . S MAGGRY(0)=CT_"^"_HDR
  E  S MAGGRY(0)="0^No Exams Found for "_HDR
  Q

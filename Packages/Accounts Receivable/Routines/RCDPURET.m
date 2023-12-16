@@ -1,5 +1,5 @@
 RCDPURET ;WISC/RFJ-Receipt utilities (transactions) ;1 Jun 99
- ;;4.5;Accounts Receivable;**114,141,169,173,196,221,304,301,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**114,141,169,173,196,221,304,301,326,409**;Mar 20, 1995;Build 17
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;use of IBRFN in tag PB allowed by private IA 2031
@@ -104,10 +104,10 @@ EDITTRAN(RECTDA,TRANDA) ;  edit a receipt transaction
  S DR=DR_"@2;X RCXAMONT;@3;.04;"
  ;  date of payment
  S DR=DR_".06;"
- ;  type of payment = district counsel (3), check (4),
- ;                    dept of justice  (5), irs (11),
- ;                    lockbox (12)
- I RCTYPE=3!(RCTYPE=4)!(RCTYPE=5)!(RCTYPE=11)!(RCTYPE=12)!(RCTYPE=13) D
+ ;  type of payment = district counsel(3), check(4), dept of justice (5),
+ ;                    irs (11), lockbox (12), top payment (13), ogc-chk (19)
+ ;                    
+ I RCTYPE=3!(RCTYPE=4)!(RCTYPE=5)!(RCTYPE=11)!(RCTYPE=12)!(RCTYPE=13)!(RCTYPE=19) D
  .   S DR=DR_".07d;"     ; check number
  .   S DR=DR_".08d;"     ; bank number
  .   S DR=DR_".1d;"      ; date of check

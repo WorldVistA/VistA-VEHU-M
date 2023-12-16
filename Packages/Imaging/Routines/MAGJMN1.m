@@ -1,5 +1,5 @@
-MAGJMN1 ;WIRMFO/JHC/DAC,GXT - VRad Maint functions ; 23 Feb 2018 3:09 PM
- ;;3.0;IMAGING;**16,9,22,18,65,76,101,90,115,120,133,152,153,184,199**;Mar 19, 2002;Build 5
+MAGJMN1 ;WIRMFO/JHC - VRad Maint functions ; 10/17/2022
+ ;;3.0;IMAGING;**16,9,22,18,65,76,101,90,115,120,133,152,153,184,199,255,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,14 +15,9 @@ MAGJMN1 ;WIRMFO/JHC/DAC,GXT - VRad Maint functions ; 23 Feb 2018 3:09 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
-ENVCHK ; "Environment Check" for KIDS Install
- I 'XPDENV Q  ; Proceed only if in Install phase
- N MAGJKIDS S MAGJKIDS=1
- D BGCSTOP
- Q
- ;
+ ;; ISI IMAGING;**99,100,101,105,102,106**
 SVRLIST ;
- W @IOF,!!?10,"Enter/Edit VistARad Exams List Definition",!!
+ W @IOF,!!?10,"Enter/Edit ISI Rad Exams List Definition",!!
  N MAGIEN
  K DIC S (DIC,DLAYGO)=2006.631,DIC(0)="ALMEQ"
  D ^DIC I Y=-1 K DIC,DA,DR,DIE,DLAYGO Q
@@ -31,6 +26,11 @@ SVRLIST ;
  S DIE=2006.631,DA=+Y,DR="[MAGJ LIST EDIT]"
  S MAGIEN=DA
  D ^DIE I '$D(DA) G SVRLIST
+ ; ISI start
+ S X=$P(@(DIC_+DA_",0)"),U,3)
+ I X="I" W !!,"Indexed List Type requires compile program entry point:",!
+ I  S DIE=2006.631,DR="200;201" D ^DIE I '$D(DA) G SVRLIST
+ ; ISI end
  D ENSRCH
  D BLDDEF(MAGIEN)
  S $P(^MAG(2006.631,MAGIEN,0),U,5)=$$NOW^XLFDT()
@@ -97,7 +97,9 @@ ENSRCH ; Invoke Search for 2006.631 def'n
  ;
 BLDDEF(LSTID) ; build DEF nodes for Column/Sort defs
  N X,QX,SS,STR,LSTHDR,T,T0,T8,T6,HASCASE,XT,HASDATE,HASNIMG,HASPRIO,HASLOCK,LISTYPE
+ N HASASSIG  ;  ISI
  S SS=0,HASCASE=0,HASDATE=0,HASNIMG=0,HASPRIO=0,HASLOCK=0
+ S HASASSIG=0  ;  ISI
  S LISTYPE=$P($G(^MAG(2006.631,LSTID,0)),U,3)
  ; columns/hdrs: Order in T array by the Relative Column Order
  F  S SS=$O(^MAG(2006.631,LSTID,1,SS)) D  Q:'SS
@@ -105,9 +107,11 @@ BLDDEF(LSTID) ; build DEF nodes for Column/Sort defs
  . . I 'HASCASE S X=1 D BLDDEF2(X)  ; Force CASE#
  . . I 'HASDATE S X=7 D BLDDEF2(X)  ; DATE/TIME
  . . I 'HASNIMG S X=9 D BLDDEF2(X)  ; NUMBER IMAGES
- . . Q:LISTYPE'="U"  ; force below only if for an Unread list
- . . I 'HASLOCK S X=2 D BLDDEF2(X)  ; EXAM LOCK IND.
- . . I 'HASPRIO S X=5 D BLDDEF2(X)  ; PRIORITY
+ . . I LISTYPE="U" D  ; force below only if for an Unread list  ;  ISI
+ . . . I 'HASLOCK S X=2 D BLDDEF2(X)  ; EXAM LOCK IND.  ;  ISI
+ . . . I 'HASPRIO S X=5 D BLDDEF2(X)  ; PRIORITY  ;  ISI
+ . . I LISTYPE]"",("UAP"[LISTYPE) D  ; force below for Unread/All Active/Pending lists  ;  ISI
+ . . . I 'HASASSIG S X=201 D BLDDEF2(X)  ; ASSIGNEE  ;  ISI
  . E  S X=^MAG(2006.631,LSTID,1,SS,0)
  . D BLDDEF2(X)
  ; go thru T to build ordered field sequence for output columns
@@ -132,6 +136,7 @@ BLDDEF2(X) ;
  I 'HASNIMG S HASNIMG=(+X=9)
  I 'HASLOCK S HASLOCK=(+X=2)
  I 'HASPRIO S HASPRIO=(+X=5)
+ I 'HASASSIG S HASASSIG=(+X=201)  ; ISI
  S T0=^MAG(2006.63,+X,0),T6=+$P(T0,U,6) S:'T6 T6=99
  S T8=$P(T0,U,8) I T8]"" S T8="~"_T8
  S XT=$S($P(T0,U,3)]"":$P(T0,U,3),1:$P(T0,U,2))_T8
@@ -140,9 +145,11 @@ BLDDEF2(X) ;
  Q
  ;
 POSTINST ; Patch installation inits, etc.
- ; D BLDALL ; update list definitions  <*> Use any time fields are added
+ D P120DD ; Patch 120 DD mods
+ D BLDALL ; update list definitions  <*> Use any time fields are added
+ D ISIPOST1 ;  ISI -- pick up search logic for ASSIGN exam lists
  D BGCSTRT ; re-start background compile
- D POST ; install message, etc.
+ ; D POST ; install message, etc.
  Q
  ;
 BLDALL ; Create "DEF" nodes, Button labels List Def'ns
@@ -151,14 +158,101 @@ BLDALL ; Create "DEF" nodes, Button labels List Def'ns
  S SS=0
  F  S SS=$O(^MAG(2006.631,SS)) Q:'SS  S LSTDAT=$G(^(SS,0)) I LSTDAT]"" D
  . S LSTNUM=$P(LSTDAT,U,2),BUTTON=$P(LSTDAT,U,7),LSTTYP=$P(LSTDAT,U,3)
- . I LSTNUM>9900!$P(LSTDAT,U,6) D BLDDEF(SS)  ; build DEF nodes for System Lists & any Enabled lists
+ . I LSTNUM>9799!$P(LSTDAT,U,6) D BLDDEF(SS)  ; ISI: 9799; build DEF nodes for System Lists & any Enabled lists
  . I BUTTON="",(LSTTYP]"") D   ; Create Button Labels if needed
  . . S BUTTON=$S(LSTTYP="U":"Unread #",LSTTYP="R":"Recent #",LSTTYP="A":"All Active #",LSTTYP="P":"Pending #",1:"List #")_LSTNUM
  . . S $P(^MAG(2006.631,SS,0),U,7)=BUTTON
  Q
  ;
+ ; ISI begin
+ISIPOST1 ; stuff search logic into exam lists for 4 ASSIGN lists
+ N SRCH,LSTNUM
+ S SRCH("DEF",3,0)=1
+ S SRCH("DEF",3,1)="201^'?."" """
+ S SRCH("DEF",4,0)=1
+ S SRCH("DEF",4,1)="^1^"
+ S SRCH("DEF",5,1)="ASSIGNEE NOT NULL"
+ F LSTNUM=9800:1:9803 D BLDSRCH(LSTNUM,.SRCH)
+ Q
+BLDSRCH(LSTNUM,DATA) ; stuff search logic nodes into list entry
+ N IEN,NODE
+ I $D(DATA)>9,LSTNUM D
+ . S IEN=$O(^MAG(2006.631,"C",LSTNUM,""))
+ . Q:'IEN
+ . S NODE=$NA(^MAG(2006.631,IEN))
+ . M @(NODE)=DATA
+ Q
+ ;
+BLDLSNUM(LSTNUM) ; Update list LSTNUM after list defs are installed (added in ISI-P102)
+ I +$G(LSTNUM)
+ E  Q
+ N IEN
+ S IEN=$O(^MAG(2006.631,"C",LSTNUM,""))
+ Q:'IEN  ; list not defined here
+ D BLDDEF(IEN)
+ Q
+ ;
+POST102L ; stuff search logic for MY RECENT EXAMS list (added in ISI-P102)
+ N SRCH,LSTNUM
+ S LSTNUM=9830
+ S SRCH("DEF",3,0)=1
+ S SRCH("DEF",3,1)="24^=""Y"""
+ S SRCH("DEF",4,0)=1
+ S SRCH("DEF",4,1)="^1^"
+ S SRCH("DEF",5,1)="INTERP BY LOGON RADIOLOGIST? EQUALS ""Y""^YES"
+ D BLDSRCH(LSTNUM,.SRCH)
+ Q
+ ;
+POST106L ; stuff search logic for US READY list (added in ISI-P106)
+ N SRCH,LSTNUM
+ S LSTNUM=980
+ S SRCH("DEF",3,0)=1
+ S SRCH("DEF",3,1)="8^[""READY FOR INTERP"""
+ S SRCH("DEF",4,0)=1
+ S SRCH("DEF",4,1)="^1^"
+ S SRCH("DEF",5,1)="STATUS CONTAINS (case-insensitive) ""READY FOR INTERP"""
+ D BLDSRCH(LSTNUM,.SRCH)
+ Q
+ ;
+PRE341 ;  Delete "old version" list entries for standard lists
+ N DA,DIDEL,DIE,DR,FIL,FILENUM,IEN,LSTID
+ S FILENUM=2006.631
+ S FIL=$NA(^MAG(FILENUM)),X=""
+ F LSTID=9991,9992,9993,9995,9996 S IEN=$O(@FIL@("C",LSTID,"")) I IEN D
+ . S DIDEL=FILENUM,DR=".01////@",DIE="^MAG("_FILENUM_",",DA=IEN D ^DIE
+ Q
+ ;
+POST341 ;
+ N LSTNUM  ; re-build exam list definition details
+ I $$UJOCHECK^ISIJUTL9() D  ; Assign not in VA yet
+ . F LSTNUM=9800:1:9803 D BLDLSNUM^MAGJMN1(LSTNUM)
+ . D ISIPOST1 ; stuff search logic for ASSIGN lists
+ F LSTNUM=9810,9820,9830,9991,9992,9993,9995,9996 D BLDLSNUM^MAGJMN1(LSTNUM)
+ D POST102L ; stuff search logic for MY RECENT EXAMS list
+ D BGCSTRT ; re-start background compile
+ Q
+ ;
+ ; ISI end
+ ;
 POST ; Install msg
- D INS^MAGQBUT4(XPDNM,DUZ,$$NOW^XLFDT,XPDA)
+ ; D INS^MAGQBUT4(XPDNM,DUZ,$$NOW^XLFDT,XPDA)
+ Q
+ ;
+P120DD ; DD changes for MAG VISTARAD SITE PARAMETERS, deleting deprecated fields
+ ;
+ W !!,"Deleting deprecated fields from MAG VISTARAD SITE PARAMETERS file ... "
+ ; First, delete the field entries
+ N I,REC
+ S REC=$G(^MAG(2006.69,1,0))
+ I REC]"" D
+ . F I=6,12,14,15 S $P(REC,U,I)=""
+ . S ^MAG(2006.69,1,0)=REC
+ ;
+ ; Then, delete the field definitions
+ S DIK="^DD(2006.69,",DA(1)=2006.69
+ F DA=4,5.5,10,11 D ^DIK
+ K DIK,DA
+ W " done! ",!
  Q
  ;
 YN(MSG,DFLT) ; get Yes/No reply
@@ -172,7 +266,7 @@ YN1 W !,MSG_" "_DFLT_"// "
  ;
 LSTINQ ; Inq/Disp list def'n
  N GREF,MAGIEN
- W !!?15,"Display VistARad Exams List Definition",!!
+ W !!?15,"Display ISI Rad Exams List Definition",!!
  N MAGIEN
  S DIC=2006.631,DIC(0)="AMEQ"
  D ^DIC I Y=-1 K DIC,DA,DR Q
@@ -191,18 +285,26 @@ DISPSRCH(GREF) ; GREF holds indirect ref for global holding search logic data
  Q
  ;
 VRSIT ;
- W @IOF,!!?10,"Enter/Edit VistARad Site Parameters",!!
+ W @IOF,!!?10,"Enter/Edit ISI Rad Site Parameters",!!
  S DIC=2006.69,DIC(0)="ALMEQ"
  I '$D(^MAG(DIC,1)) S DLAYGO=DIC
  D ^DIC I Y=-1 K DIC,DA,DR,DIE,DLAYGO Q
- S DIE=2006.69,DA=+Y,DR=".01:20"
+ S DIE=2006.69,DA=+Y,DR=".01:20;"
+ ; ISI P341--Assign to work only in Jordan until VA/IHS requests it (needs data storage change from file #70)
+ I $$UJOCHECK^ISIJUTL9() S DR=DR_"101;"
+ S DR=DR_"102;103;106;"
+ ; ISI P341--Mgr Rev-2 to work only in Jordan until VA/IHS 
+ ;   requests Assign (or we re-jigger Mgr Rev-2); ditto w/hold Exam List Stats
+ ; --> Need to re-work hard-coded client Rev-2 Lists per Assign enabled or not
+ I $$UJOCHECK^ISIJUTL9() S DR=DR_"105;104;"
+ S DR=DR_"107:110" ; ISI Patches 99, ff thru VA341
  D ^DIE
  K DIC,DA,DR,DIE,DLAYGO
  N PLACE S DA=""
  S PLACE=$$PLACE^MAGBAPI(+$G(DUZ(2)))
  S:PLACE DA=PLACE
  I DA D
- . W !!,"Editing VistARad Timeout for division #",DUZ(2),!
+ . W !!,"Editing ISI Rad Timeout for division #",DUZ(2),!
  . S DIE=2006.1,DR="123" D ^DIE
  K DA,DR,DIE
  Q
@@ -214,7 +316,7 @@ VRSIT ;
  ;          #203: DEFAULT VISTARAD USERPREF NON.
  ; 
  ; These fields point to entries in the MAGJ USER DATA File (#2006.68), and
- ;   allow the VistARad client to initialize new VistARad users to the settings
+ ;   allow the ISI Rad client to initialize new ISI Rad users to the settings
  ;   held by the appropriate default user type ("Radiologist", "Non-rad'ist").
  ;
 EEPRO ;
@@ -231,7 +333,7 @@ EEPRO ;
  . Q
  Q
 EEPREF ;
- W @IOF,!!?10,"Enter/Edit VistARad Prefetch Logic",!!
+ W @IOF,!!?10,"Enter/Edit ISI Rad Prefetch Logic",!!
  N MAGIEN
  K DIC S (DIC,DLAYGO)=2006.65,DIC(0)="ALMEQ"
  D ^DIC I Y=-1 K DIC,DIE,DR,DLAYGO Q
@@ -241,7 +343,7 @@ EEPREF ;
  G EEPREF
  Q
 INPREF ; Inquire VRad PreFetch
- W @IOF,!!?10,"Inquire VistARad Prefetch Logic",!!
+ W @IOF,!!?10,"Inquire ISI Rad Prefetch Logic",!!
  N MAGIEN,BY,FR,TO
  S DIC=2006.65,DIC(0)="AMEQ"
  D ^DIC I Y=-1 K DIC Q

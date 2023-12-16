@@ -1,8 +1,9 @@
 PSOREJU2 ;BIRM/MFR - BPS (ECME) - Clinical Rejects Utilities (1) ;10/15/04
- ;;7.0;OUTPATIENT PHARMACY;**148,260,287,341,290,358,359,385,403,421,427,478,562,680,681**;DEC 1997;Build 11
+ ;;7.0;OUTPATIENT PHARMACY;**148,260,287,341,290,358,359,385,403,421,427,478,562,680,681,702**;DEC 1997;Build 14
  ; Reference to $$TAXID^IBCEF75 in ICR #6768
  ; Reference to $$DIVNCPDP^BPSBUTL in ICR #4719
- ; Reference to 9002313.23 in ICR #4714
+ ; Reference to File 9002313.23 - BPS NCPDP REASON FOR SERVICE CODE in ICR #4714
+ ; Reference to File 9002313.26 - BPS NCPDP PRIOR AUTHORIZATION TYPE CODE in ICR #5585 
  ; Reference to $$CSNPI^BPSUTIL in ICR #4146
  ;
 GET(RX,RFL,REJDATA,REJID,OKCL,CODE,RRRFLG) ; get reject data from subfile 52.25
@@ -42,14 +43,15 @@ GET(RX,RFL,REJDATA,REJID,OKCL,CODE,RRRFLG) ; get reject data from subfile 52.25
  ;         (o) RRRFLG - If set to 1 with CODE present, also return Reject Resolution Required REJECTs
  ;                      If set to 1 and CODE not passed, then only return RRR REJECTs
  ;
- N REJS,ARRAY,REJFLD,IDX,COM,Z
+ N ARRAY,COM,IDX,REJFLD,REJS,Z
  ;
  I '$D(RFL) S RFL=$$LSTRFL^PSOBPSU1(RX)
+ S RFL=+$G(RFL)
  ;
  K REJDATA
  I '$O(^PSRX(RX,"REJ",0)) Q
  ;
- K REJS S RFL=+$G(RFL)
+ K REJS
  I $G(REJID) D
  . I +$P($G(^PSRX(RX,"REJ",REJID,0)),"^",4)'=RFL Q
  . I '$G(OKCL),$P($G(^PSRX(RX,"REJ",REJID,0)),"^",5) Q
@@ -222,6 +224,7 @@ PA() ; - Ask for Prior Authorization Type and Number
  N DIC,DIR,DIROUT,DIRUT,DTOUT,DUOUT,PAN,PAT,X,Y
  S DIC("B")=0
  S DIC(0)="QEAM",DIC=9002313.26,DIC("A")="Prior Authorization Type: "
+ S DIC("S")="I $P($G(^(0)),""^"",3)'=1"
  D ^DIC
  I ($D(DUOUT))!($D(DTOUT))!(Y=-1) Q "^"  ;Check for "^" or timeout
  S PAT=$P(Y,U,2)

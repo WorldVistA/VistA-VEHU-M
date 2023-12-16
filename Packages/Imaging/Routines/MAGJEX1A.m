@@ -1,5 +1,5 @@
-MAGJEX1A ;WIRMFO/JHC - VistARad RPCs, exam locking ; 9 Sep 2011  4:05 PM
- ;;3.0;IMAGING;**18,65,101,120**;Mar 19, 2002;Build 27;May 23, 2012
+MAGJEX1A ;WIRMFO/JHC - VistARad RPCs, exam locking ; 10/17/2022
+ ;;3.0;IMAGING;**18,65,101,120,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJEX1A ;WIRMFO/JHC - VistARad RPCs, exam locking ; 9 Sep 2011  4:05 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**99,101**
  Q
  ; Entry Points:
  ;   CASLOCK--RPC: Lock mgt
@@ -99,8 +100,8 @@ LOCKACT(RARPT,DAYCASE,REQUEST,RESULT,ACTREPLY,LOGDATA) ; determine if desired lo
  I LOCKLEV=3 D  ; Is or Can be Reserved or Interp by me
  . I MYLOCK(1) D  Q  ; Already Locked/TAKEN by me
  . . I REQUEST=1 D  Q
- . . . I MAGJOB("P32") S $P(ACTION,U)=1,$P(ACTION,U,2)=1,$P(ACTION,"|",2)=1,ACTREPLY="1~#"_DAYCASE_" ("_$$PNAM(RADFN)_") locked for update by "_$P(MAGJOB("USER",1),U,3)
- . . . E  S $P(ACTION,U,1)=1,$P(ACTION,U,2)=+MYLOCK(2),ACTREPLY="1~Exam #"_$P(MYLOCK(1),U,6)_" already open/locked--no action taken"
+ . . . ;  ISI  remove deprecated logic re p32
+ . . . S $P(ACTION,U,1)=1,$P(ACTION,U,2)=+MYLOCK(2),ACTREPLY="1~Exam #"_$P(MYLOCK(1),U,6)_" already open/locked--no action taken"
  . . I REQUEST=4 D  Q  ;  Remove Lock, keep Reserve
  . . . S $P(ACTION,U,2)=1,$P(ACTION,U,4)=1,ACTREPLY="1~Exam unlocked, reserved"
  . . E  S $P(ACTION,U,1)=1,$P(ACTION,U,2)=+MYLOCK(2),ACTREPLY="3~Invalid exam lock request ("_REQUEST_")--#1"
@@ -115,16 +116,16 @@ LOCKACT(RARPT,DAYCASE,REQUEST,RESULT,ACTREPLY,LOGDATA) ; determine if desired lo
  E  I LOCKLEV=1 D  ; Reserved by other (I can Take, Except View/Take/Cancel)
  . I MYLOCK(1) D  Q
  . . I REQUEST=1 D  Q
- . . . I MAGJOB("P32") S $P(ACTION,U)=1,$P(ACTION,"|",2)=1,ACTREPLY="1~#"_DAYCASE_" ("_$$PNAM(RADFN)_") locked for update by "_$P(MAGJOB("USER",1),U,3) ; should be impossible
- . . . E  S $P(ACTION,U)=1,ACTREPLY="1~Exam #"_$P(MYLOCK(1),U,6)_" already locked; no action taken."
+ . . . ;  ISI  remove deprecated logic re p32
+ . . . S $P(ACTION,U)=1,ACTREPLY="1~Exam #"_$P(MYLOCK(1),U,6)_" already locked; no action taken."
  . . E  I REQUEST=2 S $P(ACTION,U,1)=1,ACTREPLY="1~Exam #"_$P(MYLOCK(1),U,6)_" already locked; no action taken."
  . . ; <*> next line Unlocks ME, and preserves Other User's Reserve
  . . E  I REQUEST=4 S $P(ACTION,U,4)=1,ACTREPLY="1~Exam unlocked; reserved by "_$P(MYLOCK(2),U,4)_"."
  . . E  S $P(ACTION,U)=1,ACTREPLY="3~Invalid exam lock request ("_REQUEST_")--#5; Lock retained." ; preserve lock
  . I 'MYLOCK D  Q
  . . I REQUEST=1 D  Q
- . . . I MAGJOB("P32") S $P(ACTION,"|",2)=1,ACTREPLY="5~Case #"_DAYCASE_" is Reserved by "_$P(MYLOCK(2),U,4)_"."
- . . . E  S $P(ACTION,"|",2)=1,ACTREPLY="8~Case #"_DAYCASE_" is Reserved by "_$P(MYLOCK(2),U,4)_"."    ; #8=View/Take/Cancel"
+ . . . ;  ISI  remove deprecated logic re p32
+ . . . S $P(ACTION,"|",2)=1,ACTREPLY="8~Case #"_DAYCASE_" is Reserved by "_$P(MYLOCK(2),U,4)_"."    ; #8=View/Take/Cancel"
  . . E  I REQUEST=2 S $P(ACTION,"|",2)=1,ACTREPLY="5~Case #"_DAYCASE_" is Reserved by "_$P(MYLOCK(2),U,4)_"."
  . . E  I REQUEST=5  S $P(ACTION,U)=1,$P(ACTION,U,5)=1,ACTREPLY="1~#"_DAYCASE_" ("_$$PNAM(RADFN)_") taken/locked for update by "_$P(MAGJOB("USER",1),U,3)
  . . E  S ACTREPLY="3~Invalid exam lock request ("_REQUEST_")--#6"

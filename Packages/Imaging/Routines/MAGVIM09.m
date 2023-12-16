@@ -1,6 +1,6 @@
-MAGVIM09 ;WOIFO/DAC,BT,MAT/JSJ - Utilities for RPC calls for DICOM file processing ; Oct 04, 2022@19:19:13
- ;;3.0;IMAGING;**118,138,332**;Mar 19, 2002;Build 34;Sep 03, 2013
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGVIM09 ;WOIFO/DAC,BT,MAT,JSJ,RRM - Utilities for RPC calls for DICOM file processing ; Oct 04, 2022@19:19:13
+ ;;3.0;IMAGING;**118,138,332,345**;Mar 19, 2002;Build 2
+ ;; Per VA Directive 6402, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -157,7 +157,7 @@ RECHKFLE(UIDS,I,UID,TYPE) ;
  I TYPE=1 S FILE=2005.63
  I TYPE=2 S FILE=2005.64
  I $D(^MAGV(FILE,"B",UID)) D
- . S IEN=$O(^MAGV(FILE,"B",UID,""))
+ . S IEN=$O(^MAGV(FILE,"B",UID,""),-1)
  . S IEN=$P(^MAGV(FILE,IEN,6),"^")
  . I TYPE=1 D
  . . S NEWUID=$P($G(^MAGV(2005.62,IEN,0)),"^")

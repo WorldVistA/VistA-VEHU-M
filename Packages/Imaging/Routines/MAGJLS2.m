@@ -1,5 +1,5 @@
-MAGJLS2 ;WIRMFO/JHC Rad. Workstation RPC calls ; 24-Mar-2010  1:26pm
- ;;3.0;IMAGING;**22,18,76,101,90**;Mar 19, 2002;Build 1764;Jun 09, 2010
+MAGJLS2 ;WIRMFO/JHC - Rad. Workstation RPC calls ; 10/17/2022
+ ;;3.0;IMAGING;**22,18,76,101,90,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJLS2 ;WIRMFO/JHC Rad. Workstation RPC calls ; 24-Mar-2010  1:26pm
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**99,100,101**
  Q
  ;  ACTIVE -- list exams (Unread, Recent, &/or Pending) for input Imaging Type(s)
  ;    RPC Call: MAGJ RADACTIVEEXAMS
@@ -63,9 +64,10 @@ ACTIVE(MAGGRY,DATA) ; EP--get Active (Unread/Recent/Pend) Exam Lists
  . . . S @MAGGRY@(0)="1^1~FOR VIX EXAMID LOOKUP"
  . . . S @MAGGRY@(1)="^VIX LOOKUP"
  . . . S @MAGGRY@(2)="^EXAMID^|"_$P(DATA,U,2,5)_"||"
- I MAGJOB("P32"),+$G(MAGJOB("P32STOP")) S MAGGRY=$NA(^TMP($J,"RET")),@MAGGRY@(0)="0^4~VistARad Patch 32 is no longer supported.  Contact Imaging support for the current version of the VistARad client software." Q  ; <*>
+ ;  ISI remove deprecated logic
+ I $P($G(^MAG(2006.69,1,"ISI")),U,4)="Y" D LSTSTATU^ISIJUTL9(LSTID) ; ISI collect list usage stats
  I BKGND,LSTREQ="U" D BKREQU Q  ; UNREAD in bkgnd
- I BKGND,LSTREQ="R" D BKREQR Q  ; RECENT in bkgnd
+ I BKGND,LSTREQ="R" D:'$$MGRREV2^ISIJUTL9 BKREQR D:$$MGRREV2^ISIJUTL9 FOREGND Q  ; RECENT in bkgnd ISI--Rev-2
  I BKGND,LSTREQ="A" D BKREQA(DATA) Q  ; ALL Active Exams
  ;
  ;--- Process other list types, or bkgnd compile not enabled.
@@ -75,7 +77,19 @@ ACTIVEZ Q
 FOREGND ; compile in foregnd
  I LSTREQ="H" G HISTORY
  D BLDACTV^MAGJLS3(.MAGLST,LSTPARAM)
- D LSTOUT^MAGJLS2B(.MAGGRY,LSTID,MAGLST) K @MAGLST
+ I LSTREQ="I",($G(DATA01)=9820) N WRNMSG D  ; ISI--detect abort of Dynamic Query compile
+ . I $D(^XTMP("MAGJ2","ISIQUERY",DUZ,MAGJOB("SESSION"),"ABORT")) S WRNMSG=^("ABORT")  ; ISI
+ D LSTOUT^MAGJLS2B(.MAGGRY,LSTID,MAGLST,,$G(WRNMSG)) K @MAGLST  ; ISI
+ ; ISI begin -- below is for Dynamic Query feature only
+ I LSTREQ="I",($G(DATA01)=9820) D  ; copy query result to temp storage for session re-use
+ . K ^XTMP("MAGJ2","ISIQUERY",DUZ,MAGJOB("SESSION"),"RSL"),^("RSLSTAT")
+ . N I,X,X2 S I=+$G(@MAGGRY@(0)) I I>0 D
+ . . F I=2:1:I+1 S X=$G(@MAGGRY@(I)) I X]"" D
+ . . . S X2=$P(X,"|",2),X=$P($P(X,"|",4),U) S:X="" X="~"
+ . . . S ^XTMP("MAGJ2","ISIQUERY",DUZ,MAGJOB("SESSION"),"RSL",I)=X2
+ . . . S ^(X)=$G(^XTMP("MAGJ2","ISIQUERY",DUZ,MAGJOB("SESSION"),"RSLSTAT",X))+1 ; for Query statistics
+ . . D QRYLOG^ISIJLS2  ; log query stats
+ ; ISI end
  Q
  ;
 HISTORY ; compile History list
@@ -107,7 +121,7 @@ BKREQU ; UNREAD exams from bkgnd
  ; 2nd errtrap is to deal with locks if error occurs
  N $ETRAP,$ESTACK S $ETRAP="D ERR1^MAGJLS2"
  N ZTDESC,ZTDTH,ZTIO,ZTRTN
- S ZTRTN="BKGND^MAGJLS2",ZTDESC="IMAGING VistARad UNREAD List Compile"
+ S ZTRTN="BKGND^MAGJLS2",ZTDESC="IMAGING ISI Rad UNREAD List Compile"
  S ZTDTH=$H,ZTIO="" D ^%ZTLOAD
  S X=$$CURLIST(LSTNAM),LSTAGE=$P(X,U,2),LSTNUM=$S(+X:+X,1:+$P(X,U,3))
  ; CURLIST sub's check for excessive time n/a here
@@ -136,18 +150,26 @@ BKOUT(LSTNM) ; output list from the bkgnd process
  K LSTAGE
  Q
  ;
+ ; ISI --  Rev-2 modify this subroutine to compile Recent part in foreground
+ ;         Conditional on Rev-2 being enabled (else, use original logic)
 BKREQA(DATA) ; ALL Active from Bkgnd
  ; Copy compiles of Unread & Recent to a scratch global, & call lstout
  N ALLGO,CNT,GETLST,ICNT,REPLY,MSG
  S ALLGO=1,CNT=0,MSG=""
  F GETLST=9991,9992 D  I 'ALLGO S REPLY="Component List "_GETLST_ALLGO Q
  . D PARAMS^MAGJLS2B(GETLST) I 'LSTID S ALLGO=" not properly defined."  Q
- . S X=$$CURLIST(LSTNAM),LSTAGE=$P(X,U,2),LSTNUM=+X
- . I 'LSTNUM D
- . . I +$P(X,U,3) S LSTNUM=+$P(X,U,3)
- . . I LSTNUM S MSG=MSG_$S(MSG="":"Compile program for ",1:"; ")_"component "_LSTNAM_" may not be current (age="_LSTAGE_" for "_GETLST_")"
- . I 'LSTNUM S ALLGO=" needs more time to compile." Q
- . F ICNT=1:1:$G(^XTMP("MAGJ2",LSTNAM,LSTNUM,0,1)) S X=^XTMP("MAGJ2",LSTNAM,LSTNUM,ICNT,1),Y=^(2),CNT=CNT+1,^TMP($J,"MAGJ",CNT,1)=X,^(2)=Y
+ . ; ISI -- begin changes
+ . I GETLST=9991!(GETLST=9992&'$$MGRREV2^ISIJUTL9) D  ; Rev-2 NOT enabled, Recent part from background
+ . . S X=$$CURLIST(LSTNAM),LSTAGE=$P(X,U,2),LSTNUM=+X
+ . . I 'LSTNUM D
+ . . . I +$P(X,U,3) S LSTNUM=+$P(X,U,3)
+ . . . I LSTNUM S MSG=MSG_$S(MSG="":"Compile program for ",1:"; ")_"component "_LSTNAM_" may not be current (age="_LSTAGE_" for "_GETLST_")"
+ . . I 'LSTNUM S ALLGO=" needs more time to compile." Q
+ . . F ICNT=1:1:$G(^XTMP("MAGJ2",LSTNAM,LSTNUM,0,1)) S X=^XTMP("MAGJ2",LSTNAM,LSTNUM,ICNT,1),Y=^(2),Z=$G(^("ISI")),CNT=CNT+1,^TMP($J,"MAGJ",CNT,1)=X,^(2)=Y,^("ISI")=Z
+ . I GETLST=9992,$$MGRREV2^ISIJUTL9 D  ; Rev-2 enabled, compile Recent part in foreground
+ . . D BLDACTV^MAGJLS3(.MAGLST,LSTPARAM)
+ . . F ICNT=1:1:$G(@MAGLST@(0,1)) S X=@MAGLST@(ICNT,1),Y=^(2),Z=$G(^("ISI")),CNT=CNT+1,^TMP($J,"MAGJ",CNT,1)=X,^(2)=Y,^("ISI")=Z
+ ; ISI -- end of changes
  I ALLGO D
  . S ^TMP($J,"MAGJ",0,1)=CNT_U_"1~ALL Active Exams",^(2)=""
  . D PARAMS^MAGJLS2B($P(DATA,U))
@@ -162,6 +184,7 @@ BKGND ; EP for background compile of UNREAD exams
  N BKGLSTID S BKGLSTID=9991 G BKGNDA
  Q
 BKGND2 ; EP--bkgnd compile RECENT
+ Q:$$MGRREV2^ISIJUTL9  ;  ISI -- Rev-2 enabled, no more background compile
  N BKGLSTID S BKGLSTID=9992 G BKGNDA
  Q
 BKGNDA S BKGPROC=1,U="^"
@@ -184,12 +207,12 @@ BKLOOP ; Loop & compile "master" UNREAD List only
  . S TEST=(DELTA-LSTAGE)\5
  . ; while waiting, periodic chk for stop conditions
  . F ITEST=1:1:TEST H 5 D  Q:'BKGND
- .. S BKGND=+$P($G(^MAG(2006.69,1,0)),U,8) Q:'BKGND
- .. I $D(ZTQUEUED),$$S^%ZTLOAD S BKGND=0 ; Exit bkgnd via TaskMan Req
+ . . S BKGND=+$P($G(^MAG(2006.69,1,0)),U,8) Q:'BKGND
+ . . I $D(ZTQUEUED),$$S^%ZTLOAD S BKGND=0 ; Exit bkgnd via TaskMan Req
  . H 3
  D LSTCOMP()
- I LSTREQ="R" D NEWINT
- I LSTREQ="U" D UPDR^MAGJLS2B G BKLOOP  ;UNREAD loops; RECENT uses TaskMan
+ I LSTREQ="R" D NEWINT:'$$MGRREV2^ISIJUTL9  ; ISI -- Rev-2 eliminates this
+ I LSTREQ="U" D:'$$MGRREV2^ISIJUTL9 UPDR^MAGJLS2B G BKLOOP  ;UNREAD loops; RECENT uses TaskMan ; ISI -- Rev-2 ditto
 BKGNDZ I LSTREQ="U" L -^XTMP("MAGJ2","BKGND2","RUN")
  N ZTREQ S ZTREQ="@"  ;  clean up task entry
  K BKLOOP,DELTA,LSTAGE
@@ -222,7 +245,7 @@ LSTCOMP(COMPFAIL) ; Compile new list; subrtn used by Active and Bkgnd tags
  N COMTIM,NEWLIST,TS
  S NEWLIST=$S(LSTNUM=1:2,1:1) ; toggle node to use
  S TS="" F I=2,0 S TS=TS_$S(TS="":"",1:U)_$$HTFM^XLFDT($H+I,0)
- S ^XTMP("MAGJ2",0)=TS_U_"VistARad List Compile"
+ S ^XTMP("MAGJ2",0)=TS_U_"ISI Rad List Compile"
  S ^XTMP("MAGJ2",0,LSTNAM,NEWLIST)=$H
  D BLDACTV^MAGJLS3(.MAGGRY,LSTPARAM,$NA(^XTMP("MAGJ2",LSTNAM,NEWLIST)))
  S COMTIM=$$DELTA($P(^XTMP("MAGJ2",0,LSTNAM,NEWLIST),U))

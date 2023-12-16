@@ -1,7 +1,8 @@
 ONCOPRT1 ;HINES OIFO/RVD - OncoTrax Reports ICD ;05/14/12
- ;;2.2;ONCOLOGY;**1,7,10,13,14,17**;Jul 31, 2013;Build 6
+ ;;2.2;ONCOLOGY;**1,7,10,13,14,17,18**;Jul 31, 2013;Build 5
  ;This routine invokes Integration Agreement #3151 and #3990.
  ;P17 ICD-10 updates
+ ;P18 remove D23.9, D35.00. D35.01. D35.02  add D72.11 AND N85.02
 ICD ;check for particular ICD code.
  I SORT="[ONC DISEASE INDEX CASEFINDING]" D
  .S DIS(1)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01,""I"") I (CODE>139.99)&(CODE<208.93)"
@@ -153,8 +154,8 @@ ICD ;check for particular ICD code.
  .S DIS(146)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,4)=""C41."")!($E(CODE,1,4)=""C42."")"
  .S DIS(147)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""C44.10"")!($E(CODE,1,6)=""C44.19"")"
  .S DIS(148)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""C44.13"")"
- .S DIS(149)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I (CODE=""D23.9"")!($E(CODE,1,6)=""D35.00"")"
- .S DIS(150)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""D35.01"")!($E(CODE,1,6)=""D35.02"")"
+ .S DIS(149)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""D72.11"")"
+ .S DIS(150)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,6)=""N85.02"")"
  .S DIS(151)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,5)=""D35.3"")!($E(CODE,1,5)=""R90.0"")"
  .;S DIS(152)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,5)=""Z85.5"")!($E(CODE,1,5)=""Z85.6"")"
  .;S DIS(153)="S CODE=$$GET1^DIQ(80,$P($G(^AUPNVPOV(D0,0)),U,1),.01) I ($E(CODE,1,5)=""Z85.7"")!($E(CODE,1,5)=""Z85.8"")"

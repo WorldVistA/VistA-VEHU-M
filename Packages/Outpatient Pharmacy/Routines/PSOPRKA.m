@@ -1,6 +1,7 @@
-PSOPRKA ;BIR/EJW - PARK/UNPARK functionality (cont.) ;Feb 18, 2022@08:57:20
- ;;7.0;OUTPATIENT PHARMACY;**441**;DEC 1997;Build 209
+PSOPRKA ;BIR/EJW - PARK/UNPARK functionality (cont.) ; Apr 24, 2023@08:17:57
+ ;;7.0;OUTPATIENT PHARMACY;**441,712**;DEC 1997;Build 20
  ;
+ ; Reference to $$L^PSSLOCK,PSOL^PSSLOCK,PSOUL^PSSLOCK,UL^PSSLOCK in ICR #2789
  ;(modified from hold rtn PSOHLDA)
  ;NOTE for PaPI - check on ECME calls like in the PSOHLD* routines (e.g. reverse
  ; below may need another code besides "HLD" for parking)
@@ -84,12 +85,13 @@ EN ;
  .S PSOOLDFILLDT=$S(RXF:$P(^PSRX(DA,1,RXF,0),"^",1),1:$P(^PSRX(DA,2),"^",2))
  .D UPKSUSP
  .S UNRFIL=1
- D RXACT^PSOPRK(DA,"UPK")
+ D RXACT^PSOPRK(DA,"UPK") S PSOKPK=$G(PSOKPK)+1
  I '$G(UNRFIL),$S('RXF:$P(^PSRX(DA,0),"^",11),RXF:$P(^PSRX(DA,1,RXF,0),"^",2),1:"")="P" D
  .N I,J,BPMW  S I=0,BPMW=""
  .F  S I=$O(^PSRX(DA,"A",I)) Q:'I  S J=^(I,0) I $P(J,"^",4)=RXF,J["Rx placed in Parked status" S BPMW=$S(J["(M)":"M",J["(W)":"W",1:"M")
  .I BPMW]"" S:'RXF $P(^PSRX(DA,0),"^",11)=BPMW S:RXF $P(^PSRX(DA,1,RXF,0),"^",2)=BPMW
  S:$G(ORRFILL)&('$G(UNRFIL)) UNPARK=0
+ S:$G(ORRFILL)&($G(UNRFIL)) UNPARK=1
  I $G(ORRFILL)!$G(UNRFIL) G EN0
  I RSDT!(LBLP)!($D(PSOCMOP)) D  ; If latest fill released or label printed, generate new refill using autorefill logic
  .K ERRMSG
@@ -129,11 +131,12 @@ UPKSUSP ; Update routing and date fields for latest fill and put on suspense
  S NEXTPOSS=PSOX1
  K X,PSOX1
  S PSOX("MAIL/WINDOW")="M"
- S DIE="^PSRX(",DR=$S('RXF:"22///"_FILLDATE_";",1:"")_"100///5;102///"_NEXTPOSS D ^DIE
- I RXF N DA,DIE,DR S DA(1)=PSODA,DA=RXF,DIE="^PSRX("_DA(1)_",1,",DR=".01///"_FILLDATE D ^DIE
+ S DIE="^PSRX(",DR=$S('RXF:"22////"_FILLDATE_";",1:"")_"100///5;102///"_NEXTPOSS D ^DIE
+ I RXF N DA,DIE,DR S DA(1)=PSODA,DA=RXF,DIE="^PSRX("_DA(1)_",1,",DR=".01////"_FILLDATE D ^DIE
  S PRKMW="M"
  I 'RXF N DA,DIE,DR S DA=PSODA,DIE="^PSRX(",DR="11///"_PRKMW D ^DIE
  I RXF N DA,DIE,DR S DA(1)=PSODA,DA=RXF,DIE="^PSRX("_DA(1)_",1,",DR="2///"_PRKMW D ^DIE S DA=PSODA
+ S $P(^PSRX(PSODA,3),"^")=FILLDATE
  ; PUT ON SUSPENSE
  S (RXN,DA)=PSODA
  S SD=FILLDATE
@@ -161,14 +164,21 @@ CHKLBL(PSODA,RXF) ; see if label has printed for this fill
  F LBL=0:0 S LBL=$O(^PSRX(PSODA,"L",LBL)) Q:'LBL  I $P(^PSRX(PSODA,"L",LBL,0),"^",2)=RXF S LBLP=1
  Q
  ;
-CHKPARK(DA,RESULT) ; Entry point for AudioCARE API to determine if parked original
- ; with no refills can be requested now (will queue original when refill request is received)
+CHKPARK(DA,RESULT) ; Entry point for AudioCARE API to determine if parked original/refill
+ ; with no refills can be requested now (will queue original/refill when refill request is received)
+ N PSOPRKRF,PSORXF
  S (LBLP,RESULT)=0
  I '$D(^PSRX(DA)) Q
  I '$G(^PSRX(DA,"PARK")) Q  ; Not Parked
  I +$G(^PSRX(DA,"STA"))'=0 Q  ; Not Active
- I $O(^PSRX(DA,1,""))="",+$P(^PSRX(DA,0),"^",9)=0 D
+ S PSOPRKRF=$O(^PSRX(DA,1,""))
+ I PSOPRKRF="",+$P(^PSRX(DA,0),"^",9)=0 D  ;Check Original Fill
  .D GETRELDT(DA) I 'RSDT D CHKLBL(DA,0) I 'LBLP D
+ ..S NEXTPOSS=$P(^PSRX(DA,3),"^",2) I NEXTPOSS<DT S NEXTPOSS=DT
+ ..D ^PSOCMOPA I '$D(PSOCMOP) S RESULT="1^"_NEXTPOSS
+ I PSOPRKRF'="",+$P(^PSRX(DA,0),"^",9)>0 D  ;Check Last Refill
+ .S PSORXF=$O(^PSRX(DA,1,99999),-1)
+ .D GETRELDT(DA) I 'RSDT D CHKLBL(DA,PSORXF) I 'LBLP D
  ..S NEXTPOSS=$P(^PSRX(DA,3),"^",2) I NEXTPOSS<DT S NEXTPOSS=DT
  ..D ^PSOCMOPA I '$D(PSOCMOP) S RESULT="1^"_NEXTPOSS
  K PSOCMOP,LBLP,RSDT,NEXTPOSS

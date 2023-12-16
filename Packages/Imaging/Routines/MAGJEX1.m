@@ -1,5 +1,5 @@
-MAGJEX1 ;WIRMFO/JHC - VistARad RPC calls ; 25 Mar 2013  5:22 PM
- ;;3.0;IMAGING;**16,22,18,65,101,115,104,120,133**;Mar 19, 2002;Build 5393;Sep 09, 2013
+MAGJEX1 ;WIRMFO/JHC,ISI/JL - VistARad RPC calls ; 10/17/2022
+ ;;3.0;IMAGING;**16,22,18,65,101,115,104,120,133,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,8 @@ MAGJEX1 ;WIRMFO/JHC - VistARad RPC calls ; 25 Mar 2013  5:22 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ; Reference to EN2^RAUTL20 in ICR #3270
+ ;; ISI IMAGING;**99,101**
  Q
  ;
  ;
@@ -29,7 +31,7 @@ OPENCASE(MAGGRY,DATA) ;
  ; MAGGRY holds $NA reference to ^TMP for rpc return
  ;   all ref's to MAGGRY use subscript indirection
  ; input in DATA:
- ; OPEN_FLAG ^ RADFN^RADTI^RACNI^RARPT ^ PSINDGET ^ <unused> ^ USETGA
+ ; OPEN_FLAG ^ RADFN^RADTI^RACNI^RARPT ^ PSINDGET ^ <unused> ^ USETGA (forced to zero) ; ISI
  ; OPEN_FLAG = 0: Open, view only
  ;     1: Open, lock the case for status update
  ;     2: Open, Reserve for Interpretation
@@ -39,7 +41,7 @@ OPENCASE(MAGGRY,DATA) ;
  ; RADFN^RADTI^RACNI^RARPT = Exam ID string, specifies case of interest
  ; PSINDGET= Presentation State indicators of interest to client
  ;     K/I/U for Key Image/ Interpretation/ User PS types
- ; USETGA   = 1: Open TGA (downsampled) file; 0: Open BIG file
+ ; USETGA   = hard-code to "0": Open BIG file  ;  ISI remove support for downsampled image fetch
  ; 
  ; Details of Reply message are below tag OPENCASZ
  ; 
@@ -51,24 +53,41 @@ OPENCASE(MAGGRY,DATA) ;
  N MIXEDUP,VIEWOK,USETGA,USELORES,IMGST,REMOTE,DIQUIET
  N LOGDATA,MODIF,EXCAT,RADATA2,PSIND,RACPT,RASTCAT,RASTORD,ACQSITE,ALTPATH,PROCDT
  N YNMAMMO,YNREVANN,PSINDGET,JBDISABLE,STANUM
+ N ASIGDUZ,ASIGRIST,ASIGREPL,RADATA9,PLACE  ; ISI
  S DIQUIET=1 D DT^DICRW
  S (CT,MIXEDUP)=0,MODALITY="",DATAOUT="",DAYCASE="",MAGLST="MAGJOPENCASE",(ACQSITE,ALTPATH,PROCDT,STANUM)=""
  S VIEWOK=1
  K MAGGRY S MAGGRY=$NA(^TMP($J,MAGLST)),STARTNOD=0 K @MAGGRY  ; assign MAGGRY value
  S CURCASE=$P(DATA,U),RARPT=+$P(DATA,U,5),PSINDGET=+$P(DATA,U,6)
  S PSIND="" I PSINDGET]"" F I="K","I","U" I $F(PSINDGET,I) S PSIND(I)=""
- S USETGA=+$P(DATA,U,8)
+ S USETGA=0  ;  ISI hard-code to "0"
  S RADFN=$P(DATA,U,2),RADTI=$P(DATA,U,3),RACNI=$P(DATA,U,4)
  I RADFN,RADTI,RACNI D GETEXAM2^MAGJUTL1(RADFN,RADTI,RACNI,"",.X)
  I 'X S REPLY="4~Request Contains Invalid Case Pointer ("_RADFN_U_RADTI_U_RACNI_U_RARPT_")." G OPENCASZ
- S RADATA=$G(^TMP($J,"MAGRAEX",1,1)),RADATA2=$G(^(2))
+ S RADATA=$G(^TMP($J,"MAGRAEX",1,1)),RADATA2=$G(^(2)),RADATA9=$G(^("ISI"))  ; ISI
  K ^TMP($J,"MAGRAEX")
  S RADIV=$P(RADATA2,U,5),MODIF=$P(RADATA2,U,8),RASTCAT=$P(RADATA2,U,11),RASTORD=$P(RADATA,U,15)
+ S PLACE=$P(RADATA2,U,6) ; ISI
  S RARPT=+$P(RADATA,U,10),DAYCASE=$P(RADATA,U,12),RACPT=$P(RADATA,U,17)
  I 'RARPT!'$D(^RARPT(RARPT,2005)) S REPLY="4~This exam has no report entry for associating images; no images can be accessed." G OPENCASZ
  D CKINTEG^MAGJRPT(.X,RADFN,RADTI,RACNI,RARPT,RADATA)
  I X]"" S MIXEDUP=1,MIXEDUP("REPLY")=X ; DB corruption
- S REPLY="4~Attempting to open/display case #"_DAYCASE
+ ; ISI begin ...
+ S ASIGDUZ=+$P(RADATA9,U,3),ASIGRIST=0,ASIGREPL=0  ; ISI
+ I ASIGDUZ D
+ . F X="S","R" I $D(^VA(200,"ARC",X,ASIGDUZ)) S ASIGRIST=1 Q
+ ; check if an assignment conflict exists for current user:
+ ;   exam is lockable (curcase = 1 or 2); if a rist is attempting to open, & exam is assigned, then block:
+ ;     Rist vs Tech has Assign?  tech: allow View/Cancel; Rist: View/Override/Cancel
+ ; Note that reply code 10 is a special value, used ONLY to enable the Assign over-ride for a rist
+ I CURCASE,'$$ASIGME^ISIJUTL1(ASIGDUZ) I CURCASE'=11 D  G OPENCASZ:'(+REPLY=5) S CURCASE=0,ASIGREPL=1
+ . I ASIGRIST,(CURCASE=1) S REPLY="10~Case #"_DAYCASE_" is Assigned to "_$$USERINF^MAGJUTL3(ASIGDUZ,1)_". You may View only, Override the assignment, or Cancel.  " ; #10=View/Override/Cancel"
+ . E  I ASIGRIST S REPLY="2~Case #"_DAYCASE_" is Assigned to "_$$USERINF^MAGJUTL3(ASIGDUZ,1)_"; Reserve not allowed."
+ . E  S REPLY="5~Case #"_DAYCASE_" is Assigned to "_$$USERINF^MAGJUTL3(ASIGDUZ,1)_"; exam NOT Locked. "
+ I CURCASE=11 S CURCASE=1 ; Came through Override pathway--allow override lock attempt
+ I ASIGREPL  ; Assign conflict logic has already created a reply code/msg
+ E  S REPLY="4~Attempting to open/display case #"_DAYCASE
+ ; ISI ... end
  S JBDISABLE=0
  I CURCASE="VIX-Metadata" S JBDISABLE=1 ; metadata only, do not trigger JB fetches
  ;
@@ -103,7 +122,8 @@ OPENCASE(MAGGRY,DATA) ;
  S YNMAMMO=$$ZRUMAMMO^MAGJUTL4(RACPT)
  ; 
  ; 
- S REPLY="0~Images for Case #"_DAYCASE
+ I ASIGREPL  ; ISI    ; Assign conflict logic has already created a reply code/msg
+ E  S REPLY="0~Images for Case #"_DAYCASE  ; ISI
  ;
 OPENCASZ I 'CT,(REPLY["Attempting") S REPLY="4~Unable to retrieve images for Case #"_DAYCASE_"."
  ;
@@ -113,9 +133,9 @@ OPENCASZ I 'CT,(REPLY["Attempting") S REPLY="4~Unable to retrieve images for Cas
  ;  3: Pt Name ^ CASE # ^ Proc. Name ^ Exam Date ^ Time ^ Modality ^
  ;      SSN ^ <unused> ^ LOCKED Status ^ Modifier ^ Exam Status Category
  ;  4: Is Radiologist? ^ Alt_Path Flag ^ Acquisition Site ^ Procedure Date ^
- ;      Revise Annotations? ^ Mammography? ^ Station Number
+ ;      Revise Annotations? ^ Mammography? ^ Station Number | Regional image(0/1)
  ;
- S REMOTE=+MAGJOB("REMOTE")
+ S REMOTE=+$G(MAGJOB("REMOTE"))  ; ISI
  S LOCKED=0
  I MIXEDUP D
  . N IMIX,XDFN,XPTS S VIEWOK=$S($D(MAGJOB("KEYS","MAGJ SEE BAD IMAGES")):1,1:0)
@@ -137,7 +157,7 @@ OPENCASZ I 'CT,(REPLY["Attempting") S REPLY="4~Unable to retrieve images for Cas
  . . . I +RESULT(1)!+RESULT(2) D LOCKACT^MAGJEX1A(RARPT,DAYCASE,101,.RESULT) ; so, cancel any lock/reserve
  . . . S REPLY="5~For Case #"_DAYCASE_", current Status is "_$P(^RA(72,XX,0),U)_"; Lock or Reserve NOT allowed."
  . . E  S EXCAT="E"
- . . I RIST,'USELORES D  ; lock only for Current Case, Radiologist, & Full Res images
+ . . I RIST D  ; lock only for Current Case, Radiologist, & Full Res images  ; ISI remove deprecated logic re usetga
  . . . ;  save data needed to later log Interpreted event
  . . . D LOCKACT^MAGJEX1A(RARPT,DAYCASE,CURCASE,.RESULT,.REPLY,LOGDATA)
  . . . S LOCKED=$S(+RESULT:1,+$P(RESULT,U,2):2,1:0)
@@ -149,13 +169,8 @@ OPENCASZ I 'CT,(REPLY["Attempting") S REPLY="4~Unable to retrieve images for Cas
  . S X=$P(RADATA,U,6),T=$L(X,"  "),X=$P(X,"  ",1,T-1)_U_$P(X,"  ",T)
  . S DATAOUT=DATAOUT_U_X
  . S DATAOUT=DATAOUT_U_MODALITY_U_$P(RADATA,U,5)_U_U_LOCKED
- . S DATAOUT=DATAOUT_U_MODIF_U_EXCAT_U_"|"_RIST_U_ALTPATH_U_ACQSITE_U_PROCDT_U_YNREVANN_U_YNMAMMO_U_STANUM
- . I USELORES D
- . . I +USELORES=+$P(USELORES,U,2) S X="All"
- . . E  S X=+USELORES_" of "_+$P(USELORES,U,2)
- . . I $E(REPLY,1,8)="0~Images" S REPLY="3~"
- . . E  S REPLY=REPLY_"  --  "
- . . S REPLY=REPLY_"Note: "_X_" images for Case #"_DAYCASE_" are REDUCED RESOLUTION images, using parameters set by your site Imaging Manager; to view full-resolution images, disable the Reduced Resolution option setting. Exam NOT Locked."
+ . S DATAOUT=DATAOUT_U_MODIF_U_EXCAT_U_"|"_RIST_U_ALTPATH_U_ACQSITE_U_PROCDT_U_YNREVANN_U_YNMAMMO_U_STANUM_U_"|"_$$REGIONAL(.MAGS)_U_PLACE  ; ISI adds pipe-piece 5!
+ . ;  ISI  remove deprecated logic re usetga
  S @MAGGRY@(STARTNOD)=CT_U_REPLY_"|"_RADFN_U_RADTI_U_RACNI_U_RARPT_"|"_DATAOUT
  ; if mixedup & not have keys to see images, delete image refs
  ;   & send only reply msg
@@ -185,4 +200,13 @@ STATN(X) ; get station #, else return input value
  Q X
  ;
 END Q  ;
+ ;
+REGIONAL(MAGS) ; ISI -- return 1 if image storage loc is regional
+ N IEN,LOC,RSL
+ S RSL=""
+ I $G(MAGS) D  ;aft called jbfetch^magjutl2
+ . S IEN=+$P($G(MAGS(1)),U,4) Q:'IEN  ;MAG IEN 1st image
+ . S LOC=+$P($G(^MAG(2005,+IEN,0)),"^",3)  ;NETWORK LOCATION
+ . I $G(^MAG(2005.2,LOC,"REGIONAL")) S RSL=1
+ Q RSL
  ;

@@ -1,5 +1,5 @@
 RCDPRPLM ; WISC/RFJ-receipt profile List Manager main routine ;31 Oct 2018 09:14:14
- ;;4.5;Accounts Receivable;**114,148,149,173,196,220,217,321,326,332,375,367**;Mar 20, 1995;Build 11
+ ;;4.5;Accounts Receivable;**114,148,149,173,196,220,217,321,326,332,375,367,409**;Mar 20, 1995;Build 17
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; option: Receipt Processing [RCDP RECEIPT PROCESSING]
@@ -69,8 +69,8 @@ INIT ;EP from ListMan template RCDP RECEIPT PROFILE MENU
  ..  S RCLINE=RCLINE+1 D SET(XX,RCLINE,1,80)
  . ; Show line 2 for check/credit payment
  . I $$OPTCK^RCDPRPL2("SHOWCHECK",2) D
- ..  ; Receipt type is check
- ..  I RCDPDATA(344,RCRECTDA,.04,"I")=4!(RCDPDATA(344,RCRECTDA,.04,"I")=12) D  Q
+ .. ; Receipt type is check (4), lockbox (12) or OGC-CHK (19) ; PRCA*4.5*409
+ ..    I "^4^12^19^"[("^"_RCDPDATA(344,RCRECTDA,.04,"I")_"^") D  Q
  ...   S RCLINE=RCLINE+1 D SET("      Check #",RCLINE,1,80,.07)
  ...   S X=RCDPDATA(344.01,RCTRDA,.1,"I") S:'X X="???????"
  ...   S XX="Date: "_$E(X,4,5)_"/"_$E(X,6,7)_"/"_$E(X,2,3) D SET(XX,RCLINE,32,80)
@@ -79,7 +79,7 @@ INIT ;EP from ListMan template RCDP RECEIPT PROFILE MENU
  ..  I RCDPDATA(344,RCRECTDA,.04,"I")=7 D  Q
  ...   S RCLINE=RCLINE+1 D SET("      Card #",RCLINE,1,80,.11),SET("Confirmation #",RCLINE,35,80,.02)
  ..  ; type of payment is EDI LOCKBOX
- ..  I RCDPDATA(344,RCRECTDA,.04,"I")=14 D  Q
+ ..  I RCDPDATA(344,RCRECTDA,.04,"I")=14!(RCDPDATA(344,RCRECTDA,.04,"I")=18) D  Q  ; PRCA*4.5*409
  ...   S RCLINE=RCLINE+1 D SET("      Trace #",RCLINE,1,80,.17)
  . ; line 3 for acct. lookup, batch #, sequence #
  . I $$OPTCK^RCDPRPL2("SHOWACCT",2) D

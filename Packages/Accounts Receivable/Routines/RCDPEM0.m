@@ -1,5 +1,5 @@
 RCDPEM0 ;ALB/TMK - ERA MATCHING TO EFT (cont) ;Jun 11, 2014@13:04:03
- ;;4.5;Accounts Receivable;**173,208,220,298,304,345,375,349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**173,208,220,298,304,345,375,349,409**;Mar 20, 1995;Build 17
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -118,92 +118,132 @@ ADDDEP(RCD,RCDDT,RCZ) ; Add deposit
  . S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,5)=RCDEP
  Q RCDEP
  ;
-ADDREC(RCDEP,RCZ) ; Add receipt, send CR to FUND 528704, Rev src cd 8NZZ
- ;   for total EFT amt
- ; RCDEP = IEN in AR DEPOSIT file (#344.1)
- ;   RCZ = IEN in EDI LOCKBOX DEPOSIT file (#344.3)
- ;    Function returns IEN of new receipt entry
+ADDREC(RCDEP,RCZ) ; Add receipt, send CR to FUND 528704, Rev src cd 8NZZ for total EFT amt
+ ; Input:   RCDEP   - IEN in AR DEPOSIT file (#344.1)
+ ;          RCZ     - IEN in EDI LOCKBOX DEPOSIT file (#344.3) (same as $P(^RCY(344.31,IEN,0),"^",1)
+ ; Returns: IEN of new receipt entry
  ;
- ; RCLOCK - flag indicating lock success
- ; RCTRANDA - transaction number
- ; RECTDA - IEN in file #344
- N RCER,RCLOCK,RCTRANDA,RECTDA,RCQUIT,RCDPDATA,RCTOTCT,RC0,DIE,DA,DR,X,Y
+ ; RCLOCK   - Flag indicating lock success
+ ;PRCA*4.5*409 - Added RCPAYTYP description
+ ; RCPAYTYP - 14 if the trace number of the EFT does not begin with OGC (EDI LOCKBOX)
+ ;            18 if the trace number of the EFT begins with OGC (OGC-EFT)
+ ; RCTRANDA - Transaction number
+ ; RECTDA   - IEN in file #344
+ ;
+ ;PRCA*4.5*409 Added RCPAYTYP, XX
+ N RCER,RCLOCK,RCTRANDA,RECTDA,RCQUIT,RCDPDATA,RCPAYTYP,RCTOTCT,RC0,DIE,DA,DR,X,XX,Y
  S RC0=$G(^RCY(344.3,RCZ,0))
  S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,3)=0
+ ;
  ; Single receipt - multiple transactions for EFT payments
- S RECTDA=+$$ADDRECT^RCDPUREC($P(RC0,U,7),RCDEP,+$O(^RC(341.1,"AC",14,0)))
+ ;
+ ;PRCA*4.5*409 - Added lines Begin
+ S XX=$O(^RCY(344.31,"B",RCZ,""))               ; Get EFT IEN
+ S XX=$P(^RCY(344.31,XX,0),"^",4)               ; EFT Trace Number
+ S RCPAYTYP=$S($E(XX,1,3)="OGC":18,1:14)        ; IEN in 341.1 AR EVENT TYPE file
+ ;PRCA*4.5*409 - Added lines End
+ ;
+ ;PRCA*4.5*409 - Replaced +$O(^RC(341.1,"AC",14,0)) with +RCPAYTYP below
+ S RECTDA=+$$ADDRECT^RCDPUREC($P(RC0,U,7),RCDEP,+RCPAYTYP)
+ ;
  ; Create detail lines for deposit amount, process whole receipt to send
- ;   CR document for deposit amount
+ ; CR document for deposit amount
  I RECTDA D
  . L +^RCY(344,RECTDA):DILOCKTM S RCLOCK=$T Q:'RCLOCK  ; exit if unable to lock
  . N STATUS,RC00,RCT
- . S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U)=RECTDA,^TMP($J,"RCTOT","EFT_RECPT")=$G(^TMP($J,"RCTOT","EFT_RECPT"))+1
- . ;  check to see if receipt has been processed (fms document)
+ . S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U)=RECTDA
+ . S ^TMP($J,"RCTOT","EFT_RECPT")=$G(^TMP($J,"RCTOT","EFT_RECPT"))+1
+ . ;
+ . ; Check to see if receipt has been processed (fms document)
  . D DIQ344^RCDPRPLM(RECTDA,"200;")
- . ;  code sheet already sent once, this is a retransmission, check it
+ . ;
+ . ; Code sheet already sent once, this is a retransmission, check it
  . I RCDPDATA(344,RECTDA,200,"E")'="" S RCQUIT=0 D  Q:RCQUIT
- .. S STATUS=$$STATUS^GECSSGET(RCDPDATA(344,RECTDA,200,"E"))
- .. ;  okay to continue if status is Error, Rejected, or not defined (-1)
- .. I $E(STATUS)="E"!($E(STATUS)="R")!(STATUS=-1) Q
- .. S RCER(1)=$$SETERR(2),RCER(2)="  Receipt already sent to FMS - No change"
- .. D BULL^RCDPEM1(344.3,RC0,.RCER)
- .. S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,4)=+$G(^TMP($J,"RCXM",0))
- .. D STORERR(344.3,RCZ,.RCER)
- .. L -^RCY(344,RECTDA)
- .. L -^RCY(344.1,RCDEP)
- .. S RCQUIT=1 K RCER
- . ;  mark receipt as processed (closed) to prevent editing
+ . . S STATUS=$$STATUS^GECSSGET(RCDPDATA(344,RECTDA,200,"E"))
+ . . ;
+ . . ; Okay to continue if status is Error, Rejected, or not defined (-1)
+ . . I $E(STATUS)="E"!($E(STATUS)="R")!(STATUS=-1) Q
+ . . S RCER(1)=$$SETERR(2),RCER(2)="  Receipt already sent to FMS - No change"
+ . . D BULL^RCDPEM1(344.3,RC0,.RCER)
+ . . S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,4)=+$G(^TMP($J,"RCXM",0))
+ . . D STORERR(344.3,RCZ,.RCER)
+ . . L -^RCY(344,RECTDA)
+ . . L -^RCY(344.1,RCDEP)
+ . . S RCQUIT=1 K RCER
+ . ;
+ . ; Mark receipt as processed (closed) to prevent editing
  . D MARKPROC^RCDPUREC(RECTDA,"")
- . S DIE="^RCY(344,",DR=".04////"_+$O(^RC(341.1,"AC",14,0)),DA=RECTDA D ^DIE ; Add EDI Lockbox payment type
+ . ;
+ . ;PRCA*4.5*409 - Replaced +$O(^RC(341.1,"AC",14,0)) with +RCPAYTYP below
+ . S DIE="^RCY(344,",DR=".04////"_+RCPAYTYP,DA=RECTDA
+ . D ^DIE                                       ; Add EDI Lockbox payment type
  . ;
  . ; Add receipt line for each payer's EFT
  . S RCT=0 F  S RCT=$O(^RCY(344.31,"B",RCZ,RCT)) Q:'RCT  D  Q:$O(RCER(0))
- .. S RC00=$G(^RCY(344.31,RCT,0)),DR=""
- .. S RCTRANDA=$S('$P(RC00,U,14):$$ADDTRAN^RCDPURET(RECTDA),1:$P(RC00,U,14)) ; detail line
- .. I 'RCTRANDA D  Q
- ... S RCER(1)=$$SETERR(2),RCER(2)="  The receipt for the EFT deposit was not created correctly",RCER(3)="  You may have to add the detail manually to send the FMS CR doc to revenue"
- ... S RCER(4)="  source code 8NZZ in fund "_$S(DT<$$ADDPTEDT^PRCAACC():"5287.4",1:"528704")_".  Receipt # is "_$P($G(^RCY(344,RECTDA,0)),U),RCER(5)="  Trace # being processed at time of error was: "_$P(RC00,U,4)_"."
- ... D BULL^RCDPEM1(344.3,RC0,.RCER)
- ... S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,4)=+$G(^TMP($J,"RCXM",0))
- ... D STORERR(344.3,RCZ,.RCER)
- .. ;
- .. S DR=DR_";1.02////Auto added EDI Lockbox deposit;.06////"_$P(RC00,U,12)_";.04////"_$J(+$P(RC00,U,7),"",2)_";.14////"_RCTRANDA
- .. N N S N=+$O(^VA(200,"B","EDILOCKBOX,AUTOMATIC",0)) S:N=0 N=.5
- .. S DR=DR_";.12////"_N_";.29////"_$P(RC00,U,16) ;PRCA*4.5*375 - Add Debit/Credit Flag to Receipt Transactions
- .. S DA(1)=RECTDA,DA=RCTRANDA,DIE="^RCY(344,"_DA(1)_",1,"
- .. S:$E(DR)=";" DR=$P(DR,";",2,999) D ^DIE
- .. S DR=".14///"_RCTRANDA_";.09///"_RECTDA,DIE="^RCY(344.31,",DA=RCT D ^DIE
- .. ;
- . ;Post to FUND 528704/RSC 8NZZ
+ . . S RC00=$G(^RCY(344.31,RCT,0)),DR=""
+ . . S RCTRANDA=$S('$P(RC00,U,14):$$ADDTRAN^RCDPURET(RECTDA),1:$P(RC00,U,14)) ; detail line
+ . . I 'RCTRANDA D  Q
+ . . . S RCER(1)=$$SETERR(2)
+ . . . S RCER(2)="  The receipt for the EFT deposit was not created correctly"
+ . . . S RCER(3)="  You may have to add the detail manually to send the FMS CR doc to revenue"
+ . . . S RCER(4)="  source code 8NZZ in fund "_$S(DT<$$ADDPTEDT^PRCAACC():"5287.4",1:"528704")
+ . . . S RCER(4)=RCER(4)_".  Receipt # is "_$P($G(^RCY(344,RECTDA,0)),U)
+ . . . S RCER(5)="  Trace # being processed at time of error was: "_$P(RC00,U,4)_"."
+ . . . D BULL^RCDPEM1(344.3,RC0,.RCER)
+ . . . S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,4)=+$G(^TMP($J,"RCXM",0))
+ . . . D STORERR(344.3,RCZ,.RCER)
+ . . ;
+ . . ;PRCA*4.5*409 Added lines Begin
+ . . S XX=$P(RC00,"^",4),RCPAYTYP=$S($E(XX,1,3)="OGC":18,1:14)
+ . . S XX=$S(RCPAYTYP=14:"Auto added EDI Lockbox deposit",1:"Auto added OGC-EFT deposit")
+ . . ;
+ . . ;PRCA*4.5*409 Added lines End
+ . . ;
+ . . ;PRCA*4.5*409 Replaced Auto added EDI Lockbox deposit with _XX_" below
+ . . S DR=DR_";1.02////"_XX_";.06////"_$P(RC00,U,12)
+ . . S DR=DR_";.04////"_$J(+$P(RC00,U,7),"",2)_";.14////"_RCTRANDA
+ . . N N S N=+$O(^VA(200,"B","EDILOCKBOX,AUTOMATIC",0)) S:N=0 N=.5
+ . . S DR=DR_";.12////"_N_";.29////"_$P(RC00,U,16) ;PRCA*4.5*375 - Add Debit/Credit Flag to Receipt Transactions
+ . . S DA(1)=RECTDA,DA=RCTRANDA,DIE="^RCY(344,"_DA(1)_",1,"
+ . . S:$E(DR)=";" DR=$P(DR,";",2,999)
+ . . D ^DIE
+ . . S DR=".14///"_RCTRANDA_";.09///"_RECTDA,DIE="^RCY(344.31,",DA=RCT
+ . . D ^DIE
+ . . ;
+ . ;
+ . ; Post to FUND 528704/RSC 8NZZ
  . D PROCESS^RCDPURE1(RECTDA,2)
- . ;Save details for status report
+ . ;
+ . ; Save details for status report
  . N Z,TOT
  . S (TOT,Z)=0 F  S Z=$O(^RCY(344,RECTDA,1,Z)) Q:'Z  S TOT=TOT+$P($G(^RCY(344,RECTDA,1,Z,0)),U,4)
  . S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,2)=TOT
  . ;
  . I $P($G(^RCY(344,RECTDA,2)),U)="" D  ; Receipt not processed fully
- .. N CT,Z
- .. S RCER(1)=$$SETERR(2),RCER(2)="  The receipt "_$P($G(^RCY(344,RECTDA,0)),U)_" for the EFT deposit was not processed fully" S:TOT RCER(3)="  You must manually process it to create the FMS CR doc to rev src code 8NZZ"
- .. S Z=0,CT=+$O(RCER(" "),-1) F  S Z=$O(^TMP($J,"RCDPEMSG",Z)) Q:'Z  S CT=CT+1,RCER(CT)=$G(^TMP($J,"RCDPEMSG",Z))
- .. D BULL^RCDPEM1(344.3,RC0,.RCER)
- .. S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,4)=+$G(^TMP($J,"RCXM",0))
- .. D STORERR(344.3,RCZ,.RCER)
+ . . N CT,Z
+ . . S RCER(1)=$$SETERR(2),RCER(2)="  The receipt "_$P($G(^RCY(344,RECTDA,0)),U)
+ . . S RCER(1)=RCER(1)_" for the EFT deposit was not processed fully"
+ . . S:TOT RCER(3)="  You must manually process it to create the FMS CR doc to rev src code 8NZZ"
+ . . S Z=0,CT=+$O(RCER(" "),-1) F  S Z=$O(^TMP($J,"RCDPEMSG",Z)) Q:'Z  S CT=CT+1,RCER(CT)=$G(^TMP($J,"RCDPEMSG",Z))
+ . . D BULL^RCDPEM1(344.3,RC0,.RCER)
+ . . S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,4)=+$G(^TMP($J,"RCXM",0))
+ . . D STORERR(344.3,RCZ,.RCER)
  . ;
  . S DIE="^RCY(344.3,",DR=".11////^S X=DT;.12////"_$J(+TOT,"",2),DA=RCZ D ^DIE
  . S ^TMP($J,"RCTOT","SUSPAMT")=$G(^TMP($J,"RCTOT","SUSPAMT"))+TOT
  . S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,3)="1"
  ;
  I 'RCLOCK,$G(RECTDA) D  ; couldn't get LOCK send MailMan message and store error
- .N RCBODY,XMINSTR,XMSUBJ,XMTO,XMZ
- .S RCBODY(1)=" > "_$$FMTE^XLFDT($$NOW^XLFDT,10)
- .S RCBODY(2)="An exception occurred during Lockbox processing."
- .S RCBODY(3)="Receipt "_$P($G(^RCY(344,RECTDA,0)),U)_" was not processed."
- .S RCBODY(4)="The ePayments software could not get exclusive access to the entry."
- .S XMSUBJ="EDI LBOX "_$$FMTE^XLFDT(DT,10)_" Receipt Not Processed"
- .S XMTO("I:G.RCDPE PAYMENTS")="",XMTO(DUZ)=""
- .S XMINSTR("FROM")="POSTMASTER"
- .D SENDMSG^XMXAPI(DUZ,XMSUBJ,"RCBODY",.XMTO,.XMINSTR,.XMZ)
- .I $G(RCZ) D STORERR(344.3,RCZ,.RCBODY)
+ . N RCBODY,XMINSTR,XMSUBJ,XMTO,XMZ
+ . S RCBODY(1)=" > "_$$FMTE^XLFDT($$NOW^XLFDT,10)
+ . S RCBODY(2)="An exception occurred during Lockbox processing."
+ . S RCBODY(3)="Receipt "_$P($G(^RCY(344,RECTDA,0)),U)_" was not processed."
+ . S RCBODY(4)="The ePayments software could not get exclusive access to the entry."
+ . S XMSUBJ="EDI LBOX "_$$FMTE^XLFDT(DT,10)_" Receipt Not Processed"
+ . S XMTO("I:G.RCDPE PAYMENTS")="",XMTO(DUZ)=""
+ . S XMINSTR("FROM")="POSTMASTER"
+ . D SENDMSG^XMXAPI(DUZ,XMSUBJ,"RCBODY",.XMTO,.XMINSTR,.XMZ)
+ . I $G(RCZ) D STORERR(344.3,RCZ,.RCBODY)
  ;
  I RCLOCK L -^RCY(344,RECTDA)
  Q $S(RCLOCK:RECTDA,1:0)  ; return new IEN or zero if not processed

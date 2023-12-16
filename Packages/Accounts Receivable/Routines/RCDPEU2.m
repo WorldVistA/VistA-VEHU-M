@@ -1,12 +1,16 @@
 RCDPEU2 ;AITC/CJE - ELECTRONIC PAYER UTILITIES ;05-NOV-02
- ;;4.5;Accounts Receivable;**326,332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**326,332,409**;Mar 20, 1995;Build 17
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
-EFT344(PROMPT,IEN344) ; Select and EFT and update reciept - EP
- ; Input: PROMPT - Prompt to use when picking an EFT
- ;        IEN344 - Internal entry number to file 344
+ ;
+ ;PRCA*4.5*409 Added AREVTYPE as an optional parameter
+EFT344(PROMPT,IEN344,AREVTYPE) ; Select and EFT and update reciept - EP
+ ; Input: PROMPT    - Prompt to use when picking an EFT
+ ;        IEN344    - Internal entry number to file 344
+ ;        AREVTYPE  - AR Event Type IEN (344.1) optional, defaults to null
  ; Output
  N FDA,IEN34431,SCREEN
+ S:'$D(AREVTYPE) AREVTYPE=""                    ;PRCA*4.5*409 Added line
  S SCREEN="I '$O(^RCY(344,""AEFT"",+Y,0)),$P($G(^RCY(344.31,+Y,0)),U,8)=0"
  S IEN34431=$$ASKEFT(PROMPT,SCREEN)
  I IEN34431>0,IEN344 D  ;
@@ -15,9 +19,10 @@ EFT344(PROMPT,IEN344) ; Select and EFT and update reciept - EP
  . I '$D(^TMP("DIERR",$J)) K DIC("W")
  . W !!,IEN34431,!!
  Q
-ASKEFT(PROMPT,SCREEN) ; Select an EFT for an EDI Lockbox receipt - EP
- ; Inputs: PROMPT - Prompt to use when asking user to enter an EFT.
- ;         SCREEN - Screen for use in file 344.31 look-up
+ASKEFT(PROMPT,SCREEN,AREVTYPE) ; Select an EFT for an EDI Lockbox receipt - EP
+ ; Input: PROMPT    - Prompt to use when asking user to enter an EFT.
+ ;        SCREEN    - Screen for use in file 344.31 look-up
+ ;        AREVTYPE  - AR Event Type IEN (344.1) optional, defaults to null
  ; Returns: IEN from file 344.31 or -1 if user times out or '^'
  ;
  N COUNT,DA,DIC,DIR,DIRUT,DIROUT,DTOUT,DUOUT,FIELDS,FILE,FLAGS,IENS,INDEXES,QUIT,RETURN,VALUE,X,Y
@@ -96,7 +101,7 @@ CHKEOB(RCRECTDA,RCTRANDA,RCARRAY) ; EP from RCDPLPL3/4- Link payment to account,
  ;                   A1^A2^A3^A4 where A1=Account Linked to, A2=Amount, A3=Comment, A4=Account Name
  ; Outputs None
  N CCLAIM,CLAIM,IEN344491,IEN3611,IFN,JUST,JUST1,LCLAIM,NCLAIM,NCLAIMS,OIFN,ORIG,QUIT
- N RCERA,RCORIG,RCOSEQ,RCSEQ,RCLORIG,RCSORIG,SCLAIM,X
+ N RCERA,RCLSUSP,RCORIG,RCOSEQ,RCSEQ,RCLORIG,RCSORIG,SCLAIM,X
  ;
  S RCERA=$$GET1^DIQ(344,RCRECTDA_",",.18,"I")
  S RCSEQ=$$GET1^DIQ(344.01,RCTRANDA_","_RCRECTDA_",",.27,"I")

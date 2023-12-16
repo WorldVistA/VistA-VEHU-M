@@ -1,16 +1,19 @@
-GMTSPST1 ;BIR/RMS - MED RECON TOOL #1 (MED REC PROFILE) ;Apr 16, 2021@16:27:47
- ;;2.7;Health Summary;**94,127,131,135,115**;Oct 20, 1995;Build 191
- ;Reference to COVER^ORWPS supported by IA 4926
- ;References to ^ORRDI1 supported by IA 4659
- ;Reference to ^XTMP("ORRDI","PSOO" supported by IA 4660
- ;Reference to ^XTMP("ORRDI","OUTAGE INFO" supported by IA 5440
- ;Reference to ^PSOHCSUM supported by IA 330
- ;Reference to $$ISCLIN^ORUTL1 supported by IA 5691
- ;Reference to ^PS(51 supported by IA 1980
- ;Reference to file 53.1 supported by IA 534
- ;Reference to TEXT^ORQ12 supported by IA 4202
- ;Reference to $$PKGID^ORX8 supported by IA 3071
- ;Reference to BCMALG^PSJUTL2 supported by IA 5057
+GMTSPST1 ;BIR/RMS - MED RECON TOOL #1 (MED REC PROFILE) ; Feb 8, 2023@12:51:30
+ ;;2.7;Health Summary;**94,127,131,135,115,145**;Oct 20, 1995;Build 191
+ ;
+ ; Reference to COVER^ORWPS in ICR #7392
+ ; Reference to $$GET^ORRDI1,$$HAVEHDR^ORRDI1 in ICR #4659
+ ; Reference to ^XTMP("ORRDI","PSOO" in ICR #4660
+ ; Reference to ^XTMP("ORRDI","OUTAGE INFO" in ICR #5440
+ ; Reference to ^PSOHCSUM in ICR #330
+ ; Reference to $$ISCLIN^ORUTL1 in ICR #5691
+ ; Reference to ^OR(100 in ICR #5771
+ ; Reference to ^PS(51 in ICR #1980
+ ; Reference to ^PS(53.1 in ICR #534
+ ; Reference to TEXT^ORQ12 in ICR #4202
+ ; Reference to $$PKGID^ORX8 in ICR #3071
+ ; Reference to BCMALG^PSJUTL2 in ICR #5057
+ ; Reference to IMOOD^ORIMO in ICR #7389
 TOOL1 ;ENTRY POINT FOR HEALTH SUMMARY
  N ALPHA,DRUGNM,EXPDAYS,IND1,LIST,ORDER,PSNUM,RPC,RPCT,RPCNODE,SAVE,SAVERD
  D ADD^GMTSPSTR("GMTSPST1")
@@ -181,7 +184,7 @@ OPTDISP ;Display an Outpatient Prescription Entry
  I EXPDT Q:$$FMDIFF^XLFDT(DT,$P(EXPDT,U))>EXPDAYS
  I CANCELDT Q:$$FMDIFF^XLFDT(DT,$P(CANCELDT,U))>EXPDAYS
  S STATUS=$P($G(^TMP($J,"GMTSPST1",DFN,PACKREF,100)),U,2)
- S STATUS=$S(STATUS["ACTIVE":"Active",STATUS["SUSPENDED":"Active/Suspended",STATUS["HOLD":"On Hold",STATUS["DISCONTINUED":"Discontinued",1:STATUS)
+ S STATUS=$S(STATUS["PARK":"Active/Parked",STATUS["ACTIVE":"Active",STATUS["SUSPENDED":"Active/Suspended",STATUS["HOLD":"On Hold",STATUS["DISCONTINUED":"Discontinued",1:STATUS)
  D CKP Q:$D(GMTSQIT)
  W !,"OUTPT "_DRUGNM_" (Status = "_STATUS_")"
  S DIWL=IND1,DIWR=72
@@ -237,7 +240,7 @@ NVADISP ;Display a Non-VA Medication Entry
  W !,"Non-VA "_DRUGNM D CKP Q:$D(GMTSQIT)
  D TEXT^ORQ12(.GMTSPST1,ORDER,80)
  S DIWL=IND1,DIWR=60,ORIG=2
- D:$E(GMTSPST1(1),1,7)="Change "
+ D:$E(GMTSPST1(1),1,14)="Non-VA Change "
  . F OALINE=2:1:$O(GMTSPST1(":"),-1) I $E(GMTSPST1(OALINE),1,3)="to " S ORIG=OALINE+1 Q
  F OALINE=ORIG:1:$O(GMTSPST1(":"),-1) D
  . S X=$$LSIG($G(GMTSPST1(OALINE)))
@@ -280,7 +283,7 @@ NVADT() ;Replaces call previously in ^PSOQCF04
  S NVADT=$O(NVARR(0)) Q:NVADT=9999999 ""
  Q 9999999-NVADT
 LSIG(SIG) ;Expand a SIG
- N P,SGY,X
+ N P,SGY,X,%
  S SGY="" F P=1:1:$L(SIG," ") S X=$P(SIG," ",P) D:X]""  ;
  .I $D(^PS(51,"A",X)) S %=^(X),X=$P(%,"^") I $P(%,"^",2)]"" S Y=$P(SIG," ",P-1),Y=$E(Y,$L(Y)) S:Y>1 X=$P(%,"^",2)
  .S SGY=SGY_X_" "

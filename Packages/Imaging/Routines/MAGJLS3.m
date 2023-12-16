@@ -1,5 +1,5 @@
-MAGJLS3 ;WIRMFO/JHC - VistARad RPC calls ; 2 Jan 2012  11:46 AM
- ;;3.0;IMAGING;**16,22,18,101,90,120**;Mar 19, 2002;Build 27;May 23, 2012
+MAGJLS3 ;WIRMFO/JHC - Rad. Workstation RPC calls ; 10/17/2022
+ ;;3.0;IMAGING;**16,22,18,101,90,120,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJLS3 ;WIRMFO/JHC - VistARad RPC calls ; 2 Jan 2012  11:46 AM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**99,101,106**
  Q
  ; EPs:
  ; BLDACTV
@@ -25,13 +26,15 @@ BLDACTV(MAGGRY,DATA,MAGLST) ; get subset of Active Exams; called from MAGJLS2
  ;Listyp = U  -- UNREAD Exams (Status Category=E)
  ;   = R  -- RECENT (Sts Cat's D & T)
  ;   = A  -- ALL Active (Cat's E, D, & T)
- ;   = P  -- PENDING (Cat W)
+ ;   = P  -- PENDING (Cat's W & R)  ; ISI P106
  ;   = N  -- Newly Interpreted Exams (No Cat.-Internal use only)
+ ;   = I  -- Indexed Exams (No Cat.-Internal use only), = misc indexed lists (Favorites = 1st example)  ; ISI
  ;ImgTypes = List of Imaging Types to process, or "ALL" for all
  ; MAGLST = $NA ref to return global; references to it use subscript indirection
  ; MAGLST optional: input to specify return global to use
  ; 
  ;* This subrtn can receive U/R/A/P/N (LSTREQ)-- ^_delim list of ImgTypes (IMTYPS)
+ ;  Also can receive I; no imaging types in particular  ;  ISI
  N RADFN,RADTI,RACNI,REMX
  N HDR,HDRLST,MAGIMGTY,MAGRACNT,MAGRET,LSTREQ,LISTYP,LISCAT,IMTYPS
  N REPLY,STAT,TYP,SORTMAG,DIQUIET,STATCHK,LASTDT,IMGSONLY,URGORD,REMONLY
@@ -39,21 +42,22 @@ BLDACTV(MAGGRY,DATA,MAGLST) ; get subset of Active Exams; called from MAGJLS2
  I $G(MAGLST)="" S MAGLST=$NA(^TMP($J,"MAGJACTIVE")) ; default loc'n if not passed in
  K ^TMP($J,"MAGRAEX"),@MAGLST
  S LSTREQ=$P(DATA,U),IMTYPS=$P(DATA,U,2,99)
- I LSTREQ="U"!(LSTREQ="R")!(LSTREQ="A")!(LSTREQ="P")!(LSTREQ="N")!(LSTREQ="H")
+ I LSTREQ="U"!(LSTREQ="R")!(LSTREQ="A")!(LSTREQ="P")!(LSTREQ="N")!(LSTREQ="H")!(LSTREQ="I")  ; ISI
  E  S REPLY="0^4~Invalid Request (List Type="_LSTREQ_")" G BLDACTVZ
  S MAGRACNT=0
  S X=$G(^MAG(2006.69,1,0)),IMGSONLY=+$P(X,U,7),REMX=+$P(X,U,10) ; show only exams w/ images?
  S REMONLY=0
  I $G(MAGJOB("REMOTE")) D  ; ;show remote cache only?
- . Q:(LSTREQ="H")  S REMONLY=+$G(MAGJOB("REMOTESCREEN"))
+ . Q:(LSTREQ="H")  Q:(LSTREQ="I")  S REMONLY=+$G(MAGJOB("REMOTESCREEN"))  ; ISI
  S X=$G(^MAG(2006.69,1,1)),URGORD=$P(X,U)
  S:URGORD="" URGORD="S,U,P,R" S URGORD=$TR(URGORD,",") ; "Priority" sort
- S HDR=$S(LSTREQ="U":"UNREAD",LSTREQ="R":"RECENT",LSTREQ="P":"PENDING",LSTREQ="A":"UNREAD and RECENT",LSTREQ="N":"NEWLY INTERP",LSTREQ="H":"HISTORY",1:"")_" Exams"_" for IMAGING TYPES: "
- S LISTYP=$S(LSTREQ="U":"E",LSTREQ="R":"D^T",LSTREQ="A":"E^D^T",LSTREQ="P":"W",LSTREQ="N":"",LSTREQ="H":"",1:"E")
+ S HDR=$S(LSTREQ="U":"UNREAD",LSTREQ="R":"RECENT",LSTREQ="P":"PENDING",LSTREQ="A":"UNREAD and RECENT",LSTREQ="N":"NEWLY INTERP",LSTREQ="H":"HISTORY",LSTREQ="I":"INDEXED",1:"")_" Exams"_" for IMAGING TYPES: "  ; ISI
+ S LISTYP=$S(LSTREQ="U":"E",LSTREQ="R":"D^T",LSTREQ="A":"E^D^T",LSTREQ="P":"W^R",LSTREQ="N":"",LSTREQ="H":"",LSTREQ="I":"",1:"E")  ; ISI P99, P106
  S REPLY="0^4~Compiling list of Radiology Exams (ACTIVE)."
- I $G(BKGPROC),(LSTREQ="R") K ^TMP($J,"NEWINT") S ^TMP($J,"NEWINT")=+$G(^XTMP("MAGJ2","RECENT",0))
- I LSTREQ="N" D BLDACT2 G BLDACTVZ
+ I $G(BKGPROC),(LSTREQ="R"),'$$MGRREV2^ISIJUTL9 K ^TMP($J,"NEWINT") S ^TMP($J,"NEWINT")=+$G(^XTMP("MAGJ2","RECENT",0)) ; ISI Rev-2?
+ I LSTREQ="N" D:'$$MGRREV2^ISIJUTL9 BLDACT2 G BLDACTVZ  ;  ISI -- call only if Rev-2 not enabled
  I LSTREQ="H" D HISTBLD^MAGJLS3A G BLDACTVZ
+ I LSTREQ="I" D INDXBLD^ISIJLS1 G BLDACTVZ  ; ISI
  D BLDACT1
 BLDACTVZ ;
  I 'MAGRACNT S:(REPLY["Compiling") REPLY="0^2~No Exams Found"
@@ -75,7 +79,7 @@ BLDACT1 ; Compile exams by Status codes
  Q
 BLDACT2 ; Add recently interpreted exams to the "Recent" compile data
  ; 1st, compile these into their own list
- N CNT,INDX,RAST,STATCHK,RECLIST,REC,X1,X2
+ N CNT,INDX,RAST,STATCHK,RECLIST,REC,X1,X2,XX9
  S X=$G(^XTMP("MAGJ2","RECENT",0)),INDX=+$P(X,U,2)
  F  S INDX=$O(^XTMP("MAGJ2","RECENT",INDX)) Q:'INDX  S X=^(INDX) D
  . S RADFN=$P(X,U),RADTI=$P(X,U,2),RACNI=$P(X,U,3),(RAST,STATCHK)=$P(X,U,4)
@@ -86,9 +90,9 @@ BLDACT2 ; Add recently interpreted exams to the "Recent" compile data
  S RECLIST=+$$CURLIST^MAGJLS2("LS9992")
  I 'RECLIST S RECLIST=+$G(^XTMP("MAGJ2","BKGND","LS9992",0))
  I 'RECLIST Q  ; Recent list not being compiled--skip it!
- F CNT=1:1:MAGRACNT S X1=@MAGLST@(CNT,1),X2=^(2) D  ; MAGLST described at BLDACTV
+ F CNT=1:1:MAGRACNT S X1=@MAGLST@(CNT,1),X2=^(2),XX9=$G(^("ISI")) D  ; MAGLST described at BLDACTV
  . S REC=^XTMP("MAGJ2","LS9992",RECLIST,0,1)+1
- . S ^XTMP("MAGJ2","LS9992",RECLIST,REC,1)=X1,^(2)=X2
+ . S ^XTMP("MAGJ2","LS9992",RECLIST,REC,1)=X1,^(2)=X2,^("ISI")=XX9
  . S $P(^XTMP("MAGJ2","LS9992",RECLIST,0,1),U)=REC
  Q
  ;
@@ -103,14 +107,16 @@ SVMAG2A(PIPE3) ;used by subroutine at tag BLDACTV
  N MAGDT,SORTDT,IMGCNT,ONL,XX,XX2,Y,RARPT,KEY,RASTCAT,Y2
  N REMOTE,MODALITY,DAYCASE,EXCAT,ORD,URG,URG1,PREOP,LASTSSN,CURPRIO,STATUS
  N REMOTE2,LRFLAG,TECH,REGDT,REGDTSRT,PTID,STATPRIORITY
+ N XX9,PTDOB,PTAGE  ;  ISI
  S PIPE3=$G(PIPE3,"")
  S URG="",PREOP=""   ; <*> Need below until RAO7PC1A returns URG
  S X=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0))
  S ORD=$P(X,U,11)
  I ORD S Y=$G(^RAO(75.1,ORD,0)),URG=$P(Y,U,6),PREOP=$P(Y,U,12)
- S XX=$G(^TMP($J,"MAGRAEX",1,1)),XX2=$G(^(2))
+ S XX=$G(^TMP($J,"MAGRAEX",1,1)),XX2=$G(^(2)),XX9=$G(^("ISI")) ; ISI added new fields
  I $G(STATCHK),(STATCHK=$P(XX,U,11))
  E  I LSTREQ="H" S RAST=$P(XX,U,11)
+ E  I LSTREQ="I" S RAST=$P(XX,U,11)  ; ISI
  E  Q       ;  index '= stored status
  S RARPT=$P(XX,U,10),STATPRIORITY="" ; STATPRIORITY always null from the compiler (place-holder only)
  D IMGINFO^MAGJUTL2(RARPT,.Y)
@@ -130,6 +136,12 @@ SVMAG2A(PIPE3) ;used by subroutine at tag BLDACTV
  ;XX2 1 REQLOCABB  REQLOCNM  RdRIST  COMPLIC  RAD_DIV
  ;    6 SITE_CODE  RISTISME  PROCMOD  REQLOCT  REQWARD
  ;   11 RASTCAT   LRFLAG   TECH
+ ;XX9 1 Assignee_initials  Assign_Note  Assignee_duz    ; ISI -- begin
+ ;    4 Favorite_KeyWd1  Favorite_KeyWd2  Favorite_Note
+ ;    7 Patient_Age   Patient_Sex   Patient_DOB
+ S PTDOB=$P(XX9,U,9),PTAGE=""
+ I PTDOB D DT^DILF(,$P(MAGDT,"@"),.X) S PTAGE=$$AGECALC^ISIJLS2(PTDOB,X)
+ S $P(XX9,U,7)=PTAGE  ;                                   ISI -- end
  S:'URG URG=9  ;  request urgency default to Routine
  I URG=9,(PREOP]"") S URG=8  ; dummy val for Pre-Op
  S URG1=$S(URG=1:"Stat",URG=2:"Urg",URG=8:"PreOp",1:"Rout"),X=$E(URG1),URG1=$F(URGORD,X)-1_"-"_URG1
@@ -139,7 +151,7 @@ SVMAG2A(PIPE3) ;used by subroutine at tag BLDACTV
  S EXCAT="",CURPRIO=0
  I STATUS]"" D
  . S EXCAT=RASTCAT
- . I RASTORD<2!(EXCAT="W")!('IMGCNT) S CURPRIO=0 ; Cancelled/Waiting/No images: Ignore exam
+ . I RASTORD<2!(EXCAT="W")!(EXCAT="R")!('IMGCNT) S CURPRIO=0 ; Cancelled/Waiting/No images: Ignore exam ; ISI P106
  . E  I EXCAT="E" S CURPRIO=1  ; Examined="Current" exam
  . E  S CURPRIO=2  ; must be a "prior" exam
  . I CURPRIO,'(ONL="Y") S CURPRIO=3 ; images on jukebox
@@ -154,7 +166,7 @@ SVMAG2A(PIPE3) ;used by subroutine at tag BLDACTV
  . E  S LASTSSN=""
  ; build output string in Y & Y2
  S Y=DAYCASE_U_U_$P(XX,U,4)_U_PTID
- S Y=Y_U_URG1_U_$E($P(XX,U,9),1,30)_U_MAGDT_U_$E($P(XX,U,14),1,10)_U_IMGCNT
+ S Y=Y_U_URG1_U_$E($P(XX,U,9),1,30)_U_MAGDT_U_$E($P(XX,U,14),1,16)_U_IMGCNT  ; ISI P106
  S Y=Y_U_ONL_U_$E($P(XX,U,13),1,15)_U_REMOTE
  S Y=Y_U_SORTMAG_U_SORTDT_U_MODALITY_U_RAST_U_$$RAIMTYP(RAST)
  S RISTISME=$P(XX2,U,7)
@@ -166,8 +178,8 @@ SVMAG2A(PIPE3) ;used by subroutine at tag BLDACTV
  S Y2=Y2_"|"_PIPE3_"|"_EXCAT_"^^^"_MODALITY_U_$P(XX,U,17)_U_CURPRIO_U_RARPT_U_KEY_U_REMOTE2_U_LRFLAG_U_STATPRIORITY
  ; * Note: Keep Pipe piece 4, above, in sync with lstout^magjls2b & magjlst1 *
  S MAGRACNT=MAGRACNT+1
- S @MAGLST@(MAGRACNT,1)=Y,^(2)=Y2  ; save output for one exam
- I $G(BKGPROC),(LSTREQ="R") S ^TMP($J,"NEWINT",$P(XX,U,1,3))=""
+ S @MAGLST@(MAGRACNT,1)=Y,^(2)=Y2,^("ISI")=XX9  ; save output for one exam  ; ISI
+ I $G(BKGPROC),(LSTREQ="R"),'$$MGRREV2^ISIJUTL9 S ^TMP($J,"NEWINT",$P(XX,U,1,3))=""  ; ISI -- Rev-2?
  Q
  ;
 RAIMTYP(RAST) ; return Imaging Type Abbrev for Status Code
@@ -207,10 +219,20 @@ STAT(RAST) ; get exams for one status code
  S RADFN=0,STATCHK=RAST
  F  S RADFN=$O(^RADPT("AS",RAST,RADFN)) Q:RADFN'>0  S RADTI=0 D
  . F  S RADTI=$O(^RADPT("AS",RAST,RADFN,RADTI)) Q:RADTI'>0!(RADTI>LASTDT)  S RACNI=0 D
+ . . I '$G(BKGPROC) Q:'$$DIVSCRN(RADFN,RADTI)  ; ISI--skip if not in my logon division/assoc div
  . . F  S RACNI=$O(^RADPT("AS",RAST,RADFN,RADTI,RACNI)) Q:RACNI'>0  D
  . . . D GETEXAM2^MAGJUTL1(RADFN,RADTI,RACNI,0,.MAGRET)
  . . . Q:'MAGRET  ; no exam returned
  . . . D SVMAG2A()
  Q
  ;
+DIVSCRN(RADFN,RADTI) ; ISI begin--adding new function
+ ; --> Return T/F: exam is of interest for my logon Division?
+ N PROCEED,RADATA,X
+ S PROCEED=1
+ I $G(MAGJOB("CONSOLIDATED")) D  ; only matters for Consolidated DB
+ . S RADATA=$G(^RADPT(RADFN,"DT",RADTI,0)) I RADATA]"" D
+ . S X=$P(RADATA,U,3) I X]"",'$D(MAGJOB("DIVSCRN",X)) S PROCEED=0
+ Q:$Q PROCEED Q
+ ;  ISI--end
 END Q  ; 

@@ -1,9 +1,13 @@
 BPSSCRRS ;BHAM ISC/SS - ECME SCREEN RESUBMIT ;05-APR-05
- ;;1.0;E CLAIMS MGMT ENGINE;**1,3,5,7,8,10,11,20,26,31**;JUN 2004;Build 16
+ ;;1.0;E CLAIMS MGMT ENGINE;**1,3,5,7,8,10,11,20,26,31,35**;JUN 2004;Build 14
  ;;Per VA Directive 6402, this routine should not be modified.
+ ; Reference to $$RXRLDT^PSOBPSUT in ICR #4701
+ ; Reference to ECMEACT^PSOBPSU1 in ICR #4702
+ ; Reference to $$WRKLST^PSOREJU4 in ICR #5063
+ ; Reference to $$RXBILL^IBNCPUT3 in ICR #5355
+ ; Reference to $$ECETREJ^PSXRPPL2 in ICR #7352
+ ;
  Q
- ;IA 4702
- ;IA 5355 for call to $$RXBILL^IBNCPUT3
  ;
 RES ;
  N BPRET,BPSARR59
@@ -57,15 +61,14 @@ RESUBMIT(RXI,BPRSNRV) ;*/
  N BPRVNEED ;needs reversal
  N BPRVWAIT ;cycles of waiting 
  N BPRVRSNT ;reversal has been sent
- N WHERE,DOSDATE,BILLNUM,RXIEN,RXR,BPDFN
- N BP59
- N UPDATFLG,BPCLTOT,BPCLTOTR,BPSRSWHR,BPSRSRRS
- N BPQ,BPSCONT
- N BPSTATUS,BPSCOB,BPSPCLS,BPPRIOPN
+ ;
+ N BILLNUM,BP59,BPCLTOT,BPCLTOTR,BPDFN,BPPRIOPN,BPQ,BPSCOB,BPSCOM
+ N BPSCONT,BPSPCLS,BPSRSRRS,BPSRSWHR,BPSTATUS,BPSTC,DIWF,DIWL,DIWR
+ N DOSDATE,RXIEN,RXR,UPDATFLG,WHERE,X
+ ;
  N REVCOUNT S REVCOUNT=0
  N BPIFANY S BPIFANY=0
  N BPINPROG S BPINPROG=0
- N DIWF,DIWL,DIWR,X
  ;
  S BPCLTOT=0 ;total for resubmitted
  S BPCLTOTR=0 ;total for reversed, not resubmitted
@@ -86,9 +89,9 @@ RESUBMIT(RXI,BPRSNRV) ;*/
  . ;
  . ; check for non-billable entry with the RER action (not allowed.  need to use regular RES)
  . I $$NB^BPSSCR03(BP59),BPRSNRV D  Q
- .. W !!,">> Cannot Resubmit w/o Reversal ",!,$G(@VALMAR@(+$G(RXI(BP59)),0))
- .. W !," because this is a NON BILLABLE entry. Please use the RES action instead.",!
- .. Q
+ . . W !!,">> Cannot Resubmit w/o Reversal ",!,$G(@VALMAR@(+$G(RXI(BP59)),0))
+ . . W !," because this is a NON BILLABLE entry. Please use the RES action instead.",!
+ . . Q
  . ;
  . S RXIEN=$P(BP59,".")
  . S RXR=+$E($P(BP59,".",2),1,4)
@@ -109,20 +112,20 @@ RESUBMIT(RXI,BPRSNRV) ;*/
  . ;
  . ; check to see if any non-cancelled K# bills exist when doing a Resubmit w/o Reversal - BPS*1*20
  . I BPRSNRV D  I 'BPSCONT Q
- .. S BPSCONT=1                ; continue flag
- .. N BPG,BPSIB,IBIFN,IB
- .. S BPG=$$RXBILL^IBNCPUT3(RXIEN,RXR,$S(BPSCOB=1:"P",BPSCOB=2:"S",1:"T"),"",.BPSIB)     ; DBIA# 5355
- .. S IBIFN=0 F  S IBIFN=$O(BPSIB(IBIFN)) Q:'IBIFN  D
- ... S IB=$G(BPSIB(IBIFN))
- ... I $P(IB,U,2)="CB"!($P(IB,U,2)="CN") Q    ; cancelled bill in AR, these are OK so quit here
- ... S BPSCONT=0                              ; can't continue any longer, report on bill(s) found
- ... W !!?4,"Rx# ",$$RXNUM^BPSSCRU2(RXIEN)," was previously billed."
- ... W !?4,"Please review bill# ",$P(IB,U,1)," to determine if it should be cancelled."
- ... W !?4,"The claim cannot be resubmitted without a reversal to ECME unless the"
- ... W !?4,"existing bill is cancelled."
- ... W !!?4,"Cannot submit to ECME using Resubmit Claim w/o Reversal.",!
- ... Q
- .. Q
+ . . S BPSCONT=1                ; continue flag
+ . . N BPG,BPSIB,IBIFN,IB
+ . . S BPG=$$RXBILL^IBNCPUT3(RXIEN,RXR,$S(BPSCOB=1:"P",BPSCOB=2:"S",1:"T"),"",.BPSIB)     ; DBIA# 5355
+ . . S IBIFN=0 F  S IBIFN=$O(BPSIB(IBIFN)) Q:'IBIFN  D
+ . . . S IB=$G(BPSIB(IBIFN))
+ . . . I $P(IB,U,2)="CB"!($P(IB,U,2)="CN") Q    ; cancelled bill in AR, these are OK so quit here
+ . . . S BPSCONT=0                              ; can't continue any longer, report on bill(s) found
+ . . . W !!?4,"Rx# ",$$RXNUM^BPSSCRU2(RXIEN)," was previously billed."
+ . . . W !?4,"Please review bill# ",$P(IB,U,1)," to determine if it should be cancelled."
+ . . . W !?4,"The claim cannot be resubmitted without a reversal to ECME unless the"
+ . . . W !?4,"existing bill is cancelled."
+ . . . W !!?4,"Cannot submit to ECME using Resubmit Claim w/o Reversal.",!
+ . . . Q
+ . . Q
  . ;
  . I BPSCOB<2,$$PAYABLE^BPSOSRX5(BPSTATUS),BPINPROG=0,$$PAYBLSEC^BPSUTIL2(BP59) D  S BPQ=$$PAUSE^BPSSCRRV() Q
  . . W !,"The claim: ",!,$G(@VALMAR@(+$G(RXI(BP59)),0)),!,"cannot be Resubmitted if the secondary claim is payable.",!,"Please reverse the secondary claim first."
@@ -149,6 +152,7 @@ RESUBMIT(RXI,BPRSNRV) ;*/
  . I 'BPRSNRV,$$NB^BPSSCR03(BP59) S BPSRSWHR="ERNB",BPSRSRRS=""
  . I 'BPRSNRV,'$$NB^BPSSCR03(BP59) S BPSRSWHR="ERES",BPSRSRRS="ECME RESUBMIT"
  . ;
+ . ; Attempt to resubmit the claim.
  . S BILLNUM=$$EN^BPSNCPDP(RXIEN,RXR,DOSDATE,BPSRSWHR,"",BPSRSRRS,,,,,BPSCOB)
  . ;
  . ;print return value message
@@ -166,13 +170,13 @@ RESUBMIT(RXI,BPRSNRV) ;*/
  . D ^DIWW
  . K ^UTILITY($J,"W")
  . ;
- . ;0 Prescription/Fill successfully submitted to ECME for claims processing
- . ;1 ECME did not submit prescription/fill
- . ;2 IB says prescription/fill is not ECME billable or the data returned from IB is not valid
- . ;3 ECME closed the claim but did not submit it to the payer
- . ;4 Unable to queue the ECME claim
- . ;5 Invalid input
- . ;10 Reversal but no resubmit
+ . ;  0 Prescription/Fill successfully submitted to ECME for claims processing
+ . ;  1 ECME did not submit prescription/fill
+ . ;  2 IB says prescription/fill is not ECME billable or the data returned from IB is not valid
+ . ;  3 ECME closed the claim but did not submit it to the payer
+ . ;  4 Unable to queue the ECME claim
+ . ;  5 Invalid input
+ . ; 10 Reversal but no resubmit
  . I +BILLNUM=0 D 
  . . D ECMEACT^PSOBPSU1(+RXIEN,+RXR,"Claim resubmitted to 3rd party payer: ECME USER's SCREEN-"_$S(BPSCOB=1:"p",BPSCOB=2:"s",1:"")_$$INSNAME^BPSSCRU6(BP59))
  . . S UPDATFLG=1,BPCLTOT=BPCLTOT+1
@@ -180,7 +184,17 @@ RESUBMIT(RXI,BPRSNRV) ;*/
  . . D ECMEACT^PSOBPSU1(+RXIEN,+RXR,"Claim reversed but not resubmitted: ECME USER's SCREEN-"_$S(BPSCOB=1:"p",BPSCOB=2:"s",1:"")_$$INSNAME^BPSSCRU6(BP59))
  . . S UPDATFLG=1,BPCLTOTR=BPCLTOTR+1
  . ;
- . I +BILLNUM=2 S UPDATFLG=1    ; bps*1*20. Update the screen in the event of non-billable result.
+ . ; If non-billable, first close any open eT/eC reject, and then
+ . ; call WRKLST^PSOREJU4 to put a new eT/eC reject on the
+ . ; prescription.  Finally, add an entry to the Activity Log.
+ . I +BILLNUM=2 D
+ . . S UPDATFLG=1
+ . . I $$ECETREJ^PSXRPPL2(RXIEN) D CLSALL^PSOREJUT(RXIEN,RXR,DUZ,1)
+ . . D WRKLST^PSOREJU4(RXIEN,RXR,"",DUZ,"",1,BPSCOB,BILLNUM)
+ . . S BPSTC=$P(BILLNUM,U,3)
+ . . S BPSCOM=$S(BPSTC="T":"TRICARE-",BPSTC="C":"CHAMPVA-",1:"")_"Not ECME Billable: "_$P(BILLNUM,U,2)
+ . . D RXACT^PSOBPSU2(RXIEN,RXR,BPSCOM,"M",DUZ)
+ . . Q
  . Q
  ;
  W:BPIFANY=0 !,"No eligible items selected."

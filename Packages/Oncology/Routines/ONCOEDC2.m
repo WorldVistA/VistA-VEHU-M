@@ -1,5 +1,5 @@
 ONCOEDC2 ;HINES OIFO/RTK - ABSTRACT STATUS (165.5,91) Input Transform ;4/29/19
- ;;2.2;ONCOLOGY;**10,12,17**;Jul 31, 2013;Build 6
+ ;;2.2;ONCOLOGY;**10,12,17,18**;Jul 31, 2013;Build 5
  ;
 OBS2018 ;Remove data in fields that are obsolete for 2018+ cases
  D OBS2023
@@ -108,7 +108,9 @@ DELETE ;
  Q
  ;
 OBS2023 ;Remove data in data flag fields that are obsolete for 2023+ cases
+ ; also remove data in old Surgery of Primary Site field for 2023+ cases
  I $P($G(^ONCO(165.5,D0,0)),U,16)<3230000 Q
+ S $P(^ONCO(165.5,D0,3.1),"^",29)=""  ;SURGERY OF PRIMARY SITE (58.6)
  S $P(^ONCO(165.5,D0,27),"^",8)=""
  S $P(^ONCO(165.5,D0,27),"^",9)=""
  S $P(^ONCO(165.5,D0,27),"^",10)=""

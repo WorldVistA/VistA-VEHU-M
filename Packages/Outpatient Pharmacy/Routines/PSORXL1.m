@@ -1,6 +1,8 @@
-PSORXL1 ;BIR/SAB - action to be taken on prescriptions ;Jan 20, 2022@11:21:21
- ;;7.0;OUTPATIENT PHARMACY;**36,46,148,260,274,287,289,358,251,385,403,409,482,604,562,441,717**;DEC 1997;Build 1
- ;External reference to $$DS^PSSDSAPI supported by DBIA 5424
+PSORXL1 ;BIR/SAB - action to be taken on prescriptions ; June 09, 2023@11:10:21
+ ;;7.0;OUTPATIENT PHARMACY;**36,46,148,260,274,287,289,358,251,385,403,409,482,604,562,441,717,712**;DEC 1997;Build 20
+ ;
+ ; Reference to $$DS^PSSDSAPI in ICR #5424
+ ;
 S S SPPL="",PPL1=1 S:'$G(PPL) PPL=$G(PSORX("PSOL",PPL1)) G:$G(PPL)']"" D1
 S1 F PI=1:1 Q:$P(PPL,",",PI)=""  S DA=$P(PPL,",",PI) D
  .S PSORFD1=0 F PSOX7=0:0 S PSOX7=$O(^PSRX(DA,1,PSOX7)) Q:'$G(PSOX7)  S (PSORFD1)=PSOX7
@@ -128,4 +130,16 @@ PPLPARK ;CHECK IF RX IN PPL STRING IS PARKED - REMOVE IT IF IT IS SO LABEL DOES 
  K RXRS S PSOPX=0 F  S PSOPX=$O(PSOPX(PSOPX)) Q:'PSOPX  S RXRS(PSOPX)=PSOPX(PSOPX)
  K PSOPX F PSOPX=1:1 S PSOPRX=$P($G(PSORX("PSOL",1)),",",PSOPX) Q:PSOPRX=""  I '$D(^PSRX(PSOPRX,"PARK")) S PSOPX(PSOPRX)=""
  S PSORX("PSOL",1)="",PSOPX=0 I $D(PSOPX)>1 F  S PSOPX=$O(PSOPX(PSOPX)) Q:'PSOPX  S PSORX("PSOL",1)=PSORX("PSOL",1)_PSOPX_","
+ Q
+ ;
+PK ;
+ K SPPL S SPPL="" F PI=1:1 Q:$P(PPL,",",PI)=""  D   ;*712
+ .N PSOPARK,PSODRUG,ZZ
+ .S PSOPARK=1
+ .S DA=$P(PPL,",",PI) D  I PSOPARK D PRK^PSOPRK(DA) W:$G(^PSRX(DA,"PARK")) !,ZZ," placed in Active/Parked status." Q
+ ..S PSODRUG=$P(^PSDRUG($P(^PSRX(DA,0),"^",6),0),"^"),ZZ="RX# "_$P(^PSRX(DA,0),"^")_" "_PSODRUG
+ ..I $P(^PSRX(DA,"STA"),"^")'=0,($P(^("STA"),"^")'=5) W !,ZZ," not active or suspended!" S PSOPARK=0 Q
+ ..S PSODRUG("DEA")=$P(^PSDRUG($P(^PSRX(DA,0),"^",6),0),"^",3)
+ ..I $G(PSODRUG("DEA"))["D"!(PSODRUG["CLOZAPINE") W !,ZZ," - drug not allowed to be parked!" S PSOPARK=0
+ .I $P(^PSRX(DA,"STA"),"^")=4 S SPPL=SPPL_DA_"," Q
  Q

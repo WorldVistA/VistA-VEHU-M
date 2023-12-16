@@ -1,8 +1,10 @@
-PSORXL ;BHAM ISC/SAB - action to be taken on prescriptions ;Mar 31, 2022@13:16:09
- ;;7.0;OUTPATIENT PHARMACY;**8,21,24,32,47,135,148,287,334,251,354,367,370,442,658,441**;DEC 1997;Build 209
- ;External reference to File #50 supported by DBIA 221
- ;External references CHPUS^IBACUS and TRI^IBACUS supported by DBIA 2030
- ;Added kill for BINGRTE to force bypass of Bingo board prompt if choose H (Hold) or PK (Park) - PaPI ;441
+PSORXL ;BHAM ISC/SAB - action to be taken on prescriptions ; May 11, 2023@08:10:09
+ ;;7.0;OUTPATIENT PHARMACY;**8,21,24,32,47,135,148,287,334,251,354,367,370,442,658,441,712**;DEC 1997;Build 20
+ ;
+ ; Reference to ^PSDRUG( in ICR #221
+ ; Reference to CHPUS^IBACUS,TRI^IBACUS in ICR #2030
+ ; Added kill for BINGRTE to force bypass of Bingo board prompt if choose H (Hold) or PK (Park) - PaPI ;441
+ ;
  D PPLPARK^PSORXL1 I $G(PPL)="",'$O(RXRS(0)),$G(PSORX("PSOL",1))="" G RXSQUIT
  I $G(PSOTRVV),$G(PPL) S PSORX("PSOL",1)=PPL K PPL
  N SLBL,PSOSONE,PSOKLRXS,PSOSKIP S PSOSKIP=1
@@ -53,7 +55,7 @@ PASS ;
  I $E($G(DIR("A")),1,6)'="LABEL:" D RESDIR^PSOCPTRI
  S DIR(0)="SA^PR:PROFILE;Q:QUEUE;C:CHANGE PRINTER"_$S($P(PSOPAR,"^",23)&($D(^XUSEC("PSORPH",DUZ))!($D(^XUSEC("PSO TECH ADV",DUZ)))):";H:HOLD",1:"")
  ;S DIR(0)=DIR(0)_$S($P(PSOPAR,"^",24):";S:SUSPENSE",1:"")_$S($P(PSOPAR,"^",26):";L:PRINT",1:"")_$S($P(PSOPAR,"^",34):";PK:PARK",1:""),DIR("B")="Q" D ^DIR S:(Y="PR") Y="P"  D  G:$D(DIRUT)!($D(DUOUT)) EX  ;*370 ;441 added PR & PARK
- S DIR(0)=DIR(0)_$S($P(PSOPAR,"^",24):";S:SUSPENSE",1:"")_$S($P(PSOPAR,"^",26):";L:PRINT",1:"")_$S($G(PSOPARKX(0))="YES":";PK:PARK",1:""),DIR("B")="Q" D ^DIR S:Y="PR" Y="P"  D  G:$D(DIRUT)!($D(DUOUT)) EX  ;*370 ;441 added PR & PARK
+ S DIR(0)=DIR(0)_$S($P(PSOPAR,"^",24):";S:SUSPENSE",1:"")_$S($P(PSOPAR,"^",26):";L:PRINT",1:"")_$S($G(PSOPARKX(0))="YES":";PK:PARK",1:""),DIR("B")="Q" D ^DIR G:Y="PK" PK1 S:Y="PR" Y="P"  D  G:$D(DIRUT)!($D(DUOUT)) EX  ;*370 ;441 added PR & PARK
  .I $D(DIRUT)!($D(DUOUT)) D AL^PSOLBL("UT") I $G(PSOEXREP) S PSOEXREX=1
  .I $G(PSOPULL) I $D(DIRUT)!($D(DUOUT)) S PSOQFLAG=1
  S:$G(PSOBEDT) NOPP=Y
@@ -250,19 +252,16 @@ RTE() ; get route for RX
  I FP="F"&(FPN) S MW=$P($G(^PSRX(RX,1,FPN,0)),"^",2)   ;refill
  I FP="P"&(FPN) S MW=$P($G(^PSRX(RX,"P",FPN,0)),"^",2) ;partial
  Q $G(MW)
-PK1 S PPL1=1 S:'$G(PPL) PPL=$G(PSORX("PSOL",PPL1))  ;441 PAPI
+PK1 ;
+ G:$D(DTOUT) D1
+ S:'$G(PPL) PPL=$G(PSORX("PSOL",1))  ;441 PAPI
+ I $D(RXRS) S PI=0 F  S PI=$O(RXRS(PI)) Q:'PI  D
+ .I $G(PPL)="" S PPL=PI_"," Q
+ .Q:PPL[PI
+ .S PPL=PPL_PI_","
  G:$G(PPL)']"" D1
-PK K SPPL G:$D(DTOUT) D1 S SPPL="" F PI=1:1 Q:$P(PPL,",",PI)=""  D   ;441 PAPI
- .N PSOPARK,PSODRUG
- .S PSOPARK=1
- .S DA=$P(PPL,",",PI) D  I PSOPARK D PRK^PSOPRK(DA) W:$G(^PSRX(DA,"PARK")) !," RX# "_$P(^PSRX(DA,0),"^")_" placed in Active/Parked status." Q
- ..S PSODRUG=$P(^PSDRUG($P(^PSRX(DA,0),"^",6),0),"^")
- ..I $P(^PSRX(DA,"STA"),"^")'=0,($P(^("STA"),"^")'=5) W !," ",$P(^PSRX(DA,0),"^")," ",PSODRUG," not active or suspended" S PSOPARK=0 Q
- ..S PSODRUG("DEA")=$P(^PSDRUG($P(^PSRX(DA,0),"^",6),0),"^",3)
- ..;I $G(PSODRUG("DEA"))["D" W !," ",$P(^PSRX(DA,0),"^")," ",PSODRUG," - drug not allowed to be parked!" S PSOPARK=0 ;
- ..I $G(PSODRUG("DEA"))["D"!(PSODRUG["CLOZAPINE") W !," ",$P(^PSRX(DA,0),"^")," ",PSODRUG," - drug not allowed to be parked!" S PSOPARK=0
- .I $P(^PSRX(DA,"STA"),"^")=4 S SPPL=SPPL_DA_"," Q
- ;
+PK ;
+ D PK^PSORXL1   ;*712
  I $G(SPPL)]"" D DRUGINT
  G D1
  ;

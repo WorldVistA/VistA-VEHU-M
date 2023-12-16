@@ -1,5 +1,5 @@
 IBCNRPM2 ;BHAM ISC/CMW - Match Multiple Group Plans to a Pharmacy Plan ;10-MAR-2004
- ;;2.0;INTEGRATED BILLING;**251,276,550,617,711**;21-MAR-94;Build 18
+ ;;2.0;INTEGRATED BILLING;**251,276,550,617,711,712**;21-MAR-94;Build 14
  ;;Per VA Directive 6402, this routine should not be modified.
  ;; ;
 EN(IBCNRP,IBCNRI,IBCNRGP) ; -- main entry point for IBCNR PAYERSHEET MATCH (LIST TEMPLATE)
@@ -46,7 +46,7 @@ INIT ; -- init variables and list array
  . W !,*7,"Warning: No Active Group Plans with Pharmacy Coverage Found."
  ;
  N GPIEN,IBGP0,IBCPOLD,X,IBCPD6,IBCNRPP,IBCOV,IBCRVD,LIM
- N IBGNA,IBGNM,IBCNA,IBCNM,IBDAT,MATCH
+ N IBGNA,IBGNM,IBCNA,IBCNM,IBDAT,MATCH,UNMATCH
  K ^TMP("IBCNR",$J,"PM")
  S VALMCNT=0,VALMBG=1,(IBCNA,IBCNM,GPIEN)=""
  S VALMCNT1=0
@@ -58,14 +58,15 @@ INIT ; -- init variables and list array
  .. S ^TMP("IBCNR",$J,"PM",VALMCNT,0)="                              *** "_^TMP("IBCNR",$J,"GP",MATCH)_" UNMATCHED ***"
  .. D CNTRL^VALM10(VALMCNT,1,80,IORVON,IORVOFF,0)
  .. S ^TMP("IBCNR",$J,"PM","IDX",VALMCNT,1)=""
+ .. S UNMATCH=^TMP("IBCNR",$J,"GP",MATCH)
  .I MATCH=1 D
  .. S VALMCNT=VALMCNT+1
  .. S ^TMP("IBCNR",$J,"PM",VALMCNT,0)=""
- .. S ^TMP("IBCNR",$J,"PM","IDX",VALMCNT,1)=""
+ .. S ^TMP("IBCNR",$J,"PM","IDX",VALMCNT,UNMATCH)=""
  .. S VALMCNT=VALMCNT+1
  .. S ^TMP("IBCNR",$J,"PM",VALMCNT,0)="                              *** "_^TMP("IBCNR",$J,"GP",MATCH)_" MATCHED ***"
  .. D CNTRL^VALM10(VALMCNT,1,80,IORVON,IORVOFF,0)
- .. S ^TMP("IBCNR",$J,"PM","IDX",VALMCNT,1)=""
+ .. S ^TMP("IBCNR",$J,"PM","IDX",VALMCNT,UNMATCH)=""
  .F  S IBCNA=$O(^TMP("IBCNR",$J,"GP",MATCH,IBCNA)) Q:IBCNA=""  D
  .. F  S IBCNM=$O(^TMP("IBCNR",$J,"GP",MATCH,IBCNA,IBCNM)) Q:IBCNM=""  D
  ... ;get pharm plan id

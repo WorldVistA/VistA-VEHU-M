@@ -1,5 +1,5 @@
 ONCSGA8B ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/15/19
- ;;2.2;ONCOLOGY;**10,12,13**;Jul 31, 2013;Build 7
+ ;;2.2;ONCOLOGY;**10,12,13,18**;Jul 31, 2013;Build 5
  ;
  ;
 30 ;NET
@@ -33,9 +33,9 @@ ONCSGA8B ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/15/19
 33 ;NET
  S M=$E(M,2,5)
  I ((T="TX")!(T="T0")),M["M1" S SG=4 Q
- I T="T1",N="N0",M="M0" S SG=1 Q
- I T="T1",N="N1",M="M0" S SG="3B" Q
- I T="T1",M["M1" S SG=4 Q
+ I T["T1",N="N0",M="M0" S SG=1 Q
+ I T["T1",N="N1",M="M0" S SG="3B" Q
+ I T["T1",M["M1" S SG=4 Q
  I T="T2",N="N0",M="M0" S SG="2A" Q
  I T="T2",N="N1",M="M0" S SG="3B" Q
  I T="T2",M["M1" S SG=4 Q

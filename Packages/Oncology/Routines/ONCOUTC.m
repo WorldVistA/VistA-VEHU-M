@@ -1,5 +1,5 @@
-ONCOUTC ;Hines OIFO/GWB - [UTL *..Utility Options DS, DP, SQ and EA] ;03/17/11
- ;;2.2;ONCOLOGY;**1,4**;Jul 31, 2013;Build 5
+ONCOUTC ;HINES OIFO/GWB - [UTL *..Utility Options DS, DP, SQ and EA] ;03/17/11
+ ;;2.2;ONCOLOGY;**1,4,18**;Jul 31, 2013;Build 5
  ;
 INQ ;[PI Patient/Primary Inquiry]
  ;OUT OF ORDER MESSAGE: Marked for deletion
@@ -23,30 +23,36 @@ SEL ;S DIC(0)="AEQZ",DIC="^ONCO(160," D ^DIC G EX:Y<0 S ONCODA=+Y
  ;Q
  ;
 EN2 ;[DP Delete Oncology Patient]
- D PAT G EX:Y<0
- I $D(^ONCO(165.5,"C",ONCOD0)) D SDD^ONCOCOM
- W !?5,"Deleting a patient will also delete any primaries associated"
- W !?5,"with your division."
- S DIR("A")="     Are you sure you want to delete this ONCOLOGY PATIENT"
- S DIR("B")="NO",DIR(0)="Y" W ! D ^DIR G EX:Y=U!(Y=""),EN2:'Y
- W !
- I $D(^ONCO(165.5,"C",ONCOD0)) S ONCOP0=0 F  S ONCOP0=$O(^ONCO(165.5,"C",ONCOD0,ONCOP0)) Q:ONCOP0'>0  I $$DIV^ONCFUNC(ONCOP0)=DUZ(2) D DP
- I $D(^ONCO(165.5,"C",ONCOD0)) D  G EN2
- .S ONCOP0=$O(^ONCO(165.5,"C",ONCOD0,0))
- .S ONCDIV=$P($G(^ONCO(165.5,ONCOP0,"DIV")),U,1)
- .W !?5,"Unable to delete ONCOLOGY PATIENT."
- .W !?5,"This patient has primaries which belong to division: ",ONCDIV,!
- S DA=ONCOD0,DIK="^ONCO(160,"
- W !!?5,"Deleting ONCOLOGY PATIENT..." D ^DIK G EN2
+ W !!,"*** THIS OPTION IS OUT OF ORDER: Marked for deletion"
+ W ! K DIR S DIR(0)="E" D ^DIR Q
+ ;OUT OF ORDER MESSAGE: Marked for deletion
+ ;D PAT G EX:Y<0
+ ;I $D(^ONCO(165.5,"C",ONCOD0)) D SDD^ONCOCOM
+ ;W !?5,"Deleting a patient will also delete any primaries associated"
+ ;W !?5,"with your division."
+ ;S DIR("A")="     Are you sure you want to delete this ONCOLOGY PATIENT"
+ ;S DIR("B")="NO",DIR(0)="Y" W ! D ^DIR G EX:Y=U!(Y=""),EN2:'Y
+ ;W !
+ ;I $D(^ONCO(165.5,"C",ONCOD0)) S ONCOP0=0 F  S ONCOP0=$O(^ONCO(165.5,"C",ONCOD0,ONCOP0)) Q:ONCOP0'>0  I $$DIV^ONCFUNC(ONCOP0)=DUZ(2) D DP
+ ;I $D(^ONCO(165.5,"C",ONCOD0)) D  G EN2
+ ;.S ONCOP0=$O(^ONCO(165.5,"C",ONCOD0,0))
+ ;.S ONCDIV=$P($G(^ONCO(165.5,ONCOP0,"DIV")),U,1)
+ ;.W !?5,"Unable to delete ONCOLOGY PATIENT."
+ ;.W !?5,"This patient has primaries which belong to division: ",ONCDIV,!
+ ;S DA=ONCOD0,DIK="^ONCO(160,"
+ ;W !!?5,"Deleting ONCOLOGY PATIENT..." D ^DIK G EN2
  ;
 EN3 ;[DS Delete Primary Site/GP Record]
- D PAT G EX:Y<0
- S UTL="DELETE" D PRIM G EN3:Y<0
- S ONCOSIT=$P(Y,U,2),ONCOP0=+Y
- W !!?5,ONCONM,?35,$P(^ONCO(164.2,ONCOSIT,0),U),!!
- S DIR("A")=" Are you sure you want to delete this primary"
- S DIR("B")="NO",DIR(0)="Y" D ^DIR G EX:(Y="")!(Y=U),EN3:Y=0
- D DP G EN3
+ W !!,"*** THIS OPTION IS OUT OF ORDER: Marked for deletion"
+ W ! K DIR S DIR(0)="E" D ^DIR Q
+ ;OUT OF ORDER MESSAGE: Marked for deletion
+ ;D PAT G EX:Y<0
+ ;S UTL="DELETE" D PRIM G EN3:Y<0
+ ;S ONCOSIT=$P(Y,U,2),ONCOP0=+Y
+ ;W !!?5,ONCONM,?35,$P(^ONCO(164.2,ONCOSIT,0),U),!!
+ ;S DIR("A")=" Are you sure you want to delete this primary"
+ ;S DIR("B")="NO",DIR(0)="Y" D ^DIR G EX:(Y="")!(Y=U),EN3:Y=0
+ ;D DP G EN3
  ;
 EN1 ;[EA Edit Site/AccSeq# Data]
  D PAT G EX:Y<0
@@ -85,9 +91,9 @@ PAT ;Select ONCOLOGY PATIENT (160)
  Q
  ;
 DP ;Delete ONCOLOGY PRIMARY (165.5)
- W !?5,"Deleting ONCOLOGY PRIMARY: ",$$GET1^DIQ(165.5,ONCOP0,20)
- S DA=ONCOP0,DIK="^ONCO(165.5," D ^DIK S D0=ONCOD0 H 2 W !
- Q
+ ;W !?5,"Deleting ONCOLOGY PRIMARY: ",$$GET1^DIQ(165.5,ONCOP0,20)
+ ;S DA=ONCOP0,DIK="^ONCO(165.5," D ^DIK S D0=ONCOD0 H 2 W !
+ ;Q
  ;
 DUPSQ ;[SQ Find Duplicate Acc/Seq numbers]
  K ONCPRLST S ONCTTLDP=0 W !

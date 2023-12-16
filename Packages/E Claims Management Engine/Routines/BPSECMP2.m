@@ -1,5 +1,5 @@
 BPSECMP2 ;BHAM ISC/FCS/DRS - Parse Claim Response ;11/14/07  13:23
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5,6,7,8,10,11,19**;JUN 2004;Build 18
+ ;;1.0;E CLAIMS MGMT ENGINE;**1,5,6,7,8,10,11,19,35**;JUN 2004;Build 14
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;Reference to STORESP^IBNCPDP supported by DBIA 4299
@@ -14,7 +14,7 @@ BPSECMP2 ;BHAM ISC/FCS/DRS - Parse Claim Response ;11/14/07  13:23
  ;    EVENT:    This is used by PSO to create specific events (BILL).
  ;    USER:     User who is creating the event.  This is required when EVENT is sent.
 IBSEND(CLAIMIEN,RESPIEN,EVENT,USER) ;
- N BPSARRY,RXIEN,FILLNUM,IND,TRNDX
+ N BPSARRY,BPS57,RXIEN,FILLNUM,IND,TRNDX
  N CLAIMNFO,RESPNFO,RXINFO,RFINFO,TRANINFO
  N RESPONSE,RXACT,CLREAS,BILLNUM,DFN,REQCLAIM
  N DIE,DA,DR,AMT,ELIG
@@ -132,6 +132,16 @@ IBSEND(CLAIMIEN,RESPIEN,EVENT,USER) ;
  S BPSARRY("RELEASE DATE")=$S(FILLNUM=0:$$RXAPI1^BPSUTIL1(RXIEN,31,"I"),1:$$RXSUBF1^BPSUTIL1(RXIEN,52,52.1,FILLNUM,17,"I"))
  S BPSARRY("RESPONSE")=RESPONSE
  S BPSARRY("EPHARM")=$$GET1^DIQ(9002313.59,TRNDX,1.07,"I")
+ ;
+ ; If Secondary Claim and Action was ERWV (Resubmit w/o Reversal from ECME User Screen),
+ ; get the Primary Payer Bill and Prior Payment info from the BPS Log of Transactions
+ ; entry created during the PRO Option.
+ I BPSARRY("RXCOB")>1,RXACT="ERWV" D
+ . S BPS57=""
+ . F  S BPS57=$O(^BPSTL("B",TRNDX,BPS57)) Q:BPS57=""  D
+ . . I $$GET1^DIQ(9002313.57,BPS57,1201)'["P2" Q
+ . . S BPSARRY("PRIMARY BILL")=$$GET1^DIQ(9002313.57902,"1,"_BPS57,902.3,"I")
+ . . S BPSARRY("PRIOR PAYMENT")=$$GET1^DIQ(9002313.57902,"1,"_BPS57,902.31)
  ;
  ; For reversals, get reversal reason and check for closed reason
  ; Call IB with Reversal Event

@@ -1,5 +1,5 @@
-MAGJLS4 ;WIRMFO/JHC VistARad RPCs--History List ; 29 Jul 2003  10:00 AM
- ;;3.0;IMAGING;**18,76,101**;Nov 06, 2009;Build 50
+MAGJLS4 ;WIRMFO/JHC - VistARad RPCs--History List ; 10/17/2022
+ ;;3.0;IMAGING;**18,76,101,341**;Dec 21, 2022;Build 28
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -16,6 +16,7 @@ MAGJLS4 ;WIRMFO/JHC VistARad RPCs--History List ; 29 Jul 2003  10:00 AM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**99**
  Q
 ERR N ERR S ERR=$$EC^%ZOSV S ^TMP($J,"RET",0)="0^4~"_ERR
  S MAGGRY=$NA(^TMP($J,"RET"))
@@ -86,6 +87,7 @@ HISTGET(TXDUZ,TXDIV) ; Get full History List for input user for division txdiv
  N MAGLST,LSTTL,LSTID,MAGLST
  S TXDUZ=$G(TXDUZ,DUZ)
  S TXDIV=$G(TXDIV,DUZ(2))
+ N DATA01 S DATA01=9996 ; ISI
  D PARAMS^MAGJLS2B(9996)
  I 'LSTID S REPLY="0^4~Problem with History List Compile." Q
  S LSTTL=$$HISTTL(TXDUZ,DUZ(2))

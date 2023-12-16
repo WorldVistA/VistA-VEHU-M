@@ -1,5 +1,5 @@
-MAGJLST1 ;WIRMFO/JHC - VistARad RPC calls ; 30 Dec 2011  1:36 PM
- ;;3.0;IMAGING;**16,22,18,65,76,101,90,120**;Mar 19, 2002;Build 27;May 23, 2012
+MAGJLST1 ;WIRMFO/JHC - VistARad RPC calls ; 10/17/2022
+ ;;3.0;IMAGING;**16,22,18,65,76,101,90,120,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJLST1 ;WIRMFO/JHC - VistARad RPC calls ; 30 Dec 2011  1:36 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**99,101,103,106**
  Q
  ;
  ; Subroutines for fetching Patient Exam Info
@@ -65,11 +66,13 @@ PTLIST(MAGGRY,DATA) ; get list of exams for a patient
  N LIMEXAMS,BEGDT,SAVBEGDT,ENDDT,MORE,RDRIST,PSSN,CPT
  N CURPRIO,STATUS,RARPT,KEY,X2,REMOTE2,ONESHOT,LIMDAYS
  N IMGCNT,LRFLAG,MSG,ONL,PROCMOD,RASTCAT,RASTORD,STATPRIORITY,SNDREMOT
+ N ASIGINI,ASIGENA,ASIGDUZ,XX9  ;  ISI
  N $ETRAP,$ESTACK S $ETRAP="D ERR^MAGJLST1"
  S DIQUIET=1 D DT^DICRW
  S BEGDT=$P(DATA,U,4),ONESHOT=$P(DATA,U,5)
  K MAGGRY S DFN=+DATA
  S SNDREMOT=+$P($G(^MAG(2006.69,1,0)),U,11)
+ S ASIGENA=$P($G(^MAG(2006.69,1,"ISI")),U,1)="Y"  ;  ISI
  S MAGRACNT=1,CNT=0 K ^TMP($J,"MAGRAEX"),^("MAGRAEX2")
  S REPLY="0^4~Compiling list of Radiology Exams."
  I DFN,$D(^DPT(DFN,0)) S PATNAME=$P(^(0),U) D
@@ -99,7 +102,8 @@ PTLIST(MAGGRY,DATA) ; get list of exams for a patient
  . S PSSN=" ("_PSSN_")"
  . I CNT S REPLY=CNT_"^1~Radiology Exams for: "_PATNAME_PSSN_$S(MSG="":"",1:" -- "_MSG)
  . E  S REPLY=REPLY_$S(MSG="":"",1:" -- "_MSG)
- . S ^TMP($J,"MAGRAEX2",1)="^Day/Case~S3~1^Lock~~2^Procedure~~6^Modifier~~25^Image Date/Time~S1~7^Status~~8^# Img~S2~9^Onl~~10^"_$S(SNDREMOT:"RC~~12^",1:"")_"Site~~23^Mod~~15^Interp By~~20^Imaging Loc~~11^CPT~~27"
+ . S X="^Day/Case~S3~1^Lock~~2^Procedure~~6^Modifier~~25^Image Date/Time~S1~7^Status~~8^# Img~S2~9^Onl~~10^"_$S(SNDREMOT:"RC~~12^",1:"")_"Site~~23^Mod~~15"  ; ISI
+ . S ^TMP($J,"MAGRAEX2",1)=X_$S(ASIGENA:"^Assign~~201",1:"")_"^Interp By~~20^Imaging Loc~~11^CPT~~27" ; ISI Assign
  S $P(REPLY,"|",2)=SAVBEGDT
  S ^TMP($J,"MAGRAEX2",0)=REPLY
  S MAGGRY=$NA(^TMP($J,"MAGRAEX2"))
@@ -108,7 +112,7 @@ PTLIST(MAGGRY,DATA) ; get list of exams for a patient
  ;
 PTLOOP ; loop through exam data & package it for VRAD use
  S ISS=0
- F  S ISS=$O(^TMP($J,"MAGRAEX",ISS)) Q:'ISS  S XX=^(ISS,1),XX2=^(2) D
+ F  S ISS=$O(^TMP($J,"MAGRAEX",ISS)) Q:'ISS  S XX=^(ISS,1),XX2=^(2),XX9=$G(^("ISI")) D  ; ISI
  . S CNT=CNT+1,RARPT=$P(XX,U,10)
  . D IMGINFO^MAGJUTL2(RARPT,.Y)
  . S IMGCNT=$P(Y,U),ONL=$P(Y,U,2),MAGDT=$P(Y,U,3),REMOTE=$P(Y,U,4),MODALITY=$P(Y,U,5),PLACE=$P(Y,U,6),KEY=$P(Y,U,7)
@@ -123,13 +127,16 @@ PTLOOP ; loop through exam data & package it for VRAD use
  . S WHOLOCK=RARPT,MYLOCK="",DAYCASE=$P(XX,U,12)
  . I WHOLOCK]"" S T=$$CHKLOCK^MAGJLS2B(WHOLOCK,DAYCASE),WHOLOCK=$P(T,U),MYLOCK=$P(T,U,2)
  . S RDRIST=$P(XX2,U,3),PROCMOD=$P(XX2,U,8),CPT=$P(XX,U,17),RASTORD=$P(XX,U,15)
+ . S ASIGINI=$P(XX9,U,1),ASIGDUZ=$P(XX9,U,3) ;  ISI
  . S Y=U_DAYCASE_U_WHOLOCK_U_$E($P(XX,U,9),1,26)_U_PROCMOD_U_MAGDT_U_$E($P(XX,U,14),1,16)_U_IMGCNT_U_ONL
  . I SNDREMOT S Y=Y_U_REMOTE
- . S Y=Y_U_PLACE_U_MODALITY_U_RDRIST_U_$E($P(XX,U,13),1,11)_U_CPT
+ . S Y=Y_U_PLACE_U_MODALITY_$S(ASIGENA:U_ASIGINI,1:"")_U_RDRIST_U_$E($P(XX,U,13),1,11)_U_CPT ;  ISI asigini
  . S STATUS=$P(XX,U,11),EXCAT="",CURPRIO=0,RASTCAT=$P(XX2,U,11),LRFLAG=$P(XX2,U,12)
+ . I ASIGENA D  ; ISI   <*> Special case, for PtList ONLY! Exam is NOT locked, but assigned to someone else,
+ . . I ASIGINI]"",(MYLOCK="") I '$$ASIGME^ISIJUTL1(ASIGDUZ) S MYLOCK=0 ; flags client to NOT Allow Dictate option 
  . I STATUS]"" D
  . . S EXCAT=RASTCAT
- . . I RASTORD<2!(EXCAT="W")!('IMGCNT) S CURPRIO=0 ; Cancelled/Waiting/No images: Ignore exam
+ . . I RASTORD<2!(EXCAT="W")!(EXCAT="R")!('IMGCNT) S CURPRIO=0 ; Cancelled/Waiting/No images: Ignore exam ; ISI P106
  . . E  I EXCAT="E" S CURPRIO=1  ; Examined="Current" exam
  . . E  S CURPRIO=2  ; must be a "prior" exam
  . . I CURPRIO,'(ONL="Y") S CURPRIO=3 ; images on jukebox

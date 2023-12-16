@@ -1,5 +1,5 @@
-MAGJUTL5 ;WOIFO/JHC,DAC,GXT - VistARad RPCs ; 26 Apr 2018  3:07 PM
- ;;3.0;IMAGING;**65,76,101,90,115,104,120,133,152,153,184,199**;Mar 19, 2002;Build 5
+MAGJUTL5 ;WOIFO/JHC - VistARad RPCs ; 12/29/2022
+ ;;3.0;IMAGING;**65,76,101,90,115,104,120,133,152,153,184,199,255,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,18 +15,20 @@ MAGJUTL5 ;WOIFO/JHC,DAC,GXT - VistARad RPCs ; 26 Apr 2018  3:07 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ; Reference to INSTALDT^XPDUTL in ICR #10141
+ ;; ISI IMAGING;**99,101,102,106**
  Q
- ; adapted from MAGGTU4
-GETVER(SVRVER,SVRTVER,ALLOWCL,VIXVER) ;
- ; The Server Version SVRVER is hardcoded to match the Client
- ; so this Routine must be edited/distributed with a new Client
- ; released Client will have the T version that the server expects
+ ; ISI <*> Version # changes for ISI Rad 1.1.0 -- Jan 2018
+GETVER(SVRVER,SVRBVER,ALLOWCL,VIXVER) ;
+ ; SVRVER -- holds the Server Version that is always hardcoded to match the Client
+ ; SVRBVER - holds the smallest value for the client build # that is compatible with
+ ;           the current server--the client's value must be equal to or greater than SVRBVER
  ;
- ;--- Synchronize the below information with that in MAGJTU4V.
+ ; <*> Edit below line whenever both client and server are changing together
  ;
- S SVRVER="3.0.199",SVRTVER=2  ; P199 DAC - <*> Edit this line for each patch/T-version
- ;
- S ALLOWCL="|3.0.184|3.0.153|"  ; P184 DAC - back-compatible with prior client(s)
+ S SVRVER="1.1.1",SVRBVER=217  ; min. build version for P110--VA VistARad to ISI Rad conversion
+ ;   Rev-2 enabled in v1.1.1
+ S ALLOWCL="|3.0.199|3.0.255|"  ; back-compatible prior clients (ISI_v1.1.nnn; VA: 3.0.nnn)
  S VIXVER=""
  ; VIX may present versions different from vrad Client/Server versions; this would
  ; happen if M-only changes are made to vrad Server code as part of a VIX patch
@@ -41,88 +43,71 @@ GETVER(SVRVER,SVRTVER,ALLOWCL,VIXVER) ;
  ;
 CHKVER(MAGRY,CLVER,PLC,SVERSION) ;
  ; Input CLVER is the version of the Client
- ;    format: Major.Minor.Patch.Build# [|VIX] -- eg 3.0.115.4|VIX
- ;       Build # = T-version; VIX string only appears if a VIX session
+ ;    format: ISI_Major . ISI_Minor . Rad_Version . Build# -- e.g., 1.0.0.38
  ; 3 possible return codes in MAGRY:
  ;   2^n~msg : Client displays a message and continues
  ;   1^1~msg : Client continues without displaying a message
  ;   0^n~msg : Client displays a message then Aborts
  ; PLC returns 2006.1 pointer
+ ; SVERSION returns the Server version string
  ;
  S CLVER=$G(CLVER),PLC="",MAGRY=""
- N SV,ST,CV,CT,CP,ALLOWV,TESTFLAG,SVSTAT,VIXVER
- ; SVERSION = Full Server Version -> (3.0.18.132 or 3.0.18); test has 4, release has 3 parts
+ N SV,SBUILD,CV,CBUILD,ALLOWV,SVSTAT,VIXVER
+ ; SVERSION = Full Server Version -> (3.0.18.132)
  ; SV = Server Version -> (3.0.18); only 1st 3 parts
- ; ST = Server T Version -> defined to always match client part-4
+ ; SBUILD = Server Build # -> define this to correspond to client
  ; CV = Client Version, w/out build #
- ; CT = Client T Version alone
- ; CP = Client Patch alone
+ ; CBUILD = Client build # alone
  ; ALLOWV = Hard coded string of allowed clients for this KIDS.
- ; TESTFLAG = 1/0  -- 1=Test vs of server code; 0=Release vs
+ ;
  ;   get VIX version if a VIX session
  I $P(CLVER,"|",2)["VIX" S MAGJOB("VIX")=$P(CLVER,"|")  ; VIX facade version
  ;
  I $G(DUZ(2)) S PLC=$$PLACE^MAGBAPI(DUZ(2))
  ;  Quit if we don't have a valid DUZ(2) or valid PLACE: ^MAG(2006.1,PLC)
  I 'PLC S MAGRY="0^4~Error verifying Imaging Site (Place) -- Contact Imaging support." Q
- ;
- D GETVER(.SV,.ST,.ALLOWV,.VIXVER)
+ D GETVER(.SV,.SBUILD,.ALLOWV,.VIXVER)
  S CLVER=$P(CLVER,"|")
- S CV=$P(CLVER,".",1,3),CT=+$P(CLVER,".",4),CP=+$P(CLVER,".",3)
- ;
- D VERSTAT(.SVSTAT,SV)
- I 'SVSTAT S MAGRY=SVSTAT Q  ; KIDS status for this version indeterminate
- S TESTFLAG=(+SVSTAT=1)
- S SVERSION=SV
- I TESTFLAG S SVERSION=SV_"."_ST
+ S CV=$P(CLVER,".",1,3),CBUILD=+$P(CLVER,".",4)
+ S SVERSION=SV_"."_SBUILD
  ; Check Version differences:
+ ;   MAG*341--age out Vrad, per end-of-life date defined below
+ I '$G(MAGJOB("VIX")),$E(CV,1,4)="3.0." D  Q  ; ISI -- VistARad last gasp; <*> remove "I 0," when final End Date is established
+ . N ENDDATE,ZJ,X,X1,X2
+ . I '$$INSTALDT^XPDUTL("MAG*3.0*341",.ZJ) Q  ; if false, how did we get here?!
+ . S X="" S X=$O(ZJ(X),-1) ; most recent install of patch
+ . S X1=$E(X,1,7),X2=31 D C^%DTC  ; get date 31 days out
+ . S ENDDATE=X
+ . I '(ALLOWV[("|"_CV_"|")) D  Q
+ . . S MAGRY="0^4~VistARad Workstation software version "_CLVER_" is not compatible with the VistA server version "_SVERSION_".  Contact Imaging support. (CNA2)"
+ . ; Warn the Client, allow to continue if the expiration date is future
+ . S X1=ENDDATE,X2=DT D ^%DTC
+ . I X<1 D  Q
+ . . S MAGRY="0^4~VistARad is no longer supported; contact Imaging Support to install ISI Rad workstation software."
+ . ; Warn the Client, allow to continue
+ . S MAGRY="2^3~VistARad vs. "_CLVER_" reaches end-of-life "_$S(X>1:"in "_X_" days",1:"TOMORROW")_"; VistARad will Continue, but contact Imaging Support to install ISI Rad workstation software."
+ . Q
+ ;
  I (CV'=SV) D  Q
  . I '(ALLOWV[("|"_CV_"|")) D  Q
- . . S MAGRY="0^4~VistARad Workstation software version "_CLVER_" is not compatible with the VistA server version "_SVERSION_".  Contact Imaging support. (CNA)"
- . ; Warn the Client (unless VIX), allow to continue
- . I TESTFLAG S MAGRY="2^3~VistARad Workstation software version "_CLVER_" is running with VistA server TEST Version "_SVERSION_" --  VistARad will Continue, but contact Imaging Support if problems occur. (Pdif)"
- . E  I VIXVER]"" S MAGRY="1^1~VIX software vs. "_CLVER_" is running with VistA server vs. "_SVERSION_". (VIXdif)"
- . E  S MAGRY="2^3~VistARad Workstation software version "_CLVER_" is running with VistA server Version "_SVERSION_" --  VistARad will Continue, but contact Imaging Support to install Released Version. (RPdif)"
+ . . S MAGRY="0^4~ISI Rad Workstation software version "_CLVER_" is not compatible with the VistA server version "_SVERSION_".  Contact Imaging support. (CNA)"
+ . ; Warn the Client, allow to continue
+ . E  D
+ . . I VIXVER]"" S MAGRY="1^1~VIX software vs. "_CLVER_" is running with VistA server vs. "_SVERSION_". (VIXdif)"
+ . . E  D
+ . . . N PROGNAME S PROGNAME="ISI Rad"
+ . . . I $E(CV,1,4)="3.0." S PROGNAME="VistARad"
+ . . . S MAGRY="2^3~"_PROGNAME_" vs. "_CLVER_"; VistA server is "_SVERSION_" - "_PROGNAME_" will Continue, but contact Imaging Support to install newer workstation version. (RPdif)"  ; ISI
  . Q
- ; Versions are the Same: If T versions are not, warn the Client if needed.
- ; Released Client (of any version) will have the T version that the server
- ; expects, and no warning will be displayed.
- I CT,(CT'=ST) D  Q
- . I TESTFLAG S MAGRY="2^3~VistARad Workstation software vs. "_CLVER_" is running with VistA server TEST vs. "_SVERSION_" --  VistARad will Continue, but contact Imaging Support " D
- . . I CT<ST S MAGRY=MAGRY_"to install updated client software.  (Tdif-1)"
- . . E  S MAGRY=MAGRY_"to update the Server software.  (Tdif-2)"
- . E  S MAGRY="2^3~VistARad Workstation software vs. "_CLVER_" is running with VistA server vs. "_SVERSION_" --  VistARad will Continue, but contact Imaging Support to install Released Version. (RVdif)"
+ ; Versions are the Same: If build #s are not compatible, warn the Client if needed.
+ ; Released Client (of any version) will have a build # in range that the server
+ ; expects, so no warning will be displayed.
+ I CBUILD<SBUILD D  Q  ; server expects a higher client build #; provide warning
+ . S MAGRY="2^3~ISI Rad vs. "_CLVER_"; VistA server is "_SVERSION_" - Some features may not function as expected. Contact Imaging Support to install updated client software.  (Tdif-1)"
  . Q
- ; Client and Server Versions are the same
+ ; Client and Server Versions are compatible
  S MAGRY="1^1~Version Check OK. Server: "_SVERSION_" Client: "_CLVER Q
  Q
  ;
-P32STOP(RET) ; logic to indicate P32 should no longer function, once the RELEASED P76 is installed
- ; This is invoked from magjutl3, P76 version, if a P32 client is launched
- ; RET=1/0 ^ text -- 0 = OK to run P32; 1 = Not OK
- N SV,ST,ALLOWV,SVSTAT,RELEASED
- S RET="0^P32 supported" ; init return to allow p32 to function
- D GETVER(.SV,.ST,.ALLOWV)
- D VERSTAT(.SVSTAT,SV)
- I 'SVSTAT S RET="0^Error, but on side of caution, allow running." Q  ; KIDS status for this version indeterminate
- S RELEASED=(+SVSTAT=2)
- I RELEASED!(SV'="3.0.76") S RET="1^P32 support over"  ; don't allow P32 to function
- Q
- ;
-VERSTAT(MAGRY,MAGVER) ;
- ; Returns the status of an Imaging Version
- ; Input:
- ;   MAGVER - Version number in format  MAG*3.0*59 or 3.0.59
- ; Return: MAGRY = 0/1/2 -- see below; 0: abort; else, OK to proceed
- ;
- N VERI,TVER,MAGERR
- I +MAGVER S MAGVER="MAG*"_$P(MAGVER,".",1,2)_"*"_$P(MAGVER,".",3)
- S VERI=$$FIND1^DIC(9.6,"","O",MAGVER,"","","MAGERR")
- I 'VERI S MAGRY="0^4~There is No KIDs Install record."
- E  D
- . S TVER=$$GET1^DIQ(9.6,VERI_",","ALPHA/BETA TESTING")
- . I TVER="YES" S MAGRY="1^Alpha/Beta Version"
- . E  I TVER="NO" S MAGRY="2^Released Version"
- . E  S MAGRY="0^4~KIDs Install Status is unknown--contact Customer Support."
- Q       ;
+ ;  ISI  remove deprecated logic
 END ;

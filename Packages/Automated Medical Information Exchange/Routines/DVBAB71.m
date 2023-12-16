@@ -1,5 +1,5 @@
-DVBAB71 ;ALB/KLB - CAPRI REQUEST STATUS INQUIRY ;09/11/00
- ;;2.7;AMIE;**35**;Apr 10, 1995
+DVBAB71 ;ALB/KLB - CAPRI REQUEST STATUS INQUIRY ;09/11/00;6/29/2023 @10:54AM
+ ;;2.7;AMIE;**35,250**;Apr 10, 1995;Build 19
  ;
 STRT(MSG,DFN,RECIEN) ; 
  S U="^"
@@ -17,7 +17,7 @@ STRT(MSG,DFN,RECIEN) ;
  S Y=$P(DVB0,U,4) X ^DD("DD")
  S ^TMP("CAPRI",MCNT)=" Patient Name: "_PTNAME_"             "_DOCTYP_Y_"^",MCNT=MCNT+1
  ;S ^TMP("CAPRI",MCNT)="SSN: "_$P(^DPT(DFN,0),U,9)_"^",MCNT=MCNT+1
- S ^TMP("CAPRI",MCNT)="          SSN: "_$P(^DPT(DFN,0),U,9)_"                  Claim Number: "_$P(^DPT(DFN,.31),U,3)_"^",MCNT=MCNT+1
+ S ^TMP("CAPRI",MCNT)="          SSN: "_$P(^DPT(DFN,0),U,9)_"                  Claim Number: "_$P($G(^DPT(DFN,.31)),U,3)_"^",MCNT=MCNT+1   ;CAPRI-4838
  S DIV=$P(DVB2,U,9) I DIV'="" S DIV=$P(^DG(40.8,DIV,0),U)
  S ^TMP("CAPRI",MCNT)="Receiving Div: "_DIV_"^",MCNT=MCNT+1
  S ^TMP("CAPRI",MCNT)="  Requisition          Status      Status Date    Operator    Current Division"_"^",MCNT=MCNT+1

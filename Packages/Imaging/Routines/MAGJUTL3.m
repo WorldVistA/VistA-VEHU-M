@@ -1,5 +1,5 @@
-MAGJUTL3 ;WIRMFO/JHC - VistARad subrtns & RPCs ; 29 Mar 2013  5:02 PM
- ;;3.0;IMAGING;**16,9,22,18,65,76,101,90,120,133**;Mar 19, 2002;Build 5393;Sep 09, 2013
+MAGJUTL3 ;WIRMFO/JHC - VistARad subrtns & RPCs ; 10/17/2022
+ ;;3.0;IMAGING;**16,9,22,18,65,76,101,90,120,133,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJUTL3 ;WIRMFO/JHC - VistARad subrtns & RPCs ; 29 Mar 2013  5:02 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**99,101,102**
  Q
  ;RPC Entry points:
  ; LISTINF--Custom list info
@@ -42,12 +43,23 @@ LISTINF(MAGGRY) ; RPC: MAGJ CUSTOM LISTS
  ;
  S X="ERR1^MAGJUTL3",@^%ZOSF("TRAP")
  N D0,GLB,INF,MAGLST,NAM,T
+ N LSTNUM  ; ISI
  S MAGLST="MAGJLSTINF"
  K MAGGRY S MAGGRY=$NA(^TMP($J,MAGLST)) K @MAGGRY S @MAGGRY@(0)=0
  S GLB=$NA(^MAG(2006.631)),NAM=""
  F  S NAM=$O(@GLB@("B",NAM)) Q:NAM=""  S D0="" D
  . S D0=$O(@GLB@("B",NAM,D0)) Q:'D0  D
- . . S X=$G(@GLB@(D0,0)) Q:($P(X,U,2)>9000)!'$P(X,U,6)  ; List Active & User-defined
+ . . ;   ISI begin
+ . . S X=$G(@GLB@(D0,0)) Q:'$P(X,U,6)  ;  List not Active
+ . . S LSTNUM=$P(X,U,2)
+ . . I LSTNUM>9900 Q:'$$MGRREV2^ISIJUTL9("CLIENT")   ; ISI System-defined & Rev-2 not enabled; chg 9000 to 9900
+ . . I  I LSTNUM'=9992,(LSTNUM'=9993) Q    ;  for Rev-2, these 2 lists move to Custom List tab
+ . . I LSTNUM=9820,'($P($G(^MAG(2006.69,1,"ISI")),U,2)="Y") Q  ; Dynamic Query not enabled
+ . . I "^9800^9801^9802^9803^"[(U_LSTNUM_U) D  Q:'LSTNUM  ;  Use Assign lists?
+ . . . I '($P($G(^MAG(2006.69,1,"ISI")),U,1)="Y") S LSTNUM=0 Q  ; Assign feature not enabled
+ . . . I $$MGRREV2^ISIJUTL9("CLIENT") I LSTNUM=9800!(LSTNUM=9801) S LSTNUM=0 Q  ; Rev-2, these 2 lists move to Main tab
+ . . . I LSTNUM=9802!(LSTNUM=9803),'$D(MAGJOB("KEYS","ISIJ ASSIGN EXAMS-VIEW ALL")) S LSTNUM=0 Q  ; key needed for this list
+ . . . Q  ;  ISI end
  . . S INF="" F I=1:1 S T=$P("7^2^1^3",U,I) Q:T=""  S Y=$P(X,U,T) Q:Y=""  S $P(INF,U,I)=Y
  . . Q:T'=""  ; req'd fields not all there
  . . S T=@MAGGRY@(0)+1,^(0)=T,^(T)=INF ; add entry to reply
@@ -163,9 +175,8 @@ MAGJOBNC ; EP for Prefetch/Bkgnd calls (NOT a Vrad Client)
 MAGJOB ; Init magjob array
  N T,RIST
  I $G(MAGJOB("VRVERSION")) S X=MAGJOB("VRVERSION")
- E  S X="" ; non-client processes assume post-P32 logic
- S MAGJOB("P32")=(X="3.0.41.17") ; P32 Client?
- I MAGJOB("P32") D P32STOP^MAGJUTL5(.X) S MAGJOB("P32STOP")=X  ; STOP support when P76 releases
+ E  S X="" ; non-client process  ;  ISI
+ ;  ISI  remove deprecated logic
  D USERKEYS
  S MAGJOB("CONSOLIDATED")=($G(^MAG(2006.1,"CONSOLIDATED"))="YES")
  S MAGJOB("SITEP")=$$IMGSIT^MAGJUTL1(DUZ(2),1)  ; Site Param ien
@@ -193,6 +204,7 @@ MAGJOB ; Init magjob array
  . S $P(X,U,17)=MAGJOB("VRBLDDTTM")
  . D UPD^MAGGTAU(.Y,X)
  . D REMLOCK^MAGJEX1B ; put here to only run 1x/ login
+ . D REMLOCK^ISIJRPT2 ;  ISI, ditto
  Q
  ;
 USERINF(DUZ,FLDS) ; get data from user file
@@ -205,12 +217,14 @@ USERINF(DUZ,FLDS) ; get data from user file
  ;
 USERKEYS ; Store Security Keys in MagJob
  N I,X,Y
+ N MATCH ; ISI
  N MAGKS ; keys to send to XUS KEY CHECK
  N MAGKG ; returned
  K MAGJOB("KEYS")
- S X="MAGJ",I=0
- F  S X=$O(^XUSEC(X)) Q:$E(X,1,4)'="MAGJ"  D
- . S I=I+1,MAGKS(I)=X
+ S I=0  ; ISI
+ F MATCH="MAGJ","ISIJ" S X=MATCH D  ; ISI
+ . F  S X=$O(^XUSEC(X)) Q:$E(X,1,4)'=MATCH  D  ; ISI
+ . . S I=I+1,MAGKS(I)=X
  I '$D(MAGKS) Q
  D OWNSKEY^XUSRB(.MAGKG,.MAGKS)
  S I=0 F  S I=$O(MAGKG(I)) Q:'I  I MAGKG(I) S MAGJOB("KEYS",MAGKS(I))=""
@@ -229,7 +243,7 @@ PINF1(MAGGRY,MAGDFN) ;RPC Call MAGJ PT INFO -- Get pt info
  . K VA("PID"),VA("BID"),VAERR
  S MAGGRY=MAGGRY_"|"_AGE_U_MAGSSN
  Q
- ;
+ ; 
 AGECALC(DOB) ; calculate age from DOB til now
  ; format for age-appropriate display
  ; Input DOB in Fileman format
@@ -287,6 +301,12 @@ AGECALC(DOB) ; calculate age from DOB til now
  ;        ^10: PrimarySiteStationNumber
  ;        ^11: SiteServiceURL
  ;        ^12: SiteCode       
+ ;        ^13: ENABLE MANAGER REV-2? -- Conditionally, only if client is v1.1.1 or higher
+ ;        ^14: Place-holder for Coerce Dict (abandoned P108)
+ ;        ^15: NOTES ENABLE?  ; ISI P341
+ ;        ^16: HL7 SENDING APPLICATION  ; ISI P341
+ ;        ^17: ISI Rad Dictation Enable  ; ISI P341
+ ;        ^18: Implementation Variant  ; ISI P341
  ; ^(1)
  ;     ^01: UserName ... Network UserName
  ;     ^02: PSW ........ Network Password
@@ -324,7 +344,7 @@ USERINF2(MAGGRY,DATA) ; RPC: MAGJ USER2--get user info
  ;=== Add "^"-pieces 7:12 for ViX (MAG*3*90).
  S MAGGRY(0)=MAGGRY(0)_U_$$GET1^DIQ(200,DUZ_",",9) ;...SSN
  S MAGGRY(0)=MAGGRY(0)_U_$$GET1^DIQ(4,DUZ(2),99,"E") ;.UserLocalStationNumber
- S MAGGRY(0)=MAGGRY(0)_U_$P($$SITE^VASITE(),U,3) ;.......LocalPrimaryDivision
+ S MAGGRY(0)=MAGGRY(0)_U_$P($$SITE^VASITE(),U) ;.......LocalPrimaryDivision  ; ISI correct bug $P-1
  S MAGGRY(0)=MAGGRY(0)_U_$P($$SITE^VASITE(),U,3) ;.....PrimarySiteStationNumber
  ;
  ;=== Lookup SiteServiceURL.
@@ -336,6 +356,24 @@ USERINF2(MAGGRY,DATA) ; RPC: MAGJ USER2--get user info
  . S SSUNC=$P($G(^MAG(2005.2,VIXPTR,0)),"^",2)
  S MAGGRY(0)=MAGGRY(0)_U_$G(SSUNC) ;...................SiteServiceURL
  S MAGGRY(0)=MAGGRY(0)_U_$P(MAGJOB("SITEP"),U,2) ;.....SiteCode
+ ;
+ ; ISI begin; 101 -- Rev-2 enabled in v1.1.1
+ ; ISI begin P341 -- 
+ N IMPLVARIANT,ISIDICTENA,NOTESENA,REV2,SENDAPP,T
+ S REV2=0,IMPLVARIANT=2  ; "NOT Jordan" implementation status
+ S X=MAGJOB("VRVERSION") I X?1"1.1.".E,($P(X,".",3)>0) S REV2=$$MGRREV2^ISIJUTL9("CLIENT")
+ S NOTESENA=+$P($G(^MAG(2006.69,1,"ISI")),U,9)  ; Enable Notes?
+ S ISIDICTENA=+$P($G(^MAG(2006.69,1,"ISI")),U,10)  ; Enable ISI Dictation option?
+ S SENDAPP="RA-ISIRAD-TCP"
+ I $$UJOCHECK^ISIJUTL9() S SENDAPP="RA-PSCRIBE-TCP"  ; HL7 Send Applic for Jordan
+ I  S IMPLVARIANT=1  ; "Jordan" implementation status
+ S MAGGRY(0)=MAGGRY(0)_U_REV2 ;  Enable Revised Manager Tabs?
+ S MAGGRY(0)=MAGGRY(0)_U_0 ; place-holder for Coerce Dict (abandoned P108)
+ S MAGGRY(0)=MAGGRY(0)_U_NOTESENA
+ S MAGGRY(0)=MAGGRY(0)_U_SENDAPP
+ S MAGGRY(0)=MAGGRY(0)_U_ISIDICTENA
+ S MAGGRY(0)=MAGGRY(0)_U_IMPLVARIANT
+ ; ISI end
  ;
  ;=== Network UserName and PSW
  S MAGGRY(1)=$P($G(^MAG(2006.1,PLACE,"NET")),U,1,2)

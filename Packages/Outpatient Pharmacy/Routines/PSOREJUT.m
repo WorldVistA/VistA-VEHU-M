@@ -1,7 +1,8 @@
 PSOREJUT ;BIRM/MFR - BPS (ECME) - Clinical Rejects Utilities ;06/07/05
- ;;7.0;OUTPATIENT PHARMACY;**148,247,260,287,289,290,358,359,385,403,421,427,448,478,528,544,562**;DEC 1997;Build 19
- ;Reference to DUR1^BPSNCPD3 supported by IA 4560
- ;Reference to $$ADDCOMM^BPSBUTL supported by IA 4719
+ ;;7.0;OUTPATIENT PHARMACY;**148,247,260,287,289,290,358,359,385,403,421,427,448,478,528,544,562,702**;DEC 1997;Build 14
+ ; Reference to $$IEN59^BPSOSRX in ICR #4412
+ ; Reference to DUR1^BPSNCPD3 in ICR #4560
+ ; Reference to $$ADDCOMM^BPSBUTL in ICR #4719
  ;
 SAVE(RX,RFL,REJ,REOPEN) ; - Saves DUR Information in the file 52
  ; Input:  (r) RX  - Rx IEN (#52) 
@@ -115,8 +116,7 @@ CLSALL(RX,RFL,USR,REA,COM,COD1,COD2,COD3,CLA,PA) ; Close/Resolve All Rejects
  ;       (o) PA   - NCPDP Prior Authorization Type and Number (separated by "^")
  N REJ,REJDATA,DIE,DR,DA
  I '$D(RFL) S RFL=$$LSTRFL^PSOBPSU1(RX)
- ; - if eT,eC Non-Billable and the claim was Re-submitted don't close OPEN/UNRESOLVED rejects
- I $G(REA)=1 I $$PSOETEC^PSOREJP5(RX,RFL) Q
+ ;
  ; - Closing OPEN/UNRESOLVED rejects
  I $$FIND(RX,RFL,.REJDATA,,1) D
  . S REJ="" F  S REJ=$O(REJDATA(REJ)) Q:'REJ  D
@@ -158,8 +158,6 @@ CLOSE(RX,RFL,REJ,USR,REA,COM,COD1,COD2,COD3,CLA,PA,IGNR) ; - Mark a DUR/REFILL T
  S DR="9///1;10///"_%_";11////"_$G(USR)_";12///"_REA_";13///"_REJCOM_";14///"_$P($G(COD1),"^")_";15///"_$P($G(COD1),"^",2)
  S DR=DR_";19///"_$P($G(COD1),"^",3)_";24///"_$G(CLA)_";25///"_$P($G(PA),"^")_";26///"_$P($G(PA),"^",2)
  D ^DIE
- ; Quit if this is a "eT" (non-billable TRICARE) or "eC" (non-billable CHAMPVA)
- Q:$$PSOET^PSOREJP3(RX,RFL)
  ;
  ; Add comment to the ECME User Screen
  ; First check if this is has more than one override value from the SMA action of the reject worklist

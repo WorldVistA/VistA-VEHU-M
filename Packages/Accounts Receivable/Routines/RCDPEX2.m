@@ -1,5 +1,5 @@
 RCDPEX2 ;ALB/TMK/KML/PJH - ELECTRONIC EOB DETAIL EXCEPTION MAIN LIST TEMPLATE ;20 Dec 2018 17:20:51
- ;;4.5;Accounts Receivable;**173,269,298,304,326,345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**173,269,298,304,326,345,409**;Mar 20, 1995;Build 17
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 INIT ;EP from listman template RCDPEX EOB_SUM EXCEPTION LIST
@@ -23,12 +23,13 @@ BLD ;EP from RCDPEX3,RCDPEX31,RCDEPEX32
  ;                      'A' - Display Medical and Pharmacy and Tricare Exceptions
  ;          ^TMP(^TMP("RCDPEU1",$J) holds selected payers to display.
  ;
- N DA,DR,RC0,RCBILL,RCDECME,RCDPDATA,RCPYRIEN,RCER,RCEXC,RCMSG1,RCS,RCSEQ,RCSUB,RCX,RCX1,X,XX,Y,YY
+ N DA,DR,ERAIEN,RC0,RCBILL,RCDECME,RCDPDATA,RCPYRIEN,RCER,RCEXC,RCMSG1,RCS,RCSEQ,RCSUB
+ N RCX,RCX1,RCX2,X,XX,Y,YY                      ;PRCA*4.5*409 Added ERAIEN,RCX2
  K ^TMP("RCDPEX_SUM-EOB",$J),^TMP("RCDPEX_SUM-EOBDX",$J)
- K ^TMP("RCDPEADP",$J)                      ; Temp insurance array
+ K ^TMP("RCDPEADP",$J)                          ; Temp insurance array
  S (RCSEQ,VALMCNT)=0
  ;
- ; Extract from 344.4
+ ; Extract data from 344.4
  S RCER=0
  F  D  Q:'RCER
  . S RCER=$O(^RCY(344.4,"AEXC",RCER))
@@ -37,14 +38,14 @@ BLD ;EP from RCDPEX3,RCDPEX31,RCDEPEX32
  . F  D  Q:'RCMSG
  . . S RCMSG=$O(^RCY(344.4,"AEXC",RCER,RCMSG))
  . . Q:'RCMSG
- . . S RCSUB=RCMSG_",",DR=".02:.06",DA=RCMSG K DA(1)
+ . . S RCSUB=RCMSG_",",DR=".02:.06;.16;.17;.18",DA=RCMSG K DA(1)    ;PRCA*4.5*409 Added ;.16;.17;.18
  . . ;
  . . I RCPAY'="A" D  Q:'XX
  . . . S XX=$$ISSEL^RCDPEU1(344.4,DA)           ; PRCA*4.5*326 Check if payer was selected
- . . E  I RCTYPE'="A" D  Q:'XX                   ; If all of a give type of payer selected
- . . . S XX=$$ISTYPE^RCDPEU1(344.4,DA,RCTYPE)   ;  check that payer matches type
+ . . E  I RCTYPE'="A" D  Q:'XX                  ; If all of a give type of payer selected
+ . . . S XX=$$ISTYPE^RCDPEU1(344.4,DA,RCTYPE)   ; Check that payer matches type
  . . ;
- . . D DIQ3444(DA,DR,.RCDPDATA)             ; Extract Trace #, Payer Name/TIN, ERA Date
+ . . D DIQ3444(DA,DR,.RCDPDATA)                 ; Extract Trace #, Payer Name/TIN, ERA Date
  . . ;
  . . ; HIPPA 5010 - display of the Trace # on a separate line due to the increased
  . . ; length from 30 to 50 characters   
@@ -56,7 +57,7 @@ BLD ;EP from RCDPEX3,RCDPEX31,RCDEPEX32
  . . I $G(RCDWLIEN)'="",(RCDWLIEN'=+RCSUB) Q
  . . ;
  . . S RCDECME=0 ; PRCA*4.5*326 - no point looking for ECME# on data exception.  It is not present.
- . . S RCS=0
+ . . S RCS=0,ERAIEN=RCSUB                       ; PRCA*4.5*409 Added ,ERAIEN=RCSUB
  . . F  D  Q:'RCS
  . . . S RCS=$O(^RCY(344.4,"AEXC",RCER,RCMSG,RCS))
  . . . Q:'RCS
@@ -71,12 +72,23 @@ BLD ;EP from RCDPEX3,RCDPEX31,RCDEPEX32
  . . . S RCX=$$SETSTR^VALM1("  "_$$FMTE^XLFDT(XX,"2DZ"),RCX,70,10)
  . . . D SET(RCX,RCSEQ,RCMSG,RCS)
  . . . D SET(RCX1,RCSEQ,RCMSG,RCS)
- . . . S X=$$SETSTR^VALM1($J("",6)_"Seq #: "_$G(RCDPDATA(344.41,RCSUB,.01,"E")),"",1,17)
+ . . . ;
+ . . . ; PRCA*4.5*409 Start
+ . . . I $G(RCDPDATA(344.4,ERAIEN,.18,"E"))'="" D
+ . . . . S RCX2="      ***ERA Removed from Worklist on "
+ . . . . S XX=$G(RCDPDATA(344.4,ERAIEN,.17,"I"))
+ . . . . S XX=$$FMTE^XLFDT(XX,"2DZ"),RCX2=RCX2_XX
+ . . . . S RCX2=RCX2_" By: "_$G(RCDPDATA(344.4,ERAIEN,.16,"E"))_"***"
+ . . . E  S RCX2=""
+ . . . D:RCX2'="" SET(RCX2,RCSEQ,RCMSG,RCS)
+ . . . S X=$$SETSTR^VALM1($J("",6)_"S: "_$G(RCDPDATA(344.41,RCSUB,.01,"E")),"",1,13)
  . . . S XX=$G(RCDPDATA(344.41,RCSUB,.02,"E"))
  . . . S RCBILL=$S(XX'="":XX,1:"*"_$G(RCDPDATA(344.41,RCSUB,.05,"E")))
- . . . S X=$$SETSTR^VALM1(" Bill: "_RCBILL,X,18,20)
- . . . S X=$$SETSTR^VALM1(" Pt: "_$G(RCDPDATA(344.41,RCSUB,.15,"E")),X,38,25)
- . . . S X=$$SETSTR^VALM1(" Pd: "_$J(+$G(RCDPDATA(344.41,RCSUB,.03,"E")),"",2),X,63,17)
+ . . . S X=$$SETSTR^VALM1(" Bill: "_RCBILL,X,14,25)
+ . . . S X=$$SETSTR^VALM1(" Pt: "_$G(RCDPDATA(344.41,RCSUB,.15,"E")),X,39,25)
+ . . . S X=$$SETSTR^VALM1(" Pd: "_$J(+$G(RCDPDATA(344.41,RCSUB,.03,"E")),"",2),X,65,15)
+ . . . ;
+ . . . ; PRCA*4.5*409 End
  . . . D SET(X,RCSEQ,RCMSG,RCS)
  . . . ;
  . . . I +RCDECME D  ;PRCA*4.5*298 Display pharmacy data when ECME number is present

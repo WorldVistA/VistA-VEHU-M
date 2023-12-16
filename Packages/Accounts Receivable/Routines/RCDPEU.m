@@ -1,5 +1,5 @@
 RCDPEU ;ALB/TMK - ELECTRONIC ERA UTILITIES ;05-NOV-02
- ;;4.5;Accounts Receivable;**173,367**;Mar 20, 1995;Build 11
+ ;;4.5;Accounts Receivable;**173,367,409**;Mar 20, 1995;Build 17
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -59,7 +59,14 @@ EDILBDEP(RCDEP) ; Given deposit ien RCDEP (file 344.1), return 1 if there is
  ;
 EDILBEV(PAYTYP) ; Given ien of file 341.1 PAYTYP, return 1 if the pay type's
  ;  event number is EDI LOCKBOX
- Q ($P($G(^RC(341.1,+$G(PAYTYP),0)),U,2)=14)
+ ; Input:   PAYTYP  - IEN for AR EVENT TYPE (341.1)
+ ; Returns: 0 if PAYTP is not 14 or 18, Otherwise returns PAYTYP IEN
+ ;PRCA*4.5*409 This method used to return a 1 if the Payment Type was 14 (EDI LOCKBOX) and 0 otherwise
+ ;             Now it returns 14 (if EDI LOCKBOX), 18 (if OGC-EFT) and 0 otherwise
+ N X
+ S X=$P($G(^RC(341.1,+$G(PAYTYP),0)),U,2)
+ I X'=14,X'=18 Q 0
+ Q PAYTYP
  ;
 LBEVENT() ; Returns the IEN of EDI Lockbox event 14 in file 341.1
  Q +$O(^RC(341.1,"AC",14,0))

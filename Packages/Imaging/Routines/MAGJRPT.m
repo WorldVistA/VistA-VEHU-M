@@ -1,5 +1,5 @@
-MAGJRPT ;WIRMFO/JHC - Display Rad reports ; 3 Jul 2013  10:48 AM
- ;;3.0;IMAGING;**18,101,120,133**;Mar 19, 2002;Build 5393;Sep 09, 2013
+MAGJRPT ;WIRMFO/JHC - Display Rad reports ; 10/17/2022
+ ;;3.0;IMAGING;**18,101,120,133,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,13 @@ MAGJRPT ;WIRMFO/JHC - Display Rad reports ; 3 Jul 2013  10:48 AM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ; Reference to EN2^RAUTL20 in ICR #3270
+ ; Reference to EN3^RAO7PC3 #2877
+ ; Reference to ^RAORD5 #3513
+ ; Reference to SVTCOM^RAUTL11 in ICR #3508
+ ; Reference to PHARM^RARTUTL in ICR #5946
+ ; Reference to RDIO^RARTUTL in ICR #5946
+ ;; ISI IMAGING;**99,104,102**
  ; Subroutines for fetching Exam Info for VistaRad Workstation
  ;   RADRPT: Display Radiology Report -- RPC Call: MAGJ EXAM REPORT
  ;        ORD: Display Radiology Requisition -- RPC Call: MAGJ RADORDERDISP
@@ -46,17 +53,26 @@ ORD(MAGRPTY,DATA) ; Radiology Order Display
  S COMPLIC=$P(XX,U,4)      ;  Complications text
  S MEDS=$P(XX,U,14),RDIOPHARM=$P(XX,U,15)      ;  Medications & RadioPharm indicators
  F I=4,12,9 S HDR=HDR_$P(RADATA,U,I)_"   " ; PtName, Case #, Procedure
+ S T=$P(XX,U,8) I T]"" S HDR=HDR_" ("_T_")"  ;  ISI  Modifier
  I REQONLY D CKINTEG(.REPLY,RADFN,RADTI,RACNI,RARPT,RADATA) I REPLY]"" S REPLY="0^7~"_REPLY G ORDZ  ; Database integrity problems
  S TMPDATA=MAGRPTY_"~"_RADTI_"~"_RACNI
  S RAX="",RAPGE=0 D ^RAORD5
  S MAGRPTY=$P(TMPDATA,"~"),RADTI=$P(TMPDATA,"~",2),RACNI=$P(TMPDATA,"~",3)
  D:IO'=IO(0) ^%ZISC
  S @MAGRPTY@(1)="REQ: "_HDR
+ D CLEANUP(MAGRPTY) ;  ISI
  D COMMENTS(RADFN,RADTI,RACNI,MAGRPTY,2,COMPLIC,MEDS,RDIOPHARM)
  D TIUNOTE(RARPT,MAGRPTY,10000) ; append TIU note to reply at node 10000
  S REPLY="1^OK"
- K ^TMP($J,"MAGRAEX")
+ K ^TMP($J,"MAGRAEX"),^("RAE2") ;  ISI
 ORDZ S @MAGRPTY@(0)=REPLY
+ Q
+ ;
+CLEANUP(MAGRPTY) ; strip extraneous lines of dashes ;  ISI new subrtn
+ N HIT,I,X S HIT=0
+ S I=20 F  S I=$O(@MAGRPTY@(I)) Q:'I  S X=^(I) D
+ . I $L(X,"-")>20 S HIT=HIT+1 K:(HIT>1) @MAGRPTY@(I)
+ . E  S HIT=0
  Q
  ;
 COMMENTS(RADFN,RADTI,RACNI,MAGRPTY,DNODE,COMPLIC,MEDS,RDIOPHARM) ; add Complications & Tech Comments to output report
@@ -68,10 +84,17 @@ COMMENTS(RADFN,RADTI,RACNI,MAGRPTY,DNODE,COMPLIC,MEDS,RDIOPHARM) ; add Complicat
  ;  MEDS passes in Medications indicator
  ;  RDIOPHARM passes in Radiopharmaceuticals reference
  ;
- I +MAGJOB("USER",1)  ; Radiologist
+ N QTMP,CT,XX,NOTES,NOTESTAT,T S CT=0  ; ISI begin
+ D STATUS^ISIJNOTE(.NOTESTAT,RADFN,RADTI,RACNI)
+ S T=+$P(NOTESTAT,U,2) I T D
+ . S @MAGRPTY@(DNODE)=" ",CT=CT+.01,@MAGRPTY@(DNODE+CT)="  * See "_T_" NOTE"_$S(T-1:"S",1:"")_" at end of report."
+ . S @MAGRPTY@(DNODE)=" ",CT=CT+.01,@MAGRPTY@(DNODE+CT)=" "
+ . D NOTE^ISIJNOTE(.NOTES,1_U_RADFN_U_RADTI_U_RACNI_U_RARPT)
+ . D NOTEDISP(.NOTES,MAGRPTY,5000)
+ . K @NOTES                            ; ISI end
+ I +$G(MAGJOB("USER",1))  ; Radiologist  ;  ISI--for RadTech Tool use
  E  I $D(^VA(200,"ARC","T",+DUZ))  ; Rad Tech
  E  Q  ; Don't display for any other user type
- N QTMP,CT,XX S CT=0
  S @MAGRPTY@(DNODE)=" ",CT=CT+.01,@MAGRPTY@(DNODE+CT)="Complications: "_$S(COMPLIC:$P($G(^RA(78.1,+COMPLIC,0)),U),1:"")
  S X=$P(COMPLIC,"~",2)
  I X S CT=CT+.01,@MAGRPTY@(DNODE+CT)="   "_$P($G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"COMP")),U)
@@ -90,14 +113,14 @@ COMMENTS(RADFN,RADTI,RACNI,MAGRPTY,DNODE,COMPLIC,MEDS,RDIOPHARM) ; add Complicat
  . S REF=RACNI_","_RADTI_","_RADFN_","
  . S RAUTOE=""    ; if defined, directs output to ^TMP
  . S RAACNT=1000  ; init counter for output to ^TMP
- . D PHARM^RARTUTL(REF)  ; get Medications data  ; ICR #5946 (Private)
+ . D PHARM^RARTUTL(REF)  ; get Medications data
  . D PHARMAS("Medications",1001)
  I +$G(RDIOPHARM) D
  . N RAUTOE,RAACNT
  . K ^TMP($J,"RA AUTOE")
  . S RAUTOE=""    ; if defined, directs output to ^TMP
  . S RAACNT=1000  ; init counter for output to ^TMP
- . D RDIO^RARTUTL(RDIOPHARM)  ; get Radiopharm data  ; ICR #5946 (Private)
+ . D RDIO^RARTUTL(RDIOPHARM)  ; get Radiopharm data
  . D PHARMAS("Radiopharmaceuticals",1001)
  I +$G(MEDS)!+$G(RDIOPHARM) D
  . S CT=CT+.001,@MAGRPTY@(DNODE+CT)="  "_$TR($J(" ",66)," ","_")
@@ -114,6 +137,18 @@ PHARMAS(TITLE,NODE) ; output lines of pharma data
  . F  S LINE=^TMP($J,"RA AUTOE",NODE) D  S NODE=$O(^TMP($J,"RA AUTOE",NODE)) Q:'NODE
  . . S CT=CT+.001,@MAGRPTY@(DNODE+CT)=LINE
  . Q
+ Q
+ ;
+NOTEDISP(NOTES,MAGRPTY,DNODE) ; output notes ;  ISI new subrtn
+ N IP,NOTE,X S NOTE=0
+ S DNODE=DNODE+1,@MAGRPTY@(DNODE)="  "
+ S DNODE=DNODE+1,@MAGRPTY@(DNODE)="==================================  NOTES  =================================="
+ S DNODE=DNODE+1,@MAGRPTY@(DNODE)="  "
+ S IP="" F  S IP=$O(@NOTES@(IP)) Q:IP=""  S X=(@NOTES@(IP)) D
+ . I X="*NOTES" S NOTE=1 Q
+ . I NOTE D
+ . . I X="*NOTES_END" S NOTE=0 Q
+ . . S DNODE=DNODE+1,@MAGRPTY@(DNODE)=X
  Q
  ;
 TIUNOTE(RARPT,MAGRPTY,DNODE) ; FUT-70/IHS append Rad TIU Notes to report
@@ -157,6 +192,7 @@ RADRPT(MAGRPTY,DATA) ; Display rad report; 1st must pass integrity checks
  S COMPLIC=$P(XX,U,4)  ;  Complications text
  S MEDS=$P(XX,U,14),RDIOPHARM=$P(XX,U,15)      ;  Medications & RadioPharm indicators
  F I=4,12,9 S HDR=HDR_$P(RADATA,U,I)_"   "
+ S T=$P(XX,U,8) I T]"" S HDR=HDR_" ("_T_")"  ;  ISI  Modifier
  D CKINTEG(.REPLY,MAGDFN,MAGDTI,MAGCNI,RARPT,RADATA)
  I REPLY]"" S REPLY="0^7~"_REPLY G RPTZ  ; DB integ problem
  D EN3^RAO7PC3(MAGDFN_"^"_MAGDTI_"^"_MAGCNI)
@@ -166,7 +202,8 @@ RADRPT(MAGRPTY,DATA) ; Display rad report; 1st must pass integrity checks
  F  S I=$O(^TMP($J,"RAE3",MAGDFN,MAGCNI,MAGPRC,I)) Q:'I  D
  . S DNODE=DNODE+1
  . S @MAGRPTY@(DNODE)=$G(^TMP($J,"RAE3",MAGDFN,MAGCNI,MAGPRC,I))
- F I=1:1:4  S DNODE=DNODE+1,@MAGRPTY@(DNODE)=$S(I'=3:"",1:"** END REPORT "_$$FMTE^XLFDT($$NOW^XLFDT,"1P")_" **")
+ S DNODE=DNODE+1,@MAGRPTY@(DNODE)=" " ;  ISI
+ S DNODE=DNODE+1,@MAGRPTY@(DNODE)="** END REPORT "_$$FMTE^XLFDT($$NOW^XLFDT,"1P")_" **" ;  ISI
  D TIUNOTE(RARPT,MAGRPTY,10000) ; append TIU note to reply at node 10000
  S REPLY="1^1~Radiology Report"
 RPTZ S @MAGRPTY@(0)=REPLY

@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: PRINT TEMPLATE
 ZWR
-^DIPT(0)="PRINT TEMPLATE^.4I^2750^1887"
+^DIPT(0)="PRINT TEMPLATE^.4I^2751^1888"
 ^DIPT(.01,0)="CAPTIONED^"
 ^DIPT(.01,"F",1)="S DIC=DCC,DA=D0 D EN^DIQ"
 ^DIPT(.02,0)="FILE SECURITY CODES^^^1"
@@ -6307,7 +6307,7 @@ ZWR
 ^DIPT(1241,"F",2)="20~"
 ^DIPT(1241,"H")="@"
 ^DIPT(1241,"SUB")=1
-^DIPT(1242,0)="ONCOY54^3210818.1538^^165.5^^@^3210818"
+^DIPT(1242,0)="ONCOY54^3230814.1556^^165.5^^@^3230814"
 ^DIPT(1242,"DXS",1,9.2)="S DIP(2)=$C(59)_$P($G(^DD(165.5,58,0)),U,3),DIP(1)=$S($D(^ONCO(165.5,D0,3)):^(3),1:"""") S X=$P($P(DIP(2),$C(59)_$P(DIP(1),U,26)_"":"",2),$C(59))"
 ^DIPT(1242,"DXS",2,9.2)="S DIP(2)=$C(59)_$P($G(^DD(165.5,51.3,0)),U,3),DIP(1)=$S($D(^ONCO(165.5,D0,3)):^(3),1:"""") S X=$P($P(DIP(2),$C(59)_$P(DIP(1),U,7)_"":"",2),$C(59))"
 ^DIPT(1242,"F",1)="""* FIRST COURSE OF TREATMENT *"";S1~""Neoadjuvant Therapy...........:"";C3;S1~245.1;C36;L40~""Neoadjuvant Therapy-Clin Resp.:"";C3~245.2;C36;L40~"
@@ -6327,6 +6327,7 @@ ZWR
 ^DIPT(1242,"F",15)="""Phase III total dose..........:"";C3~5527;C35~""Number of phases rad TX.......:"";C3~7024;C35~""Rad TX discontinued early.....:"";C3~7025;C35~"
 ^DIPT(1242,"F",16)="""Total dose....................:"";C3~7026;C35~""Radiation @Fac................:"";C3~51.5;C35~51.4;C46;L34~""Radiation/Surgery Sequence....:"";C3~"
 ^DIPT(1242,"F",17)="X DXS(2,9.2) X ""F %=2:1:$L(X) I $E(X,%)?1U,$E(X,%-1)?1A S X=$E(X,0,%-1)_$C($A(X,%)+32)_$E(X,%+1,999)"" W X K DIP;C35;Z;""LOWERCASE(#51.3)""~"
+^DIPT(1242,"F",18)="""Radiation End Date............:"";C3~361;C35~"
 ^DIPT(1242,"H")="@"
 ^DIPT(1242,"IOM")=80
 ^DIPT(1242,"LAST")=""
@@ -18932,6 +18933,11 @@ ZWR
 ^DIPT(2750,"%D",2,0)="name, DUZ, GIVEN BY, and DATE GIVEN."
 ^DIPT(2750,"F",1)=".01;C1;L25~0;C27;L10;""DUZ""~51,1;C39;L23~51,2;C64;L12~"
 ^DIPT(2750,"H")="USERS RESPONSIBLE FOR SETTING PARAMETERS"
+^DIPT(2751,0)="ISIJ QUERY STATS^3180605.141^@^23450^^@^3230105"
+^DIPT(2751,"CANONIC")=1
+^DIPT(2751,"F",1)=".01;W17;R~2;W16;R~3;W15;R~1;W15~5;W12~4,.01;W30;C1~4,1;W5;""Full?"";R~4,2;W6;R;""# Sec""~4,3;W9;R;""Days Off""~"
+^DIPT(2751,"F",2)="4,4;W11;R;""Days Back""~4,5;W11;R;""Days Total""~4,6;W6;R;""#Recs""~4,7;W4;R;""#W""~4,8;W4;""#E""~4,9;W4;""#I""~4,10;W4;""#C""~4,11;W4;""#?""~"
+^DIPT(2751,"H")="QUERY STATS List"
 ^DIPT("AF",2,.01,901)=""
 ^DIPT("AF",2,.01,1018)=""
 ^DIPT("AF",2,.02,2067)=""
@@ -19334,6 +19340,7 @@ ZWR
 ^DIPT("AF",165.5,245.3,1242)=""
 ^DIPT("AF",165.5,346,1243)=""
 ^DIPT("AF",165.5,346,1279)=""
+^DIPT("AF",165.5,361,1242)=""
 ^DIPT("AF",165.5,363,1278)=""
 ^DIPT("AF",165.5,442,1278)=""
 ^DIPT("AF",165.5,560,1243)=""
@@ -21524,6 +21531,7 @@ ZWR
 ^DIPT("B","IMK",27)=""
 ^DIPT("B","INACTIVE DRUG LIST",100)=""
 ^DIPT("B","ISC VAL",748)=""
+^DIPT("B","ISIJ QUERY STATS",2751)=""
 ^DIPT("B","ISSUES TO SURGERY",335)=""
 ^DIPT("B","J331",58)=""
 ^DIPT("B","JACK",30)=""
@@ -22928,6 +22936,7 @@ ZWR
 ^DIPT("B","tfrxnew.access",2345)=""
 ^DIPT("B","tfrxref.access",2346)=""
 ^DIPT("B","zbjm test",1609)=""
+^DIPT("CANONIC",23450,2751)=""
 ^DIPT("F.4","CAPTIONED",.01)=1
 ^DIPT("F.4","ONCOLOGY PRINT TEMPLATE LIST",1231)=1
 ^DIPT("F.4","RT PRINT TEMPLATES",566)=1
@@ -23583,6 +23592,7 @@ ZWR
 ^DIPT("F2275","EVET REGLST",2397)=1
 ^DIPT("F2276.1","EVET DOWNLOAD DETAIL",2399)=1
 ^DIPT("F2276.1","EVET DOWNLOAD SUMMARY",2400)=1
+^DIPT("F23450","ISIJ QUERY STATS",2751)=1
 ^DIPT("F3.05","CAPTIONED",.01)=1
 ^DIPT("F3.05","FAILED LOG-ONS WITHOUT TEXT",823)=1
 ^DIPT("F3.05","XUDFDISPH",828)=1

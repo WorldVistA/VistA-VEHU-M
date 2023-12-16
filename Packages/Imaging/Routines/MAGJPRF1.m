@@ -1,5 +1,5 @@
-MAGJPRF1 ;WIRMFO/JHC - VistARad RPCs-User Prefs ; 16-DEC-2010  1:12 PM
- ;;3.0;IMAGING;**18,115**;Mar 19, 2002;Build 1912;Dec 17, 2010
+MAGJPRF1 ;WIRMFO/JHC - VistARad RPCs-User Prefs ; 10/17/2022
+ ;;3.0;IMAGING;**18,115,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJPRF1 ;WIRMFO/JHC - VistARad RPCs-User Prefs ; 16-DEC-2010  1:12 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**103**
  Q
 ERR ;
  N ERR S ERR=$$EC^%ZOSV S @MAGGRY@(0)="0^4~"_ERR
@@ -226,17 +227,16 @@ USERS ;
  N CT,IEN,INIT,NAME,REPLY,TOUT,USERDUZ,USERTYP
  S (CT,IEN)=0
  F  S IEN=$O(^MAG(2006.68,IEN)) Q:'IEN  S X=^(IEN,0) D
- .  S USERDUZ=$P(X,U,2)
- .  S X=$$USER(USERDUZ),NAME=$P(X,U),INIT=$P(X,U,2),USERTYP=$P(X,U,3)
- .  S:NAME="" NAME="~"
- .  ;
- .  ;--- Filter Terminants & DISUSER'd Users, except System User (MAG*3.0*115).
- .  S:($$ZRUACTIV(USERDUZ)!(USERDUZ=$$SYSUSER())) TOUT(-USERTYP,NAME,USERDUZ)=INIT
- .  ;
- .  ;--- If client => 115, create dummies if profile is a default (MAG*3.0*115)
- .  Q:$P(MAGJOB("VRVERSION"),".",3)<115
- .  N MAGJDUMY S MAGJDUMY=$$ZRUDFALT(IEN) Q:MAGJDUMY=""  S CT=CT+1
- .  S TOUT(-(1000-CT),MAGJDUMY,"D*"_USERDUZ)=INIT
+ . S USERDUZ=$P(X,U,2)
+ . S X=$$USER(USERDUZ),NAME=$P(X,U),INIT=$P(X,U,2),USERTYP=$P(X,U,3)
+ . S:NAME="" NAME="~"
+ . ;
+ . ;--- Filter Terminants & DISUSER'd Users, except System User (MAG*3.0*115).
+ . S:($$ZRUACTIV(USERDUZ)!(USERDUZ=$$SYSUSER())) TOUT(-USERTYP,NAME,USERDUZ)=INIT
+ . ;
+ . ;--- Create dummies if profile is a default user profile  ; ISI p103
+ . N MAGJDUMY S MAGJDUMY=$$ZRUDFALT(IEN) Q:MAGJDUMY=""  S CT=CT+1
+ . S TOUT(-(1000-CT),MAGJDUMY,"D*"_USERDUZ)=INIT
  S CT=0,USERTYP="" F  S USERTYP=$O(TOUT(USERTYP)) Q:USERTYP=""  S NAME="" D
  . F  S NAME=$O(TOUT(USERTYP,NAME)) Q:NAME=""  S USERDUZ="" D
  . . F  S USERDUZ=$O(TOUT(USERTYP,NAME,USERDUZ)) Q:USERDUZ=""  D

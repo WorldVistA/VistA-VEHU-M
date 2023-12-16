@@ -1,5 +1,5 @@
 RCDPEWL0 ;ALB/TMK/PJH - ELECTRONIC EOB WORKLIST ACTIONS ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,208,252,269,298,317,321,326,332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**173,208,252,269,298,317,321,326,332,409**;Mar 20, 1995;Build 17
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -332,6 +332,16 @@ VPERA(RCSCR,RCERADET,LSTMGR) ; Queued entry
  . K RCDIQ2
  . D GETS^DIQ(344.42,RCSCR1_","_RCSCR_",","*","IEN","RCDIQ2")
  . D TXT2^RCDPEX31(RCSCR,RCSCR1,.RCDIQ2,.RCXM1,.RC) ; Get top level ERA adjs
+ ;
+ ; PRCA*4.5*409 - Add header and PLB information to print array so it will display
+ ;                even when there are no claim lines.
+ I '$O(^RCY(344.4,RCSCR,1,0)) D
+ . S RC=RC+1,RCXM1(RC)="  **NO ERA DETAIL PRESENT**"
+ S Z0=+$O(^TMP($J,"RC_SUMALL"," "),-1)
+ S Z=0 F  S Z=$O(RCXM1(Z)) Q:'Z  S Z0=Z0+1,^TMP($J,"RC_SUMALL",Z0)=RCXM1(Z)
+ K RCXM1 S RC=0
+ ;
+ ; PRCA*4.5*409 - End modified code block
  S RCSCR1=0 F  S RCSCR1=$O(^RCY(344.4,RCSCR,1,RCSCR1)) Q:'RCSCR1  D
  . K RCDIQ1
  . D GETS^DIQ(344.41,RCSCR1_","_RCSCR_",","*","IE","RCDIQ1")  ;PRCA*4.5*298  need to retrieve all fields even if null  (changed "IEN" to "IE")

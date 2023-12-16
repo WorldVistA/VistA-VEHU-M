@@ -1,5 +1,5 @@
 IBCC ;ALB/MJB - CANCEL THIRD PARTY BILL ;Feb 09, 2018@10:11:43
- ;;2.0;INTEGRATED BILLING;**2,19,77,80,51,142,137,161,199,241,155,276,320,358,433,432,447,516,547,597,592,727**;21-MAR-94;Build 34
+ ;;2.0;INTEGRATED BILLING;**2,19,77,80,51,142,137,161,199,241,155,276,320,358,433,432,447,516,547,597,592,727,712**;21-MAR-94;Build 14
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;MAP TO DGCRC
@@ -127,7 +127,7 @@ NOPTF ; Note if IB364 is >0 it will be used as the ien to update in file 364
  . W !?5,"Electronic Claims Management Engine (ECME)."
  . W !?5,"Cancellation needs to occur in the ECME package by"
  . W !?5,"submitting a REVERSAL to the Payer.",!!
- . K DIR S DIR("A",1)="Has a REVERSAL for this e-Claim already been",DIR("A")="submitted to the payer via the ECME package (Y/N)",DIR(0)="Y",DIR("B")="NO" D ^DIR
+ . K DIR S DIR("A",1)="Has a REVERSAL for this e-Claim already been",DIR("A")="submitted to the payer via the ECME package (Y/N)",DIR(0)="Y",DIR("B")="NO" D ^DIR K DIR
  . I Y=0 W !!,"<PLEASE SUBMIT A REVERSAL USING THE APPROPRIATE OPTION IN THE ECME PACKAGE>",$C(7)
  ;
 CHK ;

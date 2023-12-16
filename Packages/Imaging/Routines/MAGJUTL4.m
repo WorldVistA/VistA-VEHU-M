@@ -1,5 +1,5 @@
-MAGJUTL4 ;WIRMFO/JHC - VistARad subroutines for RPC calls ; 9 Sep 2011  4:05 PM
- ;;3.0;IMAGING;**18,76,101,90,120**;Mar 19, 2002;Build 27;May 23, 2012
+MAGJUTL4 ;WIRMFO/JHC - VistARad subroutines for RPC calls ; 10/17/2022
+ ;;3.0;IMAGING;**18,76,101,90,120,341**;Dec 21, 2022;Build 28
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -15,6 +15,7 @@ MAGJUTL4 ;WIRMFO/JHC - VistARad subroutines for RPC calls ; 9 Sep 2011  4:05 PM
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
  ;;
+ ;; ISI IMAGING;**99,106**
  Q
  ;
  ;***** Return matching CPT's based on grouping criteria.
@@ -260,7 +261,7 @@ DDMPVLD8() ;
  . I PARAM2?1N.N,$D(^MAG(2005,PARAM2)) S IMGIEN=PARAM2 Q
  . ;
  . ; Case 2: PARAM2 holds RARPT in piece 4, set IMGIEN via back-pointer in File #74.
- . I $L(PARAM2,U)=4 S RARPT=$P(PARAM2,U,4),IMGIEN=$O(^RARPT(RARPT,2005,"B",""))
+ . I $L(PARAM2,U)=4 S RARPT=$P(PARAM2,U,4) I +RARPT S IMGIEN=$O(^RARPT(RARPT,2005,"B","")) ; ISI P106
  . I IMGIEN'="",$D(^MAG(2005,IMGIEN)) Q
  . ;
  . ; Case 3: PARAM2 holds RADFN^RADTI^RACNI in pieces 1:3.
@@ -300,7 +301,7 @@ STATCHK(MAGGRY,DATA) ;
  S VCAT=$P(^RA(72,STATUS,0),U,9),ORDER=$P(^(0),U,3)
  I VCAT]"" D  G STATCHK2:STOUT
  . I "EDT"[VCAT S STOUT=$S(VCAT="E":2,1:3) ; Examined or Interpreted
- . E  I VCAT="W" S STOUT=1 ; Not yet Verified
+ . E  I "WR"[VCAT S STOUT=1 ; Not yet Verified ; ISI-P106
  I ORDER=9 S STOUT=3  ; Completed exam
  E  I ORDER=0 S REPLY="0^Exam Cancelled"
  E  I ORDER=1 S STOUT=1  ; Waiting for exam

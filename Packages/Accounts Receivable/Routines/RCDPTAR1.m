@@ -1,5 +1,5 @@
 RCDPTAR1 ;ALB/DMB - EFT TRANSACTION AUDIT REPORT (Summary) ;08/19/15
- ;;4.5;Accounts Receivable;**303,326,380**;Mar 20, 1995;Build 14
+ ;;4.5;Accounts Receivable;**303,326,380,409**;Mar 20, 1995;Build 17
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -37,22 +37,25 @@ SUM ;EP from RCDPTAR
  ; PRCA*4.5*380 - Added subroutine
 SUM2 ;EP from RCDPTAR
  ; Display EFT Transaction Audit Report in summary mode by Deposit Number
- N ARR,CDDT,CTR,DIR,DIROUT,DIRUT,DTOUT,DUOUT,RCDDT,RCDNUM,RCDT1,RCDT2,RCEXCEL,X,XX,Y
+ N ARR,CDDT,CTR,DIR,DIROUT,DIRUT,DTOUT,DUOUT
+ N RCDDT,RCDNUM,RCDT1,RCDT2,RCEXCEL,RCSTOP,X,XX,Y     ; PRCA*4.5*409 - Added RCSTOP
  S RCDNUM=$$ASKDNUM()
  Q:RCDNUM=-1
- S CTR=0,RCDDT="",CDDT=""
+ S CTR=0,RCDDT="",CDDT="",RCSTOP=0              ; PRCA*4.5*409 - Added RCSTOP=0
  W !,"Select Deposit:"
- F  D  Q:RCDDT'=""
+ F  D  Q:RCDDT'=""  Q:RCSTOP                    ; PRCA*4.5*409 - Added Q:RCSTOP
  . S CDDT=$O(^RCY(344.3,"ADEP2",RCDNUM,CDDT),-1)
  . I CDDT="" D  Q                               ; No more Deposit Dates to display for Deposit Number
  . . Q:CTR=0
  . . S RCDDT=$$SELDT(CTR,.ARR)                  ; Final selection choice
+ . . I RCDDT=-1 S RCSTOP=1                      ; PRCA*4.5*409 - Added line
  . S CTR=CTR+1,ARR(CTR)=CDDT
  . S XX=$$FMTE^XLFDT(CDDT,"5DZ")
  . W !,$J(CTR,3)," ",RCDNUM," on: ",XX
  . I CTR#10=0 D  Q:RCDDT'=""                    ; Ask selection every 10 times
  . . S RCDDT=$$SELDT(CTR,.ARR)
- Q:RCDDT=""                                     ; No Deposit Date selected
+ . . I RCDDT=-1 S RCSTOP=1                      ; PRCA*4.5*409 - Added line
+ Q:RCDDT=""  Q:RCSTOP                           ; No Deposit Date selected, PRCA*4.5*409 - Added Q:RCSTOP
  S RCEXCEL=$$EXCEL^RCDMCUT2()                   ; Ask Excel output
  Q:RCEXCEL="^"
  I RCEXCEL D EXMSG
@@ -85,10 +88,12 @@ SELDT(CTR,ARR) ; Ask the user to select a deposit date for the selected Deposit 
  ;                  A1 - Selection #
  ;                  A2 - Deposit Date
  ; Returns: ""  - Nothing selected, Otherwise selected deposit date is returned
+ ;                -1 if user '^' or timed out
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
  S DIR(0)="NA^1:"_CTR_":0",DIR("A")="CHOOSE 1 - "_CTR_": "
  S DIR("?")="Select a number between 1 and "_CTR
  D ^DIR
+ I $G(DTOUT)!$G(DUOUT)!(Y=-1) Q -1              ; PRCA*4.5*409 Added line
  Q $S($D(DIRUT):"",1:ARR(Y))
  ; 
  ; PRCA*4.5*380 - Added subroutine

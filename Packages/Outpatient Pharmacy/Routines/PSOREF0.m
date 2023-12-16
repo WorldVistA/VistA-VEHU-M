@@ -1,6 +1,7 @@
-PSOREF0 ;IHS/JCM - REFILL CON'T ;Feb 07, 2022@12:43:05
- ;;7.0;OUTPATIENT PHARMACY;**14,152,180,186,204,306,382,388,501,441,677**;DEC 1997;Build 1
- ;External reference to ^PSDRUG supported by DBIA 221
+PSOREF0 ;IHS/JCM - REFILL CON'T ; July 31, 2023@17:05:28
+ ;;7.0;OUTPATIENT PHARMACY;**14,152,180,186,204,306,382,388,501,441,677,712**;DEC 1997;Build 20
+ ;
+ ; Reference to ^PSDRUG in ICR #221
  ;
  ;PSO*186 add check for DEA Special handling field refill restrictions
 PROCESS ;
@@ -20,7 +21,6 @@ PROCESS ;
  S:$G(PSOREF("MAIL/WINDOW"))["W" BINGRTE="W",BINGCRT=1
 PROCESSX D:$G(PSOREF("OLD FILL DATE"))]"" SUSDATEK^PSOUTIL(.PSOREF)
  S:$G(UNPARK) PSOREF("DFLG")=0
- K UNPARK
  Q
 DSPLY ;W !!,$P(PSOREF("RX0"),"^"),?12," ",$P(^PSDRUG($P(PSOREF("RX0"),"^",6),0),"^"),?45," SIG: "_PSOREF("SIG"),?60," QTY: ",$P(PSOREF("RX0"),"^",7)
  K FSIG,BSIG I $P($G(^PSRX(PSOREF("IRXN"),"SIG")),"^",2) D FSIG^PSOUTLA("R",PSOREF("IRXN"),54) F PSREV=1:1 Q:'$D(FSIG(PSREV))  S BSIG(PSREV)=FSIG(PSREV)
@@ -30,7 +30,7 @@ DSPLY ;W !!,$P(PSOREF("RX0"),"^"),?12," ",$P(^PSDRUG($P(PSOREF("RX0"),"^",6),0),
  K BSIG,PSREV
 DSPLYX Q
 CHECK ;
- S UNPARK=0
+ I '$G(ORRFILL) N UNPARK S UNPARK=0
  I '$P(PSOPAR,"^",11),$G(^PSDRUG($P(PSOREF("RX0"),"^",6),"I"))]"",DT>$G(^("I")) D  G CKQ
  .W $C(7),!!," *** Drug is inactive for Rx # "_$P(PSOREF("RX0"),"^")_" cannot be refilled ***",!
  I '$D(PSORX("BAR CODE")),PSOREF("PSODFN")'=PSODFN W !!,?5,$C(7),"Can't refill Rx # "_$P(PSOREF("RX0"),"^")_", it is not for this patient." G CKQ
@@ -119,7 +119,6 @@ NEWPTX Q
  ;
 UNPARK ; 441 PAPI
  N ERRMSG
- S UNPARK=1
  D UNPARK^PSOPRKA(PSOREF("IRXN"),PSODFN,.ERRMSG) ; UNPARK regardless of original or refill
  W !,"Rx # "_$P(PSOREF("RX0"),"^")," Unparked."
  I $G(ERRMSG(1))'="" D

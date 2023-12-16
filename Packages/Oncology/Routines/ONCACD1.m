@@ -1,5 +1,5 @@
 ONCACD1 ;HINES OIFO/GWB - Extract NAACCR/STATE/VACCR data ;09/06/11
- ;;2.2;ONCOLOGY;**1,4,5,8,9,13,14,15,17**;Jul 31, 2013;Build 6
+ ;;2.2;ONCOLOGY;**1,4,5,8,9,13,14,15,17,18**;Jul 31, 2013;Build 5
  ;
  ;P5 added in RQRS the Analytic Cases selection.
  ;P8 allows BLANK in TNM Clin/Path data fields & others.
@@ -7,6 +7,9 @@ ONCACD1 ;HINES OIFO/GWB - Extract NAACCR/STATE/VACCR data ;09/06/11
 EN1 ;Entry point
  K ^TMP($J)
  N EXPORT,PAGE,STOPDT,OIEN,ZTREQ
+ ;P18 
+ I $D(EDT),($P(EDT,".",2))="" S EDT=EDT_.2500
+ I $D(DATE1),($P(DATE1,".",2))="" S DATE1=DATE1_.2500
  S PAGE=1,OIEN=0
  S EXPORT="YES"
  D SETUP

@@ -1,10 +1,10 @@
-PSOREF ;BIR/SAB - refill data entry ;Dec 01, 2022@15:02:34
- ;;7.0;OUTPATIENT PHARMACY;**1,23,27,36,46,78,130,131,148,206,313,441,710**;DEC 1997;Build 1
- ;External reference to ^PSDRUG supported by DBIA 221
- ;External references PSOL and PSOUL^PSSLOCK supported by DBIA 2789
+PSOREF ;BIR/SAB - refill data entry ; Feb 14, 2023@10:12:23
+ ;;7.0;OUTPATIENT PHARMACY;**1,23,27,36,46,78,130,131,148,206,313,441,710,712**;DEC 1997;Build 20
+ ; Reference to ^PSDRUG in ICR #221
+ ; Reference to PSOL^PSSLOCK,PSOUL^PSSLOCK in ICR #2789
  ;
 EOJ ;
- K PSOMSG,PSOREF,PSORX("BAR CODE"),PSOLIST,LFD,MAX,MIN,NODE,PS,PSOERR,REF,RF,RXO,RXN,RXP,RXS,SD,VAERR,PSORX("FILL DATE")
+ K PSOMSG,PSOREF,PSORX("BAR CODE"),PSOLIST,LFD,MAX,MIN,NODE,PS,PSOERR,REF,RF,RXO,RXN,RXP,RXS,SD,VAERR,PSORX("FILL DATE"),PTRX
  D PSOUL^PSSLOCK($P(PSOLST(ORN),"^",2))
  Q
 OERR ;single refil
@@ -28,6 +28,7 @@ SPEED ;speed refill
  G BCREF:Y
  K PSOREF,PSOFDR,DIR,DUOUT,DIRUT S DIR("A")="Select Orders by number",DIR(0)="LO^1:"_PSOCNT D ^DIR I $D(DTOUT)!($D(DUOUT)) K DIR,DIRUT,DTOUT,DUOUT S VALMBCK="" Q
  K DIR,DIRUT,DTOUT,PSOOELSE,DTOUT I +Y S (ASK,SPEED,PSOOELSE)=1 D FULL^VALM1 S LST=Y D  I $G(PSOREF("DFLG"))!($G(PSOREF("QFLG"))) D ^PSOBUILD,BLD^PSOORUT1 G SPEEDX
+ .N ORD,ORN
  .F ORD=1:1:$L(LST,",") Q:$P(LST,",",ORD)']""!($G(PSOREF("QFLG")))  S ORN=$P(LST,",",ORD) D:+PSOLST(ORN)=52
  ..I $$LMREJ^PSOREJU1($P(PSOLST(ORN),"^",2)) W $C(7),!!,"Rx "_$$GET1^DIQ(52,$P(PSOLST(ORN),"^",2),.01)_" has OPEN/UNRESOLVED 3rd Party Payer Reject!" K DIR D PAUSE^VALM1 Q
  ..I $$TITRX^PSOUTL($P(PSOLST(ORN),"^",2))="t" D  Q
@@ -83,7 +84,7 @@ BCREFX K BCREF,ASK,LST,SPEED,RX,PSOBBC,DIR,DIRUT,PSORXED,PSOREF,PSOFDR,PSOOELSE 
  S VALMBCK="R" Q
 REFILL(PLACER) ;passes flag to CPRS for front door refill request
  ;PLACER=PHARMACY NUMBER
- N PSORFRM,PSOLC,PSODRG,PSODRUG0,RXN,ST,PSODEA
+ N PSORFRM,PSOLC,PSODRG,PSODRUG0,RXN,ST,PSODEA,DIV
  I $G(PLACER)["S"!('$G(PLACER)) Q "-1^Not a Valid Outpatient Medication Order."
  S RXN=PLACER I '$D(^PSRX(RXN,0)) Q "-1^Not a Valid Outpatient Medication Order."
  S RX0=^PSRX(RXN,0),PSODRG=$P(^PSRX(RXN,0),"^",6),ST=+^("STA"),PSODRUG0=^PSDRUG(PSODRG,0),PSODEA=$P($G(^(0)),"^",3),DIV=$P(^PSRX(RXN,2),"^",9),PSORFRM=$P(RX0,"^",9)
@@ -97,8 +98,9 @@ REFILL(PLACER) ;passes flag to CPRS for front door refill request
  I '$P($G(^PS(59,DIV,1)),"^",11),$G(^PSDRUG(PSODRG,"I"))]"",DT>$G(^("I")) Q "0^Inactive Drug, Non Refillable."
  I ST Q "0^Prescription is in a Non-Refillable Status."
  I $P($G(^PSDRUG(PSODRG,2)),"^",3)'["O" Q "0^Cannot Refill. Drug No Longer Used by Outpatient Pharmacy."
- S PSORFRM=$P(RX0,"^",9) F PSOJ=0:0 S PSOJ=$O(^PSRX(RXN,1,PSOJ)) Q:'PSOJ  S PSORFRM=PSORFRM-1
- I PSORFRM<1 Q "0^No Refills remaining. New Med order required."
+ S PSORFRM=$P(RX0,"^",9) N PSOJ F PSOJ=0:0 S PSOJ=$O(^PSRX(RXN,1,PSOJ)) Q:'PSOJ  S PSORFRM=PSORFRM-1
+ I $G(^PSRX(RXN,"PARK")) N RFGO S RFGO=$$REFNO(RXN) I 'RFGO Q "0^No Refills remaining. New Med order required."  ;*712
+ I PSORFRM<1,'$G(RFGO) Q "0^No Refills remaining. New Med order required."
  I $P(^PSRX(RXN,3),"^"),DT=$P(^PSRX(RXN,3),"^") Q "0^Can't Refill, Fill Date already exists for "_$E($P(^PSRX(RXN,3),"^"),4,5)_"/"_$E($P(^PSRX(RXN,3),"^"),6,7)_"/"_$E($P(^PSRX(RXN,3),"^"),2,3)_"."
  I $P(^PSRX(RXN,3),"^"),DT<$P(^PSRX(RXN,3),"^") Q "0^Can't Refill, later Refill Date already exists for "_$E($P(^PSRX(RXN,3),"^"),4,5)_"/"_$E($P(^PSRX(RXN,3),"^"),6,7)_"/"_$E($P(^PSRX(RXN,3),"^"),2,3)_"."
  I $O(^PS(52.41,"ARF",RXN,0)) Q "0^Pending Refill Request already exists."
@@ -106,3 +108,15 @@ REFILL(PLACER) ;passes flag to CPRS for front door refill request
  ;
 ULK D PSOUL^PSSLOCK($P(PSOLST(ORN),"^",2))
  Q
+ ;
+REFNO(DA) ;
+ N RSDT,LBLP,PSOCMOP,RXF,I,RXC
+ S (I,RXF,RSDT,LBLP)=0,RXC=$P(^PSRX(DA,0),"^",9)
+ F  S I=$O(^PSRX(DA,1,I)) Q:'I  S RXF=I,RSDT=$P(^PSRX(DA,1,RXF,0),"^",18)
+ S:'RXF RSDT=$P(^PSRX(DA,2),"^",13)
+ I 'RSDT D CHKLBL^PSOPRKA(DA,RXF)
+ I 'RSDT,'LBLP D ^PSOCMOPA
+ I RXF=0,RXC>0 S RXF=RXC
+ I RSDT!(LBLP)!($D(PSOCMOP)) Q:'RXF 0  I RXF,PSORFRM<1 Q 0
+ Q 1
+ ;
