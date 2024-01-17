@@ -1,5 +1,5 @@
 IBJPI2 ;DAOU/BHS - eIV SITE PARAMETERS SCREEN ACTIONS ;26-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,316,416,438,713,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**184,271,316,416,438,713,737,763**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; eIV - electronic Insurance Verification Interface
@@ -21,19 +21,42 @@ IIVEDIT ; -- IBJP IIV EDIT ACTIONS (GP,PW):  Edit eIV Site Parameters
  Q
  ;
 LTENT ; entry from list template protocol 'IBJP IIV FIX CORRUPT BUFFERS' from 'IBJP INS VER MENU' menu
- N IBA,IBERR,IBMSG,IBOK,IBXTMPNM,IBGHDESC,ZTDESC,IBOKM
+ N IBA,IBERR,IBFL,IBFR,IBMSG,IBOK,IBXTMPNM,IBGHDESC,ZTDESC,IBOKM  ;IB*763/CKB - added IBFL,IBFR
  ;
  S IBXTMPNM="IBJPI2_FIX_BUFFER_RECS",IBGHDESC="IB file 355.33 Corrupt Buffer Clean up"
  S ZTDESC="IB eInsurance FIX CORRUPTED BUFFERS IN #355.33"
  S (IBOK,IBOKM)=1
  I $G(DT)="" S DT=$$DT^XLFDT
- D LTCHKRN I 'IBOK D  D PAUSE^VALM1 G LTOUT
- . I IBOKM W !,"Not submitting Fix Corrupt Buffers to run"
+FXLST ;IB*763/CKB - Prompt user to run 'Fix or List Corrupt Buffers'
+ D FULL^VALM1
+ K DIR,DIRUT,DUOUT,X,Y
+ S DIR(0)="SA^F:Fix;L:List"
+ S DIR("A")="Fix or List Corrupt Buffers? "
+ S DIR("?")="^D FLHELP^IBJPI2"
+ S DIR("??")="^D FLHELP^IBJPI2"
+ S DIR("B")="List"
+ D ^DIR K DIR
+ S IBFR=$$UP^XLFSTR($E(Y,1))
+ I IBFR="^"!$D(DIROUT)!$D(DIRUT)!$D(DTOUT)!$D(DUOUT) D PAUSE^VALM1 G LTOUT
+ I (IBFR'="F")&(IBFR'="L") W !," Select 'F'ix or 'L'ist",! G FXLST
  ;
+ ;IB*763/CKB - if user selects LIST, change ZTDESC, IBXTMPNM and IBGHDESC
+ ; set IBFR=("F" or "L") / IBFL=("Fix Corrupt Buffer" or "List of Corrupt Buffers")
+ I IBFR="L" D
+ . S ZTDESC="IB eInsurance LIST OF CORRUPTED BUFFERS IN #355.33"
+ . S IBXTMPNM="IBJPI2_LIST_BUFFER_RECS",IBGHDESC="IB file 355.33 List of Corrupt Buffers"
+ S IBFL=$S(IBFR="F":"Fix Corrupt Buffer",1:"List of Corrupt Buffers")
+ ;
+ D LTCHKRN I 'IBOK D  D PAUSE^VALM1 G LTOUT
+ .;IB*763/CKB - Allow to Fix or List, using variables IBFR and IBFL
+ . I IBOKM D
+ .. I IBFR="F" W !,"Not submitting Fix Corrupt Buffers to run"
+ .. I IBFR="L" W !,"Not creating List of Corrupt Buffers."
  D FULL^VALM1 W !!
- S IBMSG(0)=0,IBERR=$$TASKIN("Corrupt Buffers Fixed",$G(DUZ),"IBMSG")
+ S IBMSG(0)=0
+ S IBERR=$$TASKIN($S(IBFR="L":IBFL,1:"Corrupt Buffers Fixed"),$G(DUZ),"IBMSG")
  I +IBERR!('$G(IBMSG(0))) D  D PAUSE^VALM1 G LTOUT
- . W !!,"Error in submitting 'Fix Corrupt Buffers'."
+ . W !!,"Error in submitting '"_IBFL_"'."
  . W !,"Please Contact eInsurance Team"
  I $G(IBMSG(0)) W !! S IBA=0 F  S IBA=$O(IBMSG(IBA)) D:'IBA PAUSE^VALM1 Q:'IBA  W IBMSG(IBA),!
  ;
@@ -52,7 +75,11 @@ LTCHKRN ; has the CBF been run in the last 15 days
  S MSGD="",MSG=$$CHKTSK
  D FULL^VALM1 W !!
  W IBMSF,!
- I +MSG S MSGD="*** 'Fix Corrupt Buffer' "_$P($P(MSG,U,2),"y",1)_"y ***^*** "_$P($P(MSG,U,2),"y",2,999)
+ ;IB*763/CKB - Set MSGD using IBFL for Fix or List wording
+ ;     IBFL = "Fix Corrupt Buffer" or "List of Corrupt Buffers"
+ I +MSG D
+ . S MSGD="*** '"_IBFL_"' "
+ . S MSGD=MSGD_$P($P(MSG,U,2),"y",1)_"y ***^*** "_$P($P(MSG,U,2),"y",2,999)
  I IBLDT D  I 'IBOK Q
  . K DIR,DIRUT,DUOUT
  . S DIR("?")="Enter 'Y' to view the details of the last run, Enter 'N' to skip or '^' to quit."
@@ -71,9 +98,13 @@ LTCHKRN ; has the CBF been run in the last 15 days
  . W !!,$E(IBSTR,1,$L(IBA1)),!,IBA1,!,IBB1,($E("          ",1,($L(IBA1)-3-$L(IBB1)))),"***",!
  . W $E(IBSTR,1,$L(IBA1))
  ;
- K DIR,DIRUT,DUOUT
- S DIR("?")="Enter 'Y' to run Corrupt Buffers Fix, Enter 'N' or '^' to quit."
- S DIR("A")="Do you want to run Fix Corrupt Buffers",DIR(0)="Y",DIR("B")="No" D ^DIR
+ ;IB*763/CKB - Include X,Y in kill and use IBFL for Fix or List Help Text wording
+ K DIR,DIRUT,DUOUT,X,Y
+ S DIR("A")="Do you want to run "_IBFL
+ S DIR("?")="Enter 'Y' to run "_$S(IBFR="L":"the "_IBFL,1:"Corrupt Buffers Fix")
+ S DIR("?")=DIR("?")_", Enter 'N' or '^' to quit."
+ S DIR(0)="Y",DIR("B")="No"
+ D ^DIR K DIR
  I $E(Y)=U!('Y)!($D(DIRUT))!($D(DUOUT)) S IBOK=0
  Q
  ;
@@ -93,12 +124,15 @@ TASKIN(IBSB,IBUS,IBRET,IBFLIN) ; Clean-up corrupted records in the Insurance Ver
  S IBFLIN=$G(IBFLIN)
  K @IBRET
  ;
- S ZTDESC="IB eInsurance FIX CORRUPTED BUFFERS IN #355.33"
+ ;IB*763/CKB - ZTDESC is already set, don't want to reset. Overwrites if user is running List 
+ ;S ZTDESC="IB eInsurance FIX CORRUPTED BUFFERS IN #355.33"
+ ;
  ; ZTDTH = TODAY AT 8:00 PM
  S ZTDTH=$P($$NOW^XLFDT(),"."),ZTDTH=$$FMADD^XLFDT(ZTDTH,,20)
  S ZTIO=""
  S ZTQUEUED=1
  S ZTRTN="BADRECS^IBJPI2"
+ I $E(IBSB,1)="L" S ZTRTN="LIST^IBJPI2"  ;IB*763/CKB
  S ZTSAVE("IBUS")="",ZTSAVE("IBSB")="",ZTSAVE("IBFLIN")=""
  S ZTSAVE("IBXTMPNM")="",ZTSAVE("IBGHDESC")=""
  ;
@@ -120,7 +154,7 @@ CHKTSK() ;Check if task already scheduled for date/time
  S TSK=$O(GTASKS(TSK))
  I TSK'=""  D  Q MSGA
  . S ZTSK=TSK D ISQED^%ZTLOAD
- . S MSGA="1^Task #"_+ZTSK_" is already scheduled to run on "_$$HTE^XLFDT(ZTSK("D"),1)
+ . S MSGA="1^Task #"_+ZTSK_" is already scheduled to run on "_$$HTE^XLFDT(ZTSK("D"),1)_" "
  Q MSGA
  ;
 TASK(ZTDTH,ZTDESC,ZTRTN,ZTIO,RMSG) ;bypass for queued task
@@ -143,7 +177,9 @@ TASK(ZTDTH,ZTDESC,ZTRTN,ZTIO,RMSG) ;bypass for queued task
  I '$P(TSK,U,3) S TIME=NOW
  I $P(TSK,U,3) S TIME=$P(TSK,U,2)
  S TIME=$$FMTE^XLFDT(TIME)
+ ;IB*763/CKB - allow for Fix or List message
  S MSG="Task: "_$P($G(TSK),U)_" Clean-up of corrupted records in file #355.33"
+ I IBFR="L" S MSG="Task: "_$P($G(TSK),U)_" List of Corrupt Buffers in file #355.33       "
  S RMSG(1)="      scheduled for "_TIME
  S RMSG(0)=1
  Q MSG
@@ -308,4 +344,78 @@ XREFC(DELREC) ; Clean up possible bad "C" cross-reference related to (#355.33,60
  ;
  ; save into total   ;(* IBART - use for debugging by programmer only)
  ;I DELREC M IBART(IBBUFDA,"C")=IBAR4
+ Q
+ ;
+LIST ;IB*763/CKB - List of Corrupted Buffers in File #355.33 
+ N IBARR,IBBUFDA,IBCNT,IBHNG,IBNODE0,IBNOK,IBP01,IBPATNM,IBREC,IBSTART,IBSTAT,IBSTOP
+ N IBUNAME,LN,MSG,SITENAME,SITESYS,TOTAL
+ ;
+ ; recalculate SITESYS here as this tag is called from TaskMan
+ S SITESYS=$$SITE^VASITE ; Get the site name & #
+ S SITENAME=$P(SITESYS,U,2),SITESYS=$P(SITESYS,U,3) ; piece 3 is the site #
+ S IBSTART=$$NOW^XLFDT()
+ S IBUNAME=$$NAME^XUSER($G(IBUS))
+ ;
+ ;List Header
+ S LN=1,TOTAL=0
+ S MSG(LN)="Last run by "_IBUNAME,LN=LN+1
+ S MSG(LN)="   ",LN=LN+1
+ S MSG(LN)="Date Created^Buffer IEN^Patient",LN=LN+1
+ ;
+ ;Search for corrupted entries
+ S IBBUFDA=0 F  S IBBUFDA=$O(^IBA(355.33,IBBUFDA)) Q:('+IBBUFDA)  D
+ . ; get node 0
+ . S IBNODE0=$G(^IBA(355.33,IBBUFDA,0))
+ . ; get (#.01) date entered, (#.04) status, (#60.01) patient name
+ . K IBARR,IBREC
+ . D GETS^DIQ(355.33,IBBUFDA_",",".01;.04;60.01","IE","IBREC")
+ . M IBARR=IBREC(355.33,IBBUFDA_",")
+ . S IBSTAT=$G(IBARR(.04,"I")),IBP01=$G(IBARR(.01,"I")),IBPATNM=$G(IBARR(60.01,"E"))
+ . ;
+ . ; If missing .01(DATE ENTERED is not populated)
+ . I IBP01="" D SAVLIST Q
+ . ; Corrupted buffer entry (STATUS is not E,A,R)
+ . I IBSTAT="" D SAVLIST Q 
+ . ; Patient Name is missing for Entered Status
+ . I IBSTAT="E",IBPATNM="" D SAVLIST Q
+ . ;
+ . ; Accepted/Rejected buffer entries
+ . I (("^A^R^")[("^"_IBSTAT_"^")) D
+ . . ; Corrupted buffer entry (PATIENT NAME is populated - EVIL GHOST)
+ . . I IBPATNM'="" D SAVLIST Q
+ . . ; Corrupted buffer entry (PATIENT NAME is not populated & has a node other than Zero)
+ . . I IBPATNM="",$O(^IBA(355.33,IBBUFDA,0)) D SAVLIST
+ ;
+ S MSG(LN)="**End of Report**"
+ ;
+ ; save message into ^XTMP for 15 days
+ S (IBNOK,IBCNT,IBHNG)=0,IBSTOP=$$NOW^XLFDT()
+ ;
+ ; IBXTMPNM = "IB eInsurance LIST OF CORRUPTED BUFFERS IN #355.33"
+ F  L +^XTMP(IBXTMPNM):30 Q:$T  H 10 S IBHNG=IBHNG+1 I IBHNG>10 S IBNOK=1 Q
+ I IBNOK Q  ; not able to get the lock
+ S ^XTMP(IBXTMPNM,0)=$$FMADD^XLFDT(DT,15)_U_$$NOW^XLFDT()_U_"IB file 355.33 List of Corrupt Buffers"
+ S IBCNT=$G(^XTMP(IBXTMPNM,"C"))+1,^XTMP(IBXTMPNM,"C")=IBCNT
+ L -^XTMP(IBXTMPNM)
+ ;
+ ; place message info in ^XTMP
+ S ^XTMP(IBXTMPNM,IBCNT,0)=$G(IBUNAME)_U_SITESYS_"-"_SITENAME
+ M ^XTMP(IBXTMPNM,IBCNT,"M")=MSG
+ ; place start-stop time
+ S ^XTMP(IBXTMPNM,IBCNT,"T")=IBSTART_U_IBSTOP
+ ;
+LISTQ ; Exit from List
+ ; Tell TaskManager to delete the task's record
+ I $D(ZTQUEUED) S ZTREQ="@"
+ Q
+ ;
+SAVLIST ;IB*763/CKB - Save List output to MSG array
+ S MSG(LN)=$$DAT3^IBOUTL(IBARR(.01,"I"))_"^"_IBBUFDA_"^"_IBARR(60.01,"E")
+ S LN=LN+1,TOTAL=TOTAL+1
+ Q
+ ;
+FLHELP ;IB*763/CKB - Help Text for the 'Fix or List Corrupt Buffers' prompt.
+ W !!," Select Fix to fix corrupted entries in the INSURANCE VERIFICATION PROCESSOR"
+ W !," file (#355.33) aka 'the buffer file'. Select List to display corrupted entries"
+ W !," in the INSURANCE VERIFICATION PROCESSOR file (#355.33) aka 'the buffer file'."
  Q

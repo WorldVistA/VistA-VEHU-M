@@ -1,5 +1,5 @@
 ORDEA ;ISL/TC & JMH & JLC - DEA related items ;07/10/19  09:22
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**306,374,377,499**;Dec 17, 1997;Build 165
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**306,374,377,499,607**;Dec 17, 1997;Build 7
  ;
  ;Reference to ^PSSOPKI supported by DBIA #3737
  ;Reference to ^PSSUTLA1 supported by DBIA #3373
@@ -75,7 +75,7 @@ SIGINFO(ORY,ORDFN,ORPROV,OROID) ;returns the provider/patient info that must be 
  ;*506
  I $G(OROID) S OROID=+OROID I $P($G(^OR(100,OROID,11.1)),U)]"" S ORY(ORI)="DEA: "_$P(^OR(100,OROID,11.1),U)
  ;detox #
- N ORDETOX S ORDETOX=$$DETOX^XUSER(ORPROV)
+ N ORDETOX S ORDETOX="" ; $$DETOX^XUSER(ORPROV) / P607-Remove Detox/X-Waiver
  I $L(ORDETOX)>0 S ORI=ORI+1,ORY(ORI)="Detox: "_ORDETOX
  Q
 HASHINFO(ORY,ORDFN,ORPROV,OROID) ;basic data for all orders getting signed
@@ -108,7 +108,7 @@ HASHINFO(ORY,ORDFN,ORPROV,OROID) ;basic data for all orders getting signed
  I ORSLDEA]"" S ORI=ORI+1,ORY(ORI)="DeaNumber:"_ORSLDEA
  I ORSLDEA="" S ORI=ORI+1,ORY(ORI)="DeaNumber:"_$$DEA^XUSER(,ORPROV)
  ;detox #
- N ORDETOX S ORDETOX=$$DETOX^XUSER(ORPROV)
+ N ORDETOX S ORDETOX=""  ;$$DETOX^XUSER(ORPROV) / P607-Remove Detox/X-Waiver
  I $L(ORDETOX)>0 S ORI=ORI+1,ORY(ORI)="DetoxNumber:"_ORDETOX
  Q
 ORDHINFO(ORY,ORIFN,HASH,OHINFO) ;

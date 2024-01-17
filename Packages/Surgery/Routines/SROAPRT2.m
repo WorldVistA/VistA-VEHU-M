@@ -1,5 +1,5 @@
-SROAPRT2 ;BIR/MAM - PRINT PREOP INFO (PAGE 2) ;07/19/2011
- ;;3.0;Surgery;**38,125,137,153,160,166,176,182,184**;24 Jun 93;Build 35
+SROAPRT2 ;BIR/MAM - PRINT PREOP INFO (PAGE 2); JULY 19, 2011
+ ;;3.0;Surgery;**38,125,137,153,160,166,176,182,184,213**;24 Jun 93;Build 1
  I $E(IOST)'="P" W !,?28,"PREOPERATIVE INFORMATION"
  N SRX,Y F I=200,200.1,206,210,204 S SRA(I)=$G(^SRF(SRTN,I))
  S Y=$P(SRA(200),"^",37),SRX=243,SRAO(1)=$$OUT(SRX,Y)_"^"_SRX
@@ -38,7 +38,7 @@ SROAPRT2 ;BIR/MAM - PRINT PREOP INFO (PAGE 2) ;07/19/2011
  W !,?40,"Bleeding Due To Med: ",?(79-$L($P(SRAO("3EE"),"^"))),$E($P(SRAO("3EE"),"^"),1,18)
  W !,"Coma:",?25,$P(SRAO("2B"),"^"),?40,"Transfusion > 4 RBC Units:",?72,$P(SRAO("3F"),"^")
  W !,"Hemiplegia:",?25,$P(SRAO("2C"),"^"),?40,"Chemo for Malig Last 90 Days: ",?(79-$L($P(SRAO("3G"),"^"))),$E($P(SRAO("3G"),"^"),1,10)
- W !,"CVD Repair/Obstruct:",?(35-$L($P(SRAO("2D"),"^"))),?40,"Radiotherapy W/I 90 Days:",?72,$P(SRAO("3H"),"^")
+ W !,"CVD Repair/Obstruct:",?(35-$L($P(SRAO("2D"),"^"))),$P(SRAO("2D"),"^"),?40,"Radiotherapy W/I 90 Days:",?72,$P(SRAO("3H"),"^")
  W !,"History of CVD:",?(35-$L($P(SRAO("2E"),"^"))),$P(SRAO("2E"),"^"),?40,"Preoperative Sepsis:",?(79-$L($P(SRAO("3I"),"^"))),$P(SRAO("3I"),"^")
  W !,"Tumor Involving CNS:",?25,$P(SRAO("2F"),"^"),?40,"Pregnancy:",?(79-$L($P(SRAO("3J"),"^"))),$P(SRAO("3J"),"^")
  W !,"Impaired Cognitive Function: ",?(39-$L($P(SRAO("2G"),"^"))),$E($P(SRAO("2G"),"^"),1,9),?40,"History of Cancer:",?72,$P(SRAO("3K"),"^")

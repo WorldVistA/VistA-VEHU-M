@@ -1,5 +1,5 @@
 PSOORUT3 ;ISC-BHAM/SAB-build listman screen continued ;12/07/95 18:12
- ;;7.0;OUTPATIENT PHARMACY;**5,25,243**;DEC 1997;Build 22
+ ;;7.0;OUTPATIENT PHARMACY;**5,25,243,700**;DEC 1997;Build 261
  ;
  ;Reference to MAIN^TIUEDIT supported by IA# 2410
  ;Reference to RESET^VALM4 supported by IA# 2334
@@ -34,7 +34,16 @@ DPLYOR ;displays status of patient's orders
  W ! S DIR(0)="E",DIR("A")="Press Return to Continue" D ^DIR
  K DIR,DIRUT,DTOUT,DUOUT
  Q
-A ;resizes list area
- S PSOBM=$S(VALMMENU:19,1:21) I VALM("BM")'=PSOBM S VALMBCK="R" D
- .S VALM("BM")=PSOBM,VALM("LINES")=(PSOBM-VALM("TM"))+1 I +$G(VALMCC) D RESET^VALM4
+A ;resizes list area (Called from PSO PENDING ORDER MENU - HEADER field)
+ S PSOBM=$S(VALMMENU:20,1:21) D RES
+ Q
+B ;resizes list area (Called from PSO LM ACCEPT MENU - HEADER field)
+ S PSOBM=21 D RES
+ Q
+RES ; Resize
+ ; Some users use 48-line on their Terminal Emulator to strech Listman body
+ I $D(^%ZOSF("ZVX")) Q
+ ;
+ I VALM("BM")'=PSOBM S VALMBCK="R" D
+ . S VALM("BM")=PSOBM,VALM("LINES")=(PSOBM-VALM("TM"))+1 I +$G(VALMCC) D RESET^VALM4
  Q

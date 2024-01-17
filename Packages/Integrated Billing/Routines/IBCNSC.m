@@ -1,5 +1,5 @@
 IBCNSC ;ALB/NLR - INSURANCE COMPANY EDIT ;6/1/05 9:42am
- ;;2.0;INTEGRATED BILLING;**46,137,184,276,320,371,400,488,547,592,668,752**;21-MAR-94;Build 20
+ ;;2.0;INTEGRATED BILLING;**46,137,184,276,320,371,400,488,547,592,668,752,763**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;also used for IA #4694
@@ -139,8 +139,8 @@ INSCO ; -- select insurance company
  . I ARRAY="^"!(ARRAY="") S VALMQUIT=1 Q
  . S IBCNS=ARRAY
  . ; Quit if lookup was successful
- . I IBCNS Q
- . ; lookup was not successful,quit if View only.
+ . ;I IBCNS Q  ;IB*763/DTG removed in order to continue to add ins co. if failing the $D check above
+ . ; lookup was not successful, quit if View only.
  . I $G(IBVIEW) W !,"Insurance Company not found." K IBCNS Q
  . ; Add new entry in upper case only
  . S DIC="^DIC(36,",DIC(0)="BEQZL",DLAYGO=36

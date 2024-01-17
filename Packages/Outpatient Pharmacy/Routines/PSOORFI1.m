@@ -1,5 +1,5 @@
 PSOORFI1 ;BIR/SAB - finish OP orders from OE/RR continued ;Dec 13, 2021@08:00:50
- ;;7.0;OUTPATIENT PHARMACY;**7,15,23,27,32,44,51,46,71,90,108,131,152,186,210,222,258,260,225,391,408,444,467,505,617,441,651**;DEC 1997;Build 30
+ ;;7.0;OUTPATIENT PHARMACY;**7,15,23,27,32,44,51,46,71,90,108,131,152,186,210,222,258,260,225,391,408,444,467,505,617,441,651,700**;DEC 1997;Build 261
  ;Ref. ^PS(50.7 supp. DBIA 2223
  ;Ref. ^PSDRUG( supp. DBIA 221
  ;Ref. L^PSSLOCK supp. DBIA 2789
@@ -107,7 +107,7 @@ PST D DOSE^PSOORFI4 K PSOINSFL
  S $P(RN," ",35)=" ",IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="   Entry By: "_USER1_$E(RN,$L(USER1)+1,35)
  S Y=$P(OR0,"^",12) X ^DD("DD") S ^TMP("PSOPO",$J,IEN,0)=^TMP("PSOPO",$J,IEN,0)_"Entry Date: "_$E($P(OR0,"^",12),4,5)_"/"_$E($P(OR0,"^",12),6,7)_"/"_$E($P(OR0,"^",12),2,3)_" "_$P(Y,"@",2) K RN
  ; DEA compliance note for eRx CS prescriptions
- N ERXIEN S ERXIEN=$$ERXIEN^PSOERXUT($G(ORD)_"P")
+ S ERXIEN=$$ERXIEN^PSOERXUT($G(ORD)_"P")
  I ERXIEN,$$GET1^DIQ(52.49,ERXIEN,95.1,"I"),$$CS^PSOERXA0(+$$GET1^DIQ(52.49,ERXIEN,3.2,"I")) D
  . S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)=""
  . S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="This prescription meets the requirements of the Drug Enforcement Administration"
@@ -120,6 +120,15 @@ PST D DOSE^PSOORFI4 K PSOINSFL
  E  S PSOACT=$S($D(^XUSEC("PSORPH",DUZ)):"DEFX",'$D(^XUSEC("PSORPH",DUZ))&($P($G(PSOPAR),"^",2)):"F",1:"")
  ; - PSOACTOV is used to force the Pending Order to be Read-Only (no updates) even if invoked by a Pharmacist
  I $G(PSOACTOV) S PSOACT=""
+ ; eRx Pending Order (Side-By-Side) Interface (Replaces conventional interface above)
+ S ERXIEN=$$ERXIEN^PSOERXUT($G(ORD)_"P")
+ I ERXIEN D
+ . I $D(VALMEVL) F I=1:1:99 D RESTORE^VALM10(I)
+ . S (IEN,LINE)=0 K ^TMP("PSOPO",$J)
+ . D SETPEN^PSOERUT5("PSOPO",ERXIEN,+ORD,.PSONEW,.PSODRUG,,0) S (VALMCNT,IEN)=LINE-1
+ . I $$GET1^DIQ(52.49,ERXIEN,95.1,"I"),$$CS^PSOERXA0($$GET1^DIQ(52.49,ERXIEN,3.2,"I")) D
+ . . S PKID=1,PKIE="Processing Digitally Signed eRx order"
+ ;
  D:'$G(ACP) EN^PSOLMPO S:$G(ACP) VALMBCK="Q" D:$G(PKI1)=2 DCP^PSOPKIV1
  Q
 POST ;post patient selection
@@ -167,7 +176,13 @@ PT ;process for all or one patient
  W !!,"Enter 'A' to process all patient orders",!,"      'S' to process orders for a patient",!,"      or 'E' or '^' to exit" Q
 EP ;continue processing or not
  W !,"If you want to continue processing orders Press RETURN or enter '^' to exit" Q
-LOCK S PSOPLCK=$$L^PSSLOCK(PAT,0) I '$G(PSOPLCK) D LOCK^PSOORCPY S POERR("QFLG")=1
+ ;
+LOCK ;
+ N SAVELKTM
+ ; Altering Lock Timout for MbM sites for this specific Lock to support volume eRx Processing
+ I $$GET1^DIQ(59.7,1,102,"I")="MBM" S SAVELKTM=DILOCKTM,DILOCKTM=.01
+ S PSOPLCK=$$L^PSSLOCK(PAT,0) I '$G(PSOPLCK) D LOCK^PSOORCPY S POERR("QFLG")=1
+ I $$GET1^DIQ(59.7,1,102,"I")="MBM" S DILOCKTM=SAVELKTM
  K PSOPLCK
  Q
 ULK S X=PAT_";DPT(" D ULK^ORX2 S:$G(PSOQUIT) POERR("QFLG")=1 ; not called anymore

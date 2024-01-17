@@ -1,5 +1,5 @@
 PSOSPMKY ;BIRM/MFR - State Prescription Monitoring Program - SSH Key Management ;01/06/16
- ;;7.0;OUTPATIENT PHARMACY;**451,625**;DEC 1997;Build 42
+ ;;7.0;OUTPATIENT PHARMACY;**451,625,723**;DEC 1997;Build 13
  ;
 EN ; Entry-point
  N STATEIEN,DIC,X,Y,DUOUT,DTOUT,PSOOS,LOCALDIR,X1,DIR,DIRUT,LOCALDIR
@@ -32,30 +32,38 @@ ACTION ; SSH Key Action
  . . W !!,"The ",$S(PSOOS["VMS":"OPEN VMS",1:"UNIX/LINUX")," LOCAL DIRECTORY parameter is missing for ",$$GET1^DIQ(5,STATEIEN,.01),". Please,"
  . . W !,"update it in the View/Edit SPMP State Parameters option and try again.",$C(7) D PAUSE^PSOSPMU1
  . K DIR S DIR("A")="SSH Key Encryption Type",DIR("?")="^D ETHELP^PSOSPMKY"
- . S DIR(0)="S^DSA:Digital Signature Algorithm (DSA);RSA:Rivest, Shamir & Adleman (RSA)"
+ . S DIR(0)="S^RSA:Rivest, Shamir & Adleman (RSA);DSA:Digital Signature Algorithm (DSA);ECDSA:Elliptic Curve Digital Signature Algorithm (ECDSA);EDDSA:Edward-curve Digital Signature Algorithm (ed25519)" ;p723
  . S DIR("B")="RSA" D ^DIR I $D(DUOUT)!($D(DIRUT)) Q
  . S ENCRTYPE=Y I Y="DSA" D  Q
  . . W !!,$G(IOBON),"WARNING:",$G(IOBOFF)," 'DSA' SSH keys are being phased out and are no longer supported.",$C(7)
+ . ;p723 prompt for bit size for ECDSA
+ . I ENCRTYPE="ECDSA" D  I $D(DUOUT)!($D(DIRUT)) Q
+ . . K DIR S DIR("A")="ECDSA encryption key size (bit size)",DIR("?")="Available key sizes are 256 bits, 384 bits, or 521 bits.  Also referred to as key length."
+ . . S DIR(0)="S^256:256 bits;384:384 bits;521:521 bits"
+ . . S DIR("B")="256" D ^DIR
+ . S ENCRBITS=$S(ENCRTYPE="ECDSA":Y,1:"")
  . I $D(^TMP("PSOPUBKY",$J)) D
  . . W !!,$G(IOBON),"WARNING:",$G(IOBOFF)," You may be overwriting SSH Keys that are currently in use.",$C(7)
- . K DIR S DIR("A")="Confirm Creation of SSH Keys for "_$$GET1^DIQ(5,STATEIEN,.01),DIR(0)="Y",DIR("B")="NO"
+ . K DIR S DIR("A")="Confirm Creation of SSH "_ENCRTYPE_" Keys for "_$$GET1^DIQ(5,STATEIEN,.01),DIR(0)="Y",DIR("B")="NO"
  . W ! D ^DIR I $D(DIRUT)!$D(DUOUT)!'Y Q
  . ; Deleting Existing SSH Key
  . I $D(^TMP("PSOPUBKY",$J)) D DELETE(STATEIEN)
  . W !!,"Creating New SSH Keys, please wait..."
- . N ZTRTN,ZTIO,ZTDESC,ZTDTH,ZTSK
- . S ZTRTN="NEWKEY^PSOSPMKY("_STATEIEN_","""_ENCRTYPE_""")",ZTIO=""
- . S ZTDESC="State Prescription Monitoring Program (SPMP) SSH Key Generation"
- . S ZTDTH=$$NOW^XLFDT() D ^%ZTLOAD K ZTSK
- . K ^TMP("PSOPUBKY",$J)
- . F I=1:1:30 D RETRIEVE(STATEIEN,"PUB") Q:$D(^TMP("PSOPUBKY",$J))  H 1
+ . ;p723 removing the task off logic, unnecessary
+ . ;N ZTRTN,ZTIO,ZTDESC,ZTDTH,ZTSK
+ . ;S ZTRTN="NEWKEY^PSOSPMKY("_STATEIEN_","""_ENCRTYPE_""")" 
+ . ;S ZTDESC="State Prescription Monitoring Program (SPMP) SSH Key Generation"
+ . ;S ZTDTH=$$NOW^XLFDT() D ^%ZTLOAD K ZTSK
+ . ;K ^TMP("PSOPUBKY",$J)
+ . ;F I=1:1:30 D RETRIEVE(STATEIEN,"PUB") Q:$D(^TMP("PSOPUBKY",$J))  H 1
  . ; If unable to create the key via Taskman after 30 seconds, creates them in the foreground
- . I '$D(^TMP("PSOPUBKY",$J)) D
- . . D NEWKEY(STATEIEN,ENCRTYPE),RETRIEVE(STATEIEN,"PUB")
+ . ;I '$D(^TMP("PSOPUBKY",$J)) D
+ . D NEWKEY(STATEIEN,ENCRTYPE,ENCRBITS),RETRIEVE(STATEIEN,"PUB") ;p723 pass ENCRBITS
  . I '$D(^TMP("PSOPUBKY",$J)) D
  . . W !!,"There was a problem with the generation of the new SSH Key Pair."
  . . W !,"Please try again and if the problem persists contact IT Support.",$C(7) D PAUSE^PSOSPMU1
  . E  W "Done",$C(7)
+ K ENCRBITS
  ;
  ; Delete SSH Key Pair
  I Y="D" D  G ACTION
@@ -74,7 +82,7 @@ ACTION ; SSH Key Action
  ;
 END Q
  ;
-NEWKEY(STATEIEN,ENCRTYPE) ; Generate and store a pair of SSH keys for a specific state
+NEWKEY(STATEIEN,ENCRTYPE,ENCRBITS) ; Generate and store a pair of SSH keys for a specific state
  ; Input: (r) STATEIEN - State that will be using the new key pair. Pointer to the STATE file (#5)
  ;        (o) ENCRTYPE - SSH Encryption Type (DSA / RSA) (Default: RSA)
  N LOCALDIR,DATETIME,PSOOS,KEYFILE,PV,FILE2DEL,LINE,OVFLINE,NMSPC,KEYTXT,SAVEKEY,DIE,DR,DA
@@ -82,7 +90,8 @@ NEWKEY(STATEIEN,ENCRTYPE) ; Generate and store a pair of SSH keys for a specific
  I '$G(STATEIEN) Q  ;Error: State missing
  S PSOOS=$$OS^%ZOSV()
  S LOCALDIR=$$GET1^DIQ(58.41,STATEIEN,$S(PSOOS["VMS":4,1:15)) I LOCALDIR="" Q  ;Error: Missing directory
- I $G(ENCRTYPE)'="DSA",$G(ENCRTYPE)'="RSA" S ENCRTYPE="RSA"
+ ;I $G(ENCRTYPE)'="DSA",$G(ENCRTYPE)'="RSA" S ENCRTYPE="RSA"
+ S ENCRTYPE=$S($G(ENCRTYPE)="ECDSA":"ECDSA",$G(ENCRTYPE)="EDDSA":"ed25519",1:"RSA")
  ;
  ; LOCK to avoid OS files overwrite
  F  S DATETIME=$P($$FMTHL7^XLFDT($$HTFM^XLFDT($H)),"-") S KEYFILE="KEY"_DATETIME L +@KEYFILE:0 Q:$T  H 2
@@ -105,7 +114,8 @@ NEWKEY(STATEIEN,ENCRTYPE) ; Generate and store a pair of SSH keys for a specific
  ; Linux/Unix SSH Key Generation
  I PSOOS["UNIX" D
  . I '$$DIREXIST^PSOSPMU1(LOCALDIR) D MAKEDIR^PSOSPMU1(LOCALDIR)
- . X "S PV=$ZF(-1,""ssh-keygen -q -N '' -C '' -t "_$$LOW^XLFSTR($G(ENCRTYPE))_" -f "_LOCALDIR_KEYFILE_""")"
+ . S ENCRBITS=$S($G(ENCRBITS):" -b "_ENCRBITS,1:"")
+ . X "S PV=$ZF(-1,""ssh-keygen -q -N '' -C '' -t "_$$LOW^XLFSTR($G(ENCRTYPE))_" -f "_LOCALDIR_KEYFILE_ENCRBITS_""")"
  . S FILE2DEL(KEYFILE)="",FILE2DEL(KEYFILE_".pub")=""
  ;
  K ^TMP("PSOPRVKY",$J),^TMP("PSOPUBKY",$J)
@@ -136,7 +146,7 @@ NEWKEY(STATEIEN,ENCRTYPE) ; Generate and store a pair of SSH keys for a specific
  ;
  ; Saving SSH Key Format (SSH2/OpenSSH) and Encryption Type (DSA/RSA) fields
  K DIE S DIE="^PS(58.41,",DA=STATEIEN
- S DR="18///"_$S(PSOOS["VMS":"SSH2",1:"OSSH")_";19///"_ENCRTYPE D ^DIE
+ S DR="18///"_$S(PSOOS["VMS":"SSH2",1:"OSSH")_";19////"_ENCRTYPE D ^DIE
  ;
  L -@KEYFILE
  Q
@@ -216,12 +226,13 @@ HELP ; SSH Key Help Text
  W !,""
  W !,"Step 1: Select the 'N' (Create New SSH Key Pair) Action and follow the prompts"
  W !,"        to create a new pair of SSH keys. If you already have an existing SSH"
- W !,"        Key Pair you can skip this step."
- W !,"        You can check whether you already have an existing SSH Key Pair"
- W !,"        through the 'V' (View Public SSH Key) Action."
+ W !,"        Key Pair you can skip this step. You can check whether you already"
+ W !,"        have an existing SSH Key Pair through the 'V' (View Public SSH Key)"
+ W !,"        Action."
  W !,""
- W !,"        Encryption Type: DSA or RSA?"
- W !,"        ----------------------------"
+ ;PSO*7*723 add ECDSA
+ W !,"        Encryption Type: DSA, RSA, ECDSA or EDDSA?"
+ W !,"        -----------------------------------"
  D ETHELP,PAUSE^PSOSPMU1
  W !!,"Step 2: Share the Public SSH Key content with the state/vendor. In order to"
  W !,"        successfully establish SPMP transmissions the state/vendor will have"
@@ -233,10 +244,16 @@ HELP ; SSH Key Help Text
  W !,"        make sure it contains only one line of text (no wrapping)."
  Q
 ETHELP ; Encryption Type Help
- W !,"        Digital Signature Algorithm (DSA) and Rivest, Shamir & Adleman (RSA)"
- W !,"        are two of the most common encryption algorithms used by the IT"
- W !,"        industry for securely sharing data. The majority of SPMP servers can"
- W !,"        handle either type; however there are vendors that accept only one"
- W !,"        specific type. You will need to contact the SPMP vendor support to"
- W !,"        determine which type to select."
+ W !,"        Digital Signature Algorithm (DSA) (No longer supported) and Rivest,"
+ w !,"        Shamir & Adleman (RSA) have been two of the most common encryption"
+ W !,"        algorithms used by the IT industry for securely sharing data. "
+ ;PSO*7*723 add ECDSA/EDDSA
+ W !,"        Elliptic Curve Digital Signature Algorithm (ECDSA) and Edward-curve"
+ W !,"        Digital Signature Algorithm (EDDSA) are more complex public key"
+ W !,"        cryptography encryption algorithms that are now supported by the VA."
+ W !,"        Many of SPMP servers can handle all types; however there are vendors"
+ W !,"        that accept only one specific type. You will need to contact the SPMP"
+ W !,"        vendor support to determine which type to select.  If ECDSA is selected"
+ W !,"        you will be prompted to enter the Bit size.  Valid selections are 256,"
+ W !,"        384 or 521."
  Q

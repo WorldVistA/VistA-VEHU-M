@@ -1,7 +1,8 @@
 IBCNINSC ;AITC/DG/TAZ - GENERAL INSURANCE UTILITIES - INSURANCE COMPANY LOOKUP ;02/01/23
- ;;2.0;INTEGRATED BILLING;**752**;21-MAR-94;Build 20
+ ;;2.0;INTEGRATED BILLING;**752,763**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
+ ; Reference to RECALL^DILFD supported by ICR #2055
  Q
  ;
 INSOCAS(ARRY,IBNE,IBLIMIT,IBSCR) ; lookup for case insensitive
@@ -23,8 +24,10 @@ INSOCAS(ARRY,IBNE,IBLIMIT,IBSCR) ; lookup for case insensitive
  ;           ARRY='Insurance company name as entered by user' IF optional single lookup is one (IBNE=1)
  ;                 AND the name entered is not found.
  ;
- N DIR,DIROUT,DIRUT,DTOUT,DUOUT,IBA,IBB,IBC,IBCT,IBD,IBFILTER,IBFND,IBI,IBINDX,IBJ,IBK,IBL,IBLKNM,IBLKX,IBLM
- N IBLKUNM,IBN,IBNMA,IBNMR,IBNML,IBOK,IBOK1,IBPROMPT,IBR,IBRNM,IBTMPA,IBTMPFIL,IBTMPTRK,IBTN,IBX,IBXN,X,Y
+ ;IB*763/TAZ - Added IBSBR to new statement
+ N C,DIR,DIROUT,DIRUT,DTOUT,DUOUT,IBA,IBB,IBC,IBCT,IBD,IBFILTER,IBFND,IBI,IBINDX,IBJ,IBK,IBL
+ N IBLKNM,IBLKX,IBLM,IBLKUNM,IBN,IBNMA,IBNMR,IBNML,IBOK,IBOK1,IBPROMPT,IBR,IBRNM,IBSBR,IBTIC,IBTMPA
+ N IBTMPFIL,IBTMPTRK,IBTN,IBX,IBXN,X,Y
  ;
  I $G(U)'="^" S U="^"
  I '+DT S DT=$$DT^XLFDT
@@ -38,6 +41,7 @@ INSOCAS(ARRY,IBNE,IBLIMIT,IBSCR) ; lookup for case insensitive
  K ARRY S ARRY=""
 INSOCAS1 ; entry point for loop back
  ;
+ S IBSBR=0
  S IBA="Select "_($S(+$G(ARRY)>0:"another ",1:""))_IBPROMPT
  S IBTMPFIL="^TMP("_$J_",""IBCNINSC_LKUP"")" K @IBTMPFIL
  S IBTMPTRK="^TMP("_$J_",""IBCNINSC_TRK"")" K @IBTMPTRK
@@ -49,6 +53,15 @@ INSOCAS1 ; entry point for loop back
  S DIR("??")="^D HLPLSA^IBCNINSC"
  D ^DIR
  I $E(Y)=U!($D(DTOUT))!($D(DUOUT))!($D(DIROUT)) S:'$G(ARRY) ARRY=U G INSOCASX
+ ;IB*763/TAZ-DTG - Added processing for Spacebar return or tic and IEN ex: ' ' or '`12345'
+ I $E(Y)="`" S IBTIC=1 D  I 'IBTIC W "   Insurance Company IEN not found" G INSOCAS1  ;IB*763/DTG validate that the IEN for the tic is real.
+ . N IBTR S IBTR=$E(Y,2,$L(Y)) I IBTR="" S IBTIC=0 Q  ; IB*763/DTG must start with a number
+ . I '$D(^DIC(36,IBTR,0)) S IBTIC=0  ; IB*763/DTG must be a found record.
+ I Y=" "!($E(Y)="`") N X,DIC S X=Y,DIC=36 D ^DIC I Y G:$$SELECTED(Y) INSOCAS1 D  G SKIPLKUP
+ . S IBSBR=1
+ . S IBC=$G(@IBTMPFIL@(0))+1,@IBTMPFIL@(0)=IBC
+ . S @IBTMPFIL@(IBC)=$P(Y,U,2)_U_+Y,@IBTMPTRK@(+Y)=1
+ . S IBX=X,IBFND=""
  I Y="" G INSOCASX
  S IBFND=""
  S IBX=X
@@ -63,6 +76,7 @@ INSOCAS1 ; entry point for loop back
  .. S IBA=IBNMA,IBB=$$UP^XLFSTR(IBNMA)
  .. S IBOK=$$FILTER^IBCNINSU(IBB,IBFILTER_U_IBLKUNM) I 'IBOK Q
  .. S IBNMR="" F  S IBNMR=$O(^DIC(36,IBINDX,IBNMA,IBNMR)) Q:'IBNMR  D
+ ... I '$D(^DIC(36,+IBNMR,0)) Q  ;IB*763/DTG to protect against bad index value
  ... S IBN=IBNMR
  ... S IBOK1=1 I IBSCR'="" S IBOK1=0,Y=+IBN X IBSCR I  S IBOK1=1
  ... I 'IBOK1 Q
@@ -72,10 +86,14 @@ INSOCAS1 ; entry point for loop back
  ... I IBINDX="C" S @IBTMPFIL@(IBC)=@IBTMPFIL@(IBC)_U_$P($G(^DIC(36,IBN,0)),U,1)
  ... S @IBTMPTRK@(IBN)=1
  ;
+SKIPLKUP ; Bypass Lookup if spacebar-return used. IB*763/TAZ
+ ;
  ; display / select displayed names
  ; no insurance found
  I '@IBTMPFIL@(0) S IBFND="",IBOK=0 D  G INSOCAS1:'IBOK,INSOCASX
- . I IBNE,'ARRY S ARRY=X,IBOK=1 Q  ; if only one insurance allowed treat as a new insurance if an insurance has not been selected
+ . ;I IBNE,'ARRY S ARRY=X,IBOK=1 Q  ; if only one insurance allowed treat as a new insurance if an insurance has not been selected
+ . I IBNE,'ARRY D  Q:IBOK  ;IB*763/DTG only use if minimum 3 characters in length
+ . . I $L(X)>2 S ARRY=X,IBOK=1 Q  ; if only one insurance allowed treat as a new insurance if an insurance has not been selected
  . W "   No Insurance names found that match the criteria."
  ;
  ; if only one item found
@@ -83,7 +101,8 @@ INSOCAS1 ; entry point for loop back
  . S IBE=$$IBESET($G(@IBTMPFIL@(1)))
  . S IBFND=$$FNDSET(IBE)
  . D ARSET(IBFND)
- . S IBXN=$E($P(IBE,U,2),($L(IBX)+1),($L($P(IBE,U,2))))
+ . ;IB*763/TAZ - Print complete Ins Co Name for spacebar-return
+ . S IBXN=$E($P(IBE,U,2),$S(IBSBR:0,1:($L(IBX)+1)),($L($P(IBE,U,2))))
  . D DISPADDR(IBXN,+IBE,"",1,$P(IBE,U,3))
  . I 'IBNE S IBOK=1
  ;
@@ -123,6 +142,8 @@ IBESET(IBSTR) ; set IBE equal to array item
  ;
  N IBA S IBA=""
  S IBA=$P(IBSTR,U,2)_U_$P(IBSTR,U,1)_U_$P(IBSTR,U,3)
+ ;IB*763/TAZ - Added "spacebar-return" functionality to recall the last insurance company selected.
+ D RECALL^DILFD(36,+IBA_",",DUZ)  ;ICR #2055
  Q IBA
  ;
 FNDSET(IBIN) ; set string to be saved in the return array
@@ -163,11 +184,16 @@ INSDA ; loop back point
  I $E(Y)=U S IBFND=U Q IBFND
  I 'Y Q ""
  S IBE=$$IBESET($G(@IBTMPFIL@(+Y)))
- I $D(ARRY(+IBE)) D  G INSDA
- .W !!?3,"Already selected. Choose another insurance company.",!,*7
+ I $$SELECTED(IBE) G INSDA
  ; return ien ^ name ^ zero node
  S IBFND=$$FNDSET(IBE)
  Q IBFND
+ ;
+ ;IB*763/TAZ - Created subroutine so could be called from multiple locations.
+SELECTED(IBE) ; Check to see if selected.
+ N SEL S SEL=0
+ I $D(ARRY(+IBE)) W:IBSBR $P(IBE,U,2) W !!?3,"Already selected. Choose another insurance company.",!,*7 S SEL=1
+ Q SEL
  ;
 DISPADDR(IBNAME,IBNMIEN,IBNUM,IBPCK,IBRNM) ; display the item with identifying info
  ;

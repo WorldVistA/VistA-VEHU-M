@@ -1,5 +1,5 @@
 DGREGEEWS ;ALB/MCF - E&E Web Service ;9 September 2020 9:00 AM
- ;;5.3;Registration;**1027**;Aug 13, 1993;Build 70
+ ;;5.3;Registration;**1027,1095**;Aug 13, 1993;Build 23
  ;
  ; Subscribed ICR: 
  ; Reference to routine XOBWLIB in ICR #5421 - Public APIs for HWSC
@@ -10,11 +10,12 @@ DGREGEEWS ;ALB/MCF - E&E Web Service ;9 September 2020 9:00 AM
  ; SAC EXEMPTION 20210107-01 : Use of vendor specific code
  ;
  Q
-EN(DGKEY,DGREQNAM,DGENSTAT,DGWSHTOE) ; Main entry point function call
+EN(DGKEY,DGREQNAM,DGENSTAT,DGWSHTOE,DGCOMP) ; Main entry point function call
  ; Input : DGKEY (Required) - patient full ICN with checksum -> ICN_"V"_CHECKSUM
  ;         DGREQNAM (Required)  - Requester name. Ex: "VistAData"
  ; Output: DGENSTAT (Pass by reference) - Contains the enrollment status. NULL = ICN is unknown to ES
  ;         DGWSHTOE (Pass by reference) - Contains the "Do You Wish To Enroll?" value.
+ ;         DGCOMP   (Pass by reference) - Contains the "COMPACT Act Eligible?" value.
  ; Return: DGRESP - the response in the format "N^Descriptive text".
  ;                  1 - An enrollment status exists. Descriptive text=Enrollment Status
  ;                  0 - No enrollment status exists OR Invalid ICN OR Network error.
@@ -23,7 +24,7 @@ EN(DGKEY,DGREQNAM,DGENSTAT,DGWSHTOE) ; Main entry point function call
  N $ETRAP,$ESTACK
  ; set error trap
  S $ETRAP="DO ERR^DGREGEEWS"
- S (DGENSTAT,DGWSHTOE,DGSTCODE)=""
+ S (DGENSTAT,DGWSHTOE,DGSTCODE,DGCOMP)=""
  S DGRESP="0^Unknown error"
  D GETSUMM(.DGSUMMARY)
  I '$GET(DGSUMMARY) Q DGRESP
@@ -49,6 +50,7 @@ RESULTS(DGSUMMARY) ; get enrollment status and "do you wish to enroll value?"
  . S DGRESP="1^"_DGSTCODE_" Valid ICN and known to ES"
  . S DGENSTAT=DGSUMMARY.enrollmentDeterminationInfo.enrollmentStatus
  . S DGWSHTOE=DGSUMMARY.enrollmentDeterminationInfo.registrationInfo.doYouWishToEnroll
+ . S DGCOMP=DGSUMMARY.enrollmentDeterminationInfo.compactActIndicator
  E  D
  . S DGRESP="0^"_DGSTCODE_" Valid ICN but UNKNOWN to ES"
  Q

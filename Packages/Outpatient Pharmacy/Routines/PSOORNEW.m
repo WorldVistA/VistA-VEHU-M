@@ -1,5 +1,5 @@
 PSOORNEW ;BIR/SAB - display orders from oerr ;Dec 13, 2021@08:01:18
- ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,55,46,71,90,94,106,131,133,143,237,222,258,206,225,251,386,390,391,372,416,431,313,408,436,411,444,486,446,505,517,508,457,581,617,441,651**;DEC 1997;Build 30
+ ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,55,46,71,90,94,106,131,133,143,237,222,258,206,225,251,386,390,391,372,416,431,313,408,436,411,444,486,446,505,517,508,457,581,617,441,651,700**;DEC 1997;Build 261
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PS(50.606 supported by DBIA 2174
@@ -73,32 +73,43 @@ PT D DOSE2^PSOORFI4
  I $G(PSOSIGFL)!(PSODRUG("OI")'=$P(OR0,"^",8)) S PSONEW("CLERK CODE")=DUZ,PSORX("CLERK CODE")=$P(^VA(200,DUZ,0),"^"),VALMSG="This change will create a new prescription!"
  S $P(RN," ",35)=" ",IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="   Entry By: "_$P(^VA(200,PSONEW("CLERK CODE"),0),"^")_$E(RN,$L($P(^VA(200,PSONEW("CLERK CODE"),0),"^"))+1,35)
  S Y=$P(OR0,"^",12) X ^DD("DD") S ^TMP("PSOPO",$J,IEN,0)=^TMP("PSOPO",$J,IEN,0)_"Entry Date: "_$E($P(OR0,"^",12),4,5)_"/"_$E($P(OR0,"^",12),6,7)_"/"_$E($P(OR0,"^",12),2,3)_" "_$P(Y,"@",2) K RN
+ S ERXIEN=$$ERXIEN^PSOERXUT($G(ORD)_"P")
+ ; eRx Pending Order (Side-By-Side) Interface (Replaces conventional interface above)
+ I ERXIEN D
+ . S (IEN,LINE)=0 K ^TMP("PSOPO",$J)
+ . D SETPEN^PSOERUT5("PSOPO",ERXIEN,+ORD,.PSONEW,.PSODRUG,.SIG,0) S (VALMCNT,IEN)=LINE-1
+ . D RV^PSONFI
  I PSOLMC<2 D ^PSOLMPO1 S VALMBCK="Q",PSOLMC=0
  S:PSOLMC>1 VALMBCK="R"
  Q
 ORCHK D PROVCOM^PSOORFI4,IND^PSOORFI4,ORCHK^PSOORFI4
  Q
 EDT ; Entry point for ED Action in the OP Pending Queue
- I $$CSERX(ORD) Q  ; Not allowed to edit CS eRx orders
+ D KV
+ S DIR("A",1)="* Indicates which fields will create an new Order"
+ S DIR("A")="Select Field to Edit by number",DIR(0)="LO^1:15"
+ D ^DIR Q:$D(DTOUT)!($D(DUOUT))
  ;
- D KV S DIR("A",1)="* Indicates which fields will create an new Order",DIR("A")="Select Field to Edit by number",DIR(0)="LO^1:15" D ^DIR Q:$D(DTOUT)!($D(DUOUT))
 EDTSEL ; Entry point for individual field editing
- I $$CSERX(ORD) Q  ; Not allowed to edit CS eRx orders
+ I $$ERXIEN^PSOERXUT(ORD_"P") S PSOVLMBG=VALMBG
+ ; Only 'Routing' Field can be edited for CS eRx Pending Orders
+ I +$G(Y)'=11,$$CSERX(ORD) Q  ; Not allowed to edit CS eRx orders
  N LST,FLD,OUT,CHECK,CSDRG D KV S (OUT,CSDRG)=0
  I '$D(PSODRG) S PSODRG=$G(PSODRUG("IEN"))
  I PSODRG,$$NDF(PSODRG)!($$CSDRG(PSODRG)) S CSDRG=1
  I +Y S LST=Y D FULL^VALM1 N PSODOSE M PSODOSE=PSONEW D  G DSPL
  .I CSDRG,(","_LST[",1,")!(","_LST[",3,")!(","_LST[",10,")!(","_LST[",13,") D
- ..W !!,"The selection includes field(s) that are not editable" W !,"for controlled substances. These field(s) will be skipped.",!
+ ..W !!,"The selection includes field(s) that are not editable"
+ ..W !,"for controlled substances. These field(s) will be skipped.",!
  ..S DIR(0)="E" D ^DIR K DIR
  .F FLD=1:1:$L(LST,",") Q:$P(LST,",",FLD)']""!(OUT)  D
  ..S CHECK=","_+$P(LST,",",FLD)_"," I CSDRG,",1,3,10,13,"[CHECK Q
  ..D @(+$P(LST,",",FLD)) D:$P(LST,",",FLD)=8 REF D KV
  E  S VALMBCK="" Q
 ACP ;
+ D FULL^VALM1
  N PSOORNEW,DIR,Y S Y=0,PSOORNEW=1
  I $G(ORD),+$P($G(^PS(52.41,+ORD,0)),"^",23)=1 D  Q:$D(DIRUT)!'Y  D EN1^ORCFLAG(+$P($G(^PS(52.41,ORD,0)),"^")) H 1
- . D FULL^VALM1
  . I '$D(^XUSEC("PSORPH",DUZ)) D  S Y=0 Q
  . . S DIR("A",1)="Order must be unflagged by a pharmacist before it can be finished."
  . . S DIR("A",2)=""
@@ -246,5 +257,5 @@ CSBLOCK(DFN,DIEN) ;
  ;
 CSERX(ORD) ; Check whether a Pending Order is for a CS eRx
  I $$ERXIEN^PSOERXUT(ORD_"P"),$$CSDRG(+$$GET1^DIQ(52.41,+ORD,11,"I")) D  Q 1
- . S VALMSG="CS eRx prescriptions cannot be edited",VALMBCK="R" W $C(7)
+ . S VALMSG="Only the 'Routing' field can be edited (CS eRx).",VALMBCK="R" W $C(7)
  Q 0

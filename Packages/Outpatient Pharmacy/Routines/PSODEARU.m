@@ -1,5 +1,5 @@
 PSODEARU ;WILM/BDB - EPCS Utilities and Reports; [5/7/02 5:53am] ;10/5/21  14:50
- ;;7.0;OUTPATIENT PHARMACY;**667,545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**667,545,731**;DEC 1997;Build 18
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002
  ;External reference to XUEPCS DATA file (#8991.6) is supported by DBIA 7015
  ;External reference to XUEPCS PSDRPH AUDIT file (#8991.7) is supported by DBIA 7016
@@ -17,6 +17,7 @@ OENDL(PSONS,BDT,EDT,FN) ;
  . S ND=0 F  S ND=$O(^XTV(FN,"DT",LD,ND)) Q:'ND  D
  .. Q:'$D(^XTV(FN,ND,0))
  .. S DAT=^XTV(FN,ND,0)
+ .. I FN=8991.6 I $P(DAT,"^",3)=.03 Q  ;P731 detox/x-waiver removal
  .. S IEN=$P(DAT,"^")
  .. S (DV,DVS)=0 F  S DV=$O(^VA(200,IEN,2,DV)) Q:('DV)&(DVS>0)  S:'DV DV=999999 D
  ... S DVS=DVS+1

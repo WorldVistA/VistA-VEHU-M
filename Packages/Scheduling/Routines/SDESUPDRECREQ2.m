@@ -1,5 +1,5 @@
-SDESUPDRECREQ2 ;ALB/LAB,KML,MGD,RRM,ANU - VISTA SCHEDULING CREATE EDIT RECALL REQ RPC ;March 06, 2023
- ;;5.3;Scheduling;**823,842**;Aug 13, 1993;Build 17
+SDESUPDRECREQ2 ;ALB/LAB,KML,MGD,RRM,ANU,BWF - VISTA SCHEDULING CREATE EDIT RECALL REQ RPC ;March 06, 2023
+ ;;5.3;Scheduling;**823,842,861**;Aug 13, 1993;Build 17
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -13,7 +13,7 @@ SDESUPDRECREQ2 ;ALB/LAB,KML,MGD,RRM,ANU - VISTA SCHEDULING CREATE EDIT RECALL RE
  ;   ACCNO     - (optional) Accession # (free-text 1-25 characters)
  ;   SDCMT     - (optional) COMMENT (free-text 1-80 characters)
  ;   FASTING   - (required) FAST/NON-FASTING  valid values:  FASTING,NON-FASTING,NONE
- ;   APPTP     - (required) Test/App pointer to RECALL REMINDERS APPT TYPE file 403.51
+ ;   APPTP     - (required) Test/App pointer or name (.01) to RECALL REMINDERS APPT TYPE file 403.51
  ;   RRPROVIEN - (required) Provider - Pointer to RECALL REMINDERS PROVIDERS file 403.54
  ;   CLINIEN   - (required) Clinic pointer to HOSPITAL LOCATION file
  ;   APPTLEN   - (optional) Length of Appointment  numeric between 10 and 120
@@ -137,11 +137,10 @@ VALIDATEFASTING(ERRORS,FASTING) ;Validate Fasting
  ;
 VALIDATEAPPTP(ERRORS,APPTP) ;Validate Appointment Type
  I APPTP="" D ERRLOG^SDESJSON(.ERRORS,139) Q APPTP
- ;ANU
+ I +APPTP,$D(^SD(403.51,APPTP,0)) Q APPTP
+ I +APPTP,'$D(^SD(403.51,APPTP,0)) D ERRLOG^SDESJSON(.ERRORS,132) Q APPTP
  S APPTP=$O(^SD(403.51,"B",APPTP,""))
- I APPTP="" D ERRLOG^SDESJSON(.ERRORS,139) Q APPTP
- ;
- I '$D(^SD(403.51,APPTP)) D ERRLOG^SDESJSON(.ERRORS,132)
+ I APPTP="" D ERRLOG^SDESJSON(.ERRORS,132) Q APPTP
  Q APPTP
  ;
 VALIDATERRPRVIEN(ERRORS,RRPROVIEN) ;Validate Recall Provider IEN

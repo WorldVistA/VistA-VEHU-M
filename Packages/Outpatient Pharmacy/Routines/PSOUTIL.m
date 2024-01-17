@@ -1,5 +1,5 @@
 PSOUTIL ;IHS/DSD/JCM - outpatient pharmacy utility routine ;12/28/15 4:01pm
- ;;7.0;OUTPATIENT PHARMACY;**64,456,444,469,504,651,545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**64,456,444,469,504,651,545,731**;DEC 1997;Build 18
  ;External reference $$MXDAYSUP^PSSUTIL1 supported by DBIA 6229
  ;External reference to ^ORDEA is supported by DBIA 5709
  ;
@@ -249,6 +249,7 @@ BADADDFL(RXIEN) ; Indicate whether an Rx should be flagged with a Bad Address
 PRVDETOX(PRVIEN) ; Returns the Provider DETOX#, if available and not expired
  ; Input: (r) PRVIEN   - Provider IEN (Pointer to VA PERSON file (#200))
  ;Output:     PRVDETOX - Provider Detox #
+ Q "" ;P731 detox/x-waiver removal
  N PRVDETOX
  S PRVDETOX=$$DETOX^XUSER(PRVIEN) I PRVDETOX?2A7N Q PRVDETOX
  Q ""
@@ -269,7 +270,8 @@ RXDETOX(RXIEN,ORIEN) ; Returns the Provider DETOX# associated with the Prescript
  N RXDETOX
  I $G(RXIEN) S ORIEN=+$$GET1^DIQ(52,RXIEN,39.3,"I")
  I $G(ORIEN) K ^TMP($J,"ORDEA") D ARCHIVE^ORDEA(ORIEN) S RXDETOX=$P($G(^TMP($J,"ORDEA",ORIEN,2)),"^",2) K ^TMP($J,"ORDEA")
- Q $G(RXDETOX)
+ ;Q $G(RXDETOX) ;P731 detox/x-waiver removal
+ Q ""
  ;
 CHKRXPRV(RXIEN,PRVIEN) ; Check if the Provider can be assigned to a specific Prescription (Used for Rx Copy, Rx Renewal, etc.)
  ; Input: (r) RXIEN  - Prescription IEN (Pointer to the PRESCRIPTION file (#52))

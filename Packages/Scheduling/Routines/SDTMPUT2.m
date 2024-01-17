@@ -1,5 +1,5 @@
 SDTMPUT2 ;MS/SJA - VISTA-BULK DEFAULT PROVIDER UPDATE ;May 15, 2022
- ;;5.3;Scheduling;**817,850**;Aug 13, 1993;Build 12
+ ;;5.3;Scheduling;**817,859**;Aug 13, 1993;Build 10
  ;
  ;
  N AA,ACT,ALL,CLN,CNT,LN,DIV,III,NUM,LOC,RESTCD,SC,SDACT,STCODE,STCD,STOP,SDASH,SDOUT,STIEN,VAL,SEL,STFLG
@@ -107,13 +107,13 @@ PRU(PRIEN) ; call for provider call
  S (CLN,CNT,TOTAL)=0,VAL="" F  S CLN=$O(^SC("AVADPR",PRIEN,CLN)) Q:'CLN  S TOTAL=TOTAL+1 D
  . S (CNT,NUM)=0 F  S NUM=$O(^SC(CLN,"PR",NUM)) Q:'NUM  S CNT=CNT+1,AA=$G(^(NUM,0)) S:$P(AA,U,2) VAL=$P(AA,U)_U_CLN
  . I $G(CLN) S STOP=$$SC(CLN),STCD=$TR(STOP," ()","")
- . ; 850
+ . ; 859
  . S STFLG=0 F II=1,2 S STCODE=$P(STCD,"/",II) I STCODE,RESTCD[(","_STCODE_",") D  Q
  .. S STFLG=1
  .. W !,CLN,?12,$$GET1^DIQ(44,CLN,.01),STOP
  .. W !,?8,"--- Telehealth Patient Site Stop Codes are not allowed for Bulk",!,?12,"Default Provider Update"
  . I STFLG Q
- . ; 850
+ . ; 859
  . S SDACT=$G(^SC(CLN,"I")) I +SDACT>0 I DT>$P(SDACT,U)&($P(SDACT,U,2)=""!(DT<$P(SDACT,U,2))) D  Q
  . . W !,CLN,?12,$$GET1^DIQ(44,CLN,.01),STOP W !,?8,"--- Provider update on inactive clinics is not allowed.",!
  . ;
@@ -133,13 +133,13 @@ PRC(CLIEN,STCODE) ; call for clinic search
  I SEL="S" S II=$S(SC="P":1,1:2) I $P(STCODE,U,II),RESTCD[(","_$P(STCODE,U,II)_",") D  Q
  . W !,CLIEN,?12,$$GET1^DIQ(44,CLIEN,.01),$$SC(CLIEN)
  . W !,?8,"--- Telehealth Patient Site Stop Codes are not allowed for Bulk",!,?12,"Default Provider Update"
- ; 850
+ ; 859
  S STFLG=0 F II=1,2 S STCODE=$P(STCD,"/",II) I STCODE,RESTCD[(","_STCODE_",") D  Q
  . S STFLG=1
  . W !,CLIEN,?12,$$GET1^DIQ(44,CLIEN,.01),STOP
  . W !,?8,"--- Telehealth Patient Site Stop Codes are not allowed for Bulk",!,?12,"Default Provider Update"
  I STFLG Q
- ; 850
+ ; 859
  S SDACT=$G(^SC(CLIEN,"I")) I +SDACT>0 I DT>$P(SDACT,U)&($P(SDACT,U,2)=""!(DT<$P(SDACT,U,2))) D  Q
  . W !,CLIEN,?12,$$GET1^DIQ(44,CLIEN,.01),STOP W !,?8,"--- Provider update on inactive clinics is not allowed.",!
  ;

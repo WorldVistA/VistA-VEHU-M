@@ -1,5 +1,5 @@
 IBCMDT ;ALB/VD - INSURANCE PLANS MISSING DATA REPORT (DRIVER) ; 10-APR-15
- ;;2.0;INTEGRATED BILLING ;**549**; 10-APR-15;Build 54
+ ;;2.0;INTEGRATED BILLING ;**549,763**; 10-APR-15;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; IB - Insurance Plans Missing Data Report.
@@ -47,7 +47,8 @@ C0 ; Start the Insurance Company Prompts.
  S STOP=0,IBMDTSPC("IBNMSPC")=$J
  ;
  W @IOF
- W !!?5,"This report will generate a list of ACTIVE insurance companies"
+ ;IB*763/CKB - the intro sentence should reference group plans not insurance companies
+ W !!?5,"This report will generate a list of ACTIVE group plans"
  W !?5,"that are missing the data that you select to be reported upon.",!!
  ;
  ; Select Insurance Companies or All Insurance Companies w/Plans
@@ -119,8 +120,7 @@ F70 D SLPCN^IBCMDT1
  . S IBMDTSPC("SUBHD")=IBMDTSPC("SUBHD")_"Coverage Limitations"
  ;
 F100 D DEVICE(.IBMDTSPC)
- I STOP G:$$STOP EXIT G F0
- G EXIT
+ I STOP G EXIT ;IB*763/CKB - exit the report if user enters '^'
  ;
 EXIT ; Exit point
  Q

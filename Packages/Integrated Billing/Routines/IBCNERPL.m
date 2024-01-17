@@ -1,9 +1,10 @@
 IBCNERPL ;IB/BAA/AWC - IBCN HL7 RESPONSE REPORT PRINT;25 Feb 2015
- ;;2.0;INTEGRATED BILLING;**528,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**528,737,763**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; variables from IBCNERPJ and IBCNERPK:
- ;   IBCNERTN = "IBCNERPF"
+ ; IB*763/TAZ - Change IBCNERTN comment to reference proper routine.
+ ;   IBCNERTN = "IBCNERPJ"
  ;   INCNESPJ("BEGDT") = start date for date range
  ;   INCNESPJ("ENDDT") = end date for date range
  ;   INCNESPJ("PYR",ien) = payer iens for report, if INCNESPJ("PYR")="A", then include all

@@ -1,5 +1,5 @@
-DGRP6EF ;ALB/TMK,EG,BAJ,JLS,ARF,JAM,ARF - REGISTRATION SCREEN 6 FIELDS FOR EXPOSURE FACTORS ;05 Feb 2015  11:06 AM
- ;;5.3;Registration;**689,659,737,688,909,1014,1018,1075,1084,1090**;Aug 13,1993;Build 16
+DGRP6EF ;ALB/TMK,EG,BAJ,JLS,ARF,JAM,ARF,JMM - REGISTRATION SCREEN 6 FIELDS FOR EXPOSURE FACTORS ;05 Feb 2015  11:06 AM
+ ;;5.3;Registration;**689,659,737,688,909,1014,1018,1075,1084,1090,1103**;Aug 13,1993;Build 7
  ;
 EN(DFN,QUIT) ; Display Environmental exposure factors/allow to edit
  N I,IND,DG321,DG322,DGCT,DIR,Z,X,Y,DIE,DR,DA,DGNONT
@@ -57,11 +57,17 @@ EN1 D CLEAR^VALM1
  S DGCT=DGCT+1,DIR("A",DGCT)=Z_" Camp Lejeune: "
  S DIR("A",DGCT)=DIR("A",DGCT)_$$YN^DGRP6CL(DG3217CL,1)
  ;
+ ; DG*5.3*1103 - add data group 6 for TERA indicator
+ S Z="<6>"
+ S DGCT=DGCT+1,DIR("A",DGCT)=Z_"         TERA: "_$$GET1^DIQ(2,DFN_",",.32116,"E")
+ ;
  ; DG*5.3*1075 - If DGELV flag is set display informational message
  ; DG*5.3*1090 - The display informational message has been updated
+ ; DG*5.3*1103 - The display informational message has been updated for TERA indicator
  I DGELV D
  . S DGCT=DGCT+1,DIR("A",DGCT)=" "
- . S DGCT=DGCT+1,DIR("A",DGCT)="Only VES users may enter/edit Agent Orange or ION Radiation Exposure."
+ . S DGCT=DGCT+1,DIR("A",DGCT)="Only VES users may enter/edit Agent Orange, ION Radiation Exposure"
+ . S DGCT=DGCT+1,DIR("A",DGCT)="or Toxic Exposure Risk Activity (TERA)."
  . S DGCT=DGCT+1,DIR("A",DGCT)=" "
  ;
  S DGCT=DGCT+1,DIR("A",DGCT)=" "

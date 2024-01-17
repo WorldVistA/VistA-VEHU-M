@@ -1,5 +1,5 @@
 PSDDSOR1 ;BHM/MHA/PWC - Digitally signed CS Orders Report ;02/02/2021
- ;;3.0;CONTROLLED SUBSTANCES;**40,67,73,83,89**;Feb 13,1997;Build 18
+ ;;3.0;CONTROLLED SUBSTANCES;**40,67,73,83,89,94**;Feb 13,1997;Build 4
  ;Ref. to ^PSRX( supported by DBIA 1977
  ;Ref. to ^PS(52.41, supported by DBIA 3848
  ;Ref. to ^PSOERXU9 supported by ICR/IA 7222
@@ -17,7 +17,7 @@ PRT ; Print the Report
  F I=1:1 Q:'$G(Y7(I))  W "       ",Y7(I),!
  W !?2,"Provider: "_$E($P(Y4,"^")_P1,1,30),?50,"DEA #: "_$P(Y4,"^",3)
  W !?2,"Clinic: "_$S(ERXIEN:"",1:$$GET1^DIQ(44,$P(Y0,"^",13),.01))
- W ?50,"Detox #: "_$S(ERXIEN:"",1:$P(Y4,"^",4)) ; PSD-89
+ ;W ?50,"Detox #: "_$S(ERXIEN:"",1:$P(Y4,"^",4)) ; PSD-89 ; PSD-94
  S PL=$P(Y5,"^"),PL1="" F I=2:1:6 S J=$P(Y5,"^",I) D:J]""
  .I PL1="",$L(J)+$L(PL)<60 S PL=$S(PL'="":PL_", "_J,1:J)
  .E  S PL1=PL1_$S(PL1]"":", ",1:"")_J
@@ -68,7 +68,7 @@ GETDATA(Y,ORIEN,DFN) ;Gets data from archival file, otherwise use old CPRS call.
  ;   Y(1) = "Patient name ^ Street1 ^ Street2 ^ Street3 ^ City ^ State ^ Zip"
  ;   Y(2) = "Drug name_strength_dosage form (Dispense drug) ^ Drug IEN (file 50) ^ Drug quantity prescribed ^ Schedule of medication ^5 DEA Schedule"
  ;   Y(3) = "Directions for use (SIG)"
- ;   Y(4) = "Provider's name ^ DUZ ^ Provider's DEA # ^ Provider's DETOX #"
+ ;   Y(4) = "Provider's name ^ DUZ ^ Provider's DEA # ^"     ;;  Provider's DETOX # removed by PSD*3*94
  ;   Y(5) = "SiteName ^ SiteStreet1  ^ SiteStreet2 ^ SiteCity  ^ SiteState ^ SiteZip"
  ;   Y(6) = "Orderable Item ^ Orderable Item IEN (file 50.7)"
  ;   Y(7) = "Strength ^ Dosage Form

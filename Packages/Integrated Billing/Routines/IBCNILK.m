@@ -1,5 +1,5 @@
 IBCNILK ;ALB/FA - Insurance Company Selection ; 02-OCT-2015
- ;;2.0;INTEGRATED BILLING;**549,713,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**549,713,737,763**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;;
  ;
@@ -80,9 +80,11 @@ GETFILT() ; Gets the Insurance company filter
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,FILTER,X,XX,Y
  ;
  ; First ask what kind of filter to use
+ ;IB*763/CKB - 'Select' was modified to 'SELECT' in several places below
+ ;
  W !
  S DIR(0)="SA^1:Begins with;2:Contains;3:Range"
- S DIR("A")="     Select 1, 2 or 3: "
+ S DIR("A")="     SELECT 1, 2 or 3: "  ;IB*763/CKB
  S DIR("A",1)=" 1 - Select Insurance Companies that Begin with: XXX"
  S DIR("A",2)=" 2 - Select Insurance Companies that Contain: XXX"
  S DIR("A",3)=" 3 - Select Insurance Companies in Range: XXX - YYY"
@@ -106,7 +108,7 @@ GETFILT() ; Gets the Insurance company filter
  K DIR
  S DIR(0)="F^1;30"
  S XX=$S(FILTER=1:"that begin with",FILTER=2:"that contain",1:"Start of Range")
- S DIR("A")="     Select Insurance Companies "_XX
+ S DIR("A")="     SELECT Insurance Companies "_XX   ;IB*763/CKB
  I FILTER=1 D
  . S DIR("?")="Enter the text the each Insurance Company will begin with"
  I FILTER=2 D
@@ -123,7 +125,7 @@ GETFILT() ; Gets the Insurance company filter
  W !
  K DIR
  S DIR(0)="F^1;30"
- S DIR("A")="     Select Insurance Companies End of Range"
+ S DIR("A")="     SELECT Insurance Companies End of Range"   ;IB*763/CKB
  S DIR("B")=$P(FILTER,"^",2)
  S DIR("?")="Enter the ending Range text"
  D ^DIR
@@ -278,7 +280,7 @@ SEL ;EP
  S VALMBCK="R",ERROR=0
  ; 
  ; First select the Insurance Company(s) to be selected
- S PROMPT="Select Insurance Company(s)"
+ S PROMPT="SELECT Insurance Company(s)"     ;IB*763/CKB
  S IIENS=$$SELINS(1,PROMPT,.DLINE,1,"IBCNILKIX")
  I IIENS="" S VALMBCK="R" Q                 ; None Selected
  F IX=1:1:$L(IIENS,",") D
@@ -317,7 +319,7 @@ UNSEL(SELECTED) ;EP
  S VALMBCK="R",ERROR=0
  ; 
  ; First select the Insurance Company(s) to be deselected
- S PROMPT="Deselect Insurance Company(s)"
+ S PROMPT="DESELECT Insurance Company(s)"   ;IB*763/CKB
  S IIENS=$$SELINS(1,PROMPT,.DLINE,1,WARRAY)
  I IIENS="" S VALMBCK="R" Q                 ; None Selected
  F IX=1:1:$L(IIENS,",") D

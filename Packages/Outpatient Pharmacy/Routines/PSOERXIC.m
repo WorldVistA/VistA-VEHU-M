@@ -1,5 +1,5 @@
 PSOERXIC ;ALB/BWF - eRx parsing Utilities ; 11/14/2019 3:46pm
- ;;7.0;OUTPATIENT PHARMACY;**581**;DEC 1997;Build 126
+ ;;7.0;OUTPATIENT PHARMACY;**581,700**;DEC 1997;Build 261
  ;
  Q
 PHR(ERXIEN,MTYPE) ; pharamcy
@@ -43,7 +43,10 @@ PHR(ERXIEN,MTYPE) ; pharamcy
  .D FILE^DIE(,"FDA") K FDA
  .; pharmacy communication numbers - clear the old ones if this is an existing entry
  .S KPIEN=$P(PHIEN,",")
- .I KPIEN K ^PS(52.47,KPIEN,7),^PS(52.47,KPIEN,8)
+ .I KPIEN D     ;P700
+ ..D KILL^PSOERXIA(52.47,PHIEN,"7*")
+ ..S ARRAY(52.47,PHIEN,8)="@"
+ ..D UPDATE^DIE(,"ARRAY") K ARRAY
  .D COMM^PSOERXIU(GL,52.477,KPIEN,52.47,8)
  .; link the pharmacy to the eRx record
  .S FDA(52.49,ERXIEN_",",2.5)=KPIEN D FILE^DIE(,"FDA")

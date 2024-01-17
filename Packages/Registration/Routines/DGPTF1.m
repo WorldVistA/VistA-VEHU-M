@@ -1,5 +1,5 @@
 DGPTF1 ;ALB/JDS/PLT - PTF ENTRY/EDIT ;5/17/05 3:29pm
- ;;5.3;Registration;**69,114,195,397,342,415,565,664,884**;Aug 13, 1993;Build 31
+ ;;5.3;Registration;**69,114,195,397,342,415,565,664,884,1095**;Aug 13, 1993;Build 23
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  I '$D(IOF) S IOP="HOME" D ^%ZIS K IOP
@@ -39,7 +39,7 @@ SEX S SEX=$P(A(0),U,2) W ?39,"           Sex: ",$S(SEX="M":"MALE",SEX="F":"FEMAL
 DOB S DOB=$P(A(0),U,3),Y=DOB D D^DGPTUTL W ?39," Date of Birth: ",Y
 CAT I DGPTFMT<2 W !,"    Cat of Ben: ",$S($D(^DIC(45.82,+$P(B(101),U,4),0)):$E($P(^(0),U,2),1,26),1:"")
  W:$X>50 !
- W "    Admit Elig: "_$S(+$P(B(101),U,8):$P($G(^DIC(8,+$P(B(101),U,8),0)),U),1:"UNKNOWN") W ?50,"SCI: ",$$EXTERNAL^DILFD(2,57.4,,$P(A(57),U,4))
+ W "    Admit Elig: "_$S($P($G(^DIC(8,+$P(B(101),U,8),0)),U)="COMPACT ACT ELIGIBLE":"COMPACT ACT",+$P(B(101),U,8):$P($G(^DIC(8,+$P(B(101),U,8),0)),U),1:"UNKNOWN") W ?50,"SCI: ",$$EXTERNAL^DILFD(2,57.4,,$P(A(57),U,4))
 VIET W ! S Z=3 D Z W "Vietnam SRV: " S L=$P(A(.321),U,1),Z=$S(L="Y":"YES",L="N":"NO",1:"UNKNOWN"),Z1=27 D Z1
 ST S Z=4 D Z W $S('$$FORIEN^DGADDUTL($P(A(.11),U,10))!('$P(A(.11),U,10)):"  State: "_$S($D(^DIC(5,+$P(A(.11),U,5),0)):$P(^(0),U,1),1:""),1:"Country: "_$$CNTRYI^DGADDUTL($P(A(.11),U,10)))
 POW W !?11,"POW: " S L=$P(A(.52),U,5) W $S(L="Y":"YES",L="N":"NO",1:"UNKNOWN")
@@ -57,6 +57,21 @@ CV S L=$S($P(A("CV"),U,1)>0:1,1:0)
  W !,"Combat Veteran: ",$S(L:"YES",1:"NO")
  I L S Y=$P(A("CV"),U,2) D D^DGPTUTL W ?45,"End Date: ",Y
  ;
+ N ELIG,DGKEY,DGREQNAME,DGRESP,DGCOMP,ELIGSEQ
+ S ELIG="UNDETERMINED",(DGCOMP,DGKEY,DGREQNAME,DGRESP,ELIGSEQ)=""
+ S DGKEY=$$GETICN^MPIF001(DFN),DGREQNAME="VistADataVTwo"
+ I $P(DGKEY,"^",1)'=-1 S DGRESP=$$EN^DGREGEEWS(DGKEY,DGREQNAME,"","",.DGCOMP)
+ ;if it returns zero, check PATIENT file for Compact Act eligible code
+ I $P(DGRESP,"^",1)=0 D
+ . S ELIGSEQ=""
+ . F  S ELIGSEQ=$O(^DPT(DFN,"E",ELIGSEQ)) Q:(ELIGSEQ="")!(ELIGSEQ="B")!(ELIG="ELIGIBLE")  D
+ . . I $P($G(^DIC(8,ELIGSEQ,0)),"^",1)="COMPACT ACT ELIGIBLE" S ELIG="ELIGIBLE"
+ . . Q
+ . Q
+ I $P(DGRESP,"^",1)=1 D
+ . I DGCOMP="No" S ELIG="NOT ELIGIBLE"
+ . I DGCOMP="Yes" S ELIG="ELIGIBLE"
+ W !,"Acute Suicidal Crisis:                    COMPACT Act: ",ELIG
  D EN^DGPTF4 K A,B Q:DGPR
  ;
 JUMP F I=$Y:1:20 W !

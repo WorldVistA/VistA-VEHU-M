@@ -1,5 +1,5 @@
 SDTMPEDT ;MS/SJA - TELEHEALTH STOP CODES EDIT ;Dec 17, 2020
- ;;5.3;Scheduling;**773,779,780,817,850**;Aug 13, 1993;Build 12
+ ;;5.3;Scheduling;**773,779,780,817,859**;Aug 13, 1993;Build 10
  ;
  ;
 EDIT ; Add/edit stop code entries in file #40.6

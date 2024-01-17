@@ -1,5 +1,5 @@
 PSOERXUT ;ALB/MR - eRx CS utilities ;7/21/2020 9:57am
- ;;7.0;OUTPATIENT PHARMACY;**617,667,651,718**;DEC 1997;Build 2
+ ;;7.0;OUTPATIENT PHARMACY;**617,667,651,718,700**;DEC 1997;Build 261
  Q
  ;
 CSFILTER(ERXIEN) ; Check eRx against CS Filter Prompt Answers
@@ -8,8 +8,9 @@ CSFILTER(ERXIEN) ; Check eRx against CS Filter Prompt Answers
  ;Output: 1 - Include the eRx | 0 - Exclude the eRx
  ;
  N DRGCSCH,ERXCSFLG
- S DRGCSCH=$$GET1^DIQ(52.49,ERXIEN,4.9,"I")
- S ERXCSFLG=+$$GET1^DIQ(52.49,ERXIEN,95.1,"I")
+ I $G(PSOCSERX)="B",$G(PSOCSSCH)=3 Q 1
+ S DRGCSCH=$P($G(^PS(52.49,ERXIEN,4)),"^",9)
+ S ERXCSFLG=+$G(^PS(52.49,ERXIEN,95))
  I $G(PSOCSERX)="CS",'ERXCSFLG Q 0
  I $G(PSOCSERX)="Non-CS",ERXCSFLG Q 0
  I $G(PSOCSERX)="CS",+$G(PSOCSSCH)=1,DRGCSCH'="C48675" Q 0
@@ -91,7 +92,7 @@ PRDRVAL(RESULT,ACTION,ERXIEN,PROVIEN,DRUGIEN) ; API used to Verify Provider and 
  . . I ACTION="VP"!(ACTION="AC") D SUFFWARN(.RESULT,ERXPRDEA,$S($L($G(VADEADSP)):VADEADSP,1:VADEANUM),1) S RESULT="0^B" Q
  . I '$O(RESULT(0)) S RESULT=1 Q
  . ; VistA Drug is not Selected or it is not a CS Drug
- . I ACTION="EP"!(ACTION="VP")!(ACTION="AC"),'VACSDRUG D  Q  ;p718 add accept action
+ . I ACTION="EP"!(ACTION="VP")!(ACTION="AC"),'VACSDRUG D  Q
  . . S RESULT="0^W"
  . ; Editing Provider, VistA Drug is CS or Detox, Warning (soft stop) 
  . I ACTION="EP" D  Q
@@ -182,10 +183,10 @@ ERXIEN(PORXIEN) ; Given the Pending Order (#52.41) or Prescription (#52) IEN, re
  Q $S($$CHKERX^PSOERXU1(OR100IEN):$$CHKERX^PSOERXU1(OR100IEN),1:"")
  ;
 AUDLOG(ERXIEN,FIELD,EDITBY,NEWVAL) ; Sets eRx Edit Audit Log
- ; Input: (r) ERXIEN - Pointer to ERX HOLDING QUEUE File (#52.49). eRx record being edited.
- ;        (r) FIELD  - Freetext eRx Field Name (e.g.,"DRUG", "PROVIDER", "PATIENT", Etc...). Field being edited.
- ;        (r) EDITBY - Pointer to NEW PERSON File (#200). User who made the edit.
- ;        (r) NEWVAL - Array containing the new value for the field being edited (Passed in by Reference)
+ ; Input: (r) ERXIEN  - Pointer to ERX HOLDING QUEUE File (#52.49). eRx record being edited.
+ ;        (r) FIELD   - Freetext eRx Field Name (e.g.,"DRUG", "PROVIDER", "PATIENT", Etc...). Field being edited.
+ ;        (r) EDITBY  - Pointer to NEW PERSON File (#200). User who made the edit.
+ ;        (r) NEWVAL  - Array containing the new value for the field being edited (Passed in by Reference)
  ;
  N AUDLOG,SAVERES
  S ERXIEN=+$G(ERXIEN),EDITBY=+$G(EDITBY)
@@ -201,7 +202,7 @@ AUDLOG(ERXIEN,FIELD,EDITBY,NEWVAL) ; Sets eRx Edit Audit Log
  S AUDLOG(52.4920,"+1,"_ERXIEN_",",.01)=$$NOW^XLFDT() ;Audit Log Date/Time
  S AUDLOG(52.4920,"+1,"_ERXIEN_",",.02)=FIELD         ;Element Name
  S AUDLOG(52.4920,"+1,"_ERXIEN_",",.03)=EDITBY        ;Data Format
- S AUDLOG(52.4920,"+1,"_ERXIEN_",",.04)="NEWVAL"      ;New Value 
+ S AUDLOG(52.4920,"+1,"_ERXIEN_",",.04)="NEWVAL"      ;New Value
  D UPDATE^DIE("","AUDLOG","SAVERES","")
  Q
  ;
@@ -283,16 +284,44 @@ ERXSIG(ERXIEN) ; Returns the eRx SIG
  ; Input: (r) ERXIEN - Pointer to ERX HOLDING QUEUE File (#52.49)
  ;Output:     ERXSIG - eRx SIG in one string
  ;
- N ERXSIG,SIG,I,S2017,MTYPE,MEDIEN
+ N ERXSIG,SIG,I,S2017,MSGTYPE,RESTYPE,MEDIEN
  S ERXSIG=""
  I '$D(^PS(52.49,+$G(ERXIEN),0)) Q ERXSIG
- S S2017=$$GET1^DIQ(52.49,ERXIEN,312.1,"I")
- S MTYPE=$$GET1^DIQ(52.49,ERXIEN,.08,"I")
- I S2017,MTYPE'="RE" D
- . S MEDIEN=$O(^PS(52.49,ERXIEN,311,"C","P",0))
- . S SIG=$$GET1^DIQ(52.49311,MEDIEN_","_ERXIEN_",",8,"","SIG")
- . F I=1:1 Q:'$D(SIG(I))  D
- . . S ERXSIG=ERXSIG_SIG(I)
+ S S2017=+$G(^PS(52.49,ERXIEN,312))
+ S MSGTYPE=$P($G(^PS(52.49,ERXIEN,0)),"^",8)
+ S RESTYPE=$P($G(^PS(52.49,ERXIEN,52)),"^")
+ I S2017 D
+ . I MSGTYPE="CX" S MEDIEN=$O(^PS(52.49,ERXIEN,311,"C","P",0))
+ . I MSGTYPE="RE",(RESTYPE="R") S MEDIEN=$O(^PS(52.49,ERXIEN,311,"C","MR",0))
+ . I MSGTYPE="N"!'$G(MEDIEN) S MEDIEN=$O(^PS(52.49,ERXIEN,311,0))
+ . I '$G(MEDIEN) Q
+ . F I=1:1 Q:'$D(^PS(52.49,ERXIEN,311,MEDIEN,8,I))  D
+ . . S ERXSIG=ERXSIG_" "_$G(^PS(52.49,ERXIEN,311,MEDIEN,8,I,0))
  I 'S2017 D
- . S ERXSIG=$$GET1^DIQ(52.49,ERXIEN,7,"E")
+ . S ERXSIG=$P($G(^PS(52.49,ERXIEN,7)),"^")
  Q ERXSIG
+ ;
+VISTASIG(ERXIEN) ; Returns the VistA SIG, if present
+ ; Input: (r) ERXIEN   - Pointer to ERX HOLDING QUEUE File (#52.49)
+ ;Output:     VISTASIG - VistA SIG in one string
+ ;
+ N VISTASIG,SIG
+ S VISTASIG=""
+ S SIG=0 F  S SIG=$O(^PS(52.49,ERXIEN,"SIG",SIG)) Q:'SIG  D
+ . S VISTASIG=VISTASIG_$G(^PS(52.49,ERXIEN,"SIG",SIG,0))
+ ; VA Patient Instructions
+ I $$GET1^DIQ(52.49,ERXIEN,27)'="" D
+ . S VISTASIG=VISTASIG_$S($E(VISTASIG,$L(VISTASIG))=" ":"",1:" ")_$$GET1^DIQ(52.49,ERXIEN,27)
+ Q VISTASIG
+ ;
+RENEWALS(ERXIEN) ; Returns whether Renewals are Prohibited or no
+ ; Input: ERXIEN   - Pointer to ERX HOLDING QUEUE File (#52.49)
+ ;Output: RENEWALS - 1: Renewals are Allowed | 0 - Renewals are Prohibited
+ N RENEWALS,MTYPE,CHGMESRQ,CHGMESRI,RESPVAL
+ S RENEWALS=0,MTYPE=$$GET1^DIQ(52.49,ERXIEN,.08,"I")
+ S CHGMESRQ=$$GET1^DIQ(52.49,ERXIEN,315.1,"I")
+ S CHGMESRI=$$GET1^DIQ(52.45,CHGMESRQ,.01,"I")
+ S RESPVAL=$$GET1^DIQ(52.49,ERXIEN,52.1,"E")
+ I MTYPE="N"!((MTYPE="CX")&($$PROHIBIT^PSOERX1D(RESPVAL,CHGMESRI))) D
+ . S RENEWALS=$S($$GET1^DIQ(52.49,ERXIEN,301.3,"I"):0,1:1)
+ Q RENEWALS

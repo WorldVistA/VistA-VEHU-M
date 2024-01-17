@@ -1,5 +1,5 @@
 SDHL7APU ;MS/TG,PH - TMP HL7 Routine;OCT 16, 2018
- ;;5.3;Scheduling;**704,714,773,780,798,810,850**;AUG 17, 2018;Build 12
+ ;;5.3;Scheduling;**704,714,773,780,798,810,859**;AUG 17, 2018;Build 10
  ;
  ;  Integration Agreements:
  ;
@@ -19,7 +19,7 @@ SCH(SCH,INP,MSGARY) ;
  S MSGARY("EVENT")=$G(SCH(6,1,1))  ;if the appointment is canceled check for cancel code and cancel reason, they are required
  S (SDECCR,CANCODE)=$G(SCH(6,1,2))
  I $G(MSGARY("EVENT"))="CANCELED" D
- . I $G(SDECCR)="" S ERR=1,ERRTXT="Cancel Reason was null and is required" Q     ;850-add reject condition
+ . I $G(SDECCR)="" S ERR=1,ERRTXT="Cancel Reason was null and is required" Q     ;859-add reject condition
  . S SDECCR=$O(^SD(409.2,"B",$G(CANCODE),0))
  . S:(SDECCR)="" SDECCR=11
  . S SDECTYP=$G(SCH(6,1,4))
@@ -32,8 +32,8 @@ SCH(SCH,INP,MSGARY) ;
  S:$G(TM)'="" SDECSTART=$P(TM,":",1,2)_":00.000Z"
  ;S INP(11)=$G(SDDDT)
  S SDREQBY=$G(SCH(16,1,1))
- N SCHEMAIL S SCHEMAIL=$$LOW^XLFSTR(SCH(13,1,4))
- S (DUZ,MSGARY("DUZ"))=$O(^VA(200,"ADUPN",$G(SCHEMAIL),""))
+ N SCHEMAIL I $G(SCH(13,1,4))'="" D
+ .S SCHEMAIL=$$LOW^XLFSTR(SCH(13,1,4)),(DUZ,MSGARY("DUZ"))=$O(^VA(200,"ADUPN",$G(SCHEMAIL),""))
  S:$G(DUZ)'>0 (DUZ,MSGARY("DUZ"))=.5
  N SDTYP S SDTYP=$G(SCH(6,1,4))
  I $G(SDTYP)="R" D

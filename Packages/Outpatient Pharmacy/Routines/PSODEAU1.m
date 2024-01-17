@@ -1,5 +1,5 @@
 PSODEAU1 ;ALB/BI - DEA Manual Entry ;05/15/2018
- ;;7.0;OUTPATIENT PHARMACY;**545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**545,731**;DEC 1997;Build 18
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002
  ;External reference to XUEPCS DATA file (#8991.6) is supported by DBIA 7015
  ;External reference to XUEPCS PSDRPH AUDIT file (#8991.7) is supported by DBIA 7016
@@ -111,7 +111,7 @@ DNDEAGET(RET,DEA) ;
  . S RET(1)=RET(1)_$$FMTHL7^XLFDT(Y)_"^"  ; EXPIRATION DATE
  . S X=$P($G(DNDEADAT(8991.9,DNDEAIEN_",",10.2)),"@") D ^%DT
  . S RET(1)=RET(1)_$$FMTHL7^XLFDT(Y)_"^" ; PROCESSED DATE
- . S RET(1)=RET(1)_$G(DNDEADAT(8991.9,DNDEAIEN_",",.03))_"^"  ; DETOX NUMBER
+ . S RET(1)=RET(1)_""_"^"                                       ; DETOX NUMBER ;P731 detox/x-waiver removal
  . I $G(DNDEADAT(8991.9,DNDEAIEN_",",.07))="INDIVIDUAL" D
  . . S RET(1)=RET(1)_$G(DNDEADAT(8991.9,DNDEAIEN_",",2.1))_"^"  ; SCHEDULE II NARCOTIC
  . . S RET(1)=RET(1)_$G(DNDEADAT(8991.9,DNDEAIEN_",",2.2))_"^"  ; SCHEDULE II NON-NARCOTIC

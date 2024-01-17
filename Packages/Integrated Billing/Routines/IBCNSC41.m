@@ -1,5 +1,5 @@
 IBCNSC41 ;ALB/TMP - INSURANCE PLAN SCREEN UTILITIES (CONT) ; 15-AUG-95
- ;;2.0;INTEGRATED BILLING;**43,416**;21-MAR-94;Build 58
+ ;;2.0;INTEGRATED BILLING;**43,416,763**;21-MAR-94;Build 29
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
 HDR ; -- Plan detail screen header
@@ -48,5 +48,26 @@ LIMBLD(START,OFFSET,IBLCNT) ; Build actual limit display
  .. Q
  . Q
  ;
+ D LASTEDT   ;IB*763/CKB
+ ; 
  S IBLCNT=LINE-3
+ Q
+ ;
+LASTEDT ; Display last edited info, who and when  ;IB*763/CKB
+ N COVFN,IBCDT,IBCBY,IENS,LASTUPD,LSTBY,LSTDT
+ ;
+ ; Set LASTUPD if the LAST xref doesn't exist
+ I '$D(^IBA(355.32,"LAST",IBCPOL)) D
+ . S LASTUPD="  COVERAGE Last Updated  by "
+ ;
+ ; Set LASTUPD if the LAST xref DOES exist
+ I $D(^IBA(355.32,"LAST",IBCPOL)) D 
+ . S IBCDT=$O(^IBA(355.32,"LAST",IBCPOL,"")),IBCBY=$O(^IBA(355.32,"LAST",IBCPOL,IBCDT,""))
+ . S COVFN=$O(^IBA(355.32,"LAST",IBCPOL,IBCDT,IBCBY,"")),IENS=COVFN_","
+ . S LSTDT=$$GET1^DIQ(355.32,IENS,1.03,"I"),LSTBY=$$GET1^DIQ(355.32,IENS,1.04,"E")
+ . S LASTUPD="  COVERAGE Last Updated "_$$FO^IBCNEUT1($$FMTE^XLFDT(LSTDT,"5Z"),10)_" by "_LSTBY
+ ;
+ ; Display the LASTUPD to the screen
+ D SET^IBCNSC4(START+LINE,OFFSET,"  ") S LINE=LINE+1   ;blank line
+ D SET^IBCNSC4(START+LINE,OFFSET,LASTUPD)
  Q

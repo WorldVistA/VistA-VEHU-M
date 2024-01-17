@@ -1,8 +1,9 @@
 DGREG ;ALB/JDS,MRL,PJR,PHH,ARF,RN,JAM - REGISTER PATIENT ; 3/28/14 12:38pm
- ;;5.3;Registration;**1,32,108,147,149,182,245,250,513,425,533,574,563,624,658,864,886,915,926,1024,993,1040,1027,1045,1067,1075**;Aug 13, 1993;Build 13
+ ;;5.3;Registration;**1,32,108,147,149,182,245,250,513,425,533,574,563,624,658,864,886,915,926,1024,993,1040,1027,1045,1067,1075,1102**;Aug 13, 1993;Build 4
  ; 
  ; DG*5.3*1075 - Fix line 1 for SAC compliance
- ;
+ ; Reference to (#350.9,54.01) supported by ICR #7429
+ ; Reference to BACKGND^IBCNRDV supported by ICR #4288
 START ;
 EN D LO^DGUTL S DGCLPR=""
  N DGDIV
@@ -130,7 +131,6 @@ ENRYN S DGBACK=0,DGENRYN="",DGVET=$$VET^DGENPTA(DFN) S:'DGVET DGENRYN=0
  I $D(^DIC(195.4,1,"UP")) I ^("UP") D ADM^RTQ3
  D REG^IVMCQ($G(DFN))  ; send financial query  
  G A1
- ;
  ;
 APPTREQ(DGENRDTT,DGBACK) ; Prompt for DO YOU WANT AN APPT. WITH A VA DOCTOR/PROVIDER AS SOON AS AVAILABLE?
  ; If YES, update fields #2,#1010.159 and #2,#1010.1511 (NOTE: This code came from DGEN)
@@ -348,28 +348,19 @@ CIRN ;MPI QUERY
  Q
 ROMQRY ;**926 TRIGGER IB INSURANCE QUERY
  N ZTSAVE,A,ZTRTN,ZTDESC,ZTIO,ZTDTH,DGMSG
- ;Invoke IB Insurance Query (Patch IB*2.0*214)
+ ;Invoke IB Insurance Query (Query was introduced with IB*2.0*214)
+ ;DG*1102/TAZ - Check Insurance Import Enabled flag
+ ; Reference to Field 54.01 in File 350.9 supported by ICR #7429
+ I '$$GET1^DIQ(350.9,"1,",54.01,"I") D  Q
+ . S DGMSG(1)="Insurance data retrieval is not currently enabled."
+ . S DGMSG(2)=" "  D EN^DDIOL(.DGMSG) R A:5
  S ZTSAVE("IBTYPE")=1,ZTSAVE("DFN")=DFN,ZTSAVE("IBDUZ")=$G(DUZ)
+ ; Reference to BACKGND^IBCNRDV supported by ICR #4288
  S ZTRTN="BACKGND^IBCNRDV",ZTDTH=$H,ZTDESC="IBCN INSURANCE QUERY TASK",ZTIO=""
  D ^%ZTLOAD
  ;display busy message to interactive users
  S DGMSG(1)="Insurance data retrieval has been initiated."
- S DGMSG(2)=" "
- D EN^DDIOL(.DGMSG)
- Q  ;**915 all register once functionality no longer executed.
- I +$G(DGNEW) D
- . ; query LST for Patient Demographic Information if NEW patient and
- . ; file into patient's record.
- . N A
- . I $$ROMQRY^DGROAPI(DFN) D
- . . ;display busy message to interactive users
- . .S DGMSG(1)="Data retrieval from LST site has been completed successfully"
- . .S DGMSG(2)="Thank you for your patience."
- . .D EN^DDIOL(.DGMSG) R A:5
- . E  D
- . . ;display busy message to interactive users
- . .S DGMSG(1)="Data retrieval from LST site has not been successful."
- . .S DGMSG(2)="Please continue the Registration Process."
- . .D EN^DDIOL(.DGMSG) R A:5
- . ;
+ S DGMSG(2)=" " D EN^DDIOL(.DGMSG)
+ ;**915 all "register once" functionality eliminated additional
+ ;      checks that use to be below this line.
  Q

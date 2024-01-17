@@ -1,5 +1,5 @@
 PSODEARX ;WILM/BDB - EPCS Utilities and Reports; [5/7/02 5:53am] ;3/3/22  14:50
- ;;7.0;OUTPATIENT PHARMACY;**545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**545,731**;DEC 1997;Build 18
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002
  ;
  Q
@@ -59,19 +59,20 @@ COMPILE  ; -- Compile the report lines into the sort global
  . . Q:'$D(^VA(200,NPIEN,"PS4"))
  . . I '$O(^VA(200,NPIEN,"PS4",0)) Q
  . . S PRVNAME=$$GET1^DIQ(200,NPIEN,.01,"E")
+ . . ;P731 detox/x-waiver removal
  . . ;CHECK FOR PROVIDER WITH MULTIPLE DETOX NUMBERS ERROR 6
- . . S DETOXCT=0,NPDEAIEN=0 F  S NPDEAIEN=$O(^VA(200,NPIEN,"PS4",NPDEAIEN)) Q:'NPDEAIEN  D  I DETOXCT>1 Q
- . . . S NPDEA=$$GET1^DIQ(200.5321,NPDEAIEN_","_NPIEN_",",.01,"E")
- . . . S DNDEAIEN=$$GET1^DIQ(200.5321,NPDEAIEN_","_NPIEN_",",.03,"I")
- . . . S DNDETOX=$$GET1^DIQ(8991.9,DNDEAIEN,.03) I DNDETOX]"" S DETOXCT=DETOXCT+1
- . . . I DETOXCT>1 D
- . . . . S PSOLINE="",NPDEA=""
- . . . . S PSOLINE=PSOLINE_PRVNAME_"|"                     ; NAME            #200,    #.01
- . . . . S PSOLINE=PSOLINE_NPIEN_"|"                        ; IEN             #200
- . . . . S PSOLINE=PSOLINE_NPDEA_"|"                        ; NEW DEA NUMBER  #200,   
- . . . . S PSOLINE=PSOLINE_ERROR(6)   ; ERROR TEXT
- . . . . S PSCOUNT1=PSCOUNT1+1
- . . . . S ^TMP($J,"PSODEARW",PSCOUNT1,1)=PSOLINE
+ . . ;S DETOXCT=0,NPDEAIEN=0 F  S NPDEAIEN=$O(^VA(200,NPIEN,"PS4",NPDEAIEN)) Q:'NPDEAIEN  D  I DETOXCT>1 Q
+ . . ;. S NPDEA=$$GET1^DIQ(200.5321,NPDEAIEN_","_NPIEN_",",.01,"E")
+ . . ;. S DNDEAIEN=$$GET1^DIQ(200.5321,NPDEAIEN_","_NPIEN_",",.03,"I")
+ . . ;. S DNDETOX=$$GET1^DIQ(8991.9,DNDEAIEN,.03) I DNDETOX]"" S DETOXCT=DETOXCT+1
+ . . ;. I DETOXCT>1 D
+ . . ;. . S PSOLINE="",NPDEA=""
+ . . ;. . S PSOLINE=PSOLINE_PRVNAME_"|"                     ; NAME            #200,    #.01
+ . . ;. . S PSOLINE=PSOLINE_NPIEN_"|"                        ; IEN             #200
+ . . ;. . S PSOLINE=PSOLINE_NPDEA_"|"                        ; NEW DEA NUMBER  #200,   
+ . . ;. . S PSOLINE=PSOLINE_ERROR(6)   ; ERROR TEXT
+ . . ;. . S PSCOUNT1=PSCOUNT1+1
+ . . ;. . S ^TMP($J,"PSODEARW",PSCOUNT1,1)=PSOLINE
  . . ;CHECK FOR PROVIDER WITH ALL INDIVIDUAL DEA MISSING DEA INPATIENT FLAG ERROR 7
  . . S INDIV=0,DNINPTCT=0,NPDEAIEN=0 F  S NPDEAIEN=$O(^VA(200,NPIEN,"PS4",NPDEAIEN)) Q:'NPDEAIEN  D  I DNINPTCT>0 Q
  . . . S NPDEA=$$GET1^DIQ(200.5321,NPDEAIEN_","_NPIEN_",",.01,"E")
@@ -131,15 +132,16 @@ COMPILE  ; -- Compile the report lines into the sort global
  . . . . S PSCOUNT1=PSCOUNT1+1
  . . . . S ^TMP($J,"PSODEARW",PSCOUNT1,1)=PSOLINE
  . . . ;CHECK FOR DUPLICATE DETOX NUMBER
- . . . S DNDETOX=$$GET1^DIQ(8991.9,DNDEAIEN,.03)
- . . . I DNDETOX]"" S NXDEA="" F  S NXDEA=$O(^XTV(8991.9,"D",DNDETOX,NXDEA)) Q:NXDEA=""  I NXDEA'=NPDEA D  Q
- . . . . S NXDEAIEN=$O(^XTV(8991.9,"D",DNDETOX,NXDEA,""))
- . . . . S PSOLINE=""
- . . . . S PSOLINE=PSOLINE_PRVNAME_"|"                     ; NAME            #200,    #.01
- . . . . S PSOLINE=PSOLINE_NPIEN_"|"                        ; IEN             #200
- . . . . S PSOLINE=PSOLINE_NPDEA_"|"                        ; NEW DEA NUMBER  #200,   
- . . . . S PSOLINE=PSOLINE_ERROR(5)_"  DEA:"_$$GET1^DIQ(8991.9,NXDEAIEN_",",.01)   ; ERROR TEXT
- . . . . S PSCOUNT1=PSCOUNT1+1
- . . . . S ^TMP($J,"PSODEARW",PSCOUNT1,1)=PSOLINE
+ . . . ;P731 detox/x-waiver removal
+ . . . ;S DNDETOX=$$GET1^DIQ(8991.9,DNDEAIEN,.03)
+ . . . ;I DNDETOX]"" S NXDEA="" F  S NXDEA=$O(^XTV(8991.9,"D",DNDETOX,NXDEA)) Q:NXDEA=""  I NXDEA'=NPDEA D  Q
+ . . . ;. S NXDEAIEN=$O(^XTV(8991.9,"D",DNDETOX,NXDEA,""))
+ . . . ;. S PSOLINE=""
+ . . . ;. S PSOLINE=PSOLINE_PRVNAME_"|"                     ; NAME            #200,    #.01
+ . . . ;. S PSOLINE=PSOLINE_NPIEN_"|"                        ; IEN             #200
+ . . . ;. S PSOLINE=PSOLINE_NPDEA_"|"                        ; NEW DEA NUMBER  #200,   
+ . . . ;. S PSOLINE=PSOLINE_ERROR(5)_"  DEA:"_$$GET1^DIQ(8991.9,NXDEAIEN_",",.01)   ; ERROR TEXT
+ . . . ;. S PSCOUNT1=PSCOUNT1+1
+ . . . ;. S ^TMP($J,"PSODEARW",PSCOUNT1,1)=PSOLINE
  Q
  ;

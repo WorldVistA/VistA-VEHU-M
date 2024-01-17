@@ -1,5 +1,5 @@
 PSODEAED ;JLI/FO-OAKLAND-RPC to handle epcs data changes ;08/24/12  11:56
- ;;7.0;OUTPATIENT PHARMACY;**545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**545,731**;DEC 1997;Build 18
  ;External reference to XUEPCS DATA file (#8991.6) is supported by DBIA 7015
  ;
 PRINT ; print audit logs as indicated
@@ -112,14 +112,15 @@ INIT ; Initialize the List Array for Listman PSO DEA NUMBER MANAGEMENT
  D SET^VALM10(LINE,DLINE) S LINE=LINE+1
  ;
  ; DETOX NUMBER DISPLAY
- S BAC=$G(FG("businessActivityCode"))_$G(FG("businessActivitySubcode"))
- S DLINE=""
- S DSTMP=$S($$DETOXCHK^PSODEAUT(BAC):"X"_$E(FG(NAME),2,9),1:"")
- S DSTMP=DSTMP_$S(DSTMP'=$G(GETS(.03)):"**",1:"")
- S DLINE=$$SETFLD^VALM1("DETOX NUMBER:",DLINE,"NAME")
- S DLINE=$$SETFLD^VALM1(DSTMP,DLINE,"DOJ/DEA VALUE")
- S DLINE=$$SETFLD^VALM1($G(GETS(.03)),DLINE,"LOCAL VALUE")
- D SET^VALM10(LINE,DLINE) S LINE=LINE+1
+ ;P731 detox/x-waiver removal
+ ;S BAC=$G(FG("businessActivityCode"))_$G(FG("businessActivitySubcode"))
+ ;S DLINE=""
+ ;S DSTMP=$S($$DETOXCHK^PSODEAUT(BAC):"X"_$E(FG(NAME),2,9),1:"")
+ ;S DSTMP=DSTMP_$S(DSTMP'=$G(GETS(.03)):"**",1:"")
+ ;S DLINE=$$SETFLD^VALM1("DETOX NUMBER:",DLINE,"NAME")
+ ;S DLINE=$$SETFLD^VALM1(DSTMP,DLINE,"DOJ/DEA VALUE")
+ ;S DLINE=$$SETFLD^VALM1($G(GETS(.03)),DLINE,"LOCAL VALUE")
+ ;D SET^VALM10(LINE,DLINE) S LINE=LINE+1
  ;
  S NAME="expirationDate",DLINE="",DSTMP=""
  S CNAME=$S($D(CN(NAME)):CN(NAME),1:NAME)

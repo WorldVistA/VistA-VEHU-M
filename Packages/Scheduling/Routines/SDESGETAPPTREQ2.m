@@ -1,5 +1,5 @@
-SDESGETAPPTREQ2 ;ALB/CGP,LAB - GET APPT REQ RPCS 2 ;Jun 21,2023
- ;;5.3;Scheduling;**839,847**;Aug 13, 1993;Build 4
+SDESGETAPPTREQ2 ;ALB/CGP,LAB,TJB - GET APPT REQ RPCS 2 ;Sep 11,2023
+ ;;5.3;Scheduling;**839,847,861**;Aug 13, 1993;Build 17
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
 VALIDATEDATES(REQUESTIEN,STARTRANGE,ENDRANGE) ;
@@ -76,5 +76,5 @@ FINISHAPPTREQ(REQUEST,NUM,REQUESTIEN) ; finish building Request object
  .S REQUEST("Request",NUM,"SdecContactNumberOfTextContact")=""
  .S REQUEST("Request",NUM,"SdecContactNumberOfSecureMessage")=""
  .S REQUEST("Request",NUM,"SdecContactDateOfLastLetterSent")=""
- .S REQUEST("Request",NUM,"SdecContactNumberOfContacts")=0
+ .S REQUEST("Request",NUM,"SdecContactNumberOfContacts")=""
  Q

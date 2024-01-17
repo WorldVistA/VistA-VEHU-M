@@ -1,5 +1,5 @@
 PSOERXU6 ;ALB/BWF - eRx utilities ;Feb 10, 2022@11:04
- ;;7.0;OUTPATIENT PHARMACY;**508,551,581,631,617,672,715**;DEC 1997;Build 1
+ ;;7.0;OUTPATIENT PHARMACY;**508,551,581,631,617,672,715,700**;DEC 1997;Build 261
  ;
  Q
  ; auto discontinue orders related to cancel request
@@ -207,7 +207,7 @@ FINDNRX(ERXIEN) ;
  .I $$GET1^DIQ(52.49,PREVIEN,.08,"I")="N" S DONE=1 Q
  Q PREVIEN
 JTQ(ERXIEN) ;
- N MEDA,XQY0,DFN,PSOFIN,POERR,PSOSORT,PTNM,PSODFN,PAT,MTYPE,PSOFINY,PSOLST,MTYPE,RESVAL
+ N MEDA,XQY0,DFN,PATVAL,PSOFIN,POERR,PSOSORT,PTNM,PSODFN,PAT,MTYPE,PSOFINY,PSOLST,MTYPE,RESVAL
  D FULL^VALM1
  S VALMBCK="R"
  I $G(PSOJUMP) S VALMSG="Cannot jump back, please use '^'" W $C(7) Q
@@ -218,13 +218,15 @@ JTQ(ERXIEN) ;
  S XQY0="PSO LMOE FINISH"
  I $P($G(PSOPAR),"^",2),'$D(^XUSEC("PSORPH",DUZ)) S PSORX("VERIFY")=1
  S DFN=$$GET1^DIQ(52.49,ERXIEN,.05,"I")
+ S PATVAL=$$GET1^DIQ(52.49,ERXIEN,1.14,"I")    ;LAL
  I 'DFN W !,"Vista patient has not been matched. Cannot jump to outpatient." D DIRE^PSOERXX1 Q
+ I '$G(PATVAL) W !,"Vista patient has not been validated. Cannot jump to outpatient." D DIRE^PSOERXX1 Q    ;LAL
  S (PSOFIN,POERR)=1
  S PSOSORT="PATIENT"
  S PTNM=$$GET1^DIQ(2,DFN,.01,"E")
  S (PSODFN,PAT)=DFN,PSOFINY=DFN_U_PTNM
  ;PSO*7.0*672: Check for any pending Rx's. Do not restrict based on variable PSNPINST.
- I '$D(^PS(52.41,"AOR",PAT)) W !,"Patient has no pending prescriptions." D DIRE^PSOERXX1 Q
+ ;I '$D(^PS(52.41,"AOR",PAT)) W !,"Patient has no pending prescriptions." D DIRE^PSOERXX1 Q
  W !,"Patient: "_PTNM,!
  ; new line SPAT2^PSOORFIN has been created to jump right into pending orders with the patient pre-selected
  S PSOJUMP=1
@@ -232,6 +234,20 @@ JTQ(ERXIEN) ;
  ;S X=PAT D ULP^PSOORFIN
  K PSORX,PSOJUMP
  Q
+ ;
+PN(ERXIEN) ; Enter VistA Patient Progress Notes
+ ;Input: ERXIEN - Pointer to the ERX HOLDING QUEUE file (#52.49)
+ ;
+ N PSODFN S VALMBCK="R"
+ S PSODFN=$$GET1^DIQ(52.49,ERXIEN,.05,"I")
+ I 'PSODFN D  Q
+ . S VALMSG="Vista patient has not been matched"
+ I '$$GET1^DIQ(52.49,+$G(ERXIEN),1.14,"I") D  Q
+ . S VALMSG="Vista patient has not been validated"
+ ;
+ D PRONTE^PSOORUT3 S VALMBCK="R"
+ Q
+ ;
 VARENEW(OPIEN) ;
  N FORORD,VARENEW,PON
  S VARENEW=0

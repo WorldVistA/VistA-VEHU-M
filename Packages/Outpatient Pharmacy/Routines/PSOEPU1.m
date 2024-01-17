@@ -1,5 +1,5 @@
 PSOEPU1 ;ALB/BI - DEA Manual Entry ;11/3/21  14:56
- ;;7.0;OUTPATIENT PHARMACY;**545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**545,731**;DEC 1997;Build 18
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002
  ;External reference to XUEPCS DATA file (#8991.6) is supported by DBIA 7015
  ;External reference to XUEPCS PSDRPH AUDIT file (#8991.7) is supported by DBIA 7016
@@ -133,7 +133,7 @@ DNDEAGET(RET,DEA) ;
  . S RET(1)=RET(1)_$$FMTHL7^XLFDT(Y)_"^"  ; EXPIRATION DATE
  . S X=$P($G(DNDEADAT(8991.9,DNDEAIEN_",",10.2)),"@") D ^%DT
  . S RET(1)=RET(1)_$$FMTHL7^XLFDT(Y)_"^" ; PROCESSED DATE
- . S RET(1)=RET(1)_$G(DNDEADAT(8991.9,DNDEAIEN_",",.03))_"^"  ; DETOX NUMBER
+ . S RET(1)=RET(1)_""_"^"                                       ; DETOX NUMBER  ;P731 detox/x-waiver removal
  . I $G(DNDEADAT(8991.9,DNDEAIEN_",",.07))="INDIVIDUAL" D
  . . S RET(1)=RET(1)_$G(DNDEADAT(8991.9,DNDEAIEN_",",2.1))_"^"  ; SCHEDULE II NARCOTIC
  . . S RET(1)=RET(1)_$G(DNDEADAT(8991.9,DNDEAIEN_",",2.2))_"^"  ; SCHEDULE II NON-NARCOTIC
@@ -157,6 +157,7 @@ CLEARINP(NPIEN)  ; REMOVE INPATIENT FLAG FROM ALL OF A PROVIDERS DEA NUMBERS
  Q
  ;
 DTXCHK(RET,DEA,DETOX) ; -- Check Detox Number
+ Q 1 ;P731 detox/x-waiver removal
  S RET=0
  I $L(DETOX)>9!($L(DETOX)<9) S RET="0^1^DETOX length error" Q
  I $S("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[$E(DETOX):1,1:0)=0 S RET="0^2^DETOX first character error" Q
@@ -168,6 +169,7 @@ DTXCHK(RET,DEA,DETOX) ; -- Check Detox Number
  Q
  ;
 DETOXDUP(DEA,DETOX,DUPDEA)  ; -- Check for duplicate Detox number
+ Q 0 ;P731 detox/x-waiver removal
  N I,NXTDEA,NPIEN,NPNAME S NXTDEA=0,DUPDEA=""
  I $G(DETOX)=""!($G(DEA)="") Q 0                   ; Missing required input, can't check
  I '$D(^XTV(8991.9,"D",$G(DETOX))) Q 0             ; If Detox not on file, not a duplicate
@@ -181,6 +183,7 @@ DETOXDUP(DEA,DETOX,DUPDEA)  ; -- Check for duplicate Detox number
  Q 0
  ;
 PRVRDTX(DEA)  ; -- Check for DETOX numbers on provider profile
+ Q "" ;P731 detox/x-waiver removal
  N NPIEN,DNDEA
  S DNDEA=""
  S NPIEN=$O(^VA(200,"PS4",DEA,0)) I NPIEN']"" Q DNDEA
@@ -188,6 +191,7 @@ PRVRDTX(DEA)  ; -- Check for DETOX numbers on provider profile
  Q DNDEA
  ;
 GTDNDTX(NPIEN)  ; GET A SINGLE DETOX NUMBER FROM ALL OF A PROVIDERS DEA NUMBERS IN 8991.9
+ Q "" ;P731 detox/x-waiver removal
  N GETDNDTX,DNDEAIEN,NPDEAIEN,DNDEA S GETDNDTX=""
  S NPDEAIEN=0 F  S NPDEAIEN=$O(^VA(200,NPIEN,"PS4",NPDEAIEN)) Q:'NPDEAIEN  D  Q:DNDEA]""
  . S DNDEA=""

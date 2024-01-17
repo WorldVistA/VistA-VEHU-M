@@ -1,8 +1,8 @@
 PSOERX1 ;ALB/BWF - eRx Utilities/RPC's ;Aug 14, 2020@12:43:34
- ;;7.0;OUTPATIENT PHARMACY;**467,520,527,508,551,581,635,617**;DEC 1997;Build 110
+ ;;7.0;OUTPATIENT PHARMACY;**467,520,527,508,551,581,635,617,700**;DEC 1997;Build 261
  ;
 EN(PSOIEN) ; -- main entry point for PSO ERX HOLDING QUEUE
- D EN^VALM("PSO ERX HQ DISPLAY")
+ S ERXIEN=PSOIEN D EN^VALM("PSO ERX HQ DISPLAY")
  Q
  ;
 HDR ; -- header code
@@ -16,6 +16,8 @@ HDR ; -- header code
  ;
 INIT ;
  Q:'$G(PSOIEN)
+ ; - Resetting list to NORMAL video attributes
+ D RESET^PSOERUT0()
  D INIT^PSOERX1G
  Q
  ;

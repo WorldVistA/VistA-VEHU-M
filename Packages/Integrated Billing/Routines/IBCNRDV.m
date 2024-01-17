@@ -1,5 +1,5 @@
 IBCNRDV ;OAKFO/ELZ - INSURANCE INFORMATION EXCHANGE VIA RDV ;27-MAR-03
- ;;2.0;INTEGRATED BILLING;**214,231,361,371,452,593,631,664**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**214,231,361,371,452,593,631,664,763**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; This routine is used to exchange insurance information between
@@ -14,6 +14,10 @@ AGAIN S DIC="^DPT(",DIC(0)="AEMNQ" D ^DIC Q:Y<1  S DFN=+Y
  ;
 BACKGND ; background/tasked entry point
  ; IBTYPE is being used as a flag to indicate this is running in background
+ ;
+ ;IB*763/TAZ - Check Insurance Import Enabled flag and quit if not enabled.
+ ; for background jobs only
+ I $D(IBTYPE),'$$GET1^DIQ(350.9,"1,",54.01,"I") Q
  ;
  ; look up treating facilities
  K IBT S IBT=$$TFL^IBARXMU(DFN,.IBT)

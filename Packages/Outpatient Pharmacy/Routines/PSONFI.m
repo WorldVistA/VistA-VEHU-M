@@ -1,5 +1,5 @@
 PSONFI ;BIR/MHA - dispense drug/orderable item text display ;09/13/00
- ;;7.0;OUTPATIENT PHARMACY;**46,94,131,225,391**;DEC 1997;Build 13
+ ;;7.0;OUTPATIENT PHARMACY;**46,94,131,225,391,700**;DEC 1997;Build 261
  ;External reference to PSSDIN is supported by DBIA 3166
  ;External reference to ^PS(50.606 is supported by DBIA 2174
  ;External reference to ^PS(50.7 is supported by DBIA 2223
@@ -37,14 +37,21 @@ DIN(OI,DD) ;Setup DIN indicator
  K ^TMP("PSSDIN",$J) Q
  Q
 RV ;reverse video
+ ; Saves Normal Line formatting
+ I $G(VALMCNT)>$G(LASTLINE) D
+ . F L=($G(LASTLINE)+1):1:VALMCNT D SAVE^VALM10(L)
+ . S LASTLINE=VALMCNT
+ ;
  I $G(PKID),$G(PKIE)]"" D CNTRL^VALM10(1,1,$L(PKIE),IORVON,IORVOFF,0)
  D:$G(NFIO) CNTRL^VALM10(+NFIO,$P(NFIO,",",2),5,IORVON,IORVOFF,0)
  D:$G(NFID) CNTRL^VALM10(+NFID,$P(NFID,",",2),5,IORVON,IORVOFF,0)
  K NFIO,NFID,PKID
  ;- Reverses video for the words "Flagged" and "Unflagged"
  N L
- F L=1:1:VALMCNT D
+ F L=1:1:$G(VALMCNT) D
  . D:$D(FLAGLINE(L)) CNTRL^VALM10(L,1,FLAGLINE(L),IORVON,IORVOFF,0)
+ ; eRx Formatting
+ D VIDEO^PSOERUT0()
  Q
  ;
 TD N N1,N2,N3,N4,TX,NX S NX="PSSDIN"

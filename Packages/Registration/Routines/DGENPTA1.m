@@ -1,5 +1,5 @@
 DGENPTA1 ;ALB/CJM,EG,CKN,ERC,TDM,PWC,JAM,KUM - Patient API - File Data ;5/24/11 4:54pm
- ;;5.3;Registration;**121,147,314,677,659,653,688,810,754,838,841,842,978,1036,1064,1093**;Aug 13,1993;Build 12
+ ;;5.3;Registration;**121,147,314,677,659,653,688,810,754,838,841,842,978,1036,1064,1093,1103**;Aug 13,1993;Build 7
  ;
 LOCK(DFN) ;
  ;Description: Given an internal entry number of a PATIENT  record, this
@@ -166,4 +166,6 @@ FIELD(SUB) ;
  I FNUM="" S FNUM=$S(SUB="PENTRMR1":.3854,SUB="PENTRMR2":.3855,SUB="PENTRMR3":.3856,SUB="PENTRMR4":.3857,SUB="PILOCK":.386,SUB="PALOCK":.3861,1:"")
  ; DG*5.3*1064
  I FNUM="" S FNUM=$S(SUB="INDID":.571,SUB="INDADT":.573,SUB="INDSDT":.572,SUB="INDEDT":.574,1:"")
+ ; DG*5.3*1103 - Update Toxic Exposure Risk Activity (TERA) indicator that is received from ZEL segment sequence #48
+ I FNUM="" S FNUM=$S(SUB="TERA":.32116,1:"")
  Q FNUM

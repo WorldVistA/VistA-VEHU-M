@@ -1,5 +1,5 @@
 PSODEAU0 ;ALB/BI - DEA MANUAL ENTRY ;05/15/2018
- ;;7.0;OUTPATIENT PHARMACY;**529,684**;DEC 1997;Build 57
+ ;;7.0;OUTPATIENT PHARMACY;**529,684,731**;DEC 1997;Build 18
  ;External reference to sub-file NEW DEA #S (#200.5321) is supported by DBIA 7000
  ;External reference to DEA BUSINESS ACTIVITY CODES file (#8991.8) is supported by DBIA 7001
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002
@@ -8,6 +8,7 @@ PSODEAU0 ;ALB/BI - DEA MANUAL ENTRY ;05/15/2018
  Q
  ;
 DETOXDUP(DEA,DETOX,DUPDEA)  ; -- Test Business Activity Code for DEXTOX (DW)
+ Q "" ;P731 detox/x-waiver removal
  N I,NXTDET S NXTDEA=0,DUPDEA=""
  I $G(DETOX)=""!($G(DEA)="") Q 0                   ; Missing required input, can't check
  I '$D(^XTV(8991.9,"D",$G(DETOX))) Q 0             ; If Detox not on file, not a duplicate

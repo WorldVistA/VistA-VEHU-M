@@ -1,5 +1,5 @@
-XQALSUR2 ;FO-OAK.SEA/JLI-Continuation of alert surrogate processing ; May 12, 2021@14:28
- ;;8.0;KERNEL;**366,513,602,690,730,754**;Jul 10, 1995;Build 1
+XQALSUR2 ;FO-OAK.SEA/JLI-Continuation of alert surrogate processing ; September 6, 2023@14:28
+ ;;8.0;KERNEL;**366,513,602,690,730,754,790**;Jul 10, 1995;Build 2
  ;Per VHA VA Directive 6402, this routine should not be modified
  Q
  ; added to handle adjustment for manual or Fileman editing of surrogate on top zero node
@@ -34,16 +34,15 @@ CHKCRIT(ZERONODE) ;EXTRINSIC - check for critical indication for alert
  . S ALERTTXT=$$UP^XLFSTR($P(ZERONODE,U,3))
  . I ALERTTXT[CRITTEXT,ALERTTXT'["NOT "_CRITTEXT,ALERTTXT'["NON "_CRITTEXT S RESULT=1  ;;XU*8*690 - Added check for "NON" critical text
  Q RESULT
+ ;
 CLEANUP(XQAUSER) ;SR. - clean up expired surrogate info
- N XQAI,XQANOW,XQASUR
- S XQANOW=$$NOW^XLFDT()
- I $P($G(^XTV(8992,XQAUSER,2,0)),U,2)>0 D
- . S XQAI=0 F  S XQAI=$O(^XTV(8992,XQAUSER,2,XQAI)) Q:XQAI'>0  D
- . . S XQASUR=$G(^XTV(8992,XQAUSER,2,XQAI,0))
- . . I ($P(XQASUR,U)<XQANOW)&($P(XQASUR,U,4)'=1)&($P(XQASUR,U,3)<XQANOW)&($P(XQASUR,U,3)>0) D
- . . . N XQAIEN S XQAIEN=XQAI_","_XQAUSER_","
- . . . N XQAFDA S XQAFDA(8992.02,XQAIEN,.01)="@" D FILE^DIE("","XQAFDA")
- Q
+ N XQAI,XQARETD,XQASUR
+ I $P($G(^XTV(8992,XQAUSER,2,0)),U,2)'>0 Q  ;p790
+ S XQARETD=$$FMADD^XLFDT($$NOW^XLFDT(),-1825) ;p790 retention date for 5 years in the past
+ S XQAI=0 F  S XQAI=$O(^XTV(8992,XQAUSER,2,XQAI)) Q:XQAI'>0  D
+ . S XQASUR=$G(^XTV(8992,XQAUSER,2,XQAI,0))
+ . I $$EXPIRED(XQASUR,XQARETD) D DELSUR(XQAI,XQAUSER) ;P790
+ Q 
  ; p730
 DISPSUR(XQAUSER,XQASLIST)   ; Prints and returns current list of surrogate periods for a user 
  ; usage: N LIST D DISPSUR^XQAUSER(DUZ,.LIST)
@@ -55,4 +54,16 @@ DISPSUR(XQAUSER,XQASLIST)   ; Prints and returns current list of surrogate perio
  . W !,XQAI,"  ",$P(XQASLIST(XQAI),U,2),?33,$$FMTE^XLFDT($P(XQASLIST(XQAI),U,3)),?58,$$FMTE^XLFDT($P(XQASLIST(XQAI),U,4))
  W !
  Q
+ ;P790
+DELSUR(XQAI,XQAUSER) ;Purge surrogate
+ N XQAIEN,XQAFDA
+ S XQAIEN=XQAI_","_XQAUSER_","
+ S XQAFDA(8992.02,XQAIEN,.01)="@" D FILE^DIE("","XQAFDA")
+ Q
+ ;p790
+EXPIRED(XQASUR,RETDATE) ; called by CLEANUP. SURROGATE return 1 if expired or 0 if not
+ ;  RETDATE, retention date, is greater than start (P1) and end (P3) dates
+ ;  end date (P3) is not empty (otherwise still active)
+ ;  alerts don't need to be returned (P4=0) (alerts already returned) 
+ Q ($P(XQASUR,U)<RETDATE)&($P(XQASUR,U,4)'=1)&($P(XQASUR,U,3)<RETDATE)&($P(XQASUR,U,3)>0)
  ;

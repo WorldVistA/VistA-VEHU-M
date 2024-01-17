@@ -1,5 +1,5 @@
 SDTMPUT0 ;MS/SJA - TELEHEALTH SEARCH UTILITY ;Dec 17, 2020
- ;;5.3;Scheduling;**773,779,812,817,821,832**;Aug 13, 1993;Build 6
+ ;;5.3;Scheduling;**773,779,812,817,821,832,859**;Aug 13, 1993;Build 10
  ;Reference to ^DGCN(391.91 supported by IA #4943
  ;
  N II,ARR,CNT,CODE,DEA,DFN,FAC,F407,S407,ICNHA,SIEN,MPI,NODE1,NODE8,NODE99,FICN,SDCL,NODE0,DIV,MCD,INST,INSF
@@ -30,10 +30,11 @@ C ; Search by clinic
  K DIC,SDCL,SDNO,NOD0,PNODE,DIV,SDSL,MCD,INST,INSF,LTZ,CTRY,TZEX,CHAR4,CHAR4DSC
  S DIC="^SC(",DIC(0)="AEMQZ",DIC("S")="I $P(^(0),""^"",3)=""C"",'$G(^(""OOS""))"
  S DIC("A")="Select CLINIC: " D ^DIC K DIC("S"),DIC("A") Q:"^"[X  I +Y'>0 G:+Y<0 C
- S SDCL=Y
- S SDNO="",NODE0=$G(^SC(+SDCL,0)),DIV=$P(NODE0,U,15)
- S SDSL=$G(^SC(+SDCL,"SL")),MCD=$G(^DG(40.8,DIV,0)),INST=$P(MCD,U,7)
- S INSF=$G(^DIC(4,INST,8)),LTZ=$P(INSF,U),CTRY=$P(INSF,U,2),TZEX=$P(INSF,U,3)
+ S SDCL=Y,(DIV,MCD,INST,INSF,LTZ,CTRY,TZEX)=""  ;859
+ S SDNO="",NODE0=$G(^SC(+SDCL,0)),DIV=$P(NODE0,U,15),SDSL=$G(^SC(+SDCL,"SL"))
+ I DIV D  ;859
+ . S MCD=$G(^DG(40.8,DIV,0)),INST=$P(MCD,U,7)
+ . S INSF=$G(^DIC(4,INST,8)),LTZ=$P(INSF,U),CTRY=$P(INSF,U,2),TZEX=$P(INSF,U,3)
  S CHAR4=$$CHAR4^SDESUTIL($P(SDCL,U,2)) S CHAR4DSC=$S(CHAR4="":"",1:CHAR4_"-"_$$CHAR4DSC^SDTMPUTL(CHAR4))
  W !!,SDASH,!
  W !,"Clinic",?18,": ",$TR(SDCL,"^","-")
@@ -46,11 +47,11 @@ C ; Search by clinic
  W !,"Station Number",?18,": ",$$GET1^DIQ(4,INST_",",99,"E")
  W !,"Stop Code",?18,": " I $P(NODE0,U,7) W $P(NODE0,U,7),"-",$$GET1^DIQ(40.7,$P(NODE0,U,7),.01)," (",$$GET1^DIQ(40.7,$P(NODE0,U,7),1),")"
  W !,"Credit Stop Code",?18,": " I $P(NODE0,U,18) W $P(NODE0,U,18),"-",$$GET1^DIQ(40.7,$P(NODE0,U,18),.01)," (",$$GET1^DIQ(40.7,$P(NODE0,U,18),1),")"
- W !,"CHAR4",?18,": ",CHAR4DSC ;821
- W !,"Country",?18,": " W:CTRY CTRY,"-",$$GET1^DIQ(779.004,CTRY,.01)
- W !,"Location Timezone",?18,": " W:LTZ LTZ,"-",$$GET1^DIQ(1.71,LTZ,.01)
+ W !,"CHAR4",?18,": " W:$D(CHAR4DSC) CHAR4DSC ;821
+ W !,"Country",?18,": " W:$D(CTRY) CTRY,"-",$$GET1^DIQ(779.004,CTRY,.01)
+ W !,"Location Timezone",?18,": " W:$D(LTZ) LTZ,"-",$$GET1^DIQ(1.71,LTZ,.01)
  W !,"Timezone Exception",?18,": ",TZEX
- W !,"Overbooks per day",?18,": ",$P(SDSL,U,7)
+ W !,"Overbooks per day",?18,": " W:$D(SDSL) $P(SDSL,U,7)
  W !,"Spec Instructions",?18,":"
  D SI
  D ACT
@@ -190,7 +191,7 @@ ICN ; full ICN history
 ACT ; inactive clinic
  I $D(^SC(+SDCL,"I")) S SDRE=+$P(^("I"),U,2),SDIN=+^("I") I SDRE'=SDIN I SDIN'>DT&(SDRE=0!(SDRE>DT)) D
  . S Y=SDIN D DTS^SDUTL W !!,?4,"**** Clinic is inactive ",$S(SDRE:"from ",1:"as of "),Y S Y=SDRE D:Y DTS^SDUTL W $S(SDRE:" to "_Y,1:"")," ****" K SDIN,SDRE S SDNO=1
- I 'SDNO,$D(SDIN),SDIN>DT,SDRE'=SDIN W !,?4,"**** Clinic will be inactive ",$S(SDRE:"from ",1:"as of ") S Y=SDIN D DTS^SDUTL W Y S Y=SDRE D:Y DTS^SDUTL W $S(SDRE:" to "_Y,1:"")," ****" K SDIN,SDRE
+ I '$G(SDNO),$D(SDIN),SDIN>DT,SDRE'=SDIN W !,?4,"**** Clinic will be inactive ",$S(SDRE:"from ",1:"as of ") S Y=SDIN D DTS^SDUTL W Y S Y=SDRE D:Y DTS^SDUTL W $S(SDRE:" to "_Y,1:"")," ****" K SDIN,SDRE
  Q
  ;
 END K ARR,CNT,CODE,CTRY,DFN,FAC,F407,S407,ICNHA,SIEN,II,MPI,NODE1,NODE8,NODE99,FICN,SDCL,NODE0,DIV,MCD,INST,INSF
@@ -259,13 +260,15 @@ SDHELP ;Help text
  Q
  ;
 SI ;Parse and display special instructions
- N N,I,E,S
+ N N,I,E,S,SV
  S N=+$P($G(^SC(+SDCL,"SI",0)),U,3)
  I N=0 Q
  F I=1:1:N S X=$G(^SC(+SDCL,"SI",I,0)) D
   . I X="" Q
   . I $L(X)<61 W ?20,X W:I<N ! Q 
-  . S E=48 F  S E=$F(X," ",E) Q:E=0!(E>60)  S S=E
+  . S E=45 F  S SV=E,E=$F(X," ",E) Q:E=0!(E=58)!(E>58)  ;859 Parse comment on space
+  . I E>58 S E=SV  ;859 If line>58 go back to previous
+  . S S=E  ;859 S = divide between line 1 and 2
   . W ?20,$E(X,1,S-1),!,?22,$E(X,S,99)
   . I I<N W !
  Q

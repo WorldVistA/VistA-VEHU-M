@@ -1,5 +1,5 @@
 DGBTSP ;ALB/BLD - BENEFICIARY TRAVEL SPECIAL MODE OF TRANSPORTATION ; 12/18/2011@1000 ; 12/23/2012
- ;;1.0;Beneficiary Travel;**20,22,25,39**;December 27, 2011;Build 6
+ ;;1.0;Beneficiary Travel;**20,22,25,39,40**;December 27, 2011;Build 8
  ;
  ;MUST ENTER AT EN^DGBTSP
  Q
@@ -8,21 +8,29 @@ EN(DGBTSP) ;main entry point from DGBTE
  ;
  ;TRNSMDE = mode of transportation
  ;REMARKS = will only have data if OTHER is chosen from mode of transportation list
- ;
  N TRNSMDE,DGBTINTO,PREAUTH,DGBTACTYPE,MODEOFTRANS,OTHERTRANRMKS,AUTHORIZED,VENDOR,INVOICE,INVDT,OWTRP,TOTALMILES,TOTINVOICE,DGBTFDA
  N BASERATE,MILEAGEFEE,NOSHOW,WAITTIME,EXTRACREW,SPEQUIP,REMARKS,DGBTINTO,ERRMSG,OTHERTRANSRMKS,ACTTYPE,ERRMSG
- ;
- ;
- S DGBTSP=1,DGBTCMTY="M",SPCOMPLETE=0
+ S DGBTSP=1,DGBTCMTY="S",SPCOMPLETE=0 ; DGBT*1.0*40 - default DGBTCMTY to "S"
  ;type of claim - Mileage or Special Mode Claim
  S DGBTACTYPE=$$GET1^DIQ(392,DGBTDT,56,"I")
- S DIR("A")="Is this a Mileage or Special Mode Claim?",DIR("?")="Enter 'M' for Mileage Claim or RETURN to continue processing Mileage claim or 'S' for Special Mode Claim"
- S DIR(0)="S^M:MILEAGE;S:SPECIAL MODE^^W $S(X=""M"":""MILEAGE"",X=""S"":""SPECIAL MODE"",1:"""") K:X="" X"
- S DIR("B")=$S($G(DGBTSP("CLAIM TYPE"))'="":DGBTSP("CLAIM TYPE"),$G(DGBTACTYPE)'="":DGBTACTYPE,1:"M")
- D ^DIR K DIR S:$D(^DGBT(392,DGBTDTI,"SP")) SPCOMPLETE=1 I ($D(DTOUT))!($D(DUOUT)) K DGBTSP S DGBTSP=$S($D(^DGBT(392,DGBTDTI,"SP")):1,1:0),SPCOMPLETE=$S($G(CHZFLG)=1:1,1:0),DGBTTOUT=-1 Q
+ ;
+ ;DGBT*1.0*40 - removing mileage claim option
+ ;
+ ;S DIR("A")="Is this a Mileage or Special Mode Claim?",DIR("?")="Enter 'M' for Mileage Claim or RETURN to continue processing Mileage claim or 'S' for Special Mode Claim"
+ ;S DIR(0)="S^M:MILEAGE;S:SPECIAL MODE^^W $S(X=""M"":""MILEAGE"",X=""S"":""SPECIAL MODE"",1:"""") K:X="" X"
+ ;S DIR("B")=$S($G(DGBTSP("CLAIM TYPE"))'="":DGBTSP("CLAIM TYPE"),$G(DGBTACTYPE)'="":DGBTACTYPE,1:"M")
+ ; *40 - only allow special mode claims, replacing with yes/no prompt
+ K DIR
+ S DIR(0)="Y"
+ S DIR("A")="Do you want to enter a Special Mode Claim"
+ S DIR("A",1)="Use the Beneficiary Travel Self-Service System (BTSSS) for Mileage Claims."
+ S DIR("B")="Yes"
+ D ^DIR K DIR
+ S:$D(^DGBT(392,DGBTDTI,"SP")) SPCOMPLETE=1
+ I ($D(DTOUT))!($D(DUOUT))!($G(Y)=0) K DGBTSP S DUOUT=1,DGBTSP=$S($D(^DGBT(392,DGBTDTI,"SP")):1,1:0),SPCOMPLETE=$S($G(CHZFLG)=1:1,1:0),DGBTTOUT=-1 Q  ; *40 - need to set DUOUT to quit claim process
+ I $G(Y)=1 S Y="S",Y(0)="SPECIAL MODE" ; *40 - setting Y to make it compatible with existing code below
  S DGBTSP("CLAIM TYPE")=$P(Y,",",1),DGBTCMTY=$P(Y,",",1)
  ;*************
- ;
  I +DGBTELL=15 D
  .S DGBTFDA(392,DGBTDTI_",",56)=$G(DGBTSP("CLAIM TYPE"))
  .S DGBTFDA(392,DGBTDTI_",",3)=$P(VAEL(1),"^",2)

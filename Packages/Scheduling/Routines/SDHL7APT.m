@@ -1,5 +1,5 @@
 SDHL7APT ;MS/TG,PH - TMP HL7 Routine;AUG 17, 2018
- ;;5.3;Scheduling;**704,714,754,773,780,798,810,817,821,848,850**;AUG 17, 2018;Build 12
+ ;;5.3;Scheduling;**704,714,754,773,780,798,810,817,821,848,859**;AUG 17, 2018;Build 10
  ;
  ;  Integration Agreements:
  Q
@@ -89,7 +89,7 @@ PROCSIU ;Process SI^S12 messages from the "TMP VISTA" Subscriber protocol
  N MSGARY,SDCL,SDCL2,SDCL3
  D MSH^SDHL7APU(.MSH,.INP,.MSGARY)
  D SCH^SDHL7APU(.SCH,.INP,.MSGARY)
- I +ERR D  Q   ;850-check Cancel Reason
+ I +ERR D  Q   ;859-check Cancel Reason
  .S ERR=$G(MSAHDR)_$E(ERRTXT,1,52)
  .D SENDERR^SDHL7APU(ERR)
  .K @MSGROOT
@@ -147,7 +147,7 @@ PROCSIU ;Process SI^S12 messages from the "TMP VISTA" Subscriber protocol
  ;IF a regular appt, not rtc or consult check to see if the appointment is in 409.85
  I $P(SDAPTYP,"|",1)="A" D
  .Q:$$UPPER^SDUL1(MSGARY("HL7EVENT"))'="S12"
- .I $G(AIL(2,4,1,4))=$G(SDPARENT) S (INP(25),SCH(24,1,1),SDPARENT)=""  ;850 prevent adding parent in ARSET below
+ .I $G(AIL(2,4,1,4))=$G(SDPARENT) S (INP(25),SCH(24,1,1),SDPARENT)=""  ;859 prevent adding parent in ARSET below
  .S:INP(3)="" INP(3)=DT S RTN=0 D ARSET^SDECAR2(.RTN,.INP)
  .S REQIEN=+$P(RTN,$c(30),2),SDAPTYP="A|"_REQIEN      ;817- define REQIEN for later  ;810- SDECAR2 routine should be used instead of SDHLAPT1 version of ARSET
  .I $G(SDMTC)=1 D CHKCHILD^SDHL7APU ; if multi check to see if the child order is in 409.85, if not add it

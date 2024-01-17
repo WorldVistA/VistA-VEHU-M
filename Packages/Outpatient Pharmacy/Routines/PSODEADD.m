@@ -1,5 +1,5 @@
 PSODEADD ;DAL/JCH-Add/update DEA NUMBERS file (8991.9) ;19 Jul 2021 06:00
- ;;7.0;OUTPATIENT PHARMACY;**545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**545,731**;DEC 1997;Build 18
  ; Reference to ^XOBWLIB supported by DBIA 5421
  ;
 EN ; Entry Point
@@ -85,7 +85,7 @@ ED89919(PSODEAI,PSODNEW,PSOSTOP) ; Enter remaining fields in 8991.9
  S PSODTYPE=$$PROVTYPE^PSODEAUT(PSOBACE)
  S DR=".07///"_+PSODTYPE D ^DIE
  W !,"DEA TYPE: ",$P(PSODTYPE,U,2)
- K DR I +PSODTYPE=2 S DR=".03;"
+ K DR ;I +PSODTYPE=2 S DR=".03;"  ;P731 detox/x-waiver removal
  S DR=$G(DR)_".04;1.1R;2.1R;2.2R;2.3R;2.4R;2.5R;2.6R;1.2;1.3;1.4;1.5;1.6;1.7" D ^DIE
  ;
  K FDA,ERR

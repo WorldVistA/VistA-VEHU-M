@@ -1,56 +1,81 @@
 PSOERX1B ;ALB/BWF - Accept eRx function ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**467,506,520,527,508,551,591,606,581,617**;DEC 1997;Build 110
+ ;;7.0;OUTPATIENT PHARMACY;**467,506,520,527,508,551,591,606,581,617,700**;DEC 1997;Build 261
  ;
  Q
 ACVAL(PSOIEN,TYPE) ; NEW MTYPE, GET IT OFF FIELD .08, IF NOT DEFINED, 
- N F,VBFLD,VBDTTMF,DIR,TAG,VALPAR,VAL,CURVAL,MVFLD,VBFLD,VBDTTMF,PSOIENS,RXSTAT,QFLG,VDTTM,ERXMMFLG,MTYPE
- N RESTYPE
+ ;Input: PSOIEN - eRx IEN (Pointer to #52.49)
+ ;       TYPE   - Validation Type (P: Patient, PR: Provider, D: Drug)
+ N MBMSITE,F,VBFLD,VBDTTMF,DIR,TAG,VALPAR,VAL,CURVAL,MVFLD,VBFLD,VBDTTMF,PSOIENS,RXSTAT,QFLG,VDTTM,ERXMMFLG,MTYPE,Y
+ N RESTYPE,GMRA,GMRAL,ERXPTIEN,DFN
+ S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0)
  S F=52.49,PSOIENS=PSOIEN_","
  D FULL^VALM1
  S VALMBCK="R"
  ; first check to see if the entry exists. cannot validate something that has no value
  S MTYPE=$$GET1^DIQ(52.49,PSOIEN,.08,"I") ;mtype
- S RXSTAT=$$GET1^DIQ(52.49,PSOIEN,1,"E") I RXSTAT="RJ"!(RXSTAT="RM")!(RXSTAT="PR") D  Q
- .W !!,"Cannot accept validation for a prescription with a status of 'Rejected',",!,"'Removed',or 'Processed",!
- .S DIR(0)="E" D ^DIR
+ S RXSTAT=$$GET1^DIQ(52.49,PSOIEN,1,"E") I RXSTAT="RJ"!(RXSTAT="RM")!($E(RXSTAT,1,3)="REM")!(RXSTAT="PR")!(RXSTAT="CRP")!(RXSTAT="CXP")!(RXSTAT="RRP") D  Q
+ . W !!,"Cannot accept validation for a prescription with a status of 'Rejected',",!,"'Removed',or 'Processed",!
+ . S DIR(0)="E" D ^DIR
  Q:TYPE']""
  S TAG=$S(TYPE="P":"patient",TYPE="PR":"provider",TYPE="D":"drug",1:"")
  S VALPAR=$S(TYPE="P":.05,TYPE="PR":2.3,TYPE="D":3.2,1:"") Q:VALPAR=""
  S VAL=$$GET1^DIQ(F,PSOIEN,VALPAR,"I") I 'VAL D  Q
- .W !,"Vista "_TAG_" has not been matched. Cannot manually validate."
- .S DIR(0)="E" D ^DIR
+ . W !,"Vista "_TAG_" has not been matched. Cannot manually validate."
+ . S DIR(0)="E" D ^DIR
  S MVFLD=$S(TYPE="P":1.7,TYPE="PR":1.3,TYPE="D":1.5,1:"")
  S VBFLD=$S(TYPE="P":1.13,TYPE="PR":1.8,TYPE="D":1.11,1:"")
  S VBDTTMF=$S(TYPE="P":1.14,TYPE="PR":1.9,TYPE="D":1.12,1:"")
  ; check if Patient has a valid adress - CS prescriptions only
  I TYPE="P",$$GET1^DIQ(52.49,PSOIEN,95.1,"I"),'$$VALPTADD^PSOERXUT(+$G(VAL)) D  Q
- .W !!,"Unable to validate - VistA Patient does not have a current mailing"
- .W !,"or residential address on file.",$C(7),!
- .S DIR(0)="E" D ^DIR
+ . W !!,"Unable to validate - VistA Patient does not have a current mailing"
+ . W !,"or residential address on file.",$C(7),!
+ . S DIR(0)="E" D ^DIR
  ; check to see if this is already validated
  I MVFLD S CURVAL=$$GET1^DIQ(F,PSOIEN,MVFLD,"I")
  I CURVAL D  Q
- .W !!,"This "_TAG_" has already been manually validated."
- .W !,"Validated By: "_$$GET1^DIQ(F,PSOIEN,VBFLD,"E")
- .W !,"Validated Date/Time: "_$$GET1^DIQ(F,PSOIEN,VBDTTMF,"E"),!
- .S DIR(0)="E" D ^DIR
+ . W !!,"This "_TAG_" has already been "_$S(TYPE="PR"&$$GET1^DIQ(52.49,PSOIEN,2.7,"I"):"automatically",1:"manually")_" validated."
+ . W !,"Validated By: "_$$GET1^DIQ(F,PSOIEN,VBFLD,"E")
+ . W !,"Validated Date/Time: "_$$GET1^DIQ(F,PSOIEN,VBDTTMF,"E"),!
+ . S DIR(0)="E" D ^DIR
  S QFLG=0
  I TYPE="D" D
- .W !
- .I '$O(^PS(52.49,PSOIEN,21,0)) W !,"Dosing information missing.",$C(7) S QFLG=1
- .I $$GET1^DIQ(52.49,PSOIEN,20.1,"E")="" W !,"Quantity missing.",$C(7) S QFLG=1
- .I $$GET1^DIQ(52.49,PSOIEN,20.2,"E")="" W !,"Days supply missing.",$C(7) S QFLG=1
+ . W !
+ . I '$O(^PS(52.49,PSOIEN,21,0)) W !,"Dosing information missing.",$C(7) S QFLG=1
+ . I $$GET1^DIQ(52.49,PSOIEN,20.1,"E")="" W !,"Quantity missing.",$C(7) S QFLG=1
+ . I $$GET1^DIQ(52.49,PSOIEN,20.2,"E")="" W !,"Days supply missing.",$C(7) S QFLG=1
  I $G(QFLG) W ! S DIR(0)="E" D ^DIR K DIR Q
  I TYPE="D" D
- .N ERXMSG,I
- .D PRDRVAL^PSOERXUT(.ERXMSG,"VD",PSOIEN) I $P(ERXMSG,"^",2)="B" S QFLG=1
- .I $O(ERXMSG(0)) D
- ..W !!,"*********************************",$S($P(ERXMSG,"^",2)="W":" WARNING(S) ",1:"INVALID DRUG"),"***********************************"
- ..S I=0 F  S I=$O(ERXMSG(I)) Q:'I  W !,$P(ERXMSG(I),"^")
- ..W !,"********************************************************************************",$C(7)
+ . N ERXMSG,I
+ . D PRDRVAL^PSOERXUT(.ERXMSG,"VD",PSOIEN) I $P(ERXMSG,"^",2)="B" S QFLG=1
+ . I $O(ERXMSG(0)) D
+ . . W !!,"*********************************",$S($P(ERXMSG,"^",2)="W":" WARNING(S) ",1:"INVALID DRUG"),"***********************************"
+ . . S I=0 F  S I=$O(ERXMSG(I)) Q:'I  W !,$P(ERXMSG(I),"^")
+ . . W !,"********************************************************************************",$C(7)
  I $G(QFLG) W ! S DIR(0)="E" D ^DIR K DIR Q
  ;
- I TYPE="P" S ERXMMFLG=$$PATWARN^PSOERX1A("VP",PSOIEN) I 'ERXMMFLG S DIR(0)="E" D ^DIR K DIR Q
+ I TYPE="P" D  I '$G(ERXMMFLG) S DIR(0)="E" D ^DIR K DIR
+ . S ERXMMFLG=$$PATWARN^PSOERX1A("VP",PSOIEN)
+ ;
+ S DFN=$$GET1^DIQ(52.49,PSOIEN,.05,"I")
+ ; VistA Patient ChampVA Eligibility Check (MbM Only)
+ I $G(MBMSITE),TYPE="P",'$$CHVAELIG^PSOERXU9(DFN) D  Q
+ . I ",N,I,W,RXI,RXN,RXW,RXR,CXI,CXN,CXW,"[(","_$G(RXSTAT)_",") D
+ . . D UPDSTAT^PSOERXU1(PSOIEN,"HEL","Hold due to Eligibility Issue")
+ . . W !!,"This eRx has been put on Hold (HEL) because the VistA Patient ("_$$GET1^DIQ(2,DFN,.01)_") is not Eligible for ChampVA Rx Benefit."
+ . . K DIR D PAUSE^VALM1
+ . D AUTOHOLD^PSOERX1E("E",PSOIEN,DFN)
+ ;
+ ; VistA Patient Allergy Check (MbM Only)
+ I $G(MBMSITE),TYPE="P" D  I $G(GMRAL)="" Q
+ . S GMRA="0^0^111" D EN1^GMRADPT I $G(GMRAL)'="" Q
+ . I ",N,I,W,RXI,RXN,RXW,RXR,CXI,CXN,CXW,"[(","_$G(RXSTAT)_",") D
+ . . D UPDSTAT^PSOERXU1(PSOIEN,"HAL","Hold for Allergy Assessment")
+ . . W !!,"This eRx has been put on Hold (HAL) because the VistA Patient ("_$$GET1^DIQ(2,DFN,.01)_") does not have an Allergy Assessment.."
+ . . K DIR D PAUSE^VALM1
+ . D AUTOHOLD^PSOERX1E("A",PSOIEN,DFN)
+ ;
+ I TYPE="P",'$G(ERXMMFLG) Q
+ ;
  I TYPE="PR" S ERXMMFLG=$$PRVWARN^PSOERX1A("VP",PSOIEN) I 'ERXMMFLG S DIR(0)="E" D ^DIR K DIR Q
  W !,"Would you like to mark this "_TAG_" as VALIDATED?"
  S DIR(0)="Y",DIR("B")=$S($G(ERXMMFLG):"NO",1:"YES") D ^DIR Q:Y'=1
@@ -59,19 +84,19 @@ ACVAL(PSOIEN,TYPE) ; NEW MTYPE, GET IT OFF FIELD .08, IF NOT DEFINED,
  I VBFLD S FDA(F,PSOIENS,VBFLD)=$G(DUZ)
  I VBDTTMF S FDA(F,PSOIENS,VBDTTMF)=VDTTM
  I $D(FDA) D FILE^DIE(,"FDA") K FDA
- W !,"Validation Updated!!" S DIR(0)="E" D ^DIR
+ W !,"Validation Updated!!"
  ; check validations and update status to 'wait' if all validations have occured.
  I MTYPE="N" D
- .I $$GET1^DIQ(52.49,PSOIEN,1.3,"I"),$$GET1^DIQ(52.49,PSOIEN,1.5,"I"),$$GET1^DIQ(52.49,PSOIEN,1.7,"I") D UPDSTAT^PSOERXU1(PSOIEN,"W") Q
- .D UPDSTAT^PSOERXU1(PSOIEN,"I")
+ . I $$GET1^DIQ(52.49,PSOIEN,1.3,"I"),$$GET1^DIQ(52.49,PSOIEN,1.5,"I"),$$GET1^DIQ(52.49,PSOIEN,1.7,"I") D UPDSTAT^PSOERXU1(PSOIEN,"W") Q
+ . D UPDSTAT^PSOERXU1(PSOIEN,"I")
  I MTYPE="RE" D
- .S RESTYPE=$$GET1^DIQ(52.49,PSOIEN,52.1,"I")
- .I RESTYPE'="R" D UPDSTAT^PSOERXU1(PSOIEN,"RXW") Q
- .I $$GET1^DIQ(52.49,PSOIEN,1.3,"I"),$$GET1^DIQ(52.49,PSOIEN,1.5,"I"),$$GET1^DIQ(52.49,PSOIEN,1.7,"I") D UPDSTAT^PSOERXU1(PSOIEN,"RXW") Q
- .D UPDSTAT^PSOERXU1(PSOIEN,"RXI")
+ . S RESTYPE=$$GET1^DIQ(52.49,PSOIEN,52.1,"I")
+ . I RESTYPE'="R" D UPDSTAT^PSOERXU1(PSOIEN,"RXW") Q
+ . I $$GET1^DIQ(52.49,PSOIEN,1.3,"I"),$$GET1^DIQ(52.49,PSOIEN,1.5,"I"),$$GET1^DIQ(52.49,PSOIEN,1.7,"I") D UPDSTAT^PSOERXU1(PSOIEN,"RXW") Q
+ . D UPDSTAT^PSOERXU1(PSOIEN,"RXI")
  I MTYPE="CX" D
- .I $$GET1^DIQ(52.49,PSOIEN,1.3,"I"),$$GET1^DIQ(52.49,PSOIEN,1.5,"I"),$$GET1^DIQ(52.49,PSOIEN,1.7,"I") D UPDSTAT^PSOERXU1(PSOIEN,"CXW") Q
- .D UPDSTAT^PSOERXU1(PSOIEN,"CXI")
+ . I $$GET1^DIQ(52.49,PSOIEN,1.3,"I"),$$GET1^DIQ(52.49,PSOIEN,1.5,"I"),$$GET1^DIQ(52.49,PSOIEN,1.7,"I") D UPDSTAT^PSOERXU1(PSOIEN,"CXW") Q
+ . D UPDSTAT^PSOERXU1(PSOIEN,"CXI")
  I TYPE="P" D BPROC^PSOERXU8(PSOIEN,"PA",MVFLD,VBFLD,VBDTTMF,VDTTM) K @VALMAR D INIT^PSOERXP1
  I TYPE="PR" D BPROC^PSOERXU8(PSOIEN,"PR",MVFLD,VBFLD,VBDTTMF,VDTTM) K @VALMAR D INIT^PSOERXR1
  I TYPE="D" K @VALMAR D INIT^PSOERXD1
@@ -88,7 +113,7 @@ ACVAL(PSOIEN,TYPE) ; NEW MTYPE, GET IT OFF FIELD .08, IF NOT DEFINED,
  ;PSOHY("REF")=# OF REFILLS (20.5)
  ;PSOHY("PAT")=PATIENT IEN (.05)
  ;PSOHY("OCC")=ORDER TYPE (ALWAYS 'NW') - NO MAPPING TO 52.49
- ;PSOHY("EDT")=LOGIN DATE (TODAYS DATE) - NO MAPPING TO 52.49
+ ;PSOHY("EDT")=LOGIN DATE/TIME (ERX MSG DATE/TIME #.03)
  ;PSOHY("PRIOR")=PRIORITY (SET OF CODES, 52.41,25 - STAT, EMERGENCY, ROUTINE)
  ;PSOHY("EXAPP")=EXTERNAL APPLICATION (FREE TEXT), LIKELY "PSO" - NO MAPPING TO 52.49
  ;PSOHY("PRCOM",#)=PROVIDER COMMENTS (8- NOTES)
@@ -96,14 +121,14 @@ ACVAL(PSOIEN,TYPE) ; NEW MTYPE, GET IT OFF FIELD .08, IF NOT DEFINED,
  ;PSOHY("QTSUB",CNT)=QUANTITY TIMING SUBFILE DATA. MERGED IN, FULL SUBFILE DATA
  ; QUANTITY/TIMING MAPS DIRECTLY TO QUANTITY TIMING IN 52.41
 SETUP ;
- N PSOIENS,PSODAT,F,PATIEN,PROVIEN,OC,VQTY,EFFDT,VADRUG,VAOI,VAREF,VAROUT,VAPRIOR,PSOHY,LOC,ERXNUM,PRVARY,PRVCOMM
+ N MBMSITE,PSOIENS,PSODAT,F,PATIEN,PROVIEN,OC,VQTY,EFFDT,VADRUG,VAOI,VAREF,VAROUT,VAPRIOR,PSOHY,LOC,ERXNUM,PRVARY,PRVCOMM
  N PLOOP,PCNT,QTLOOP,QTCNT,PSOEXMS,DIR,ORDERTYP,PSOEXCNT,SCNT,SIGDAT,SLOOP,POORD,PMVAL,PRMVAL,DMVAL,PATINST,RXSTAT
  N VADAYS,UNEXPI,PINARY,WRITDT,SLOOP2,MTYPE,REQIEN,ORXIEN,RESTYPE,DELTAS,RXIEN
+ S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0)
  S F=52.49
  Q:'$G(PSOIEN)
  D FULL^VALM1
- S VALMBCK="R"
- S RXSTAT=$$GET1^DIQ(52.49,PSOIEN,1,"E") I RXSTAT="RJ"!(RXSTAT="RM")!(RXSTAT="PR")!(RXSTAT="RXP") D  Q
+ S RXSTAT=$$GET1^DIQ(52.49,PSOIEN,1,"E") I RXSTAT="RJ"!(RXSTAT="RM")!($G(MBMSITE)&($E(RXSTAT,1,3)="REM"))!(RXSTAT="PR")!(RXSTAT="RXP") D  Q
  .W !!,"Cannot accept a prescription with a status of 'Rejected', 'Removed',",!,"or 'Processed",!
  .S DIR(0)="E" D ^DIR
  S PSOIENS=PSOIEN_","
@@ -165,8 +190,8 @@ SETUP ;
  S PSOHY("ITEM")=VAOI,PSOHY("DRUG")=VADRUG
  S PSOHY("QTY")=VQTY,PSOHY("REF")=VAREF
  S (PSOHY("PAT"),DFN)=PATIEN,PSOHY("OCC")=ORDERTYP
- ; login date will always be the written date. if there is no written date by chance, use the received date
- S PSOHY("EDT")=$$NOW^XLFDT,PSOHY("PRIOR")=VAPRIOR
+ ; Login date will always be the Message Received Date/Time
+ S PSOHY("EDT")=$$GET1^DIQ(52.49,PSOIEN,.03,"I"),PSOHY("PRIOR")=VAPRIOR
  ; ALWAYS PSO as the external application
  S PSOHY("EXAPP")="PHARMACY"
  S PSOHY("DAYS")=VADAYS
@@ -183,7 +208,7 @@ SETUP ;
  K DFN
  Q
 ADD(QUIET) ;Add CHCS message to Outpatient Pending Orders file
- N PSOHQ,PSOHQT,PSOCPEND,PSOHINI,PSOHINLO,ERXSTA,ORDNUM,ILOOP,IARY,PSSRET,RESTYPE,RTHIEN,RTHID
+ N PSOHQ,PSOHQT,PSOCPEND,PSOHINI,PSOHINLO,ERXSTA,ORDNUM,ILOOP,IARY,PSSRET,RESTYPE,RTHIEN,RTHID,X
  S (PSOHINI,PSOHINLO)=0 D
  .I $G(PSOHY("LOC")) S PSOHINLO=$P($G(^SC(PSOHY("LOC"),0)),"^",4) I PSOHINLO Q
  ; get institution from 52.49 if clinic was not passed in
@@ -261,12 +286,15 @@ ADD(QUIET) ;Add CHCS message to Outpatient Pending Orders file
  .I $P(PSSRET(0),U)<1 W !,$P(PSSRET(0),U,2) S DIR(0)="E" D ^DIR K DIR Q
  .I $D(PSSRET("errorMessage")) W !,PSSRET("errorMessage") S DIR(0)="E" D ^DIR K DIR Q
  ;PSO*7*520 - end rxVerify changes
- I '$D(QUIET) S DIR(0)="E" D ^DIR K DIR
  K QUIET
  Q
  ; remove eRx from holding queue
 REM ;
  D REM^PSOERXU4
+ Q
+ ; unremove eRx from holding queue
+UNREM ;
+ D UNREM^PSOERXU4
  Q
  ; reject eRx
 REJ ;

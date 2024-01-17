@@ -1,5 +1,5 @@
 PSSOPKI ;BHAM ISC/MHA-New API's to CPRS for DEA/PKI Pilot Project ;03/11/02
- ;;1.0;PHARMACY DATA MANAGEMENT;**61,69,166,183,209,219,246,247**;9/30/97;Build 11
+ ;;1.0;PHARMACY DATA MANAGEMENT;**61,69,166,183,209,219,246,247,261**;9/30/97;Build 3
  ;Reference to ^PSNDF(50.68 supported by DBIA 3735
  ;
 OIDEA(PSSXOI,PSSXOIP) ; CPRS Orderable Item call 
@@ -67,6 +67,7 @@ DETOX(PSSDIEN) ; BUPREN drug check to determine if drug is a detox medication
  ; Input - PSSDIEN - Drug IEN
  ; Output - returns 1 if the drugs is a Detox medication, otherwise it returns 0
  ;
+ Q 0 ;P261 detox/x-waiver removal
  Q:'$G(PSSDIEN) 0
  Q:$P($G(^PSDRUG(PSSDIEN,0)),"^")'["BUPREN" 0
  N PSSJ,PSSY,PSSNDF,PKGLIST,SYSLIST
@@ -88,6 +89,7 @@ OIDETOX(PSSXOI,PSSXOIP) ; CPRS Orderable Item to check a drug is a DETOX or not
  ;      - PSSXOIP - Package
  ;Output - returns 1 if the drugs associated to the Orderable Item contains the text "BUPREN" as part of the name
  ;         otherwise it returns 0
+ Q 0 ;P261 detox/x-waiver removal
  N PSSDTOX,PSSLP,PSSDPK
  I '$G(PSSXOI)!($G(PSSXOIP)="")!(PSSXOIP'="O") Q 0
  S (PSSLP,PSSDTOX)=0

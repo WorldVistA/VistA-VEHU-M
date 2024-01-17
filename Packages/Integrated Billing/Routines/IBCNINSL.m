@@ -1,8 +1,9 @@
 IBCNINSL ;AITC/TAZ/VAD - GENERAL INSURANCE UTILITIES - LOOKUP ;8/20/20 12:46p.m.
- ;;2.0;INTEGRATED BILLING;**664,687,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**664,687,737,763**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;IB*2.0*664/TAZ/VAD - Cloned code from VAUTOMA to increase functionality
+ ;IB*763/TAZ Removed tag INSCO since it has been replaced by another lookup.
  ;
  ; IA #2171 used in tag INSTS
  ;
@@ -46,15 +47,6 @@ INSTS(IEN) ;Screen for Institution   IA #2171
  S OK=$S(PRNT="":0,PSTA="":1,PSTA=STA:1,1:0)
 INSTSQ ;Exit Screen
  Q OK
- ;
-INSCO(ARRAY) ; Insurance Company Lookup
- ;INPUT:
- ; ARRAY    - Results of lookup to be used by calling routine
- ;
- N IBUTNI,INSCO
- D LOOKUP(36,"Insurance Company","INSCO")
- M ARRAY=INSCO
- Q
  ;
 PAYER(APP,ARRAY) ;Payer Lookup
  ;INPUT:

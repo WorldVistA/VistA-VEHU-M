@@ -1,5 +1,5 @@
 YTSCORE ;SLC/KCM - Scoring for complex instruments ; 9/15/2015
- ;;5.01;MENTAL HEALTH;**119,123,142,141,217**;Dec 30, 1994;Build 12
+ ;;5.01;MENTAL HEALTH;**119,123,142,141,217,234**;Dec 30, 1994;Build 38
  ;
  ;
  Q
@@ -201,4 +201,19 @@ LDTSCOR(TSARR,YSAD) ;
  .S RAW=$S($L(RAW)=1:" "_RAW,1:RAW)
  .S T1=$S($L(T1)=1:" "_T1,1:T1),T2=$S($L(T2)=1:" "_T2,1:T2),T3=$S($L(T3)=1:" "_T3,1:T3)
  .S TSARR($P($P(DATA,U,3),":"))=$P(DATA,U,3)_U_RAW_U_T1_U_T2_U_T3
+ Q
+BYKEY(YSDATA) ; use YSDATA to score by key and put into ^TMP($J,"YSCOR")
+ ; expects scales to already be in ^TMP($J,"YSG")
+ N I,J,TEST,ANSWERS,SCORES,QID,CID,YS
+ K ^TMP($J,"YSCOR")
+ S TEST=$P(YSDATA(2),U,3),YS("CODE")=TEST
+ I $L(TEST) S TEST=$O(^YTT(601.71,"B",TEST,0))
+ I 'TEST S ^TMP($J,"YSCOR",1)="[ERROR]",^(2)="No test found" QUIT
+ S I=2,J=0 F  S I=$O(YSDATA(I)) Q:'I  D  ; build ANSWERS array
+ . S QID=$P(YSDATA(I),U),CID=$P(YSDATA(I),U,3)
+ . S J=J+1,ANSWERS(J,"id")=QID,ANSWERS(J,"value")=CID
+ D SUMKEY^YTSCOREX(TEST,.ANSWERS,.SCORES)
+ S J=1,^TMP($J,"YSCOR",J)="[DATA]"
+ S I=0 F  S I=$O(SCORES(I)) Q:'I  D
+ . S J=J+1,^TMP($J,"YSCOR",J)=$G(SCORES(I,"name"))_"="_SCORES(I,"raw")
  Q

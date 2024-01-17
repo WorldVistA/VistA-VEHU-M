@@ -1,5 +1,5 @@
 YTQRQAD2 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181,199,202,204,208,233,223**;Dec 30, 1994;Build 22
+ ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181,199,202,204,208,233,223,234**;Dec 30, 1994;Build 38
  ;
 SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  I $G(DATA("assignmentId"))?36ANP G POSTADM^YTQRCRW
@@ -179,4 +179,7 @@ GETCHKS(ARGS,RESULTS) ; verify answer string & return check messages if needed
  I ARGS("instrumentName")="BAM-C" D VERIFY^YTSBAMC(.ARGS,.RESULTS)
  I ARGS("instrumentName")="BAM-R" D VERIFY^YTSBAMR(.ARGS,.RESULTS)
  I ARGS("instrumentName")="BAM-IOP" D VERIFY^YTSBAMI(.ARGS,.RESULTS)
+ I ARGS("instrumentName")="BAM-C-CBT-SUD" D VERIFY^YTSBAMCC(.ARGS,.RESULTS)
+ I ARGS("instrumentName")="BAM-R-CSG-SUD" D VERIFY^YTSBAMRC(.ARGS,.RESULTS)
+ I ARGS("instrumentName")="BAM-IOP-CSG-SUD" D VERIFY^YTSBAMIC(.ARGS,.RESULTS)
  Q

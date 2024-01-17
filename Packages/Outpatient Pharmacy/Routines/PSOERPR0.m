@@ -1,0 +1,202 @@
+PSOERPR0 ;BIRM/MFR - eRx Holding Queue Preferences - All Patients (Patient Centric) Queue ;08/29/22
+ ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;
+EN ; - Entry Point
+ N DIR,DIRUT,DIROUT,PSOPRIEN
+ S PSOPRIEN=+$O(^PS(52.35,"B","ERX HOLDING QUEUE PREFERENCES",0)) I 'PSOPRIEN Q
+ ;
+ S (PSOCHNG,PSOQUIT)=0 D FULL^VALM1 W !
+ ;
+ ; - Reset user/division preferences
+ I $D(^PS(52.35,PSOPRIEN,"PCV",DUZ)) D
+ . D DISPLAY
+ . S DIR("A")="     Delete this saved default view? "
+ . S DIR(0)="YA",DIR("B")="NO" D ^DIR I $D(DIRUT)!$D(DIROUT) S PSOQUIT=1 Q
+ . I Y=1 D DELETE,LOAD
+ . W !
+ I PSOQUIT Q
+ ;
+LKBKD ; - Look Back Days
+ K DIR,DIRUT,DIROUT,SAVEX,X,Y
+ S DIR(0)="52.351,1",DIR("B")=PSOLKBKD
+ D ^DIR I $D(DIRUT)!$D(DIROUT) G @$$GOTO(X,"LKBKD")
+ W $S(X>0:" DAYS",1:" (TODAY'S)") S PSOLKBKD=X
+ D CHANGED("LKBKD",PSOLKBKD)
+ ;
+SRTBY ; - Sort By 
+ K DIR,DIRUT,DIROUT,X,Y
+ S DIR(0)="52.351,2",DIR("B")=PSOSRTBY
+ D ^DIR I $D(DIRUT)!$D(DIROUT) G @$$GOTO(X,"SRTBY")
+ S PSOSRTBY=Y D CHANGED("SRTBY",PSOSRTBY)
+ ;
+ORDER ; - Sort Order 
+ K DIR,DIRUT,DIROUT,X,Y
+ S DIR(0)="52.351,3",DIR("B")=PSORDER
+ D ^DIR I $D(DIRUT)!$D(DIROUT) G @$$GOTO(X,"ORDER")
+ S PSORDER=Y D CHANGED("ORDER",PSORDER)
+ ;
+INCCS ; - Include CS/Non-CS
+ K DIR,DIRUT,DIROUT,X,Y
+ S DIR(0)="52.351,4",DIR("B")=PSOCSERX
+ D ^DIR I $D(DIRUT)!$D(DIROUT) G @$$GOTO(X,"ORDER")
+ S PSOCSERX=Y D CHANGED("INCCS",PSOCSERX)
+ ;
+CSSCH ; - CS Schedule
+ I PSOCSERX="Non-CS" G MAXQSIZ
+ K DIR,DIRUT,DIROUT,X,Y
+ S DIR(0)="52.351,5",DIR("B")=$S(PSOCSSCH=1:"SCHEDULE II ONLY",PSOCSSCH=2:"SCHEDULES III - V",1:"SCHEDULES II - V")
+ D ^DIR I $D(DIRUT)!$D(DIROUT) G @$$GOTO(X,"ORDER")
+ S PSOCSSCH=Y D CHANGED("CSSCH",PSOCSSCH)
+ ;
+GRPCS ; - Group By CS/Non-CS
+ I PSOCSERX="Non-CS" G MAXQSIZ
+ K DIR,DIRUT,DIROUT,X,Y
+ S DIR(0)="52.351,6",DIR("B")=$S(PSOCSGRP:"YES",1:"NO")
+ D ^DIR I $D(DIRUT)!$D(DIROUT) G @$$GOTO(X,"ORDER")
+ S PSOCSGRP=Y D CHANGED("GRPCS",PSOCSGRP)
+ ;
+MAXQSIZ ; - Maximum Queue Size
+ K DIR,DIRUT,DIROUT,X,Y
+ S DIR(0)="52.351,7",DIR("B")=PSOMAXQS
+ D ^DIR I $D(DIRUT)!$D(DIROUT) G @$$GOTO(X,"MAXQSIZ")
+ S PSOMAXQS=Y D CHANGED("MAXQSIZ",PSOMAXQS)
+ ;
+EXIT ; Exit
+ ;
+ ; - Save view?
+ I $G(PSOCHNG) D
+ . S PSORFRSH=1
+ . W ! S DIR(0)="YA",DIR("B")="NO",DIR("A")="Save as your default view? "
+ . D ^DIR I $D(DIRUT)!$D(DIROUT)!(Y=0) Q
+ . D SAVE
+ ;
+ S VALMBCK="R"
+ ;
+END Q
+ ;
+DISPLAY ; - Displays the current view
+ N LN,PSOPRIEN,PRFDAT,PREFS
+ S PSOPRIEN=+$O(^PS(52.35,"B","ERX HOLDING QUEUE PREFERENCES",0)) I 'PSOPRIEN Q
+ ;
+ I $D(^PS(52.35,PSOPRIEN,"PCV",DUZ)) D
+ . D GETS^DIQ(52.351,DUZ_","_PSOPRIEN_",","1;2;3;4;5;6;7","IE","PRFDAT")
+ . M PREFS=PRFDAT(52.351,DUZ_","_PSOPRIEN_",")
+ . W !?5,"Your saved default view:"
+ . S $P(LN,"-",24)="" W !?5,LN
+ . W !?5,"LOOK BACK DAYS      : ",$G(PREFS(1,"E"))," DAYS"
+ . W !?5,"SORT BY             : ",$G(PREFS(2,"E"))
+ . W !?5,"SORT ORDER          : ",$G(PREFS(3,"E"))
+ . W !?5,"INCLUDE CS/NON-CS   : ",$G(PREFS(4,"E"))
+ . I $G(PREFS(4,"I"))'="Non-CS" D
+ . . W !?5,"CS SCHEDULE         : ",$G(PREFS(5,"E"))
+ . . W !?5,"GROUP BY CS/NON-CS  : ",$G(PREFS(6,"E"))
+ . W !?5,"MAXIMUM QUEUE SIZE  : ",$G(PREFS(7,"E"))
+ . W !
+ Q 
+ ;
+GOTO(INPUT,HOME) ; - Directed up-arrow
+ N GOTO,TAG,TRGT
+ I $P(INPUT,"^",2)="" S PSOQUIT=1 Q "EXIT"
+ ;
+ S TRGT=$P(INPUT,"^",2)
+ S TAG("LOOK BACK DAYS")="LKBKD"
+ S TAG("SORT BY")="SRTBY"
+ S TAG("SORT ORDER")="ORDER"
+ S TAG("INCLUDE CS/NON-CS")="INCCS"
+ S TAG("CS SCHEDULE")="CSSCH"
+ S TAG("GROUP BY CS/NON-CS")="GRPCS"
+ S TAG("MAXIMUM QUEUE SIZE")="MAXQSIZ"
+ ;
+ S GOTO=HOME
+ S TAG="" F  S TAG=$O(TAG(TAG)) Q:TAG=""  I $E(TAG,1,$L(TRGT))=TRGT S GOTO=TAG(TAG) Q
+ I GOTO=HOME W "   ??",$C(7)
+ ;
+ Q GOTO
+ ;
+LOAD ; Loading Factory/Division/User preferences for Single Patient View
+ ;Output: PSOLKBKD - Look Back Days
+ ;        PSOSRTBY - Sort By Field
+ ;        PSORDER  - Sort Order ("A":Asc,"D":Desc)
+ ;        PSOCSERX - Include CS/Non-CS (C:CS Only/N:Non-CS Only/B:Both)
+ ;        PSOSCSCH - CS Schedule (1:II Only/2:III-V/3:II-V)
+ ;        PSOCSGRP - Group by CS/Non-CS (1:ON/0:YES)
+ ;        PSOMAXQS - Maximum Queue Size
+ ; - 'Factory' Defaults
+ I $G(RESETLBD)!'$G(PSOLKBKD)!($G(PSOSTFLT)="WP") D
+ . S PSOLKBKD=365
+ . I $$GET1^DIQ(59,PSOSITE,10.2) S PSOLKBKD=$$GET1^DIQ(59,PSOSITE,10.2)
+ S PSOSRTBY="ED",PSORDER="D",PSOCSERX="B",PSOCSSCH=3,PSOCSGRP=0,PSOMAXQS=999
+ ; 
+ N PSOPRIEN
+ S PSOPRIEN=+$O(^PS(52.35,"B","ERX HOLDING QUEUE PREFERENCES",0)) I 'PSOPRIEN Q
+ ;
+ ; - User's preferences
+ I $D(^PS(52.35,PSOPRIEN,"PCV",DUZ,0)) D SET Q
+ ;
+ Q
+ ;
+CHANGED(FIELD,VALUE) ; - Sets PSOCHNG so the list can be refreshed
+ ;        FIELD - Field to be checked if was changed/edited
+ ;        VALUE - New Value for the field
+ I $G(PSOCHNG) Q
+ ;
+ N PSOPRIEN,PRFDAT,PREFS
+ S PSOPRIEN=+$O(^PS(52.35,"B","ERX HOLDING QUEUE PREFERENCES",0)) I 'PSOPRIEN Q
+ ; - Saved User's preferences
+ D GETS^DIQ(52.351,DUZ_","_PSOPRIEN_",","1;2;3;4;5;6;7","IE","PRFDAT")
+ M PREFS=PRFDAT(52.351,DUZ_","_PSOPRIEN_",")
+ ;
+ I FIELD="LKBKD",VALUE'=$G(PREFS(1,"I")) S PSOCHNG=1 Q
+ I FIELD="SRTBY",VALUE'=$G(PREFS(2,"I")) S PSOCHNG=1 Q
+ I FIELD="ORDER",VALUE'=$G(PREFS(3,"I")) S PSOCHNG=1 Q
+ I FIELD="INCCS",VALUE'=$G(PREFS(4,"I")) S PSOCHNG=1 Q
+ I FIELD="CSSCH",VALUE'=$G(PREFS(5,"I")) S PSOCHNG=1 Q
+ I FIELD="GRPCS",VALUE'=$G(PREFS(6,"I")) S PSOCHNG=1 Q
+ I FIELD="MAXQSIZ",VALUE'=$G(PREFS(7,"I")) S PSOCHNG=1 Q
+ ;
+ Q
+ ;
+SET ; Sets Preferences Variables
+ N PSOPRIEN,PRFDAT,PREFS
+ S PSOPRIEN=+$O(^PS(52.35,"B","ERX HOLDING QUEUE PREFERENCES",0)) I 'PSOPRIEN Q
+ D GETS^DIQ(52.351,DUZ_","_PSOPRIEN_",","1;2;3;4;5;6;7","I","PRFDAT")
+ M PREFS=PRFDAT(52.351,DUZ_","_PSOPRIEN_",")
+ I $G(PSOSTFLT)'="WP",$G(RESETLBD) S X=$G(PREFS(1,"I")) I X'="" S PSOLKBKD=X
+ S X=$G(PREFS(2,"I")) I X'="" S PSOSRTBY=X
+ S X=$G(PREFS(3,"I")) I X'="" S PSORDER=X
+ S X=$G(PREFS(4,"I")) I X'="" S PSOCSERX=X
+ S X=$G(PREFS(5,"I")) I X'="" S PSOCSSCH=X
+ S X=$G(PREFS(6,"I")) I X'="" S PSOCSGRP=X
+ S X=$G(PREFS(7,"I")) I X'="" S PSOMAXQS=X
+ Q
+ ;
+SAVE ; - Saves User's Preferences
+ ;
+ N DIE,DR,DA,PSOPRIEN
+ ;
+ S PSOPRIEN=+$O(^PS(52.35,"B","ERX HOLDING QUEUE PREFERENCES",0)) I 'PSOPRIEN Q
+ ;
+ W !!,"Saving..."
+ ;
+ I '$D(^PS(52.35,PSOPRIEN,"PCV",DUZ,0)) D
+ . N %,DIC,DR,DA,X,DINUM,DLAYGO,DD,DO
+ . S DIC="^PS(52.35,"_PSOPRIEN_",""PCV"","
+ . S DA(1)=PSOPRIEN,(DINUM,X)=DUZ,DIC(0)=""
+ . K DD,DO D FILE^DICN K DD,DO
+ ;
+ S DR="1///"_PSOLKBKD_";2///"_PSOSRTBY_";3///"_PSORDER_";4///"_PSOCSERX
+ S DR=DR_";5///"_$S(PSOCSERX'="Non-CS":PSOCSSCH,1:"@")
+ S DR=DR_";6///"_$S(PSOCSERX'="Non-CS":PSOCSGRP,1:"@")_";7///"_PSOMAXQS
+ ;
+ S DIE="^PS(52.35,"_PSOPRIEN_",""PCV"",",DA(1)=PSOPRIEN,DA=DUZ
+ D ^DIE H 1 W "OK!" H .5
+ Q
+ ;
+DELETE ; - Deletes user/division preferences
+ N DIK,DA,DIE,DR
+ ;
+ W !!,"Deleting..."
+ ;
+ S DIK="^PS(52.35,"_PSOPRIEN_",""PCV"",",DA(1)=PSOPRIEN,DA=DUZ
+ D ^DIK H 1 W "OK!"
+ Q

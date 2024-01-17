@@ -1,5 +1,5 @@
 DGRPD ;ALB/MRL,MLR,JAN,LBD,EG,BRM,JRC,BAJ,JAM,HM,BDB,ARF,RN,JAM - PATIENT INQUIRY (NEW) ; Feb 15, 2023@10:25
- ;;5.3;Registration;**109,124,121,57,161,149,286,358,436,445,489,498,506,513,518,550,545,568,585,677,703,688,887,907,925,936,940,941,987,1006,1056,1061,1059,1071,1064,1086**;Aug 13, 1993;Build 12
+ ;;5.3;Registration;**109,124,121,57,161,149,286,358,436,445,489,498,506,513,518,550,545,568,585,677,703,688,887,907,925,936,940,941,987,1006,1056,1061,1059,1071,1064,1086,1095**;Aug 13, 1993;Build 23
  ; *286* Newing variables X,Y in OKLINE subroutine
  ; *358* If a patient is on a domiciliary ward, don't display MEANS
  ; TEST required/Medication Copayment Exemption messages
@@ -132,12 +132,32 @@ EN ;call to display patient inquiry - input DFN
  N DGCV S DGCV=$$CVEDT^DGCV(+DFN)
  W !!,?2,"Combat Vet Status: "_$S($P(DGCV,U,3)=1:"ELIGIBLE",$P(DGCV,U,3)="":"NOT ELIGIBLE",1:"EXPIRED") I DGCV>0 W ?45,"End Date: "_$$FMTE^XLFDT($P(DGCV,U,2),"5DZ")
  ;DG*5.3*1061 Display COMPACT ACT status only if TRUE
- N DGCOMPACT S DGCOMPACT=$$CAI^DGENELA(+DFN)
- I DGCOMPACT=1 W !,?1,"COMPACT Act Status: ELIGIBLE"
+ N DGKEY,DGREQNAME,DGRESP,DGCOMP,ELIGSEQ
+ S ELIG="UNDETERMINED",(DGCOMP,DGKEY,DGREQNAME,DGRESP,ELIGSEQ)=""
+ ;make call to determine patient eligibility
+ S DGKEY=$$GETICN^MPIF001(DFN),DGREQNAME="VistADataVTwo"
+ I $P(DGKEY,"^",1)'=-1 S DGRESP=$$EN^DGREGEEWS(DGKEY,DGREQNAME,"","",.DGCOMP)
+ ;if it returns zero, check PATIENT file for Compact Act eligible code
+ I $P(DGRESP,"^",1)=0 D
+ . S ELIGSEQ=""
+ . F  S ELIGSEQ=$O(^DPT(DFN,"E",ELIGSEQ))  Q:(ELIGSEQ="")!(ELIGSEQ="B")!(ELIG="ELIGIBLE")  D
+ . . I $P($G(^DIC(8,ELIGSEQ,0)),"^",1)="COMPACT ACT ELIGIBLE" S ELIG="ELIGIBLE"
+ . . Q
+ . Q
+ I $P(DGRESP,"^",1)=1 D
+ . I DGCOMP="No" S ELIG="NOT ELIGIBLE"
+ . I DGCOMP="Yes" S ELIG="ELIGIBLE"
+ W !,?1,"COMPACT Act Status: "_ELIG
  ;
  ;display primary eligibility
  S X1=DGRP(.36),X=$P(DGRP(.361),"^",1) W !,"Primary Eligibility: ",$S($D(^DIC(8,+X1,0)):$P(^(0),"^",1)_" ("_$S(X="V":"VERIFIED",X="P":"PENDING VERIFICATION",X="R":"PENDING REVERIFICATION",1:"NOT VERIFIED")_")",1:DGRPU)
- W !,"Other Eligibilities: " F I=0:0 S I=$O(^DIC(8,I)) Q:'I  I $D(^DIC(8,I,0)),I'=+X1 S X=$P(^(0),"^",1)_", " I $D(^DPT("AEL",DFN,I)) W:$X+$L(X)>79 !?21 W X
+ W !,"Other Eligibilities: "
+ S I="",X=""
+ F  S I=$O(^DPT("AEL",DFN,I)) Q:I=""  D
+ . I $D(^DIC(8,I,0)),I'=+X1 S X=$P(^DIC(8,I,0),"^",1)_", "
+ . I $O(^DPT("AEL",DFN,I))="" S X=$E(X,1,$L(X)-2)
+ . W:$X+$L(X)>79 !?21 W X
+ . Q
  I '$$OKLINE^DGRPD1(16) G Q
  ;employability status
  W !?6,"Unemployable: ",$S($P(DGRP(.3),U,5)="Y":"YES",1:"NO")

@@ -1,5 +1,5 @@
 PSOERXEN ;ALB/BWF - eRx Utilities/RPC's ; 6/1/2018 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**508,581,617**;DEC 1997;Build 110
+ ;;7.0;OUTPATIENT PHARMACY;**508,581,617,700**;DEC 1997;Build 261
  ;
  Q
 EN ;
@@ -11,6 +11,14 @@ EN ;
  S PSNPINST=$$GET1^DIQ(59,PSOSITE,101,"I")
  I 'PSNPINST W !,"NPI Institution must be defined to continue." S DIR(0)="E" D ^DIR K DIR Q
  ;
+ W !!?5,"************************** NOTICE ****************************"
+ W !?5,"This option will be retired soon. Please, use the new option:"
+ W !!?5,"ERX   eRx Holding Queue Processing [PSO ERX QUEUE PROCESSING]"
+ W !!?5,"It fully replaces this option and provides some additional"
+ W !?5,"functionality that will help you process incoming eRx records"
+ W !?5,"more efficiently."
+ W !?5,"**************************************************************",$C(7)
+ K DIR S DIR("A")="Press Return to continue",DIR(0)="E" D ^DIR
  ; Controlled Substance Filter Prompts
  K DIR S DIR(0)="S^Non-CS:Non-Controlled Substance;CS:Controlled Substance;B:Both"
  S DIR("B")="B",DIR("?")="Select the type of prescription to be included in the Holding Queue"

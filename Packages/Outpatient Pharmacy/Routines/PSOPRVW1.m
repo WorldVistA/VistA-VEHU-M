@@ -1,5 +1,5 @@
 PSOPRVW1 ;BIR/BI,MHA-enter/edit/view provider ; 11/9/2018
- ;;7.0;OUTPATIENT PHARMACY;**545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**545,731**;DEC 1997;Build 18
  ;External reference to sub-file NEW DEA #'S (#200.5321) is supported by DBIA 7000
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002
  ;
@@ -69,7 +69,8 @@ DEAEDT1(NPIEN) ; Select one DEA number and edit it
  . W $E("    ",1,5-$L(CNT)),CNT," - ",$P(NPDEALST(CNT),U,1)
  . W:$P(NPDEALST(CNT),U,2)'="" "-",$P(NPDEALST(CNT),U,2)
  . W " ",$P(NPDEALST(CNT),U,5)
- . W:$P(NPDEALST(CNT),U,6)'="" "  Contains Detox # ",$P(NPDEALST(CNT),U,6)
+ . ;P731 detox/x-waiver removal
+ . ;W:$P(NPDEALST(CNT),U,6)'="" "  Contains Detox # ",$P(NPDEALST(CNT),U,6)
  . W:$O(NPDEALST(CNT)) !
  I $G(DEAEDQ)=2 D  Q
  .W !,"Use EPCS GUI (EPCS Data Entry for Prescriber) to manage this provider's DEA"
@@ -110,7 +111,7 @@ DEAEDT1(NPIEN) ; Select one DEA number and edit it
  . S DNDEAIEN=$P(NPDEALST("B",X),U,3)
  . S DIIENS=$P(NPDEALST("B",X),U,4)
  S X=SAVEX
- I X="@",$$DELDEA(.NPDEALST) Q
+ I X="@",$$DELDEA(.NPDEALST,NPIEN) Q  ; 731 - Include Provider IEN
  I X="@" Q  ;S DEAEDQ=1 Q
  S NPDEATXT=$$GET1^DIQ(200.5321,DIIENS,.01)
  D WS^PSOPRVW1(NPDEATXT,DIIENS,PSOWSDWN)
@@ -244,7 +245,7 @@ IPSLOOP ; Loop to prevent the user from existing without selecting a DEA number 
  . W "        ",NPDEATXT," - "_$S(UFIO="YES":"YES",1:"NO"),!
  Q
  ;
-DELDEA(NPDEALST) ; -- Code used to add/edit/delete the VA Number
+DELDEA(NPDEALST,NPIEN) ; -- Code used to add/edit/delete the VA Number
  N ACNT,D,DA,DEATYPE,DI,DIC,DIE,DIE1,DIEDA,DIEL,DIETMP,DIEXREF,DIFLD,DIR,DNDEAIEN
  N DNDETOX,DR,NPDEACNT,NPDEATXT,RESPONSE,VANUMBER,X,Y,SELECTED
  S RESPONSE=0
@@ -272,13 +273,17 @@ DELDEA(NPDEALST) ; -- Code used to add/edit/delete the VA Number
  I VANUMBER="",NPDEACNT=1 D
  . S ACNT=ACNT+1,DIR("A",ACNT)="This is the only DEA number on file for this provider. The provider will no"
  . S ACNT=ACNT+1,DIR("A",ACNT)="longer be able to prescribe controlled substances at the VA."
- I DNDETOX'="" D
- . S ACNT=ACNT+1,DIR("A",ACNT)="This DEA # contains Detox # "_DNDETOX_". To maintain the Detox #,"
- . S ACNT=ACNT+1,DIR("A",ACNT)="please add it to another DEA # on the provider's profile."
+ ;P731 detox/x-waiver removal
+ ;I DNDETOX'="" D
+ ;. S ACNT=ACNT+1,DIR("A",ACNT)="This DEA # contains Detox # "_DNDETOX_". To maintain the Detox #,"
+ ;. S ACNT=ACNT+1,DIR("A",ACNT)="please add it to another DEA # on the provider's profile."
  S ACNT=ACNT+1,DIR("A",ACNT)=" "
  S DIR(0)="Y" D ^DIR K DIR G:Y'=1 DELDEAQ
  S DIE="^VA(200,"_DA(1)_",""PS4"",",DR=".01///@" D ^DIE K DIE,DR,DA
- I DEATYPE=2 S DA=DNDEAIEN,DIK="^XTV(8991.9," D ^DIK K DIK,DA
+ I DEATYPE=2 D
+ . S DA=DNDEAIEN,DIK="^XTV(8991.9," D ^DIK K DIK,DA
+ . N PSOLDEA,PSODELDEA S PSOLDEA=$$GET1^DIQ(200,NPIEN,53.2),PSODELDEA=$P($G(NPDEALST(+$G(SELECTED))),"^")  ; 731 - Remove DEA# field (#53.2) if no remaining DEAs
+ . Q:PSOLDEA=""  I (PSOLDEA=PSODELDEA)!(($O(NPDEALST(999),-1)=1)&(SELECTED=1)) K DIE,DA,DR,X S DIE="^VA(200,",DA=NPIEN,DR="53.2///@" D ^DIE K DIE,DR,DA
  S RESPONSE=1
 DELDEAQ  ; -- Common Exit Point
  Q RESPONSE
@@ -319,6 +324,7 @@ REDISP ; Redisplay DEA numbers
  . W $E("    ",1,5-$L(CNT)),CNT," - ",$P(NPDEALST(CNT),U,1)
  . W:$P(NPDEALST(CNT),U,2)'="" "-",$P(NPDEALST(CNT),U,2)
  . W " ",$P(NPDEALST(CNT),U,5)
- . W:$P(NPDEALST(CNT),U,6)'="" "  Contains Detox # ",$P(NPDEALST(CNT),U,6)
+ . ;P731 detox/x-waiver removal
+ . ;W:$P(NPDEALST(CNT),U,6)'="" "  Contains Detox # ",$P(NPDEALST(CNT),U,6)
  . W:$O(NPDEALST(CNT)) !
  Q

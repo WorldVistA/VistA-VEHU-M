@@ -1,9 +1,11 @@
 DGROAPI ;DJH/AMA - ROM EXTERNAL USER INTERFACE APIs ; 27 Apr 2004  4:42 PM
- ;;5.3;Registration;**533,572**;Aug 13, 1993
+ ;;5.3;Registration;**533,572,1102**;Aug 13, 1993;Build 4
  ;
  ;This routine contains API entry points that are used by packages
  ;and modules that are external to the Register Once module.
  ;
+ ; Reference to (#350.9,54.01) supported by ICR #7429
+ ; Reference to BACKGND^IBCNRDV supported by ICR #4288
  Q  ;no direct entry
  ;
 ROMQRY(DGDFN) ;query the LST for all patient demographic data
@@ -35,9 +37,15 @@ ROMQRY(DGDFN) ;query the LST for all patient demographic data
  ;
  I DGRSLT D
  . N ZTSAVE,A,ZTRTN,ZTDESC,ZTIO,ZTDTH,DGMSG
- . ;Invoke IB Insurance Query (Patch IB*2.0*214)
+ . ;Invoke IB Insurance Query (Query was introduced with IB*2.0*214)
+ . ;DG*1102/TAZ - Check Insurance Import Enabled flag
+ . ; Reference to Field 54.01 in File 350.9 supported by ICR #7429
+ . I '$$GET1^DIQ(350.9,"1,",54.01,"I") D  Q
+ .. S DGMSG(1)="Insurance data retrieval is not currently enabled."
+ .. S DGMSG(2)=" "
+ .. D EN^DDIOL(.DGMSG) R A:5
  . S ZTSAVE("IBTYPE")=1,ZTSAVE("DFN")=DGDFN,ZTSAVE("IBDUZ")=$G(DUZ)
- . S ZTRTN="BACKGND^IBCNRDV"
+ . S ZTRTN="BACKGND^IBCNRDV"  ;Supported by ICR #4288
  . S ZTDTH=$H
  . S ZTDESC="IBCN INSURANCE QUERY TASK"
  . S ZTIO=""

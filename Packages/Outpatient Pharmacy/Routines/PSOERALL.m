@@ -1,0 +1,282 @@
+PSOERALL ;ALB/MR - eRx Patient Allergies ; 8/3/2016 5:14pm
+ ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;
+EN ; -- main entry point for PSO ERX HOLDING QUEUE
+ N LASTLINE,MBMSITE
+ S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0)
+ ; Call from a Pending Order
+ I '$G(PSOIEN),$G(ORD),$D(^PS(52.41,ORD,0)) N PSOIEN S PSOIEN=+$$ERXIEN^PSOERXUT(ORD_"P")
+ I '$G(PSOIEN) D  Q
+ . S VALMSG="This is not an eRx prescription",VALMBCK="R" W $C(7)
+ S ERXIEN=PSOIEN
+ D EN^VALM("PSO ERX PATIENT ALLERGIES")
+ Q
+ ;
+LMHDR ; ListMan Header Code
+ D SHOW^VALM,HDR^PSOERALL
+ S XQORM("??")="D HELP^VALM2,HDR^PSOERALL"
+ Q
+ ;
+HDR ; -- header code
+ N AMATCH,VPATIEN,VALUSER,VALDTTM,MATCH,HDR
+ S AMATCH=$$GET1^DIQ(52.49,PSOIEN,1.6,"I"),VPATIEN=$$GET1^DIQ(52.49,PSOIEN,.05,"I")
+ S VALUSER=$$GET1^DIQ(52.49,PSOIEN,1.13,"E"),VALDTTM=$$GET1^DIQ(52.49,PSOIEN,1.14,"I")
+ S VALMHDR(1)="eRx Reference #: "_IOINHI_$$GET1^DIQ(52.49,PSOIEN,.01,"E")_IOINORM
+ ;Only Displays Eligibility info if VistA Patient is selected
+ I $G(VPATIEN) D
+ . D INSTR^VALM1($S($G(MBMSITE):"ChampVA Rx Benefit: ",1:"Eligibility: ")_IOINHI_$$ELIG^PSOERXP1(VPATIEN)_IOINORM,$S($G(MBMSITE):41,1:30),2)
+ S MATCH=$S(AMATCH=1:"AUTO-MATCHED",AMATCH=2:"AUTO-MATCHED/EDITED",VPATIEN:"MANUALLY-MATCHED",1:"")
+ I VALUSER'="",MATCH'="" S MATCH=MATCH_" | VALIDATED by "_$E(VALUSER,1,19)_" on "_$$FMTE^XLFDT(VALDTTM,"2Y")
+ I MATCH="" S MATCH="NOT MATCHED"
+ S $E(MATCH,81)="" D INSTR^VALM1("Status: "_IOINHI_MATCH_IOINORM,1,3)
+ S HDR="",$E(HDR,15)="ERX PATIENT",$E(HDR,40)="|",$E(HDR,54)="VISTA PATIENT"
+ S $E(HDR,81)="" D INSTR^VALM1(IORVON_IOUON_HDR_IORVOFF_IOINORM,1,4)
+ Q
+ ;
+INIT ;
+ N ERXPAT,PSODFN,DFN,XE,XV,DATA,ERXDM,ERR,ERXNAME,ERXDOB,ERXSSN,VADM,VAPA,VANAME,VADOB,VASSN
+ N HIGHLN,REVLN,UNDERLN,BLINKLN,HIGUNDLN
+ ;
+ S NMSPC="PSOERALL"
+ ; Required variable: PSOIEN - Pointer to ERX HOLDING QUEUE (#52.49)
+ I '$G(PSOIEN) Q
+ S ERXPAT=$$GET1^DIQ(52.49,PSOIEN,.04,"I")
+ S (DFN,PSODFN)=+$$VISTAPAT^PSOERUT6(PSOIEN)
+ ;
+ K ^TMP("PSOERALL",$J)
+ ;eRx Patient Data
+ D GETS^DIQ(52.46,ERXPAT_",",".01;.08;1.4","EI","DATA","ERR")
+ M ERXDM=DATA(52.46,ERXPAT_",")
+ S ERXNAME=$E(ERXDM(.01,"E"),1,33),ERXDOB=ERXDM(.08,"E"),ERXSSN=ERXDM(1.4,"E")
+ ;VistA Patient Data
+ S (VANAME,VADOB,VASSN)=""
+ I DFN D
+ . D DEM^VADPT,ADD^VADPT
+ . S VANAME=$E($P(VADM(1),"^"),1,33),VADOB=$P(VADM(3),"^",2),VASSN=$P(VADM(2),"^",2)
+ ;
+ ; - Resetting list to NORMAL video attributes
+ D RESET^PSOERUT0()
+ ;
+ S LINE=1
+ S XE="Name: "_$$COMPARE^PSOERUT0("LM",$E(ERXNAME,1,33),$G(VANAME),7)
+ S XV="|Name: "_$$COMPARE^PSOERUT0("LM",$G(VANAME),ERXNAME,47)
+ D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ I $L(ERXNAME)>33 D
+ . S XE=$$COMPARE^PSOERUT0("LM",$E(ERXNAME,34,99),"",7)
+ . D ADDLINE^PSOERUT0("LM",NMSPC,XE,"|")
+ S XE="DOB : "_$$COMPARE^PSOERUT0("LM",ERXDOB,$G(VADOB),7)
+ S XV="|DOB : "_$$COMPARE^PSOERUT0("LM",$G(VADOB),ERXDOB,47)
+ D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ S XE="SSN : "_$$COMPARE^PSOERUT0("LM",ERXSSN,VASSN,7)
+ S XV="|SSN : "_$$COMPARE^PSOERUT0("LM",VASSN,ERXSSN,47)
+ D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ ;
+ D BLANKLN^PSOERUT0("LM")
+ D ALLERGY(PSOIEN,DFN)
+ D BLANKLN^PSOERUT0("LM")
+ ;
+ S VALMCNT=LINE-1
+ ; - Saving NORMAL video attributes to be reset later
+ I LINE>$G(LASTLINE) D
+ . F I=($G(LASTLINE)+1):1:LINE D SAVE^VALM10(I)
+ . S LASTLINE=LINE
+ D VIDEO^PSOERUT0()
+ Q
+ ;
+HELP ; -- help code
+ ;S X="?" D DISP^XQORM1 W !!
+ Q
+ ;
+EXIT ; -- exit code
+ D FULL^VALM1
+ Q
+ ;
+EXPND ; -- expand code
+ Q
+ ;
+VPA ; Vista Patient Allergies
+ N DFN,PSODFN
+ I '$G(PSOIEN) Q
+ S (DFN,PSODFN)=+$$GET1^DIQ(52.49,PSOIEN,.05,"I")
+ I '$G(DFN) S VALMSG="No VistA Patient Selected (Not Matched).",VALMBCK="R" W $C(7) Q
+ D ^PSOORUT2,EN^PSOLMDA
+ D INIT S VALMBCK="R"
+ Q
+ ;
+ALLERGY(ERXIEN,DFN) ; VistA Patient Allergy and Adverse Reaction information
+ ; Input: ERXIEN - Pointer to ERX HOLDING QUEUE file (#52.49)
+ ;        DFN    - Pointer to PATIENT File(#2)
+ ;
+ N IEN,XE,XV,LDAT,GMRA,GMRAL,PSONOAL,LN,TYPE,VANOASS,VANKA,EALLDATA,ALLLN,SEQ,SEV,DRUGFOOD,SYMP,SYMPS
+ N ALL,Z,ZH,VERIFY,TYPE,AGENT,FILE,ERXALL,ALLLIST,ORIGDTTM,SEVERITY,VERIFY,OBSHIST,ALLINFO,LN,SEVER
+ N SEVERS,UPPERLN,ERXALLS,VAALLS,ERXNKA
+ S (VANOASS,VANKA)=0
+ ;
+ ; Loading VistA Allergies and Building array VAALLS for comparison
+ I $G(DFN) D
+ . ; Local Allergies
+ . S GMRA="0^0^111^1^0" D ^GMRADPT
+ . I GMRAL="" S VANOASS=1          ; No Allergy Assessment
+ . I GMRAL=0 S VANKA=1             ; No Known Allergies
+ . I GMRAL D
+ . . S ALL=0 F  S ALL=$O(GMRAL(ALL)) Q:'ALL  I $P($G(GMRAL(ALL)),"^",2)'="" S VAALLS($P(GMRAL(ALL),"^",2))=""
+ . ; Remote Allergies
+ . I $T(HAVEHDR^ORRDI1)'="",$$HAVEHDR^ORRDI1,$D(^XTMP("ORRDI","OUTAGE INFO","DOWN")) D
+ . . D GET^ORRDI1(DFN,"ART") D
+ . . I $P($G(^XTMP("ORRDI","ART",DFN,0)),"^",3)=0 Q
+ . . S ALL=0 F  S ALL=$O(^XTMP("ORRDI","ART",DFN,ALL)) Q:'ALL  D 
+ . . . S AGENT=$P($G(^XTMP("ORRDI","ART",DFN,ALL,"REACTANT",0)),"^",1) I AGENT="" Q
+ . . . S VAALLS(AGENT)=""
+ ;
+ ; Loading VistA Allergies and Building array ERXALLS for comparison
+ S ALLLN=LINE-1
+ S ALLLN=ALLLN+1,ERXALL(ALLLN)="Allergy:"
+ S ERXNKA=$$GET1^DIQ(52.49,ERXIEN,302,"I")
+ I ERXNKA="Y" D
+ . S ALLLN=ALLLN+1,ERXALL(ALLLN)=" NO KNOWN ALLERGIES"
+ . I VANKA S HIGHLN(ALLLN,2)=18
+ . E  S REVLN(ALLLN,2)=18
+ D ALRGDATA^PSOERXU9(.EALLDATA,ERXIEN,1)
+ I ERXNKA'="Y",'$O(EALLDATA(0)) D
+ . S ALLLN=ALLLN+1,ERXALL(ALLLN)=" NO ALLERGY INFORMATION RECEIVED"
+ . I VANOASS S HIGHLN(ALLLN,2)=31
+ . E  S REVLN(ALLLN,2)=31
+ S SEQ=0 F  S SEQ=$O(EALLDATA(SEQ)) Q:'SEQ  D
+ . I $P($G(EALLDATA(SEQ)),"^",7)'="" S ERXALLS($P(EALLDATA(SEQ),"^",7))=""
+ ;
+ ; Bulding Screen with eRx Allergies (Left Side)
+ S SEQ=0
+ F  S SEQ=$O(EALLDATA(SEQ)) Q:'SEQ  D
+ . S Z=$G(EALLDATA(SEQ)),AGENT=$P(Z,"^",7)
+ . F  Q:$G(AGENT)=""  D
+ . . S ALLLN=ALLLN+1,ERXALL(ALLLN)=" "_$E(AGENT,1,38)
+ . . I $D(VAALLS($P(Z,"^",7))) S HIGUNDLN(ALLLN,2)=$S($L(AGENT)>38:38,1:$L(AGENT))
+ . . E  S REVLN(ALLLN,2)=$S($L(AGENT)>38:38,1:$L(AGENT))
+ . . S AGENT=$E(AGENT,39,999)
+ . I $P(Z,"^",3) D
+ . . S ALLLN=ALLLN+1,ERXALL(ALLLN)="   Effective Date: "_$$FMTE^XLFDT($P(Z,"^",3))
+ . . S HIGHLN(ALLLN,20)=12
+ . S ALLLN=ALLLN+1,ERXALL(ALLLN)="   Severity: "
+ . D ADDFRTXT($P(Z,"^",10),0,35,.ERXALL,.ALLLN,"    ","5^35")
+ . I $P(Z,"^",8)'="" D
+ . . S ALLLN=ALLLN+1,ERXALL(ALLLN)="   Reaction: "
+ . . D ADDFRTXT($P(Z,"^",8),0,35,.ERXALL,.ALLLN,"    ","5^35")
+ . S ALLLN=ALLLN+1,ERXALL(ALLLN)="   Symptoms: "
+ . D ADDFRTXT($P(Z,"^",12),0,35,.ERXALL,.ALLLN,"    ","5^35")
+ ;
+ ; Gathering Local VistA Allergies Details
+ K ALLLIST,REF
+ I $G(DFN) D
+ . I GMRAL D                     ; Allergies Found
+ . . S ALL=0 F  S ALL=$O(GMRAL(ALL)) Q:'ALL  D
+ . . . S Z=GMRAL(ALL),ZH=$G(GMRAL(ALL,"H"))
+ . . . K ALLINFO D EN1^GMRAOR2(ALL,"ALLINFO")
+ . . . S AGENT=$P(ALLINFO,"^",1),VERIFY=$$TITLE^XLFSTR($P(ALLINFO,"^",4)),OBSHIST=$P(ALLINFO,"^",5)
+ . . . S TYPE=$S($P(ALLINFO,"^",6)="ALLERGY":"1^Allergy",1:"2^Adverse Reaction")
+ . . . S DRUGFOOD=$$TITLE^XLFSTR($P(ALLINFO,"^",7)),DRUGFOOD=$TR(DRUGFOOD," "),DRUGFOOD=$TR(DRUGFOOD,",","/")
+ . . . S ORIGDTTM=$P(ALLINFO,"^",10)
+ . . . S ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT_" ")=AGENT_"^"_ORIGDTTM_"^"_OBSHIST
+ . . . S SEVERITY=""
+ . . . I $D(ALLINFO("H")) S SEVERITY=$P($G(ALLINFO("H")),"^",2)
+ . . . I $D(ALLINFO("O")) S SEV=$O(ALLINFO("O",0)) I SEV S SEVERITY=$P($G(ALLINFO("O",SEV)),"^",2)
+ . . . S:(SEVERITY'="") ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT_" ","O")=SEVERITY
+ . . . S (SYMP,SYMPS)="" F  S SYMP=$O(ALLINFO("S",SYMP)) Q:SYMP=""  D
+ . . . . S ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT_" ","S",$G(ALLINFO("S",SYMP))_" ")=""
+ ;
+ ; Gathering Remote VistA Allergies
+ I $G(DFN) D
+ . S ALL=0 F  S ALL=$O(^XTMP("ORRDI","ART",DFN,ALL)) Q:'ALL  D
+ . . S Z=$G(^XTMP("ORRDI","ART",DFN,ALL,"GMRALLERGY",0))
+ . . S FILE=$P($P(Z,"^",3),"99VA",2)
+ . . I FILE'=50.6,FILE'=120.82,FILE'=50.605,FILE'=50.416 Q
+ . . S AGENT=$P($G(^XTMP("ORRDI","ART",DFN,ALL,"REACTANT",0)),"^",1)
+ . . S TYPE="3^Remote "_$S($P($G(^XTMP("ORRDI","ART",DFN,ALL,"MECHANISM",0)),"^",2)="ALLERGY":"Allergy",1:"Adverse Reaction")
+ . . S ORIGDTTM=$$FMTE^XLFDT($$HL7TFM^XLFDT($G(^XTMP("ORRDI","ART",DFN,ALL,"ORIGINATION DATE/TIME",0))))
+ . . S VERIFY=$S($P($G(^XTMP("ORRDI","ART",DFN,ALL,"VERIFIED",0)),"^")="YES":"Verified",1:"Non-Verified")
+ . . S DRUGFOOD=$$TITLE^XLFSTR($P($G(^XTMP("ORRDI","ART",DFN,ALL,"TYPE",0)),"^",2))
+ . . S OBSHIST=$P($G(^XTMP("ORRDI","ART",DFN,ALL,"OBS/HISTORICAL",0)),"^",2)
+ . . S ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT_" ")=AGENT_"^"_ORIGDTTM_"^"_OBSHIST
+ . . S (SYMP,SYMPS)="" F  S SYMP=$O(^XTMP("ORRDI","ART",DFN,ALL,"SIGNS/SYMPTOMS",SYMP)) Q:SYMP=""  D
+ . . . S ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT_" ","S",$P($G(^XTMP("ORRDI","ART",DFN,ALL,"SIGNS/SYMPTOMS",SYMP)),"^",2)_" ")=""
+ . . S SEVERITY=$P($G(^XTMP("ORRDI","ART",DFN,ALL,"SEVERITY",0)),"^",2)
+ . . S:SEVERITY'="" ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT,"O")=SEVERITY
+ ;
+ ; Bulding Screen with VistA Allergies (Right side)
+ S ALLLN=LINE-1 K VISTAALL
+ I VANOASS!VANKA D
+ . S ALLLN=ALLLN+1,VISTAALL(ALLLN)="|Allergy:"
+ . I VANOASS=1 D      ; No Allergy Assessment
+ . . S ALLLN=ALLLN+1,VISTAALL(ALLLN)="| NO ALLERGY ASSESSMENT"
+ . . I ERXNKA'="Y",'$O(EALLDATA(0)) S HIGHLN(ALLLN,42)=31
+ . . E  S REVLN(ALLLN,42)=31
+ . E  D
+ . . S ALLLN=ALLLN+1,VISTAALL(ALLLN)="| NO KNOWN ALLERGIES"
+ . . I ERXNKA="Y" S HIGHLN(ALLLN,42)=18
+ . . E  S REVLN(ALLLN,42)=18
+ E  D
+ . S (TYPE,VERIFY,DRUGFOOD,AGENT,SYMP)="",UPPERLN=1 K SYMPS
+ . F  S TYPE=$O(ALLLIST(TYPE)) Q:TYPE=""  D
+ . . I '$G(UPPERLN) S ALLLN=ALLLN+1,VISTAALL(ALLLN)="|________________________________________"
+ . . S ALLLN=ALLLN+1,VISTAALL(ALLLN)="|"_$P(TYPE,"^",2)_":",UPPERLN=0
+ . . F  S VERIFY=$O(ALLLIST(TYPE,VERIFY)) Q:VERIFY=""  D
+ . . . S ALLLN=ALLLN+1,VISTAALL(ALLLN)="| "_VERIFY_":"
+ . . . F  S DRUGFOOD=$O(ALLLIST(TYPE,VERIFY,DRUGFOOD)) Q:DRUGFOOD=""  D
+ . . . . S ALLLN=ALLLN+1,VISTAALL(ALLLN)="|  "_DRUGFOOD_":",UNDERLN(ALLLN,43)=$L(DRUGFOOD)+1
+ . . . . F  S AGENT=$O(ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT)) Q:AGENT=""  D
+ . . . . . S Z=ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT)
+ . . . . . S ALLLN=ALLLN+1,VISTAALL(ALLLN)="|   "_$P(Z,"^",1) ;,HIGUNDLN(ALLLN,44)=$L($P(Z,"^",1))
+ . . . . . I $D(ERXALLS($P(Z,"^",1))) S HIGUNDLN(ALLLN,44)=$L($P(Z,"^",1))
+ . . . . . E  S REVLN(ALLLN,44)=$L($P(Z,"^",1))
+ . . . . . I $P(Z,"^",2)'="" S ALLLN=ALLLN+1,VISTAALL(ALLLN)="|   Effective Date: "_$P(Z,"^",2),HIGHLN(ALLLN,60)=$L($P(Z,"^",2))
+ . . . . . I $P(Z,"^",3)'="" S ALLLN=ALLLN+1,VISTAALL(ALLLN)="|    Reaction: "_$P(Z,"^",3),HIGHLN(ALLLN,55)=$L($P(Z,"^",3))
+ . . . . . I $G(ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT,"O"))'="" D
+ . . . . . . S ALLLN=ALLLN+1,VISTAALL(ALLLN)="|    Severity: "_$G(ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT,"O"))
+ . . . . . . S HIGHLN(ALLLN,55)=$L($G(ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT,"O")))
+ . . . . . I $D(ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT,"S")) D
+ . . . . . . S ALLLN=ALLLN+1,VISTAALL(ALLLN)="|    Symptoms:"
+ . . . . . . S SYMP="" F  S SYMP=$O(ALLLIST(TYPE,VERIFY,DRUGFOOD,AGENT,"S",SYMP)) Q:SYMP=""  D
+ . . . . . . . D ADDFRTXT(SYMP,0,35,.VISTAALL,.ALLLN,"|     ","46^36")
+ ;
+ ; Setting List Content
+ F ALLLN=5:1 Q:('$D(ERXALL(ALLLN))&'$D(VISTAALL(ALLLN)))  D
+ . S XE=$G(ERXALL(ALLLN))
+ . S XV=$S($D(VISTAALL(ALLLN)):VISTAALL(ALLLN),1:"|")
+ . D ADDLINE^PSOERUT0("LM","PSOERALL",XE,XV)
+ Q
+ ;
+ADDFRTXT(TEXT,RS2C,SIZE,ARRAY,ARRLN,PFIX,HIGH) ; Wraps FreeText and adds to existing array
+ ;Input: TEXT  - Free Text to be added (long string)
+ ;       RS2C  - Replace Space with Comma? (1: Yes | 0: No)
+ ;       SIZE  - Size for Wrapping
+ ;       ARRAY - Array where wrapped text should be added (Passed by Ref.)
+ ;       ARRLN - Line in the array to add (Passed by Ref.)
+ ;    (o)PFIX  - Preffix to be included in the beginning of the line
+ ;    (o)HIGH  - Indicates position to be highlight (P1) and Length (P2) (e.g.,"10^30")
+ N X,I,TXT,DIWL,DIWR,DIWF,Z
+ S X=TEXT
+ K ^UTILITY($J,"W") S DIWL=1,DIWR=SIZE,DIWF="|" D ^DIWP
+ F I=1:1 Q:'$D(^UTILITY($J,"W",1,I))  D
+ . S TXT=^UTILITY($J,"W",1,I,0) I TXT="" Q
+ . I RS2C S TXT=$$S2C(TXT)
+ . S ARRLN=ARRLN+1,ARRAY(ARRLN)=$G(PFIX)_TXT I +$G(HIGH) S HIGHLN(ARRLN,+HIGH)=+$P(HIGH,"^",2)
+ Q
+ ;
+C2S(STR) ; Replaces commas with spaces (for auto-wrap to work) - Arbitrarily using '@' (not likely to be on the string)
+ N C2S
+ S C2S=$TR(STR," ","@")
+ S C2S=$TR(C2S,","," ")
+ Q C2S
+ ;
+S2C(STR) ; Replaces spaces with commas (for auto-wrap to work)
+ N S2C
+ S S2C=$TR(STR," ",",")
+ S S2C=$TR(S2C,"@"," ")
+ I $E(S2C,$L(S2C))="," S $E(S2C,$L(S2C))=""
+ Q S2C
+ ;
+SORT(STR) ; Sorts a comma (,) separated list alphabetically
+ N I,SARR,SSTR,WORD
+ F I=1:1:$L(STR,",") I $TR($P(STR,",",I)," ")'="" S SARR($P(STR,",",I))=""
+ S (SSTR,WORD)="" F  S WORD=$O(SARR(WORD)) Q:WORD=""  S SSTR=SSTR_","_WORD
+ S $E(SSTR)=""
+ Q SSTR

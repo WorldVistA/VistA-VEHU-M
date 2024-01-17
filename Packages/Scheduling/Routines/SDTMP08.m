@@ -1,5 +1,5 @@
 SDTMP08 ;MS/PB- VISTA SCHEDULING RPCS ;DEC 6, 2018
- ;;5.3;Scheduling;**704,850**;DEC 6, 2018;Build 12
+ ;;5.3;Scheduling;**704,859**;DEC 6, 2018;Build 10
  ;
  Q
  ;
@@ -35,7 +35,7 @@ APPDEL(SDECY,SDECAPTID,SDECTYP,SDECCR,SDECNOT,SDECDATE,SDUSER) ;Cancels appointm
  I SDECTYP="" D ERR(SDECI,"SDEC08: Invalid status type") Q
  ;validate CANCELLATION REASON pointer (optional)
  S SDECCR=$G(SDECCR)
- I SDECCR'="" S SDECCR=$O(^SD(409.2,"B",$G(SDECCR),"")) ;850 - correct misspelling
+ I SDECCR'="" S SDECCR=$O(^SD(409.2,"B",$G(SDECCR),"")) ;859 - correct misspelling
  ;validate SDECNOT
  S SDECNOT=$TR(SDECNOT,"^"," ") ;alb/sat 658 - strip out ^
  ;validate cancel date/time

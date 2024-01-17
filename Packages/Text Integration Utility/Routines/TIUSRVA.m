@@ -1,12 +1,12 @@
-TIUSRVA ; SLC/JER,AJB - API'S FOR AUTHORIZATION ;01/30/23  12:29
- ;;1.0;TEXT INTEGRATION UTILITIES;**19,28,47,80,100,116,152,160,178,175,157,236,234,239,268,289,355**;Jun 20, 1997;Build 11
+TIUSRVA ; SLC/JER,AJB - API'S FOR AUTHORIZATION ;11/02/23  11:00
+ ;;1.0;TEXT INTEGRATION UTILITIES;**19,28,47,80,100,116,152,160,178,175,157,236,234,239,268,289,355,357**;Jun 20, 1997;Build 5
  ;
- ; External reference to $$GET1^DIQ supported by IA 2056
- ; External reference to $$PATCH^XPDUTL supported by IA 10141
- ; External reference to FIELD^DID supported by IA 2052
- ; External reference to File ^AUPNVSIT supported by IA 3580
- ; External reference to $$ISA^USRLM supported by IA 1544
- ; External reference to $$ACTVSURO^XQALSURO supported by IA 2790
+ ; Reference to $$GET1^DIQ supported by ICR #2056
+ ; Reference to $$PATCH^XPDUTL supported by ICR #10141
+ ; Reference to FIELD^DID supported by ICR #2052
+ ; Reference to File ^AUPNVSIT supported by ICR #3580
+ ; Reference to $$ISA^USRLM supported by ICR #1544
+ ; Reference to $$ACTVSURO^XQALSURO supported by ICR #2790
  ;
  Q
 REQCOS(TIUY,TIUTYP,TIUDA,TIUSER,TIUDT) ; Evaluate cosignature requirement
@@ -160,4 +160,5 @@ NDTOSIGN(TIUY,TIUDA) ; current user need to sign this document? *355 ajb
  . I DUZ=$P(NODE(12),U,4)!(DUZ=$P(NODE(12),U,8)) S TIUY=1 Q  ; is user the expected signer or expected cosigner?
  . I +$P(NODE(12),U,4) I DUZ=$$ACTVSURO^XQALSURO($P(NODE(12),U,4)) S TIUY=1 Q  ; is user a surrogate for expected signer?
  . I +$P(NODE(12),U,8) I DUZ=$$ACTVSURO^XQALSURO($P(NODE(12),U,8)) S TIUY=1 ; is user a surrogate for expected cosigner?
+ I STATUS'<6,'TIUY D TASKALRT^TIUALRT(TIUDA) ; resend alert(s) *357
  Q

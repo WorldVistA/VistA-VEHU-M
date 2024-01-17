@@ -1,5 +1,5 @@
 PSOERXU3 ;ALB/BWF - eRx utilities ; 5/26/2017 9:57am
- ;;7.0;OUTPATIENT PHARMACY;**508,591,606,581,617,646**;DEC 1997;Build 5
+ ;;7.0;OUTPATIENT PHARMACY;**508,591,606,581,617,646,700**;DEC 1997;Build 261
  ;
  Q
  ; PSO*508 - Added MEDDIS, RRREQ, and RRRES linetags.
@@ -326,8 +326,8 @@ PSOHY(PSOHY,ERXIEN,ORXIEN,RXIEN,PROVOVR) ;
  S PSOHY("QTY")=VQTY,PSOHY("REF")=VAREF
  ; DFN cannot be newed/killed here because it needs to exist for the subsequent call.
  S (PSOHY("PAT"),DFN)=PATIEN,PSOHY("OCC")=ORDERTYP
- ; login date will always be the written date. if there is no written date by chance, use the received date
- S PSOHY("EDT")=$$NOW^XLFDT,PSOHY("PRIOR")=VAPRIOR
+ ; Login date will always be the Message Received Date/Time
+ S PSOHY("EDT")=$$GET1^DIQ(52.49,ERXIEN,.03,"I"),PSOHY("PRIOR")=VAPRIOR
  ; ALWAYS PSO as the external application
  S PSOHY("EXAPP")="PHARMACY"
  S PSOHY("DAYS")=VADAYS

@@ -1,5 +1,5 @@
 PSOERX1F ;ALB/MR - Accept/Un-Accept eRx function ; 8/18/2020 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**617,651**;DEC 1997;Build 30
+ ;;7.0;OUTPATIENT PHARMACY;**617,651,700**;DEC 1997;Build 261
  ;
  Q
  ;PSOHY("LOC")=IEN of hospital location file (#44) - NOT USED, 
@@ -14,7 +14,7 @@ PSOERX1F ;ALB/MR - Accept/Un-Accept eRx function ; 8/18/2020 5:14pm
  ;PSOHY("REF")=# OF REFILLS (20.5)
  ;PSOHY("PAT")=PATIENT IEN (.05)
  ;PSOHY("OCC")=ORDER TYPE (ALWAYS 'NW') - NO MAPPING TO 52.49
- ;PSOHY("EDT")=LOGIN DATE/TIME (NOW) - NO MAPPING TO 52.49
+ ;PSOHY("EDT")=LOGIN DATE/TIME (ERX MSG DATE/TIME #.03)
  ;PSOHY("PRIOR")=PRIORITY (SET OF CODES, 52.41,25 - STAT, EMERGENCY, ROUTINE)
  ;PSOHY("EXAPP")=EXTERNAL APPLICATION (FREE TEXT), LIKELY "PSO" - NO MAPPING TO 52.49
  ;PSOHY("PRCOM",#)=PROVIDER COMMENTS (8- NOTES)
@@ -22,16 +22,18 @@ PSOERX1F ;ALB/MR - Accept/Un-Accept eRx function ; 8/18/2020 5:14pm
  ;PSOHY("QTSUB",CNT)=QUANTITY TIMING SUBFILE DATA. MERGED IN, FULL SUBFILE DATA
  ; QUANTITY/TIMING MAPS DIRECTLY TO QUANTITY TIMING IN 52.41
 SETUP ;
- N PSOIENS,PSODAT,F,PATIEN,PROVIEN,OC,VQTY,EFFDT,VADRUG,VAOI,VAREF,VAROUT,VAPRIOR,PSOHY,LOC,ERXNUM,PRVARY,PRVCOMM
+ N MBMSITE,PSOIENS,PSODAT,F,PATIEN,PROVIEN,OC,VQTY,EFFDT,VADRUG,VAOI,VAREF,VAROUT,VAPRIOR,PSOHY,LOC,ERXNUM,PRVARY,PRVCOMM
  N PLOOP,PCNT,QTLOOP,QTCNT,PSOEXMS,DIR,ORDERTYP,PSOEXCNT,SCNT,SIGDAT,SLOOP,POORD,PMVAL,PRMVAL,DMVAL,PATINST,RXSTAT
- N VADAYS,UNEXPI,PINARY,WRITDT,SLOOP2,MTYPE,REQIEN,ORXIEN,RESTYPE,DELTAS,RXIEN,ERXMSG,I,CSERRMSG
+ N VADAYS,UNEXPI,PINARY,WRITDT,SLOOP2,MTYPE,REQIEN,ORXIEN,RESTYPE,DELTAS,RXIEN,ERXMSG,I,CSERRMSG,PSOQUIT,DIC
+ S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0)
  S F=52.49
  Q:'$G(PSOIEN)
- D FULL^VALM1 S VALMBCK="R"
+ D FULL^VALM1 I MBMSITE S VALMBCK="R"
  I $$DONOTFIL^PSOERXUT(PSOIEN) Q
- S RXSTAT=$$GET1^DIQ(52.49,PSOIEN,1,"E") I RXSTAT="RJ"!(RXSTAT="RM")!(RXSTAT="PR") D  Q
- .W !!,"Cannot accept a prescription with a status of 'Rejected', 'Removed',",!,"or 'Processed",!
- .S DIR(0)="E" D ^DIR
+ S RXSTAT=$$GET1^DIQ(52.49,PSOIEN,1,"E")
+ I RXSTAT="RJ"!(RXSTAT="RM")!($E(RXSTAT,1,3)="REM")!(RXSTAT="PR")!(RXSTAT="CXP")!(RXSTAT="RXP") D  Q
+ . W !!,"Cannot accept a prescription with a status of 'Rejected', 'Removed',",!,"or 'Processed",!
+ . S DIR(0)="E" D ^DIR
  S PSOIENS=PSOIEN_","
  D GETS^DIQ(F,PSOIENS,".01;.05;.07;.08;1;1.3;1.5;1.7;2.1;2.3;3.2;5.9;6.2;6.3;8;20.1;20.2;20.4;20.5;20.6;25;25.2;27;30;52.1","IE","PSODAT")
  S PSOEXCNT=0
@@ -50,7 +52,7 @@ SETUP ;
  .; call using silent mode if this is auto-processing
  .D ADD(1)
  S ERXSTA=$G(PSODAT(F,PSOIENS,1,"E")) I ERXSTA="E"!($E(ERXSTA)="H") S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="eRx is in a 'Hold' status." D MSGDIR^PSOERXU1(.PSOEXMS) Q
- I MTYPE="N" D
+ I MTYPE="N"!(MTYPE="RE"&(RESTYPE="R")!(MTYPE="CX")) D
  .S PMVAL=$G(PSODAT(F,PSOIENS,1.7,"I")) I 'PMVAL S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Patient has not been manually validated."
  .S PRMVAL=$G(PSODAT(F,PSOIENS,1.3,"I")) I 'PRMVAL S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Provider has not been manually validated."
  .S DMVAL=$G(PSODAT(F,PSOIENS,1.5,"I")) I 'DMVAL S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Drug has not been manually validated."
@@ -59,17 +61,18 @@ SETUP ;
  ; CS eRx Validations
  D PRDRVAL^PSOERXUT(.CSERRMSG,"AC",PSOIEN)
  I '$G(CSERRMSG),$P(CSERRMSG,"^",2)="B" D MSGDIR^PSOERXU1(.CSERRMSG) Q
- I $$GET1^DIQ(52.49,PSOIEN,95.1,"I"),'$$VALPTADD^PSOERXUT(+$G(PSODAT(F,PSOIENS,.05,"I"))) D  D MSGDIR^PSOERXU1(.CSERRMSG) Q
+ I $$GET1^DIQ(52.49,PSOIEN,95.1,"I"),'$$VALPTADD^PSOERXUT(+$G(PSODAT(F,PSOIENS,.05,"I"))) D  Q
  . S CSERRMSG(1)="Patient does not have a current mailing or residential address on file."
+ . D MSGDIR^PSOERXU1(.CSERRMSG)
  ;
  S POORD=$G(PSODAT(F,PSOIENS,25.2,"I")) I POORD S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Pending outpatient order already exists."
  S PATIEN=$G(PSODAT(F,PSOIENS,.05,"I")) I 'PATIEN S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="No matched vista patient."
  S PROVIEN=$G(PSODAT(F,PSOIENS,2.3,"I")) I 'PROVIEN S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Provider not matched to a vista provider."
  S VADRUG=$G(PSODAT(F,PSOIENS,3.2,"I")) I 'VADRUG S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Drug not matched to a vista drug."
- S LOC=$G(PSODAT(F,PSOIENS,20.6,"I"))
  S ERXNUM=$G(PSODAT(F,PSOIENS,.01,"E")) I 'ERXNUM S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="eRx number missing."
  S VQTY=$G(PSODAT(F,PSOIENS,20.1,"E")) I 'VQTY S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Quantity missing."
  S EFFDT=$G(PSODAT(F,PSOIENS,6.3,"I")),WRITDT=$G(PSODAT(F,PSOIENS,5.9,"I"))
+ S LOC=$G(PSODAT(F,PSOIENS,20.6,"I")) I 'LOC S LOC=$$GET1^DIQ(59,PSOSITE,10,"I")
  ; if the effective date is passed in and there is no time, add .000001 to the date
  I EFFDT]"" S EFFDT=$P(EFFDT,".")
  I '$L(EFFDT) S EFFDT=WRITDT
@@ -88,18 +91,29 @@ SETUP ;
  I '$O(^PS(52.49,PSOIEN,21,0)) S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Dosing information missing."
  S (QTLOOP,QTCNT)=0 F  S QTLOOP=$O(^PS(52.49,PSOIEN,21,QTLOOP)) Q:'QTLOOP  D
  .S QTCNT=QTCNT+1 M PSOHY("QTSUB",QTCNT)=^PS(52.49,PSOIEN,21,QTLOOP)
+ ;
+ ; Assigning Clinic which the User is logged into
+ S PSOQUIT=0
+ I $G(MBMSITE),+$$GET1^DIQ(52.49,PSOIEN,20.6,"I")'=+$G(PSOCLNC) D  I $G(PSOQUIT) Q
+ . W !!,"Current Clinic assigned to the eRx: ",$$GET1^DIQ(52.49,PSOIEN,20.6),!
+ . K DIC S DIC(0)="AEMQ",DIC=44,DIC("S")="I '$P($G(^(""I"")),U,1)!$P($G(^(""I"")),U,2)"
+ . S DIC("A")="Send to eRx Clinic: "
+ . I $G(PSOCLNC) S DIC("B")=$$GET1^DIQ(44,PSOCLNC,.01)
+ . D ^DIC I Y="^"!$D(DTOUT)!$D(DUOUT) S PSOQUIT=1 Q
+ . I $G(Y)>0 S LOC=+Y
  ; always 'routine' for now
  S VAPRIOR="R"
  ; always 'new' for this version
  I '$L($G(ORDERTYP)) S ORDERTYP="NW"
  S PSOHY("LOC")=LOC,PSOHY("CHNUM")=$G(ERXNUM)
- S PSOHY("PICK")=VAROUT,PSOHY("ENTER")=PROVIEN
+ S PSOHY("PICK")=VAROUT ;,PSOHY("ENTER")=PROVIEN
+ S PSOHY("ENTER")=DUZ
  S PSOHY("PROV")=PROVIEN,PSOHY("SDT")=EFFDT
  S PSOHY("ITEM")=VAOI,PSOHY("DRUG")=VADRUG
  S PSOHY("QTY")=VQTY,PSOHY("REF")=VAREF
  S (PSOHY("PAT"),DFN)=PATIEN,PSOHY("OCC")=ORDERTYP
- ; login date will always be the written date. if there is no written date by chance, use the received date
- S PSOHY("EDT")=$$NOW^XLFDT(),PSOHY("PRIOR")=VAPRIOR
+ ; Login date will always be the Message Received Date/Time
+ S PSOHY("EDT")=$$GET1^DIQ(52.49,PSOIEN,.03,"I"),PSOHY("PRIOR")=VAPRIOR
  ; ALWAYS PSO as the external application
  S PSOHY("EXAPP")="PHARMACY"
  S PSOHY("DAYS")=VADAYS
@@ -115,7 +129,10 @@ SETUP ;
  K DFN
  Q
 ADD(QUIET) ;Add CHCS message to Outpatient Pending Orders file
- N PSOHQ,PSOHQT,PSOCPEND,PSOHINI,PSOHINLO,ERXSTA,ORDNUM,ILOOP,IARY,PSSRET
+ N MBMSITE,PSOHQ,PSOHQT,PSOCPEND,PSOHINI,PSOHINLO,ERXSTA,ORDNUM,ILOOP,IARY,PSSRET
+ S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0)
+ I '$G(PSOHY("DRUG")) D  Q
+ . S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Invalid Dispense Drug" Q
  S (PSOHINI,PSOHINLO)=0 D
  .I $G(PSOHY("LOC")) S PSOHINLO=$P($G(^SC(PSOHY("LOC"),0)),"^",4) I PSOHINLO Q
  ; get institution from 52.49 if clinic was not passed in
@@ -185,7 +202,9 @@ ADD(QUIET) ;Add CHCS message to Outpatient Pending Orders file
  N UNEXINS S UNEXINS(1)=$$ERXSIG^PSOERXUT(PSOIEN)
  I $L($G(UNEXINS(1))) D WP^DIE(52.41,PSOCPEND_",",9,"K","UNEXINS")
  ;
- I '$D(QUIET) W !!,"eRx #"_PSOHY("CHNUM")_" sent to PENDING OUTPATIENT ORDERS!"
+ I '$D(QUIET) D
+ . W !!,"eRx #"_PSOHY("CHNUM")_" sent to PENDING ORDERS Queue."
+ . W:$G(MBMSITE) " (Clinic: "_$$GET1^DIQ(44,+$G(PSOHY("LOC")),.01)_")"
  ;PSO*7*520 - add sending and warning/information related to RxVerify Message.
  I '$$UNACCBEF(PSOIEN),MTYPE="N"!((MTYPE="RE")&(RESTYPE="R"))!(MTYPE="CX") D
  .W !!,"Sending rxVerify Message to prescriber."
@@ -194,7 +213,7 @@ ADD(QUIET) ;Add CHCS message to Outpatient Pending Orders file
  .I $P(PSSRET(0),U)<1 W !,$P(PSSRET(0),U,2) S DIR(0)="E" D ^DIR K DIR Q
  .I $D(PSSRET("errorMessage")) W !,PSSRET("errorMessage") S DIR(0)="E" D ^DIR K DIR Q
  ;PSO*7*520 - end rxVerify changes
- I '$D(QUIET) S DIR(0)="E" D ^DIR K DIR
+ ;
  K QUIET
  Q
  ;
@@ -227,7 +246,10 @@ UNACC ; Un-Accept eRx from Pending Queue back into the Holding Queue
  D ^DIR I $G(DIRUT)!$G(DUOUT)!'Y Q
  W ?40,"Please wait..."
  ;
+ ; Chaning eRx Order Status to Hold
  D UPDSTAT^PSOERXU1(ERXIEN,$P(PSOHOLD,"^",2),HOLDCOMM,1)
+ ; Removing pointer to the Pending Order entry
+ I $P($G(^PS(52.49,ERXIEN,25)),"^",2) S $P(^PS(52.49,ERXIEN,25),"^",2)=""
  ;
  Q:'$D(^PS(52.41,ORD,0))
  K ^PS(52.41,"AOR",$P(^PS(52.41,ORD,0),"^",2),+$P($G(^PS(52.41,ORD,"INI")),"^"),ORD)
@@ -248,8 +270,6 @@ JUMP2ERX ; Jump to the eRx Holding Queue for the specific order after Un-Accepti
  D FULL^VALM1
  S VALMBCK="R"
  I $G(PSOJUMP) S VALMSG="Cannot jump back to the Holding Queue, use ^" W $C(7) Q
- ;I '$G(ORD)!'$D(^PS(52.41,+$G(ORD),0)) S VALMSG="Invalid Pending Order" W $C(7) Q
- ;S ORDNUM=$$GET1^DIQ(52.41,+ORD,.01) I 'ORDNUM S VALMSG="Invalid Pending Order" W $C(7) Q
  S ORDNUM=+$$ORDNUM() I 'ORDNUM S VALMSG="Invalid Order" W $C(7) Q
  S (ERXIEN,PSOIEN)=$$CHKERX^PSOERXU1(ORDNUM) I 'PSOIEN S VALMSG="This Order is not related to an eRx" W $C(7) Q
  X "N (DUZ,IO,U,DT,DILOCKTM,DTIME,PSOIEN,ERXIEN,PSOSITE,PSOJUMP,PSNPINST)"
@@ -262,7 +282,7 @@ JUMP2ERX ; Jump to the eRx Holding Queue for the specific order after Un-Accepti
  ;
 ORDNUM() ; Returns the correct IEN for the ORDER file (#100) for the Rx
  I $P(XQY0,"^")="PSO LM BACKDOOR ORDERS"!($P(XQY0,"^")="PSO LMOE FINISH"),$P(VALMKEY,"^",2)="PSO HIDDEN ACTIONS",$G(RXN) Q +$$GET1^DIQ(52,RXN,39.3,"I")
- I $P(XQY0,"^")="PSO LM BACKDOOR ORDERS"!($P(XQY0,"^")="PSO LMOE FINISH")!($P(XQY0,"^")="PSO PMP"),$P(VALMKEY,"^",2)="PSO HIDDEN ACTIONS #3",$G(ORD) Q +$$GET1^DIQ(52.41,+ORD,.01)
+ I $P(XQY0,"^")="PSO LM BACKDOOR ORDERS"!($P(XQY0,"^")="PSO LMOE FINISH")!($P(XQY0,"^")="PSO PMP"),$P(VALMKEY,"^",2)="PSO HIDDEN ACTIONS #3"!($P(VALMKEY,"^",2)="PSO HIDDEN ACTIONS #4"),$G(ORD) Q +$$GET1^DIQ(52.41,+ORD,.01)
  I $P(XQY0,"^")="PSO VIEW"!($P(XQY0,"^")="PSO PMP"),$P(VALMKEY,"^",2)="PSO PMP HIDDEN ACTIONS MENU #2",$G(RXN) Q +$$GET1^DIQ(52,RXN,39.3,"I")
  Q 0
  ;

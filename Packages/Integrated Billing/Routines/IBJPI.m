@@ -1,5 +1,5 @@
 IBJPI ;DAOU/BHS - IBJP eIV SITE PARAMETERS SCREEN ; 01-APR-2015
- ;;2.0;INTEGRATED BILLING;**184,271,316,416,438,479,506,528,549,601,621,659,668,687,702,732**;21-MAR-94;Build 13
+ ;;2.0;INTEGRATED BILLING;**184,271,316,416,438,479,506,528,549,601,621,659,668,687,702,732,763**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;/vd-IB*2*668 - Removed the SSVI logic introduced with IB*2*528 in its entirety within VistA.
@@ -35,7 +35,7 @@ HELP ; help
  W !!,"The Batch Extracts section concerns extract-specific parameters"
  W !,"including active/inactive status and selection criteria. Parameters"
  W !,"associated with a specific extract may also be detailed here."
- W !!,"The Fix Corrupt Buffers action allows a user to fix corrupted entries in"
+ W !!,"The Fix Corrupt Buffers action allows a user to list or fix corrupted entries in"
  W !,"the INSURANCE VERIFICATION PROCESSOR file (#355.33) aka ""the buffer file""."
  D PAUSE^VALM1
  W @IOF
@@ -71,7 +71,11 @@ BLDGENE(SLINE,ELINE) ; Build the General Editable Parameters Section
  S ELINE=$$SETN("General Parameters (editable)",SLINE,1,1)
  S ELINE=$$SET("          Medicare Payer: ",$$GET1^DIQ(350.9,"1,",51.25),ELINE,1)
  S ELINE=$$SET("           HMS Directory: ",$$GET1^DIQ(350.9,"1,",13.01),ELINE,1)
+ ;IB*763/CKB - Added display for INSURANCE IMPORT SWITCH
+ S STRTLN=ELINE
  S ELINE=$$SET("              EII Active: ",$$GET1^DIQ(350.9,"1,",13.02),ELINE,1)
+ S ELINE=STRTLN
+ S ELINE=$$SET("   Insurance Import Enabled: ",$$GET1^DIQ(350.9,"1,",54.01),ELINE,41)
  ;/vd-IB*2*687 - Added the following 3 lines.
  S STRTLN=ELINE
  S ELINE=$$SET("             IIU Enabled: ",$$GET1^DIQ(350.9,"1,",53.02),ELINE,1)

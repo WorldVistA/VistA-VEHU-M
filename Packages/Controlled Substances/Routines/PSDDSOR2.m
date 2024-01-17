@@ -1,5 +1,5 @@
 PSDDSOR2 ;BIR/MHA-Digitally Signed OP Released Rx Report ;02/02/2021
- ;;3.0;CONTROLLED SUBSTANCES;**40,42,45,73,89**;Feb 13,1997;Build 18
+ ;;3.0;CONTROLLED SUBSTANCES;**40,42,45,73,89,94**;Feb 13,1997;Build 4
  ;Ref. ^PSD(58.8 supp. by IA 2711
  ;Ref. ^PSD(58.81 supp. by IA 2808
  ;Ref. ^PSRX( supp. by IA 1977
@@ -122,7 +122,7 @@ GD ;
  . S ^TMP("PSDDSOR",$J,PSDS,DRN,RX,1)=$P(^DPT(DFN,0),U)_U_VAPA(1)_U_VAPA(2)_U_VAPA(3)_U_VAPA(4)_U_$P(VAPA(5),U,2)_U_VAPA(6) ;patient data
  . S ^TMP("PSDDSOR",$J,PSDS,DRN,RX,2)=DRN_U_DR_U_$P(RX0,U,7)_U_U_$P($G(^PSDRUG(DR,0)),U,3) ;drug name^drug ien^quant^^dea sched
  . S ^TMP("PSDDSOR",$J,PSDS,DRN,RX,3)=""
- . S ^TMP("PSDDSOR",$J,PSDS,DRN,RX,4)=$P($G(^VA(200,PR,0)),U)_U_PR_U_$$DEA^XUSER(0,PR)_U_$$DETOX^XUSER(PR) ;provider data
+ . S ^TMP("PSDDSOR",$J,PSDS,DRN,RX,4)=$P($G(^VA(200,PR,0)),U)_U_PR_U_$$DEA^XUSER(0,PR)_U  ;_$$DETOX^XUSER(PR) ;provider data  ; PSD*3*94 Remove Detox/X-Waiver
  . S DV=+$P(RX2,U,9) ;division ien, pointer to outpatient site (59)
  . S DVD=$G(^PS(59,DV,0)) ;outpatient site node 0
  . N ZIP S ZIP=$P(DVD,"^",5),ZIP=$S(ZIP["-":ZIP,1:$E(ZIP,1,5)_$S($E(ZIP,6,9)]"":"-"_$E(ZIP,6,9),1:"")) ;format zip code

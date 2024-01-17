@@ -1,10 +1,11 @@
 IBCNERP1 ;DAOU/BHS - IBCNE USER IF eIV RESPONSE REPORT ; 03-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,416,528,549,668,702,737,752**;21-MAR-94;Build 20
+ ;;2.0;INTEGRATED BILLING;**184,271,416,528,549,668,702,737,752,763**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; eIV - Insurance Verification Interface
  ;
  ; IB*737/TAZ - Remove references to ~NO PAYER
+ ; IB*763/TAZ - Remove references to routines IBCNERPF, IBCNERPG, and IBCNERPH.
  ;
  ; Input parameters: N/A
  ; Other relevant variables ZTSAVED for queueing:
@@ -56,7 +57,7 @@ EN(IPRF) ; Main entry pt
  . W !,"response detail."
  ;
  ; Rpt by Date Range or Trace #
-R05 I '$G(IPRF) D RTYPE I STOP G EXIT  ;IB*752/CKB - if user entered '^', exit option
+R05 I '$G(IPRF) D RTYPE I STOP G EXIT ;IB*752/CKB - if user entered '^', exit option
  ; If rpt by Trace # - no other criteria is necessary
  I $G(IBCNESPC("TRCN")) G R60
  ; Date Range params
@@ -106,13 +107,11 @@ COMPILE(IBCNERTN,IBCNESPC,IBOUT) ;
  I IBCNERTN="IBCNERP1" D EN^IBCNERP2(IBCNERTN,.IBCNESPC,IBOUT)
  I IBCNERTN="IBCNERP4" D EN^IBCNERP5(IBCNERTN,.IBCNESPC)
  I IBCNERTN="IBCNERP7" D EN^IBCNERP8(IBCNERTN,.IBCNESPC)
- I IBCNERTN="IBCNERPF" D EN^IBCNERPG(IBCNERTN,.IBCNESPC,IBOUT)
  ; Print
  I '$G(ZTSTOP) D
  . I IBCNERTN="IBCNERP1" D EN3^IBCNERPA(IBCNERTN,.IBCNESPC,IBOUT)
  . I IBCNERTN="IBCNERP4" D EN6^IBCNERPA(IBCNERTN,.IBCNESPC,IBOUT)
  . I IBCNERTN="IBCNERP7" D EN^IBCNERP9(IBCNERTN,.IBCNESPC,IBOUT)
- . I IBCNERTN="IBCNERPF" D EN^IBCNERPH(IBCNERTN,.IBCNESPC,IBOUT)
  ; Close device
  D ^%ZISC
  ; Kill scratch globals

@@ -1,9 +1,9 @@
-TIUALRT ; SLC/JER,AJB - SEND ALERTS ;Jun 12, 2023@07:00:42
- ;;1.0;TEXT INTEGRATION UTILITIES;**21,84,79,88,58,61,151,158,175,221,227,259,355,358,353**;Jun 20, 1997;Build 20
+TIUALRT ; SLC/JER,AJB - SEND ALERTS ;11/08/23  10:36
+ ;;1.0;TEXT INTEGRATION UTILITIES;**21,84,79,88,58,61,151,158,175,221,227,259,355,358,353,357**;Jun 20, 1997;Build 5
  ;
- ; Reference to ONEHR^ORACCESS in ICR #7356
- ; Reference to ^DPT( supported by IA #10035
- ; Reference to $D(^VA(200 in ICR #4329
+ ; Reference to ^DPT( supported by ICR #10035
+ ; Reference to ^VA(200 supported by ICR #4329
+ ; Reference to ONEHR^ORACCESS supported by ICR #7356
  ;
  Q
 SEND(DA,OVERDUE,TIUXQA) ;
@@ -13,7 +13,7 @@ SEND(DA,OVERDUE,TIUXQA) ;
  ;            TIUXQA=0 delete current alerts, TIUXQA=1 keep current alerts
  N ADDENDUM,FDA,NODE,TIUAAALRT,TIUDPRM,TIUPRM0,TIUPRM1,XQA,XQAARCH,XQADATA,XQADFN,XQAID,XQAMSG,XQAROU
  S NODE(0)=$G(^TIU(8925,+DA,0)) Q:'NODE(0)  S NODE(12)=$G(^(12)),NODE(13)=$G(^(13))
- S NODE(14)=$G(^TIU(8925,+DA,14)),NODE(15)=$G(^(15)),OVERDUE=+$G(OVERDUE,0)
+ S NODE(14)=$G(^TIU(8925,+DA,14)),NODE(15)=$G(^(15)),OVERDUE=+$G(OVERDUE,0),ZTREQ="@"
  S ADDENDUM=$S($P($G(^TIU(8925.1,+NODE(0),0)),U)["ADDENDUM"&$P(NODE(0),U,6):1,1:0) ;    is document an addendum?
  I '$G(TIUXQA) D ALERTDEL(DA) ;                                                         delete alerts for a document
  D SETPARM^TIULE S (TIUDPRM(0),TIUDPRM(5))="" D DOCPRM^TIULC1(+NODE(0),.TIUDPRM,DA)  ;  get basic & document parameters
@@ -68,7 +68,7 @@ XQADATA(DA,PT,AS) ; setup message text
  Q
 ACT ; Act on alerts
  N TIUQUIK,TIUDA,TIUPRM0,TIUPRM1,TIUPRM3,RSTOK S TIUQUIK=1 K XQAKILL
- I $$ONEHR^ORACCESS D  Q
+ I $$ONEHR^ORACCESS D  Q  ; *353 agp
  . W !,"Site has migrated to Electronic Health Record."
  . W !,"TIU List Manager access not allowed."
  . I $$READ^TIUU("EA","RETURN to continue...")
@@ -78,9 +78,20 @@ ACT ; Act on alerts
  I RSTOK'>0 D  Q
  . W !!,$C(7),"Ok, no harm done...",! ; Echo denial message
  . I $$READ^TIUU("EA","RETURN to continue...") ; pause
- I $P(^TIU(8925,+TIUDA,0),U,5)'<7,'+$$ISSIGNR(TIUDA,DUZ) S XQAKILL=1
+ I $P(^TIU(8925,+TIUDA,0),U,5)>6,'+$$ISSIGNR(TIUDA,DUZ) S XQAKILL=1 ; *357
  D:'$D(TIUPRM0)!'$D(TIUPRM1) SETPARM^TIULE
  D EN^VALM("TIU BROWSE FOR CLINICIAN")
+ Q
+ISSIGNR(DA,USER) ; *357, is user an additional signer (or surrogate for) and is signature outstanding?
+ N TIUAS,TIUY S (TIUAS,TIUY)=0
+ F  S TIUAS=$O(^TIU(8925.7,"AE",DA,TIUAS)) Q:'TIUAS!(+TIUY)  I USER=TIUAS!(USER=$$ACTVSURO^XQALSURO(TIUAS)) D
+ . N NODE0 S NODE0=$G(^TIU(8925.7,+$O(^TIU(8925.7,"AE",DA,TIUAS,0)),0))
+ . I +$L(NODE0),+$P(NODE0,U,4)'>0 S TIUY=1
+ I 'TIUY D TASKALRT(DA) ; resend alert(s) for a document
+ Q TIUY
+TASKALRT(DA) ; resend alert(s) for a document via a delayed task *357
+ N TIUADDL,ZTDESC,ZTDTH,ZTIO,ZTRTN,ZTSAVE,ZTSK S TIUADDL=1,ZTDESC="SEND^TIUALRT("_DA_")",ZTDTH=+$H_","_($P($H,",",2)+10)
+ S ZTIO="",ZTSAVE("TIUADDL")="",ZTSAVE("DA")="",ZTRTN="SEND^TIUALRT(DA)" D ^%ZTLOAD
  Q
 SENDTRAN(DA) ; Generate "Send back to transcription" alert
  N TIUEDT,TIU0,TIUPNM,TIUSSN,TIUTRAN,TIU,XQA,XQAMSG,TIUMSG
@@ -158,9 +169,3 @@ ADDENDEL(DA) ; Delete alert associated with a Addendum added
  N XQA,XQAID,XQAKILL S XQAID="TIUADD"_DA
  D DELETEA^XQALERT
  Q
-ISSIGNR(DA,USER) ; Is USER an additional signer of document DA?
- N TIUY,TIUSDA,TIUSD0 S (TIUY,TIUSDA)=0
- S TIUSDA=+$O(^TIU(8925.7,"AE",DA,USER,0)) G:'TIUSDA ISSIGNX
- S TIUSD0=$G(^TIU(8925.7,TIUSDA,0)) G:'$L(TIUSD0) ISSIGNX
- I +$P(TIUSD0,U,4)'>0 S TIUY=1
-ISSIGNX Q TIUY

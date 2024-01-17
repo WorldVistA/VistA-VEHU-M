@@ -1,5 +1,5 @@
-SDESCLNSEARCH ;ALB/MGD,BWF - CLINIC NAME SEARCH AND LIMITED DATA RETURN ;JUL 12, 2023
- ;;5.3;Scheduling;**824,851**;Aug 13, 1993;Build 10
+SDESCLNSEARCH ;ALB/MGD,BWF - CLINIC NAME SEARCH AND LIMITED DATA RETURN ;JUL 7, 2023
+ ;;5.3;Scheduling;**824,851,861**;Aug 13, 1993;Build 17
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -70,13 +70,13 @@ VALIDATEINPUT(ERRORLIST,SEARCHSTRING,STATION,DATE) ; validate incoming parameter
 GETCLINICLIST(SEARCHSTRING,STATION,DATE,CLINICLIST) ; pull matching recall clinics using the first input parameter passed in by the RPC
  ; Input - SEARCHSTRING = string that represents the name of the recall clinic
  ;         STATION = Station Number
- ;         DATE = Date in ISO 8601 format to use for Clinic Status verification
+ ;         DATE = Fileman Date to use for Clinic Status verification
  ; CLINICLIST = passed in by reference; represents the array that will be returned as output
  ; Output - CLINICLIST = list of recall clinic names, clinic IENs and the associated recall reminder IENs.
  N CLINCNT,RESULTS,SUB3
  K CLINICLIST
  S (SUB3,CLINCNT)=0
- D FIND^DIC(44,,"@;.01",,SEARCHSTRING,,"B",,,"RESULTS")
+ D FIND^DIC(44,,"@;.01",,SEARCHSTRING,,"B^C",,,"RESULTS")
  F  S SUB3=$O(RESULTS("DILIST",2,SUB3)) Q:SUB3=""  D
  . S CLINICIEN=$G(RESULTS("DILIST",2,SUB3))
  . I STATION'="" Q:$$WRONGDIVISION(CLINICIEN,STATION)

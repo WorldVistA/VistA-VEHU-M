@@ -1,5 +1,5 @@
 YTSBIPF ;SLC/KCM - Score B-IPF ; 10/14/18 2:02pm
- ;;5.01;MENTAL HEALTH;**177**;Dec 30, 1994;Build 6
+ ;;5.01;MENTAL HEALTH;**177,234**;Dec 30, 1994;Build 38
  ;
 DLLSTR(YSDATA,YS,YSTRNG) ; compute scores or report text based on YSTRNG
  ; input
@@ -30,7 +30,8 @@ SCORESV ; calculate the score
  . S YTCNT=YTCNT+1
  . S YTRAW=YTRAW+$P(^YTT(601.75,YTCHC,0),U,2)
  ; score is (raw score / maximum given number answered) * 100
- S SCORE=$FN((YTRAW/(YTCNT*6))*100,"",0)
+ I YTCNT=0 S SCORE="" I 1  ; everything skipped or N/A
+ E  S SCORE=$FN((YTRAW/(YTCNT*6))*100,"",0)
  ;
  ; set scores into ^TMP($J,"YSCOR",n)=scaleId=rawScore^tScore
  K ^TMP($J,"YSCOR")
@@ -44,6 +45,7 @@ REPORT(VAL,LVL) ; build the scoring display for the report
  ; expects ^TMP($J,"YSCOR",...) and ^TMP($J,"YSG") from DLLSTR
  ;         YSDATA from DLLSTR
  S VAL=$P(^TMP($J,"YSCOR",2),"=",2),LVL=""
+ I VAL="" S LVL="No score" Q
  I VAL<11 S LVL="No impairment" Q
  I VAL<31 S LVL="Mild impairment" Q
  I VAL<51 S LVL="Moderate impairment" Q

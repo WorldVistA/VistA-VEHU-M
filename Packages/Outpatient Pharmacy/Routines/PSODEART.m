@@ -1,5 +1,5 @@
 PSODEART ;FO-OAKAND/REM - EPCS Utilities and Reports; [5/7/02 5:53am] ;10/5/21  09:42
- ;;7.0;OUTPATIENT PHARMACY;**667,545,714**;DEC 1997;Build 2
+ ;;7.0;OUTPATIENT PHARMACY;**667,545,714,731**;DEC 1997;Build 18
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002
  ;External reference to XUEPCS DATA file (#8991.6) is supported by DBIA 7015
  ;External reference to XUEPCS PSDRPH AUDIT file (#8991.7) is supported by DBIA 7016
@@ -206,6 +206,7 @@ MGRP ;
  ;
 BMAIL ;
  S DAT=^XTV(FN,ND,0),IEN=$P(DAT,"^"),ARR(IEN)=""
+ I FN=8991.6 I $P(DAT,"^",3)=.03 Q  ;P731 detox/x-waiver removal
  D GETS^DIQ(FN,ND,".01;.02;.04;.05;.06;.08","E","XTV")
  D GETS^DIQ(FN,ND,".03","IE","XTV")
  S P1=$G(XTV(FN,ND_",",.01,"E"))_FSP
@@ -275,6 +276,7 @@ OEN ;
  . S ND=0 F  S ND=$O(^XTV(FN,"DT",LD,ND)) Q:'ND  D
  .. Q:'$D(^XTV(FN,ND,0))
  .. S DAT=^XTV(FN,ND,0)
+ ..I PSORPT=1 I $P(DAT,"^",3)=.03 Q  ;P731 detox/x-waiver removal
  .. S IEN=$P(DAT,"^")
  .. S (DV,DVS)=0 F  S DV=$O(^VA(200,IEN,2,DV)) Q:('DV)&(DVS>0)  S:'DV DV=999999 D
  ... S DVS=DVS+1

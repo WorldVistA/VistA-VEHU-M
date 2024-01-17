@@ -1,5 +1,5 @@
 IBCNES4 ;ALB/JNM - eIV elig/Benefit screen ; 06/08/2016
- ;;2.0;INTEGRATED BILLING;**549,702**;21-MAR-94;Build 53
+ ;;2.0;INTEGRATED BILLING;**549,702,763**;21-MAR-94;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; entry point for IBCNB ELIG PAYER SUMMARY action protocol
@@ -23,18 +23,25 @@ INIT0(IBVF,IBVIENS,IBSUBID,IBNOLBL) ; -- Used by IBCNBCD to fetch data
  ;
 INIT(IBSUBID) ; -- init variables and list array
  ;IB*702/CKB,TAZ,DJW - Fixed restore of IBVF and IBVIENS
- N IBVDA,LN,COL,COL1,COL2,VALMAR ;,IBVF2,IBVIENS2
+ ;IB*763/TAZ - Add check for Purged Response records.
+ N IBVDA,LN,COL,COL1,COL2,PURGED,VALMAR ;,IBVF2,IBVIENS2
  ;S IBVF2=IBVF,IBVIENS2=IBVIENS
  I $G(IBSUBID)="" S IBSUBID="IBCNES PAY SUM"
  S VALMAR=$NA(^TMP(IBSUBID,$J))
  K @VALMAR ; clear out the existing data, if any
- S LN=0,COL1=2,COL2=47
+ S LN=0,COL1=2,COL2=47,PURGED=0
  I IBVF=2.322 D
  . N IEN
  . S IEN=$$GET1^DIQ(2.312,IBVIENS,8.03,"I")
- . I +$G(IEN) S IBVF=365.02,IBVIENS=IEN_","
+ . I '$G(IEN) Q
+ . I '$D(^IBCN(365,IEN)) S PURGED=1 Q
+ . S IBVF=365.02,IBVIENS=IEN_","
  ;IB*702/TAZ,CKB,DJW cleaned up the code for readability, changed G's to D's and
  ; moved INITX tag
+ ;IB*763/TAZ - Print Purged message if PURGED variable is set then exit.
+ I PURGED D  G INITX
+ . D SET1()
+ . D SET4("","The Payer Response is no longer on file.")
  I IBVF=2.322 D NODATA G INITX
  D DA^DILF(IBVIENS,.IBVDA)  ; build the IBVDA array for the iens
  I '$D(IBVDA) D NODATA G INITX
@@ -91,12 +98,16 @@ INIT2(IBVF) ; allows changing IBVF just for this routine
  ;
 WAITING ;
  D SET1()
- D SET1("Awaiting Payer Response.")
+ ;IB*763/TAZ - Removed trailing ":" for consistency
+ ;D SET1("Awaiting Payer Response.")
+ D SET4("","Awaiting Payer Response.")
  Q
  ; 
 NODATA ; display no data found
  D SET1()
- D SET1("No Payer Summary Data Found")
+ ;IB*763/TAZ - Removed trailing ":" for consistency
+ ;D SET1("No Payer Summary Data Found")
+ D SET4("","No Payer Summary Data Found")
  Q
  ;
 GETQUAL(QREC) ; Return Communication Qualifier text

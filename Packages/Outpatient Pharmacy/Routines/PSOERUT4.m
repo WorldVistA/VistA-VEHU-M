@@ -1,0 +1,303 @@
+PSOERUT4 ;ALB/MFR - eRx Drug Suggestion Utilities; 06/25/2023 5:14pm
+ ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;
+MATCHSUG(ERXIEN) ; Match Suggestion Prompt
+ ; Input: ERXIEN   - Pointer to ERX HOLDING QUEUE file (#52.49)
+ ;Output: MATCHSUG - eRx record (Pointer to #52.49) or 0 (Not selected or no suggestion on file)
+ ;
+ N MATCHSUG,DRUGHASH,MATCHCNT,CNT,VISTARX,QUIT,DIR,Y,X,VADRUG,VASIG,SUGGARR,TEMPARR,II
+ N VADAYS,VAREFS,VAQTY
+ I '$D(^PS(52.49,+$G(ERXIEN),0)) Q 0
+ ; Dosage already entered
+ I $D(^PS(52.49,ERXIEN,21)) Q 0
+ ; 
+ S DRUGHASH=$$DRUGHASH^PSOERUT(ERXIEN) I 'DRUGHASH Q 0
+ ;
+ S (MATCHSUG,MATCHCNT,QUIT)=0
+ S VISTARX=9999999999
+ F  S VISTARX=$O(^PS(52.49,"ADRGVRX",DRUGHASH,VISTARX),-1) Q:'VISTARX  D  I (MATCHCNT>2) Q
+ . S VADRUG=+$$GET1^DIQ(52,VISTARX,6,"I") I 'VADRUG Q
+ . ; If Drug is Inactive, forget suggestion automatically
+ . I $$GET1^DIQ(50,VADRUG,100,"I") D  Q
+ . . K ^PS(52.49,"ADRGVRX",DRUGHASH,VISTARX)
+ . S VASIG=$$SUGSIG^PSOERUT2(VISTARX,ERXIEN) I VASIG="" Q
+ . S VAQTY=+$$GET1^DIQ(52,VISTARX,7,"I")
+ . S VADAYS=+$$GET1^DIQ(52,VISTARX,8,"I")
+ . S VAREFS=+$$GET1^DIQ(52,VISTARX,9,"I")
+ . I $D(TEMPARR(VADRUG,VASIG,VAQTY,VADAYS,VAREFS)) Q
+ . S MATCHCNT=MATCHCNT+1
+ . S SUGGARR(MATCHCNT)=VISTARX_"^"_DRUGHASH,TEMPARR(VADRUG,VASIG,VAQTY,VADAYS,VAREFS)=""
+ F CNT=1:1:MATCHCNT D  I MATCHSUG!QUIT Q
+ . S VISTARX=+SUGGARR(CNT),DRUGHASH=$P(SUGGARR(CNT),"^",2)
+ . D CMPMEDS(ERXIEN,VISTARX,CNT_"^"_MATCHCNT)
+ . K DIR S DIR(0)="SOA^A:ACCEPT;"_$S(MATCHCNT>1&(MATCHCNT'=CNT):"N:NEXT;",1:"")_"F:FORGET;E:EXIT"
+ . S DIR("A")="ACTION on SUGGESTION: (A)CCEPT  "_$S(MATCHCNT>1&(MATCHCNT'=CNT):"(N)EXT  ",1:"")_"(F)ORGET  (E)XIT: "
+ . S DIR("B")=$S(MATCHCNT>1&(MATCHCNT'=CNT):"NEXT",1:"EXIT")
+ . S II=0
+ . S II=II+1,DIR("?",II)="  ACCEPT - Accepts the suggested data (right column) and pre-populates the"
+ . S II=II+1,DIR("?",II)="           VistA fields"
+ . I MATCHCNT>1&(MATCHCNT'=CNT) D
+ . . S II=II+1,DIR("?",II)="  NEXT   - Ignores the current suggestion and view the next one"
+ . S II=II+1,DIR("?",II)="  FORGET - Forgets the current suggestion so that it is not presented again"
+ . S II=II+1,DIR("?",II)="           in the future to any user"
+ . S DIR("?")="  EXIT   - Exits and continue to filling the VistA fields manually"
+ . D ^DIR I $D(DIRUT)!$D(DIROUT)!(Y="E") S QUIT=1 Q
+ . I Y="A" S MATCHSUG=VISTARX Q
+ . I Y="N" W ! Q
+ . I Y="F" D
+ . . K DIR S DIR(0)="SA^Y:YES;N:NO",DIR("B")="NO"
+ . . S DIR("A")="Are you sure this suggestion match should be forgotten? "
+ . . S DIR("?")="This suggestion originated from a VistA Rx previously dispensed for an eRx with"
+ . . S DIR("?")=DIR("?")_" the exact Drug Name, NDC, SIG, Quantity, Days Supply, # of Reffils"
+ . . S DIR("?")=DIR("?")_" and Substitution allowance. Once you forget this match it will no"
+ . . S DIR("?")=DIR("?")_"  longer be suggested as a match for future eRx's with the same fields."
+ . . W ! D ^DIR I $D(DIRUT)!$D(DIROUT)!(Y="N") S CNT=CNT-1 W ! Q
+ . . W !?64,"Forgetting..." K ^PS(52.49,"ADRGVRX",DRUGHASH,VISTARX) H 1 W "Ok." H .5 W ! Q
+ Q MATCHSUG
+ ;
+CMPMEDS(ERXIEN,VISTARX,COUNTER) ; Display the Comparison Between eRx and VistA Providers
+ ;Input: ERXIEN   - Pointer to ERX HOLDING QUEUE file (#52.49)
+ ;       VISTARX - VistA Rx IEN (Pointer to #52)
+ ;       COUNTER - P1: Entry # | P2: Number of Entries
+ I '$D(^PS(52.49,+$G(ERXIEN),0))!'$D(^PSRX(+$G(VISTARX),0)) Q
+ N XX,LINE,X
+ W !?55,"|Sugg. " W $G(IOINHI)_+$G(COUNTER)_$G(IOINORM)_" of "_$G(IOINHI)_$P($G(COUNTER),"^",2)_$G(IOINORM)
+ W " - ",$G(IOINHI)_$$FMTE^XLFDT($$GET1^DIQ(52,VISTARX,21,"I")\1,"2Z")_$G(IOINORM),?79,"|"
+ W !,$G(IORVON)_"ERX MED"_$G(IORVOFF),?41,$G(IORVON)_"VISTA MED"_$G(IORVOFF)
+ W ?55,"|From Rx#: "_$G(IOINHI)_$$GET1^DIQ(52,VISTARX,.01)_$G(IOINORM),?79,"|"
+ S $P(XX,"_",81)="" W !,XX
+ S LINE=0 D SETDRUG^PSOERUT2("RS",,ERXIEN,1,VISTARX)
+ Q
+ ;
+DOSAGE(MODE,NPSPC,ERXIEN) ; Sets Dosage Information
+ ; Input: MODE    - Display Mode: "RS": Roll & Scroll | "LM": ListMan
+ ;        NMSPC  - ListMan Temp Global Namespace (e.g., "PSOERXP1")
+ ;        ERXIEN - Pointer to ERX HOLDING QUEUE file (#52.49)
+ N ERXDOSE,DOSE,XE,XV,WRPDOSE,I,DISPUNTS,DOSEX
+ D ERXDOSE(ERXIEN,.ERXDOSE)
+ I '$D(ERXDOSE) D  Q
+ . I MODE="LM" S UNDERLN(LINE,41)=2
+ . S XE="",XV="|"_$S(MODE="LM":"2)",1:"  ")_"   Dosage:" D ADDLINE^PSOERUT0(MODE,NMSPC,XE,XV)
+ F DOSE=1:1 Q:'$D(ERXDOSE("DOSE",DOSE))  D
+ . I '$G(ERXDOSE("DOSE ORDERED",DOSE)) D
+ . . S XE="",XV="|       Verb: "_$$COMPARE^PSOERUT0(MODE,ERXDOSE("VERB",DOSE),ERXDOSE("VERB",DOSE),54)
+ . . D ADDLINE^PSOERUT0(MODE,NMSPC,XE,XV)
+ . S DOSEX=ERXDOSE("DOSE",DOSE) I $E(DOSEX,1)=".",$G(ERXDOSE("DOSE ORDERED",DOSE)) S DOSEX="0"_DOSEX
+ . I $G(ERXDOSE("UNITS",DOSE))]"" S DOSEX=DOSEX_" ("_$$GET1^DIQ(50.607,ERXDOSE("UNITS",DOSE),.01)_")"
+ . D WRAP^PSOERUT(DOSEX,24,.WRPDOSE)
+ . S XE="",XV="|"_$S(MODE="LM"&(DOSE=1):"2)",1:"  ")_"   Dosage: "_$$COMPARE^PSOERUT0("LM",$G(WRPDOSE(1,0)),$G(WRPDOSE(1,0)),54)
+ . I MODE="LM",DOSE=1 S UNDERLN(LINE,41)=2
+ . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . F I=2:1 Q:'$D(WRPDOSE(I))  D
+ . . S XE="",XV="|              "_$$COMPARE^PSOERUT0("LM",$G(WRPDOSE(I,0)),$G(WRPDOSE(I,0)),54)
+ . . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . I $G(ERXDOSE("DOSE ORDERED",DOSE)) D
+ . . S XE="",XV="|       Verb: "_$$COMPARE^PSOERUT0(MODE,$G(ERXDOSE("VERB",DOSE)),$G(ERXDOSE("VERB",DOSE)),54)
+ . . D ADDLINE^PSOERUT0(MODE,NMSPC,XE,XV)
+ . . S DISPUNTS=$S($E(ERXDOSE("DOSE ORDERED",DOSE),1)=".":"0",1:"")_ERXDOSE("DOSE ORDERED",DOSE)
+ . . S XE="",XV="|Disp. Units: "_$$COMPARE^PSOERUT0(MODE,$E(DISPUNTS,1,27),$E(DISPUNTS,1,27),54)
+ . . D ADDLINE^PSOERUT0(MODE,NMSPC,XE,XV)
+ . . I $L(DISPUNTS)>27 D
+ . . . D ADDLINE^PSOERUT0(MODE,NMSPC,$$COMPARE^PSOERUT0(MODE,$E(DISPUNTS,28,999),$E(DISPUNTS,28,999),41))
+ . I $G(ERXDOSE("NOUN",DOSE))'="" D
+ . . S XE="",XV="|       Noun: "_$$COMPARE^PSOERUT0(MODE,ERXDOSE("NOUN",DOSE),ERXDOSE("NOUN",DOSE),54)
+ . . D ADDLINE^PSOERUT0(MODE,NMSPC,XE,XV)
+ . S XE="",XV="|      Route: "_$$COMPARE^PSOERUT0(MODE,$G(ERXDOSE("ROUTE",DOSE)),$G(ERXDOSE("ROUTE",DOSE)),54)
+ . D ADDLINE^PSOERUT0(MODE,NMSPC,XE,XV)
+ . S XE="",XV="|   Schedule: "_$$COMPARE^PSOERUT0(MODE,$G(ERXDOSE("SCHEDULE",DOSE)),$G(ERXDOSE("SCHEDULE",DOSE)),54)
+ . D ADDLINE^PSOERUT0(MODE,NMSPC,XE,XV)
+ . I $G(ERXDOSE("DURATION",DOSE))'="" D
+ . . N DUR S DUR=ERXDOSE("DURATION",DOSE)
+ . . S XE="",XV="|   Duration: "_$$COMPARE^PSOERUT0(MODE,DUR_" "_$$FREQ(DUR),DUR_" "_$$FREQ(DUR),54)
+ . . D ADDLINE^PSOERUT0(MODE,NMSPC,XE,XV)
+ . I $G(ERXDOSE("CONJUNCTION",DOSE))'="" D
+ . . S XE="",XV="|Conjunction: "_$$COMPARE^PSOERUT0(MODE,ERXDOSE("CONJUNCTION",DOSE),ERXDOSE("CONJUNCTION",DOSE),54)
+ . . D ADDLINE^PSOERUT0(MODE,NMSPC,XE,XV)
+ Q
+ ;
+CSPRV(PROV,DRG,ORN) ; Sets CS Information (DEA#, Detox #, Site Address,...)
+ N DETN,DEA,I,LBL,VADD,SPC
+ I PROV="" Q
+ S:$L($G(PSORX("RXDEA"))) DEA=PSORX("RXDEA")
+ I '$L($G(DEA)) D
+ . S DEA=$S($G(PENDATA("OIRXN")):$$RXDEA^PSOUTIL(PENDATA("OIRXN")),$G(ORN):$$RXDEA^PSOUTIL(,ORN),1:$$DEA^XUSER(0,PROV))
+ . S:DEA]"" PSORX("RXDEA")=DEA
+ S:$L($G(PSORX("DETX"))) DETN=PSORX("DETX")
+ S LBL="DEA#: "
+ I DRG,$$DETOX^PSSOPKI(DRG),'$L($G(DETN)) D
+ . S DETN=$S($G(ORN):$$RXDETOX^PSOUTIL(,ORN),1:$$DETOX^XUSER(PROV))
+ S $P(SPC," ",(33-$L(DEA)))=" "
+ I (DEA'="")!($G(DETN)'="") D
+ . S XV="|"_LBL_$$COMPARE^PSOERUT0("LM",DEA,DEA,41+$L(LBL))
+ . S XV=XV_$S($G(DETN)]"":SPC_"DETOX#: "_$$COMPARE^PSOERUT0("LM",$G(DETN),$G(DETN),49+$L(SPC)),1:"")
+ . D ADDLINE^PSOERUT0("LM",NMSPC,"",XV)
+ I $G(ORN) D PRVAD^PSOPKIV2 I $G(VADD(1))]"" D
+ . S XV="|Site Address: "_$$COMPARE^PSOERUT0("LM",VADD(1),VADD(1),15)
+ . D ADDLINE^PSOERUT0("LM",NMSPC,"",XV)
+ . I VADD(2)'="" S XV="|              "_$$COMPARE^PSOERUT0("LM",VADD(2),VADD(2),15)
+ . D ADDLINE^PSOERUT0("LM",NMSPC,"",XV)
+ . I VADD(3)'="" S XV="|              "_$$COMPARE^PSOERUT0("LM",VADD(3),VADD(3),15)
+ . D ADDLINE^PSOERUT0("LM",NMSPC,"",XV)
+ Q
+ ;
+VASIG(ORD) ; Returns The Pending Order SIG
+ ; Input: ORD   - Pointer to the PENDING ORDER file (#52.41)
+ ;Output: VASIG - VistA SIG in one long string 
+ N VASIG,SIG
+ S VASIG="",ORD=+$G(ORD)
+ S SIG=0 F  S SIG=$O(^PS(52.41,ORD,"SIG",SIG)) Q:'SIG  D
+ . I $E(VASIG,$L(VASIG))'=" " S VASIG=VASIG_" "
+ . S VASIG=VASIG_$G(^PS(52.41,ORD,"SIG",SIG,0))
+ Q VASIG
+ ;
+ERXDOSE(ERXIEN,DOSEARR) ; Retrieves the Dosage for an eRx and loads an Array
+ ; Input: ERXIEN  - Pointer to the ERX HOLDING QUEUE file (#52.49)
+ ;Output:.DOSEARR - Return Array Containing Dosage Information
+ ;
+ N ERXDOSE,DOSE
+ K DOSEARR D GETS^DIQ(52.49,ERXIEN,"21*","IE","ERXDOSE")
+ S DOSE="" F  S DOSE=$O(ERXDOSE(52.4921,DOSE)) Q:DOSE=""  D
+ . S DOSEARR("DOSE ORDERED",+DOSE)=ERXDOSE(52.4921,DOSE,9,"I")
+ . S DOSEARR("DOSE",+DOSE)=ERXDOSE(52.4921,DOSE,8,"I")
+ . S DOSEARR("UNITS",+DOSE)=ERXDOSE(52.4921,DOSE,11,"I")
+ . S DOSEARR("NOUN",+DOSE)=ERXDOSE(52.4921,DOSE,12,"I")
+ . S DOSEARR("DURATION",+DOSE)=ERXDOSE(52.4921,DOSE,2,"I")
+ . I $G(ERXDOSE(52.4921,DOSE,6,"E"))'="" D
+ . . S DOSEARR("CONJUNCTION",+DOSE)=ERXDOSE(52.4921,DOSE,6,"E")
+ . S DOSEARR("ROUTE",+DOSE)=ERXDOSE(52.4921,DOSE,10,"E")
+ . S DOSEARR("SCHEDULE",+DOSE)=ERXDOSE(52.4921,DOSE,1,"I")
+ . S DOSEARR("VERB",+DOSE)=ERXDOSE(52.4921,DOSE,13,"I")
+ Q
+ ;
+VARXDOSE(RXIEN,DOSEARR) ; Retrieves the Dosage for a PRESCRIPTION and loads an Array
+ ; Input: RXIEN    - Pointer to the PRESCRIPTION file (#52)
+ ;Output: .DOSEARR - Return Array Containing Dosage Information
+ ;
+ ; - Retrieving VistA Rx Dose and Saving to the eRx
+ N VADOSE,DOSE
+ I '$D(^PSRX(+$G(RXIEN),0)) Q
+ K DOSEARR D GETS^DIQ(52,RXIEN,"113*","I","VADOSE")
+ S DOSE="" F  S DOSE=$O(VADOSE(52.0113,DOSE)) Q:DOSE=""  D
+ . S DOSEARR("DOSE ORDERED",+DOSE)=VADOSE(52.0113,DOSE,1,"I")
+ . S DOSEARR("DOSE",+DOSE)=VADOSE(52.0113,DOSE,.01,"I")
+ . S DOSEARR("UNITS",+DOSE)=VADOSE(52.0113,DOSE,2,"I")
+ . S DOSEARR("NOUN",+DOSE)=VADOSE(52.0113,DOSE,3,"I")
+ . S DOSEARR("DURATION",+DOSE)=VADOSE(52.0113,DOSE,4,"I")
+ . S DOSEARR("CONJUNCTION",+DOSE)=VADOSE(52.0113,DOSE,5,"I")
+ . S DOSEARR("ROUTE",+DOSE)=VADOSE(52.0113,DOSE,6,"I")
+ . S DOSEARR("SCHEDULE",+DOSE)=VADOSE(52.0113,DOSE,7,"I")
+ . S DOSEARR("VERB",+DOSE)=VADOSE(52.0113,DOSE,8,"I")
+ Q
+ ; 
+PODOSAGE(NMSPC,ORDIEN,PENDATA,RENEWORD) ; Set ListMan Side-By-Side Section for VistA Pending Order Dosage
+ ;Input: NMSPC    - ListMan Temp Global Namespace (e.g., "PSOERXP1", "PSOPO", ...)
+ ;       ORDIEN   - Pointer to PENDING OUTPATIENT ORDERS file (#52.41)
+ ;       PENDATA  - Array containing the Pending Order data
+ ;       RENEWORD - Renewal Pending Order? 1: YES | 0/null - NO ; Sets Pending Order Dosage Information
+ N DOSE,XE,XV,DFN,I,WRPDOSE,DISPUNTS,ROUTE,CONJUNCT
+ S DFN=+$$GET1^DIQ(52.41,ORDIEN,1,"I")
+ ;
+ I '$D(PENDATA) D  Q
+ . S XE="",XV="|"_$S('RENEWORD:"3) ",1:"  ")_"   *Dosage:" D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ F DOSE=1:1 Q:'$D(PENDATA("DOSE",DOSE))  D
+ . I '$G(PENDATA("DOSE ORDERED",DOSE)),$G(PENDATA("VERB",DOSE))]"" D
+ . . S XE="",XV="|        Verb: "_$$COMPARE^PSOERUT0("LM",PENDATA("VERB",DOSE),PENDATA("VERB",DOSE),55)
+ . . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . S DOSEX=PENDATA("DOSE",DOSE) I $E(DOSEX,1)=".",$G(PENDATA("DOSE ORDERED",DOSE)) S DOSEX="0"_DOSEX
+ . I $G(PENDATA("UNITS",DOSE))]"" S DOSEX=DOSEX_" ("_$$GET1^DIQ(50.607,PENDATA("UNITS",DOSE),.01)_")"
+ . D WRAP^PSOERUT(DOSEX,24,.WRPDOSE)
+ . S XE="",XV="|"_$S(DOSE=1&'RENEWORD:"3)",1:"  ")_"   *Dosage: "_$$COMPARE^PSOERUT0("LM",$G(WRPDOSE(1,0)),$G(WRPDOSE(1,0)),55)
+ . I DOSE=1,'RENEWORD S UNDERLN(LINE,41)=2
+ . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . F I=2:1 Q:'$D(WRPDOSE(I))  D
+ . . S XE="",XV="|              "_$$COMPARE^PSOERUT0("LM",$G(WRPDOSE(I,0)),$G(WRPDOSE(I,0)),55)
+ . . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . I $G(PENDATA("DOSE ORDERED",DOSE)),$G(PENDATA("VERB",DOSE))]"" D
+ . . S XE="",XV="|        Verb: "_$$COMPARE^PSOERUT0("LM",PENDATA("VERB",DOSE),PENDATA("VERB",DOSE),55)
+ . . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . I '$G(PENDATA("DOSE ORDERED",DOSE)),$P($G(^PS(55,DFN,"LAN")),"^") D
+ . . D WRAP^PSOERUT($G(PENDATA("ODOSE",DOSE)),22,.WRPDOSE)
+ . . S XE="",XV="|*Oth.Lang.Dosage: "_$$COMPARE^PSOERUT0("LM",$G(WRPDOSE(1,0)),$G(WRPDOSE(1,0)),59)
+ . . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . . F I=2:1 Q:'$D(WRPDOSE(I))  D
+ . . . S XE="",XV="|             "_$$COMPARE^PSOERUT0("LM",$G(WRPDOSE(I,0)),$G(WRPDOSE(I,0)),59)
+ . . . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . I $G(PENDATA("DOSE ORDERED",DOSE))'="" D
+ . . S DISPUNTS=$S($E(PENDATA("DOSE ORDERED",DOSE),1)=".":"0",1:"")_PENDATA("DOSE ORDERED",DOSE)
+ . . S XE="",XV="| Disp. Units: "_$$COMPARE^PSOERUT0("LM",DISPUNTS,DISPUNTS,55)
+ . . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . I $G(PENDATA("NOUN",DOSE))'="" D
+ . . S XE="",XV="|        Noun: "_$$COMPARE^PSOERUT0("LM",PENDATA("NOUN",DOSE),PENDATA("NOUN",DOSE),55)
+ . . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . I $G(PENDATA("ROUTE",DOSE)) S ROUTE=$$GET1^DIQ(51.2,PENDATA("ROUTE",DOSE),.01)
+ . S XE="",XV="|      *Route: "_$$COMPARE^PSOERUT0("LM",$G(ROUTE),$G(ROUTE),55)
+ . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . S XE="",XV="|   *Schedule: "_$$COMPARE^PSOERUT0("LM",PENDATA("SCHEDULE",DOSE),PENDATA("SCHEDULE",DOSE),55)
+ . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . I $G(PENDATA("DURATION",DOSE))'="" D
+ . . N DUR S DUR=PENDATA("DURATION",DOSE)
+ . . S XE="",XV="|   *Duration: "_$$COMPARE^PSOERUT0("LM",DUR_" "_$$FREQ(DUR),DUR_" "_$$FREQ(DUR),55)
+ . . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ . I $G(PENDATA("CONJUNCTION",DOSE))'="" D
+ . . S CONJUNCT=$S(PENDATA("CONJUNCTION",DOSE)="T":"THEN",PENDATA("CONJUNCTION",DOSE)="X":"EXCEPT",1:"AND")
+ . . S XE="",XV="|*Conjunction: "_$$COMPARE^PSOERUT0("LM",CONJUNCT,CONJUNCT,55)
+ . . D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ Q
+ ;
+PENFLAG(NMSPC,ORD) ; Backdoor ListManager Display of Flag/Unflag Information
+ N FLAG,FLAGHDR,XX,FLAGCOMM
+ ;
+ D GETS^DIQ(52.41,ORD,"33;34;35;36;37;38","IE","FLAG") I '$G(FLAG(52.41,ORD_",",33,"I")) Q
+ S XX="Order Flagged by "_FLAG(52.41,ORD_",",34,"E")_" on "_FLAG(52.41,ORD_",",33,"E")
+ S $E(FLAGHDR,(81-$L(XX))/2)=XX
+ S UNDERLN(LINE,1)=100
+ D ADDLINE^PSOERUT0("LM",NMSPC,FLAGHDR,"")
+ S XX=FLAG(52.41,ORD_",",35,"E")
+ F  Q:XX=""  D
+ . S FLAGCOMM=$E(XX,1,79)
+ . S FLAGCOMM=" "_$$COMPARE^PSOERUT0("LM",$E(XX,1,79),$E(XX,1,79),2),XX=$E(XX,80,9999)
+ . D ADDLINE^PSOERUT0("LM",NMSPC,FLAGCOMM,"")
+ I FLAG(52.41,ORD_",",36,"I")'="" D
+ . S XX="Order Un-Flagged by "_FLAG(52.41,ORD_",",37,"E")_" on "_FLAG(52.41,ORD_",",36,"E")
+ . S FLAGHDR="",$E(FLAGHDR,(81-$L(XX))/2)=XX
+ . S UNDERLN(LINE,1)=100
+ . D ADDLINE^PSOERUT0("LM",NMSPC,FLAGHDR,"")
+ . S XX=FLAG(52.41,ORD_",",38,"E")
+ . F  Q:XX=""  D
+ . . S FLAGCOMM=$E(XX,1,79)
+ . . S FLAGCOMM=" "_$$COMPARE^PSOERUT0("LM",$E(XX,1,79),$E(XX,1,79),2),XX=$E(XX,80,9999)
+ . . D ADDLINE^PSOERUT0("LM",NMSPC,FLAGCOMM,"")
+ D BLANKLN^PSOERUT0("LM",1)
+ Q
+ ;
+ACCDTBY(ERXIEN) ; Returns the eRx latest Accepted Date/Time
+ ; Input: ERXIEN - Pointer to ERX HOLDING QUEUE file (#52.49)
+ ;Output: P1^P2 - P1: External Accepted Date/Time (MM/DD/YY) | P2: Accepted By Name
+ ;
+ N ACCDTBY,ACDTTM,ACBY,STHIS,FOUND,STAT
+ S ACCDTBY="",STHIS=99999,FOUND=0
+ F  S STHIS=$O(^PS(52.49,ERXIEN,19,STHIS),-1) Q:'STHIS!(FOUND)  D
+ . S STAT=$$GET1^DIQ(52.4919,STHIS_","_ERXIEN,.02,"I")
+ . I ",PR,RXP,CXP,"[(","_$$GET1^DIQ(52.45,STAT,.01,"E")_",") D
+ . . S ACCDTBY=$$FMTE^XLFDT($$GET1^DIQ(52.4919,STHIS_","_ERXIEN,.01,"I"),"2Y")_"^"_$$GET1^DIQ(52.4919,STHIS_","_ERXIEN,.03,"E")
+ . . S FOUND=1
+ Q ACCDTBY
+  ;
+PROVCOMM(COMM) ; Expand Provider Comments
+ ; Input: Provider Comments
+ ;Output: Expanded Comments
+ N PROVCOMM,X,PSODIR,INS1
+ I $G(COMM)="" Q ""
+ S COMM=$$UP^XLFSTR(COMM)
+ S (X,PSODIR("INS"))=COMM D SIG^PSOHELP S $E(INS1)="",PROVCOMM=INS1
+ Q PROVCOMM
+ ;
+FREQ(DUR) ; Returns the Duration Frequency word (WEEKS, DAYS, etc..)
+ ; Input: DUR - Schedule Duration (e.g., "4D", "3W", "6H", etc...)
+ ;Output: Spelled out duration frequency between parenthesis ("(DAYS)", "(WEEKS)", "(HOURS)", etc...)
+ S DUR=$G(DUR)
+ I DUR["M" Q "(MINUTES)"
+ I DUR["H" Q "(HOURS)"
+ I DUR["L" Q "(MONTHS)"
+ I DUR["W" Q "(WEEKS)"
+ Q "(DAYS)"

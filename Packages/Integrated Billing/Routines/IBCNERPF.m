@@ -1,17 +1,17 @@
-IBCNERPF ;BP/YMG - IBCNE USER INTERFACE EIV INSURANCE UPDATE REPORT ;16-SEP-2009
- ;;2.0;INTEGRATED BILLING;**416,528,549,595,668,737**;21-MAR-94;Build 19
+IBCNERPF ;BP/YMG - IBCNE eIV AUTO UPDATE REPORT ;09-MAY-2023
+ ;;2.0;INTEGRATED BILLING;**416,528,549,595,668,737,763**;16-SEP-09;Build 29
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
- ; IB*2.0*549 Change value of IBCNESPC("PYR",ien)
- ;            Add IBCNESPC("PYR",ien,coien)
- ;                IBCNESPC("INSCO"))
- ; IB*2.0*549 Sort by payer name
+ ; NOTE:
+ ;   IB*2.0*763 is a major re-write of this report.  The comments from the previous patches
+ ;   have either been removed or modified to remove the patch number if the comment is relevant.
+ ;
  ; Variables:
- ;   IBCNERTN = "IBCNERPF" (current routine name for queueing the 
- ;                          COMPILE process)
- ;   IBCNESPC("BEGDT") = start date for date range
- ;   IBCNESPC("ENDDT") = end date for date range
- ;   IBCNESPC("INSCO") = "A" (All ins. cos.) OR "S" (Selected ins. cos.)
+ ;   IBCNESPC("BEGDT")   = start date for date range
+ ;   IBCNESPC("ENDDT")   = end date for date range
+ ;   IBCNESPC("IBOUT")   = "R" for Report format or "E" for Excel format
+ ;   IBCNESPC("ICODETL") = 1 for displaying Ins Co Detail
+ ;   IBCNESPC("INSCO")   = "A" (All ins. cos.) OR "S" (Selected ins. cos.)
  ;   IBCNESPC("PYR",ien) - payer iens for report, if IBCNESPC("PYR")="A", then include all
  ;                       = (1) ^ (2)
  ;     (1) Display insurance company detail - 0 = No / 1 = Yes
@@ -20,46 +20,129 @@ IBCNERPF ;BP/YMG - IBCNE USER INTERFACE EIV INSURANCE UPDATE REPORT ;16-SEP-2009
  ;   IBCNESPC("PYR",ien,coien) - payer iens and company ien for report
  ;                             = Count for insurance company
  ;   IBCNESPC("PAT",ien) = patient iens for report, if IBCNESPC("PAT")="A", then include all
- ;   IBCNESPC("TYPE") = report type: "S" - summary, "D" - detailed
- ;   IBOUT = "R" for Report format or "E" for Excel format
+ ;   IBCNESPC("TYPE")    = report type: "S" - summary, "D" - detailed
  ;
  Q
 EN ; entry point
- N IBCNERTN,IBCNESPC,IBOUT,STOP
+ N IBCNESPC,STOP,TYPE
  ;
- S STOP=0,IBCNERTN="IBCNERPF"
+ S STOP=0
  W @IOF
- ; IB*2.0*549 - Change report name to eIV Auto Update Report
  W !,"eIV Auto Update Report"
- ; Prompts for eIV Update Report
+ ;
  ; Report Type - Summary or Detailed
-P10 D TYPE I STOP G EXIT
- ; Payer Selection parameter
-P20 D PAYER I STOP G:$$STOP^IBCNERP1 EXIT G P10
- ; Date Range parameters
-P30 D DTRANGE I STOP G:$$STOP^IBCNERP1 EXIT G P20
- ; Patient Selection parameter
-P40 D PATIENT I STOP G:$$STOP^IBCNERP1 EXIT G P30
- ; IB*2.0*549 Set flag for all/selected insurance companies
-P50 D INSCO
- ; IB*2.0*549 Sort is by payer name, so call to choose sort order not needed
- ; Select the output type
-P60 S IBOUT=$$OUT^IBCNERP1 I STOP G:$$STOP^IBCNERP1 EXIT G P50
- ;IB*737/CKB - add Excel warning message
- I IBOUT="E" D
+TYPE ;Type of Report
+ N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
+ W !
+ S DIR(0)="SA^S:Summary;D:Detailed"
+ S DIR("A")="Run a (S)ummary or (D)etailed Report: "
+ S DIR("B")="Summary"
+ D ^DIR
+ I $D(DIRUT)!$D(DIRUT)!$D(DTOUT)!$D(DUOUT) G EXIT
+ S (TYPE,IBCNESPC("TYPE"))=Y
+ I TYPE="S" G SUMMARY
+ ;
+DETAIL ; Prompts in specific order for Detail report.
+ S IBCNESPC("ICODETL")=1
+ ;
+D10 ; Payer Selection parameter
+ D PAYER I STOP G:$$STOP EXIT G TYPE
+ ;
+D20 ; Date Range parameters
+ D DTRANGE I STOP G:$$STOP EXIT G D10
+ ;
+D30 ; Patient Selection parameter
+ D PATIENT I STOP G:$$STOP EXIT G D20
+ ;
+ G IBOUT
+ ;
+SUMMARY ;Prompts in specific order for Summary report
+ ;
+ S IBCNESPC("INSCO")="A" ;All insurance companies
+ S IBCNESPC("PAT")="A"   ;All Patients
+ S IBCNESPC("PYR")="A"   ;All Payers
+ ;
+S10 ;Select Payer or Source of Information
+ N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
+ W !
+ S DIR(0)="SA^P:Payer;S:Source of Information"
+ S DIR("A")="Run for (P)ayer or (S)ource of Information: "
+ S DIR("?",1)="When selecting '(P)ayer', the report displays the breakout of auto updated"
+ S DIR("?",2)="entries based on the Payer name."
+ S DIR("?",3)=""
+ S DIR("?",4)="When selecting '(S)ource of Information', the report displays the breakout of"
+ S DIR("?")="auto updated entries based on the Source of Information of the entry."
+ D ^DIR I $D(DIRUT) G:$$STOP EXIT G TYPE
+ S IBCNESPC("PS")=Y
+ I Y="S" D  G S40  ;Source of Information does not prompt for Ins Co or Payer.
+ . S (IBCNESPC("PYR"),IBCNESPC("PAT"))="A"
+ . S IBCNESPC("ICODETL")=1
+ ;
+S20 ;Prompt for Insurance Company Detail
+ D ICODETL I STOP G:$$STOP EXIT G S10
+ ;
+S30 ;Prompt for Payer Selection
+ D PAYER I STOP G:$$STOP EXIT G S20
+ ;
+S40 ; Response Received Date
+ D DTRANGE I STOP G:$$STOP EXIT G S10:(IBCNESPC("PS")="S") G S30
+ ;
+IBOUT ;
+ N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
+ W !
+ S DIR(0)="SA^E:Excel;R:Report"
+ S DIR("A")="(E)xcel Format or (R)eport Format: "
+ S DIR("B")="Report"
+ D ^DIR I $D(DIRUT) S STOP=1 G:$$STOP EXIT G S40:TYPE="S" G D30
+ S IBCNESPC("IBOUT")=Y
+ I Y="E" D
  . W !!,"For CSV output, turn logging or capture on now. To avoid undesired wrapping"
- . W !,"of the data saved to the file, please enter ""0;256;99999"" at the ""DEVICE:"""
+ . W !,"of the data saved to the file, please enter ""0;"_$S(TYPE="S":"132",1:"256")_";99999"" at the ""DEVICE:"""
  . W !,"prompt.",!
+ I $G(IBCNESPC("TYPE"))="D" W:$G(IBCNESPC("IBOUT"))="R" !!!,"*** This report is 132 characters wide ***",!
  ;
  ; Select the output device
-P100 D DEVICE^IBCNERP1(IBCNERTN,.IBCNESPC,IBOUT) I STOP G:$$STOP^IBCNERP1 EXIT G P50
+DEVICE ; Device Handler and possible TaskManager calls
+ ;
+ ; Output params:
+ ;  STOP = Flag to stop routine
+ ;
+ ; Init vars
+ N POP,ZTDESC,ZTRTN,ZTSAVE
+ ;
+ S ZTRTN="COMPILE^IBCNERPF(.IBCNESPC)"
+ S ZTDESC="IBCNE eIV Auto Update Report"
+ S ZTSAVE("IBCNESPC(")=""
+ D EN^XUTMDEVQ(ZTRTN,ZTDESC,.ZTSAVE,"QM",1)
  ;
 EXIT ;
  Q
  ;
+COMPILE(IBCNESPC) ; 
+ ; Entry point called from EN^XUTMDEVQ in either direct or queued mode.
+ ; Input params:
+ ;  IBCNESPC = Array passed by ref of the report params
+ ;
+ ; Init scratch globals
+ N ALLPAT,ALLPYR
+ K ^TMP($J,"IBCNERPF")
+ N IBOUT
+ ; Compile
+ S IBOUT=$G(IBCNESPC("IBOUT"))
+ D EN^IBCNERPG(.IBCNESPC)
+ ; Print
+ I '$G(ZTSTOP) D PRINT^IBCNERPG(.IBCNESPC)
+ ; Close device
+ D ^%ZISC
+ ; Kill scratch globals
+ K ^TMP($J,"IBCNERPF")
+ ; Purge task record
+ I $D(ZTQUEUED) S ZTREQ="@"
+ ;
+COMPILX ; COMPILE exit pt
+ Q
+ ;
 PAYER ;
- ; IB*2.0*549 Add PIEN for payer IEN
- ; IB*737/TAZ - Removed reference to Most Popular Payer and "~NO PAYER"
  N DIC,DIR,DIROUT,DIRUT,DTOUT,DUOUT,PIEN,X,Y
  W !
  S DIR("A")="Run for (A)ll Payers or (S)elected Payers: "
@@ -67,112 +150,78 @@ PAYER ;
  S DIR(0)="SA^A:All;S:Selected",DIR("B")="A"
  D ^DIR
  I $D(DIRUT) S STOP=1 Q
- I Y="A" S IBCNESPC("PYR")="A" Q  ; "All Payers" selected
+ S IBCNESPC("PYR")=Y I Y="A" Q  ; "All Payers" selected
  S DIC(0)="ABEQ"
- ; IB*2.0*549 Change prompt from "Select Insurance Company" to "Select Payer"
  W !
  S DIC("A")="Select Payer: "
- ; Do not allow selection of non-eIV payers
- ; IB*2.0*549 Only include payers with eIV Auto Update flag = Yes
+ ; Only include payers with eIV Auto Update flag = Yes
  S DIC("S")="I $$AUTOUPDT^IBCNERPF($P($G(Y),U,1))"
  S DIC="^IBE(365.12,"
  ;
 PAYER1 ;
  D ^DIC
  I $D(DUOUT)!$D(DTOUT)!(Y=-1) S STOP=1 K IBCNESPC("PYR") Q
- ; IB*2.0*549 Get PIEN value
  S PIEN=$P(Y,U,1) K IBCNESPC("PYR",PIEN) S IBCNESPC("PYR",PIEN)=""
- ; IB*2.0*549 Get corresponding insurance companies
- D GETCOMPS(PIEN,.IBCNESPC)
- ; IB*2.0*549 Change Select Another to Select Another Payer 
+ I $G(IBCNESPC("ICODETL")) D GETCOMPS(PIEN,.IBCNESPC)
  W !
  I $$ANOTHER("Payer") W ! G PAYER1
  Q
  ;
-INSCO ; IB*2.0*549 Setup insurance company flag
- N PIEN,STOP
- S STOP=0
- I '$D(IBCNESPC("PYR")) D
- . K IBCNESPC("INSCO")
- E  D
- . I $G(IBCNESPC("PYR"))="A" D
- . . S IBCNESPC("INSCO")="A"
- . E  D
- . . S PIEN=""
- . . F  S PIEN=$O(IBCNESPC("PYR",PIEN)) Q:PIEN=""  D  Q:STOP
- . . . I $D(IBCNESPC("PYR",PIEN))\10 S IBCNESPC("INSCO")="S",STOP=1 Q
- . . S:'STOP IBCNESPC("INSCO")="A"
- Q
- ;
-AUTOUPDT(PIEN) ; Determine if the Auto update flag for payer = Yes
+AUTOUPDT(PIEN) ; Lookup screen to determine if the Auto update flag for payer = Yes
  ; Input:   PIEN        - IEN of the Payer (file 365.12)
  ; Returns  1 - Auto update flag is set to 'Y', 0 otherwise
- ; IB*2.0*549 Only include payers with eIV Auto Update flag = Yes
  N AUTOUPDT,IENS,MULT
- ;IB*668/TAZ - Changed Payer Application from IIV to EIV
+ S AUTOUPDT=0
  S MULT=$$PYRAPP^IBCNEUT5("EIV",PIEN)
  I MULT D
  . S IENS=MULT_","_PIEN_","
- . ;IB*668/TAZ - Changed location for AUTOUPDT
  . S AUTOUPDT=$$GET1^DIQ(365.121,IENS,4.01,"I")
- E  S AUTOUPDT=0
  Q AUTOUPDT
  ;
 GETCOMPS(PIEN,IBCNESPC) ; Get companies linked to payer
- ; IB*2.0*549 Get associated insurance companies 
- ; IB*2.0*549 If user wants to display insurance companies, prompt only 
- ;            for those linked to payer
- ; IB*2.0*549 Allow the user to select none, one, or multiple insurance 
- ;            companies associated with a given payer
+ ; Get associated insurance companies 
+ ; If user wants to display insurance companies, prompt only for those linked to payer
+ ; Allow the user to select none, one, or multiple insurance companies associated with a given payer
  ;
- ; IB*2.0*549 Add to IBCNESPC documentation
  ; Input
  ;  PIEN     - Payer ID
  ;  IBCNESPC - Array holding payer id and related insurance companies
  ; Output
  ;  IBCNESPC - Array holding payer id and related insurance companies
- ;  IBCNESPC("PYR",PIEN) = (1) ^ (2)
- ;    (1) Display insurance company detail - 0 = No / 1 = Yes
- ;    (2) Display all or some insurance companies - A = All companies/ S = Specified companies
+ ;  IBCNESPC("PYR",PIEN) = (1)
+ ;    (1) Display all or some insurance companies - A = All companies/ S = Specified companies
  ;
- N DIR,DIROUT,DIRUT,DTOUT,DUOUT,IBCNS,X,Y
- ; IB*2.0*549 Query to display associated insurance companies
- W !
- S DIR("A")="Do you want to display insurance company detail"
- S DIR("B")="NO"
- S DIR(0)="Y" D ^DIR
- Q:$D(DIRUT)
- ; IB*2.0*549 Display or do not display company detail
- S IBCNESPC("PYR",PIEN)=Y
- Q:'Y  ; IB*2.0*549 Do not display company detail
- ;
+ N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
  W !
  K DIR
- ;IB*737/CKB - add parentheses around the S in Selected
  S DIR("A")="Run for (A)ll Insurance Companies or (S)elected Insurance Companies: "
  S DIR("B")="A"
  S DIR(0)="SA^A:All;S:Selected" D ^DIR
  Q:$D(DIRUT)
- ; IB*2.0*549 Display all or specified companies
- S $P(IBCNESPC("PYR",PIEN),U,2)=Y
- Q:Y="A"  ; IB*2.0*549 Run for all companies
- ; IB*2.0*549 - Replaced dictionary look-up of Insurance Companies with
- ;                           call to Insurance Company look-up listman template
+ S $P(IBCNESPC("PYR",PIEN),U)=Y
+ I Y="A" Q  ; Run for all companies
+ S IBCNESPC("INSCO")="S"
  K ^TMP("IBCNILKA",$J)
- ;IB*737/CKB - changed the call to EN^IBCNILK from '4' to '5'. When the Coverage Limitations Report was added,
- ; it uses '4' to 'search for Name(s) that are blank (null)' when calling $$FILTER^IBCNINSU.
- ; NOTE: this is the only report that uses '5'
  D EN^IBCNILK(2,PIEN,5)
  I $D(^TMP("IBCNILKA",$J)) D
- .S IBCNS=""
- .F  S IBCNS=$O(^TMP("IBCNILKA",$J,IBCNS)) Q:IBCNS=""  D
- ..S IBCNESPC("PYR",PIEN,IBCNS)=""
- .K ^TMP("IBCNILKA",$J)
+ . M IBCNESPC("PYR",PIEN)=^TMP("IBCNILKA",$J)
+ K ^TMP("IBCNILKA",$J)
+ Q
+ ;
+ICODETL ;Display Insurance Company Detail.
+ N DIR,DIROUT,DIRUT,DTOUT,DUOUT,IBCNS,X,Y
+ W !
+ S DIR("A")="Do you want to display insurance company detail"
+ S DIR("B")="NO"
+ S DIR(0)="Y" D ^DIR
+ I $D(DIRUT) S STOP=1 G ICODETLX
+ S IBCNESPC("ICODETL")=Y=1
+ICODETLX ;
  Q
  ;
 DTRANGE ;
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y,IBDT180
- ; IB*2*595/DM default start date to T-180 
+ ; Default start date to T-180 
 T180 ; 
  W !
  S IBDT180=$$FMADD^XLFDT($$DT^XLFDT(),-180)
@@ -180,6 +229,7 @@ T180 ;
  S DIR("A")="Earliest Date Received"
  S DIR("A",1)="RESPONSE RECEIVED DATE RANGE SELECTION:"
  D ^DIR I $D(DIRUT) S STOP=1 Q
+ I Y>DT W !!,"Future dates not allowed." G T180
  I Y<IBDT180 W !!,"Response must not be previous to "_$$FMTE^XLFDT(IBDT180,"D")_"." G T180
  S IBCNESPC("BEGDT")=Y
  ; End date
@@ -187,6 +237,7 @@ DTRANGE1 ;
  S DIR("B")="Today"
  K DIR("A") S DIR("A")="  Latest Date Received"
  D ^DIR I $D(DIRUT) S STOP=1 Q
+ I Y>DT W !!,"Future dates not allowed." G DTRANGE1
  I Y<IBCNESPC("BEGDT") W !,"     Latest Date must not precede the Earliest Date." G DTRANGE1
  S IBCNESPC("ENDDT")=Y
  Q
@@ -209,28 +260,30 @@ PATIENT1 ;
  D ^DIC
  I $D(DUOUT)!$D(DTOUT)!(Y=-1) S STOP=1 K IBCNESPC("PAT") Q
  S IBCNESPC("PAT",$P(Y,U,1))=""
- ; IB*2.0*549 Change Select Another to Select Another Patient
  I $$ANOTHER("Patient") G PATIENT1
  Q
  ;
 ANOTHER(TYPE) ; "Select Another" prompt
- ;IB*2.0*549 Change Select Another to Select Another Patient
- ;
  ; returns 1, if response was "YES", returns 0 otherwise
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
- ; IB*2.0*549 Change Select Another to Select Another [Type]
- ;IB*737/CKB - remove the extra question mark
  S DIR("A")="Select Another "_TYPE S DIR(0)="Y",DIR("B")="NO"
  D ^DIR I $D(DIRUT) S STOP=1
  Q Y
  ;
-TYPE ;
- ;IB*2.0*549 Sort by payer name (Delete SORT tag)
- N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
+STOP() ; Determine if user wants to exit out of the whole option
+ ; Init vars
+ N DIR,X,Y,DIRUT
+ ;
  W !
- S DIR(0)="SA^S:Summary;D:Detailed"
- S DIR("A")="Run a (S)ummary or (D)etailed Report: "
- S DIR("B")="Summary"
- D ^DIR I $D(DIRUT) S STOP=1 Q
- S IBCNESPC("TYPE")=Y
- Q
+ S DIR(0)="Y"
+ S DIR("A")="Do you want to exit out of this option entirely"
+ S DIR("B")="YES"
+ S DIR("?",1)="  Enter YES to immediately exit out of this option."
+ S DIR("?")="  Enter NO to return to the previous question."
+ D ^DIR K DIR
+ I $D(DIRUT)!$D(DTOUT) S (STOP,Y)=1 G STOPX
+ I 'Y S STOP=0
+ ;
+STOPX ; STOP exit pt
+ Q Y
+ ;

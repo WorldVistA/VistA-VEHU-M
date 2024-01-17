@@ -1,5 +1,5 @@
 PSOORFI4 ;BIR/SAB - CPRS order checks and display con't ;Aug 23, 2021@14:15:33
- ;;7.0;OUTPATIENT PHARMACY;**46,74,78,99,117,131,207,258,274,300,308,251,384,391,444,441**;DEC 1997;Build 209
+ ;;7.0;OUTPATIENT PHARMACY;**46,74,78,99,117,131,207,258,274,300,308,251,384,391,444,441,700**;DEC 1997;Build 261
  ;External reference to ^PS(51.2 supported by DBIA 2226
  ;External reference to ^PS(50.607 supported by DBIA 2221
  ;External reference ^PS(55 supported by DBIA 2228
@@ -24,7 +24,9 @@ INST1 ;
  I $P($G(^PS(55,PSODFN,"LAN")),"^") S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)=" Other Pat Instruct: "_$S($G(PSONEW("SINS"))]"":PSONEW("SINS"),1:"")
  Q
 PROVCOM ;
- I $O(PRC(0)),'$G(PSOPRC) D  D KV^PSOVER1
+ N MBMSITE
+ S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0)
+ I 'MBMSITE,$O(PRC(0)),'$G(PSOPRC) D  D KV^PSOVER1
  .D EN^DDIOL("Provider Comments: ","","!")
  .F I=0:0 S I=$O(PRC(I)) Q:'I  D EN^DDIOL(PRC(I),"","!")
  .D KV^PSOVER1 S DIR(0)="Y",DIR("A")="Copy Provider Comments into the Patient Instructions",DIR("B")="No"

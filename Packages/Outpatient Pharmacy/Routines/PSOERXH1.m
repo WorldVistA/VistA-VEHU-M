@@ -1,16 +1,17 @@
 PSOERXH1 ;ALB/BWF - eRx Utilities/RPC's ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**467,527,508,581,617**;DEC 1997;Build 110
+ ;;7.0;OUTPATIENT PHARMACY;**467,527,508,581,617,700**;DEC 1997;Build 261
  ;
  Q
  ; place eRx on Hold
 HOLD ;
- N DIE,DA,DR,CURSTAT,CSTATI,LMATCH,LSTAT,SUBFIEN,NEWSTAT,RESP,DIR,RXSTAT,HCOMM,MTYPE
+ N MBMSITE,DIE,DA,DR,CURSTAT,CSTATI,LMATCH,LSTAT,SUBFIEN,NEWSTAT,RESP,DIR,RXSTAT,HCOMM,MTYPE
+ S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0)
  Q:'$G(PSOIEN)
  D FULL^VALM1 S VALMBCK="R"
  I $$DONOTFIL^PSOERXUT(PSOIEN) Q
  S MTYPE=$$GET1^DIQ(52.49,PSOIEN,.08,"I")
  S RXSTAT=$$GET1^DIQ(52.49,PSOIEN,1,"E")
- I RXSTAT="RJ"!(RXSTAT="RM")!(RXSTAT="PR") D  Q
+ I RXSTAT="RJ"!(RXSTAT="RM")!($G(MBMSITE)&($E(RXSTAT,1,3)="REM"))!(RXSTAT="PR") D  Q
  .W !!,"Cannot hold a prescription with a status of 'Rejected', 'Removed',",!,"or 'Processed",!
  .S DIR(0)="E" D ^DIR
  I RXSTAT="RXP"!(RXSTAT="RXC")!(RXSTAT="RXE") D  Q
@@ -31,28 +32,35 @@ HOLD ;
  ..W "Hold Reason required. eRx not placed in a 'Hold' status."
  ..S DIR(0)="E" D ^DIR
  .S DIR(0)="52.4919,1",DIR("A")="Additional Comments (Optional)" D ^DIR K DIR
- .I Y="^" W !,"eRx NOT placed on hold." D ^DIR K DIR Q
+ .I Y="^" W !,"eRx NOT placed on hold." K DIR S DIR(0)="E" D ^DIR Q
  .S HCOMM=$G(Y)
  .S DIE="52.49",DR="1///"_RESP,DA=PSOIEN D ^DIE K DIE
  .S SUBFIEN=$$NSTAT(PSOIEN,RESP,HCOMM)
  .K @VALMAR D INIT^PSOERX1
+ .S PSORFRSH=1
  K Y
  S RESP=$$HDIR()
  I 'RESP D  Q
- .W "Hold Reason required. eRx not placed in a 'Hold' status."
- .S DIR(0)="E" D ^DIR
+ . W "Hold Reason required. eRx not placed in a 'Hold' status."
+ . S DIR(0)="E" D ^DIR
  S DIR(0)="52.4919,1",DIR("A")="Additional Comments (Optional)" D ^DIR K DIR
  I Y="^" Q
  S HCOMM=Y
- S DIE="52.49",DR="1///"_RESP,DA=PSOIEN D ^DIE K DIE
+ S DIE="52.49",DR="1////"_RESP,DA=PSOIEN D ^DIE K DIE
  S FDA(52.4919,"+1,"_PSOIEN_",",.01)=$$NOW^XLFDT()
  S FDA(52.4919,"+1,"_PSOIEN_",",.02)=RESP
  S FDA(52.4919,"+1,"_PSOIEN_",",.03)=$G(DUZ)
  S FDA(52.4919,"+1,"_PSOIEN_",",1)=HCOMM
+ W !,"Updating..."
  D UPDATE^DIE(,"FDA","NEWSTAT","ERR") K FDA
  S SUBFIEN=$O(NEWSTAT(0)) Q:'SUBFIEN
  S SUBFIEN=$G(NEWSTAT(SUBFIEN))
+ H .5 W "done.",$C(7) H 1
+ S PSORFRSH=1
+ ; Batch Hold
+ D BATCHHLD^PSOERXH2(PSOIEN,RESP,HCOMM,"H")
  K @VALMAR D INIT^PSOERX1
+ I $G(VALM("TITLE"))'="eRx Holding Queue Display" K VALMBCK
  Q
 NSTAT(IEN,STAT,COMM) ;
  N SUBFIEN
@@ -74,20 +82,26 @@ HDIR(HTYP) ;
  Q $P(Y,U)
  ; remove hold from eRx
 UNHOLD ;
- N Y,DIR,DIE,DA,DR,NEWSIEN,RXSTAT,RXSTATI,MTYPE,QUIT,PEND
+ N Y,DIR,DIE,DA,DR,NEWSIEN,RXSTAT,RXSTATI,MTYPE,QUIT,PEND,HOLDIEN
  D FULL^VALM1 S VALMBCK="R"
  I $$DONOTFIL^PSOERXUT(PSOIEN) Q
  S MTYPE=$$GET1^DIQ(52.49,PSOIEN,.08,"I")
  S PEND=$$GET1^DIQ(52.49,PSOIEN,25.2,"I")
- S RXSTAT=$$GET1^DIQ(52.49,PSOIEN,1,"E") I RXSTAT="RJ"!(RXSTAT="RM")!(RXSTAT="PR") D  Q
+ S RXSTAT=$$GET1^DIQ(52.49,PSOIEN,1,"E") I RXSTAT="RJ"!(RXSTAT="RM")!($G(MBMSITE)&($E(RXSTAT,1,3)="REM"))!(RXSTAT="PR") D  Q
  .W !!,"Cannot un-hold a prescription with a status of 'Rejected', 'Removed',",!,"or 'Processed",!
  .S DIR(0)="E" D ^DIR
  W !
  I $E($$GET1^DIQ(52.49,PSOIEN,1,"E"),1)'="H" D  Q
  .W !,"This eRx is not currently on hold. Please use the 'Hold'",!,"function to update the hold status and comments.",!!
- .S DIR(0)="E"
+ .K DIR S DIR(0)="E"
  .D ^DIR
  .K @VALMAR D INIT^PSOERX1
+ ; Un-Hold Comments
+ S DIR(0)="52.4919,1",DIR("A")="Additional Comments (Optional)" D ^DIR K DIR
+ I Y="^" Q
+ S UHCOMM=$G(Y)
+ S HOLDIEN=$$GET1^DIQ(52.49,PSOIEN,1,"I")
+ ;
  I RXSTAT="HC" D
  .W !,"A change request has been generated for this NewRx record.",!,"Are you sure you like to unhold this prescription?"
  .K DIR S DIR(0)="Y",DIR("B")="Y" D ^DIR
@@ -97,7 +111,7 @@ UNHOLD ;
  I PEND,RXSTAT="HC" D  Q
  .I PEND D
  ..S RXSTATI=$$PRESOLV^PSOERXA1("PR","ERX")
- ..D UPDSTAT^PSOERXU1(PSOIEN,"PR","HOLD REMOVED BY "_$$NAME^XUSER(DUZ))
+ ..D UPDSTAT^PSOERXU1(PSOIEN,"PR",UHCOMM)
  .I 'PEND D
  ..N LSFOUND,LSLOOP,STDAT,LSTAT,LKNOWN,LKNOWNE
  ..S LSFOUND=0
@@ -113,7 +127,7 @@ UNHOLD ;
  ....S LKNOWNE=$$GET1^DIQ(52.4919,LKNOWN_","_PSOIEN_",",.02,"E")
  ...I LKNOWNE="N"!(LKNOWNE="") S LKNOWNE="I"
  ..S RXSTATI=$$PRESOLV^PSOERXA1(LKNOWNE,"ERX")
- ..D UPDSTAT^PSOERXU1(PSOIEN,LKNOWNE,"HOLD REMOVED BY "_$$NAME^XUSER(DUZ))
+ ..D UPDSTAT^PSOERXU1(PSOIEN,LKNOWNE,UHCOMM)
  .W !,"eRx removed from hold status, and placed to '"_$$SENTENCE^XLFSTR($$GET1^DIQ(52.45,RXSTATI,.02,"E"))_"'."
  .K DIR S DIR(0)="E" D ^DIR K DIR
  .K @VALMAR D INIT^PSOERX1
@@ -124,8 +138,11 @@ UNHOLD ;
  I '$G(RXSTATI),MTYPE="N" S RXSTATI=$$PRESOLV^PSOERXA1("I","ERX"),RXSTAT=$$GET1^DIQ(52.45,RXSTATI,.01,"E")
  I '$G(RXSTATI),MTYPE="RE" S RXSTATI=$$PRESOLV^PSOERXA1("RXI","ERX"),RXSTAT=$$GET1^DIQ(52.45,RXSTATI,.01,"E")
  I '$G(RXSTATI),MTYPE="CX" S RXSTATI=$$PRESOLV^PSOERXA1("CXI","ERX"),RXSTAT=$$GET1^DIQ(52.45,RXSTATI,.01,"E")
- D UPDSTAT^PSOERXU1(PSOIEN,RXSTAT,"HOLD REMOVED BY "_$$NAME^XUSER(DUZ))
+ D UPDSTAT^PSOERXU1(PSOIEN,RXSTAT,UHCOMM)
  W !,"eRx removed from hold status, and placed to '"_$$SENTENCE^XLFSTR($$GET1^DIQ(52.45,RXSTATI,.02,"E"))_"'."
  K DIR S DIR(0)="E" D ^DIR K DIR
+ ;Batch Un-Hold
+ D BATCHHLD^PSOERXH2(PSOIEN,HOLDIEN,UHCOMM,"U")
  K @VALMAR D INIT^PSOERX1
+ I $G(VALM("TITLE"))'="eRx Holding Queue Display" K VALMBCK
  Q

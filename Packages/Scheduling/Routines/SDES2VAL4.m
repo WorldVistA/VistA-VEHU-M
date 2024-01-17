@@ -1,0 +1,16 @@
+SDES2VAL4 ;ALB/MGD - SDES2 INSTITUTION UTILITIES ;NOV 21, 2023
+ ;;5.3;Scheduling;**870**;Aug 13, 1993;Build 3
+ ;;Per VHA Directive 6402, this routine should not be modified
+ ;
+ ; Reference to ^DIC(4 in #10090
+ ;
+ Q
+ ;
+VALSTATIONNUM(SDERRORS,STATION,SDDATETIME) ; Validate Station Number
+ N RESULTS
+ I STATION'="" D
+ .I (($L(STATION)<3)!($L(STATION)>7)) D ERRLOG^SDESJSON(.SDERRORS,522) Q
+ .;
+ .D FIND^DIC(4,,"@;99","X",STATION,,"D",,,"RESULTS")
+ .I '$D(RESULTS("DILIST",2)) D ERRLOG^SDES2JSON(.SDERRORS,197) Q
+ Q

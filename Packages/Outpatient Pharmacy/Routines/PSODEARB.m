@@ -1,5 +1,5 @@
 PSODEARB ;WILM/BDB - Print Disuser prescribers with privledges; ;9/28/21  14:08
- ;;7.0;OUTPATIENT PHARMACY;**545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**545,731**;DEC 1997;Build 18
  ;External reference to VA(200 is supported by DBIA 10060
  ;Reference DBIA 2343  - $$ACTIVE^XUSER
  ;Reference DBIA 2171  - PARENT^XUAF4()
@@ -52,6 +52,7 @@ OEN ;
  . W !!,?9,LEN
  . S ND=0 F  S ND=$O(^XTMP(PSONS,$J,DV,ND)) Q:'ND  D  Q:$D(DIRUT)
  .. S DAT=^TMP(PSONS,$J,ND),NPIEN=$P(DAT,"^"),DEA=$P(DAT,"^",2)
+ .. I $P(DAT,"^",3)=.03 Q  ;P731 detox/x-waiver removal
  .. I $P(DAT,"^",9,14)'["Y" Q  ;check for a schedule
  .. S ARR(NPIEN)=""
  .. S PSOSPS=$G(^VA(200,NPIEN,"PS"))

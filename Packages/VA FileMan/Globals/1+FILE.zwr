@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: FILE
 ZWR
-^DIC(0)="FILE^1^19200.112^2893"
+^DIC(0)="FILE^1^19200.112^2898"
 ^DIC(.11,0)="INDEX^.11"
 ^DIC(.11,0,"DD")="^"
 ^DIC(.11,0,"DEL")="^"
@@ -235,7 +235,7 @@ ZWR
 ^DIC(.85,0,"GL")="^DI(.85,"
 ^DIC(.85,0,"LAYGO")="^"
 ^DIC(.85,0,"WR")="^"
-^DIC(.85,"%",0)="^1.005^^0"
+^DIC(.85,"%",0)="^1.005"
 ^DIC(.85,"%D",0)="^^13^13^3160102^"
 ^DIC(.85,"%D",1,0)="The LANGUAGE file is used both to officially identify a language, and to"
 ^DIC(.85,"%D",2,0)="store MUMPS code needed to do language-specific conversions of data such"
@@ -250,7 +250,7 @@ ZWR
 ^DIC(.85,"%D",11,0)="A note to VISTA developers: Although users can select entries by name, "
 ^DIC(.85,"%D",12,0)="software should use the official two or three letter codes to eliminate "
 ^DIC(.85,"%D",13,0)="mistakes resulting from languages that have similar spelling."
-^DIC(.85,"%MSC")=3231216.222014
+^DIC(.85,"%MSC")=3121114.111954
 ^DIC(.86,0)="DATA TYPE PROPERTY^.86I"
 ^DIC(.86,0,"DD")="^"
 ^DIC(.86,0,"DEL")="^"
@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3231127.010847
+^DIC(2,"%MSC")=3240117.15572
 ^DIC(3.05,0)="FAILED ACCESS ATTEMPTS LOG^3.05"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
@@ -4403,6 +4403,27 @@ ZWR
 ^DIC(52.11,"%D",3,0)="time information.  Ideally, as the pharmacy receives the Rx"
 ^DIC(52.11,"%D",4,0)="from the patient, the information will be entered into this file."
 ^DIC(52.11,"%D",5,0)="within the outpatient pharmacy package."
+^DIC(52.35,0)="ERX HOLDING QUEUE PREFERENCES^52.35"
+^DIC(52.35,0,"AUDIT")=""
+^DIC(52.35,0,"DD")=""
+^DIC(52.35,0,"DEL")="@"
+^DIC(52.35,0,"GL")="^PS(52.35,"
+^DIC(52.35,0,"LAYGO")="@"
+^DIC(52.35,0,"RD")=""
+^DIC(52.35,0,"WR")=""
+^DIC(52.35,0,"AUDIT")=""
+^DIC(52.35,0,"DD")=""
+^DIC(52.35,0,"DEL")="@"
+^DIC(52.35,0,"GL")="^PS(52.35,"
+^DIC(52.35,0,"LAYGO")="@"
+^DIC(52.35,0,"RD")=""
+^DIC(52.35,0,"WR")=""
+^DIC(52.35,"%",0)="^1.005^^0"
+^DIC(52.35,"%D",0)="^^3^3^3221104^^^"
+^DIC(52.35,"%D",1,0)="This file contains user specific preferences for the eRx Holding Queue option."
+^DIC(52.35,"%D",2,0)="If a specific user does not have an entry in this file, default values apply."
+^DIC(52.35,"%D",3,0)="Default values are explained in the description of each sub-file in this file."
+^DIC(52.35,"%MSC")=3240117.155648
 ^DIC(52.4,0)="RX VERIFY^52.4P26"
 ^DIC(52.4,0,"GL")="^PS(52.4,"
 ^DIC(52.4,0,"GL")="^PS(52.4,"
@@ -4558,7 +4579,7 @@ ZWR
 ^DIC(52.49,0,"WR")="@"
 ^DIC(52.49,"%D",0)="^1.001^1^1^3170711^^"
 ^DIC(52.49,"%D",1,0)="This file holds the eRx prescriptions received from Change Healthcare."
-^DIC(52.49,"%MSC")=3220624.222755
+^DIC(52.49,"%MSC")=3240117.155648
 ^DIC(52.5,0)="RX SUSPENSE^52.5PI"
 ^DIC(52.5,0,"GL")="^PS(52.5,"
 ^DIC(52.5,0,"GL")="^PS(52.5,"
@@ -5516,7 +5537,7 @@ ZWR
 ^DIC(58.41,"%D",3,0)=" "
 ^DIC(58.41,"%D",4,0)="While some of the parameters are updated by the user via a menu option, others"
 ^DIC(58.41,"%D",5,0)="are used internally for automated scheduled transmissions."
-^DIC(58.41,"%MSC")=3230923.192425
+^DIC(58.41,"%MSC")=3240117.155659
 ^DIC(58.42,0)="SPMP EXPORT BATCH^58.42"
 ^DIC(58.42,0,"AUDIT")=""
 ^DIC(58.42,0,"DD")=""
@@ -21330,7 +21351,7 @@ ZWR
 ^DIC(350.9,"%D",10,0)="This file should always be edited by use of the provided options."
 ^DIC(350.9,"%D",11,0)=" "
 ^DIC(350.9,"%D",12,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(350.9,"%MSC")=3231127.010208
+^DIC(350.9,"%MSC")=3240117.155549
 ^DIC(351,0)="MEANS TEST BILLING CLOCK^351I"
 ^DIC(351,0,"DD")="@"
 ^DIC(351,0,"GL")="^IBE(351,"
@@ -22430,6 +22451,7 @@ ZWR
 ^DIC(355.32,"%D",0)="^^2^2^2950808^^^^"
 ^DIC(355.32,"%D",1,0)="This file contains the detail by plan and effective date of the categories"
 ^DIC(355.32,"%D",2,0)="that may be restricted for insurance coverage."
+^DIC(355.32,"%MSC")=3240117.155549
 ^DIC(355.33,0)="INSURANCE VERIFICATION PROCESSOR^355.33"
 ^DIC(355.33,0,"AUDIT")="@"
 ^DIC(355.33,0,"DD")="@"
@@ -26494,25 +26516,6 @@ ZWR
 ^DIC(392.43,0,"RD")="d"
 ^DIC(392.43,0,"WR")="D"
 ^DIC(392.43,"%",0)="^1.005^^0"
-^DIC(392.5,0)="BENEFICIARY TRAVEL DASHBOARD CONFIG^392.5"
-^DIC(392.5,0,"AUDIT")="@"
-^DIC(392.5,0,"DD")="@"
-^DIC(392.5,0,"DEL")="@"
-^DIC(392.5,0,"GL")="^DGBT(392.5,"
-^DIC(392.5,0,"LAYGO")="@"
-^DIC(392.5,0,"RD")="@"
-^DIC(392.5,0,"WR")="@"
-^DIC(392.5,0,"AUDIT")="@"
-^DIC(392.5,0,"DD")="@"
-^DIC(392.5,0,"DEL")="@"
-^DIC(392.5,0,"GL")="^DGBT(392.5,"
-^DIC(392.5,0,"LAYGO")="@"
-^DIC(392.5,0,"RD")="@"
-^DIC(392.5,0,"WR")="@"
-^DIC(392.5,"%",0)="^1.005^^0"
-^DIC(392.5,"%D",0)="^^2^2^3110906^"
-^DIC(392.5,"%D",1,0)="This file stores the institutions that are tracked on the Beneficiary "
-^DIC(392.5,"%D",2,0)="Travel Dashboard."
 ^DIC(392.51,0)="BENEFICIARY TRAVEL DASHBOARD AUDIT^392.51"
 ^DIC(392.51,0,"AUDIT")="@"
 ^DIC(392.51,0,"DD")="@"
@@ -29852,7 +29855,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3231127.010258
+^DIC(409.93,"%MSC")=3240117.16081
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
@@ -52785,7 +52788,7 @@ ZWR
 ^DIC(8925.99,"%D",1,0)="This file contains the site-configurable parameters for the Text Integration"
 ^DIC(8925.99,"%D",2,0)="Utilities package.  It will have one entry for each division, to support"
 ^DIC(8925.99,"%D",3,0)="variable definition of package behavior at multi-divisional facilities."
-^DIC(8925.99,"%MSC")=3230415.22464
+^DIC(8925.99,"%MSC")=3240117.155418
 ^DIC(8926,0)="TIU PERSONAL PREFERENCES^8926"
 ^DIC(8926,0,"AUDIT")="@"
 ^DIC(8926,0,"DD")="@"
@@ -58446,7 +58449,6 @@ ZWR
 ^DIC("B","BENEFICIARY TRAVEL CERTIFICATI",392.2)=""
 ^DIC("B","BENEFICIARY TRAVEL CLAIM",392)=""
 ^DIC("B","BENEFICIARY TRAVEL DASHBOARD A",392.51)=""
-^DIC("B","BENEFICIARY TRAVEL DASHBOARD C",392.5)=""
 ^DIC("B","BENEFICIARY TRAVEL DENIAL LETT",392.6)=""
 ^DIC("B","BENEFICIARY TRAVEL DENIAL REAS",392.8)=""
 ^DIC("B","BENEFICIARY TRAVEL DISTANCE",392.1)=""
@@ -59006,6 +59008,7 @@ ZWR
 ^DIC("B","ERX EXTERNAL PERSON",52.48)=""
 ^DIC("B","ERX EXTERNAL PHARMACY",52.47)=""
 ^DIC("B","ERX HOLDING QUEUE",52.49)=""
+^DIC("B","ERX HOLDING QUEUE PREFERENCES",52.35)=""
 ^DIC("B","ERX SERVICE REASON CODES",52.45)=""
 ^DIC("B","ESP ACTIVITY CODES",911)=""
 ^DIC("B","ESP ACTIVITY REPORT",910.1)=""

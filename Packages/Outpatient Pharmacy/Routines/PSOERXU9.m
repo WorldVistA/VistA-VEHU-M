@@ -1,5 +1,5 @@
 PSOERXU9 ;ALB/ART - eRx Holding Queue Utilities ;02/02/2021
- ;;7.0;OUTPATIENT PHARMACY;**617**;DEC 1997;Build 110
+ ;;7.0;OUTPATIENT PHARMACY;**617,700**;DEC 1997;Build 261
  ;
  ;There are no APIs defined for the eRx Holding Queue (52.49) and associated files
  ; in the Pharmacy Reengineering (PRE) Application Program Interface (API) Manual
@@ -114,3 +114,54 @@ ERXDATA(ERXDATA,ERXIEN) ;Get eRx Holding Queue Data
  S ERXDATA(5)=PATSTR1_U_PATSTR2_U_""_U_PATCITY_U_PATSTATE_U_PATZIP_U_$$FMTE^XLFDT(PATDOB,"5DZ")
  ;
  Q
+ ;
+ALRGDATA(ALRGDATA,ERXIEN,SORTED) ; Get eRx Patient Allergy Data
+ ;Inputs: (r) ALRGDATA - reference to return array
+ ;        (r) ERXIEN   - Pointer to the ERX HOLDING QUEUE file (#52.49)
+ ;        (o) SORTED   - Return the list of Allergies in Alphabetical Order
+ ;
+ ;Output: Populated ALRGDATA array.  This is a sub-multiple data so each row of the array is one sequence number
+ ; ALRGDATA(n)=Seguence number^Source of information^Effective date^Expiration date^Drug product code^Drug product qualifier
+ ;  ^Drug product text^Reaction text^reaction code^Severity text^Severity code^Adverse event text^Adverse event code
+ ;
+ Q:'$D(^PS(52.49,+$G(ERXIEN),0))
+ K ALRGDATA
+ ;
+ N DATA,ALRARRAY
+ D GETS^DIQ(52.49,ERXIEN,"303*","IE","DATA") M ALRARRAY=DATA(52.49303)
+ ;
+ ; We got data, build the output one row per sequence number
+ ; fileNum in this case is 52.49
+ ; exSeq is the sequence number and the ien as one subscript when building the
+ ; final array that will be broken up
+ ;
+ N EXSEQ,INDEX,TMPDATA,COUNT
+ S EXSEQ=""
+ F  S EXSEQ=$O(ALRARRAY(EXSEQ)) Q:EXSEQ=""  D
+ . S INDEX=$S($G(SORTED):ALRARRAY(EXSEQ,3,"E")_" "_EXSEQ,1:EXSEQ)
+ . S $P(TMPDATA(INDEX),U,1)=ALRARRAY(EXSEQ,.01,"E")
+ . S $P(TMPDATA(INDEX),U,2)=ALRARRAY(EXSEQ,.02,"E")
+ . S $P(TMPDATA(INDEX),U,3)=ALRARRAY(EXSEQ,.03,"I")
+ . S $P(TMPDATA(INDEX),U,4)=ALRARRAY(EXSEQ,.04,"E")
+ . S $P(TMPDATA(INDEX),U,5)=ALRARRAY(EXSEQ,1,"E")
+ . S $P(TMPDATA(INDEX),U,6)=ALRARRAY(EXSEQ,2,"E")
+ . S $P(TMPDATA(INDEX),U,7)=ALRARRAY(EXSEQ,3,"E")
+ . S $P(TMPDATA(INDEX),U,8)=ALRARRAY(EXSEQ,4,"E")
+ . S $P(TMPDATA(INDEX),U,9)=ALRARRAY(EXSEQ,5,"E")
+ . S $P(TMPDATA(INDEX),U,10)=ALRARRAY(EXSEQ,6,"E")
+ . S $P(TMPDATA(INDEX),U,11)=ALRARRAY(EXSEQ,7,"E")
+ . S $P(TMPDATA(INDEX),U,12)=ALRARRAY(EXSEQ,8,"E")
+ . S $P(TMPDATA(INDEX),U,13)=ALRARRAY(EXSEQ,9,"E")
+ S EXSEQ="",COUNT=0
+ F  S EXSEQ=$O(TMPDATA(EXSEQ)) Q:EXSEQ=""  D
+ . S COUNT=COUNT+1,ALRGDATA(COUNT)=TMPDATA(EXSEQ)
+ Q
+ ;
+CHVAELIG(DFN) ; Returns whether the VistA Patient is ChampVA Eligible or not (Used by MbM sites only)
+ ; Input: DFN - Pointer to the PATIENT file (#2)
+ ;Output: 1: ChampVA Eligible | 0: Unable to Verify or Not Eligibile
+ I $$GET1^DIQ(59.7,1,102,"I")'="MBM" Q "0^NOT AN MbM SITE"
+ N MBMELAPI,EXEC,ELIG S MBMELAPI="CHVAELIG^PSOZRXU0"
+ I $T(@MBMELAPI)="" Q "0^UNABLE TO VERIFY"
+ S EXEC="S ELIG=$$"_MBMELAPI_"("_DFN_")" X EXEC
+ Q $S(ELIG=1:"1^ELIGIBLE",ELIG=2:"2^SB",1:"0^NOT ELIGIBLE")
