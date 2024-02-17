@@ -1,5 +1,5 @@
-KMPUTLW ;SP/JML - Manage REST interfaces for VSM Monitors ;2/1/2023
- ;;4.0;CAPACITY MANAGEMENT;**1,2,3**;3/1/2018;Build 17
+KMPUTLW ;SP/JML - Manage REST interfaces for VSM Monitors ;11/1/2023
+ ;;4.0;CAPACITY MANAGEMENT;**1,3,4**;3/1/2018;Build 36
  ;
  ; Reference to GETENV^%ZOSV in ICR #10097
  ; Reference to $$SITE^VASITE in ICR #10112
@@ -107,7 +107,6 @@ CANMSG(MTYPE,KMPMKEY,KMPSITE,KMPD) ; Repeatable, configured informational mail m
  Q
  ;
 CFGMSG(KMPRQNAM) ;  Send configuration data to update Location Table at National VSM Database
- QUIT
  N KMPCFG,KMPJSON,KMPMARR,KMPMKEY,KMPMON,KMPSCODE
  I $G(KMPRQNAM)="" S KMPRQNAM=$$USERNAME^KMPVCCFG($G(DUZ))
  ;
@@ -124,7 +123,6 @@ RETRY(KMPMON) ;
  N KMPMKEY,KMPVER,ZTDESC,ZTDTH,ZTRTN
  I KMPMON.Function'="Retry" Q "Incorrect Function Type"
  S KMPMKEY=KMPMON.Monitor
- I $$GETVAL^KMPVCCFG(KMPMKEY,"VERSION",8969)<3 Q KMPMKEY_" is not a real time monitor"
  S ZTDTH=$H
  I KMPMKEY="VTCM" S ZTRTN="RETRY^KMPTCMRT",ZTDESC="VTCM RETRY"
  I KMPMKEY="VSTM" S ZTRTN="RETRY^KMPSTMRT",ZTDESC="VSTM RETRY"
@@ -156,12 +154,11 @@ PACKAGES(KMPJSON) ; Get data from PACKAGE file
  S KMPPARR=##class(%DynamicArray).%New()
  S KMPPRE=""
  F  S KMPPRE=$O(^DIC(9.4,"C",KMPPRE)) Q:KMPPRE=""  D
- .S KMPPACK=##class(%DynamicObject).%New()
  .S KMPIEN=""
- .; NO WAY TO DECIDE WHICH IS CORRECT SO TAKE FIRST - DON'T LOOP
- .S KMPIEN=$O(^DIC(9.4,"C",KMPPRE,KMPIEN)) Q:KMPIEN=""  D
+ .F  S KMPIEN=$O(^DIC(9.4,"C",KMPPRE,KMPIEN)) Q:KMPIEN=""  D
  ..S KMPPNAM=$P($G(^DIC(9.4,KMPIEN,0)),"^")
- ..S KMPPACK.Name=KMPPNAM,KMPPACK.Prefix=KMPPRE
+ ..S KMPPACK=##class(%DynamicObject).%New()
+ ..S KMPPACK.Name=KMPPNAM,KMPPACK.Prefix=KMPPRE,KMPPACK.Ien=KMPIEN
  ..D KMPPARR.%Push(KMPPACK)
  S KMPJSON.Packages=KMPPARR
  Q
@@ -247,8 +244,8 @@ MON(KMPJSON) ;
  .S KMPMON.NationalSupportEmailAddress=$P(KMP3,"^",2)
  .S KMPMON.OnOff=$P(KMPCFG,"^",2)
  .S KMPMON.Realtime=$P(KMPCFG,"^",12)
- .S KMPMON.ScheduleFrequency=$P(KMPCFG,"^",7)
- .S KMPMON.ScheduleStart=$P(KMPCFG,"^",8)
+ .S KMPMON.HttpRequestMaxLength=$P(KMPCFG,"^",7)
+ .S KMPMON.MonitorStartDelay=$P(KMPCFG,"^",8)
  .S KMPMON.StartPerfmon=$P(KMPCFG,"^",13)
  .S KMPMON.TaskmanOption=$P(KMPCFG,"^",11)
  .S KMPMON.Version=$P(KMPCFG,"^",3)
@@ -274,7 +271,7 @@ TSTAMP(KMPDAY,KMPFORMAT,KMPTZ) ;
  I $G(KMPTZ)=1 S KMPRTS=KMPRTS_"Z"_KMPTZONE
  S KMPUTC=$SYSTEM.Util.LocalWithZTIMEZONEtoUTC(KMPDAY)
  S $P(KMPRTS,"^",2)=$ZDATETIME(KMPUTC,3)
- S $P(KMPRTS,"^",3)=(KMPUTC - 47117 * 86400 + $P($P(KMPUTC,",",2),"."))
+ S $P(KMPRTS,"^",3)=(KMPUTC-47117*86400+$P($P(KMPUTC,",",2),"."))
  S $P(KMPRTS,"^",4)=$SYSTEM.Util.IsDST()
  Q KMPRTS
  ;
@@ -290,7 +287,7 @@ SHORTDAT(KMPDAY,KMPFORMAT) ; convert $h or fileman to external date
 UTC(KMPZTS) ; Requres $ZTIMSTAMP to convert to Linux Epoch format
  S KMPZTS=$G(KMPZTS) I KMPZTS="" S KMPZTS=$ZTIMESTAMP
  ; get delta from $h start to Epoch start -- then convert to seconds
- Q (KMPZTS - 47117 * 86400 + $P($P(KMPZTS,",",2),"."))
+ Q (KMPZTS-47117*86400+$P($P(KMPZTS,",",2),"."))
  ;
 NODETYPE(INSTANCE) ; 
  ;  from ZSTU

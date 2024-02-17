@@ -1,5 +1,5 @@
-RAO7PC2 ;HISC/GJC-Part two for Return Narrative (EN3^RAO7PC1) ;8/18/08  09:47
- ;;5.0;Radiology/Nuclear Medicine;**1,11,14,16,22,27,45,75,56,95,97,143**;Mar 16, 1998;Build 11
+RAO7PC2 ;HISC/GJC-Part two for Return Narrative (EN3^RAO7PC1) ; Sep 11, 2023@14:32:30
+ ;;5.0;Radiology/Nuclear Medicine;**1,11,14,16,22,27,45,75,56,95,97,143,206**;Mar 16, 1998;Build 8
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;Supported IA #1571 ^LEX(757.01
  ;Supported IA #10104 UP^XLFSTR
@@ -22,7 +22,10 @@ CASE(Y) ; Retrieve exam data for specified inverse exam date range.
  S RAOPRC(0)=$G(^RAMIS(71,+$P(RAORD(0),"^",2),0))
  S RAOPRC=$S($P(RAOPRC(0),"^")]"":$P(RAOPRC(0),"^"),1:"Unknown")
  S RAPDIAG(0)=$G(^RA(78.3,+$P(RAEXAM(0),"^",13),0))
- S RATMP=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+$P(RAEXAM(0),U,13),0)),U,6),.01)
+ ;p206/KLM - EXPRESSION field (#6) deprecated. Use DISPLAY TEXT field (#100)
+ ;S RATMP=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+$P(RAEXAM(0),U,13),0)),U,6),.01)
+ S RATMP=$P($G(^RA(78.3,+$P(RAEXAM(0),U,13),1)),U)
+ ;p206 end
  S RAPDIAG=$P(RAPDIAG(0),"^")_$S(RATMP="":"",1:" ("_RATMP_")")
  S RARPT=+$P(RAEXAM(0),"^",17)
  ; RARPTST="NO REPORT" if no ^RARPT(ien) OR no data for Report Status
@@ -63,7 +66,9 @@ CASE(Y) ; Retrieve exam data for specified inverse exam date range.
  . S Z=0 F  S Z=$O(^RADPT(RADFN,"DT",RAINVXDT,"P",Y,"DX",Z)) Q:Z'>0  D
  .. S RASDIAG=+$G(^RADPT(RADFN,"DT",RAINVXDT,"P",Y,"DX",Z,0))
  .. S RASDIAG(0)=$G(^RA(78.3,RASDIAG,0))
- .. S RATMP=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+RASDIAG,0)),U,6),.01)
+ .. ;p206 - EXPRESSION field (#6) deprecated. Use DISPLAY TEXT field (#100)
+ .. ;S RATMP=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+RASDIAG,0)),U,6),.01)
+ .. S RATMP=$P($G(^RA(78.3,+RASDIAG,1)),U)
  .. S RASDIAG(1)=$P(RASDIAG(0),"^")_$S(RATMP="":"",1:" ("_RATMP_")")
  .. I RASDIAG(1)]"",(RAINCLUD) D
  ... S RACNT=RACNT+1,^TMP($J,"RAE2",RADFN,Y,RAPROC,"D",RACNT)=RASDIAG(1)

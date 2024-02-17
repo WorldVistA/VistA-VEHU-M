@@ -1,5 +1,5 @@
-SDESAPPTDATA ;ALB/TAW,MGD,RRM,LAB,DJS,ANU,BWF - VISTA Appointment data getter ;JUNE 27, 2023@11:38
- ;;5.3;Scheduling;**788,814,815,820,823,827,837,838,839,846,847,860**;Aug 13, 1993;Build 12
+SDESAPPTDATA ;ALB/TAW,MGD,RRM,LAB,DJS,BWF,ANU - VISTA Appointment data getter ;OCT 12, 2023@11:38
+ ;;5.3;Scheduling;**788,814,815,820,823,827,837,838,839,846,847,860,864**;Aug 13, 1993;Build 15
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to ^VA(200 in ICR #10060
@@ -98,6 +98,9 @@ SUMMARY(APPTDATA,IEN) ;
  S APPTDATA("DFN")=SDDFN
  S APPTDATA("Patient","EligibilityIEN")=$$GET1^DIQ(2,SDDFN_",",.361,"I")
  S APPTDATA("Patient","Name")=$$GET1^DIQ(2,SDDFN_",",.01,"E")
+ ; 864
+ S APPTDATA("Patient","DateOfBirth")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDDFN_",",.03,"I"))
+ S APPTDATA("Patient","DateOfDeath")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDDFN_",",.351,"I"))
  ;
  ; patient comments
  D GETPATCOMMENTS(.APPTDATA,IEN)
@@ -201,6 +204,9 @@ SUMMARY2(APPTDATA,IEN) ;
  S APPTDATA("DFN")=SDDFN
  S APPTDATA("Patient","EligibilityIEN")=$$GET1^DIQ(2,SDDFN_",",.361,"I")
  S APPTDATA("Patient","Name")=$$GET1^DIQ(2,SDDFN_",",.01,"E")
+ ; 864
+ S APPTDATA("Patient","DateOfBirth")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDDFN_",",.03,"I"))
+ S APPTDATA("Patient","DateOfDeath")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDDFN_",",.351,"I"))
  ; provider data elements
  S PROV=$G(APPTARY(FN,IENS,.16,"I"))
  I PROV D

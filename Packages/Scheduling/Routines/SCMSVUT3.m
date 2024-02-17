@@ -1,5 +1,6 @@
-SCMSVUT3   ;BP/JRP - HL7 segment & field validation utilities ; Mar 04, 2021@10:12
- ;;5.3;Scheduling;**142,180,208,239,395,441,543,777**;AUG 13, 1993;Build 4
+SCMSVUT3 ;BP/JRP/DMR - HL7 segment & field validation utilities ; Oct 19, 2023@10:47
+ ;;5.3;Scheduling;**142,180,208,239,395,441,543,777,864**;AUG 13, 1993;Build 15
+ ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;Standard input parameters
  ;   DATA  - Value to validate
@@ -161,7 +162,7 @@ MSTSTAT(DATA) ;
  ;Check for valid MST status codes Y,N,D,U
  ;
  ;INPUT
- ;   DATA - the MST Status passed in by routine SCMSVZEL 
+ ;   DATA - the MST Status passed in by routine SCMSVZEL
  ;
  ;OUTPUT
  ;   1 - Valid MST Status
@@ -232,4 +233,5 @@ AOLOC(DATA,DFN) ;Validate Agent Orange exposure location (error 7130)
  ;No claim - shouldn't have a location
  I 'VASV(2) Q $S(DATA="":1,1:0)
  ;Claims exposure - must have a valid location
- Q $S(DATA="":0,"VKOB"[DATA:1,1:0)  ;SD*5.3*777 - Include BWN
+ ;Q $S(DATA="":0,"VKOB"[DATA:1,1:0)  ;SD*5.3*777 - Include BWN
+ Q $S(DATA="":0,"BKVTLCGJO"[DATA:1,1:0)  ;SD*5.3*862

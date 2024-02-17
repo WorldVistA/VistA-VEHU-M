@@ -1,5 +1,5 @@
-SDES2RSTCAVAIL ;ALB/LAB - VISTA SCHEDULING SDES2 RESTORE CLIN AVAIL ;JUL 26, 2023
- ;;5.3;Scheduling;**861**;Aug 13, 1993;Build 17
+SDES2RSTCAVAIL ;ALB/LAB - VISTA SCHEDULING SDES2 RESTORE CLIN AVAIL ;OCT 30, 2023
+ ;;5.3;Scheduling;**861,864**;Aug 13, 1993;Build 15
  ;;Per VHA Directive 6402, this routine should not be modified
  Q
  ;
@@ -49,7 +49,7 @@ VALIDATE(ERRORS,CLINIC,DATETIME,RESTORETYPE) ; validate input array variables
  Q:$D(ERRORS)
  I '$$CLNCK^SDUTL2(CLINIC,1) S ERRORS("Restore",1)="" D ERRLOG^SDES2JSON(.ERRORS,52,"Clinic stop code restriction invalid. MUST be corrected before continuing.")
  Q:$D(ERRORS)
- S DATETIME=$$VALISODTTM^SDES2VALISODTTM(.ERRORS,DATETIME,CLINIC,1,389,390) ;
+ S DATETIME=$$VALISODTTM^SDES2VALISODTTM(.ERRORS,DATETIME,CLINIC,1,45,46) ;
  I (RESTORETYPE'="P")&(RESTORETYPE'="F") S ERRORS("Restore",1)="" D ERRLOG^SDES2JSON(.ERRORS,52,"Invalid Restore type value.") Q
  I (RESTORETYPE="F")&($P(DATETIME,".",2)'="") S ERRORS("Restore",1)="" D ERRLOG^SDES2JSON(.ERRORS,52,"No time needed for Full restore.")
  I (RESTORETYPE="P")&($P(DATETIME,".",2)="") S ERRORS("Restore",1)="" D ERRLOG^SDES2JSON(.ERRORS,52,"Start time of period to restore is required.")

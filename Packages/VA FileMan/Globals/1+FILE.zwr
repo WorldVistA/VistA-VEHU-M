@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: FILE
 ZWR
-^DIC(0)="FILE^1^19200.112^2898"
+^DIC(0)="FILE^1^19200.112^2899"
 ^DIC(.11,0)="INDEX^.11"
 ^DIC(.11,0,"DD")="^"
 ^DIC(.11,0,"DEL")="^"
@@ -1292,7 +1292,7 @@ ZWR
 ^DIC(9.6,"%D",2,0)="by the Kernel Installation & Distribution System.  All components of the"
 ^DIC(9.6,"%D",3,0)="package, i.e. templates, options, Security Keys, etc., must be listed in "
 ^DIC(9.6,"%D",4,0)="in this file."
-^DIC(9.6,"%MSC")=3230311.17473
+^DIC(9.6,"%MSC")=3240217.052414
 ^DIC(9.7,0)="INSTALL^9.7"
 ^DIC(9.7,0,"AUDIT")="#"
 ^DIC(9.7,0,"DD")="@"
@@ -2093,7 +2093,7 @@ ZWR
 ^DIC(25.11,"%D",0)="^1.001^2^2^3150209^^^^"
 ^DIC(25.11,"%D",1,0)="This file contains the Health Benefit Plan names and their short and long "
 ^DIC(25.11,"%D",2,0)="descriptions."
-^DIC(25.11,"%MSC")=3221113.204125
+^DIC(25.11,"%MSC")=3240217.052628
 ^DIC(26.11,0)="PRF LOCAL FLAG^26.11"
 ^DIC(26.11,0,"GL")="^DGPF(26.11,"
 ^DIC(26.11,0,"GL")="^DGPF(26.11,"
@@ -2453,7 +2453,7 @@ ZWR
 ^DIC(38.6,"%D",3,0)="individual checks on or off the user should not alter or add to this"
 ^DIC(38.6,"%D",4,0)="file in any way.  Making any modification to this file will definitely"
 ^DIC(38.6,"%D",5,0)="cause the consistency checker to function improperly."
-^DIC(38.6,"%MSC")=3230514.004925
+^DIC(38.6,"%MSC")=3240217.052628
 ^DIC(39.4,0)="ADT/HL7 TRANSMISSION^39.4"
 ^DIC(39.4,0,"AUDIT")="@"
 ^DIC(39.4,0,"DD")="@"
@@ -8820,6 +8820,7 @@ ZWR
 ^DIC(78.3,"%D",52,0)=" --------------"
 ^DIC(78.3,"%D",53,0)="The package does not use any sort templates associated with this"
 ^DIC(78.3,"%D",54,0)="file."
+^DIC(78.3,"%MSC")=3240217.052509
 ^DIC(78.4,0)="FILM SIZES^78.4"
 ^DIC(78.4,0,"DD")="#"
 ^DIC(78.4,0,"DEL")="#"
@@ -29855,7 +29856,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3240117.16081
+^DIC(409.93,"%MSC")=3240217.052606
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
@@ -40251,6 +40252,7 @@ ZWR
 ^DIC(790.31,"%D",5,0)="document appropriate results for procedures performed on women patients"
 ^DIC(790.31,"%D",6,0)="through the Add a New Procedure and Edit a Procedure options.  This file"
 ^DIC(790.31,"%D",7,0)="is exported with data and should not be locally edited."
+^DIC(790.31,"%MSC")=3240217.052509
 ^DIC(790.32,0)="WV DIAGNOSTIC CODE TRANSLATION^790.32"
 ^DIC(790.32,0,"AUDIT")="@"
 ^DIC(790.32,0,"DD")="@"
@@ -53437,7 +53439,7 @@ ZWR
 ^DIC(8969,"%D",0)="^^2^2^3150707^"
 ^DIC(8969,"%D",1,0)="This file contains current configuration data related to the daily "
 ^DIC(8969,"%D",2,0)="operation of each monitor deployed."
-^DIC(8969,"%MSC")=3220622.2311
+^DIC(8969,"%MSC")=3240217.051236
 ^DIC(8969.02,0)="VSM MONITOR DEFAULTS^8969.02"
 ^DIC(8969.02,0,"GL")="^KMPV(8969.02,"
 ^DIC(8969.02,0,"GL")="^KMPV(8969.02,"
@@ -53828,7 +53830,7 @@ ZWR
 ^DIC(8989.3,"%D",7,0)="interactive users and for TaskMan.  Defaults for fields such as timed"
 ^DIC(8989.3,"%D",8,0)="read, auto menu, and ask device are defined for use when not otherwise"
 ^DIC(8989.3,"%D",9,0)="specified for a user or device."
-^DIC(8989.3,"%MSC")=3231216.222105
+^DIC(8989.3,"%MSC")=3240217.052436
 ^DIC(8989.5,0)="PARAMETERS^8989.5"
 ^DIC(8989.5,0,"AUDIT")="@"
 ^DIC(8989.5,0,"DD")="@"

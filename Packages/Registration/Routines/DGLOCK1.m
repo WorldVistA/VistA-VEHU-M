@@ -1,5 +1,5 @@
-DGLOCK1 ;ALB/MRL,JAM,ARF,JAM,ARF - PATIENT FILE DATA EDIT CHECK ; 28 JUL 86
- ;;5.3;Registration;**121,314,1014,1061,1075,1081,1082,1098**;Aug 13, 1993;Build 13
+DGLOCK1 ;ALB/MRL,JAM,ARF,JAM,ARF,JAM - PATIENT FILE DATA EDIT CHECK ; 28 JUL 86
+ ;;5.3;Registration;**121,314,1014,1061,1075,1081,1082,1098,1109**;Aug 13, 1993;Build 13
 AOD ;AO Delete
  I $D(^DPT(DFN,.321)),$P(^(.321),U,2)="Y" W !?4,*7,"Can't delete as long as Agent Orange exposure is indicated." K X
  Q
@@ -101,6 +101,8 @@ ECD ;primary eligibility code input transform
  S DIC("S")=DIC("S")_",$$NATCODE^DGENELA(+Y)'=28"
  ; DG*5.3*1098 Add the WORLD WAR II eligibility code 29 to the codes for the screening logic for the PRIMARY ELIGIBILITY CODE prompt
  S DIC("S")=DIC("S")_",$$NATCODE^DGENELA(+Y)'=29"
+ ; DG*5.3*1109 Add the SERVICE ACT eligibility code 30 to the codes for the screening logic for the PRIMARY ELIGIBILITY CODE prompt
+ S DIC("S")=DIC("S")_",$$NATCODE^DGENELA(+Y)'=30"
  I DGVT="N" G ECDS
  I DGSER S DGPC=$S(+$P(^DPT(DFN,.3),U,2)>49:1,1:0),DGXX=$S(DGPC:1,1:3),DIC("S")=DIC("S")_",($P(^(0),U,9)="_DGXX_")" G ECDS ;sc only
  I $P($G(^DPT(DFN,.52)),"^",5)="Y" S DIC("S")=DIC("S")_",($P(^(0),U,9)=18)" G ECDS ;pow only
@@ -127,6 +129,8 @@ ECDS D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X
  I $G(X),$$NATCODE^DGENELA(X)=28 K X Q
  ; DG*5.3*1098 Prevent WORLD WAR II eligibility code 29 from being entered as a primary eligibility
  I $G(X),$$NATCODE^DGENELA(X)=29 K X Q
+ ; DG*5.3*1109 Prevent SERVCE ACT eligibility code 30 from being entered as a primary eligibility
+ I $G(X),$$NATCODE^DGENELA(X)=30 K X Q
  ;
  ; DG*5.3*1014 - if editing Primary Eligibility "COLLATERAL OF VET", save off any CCPs
  I $G(X),DGCOV D REMOVE^DGRP1152U(DFN)

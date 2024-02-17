@@ -1,6 +1,6 @@
-MAGDTR03 ;WOIFO/PMK/NST - Read a DICOM image file ; October 27, 2022
- ;;3.0;IMAGING;**46,54,127,328**;Mar 19, 2002;Build 5
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDTR03 ;WOIFO/PMK/NST/MKN - Read a DICOM image file ; Mar 27, 2023 12:21 PM
+ ;;3.0;IMAGING;**46,54,127,353**;Mar 19, 2002;Build 7
+ ;; Per VA Directive 6402, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -110,15 +110,17 @@ CANCEL ; entry point from ^MAGDTR01 & ^MAGDTRLU for CANCELLED consults
  Q
  ;
 FINISH ; finalize resulted or cancelled consult
- N DUZACQ,FULLNAME,INITIALS,LOCKNAME,X
+ N ADDNDM,DUZACQ,FULLNAME,INITIALS,LOCKNAME,X
  ; record who resulted or cancelled the consult
  ;
  I $G(MODE)="REPAIR" G REPAIR ; set in ^MAGDTRLU
- Q:$$GET1^DIQ(2006.5849,UNREAD,11)]""  ; P328 - quit when READER is already on file
+ ;
+ S ADDNDM=$$ISADDNDM(GMRCIEN) ;P353
  ;
  ; process the transaction
  I $D(HLNEXT) D  ; IFC - data comes from HL7 message
  . D GETHL7B^MAGDTR01(.FULLNAME,.LOCATION)
+ . Q:ADDNDM  ;P353
  . ; if resulter is not the person who locked the study, update name
  . S LOCKNAME=$P(^MAG(2006.5849,UNREAD,0),"^",12)
  . I LOCKNAME'=FULLNAME,FULLNAME'="" D  ; not the same person, update
@@ -133,13 +135,14 @@ FINISH ; finalize resulted or cancelled consult
  E  D  ; local consult - FULLNAME array is for IFCs only
  . ; record the id of the resulter - DUZ comes from RPC session
  . ; assumes that the results were entered directly, not via IFC/HL7
+ . Q:ADDNDM  ;P353
  . S FULLNAME=$$GET1^DIQ(200,DUZ,.01)
  . S INITIALS=$$GET1^DIQ(200,DUZ,1) ; initial
  . S X=FULLNAME_"^"_INITIALS_"^"_DUZ_"^"_DUZ_"^"_DUZ(2) ; DUZacq=DUZread
  . S $P(^MAG(2006.5849,UNREAD,0),"^",12,16)=X ; reader identification
  . Q
  ;
- D EXREF(UNREAD,TIMESTMP) ; set "E" cross-reference
+ D:'ADDNDM EXREF(UNREAD,TIMESTMP) ; set "E" cross-reference ; P353 added 'ADDNM ('Addendum)
  Q
  ;
 EXREF(UNREAD,TIMESTMP) ; set cancellation or reading stop date/time and "E" cross-reference
@@ -203,4 +206,14 @@ TIUNOTE ; create a TIU result note, if one is not present
  S MAGDFN=$$GET1^DIQ(123,GMRCIEN,.02,"I")
  D NEW^MAGGNTI1(.ZZ,MAGDFN,MAGTITLE,1,"E",,DUZ,,,GMRCIEN,.MAGTEXT)
  Q
+ ;
+ISADDNDM(GMRCIEN) ; P353
+ ; Is the current patient consult transaction (activity) an ADDENDUM? 
+ ; Return is 0 = NO  or 1 = YES - last consult transaction was an ADDENDUM?
+ ;
+ N MAGCOMPF,MAGIENS,MAGOUT
+ D GETS^DIQ(123,GMRCIEN_",","40*","","MAGOUT")
+ S MAGIENS=$O(MAGOUT(123.02,""),-1)
+ Q:MAGIENS="" 0
+ Q $S($G(MAGOUT(123.02,MAGIENS,1))="ADDENDUM ADDED TO":1,1:0)
  ;

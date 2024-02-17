@@ -1,0 +1,112 @@
+SDES2GETCANSLOTS ;ALB/MGD - VISTA SCHEDULING RPCS GET CLINIC CANCELLED SLOTS ; Jan 04, 2024@20:54
+ ;;5.3;Scheduling;**866**;Aug 13, 1993;Build 22
+ ;;Per VHA Directive 6402, this routine should not be modified
+ ;
+ ; External References
+ ; -------------------
+ ; Reference to $$FIND1^DIC in ICR #2051
+ ; Reference to $$GET1^DIQ  in ICR #2056
+ ;
+ Q  ;No Direct Call
+ ;
+ ; RPC: SDES2 GET CANCELLED SLOTS
+ ;
+GETCANCSLOTS(JSONRETURN,SDCONTEXT,SDCANCDATA) ;
+ ; This RPC returns cancelled slots within a given timeframe for a given clinic in JSON format.
+ ; Input:
+ ; SDCONTEXT("ACHERON AUDIT ID") = Up to 40 Character unique ID number. Ex: 11d9dcc6-c6a2-4785-8031-8261576fca37
+ ; SDCONTEXT("USER DUZ")    = [required] - The DUZ of the user taking action in the calling application.
+ ; SDCONTEXT("USER SECID")  = [optional] - The SECID of the user taking action in the calling application.
+ ; SDCONTEXT("PATIENT DFN") = [optional] - The DFN/IEN of the target patient from the calling application.
+ ; SDCONTEXT("PATIENT ICN") = [optional] - The ICN of the target patient from the calling application.
+ ;
+ ; SDCANCDATA("CLINICIEN")   = [required] - The Internal Entry Number (IEN) from the HOSPITAL LOCATION File #44
+ ; SDCANCDATA("SDESSTART")   = [required] - The Start Date of search in ISO8601 format CCYY-MM-DDTHH:MM-OFFSET
+ ; SDCANCDATA("SDESENDDATE") = [required] - The End Date of search in ISO8601 format CCYY-MM-DDTHH:MM-OFFSET
+ ;
+ ; JSONRETURN = [required] - This is where the retrieved data is stored in JSON format.
+ ;
+ N SDGETCANCSLOTS,SDCLNAME,ERROR,SDCLRESIEN,SDTMPARY
+ S ERROR=0
+ ; validate context
+ D VALCONTEXT^SDES2VALCONTEXT(.SDGETCANCSLOTS,.SDCONTEXT)
+ I $D(SDGETCANCSLOTS) S SDGETCANCSLOTS("CancelledSlots",1)="" D BUILDJSON^SDES2JSON(.JSONRETURN,.SDGETCANCSLOTS) Q
+ ;
+ ; validate cancdata input parameters
+ D VALIDATEINPUT(.SDGETCANCSLOTS,.SDCANCDATA,.ERROR)
+ I ERROR S SDGETCANCSLOTS("CancelledSlots",1)="" D BUILDJSON^SDES2JSON(.JSONRETURN,.SDGETCANCSLOTS) Q
+ ;
+ K SDTMPARY
+ S SDTMPARY=$NA(^TMP($J,"CLNCANCSLOTS"))
+ K @SDTMPARY
+ D GETSLOTS^SDEC57(SDTMPARY,$G(SDCANCDATA("SDCLRESIEN")),$G(SDCANCDATA("SDESSTART")),$G(SDCANCDATA("SDESENDDATE")))
+ D BUILDDATA(CLINICIEN)
+ K @SDTMPARY
+ I ERROR!('$D(SDGETCANCSLOTS("CancelledSlots"))) S SDGETCANCSLOTS("CancelledSlots",1)=""
+ D BUILDJSON^SDES2JSON(.JSONRETURN,.SDGETCANCSLOTS)
+ K SDGETCANCSLOTS
+ Q
+ ;
+VALIDATEINPUT(SDGETCANCSLOTS,SDCANCDATA,ERROR) ;validate input parameters
+ N SDERR,EFLAG,SFLAG,SDESSTART,SDESENDDATE,SDVALERROR
+ S (SFLAG,EFLAG)=0
+ ;validate CLINIC IEN
+ S CLINICIEN=$G(SDCANCDATA("CLINICIEN"))
+ D VALFILEIEN^SDES2VALUTIL(.SDVALERROR,.SDGETCANCSLOTS,44,CLINICIEN,1,,67,19)
+ I SDVALERROR=0 S ERROR=1 Q
+ I +CLINICIEN>0 D  Q:ERROR
+ . S SDCLNAME=$$GET1^DIQ(44,CLINICIEN_",",.01,"I")  ;retrieve the clinic name
+ . I SDCLNAME="" D ERRLOG^SDESJSON(.SDGETCANCSLOTS,80) S ERROR=1 Q  ;clinic IEN not found
+ . S SDCLRESIEN=$$FIND1^DIC(409.831,"","MX",SDCLNAME,"","","SDERR") ;retrieve the resource IEN for the clinic
+ . I $D(SDERR) D ERRLOG^SDESJSON(.SDGETCANCSLOTS,70) S ERROR=1 Q  ;invalid clinic resource id
+ . S SDCANCDATA("SDCLRESIEN")=SDCLRESIEN
+ ;
+ ;validate start date
+ S SDESSTART=$G(SDCANCDATA("SDESSTART"))
+ S SDESSTART=$$VALISODTTM^SDES2VALISODTTM(.SDGETCANCSLOTS,SDESSTART,CLINICIEN,1,25,27)
+ I SDESSTART="" S ERROR=1 Q
+ I $P(SDESSTART,".",2)="" S ERROR=1 D ERRLOG^SDES2JSON(.SDGETCANCSLOTS,27) Q
+ S SDCANCDATA("SDESSTARTDTTM")=SDESSTART
+ S SDCANCDATA("SDESSTART")=$P(SDESSTART,".",1)
+ ;
+ ;validate end date
+ S SDESENDDATE=$G(SDCANCDATA("SDESENDDATE"))
+ S SDESENDDATE=$$VALISODTTM^SDES2VALISODTTM(.SDGETCANCSLOTS,SDESENDDATE,CLINICIEN,1,26,28)
+ I SDESENDDATE="" S ERROR=1 Q
+ I $P(SDESENDDATE,".",2)="" S ERROR=1 D ERRLOG^SDES2JSON(.SDGETCANCSLOTS,28) Q
+ S SDCANCDATA("SDESENDDTTM")=SDESENDDATE
+ S SDCANCDATA("SDESENDDATE")=$P(SDESENDDATE,".",1)
+ ;
+ ;validate end date after start date
+ I SDESSTART>SDESENDDATE S ERROR=1 D ERRLOG^SDESJSON(.SDGETCANCSLOTS,242)
+ Q
+ ;
+BUILDDATA(CLINICIEN) ; retrieve clinic availability data
+ N SDP1,SDP2,SDP3,SDP4,SDSLOTS,SDSTOPTM,SDSTRTTM,SDTOTAL,II,SDDIV,SDINST
+ I $O(@SDTMPARY@(""))="" Q
+ S SDTOTAL=@SDTMPARY@("CNT")
+ F II=1:1:SDTOTAL D
+ . S SDP1=$P(@SDTMPARY@(II),U,2) ;start date
+ . S SDP2=$P(@SDTMPARY@(II),U,3) ;end date
+ . I (SDP1<SDCANCDATA("SDESSTARTDTTM"))!(SDP1>SDCANCDATA("SDESENDDTTM")) Q
+ . S SDP3=+$P(@SDTMPARY@(II),U,4) ;open slots available
+ . S SDP4=$P(@SDTMPARY@(II),U,5) ;access type  (1=available, 2=not available, 3=cancelled)
+ . Q:SDP4'=3  ; Only return cancelled slots
+ . I $P(SDP1,".",2)=""!($P(SDP1,".",2)="00") S $P(SDP1,".",2)="0001"
+ . S SDSTRTTM=$$FMTISO^SDAMUTDT(SDP1,CLINICIEN)
+ . S SDSTOPTM=$$FMTISO^SDAMUTDT(SDP2,CLINICIEN)
+ . S SDSLOTS=$P(@SDTMPARY@(II),U,4)
+ . S SDSLOTS=$S(SDSLOTS=" ":"",1:SDSLOTS)
+ . S SDSLOTS=$S(SDP4=3:"X",1:SDSLOTS)
+ . S SDGETCANCSLOTS("CancelledSlots",II,"BeginTime")=SDSTRTTM
+ . S SDGETCANCSLOTS("CancelledSlots",II,"EndTime")=SDSTOPTM
+ . S SDGETCANCSLOTS("CancelledSlots",II,"SlotsAvail")=SDSLOTS
+ ; Changes for 831 start
+ I $G(CLINICIEN) D
+ .S SDDIV=$$GET1^DIQ(44,CLINICIEN_",",3.5,"I")
+ .S:SDDIV SDINST=$$GET1^DIQ(40.8,SDDIV_",",.07,"I")
+ .I $$GET1^DIQ(4,SDINST,800,"I")="" D
+ ..S SDGETCANCSLOTS("CancelledSlots",0.1,"Error")="No Timezone set for Clinic."
+ ..I $$GET1^DIQ(8989.3,1,217,"I")="" S SDGETCANCSLOTS("CancelledSlots",0.2,"Error")="No Timezone set for Institution in Kernel Parameters (#8989.3) file."
+ ; Changes for 831 end
+ Q

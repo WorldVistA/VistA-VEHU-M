@@ -1,5 +1,5 @@
 VPRHS ;SLC/MKB -- HealthShare utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,15,16,17,19,25,27**;Sep 01, 2011;Build 10
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,15,16,17,19,25,27,33**;Sep 01, 2011;Build 8
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -53,7 +53,9 @@ QUE(DFN) ; -- create task to POST a Patient update
 PAT ; -- post Patient update [TASK]
  Q:'$P($G(^VPR(1,0)),U,2)                     ;monitoring disabled
  S DFN=+$G(DFN) Q:DFN<1  Q:'$D(^DPT(DFN,0))   ;not valid
- Q:'$$SUBS(DFN)  I $$MERGED(DFN) D UN(DFN) Q  ;not subscribed
+ ;if in merged state, unsubscribe and use 'into' DFN
+ I $$MERGED(DFN) D UN(DFN) S DFN=+$G(^DPT(DFN,-9))
+ I '$$SUBS(DFN) Q  ;not subscribed
  D POST(DFN,"Patient",DFN_";2")
  S $P(^VPR(1,2,DFN,0),U,2)="",ZTREQ="@"       ;clear task
  Q
@@ -81,10 +83,11 @@ POST(DFN,TYPE,ID,ACT,VST,RES) ; -- post an update to
  Q:'$P($G(^VPR(1,0)),U,2)                   ;monitoring disabled
  S DFN=+$G(DFN),TYPE=$G(TYPE),ID=$G(ID)
  Q:DFN<1  Q:TYPE=""                         ;incomplete request
+ ;if in merged state, unsubscribe and use 'into' DFN
+ I $$MERGED(DFN) D UN(DFN) S DFN=+$G(^DPT(DFN,-9))
  N ICN S ICN=$$GETICN^MPIF001(DFN) Q:ICN<0  ;ICN required
  ; add to ^VPR if not subscribed
  I '$$SUBS(DFN) D:$$VALID(DFN) NEW(DFN,ICN) Q
- I $$MERGED(DFN) D UN(DFN) Q                ;no merged-from pats
  S ACT=$S($G(ACT)="@":"D",1:"U")
 P1 ;may enter here from VPRHSX1 manual update option
  N SEQ,STR S SEQ=$$NUM

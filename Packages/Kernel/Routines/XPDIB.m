@@ -1,5 +1,5 @@
 XPDIB ;SFISC/RSD - Backup installed Package ; Mar 20, 2023@14:49:13
- ;;8.0;KERNEL;**10,58,108,178,713,738,750,755,768,778,785**;Jul 10, 1995;Build 5
+ ;;8.0;KERNEL;**10,58,108,178,713,738,750,755,768,778,785,796**;Jul 10, 1995;Build 4
  ;Per VHA Directive 2004-038, this routine should not be modified.
 EN ;
  ;p713 - added support to create Build from Transport Global to create a backup
@@ -161,7 +161,9 @@ KRN(FILE,XPDY) ;FILE=file #, XPDY=^XPD(9.6,XPDA,"KRN",XPDFILE,"NM",XPDOLDA,0)
  S X=$P(XPDY,U)
  ;$P(XPDY,U,2) is file # for FileMan templates, reset name in XPDY before getting DA
  S:$P(XPDY,U,2) $P(XPDY,U)=$P(XPDY,"    FILE #") ;p785
- S FGR=$$FILE^XPDV(FILE),DA=$$ENTRY^XPDV(XPDY) ;DA=ien or 0 if doesn't exists
+ ;Routine file, just check if routine exists, don't call FILE or ENTRY
+ I FILE=9.8 S DA=($T(^@X)]"") ;p796
+ E  S FGR=$$FILE^XPDV(FILE),DA=$$ENTRY^XPDV(XPDY) ;DA=ien or 0 if doesn't exists
  ;If X exists, set to 0 - send, else set to 1 - delete
  S $P(XPDY,U,3)='DA
  ;save component

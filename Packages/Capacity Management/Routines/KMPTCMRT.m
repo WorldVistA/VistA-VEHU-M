@@ -1,5 +1,5 @@
 KMPTCMRT ;SP/JML - Collect Cache Metrics for the Real-Time Timed Collection Monitor ;2/1/2023
- ;;4.0;CAPACITY MANAGEMENT;**1,2,3**;3/1/2018;Build 17
+ ;;4.0;CAPACITY MANAGEMENT;**1,2,3,4**;3/1/2018;Build 36
  ;
  ; Reference to $$WORKDAY^XUWORKDY in ICR #10046
  ; Reference to $$HTFM^XLFDT in ICR #10103
@@ -206,22 +206,7 @@ SETRETRY ;
  S KMPTEXT(3)="Response Time: "_$P(KMPSTAT,"^",3)
  S KMPTEXT(4)="Node: "_KMPVNODE
  D INFOMSG^KMPUTLW(.KMPTEXT)
- N $ESTACK,$ETRAP S $ETRAP="D RERROR,UNWIND^%ZTER"
  S ^KMPTMP("KMPV","VTCM","RETRY",KMPVNODE,+$H,$H)=KMPJSON.%ToJSON()
- Q
- ;
-RERROR ;
- ; Send email to alert
- N KMPSTAT,KMPTEXT
- H 30
- S KMPSTAT=$$POST^KMPUTLW(KMPJSON,"/timedcollection",,"VTCM")
- Q:+KMPSTAT=200
- S KMPTEXT("SUBJECT")="VSM FAILED RETRY SAVE: VTCM at "_KMPJSON.Site.SiteCode
- S KMPTEXT(1)="TIMESTAMP: "_$P(KMPTIMES,"^")
- S KMPTEXT(2)="Error: "_$$EC^%ZOSV
- S KMPTEXT(3)="Last Global Reference: "_$$LGR^%ZOSV
- S KMPTEXT(4)="Node: "_KMPVNODE
- D INFOMSG^KMPUTLW(.KMPTEXT)
  Q
  ;
 RETRY ;  retry failed POSTS

@@ -1,5 +1,5 @@
-KMPUTLW2 ;SP/JML - Manage REST interfaces for VSM Monitors ;6/1/2020
- ;;4.0;CAPACITY MANAGEMENT;**1**;3/1/2018;Build 27
+KMPUTLW2 ;SP/JML - Manage REST interfaces for VSM Monitors ;11/1/2023
+ ;;4.0;CAPACITY MANAGEMENT;**1,4**;3/1/2018;Build 36
   ;
   ; Reference to ^%ZTER(1 supported by ICR #7138
   ; Reference to ^%ZTER(3.077 supported by ICR #7139
@@ -82,26 +82,22 @@ SETCFG(KMPCFG) ; Change VSM configuration via national server change request
  D STOPMON^KMPVCBG(KMPMKEY,1,1)
  ;
  S KMPVER=$$GETVAL^KMPVCCFG(KMPMKEY,"VERSION",8969)
- S KMPRTO=$S(KMPVER>2:1,1:0)
- S KMPRTN=KMPCFG.Realtime
  I KMPCFG.Function'="SetConfig" Q "Incorrect Function Type"
  S KMPFVAL("ALLOW TEST SYSTEM")=KMPCFG.AllowTestSystem
  S KMPFVAL("APIKEY")=KMPCFG.ApiKey
  S KMPFVAL("COLLECTION INTERVAL")=KMPCFG.CollectionInterval
  S KMPFVAL("DAYS TO KEEP DATA")=KMPCFG.DaysToKeepData
  S KMPFVAL("ENCRYPT")=KMPCFG.Encrypt
+ S KMPFVAL("HTTP REQUEST MAX LENGTH")=KMPCFG.HttpRequestMaxLength
+ S KMPFVAL("MONITOR START DELAY")=KMPCFG.MonitorStartDelay
  S KMPFVAL("NATIONAL DATA EMAIL ADDRESS")=KMPCFG.NationalDataEmailAddress
  S KMPFVAL("NATIONAL FQDN")=KMPCFG.NationalFqdn
  S KMPFVAL("NATIONAL IP ADDRESS")=KMPCFG.NationalIpAddress
  S KMPFVAL("NATIONAL PORT")=KMPCFG.NationalPort
  S KMPFVAL("NATIONAL SUPPORT EMAIL ADDRESS")=KMPCFG.NationalSupportEmailAddress
  S KMPFVAL("ONOFF")=KMPCFG.OnOff
- S KMPFVAL("START PERFMON")=KMPCFG.StartPerfmon
- S KMPFVAL("TASKMAN SCHEDULE FREQUENCY")=KMPCFG.TaskmanScheduleFrequency
- S KMPFVAL("TASKMAN SCHEDULE START")=KMPCFG.TaskmanScheduleStart
+ S KMPFVAL("TASKMAN OPTION")=KMPCFG.TaskmanOption
  S KMPFVAL("VSM CFG EMAIL ADDRESS")=KMPCFG.VsmCfgEmailAddress
- ;if REALTIME changes then add other fields to KMPFVAL array
- I KMPRTO'=KMPRTN D SETRT^KMPTASK(KMPMKEY,KMPRTN,.KMPFVAL)
  ;
  ; verify Monitor Type is valid
  I $D(^KMPV(8969,"B",KMPMKEY)) S KMPIEN=$O(^KMPV(8969,"B",KMPMKEY,""))
@@ -154,7 +150,6 @@ SETCFG(KMPCFG) ; Change VSM configuration via national server change request
  ..S KMPDATA=KMPFVAL(KMPFNAM)
  ..S KMPTEXT(KMPI)=KMPFNAM_"-"_$P(KMPDATA,"^",2)_" TO "_$P(KMPDATA,"^"),KMPI=KMPI+1
  .D INFOMSG^KMPUTLW(.KMPTEXT)
- ;
  ; if end state is 'ON' then start monitor
  I $$GETVAL^KMPVCCFG(KMPMKEY,"ONOFF",8969)="ON" D STARTMON^KMPVCBG(KMPMKEY,1,1)
  ;

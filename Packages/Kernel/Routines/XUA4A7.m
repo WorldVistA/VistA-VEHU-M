@@ -1,5 +1,5 @@
-XUA4A7 ;ISCSF/RWF - K7, Give entrys into F6 a Provider key ;03/24/10  07:58
- ;;8.0;KERNEL;**49,542**;Jul 10, 1995;Build 5
+XUA4A7 ;ISCSF/RWF - K7, Give entrys into F6 a Provider key ; Oct 17, 2023@03:29:38
+ ;;8.0;KERNEL;**49,542,789**;Jul 10, 1995;Build 15
  Q  ;don't enter from top.
 F6S ;Give provider the key.
  N %,X1,X2 S %=$G(^DIC(6,DA,"I")) I %,%<DT Q  ;see if inactive
@@ -46,7 +46,7 @@ F19K ;holder subfile V6.5 only
  K ^VA(200,"AK."_$P(%,U),X1,X)
  Q
 LAYGO ;Called from ^DD(200,.01,"LAYGO",1,0)
- Q:DIC(0)'["E"
+ Q:$G(DIC(0))'["E"
  W !,"Checking SOUNDEX for matches."
  N DIR,DUOUT,DIRUT,Y,XU1,XU2,XU3 S XU3=X
  S X=$$EN^XUA4A71(XU3),XU2=0

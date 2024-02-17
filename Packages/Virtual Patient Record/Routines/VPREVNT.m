@@ -1,5 +1,5 @@
 VPREVNT ;SLC/MKB -- VistA event listeners ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,15,17,19,21,20,26,25,27,29,31,34**;Sep 01, 2011;Build 2
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,15,17,19,21,20,26,25,27,29,31,34,33**;Sep 01, 2011;Build 8
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; External References               DBIA#
@@ -134,15 +134,6 @@ GMRV(DFN,IEN,ERR) ; -- Vital Measurement file #120.5 AVPR index
  D POST^VPRHS(DFN,"Observation",IEN_";120.5",ACT)
  Q
  ;
-MDC(OBS) ; -- MDC OBSERVATION UPDATE protocol listener [not in use]
- N DFN,ID,ACT
- S DFN=+$G(OBS("PATIENT_ID","I")) Q:DFN<1
- S ID=$G(OBS("OBS_ID","I")) Q:'$L(ID)
- S ACT=$S('$G(OBS("STATUS","I")):"@",1:"")
- D POST^VPRHS(DFN,"Observation",ID_";704.117",ACT)
- ;I $G(OBS("DOMAIN","VITALS")) D POST^VPRHS(DFN,"Observation",ID,ACT)
- Q
- ;
 CP(DFN,ID,ACT) ; -- CP Transaction file #702 AVPR index
  Q  ; via VPRPROC [no longer used]
  S DFN=+$G(DFN),ID=+$G(ID)
@@ -166,11 +157,12 @@ TIU(DFN,IEN) ; -- TIU Document file #8925 AEVT index
 TIUR ; -- TIU DOCUMENT ACTION EVENT listener (removing notes)
  N ARY,ACT,DFN,IEN,VST,DAD,X,VPRSQ,CLS
  S ARY=$NA(^TMP("TIUDOCACT",$J)),ACT=$G(@ARY@("ACTION"))
- I ACT="RETRACT" D  G TRQ  ;not DELETE
+ I ACT="RETRACT" D  Q:IEN<1  G TRQ  ;not DELETE
  . S DFN=+$G(@ARY@("PATIENT")),VST=$G(@ARY@("VISIT"))
  . S IEN=+$G(@ARY@("DOCUMENT")) Q:IEN<1  Q:DFN<1
- . S DAD=+$$GET1^DIQ(8925,IEN,.06,"I") S:DAD IEN=DAD
- . ;D TIU^VPRENC(IEN,,VST)
+ . S DAD=+$$GET1^DIQ(8925,IEN,.06,"I") Q:'DAD
+ . ; update parent unless already retracted
+ . S IEN=$S($$GET1^DIQ(8925,DAD,.05,"I")=15:0,1:DAD)
  ;
  Q:ACT'="REASSIGN"
  S DFN=+$G(@ARY@("PATIENT","OLD")),VST=$G(@ARY@("VISIT","OLD"))
@@ -179,14 +171,15 @@ TIUR ; -- TIU DOCUMENT ACTION EVENT listener (removing notes)
  S DAD=+$$GET1^DIQ(8925,IEN,.06,"I") I DAD D TIU^VPRENC(DAD) Q
  ; new document saved via regular index event
 TRQ ; remove document from old patient/visit
- D POST^VPRHS(DFN,"Document",IEN_";8925","@",VST,.VPRSQ)
- I $G(VPRSQ) D  ;save visit
+ S ACT=$S($G(DAD):"",1:"@") ;update parent if retracting addendum
+ D POST^VPRHS(DFN,"Document",IEN_";8925",ACT,VST,.VPRSQ)
+ I ACT="@",$G(VPRSQ) D  ;save visit
  . S ^XTMP("VPR-"_VPRSQ,IEN)=DFN_"^Document^"_IEN_";8925^D^"_VST
  . S X=+$$GET1^DIQ(8925,IEN,.01,"I"),^XTMP("VPR-"_VPRSQ,IEN,0)=X_U_DFN_U_VST
  . S ^XTMP("VPR-"_VPRSQ,0)=$$FMADD^XLFDT(DT,14)_U_DT_"^Deleted record for AVPR"
  S CLS=$$GET1^DIQ(8925,IEN,.04,"I")
- D:CLS=27 POST^VPRHS(DFN,"AdvanceDirective",IEN_";8925","@")
- D:CLS=30!(CLS=31) POST^VPRHS(DFN,"Alert",IEN_";8925","@")
+ D:CLS=27 POST^VPRHS(DFN,"AdvanceDirective",IEN_";8925",ACT)
+ D:CLS=30!(CLS=31) POST^VPRHS(DFN,"Alert",IEN_";8925",ACT)
  Q
  ;
 TIUS(IEN) ; -- TIU MULTIPLE SIGNATURE file #8925.7 AVPR index

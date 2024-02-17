@@ -1,10 +1,12 @@
-SDES2UTIL ;ALB/MGD - SDES2 UTILITIES ;July 3, 2023
- ;;5.3;Scheduling;**853,857**;Aug 13, 1993;Build 14
+SDES2UTIL ;ALB/MGD,ANU,TJB - SDES2 UTILITIES ;OCT 23, 2023
+ ;;5.3;Scheduling;**853,857,864**;Aug 13, 1993;Build 15
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to INSTITUTION in #2251
  ; Reference to KERNEL SYSTEM PARAMETERS in #1518
  ; Reference to ^ECX(728.44 in #7340
+ ; Reference to OWNREC^DGSEC4 in ICR #7036
+ ; Reference to SENS^DGSEC4 in ICR #7036
  Q
  ;
 PADCLTIME(TIME) ;
@@ -193,8 +195,8 @@ INACTIVE(SDCL,SDDT) ; determine if clinic is active
  S INACTIVEDATE=$P(SDNODEI,U,1)   ;inactive date/time
  S REACTIVEDATE=$P(SDNODEI,U,2)   ;reactive date/time
  I (INACTIVEDATE="") S STATUS=0 Q STATUS
- I (INACTIVEDATE'="")&(INACTIVEDATE>SDDT) S STATUS=0 Q STATUS
- I (REACTIVEDATE'="")&(REACTIVEDATE'>SDDT) S STATUS=0 Q STATUS
+ I (REACTIVEDATE>=INACTIVEDATE)&(REACTIVEDATE<SDDT) S STATUS=0 Q STATUS
+ I INACTIVEDATE>SDDT S STATUS=0 Q STATUS
  Q STATUS
  ;
 STATIONNUMBER(CLINICIEN) ;
@@ -229,23 +231,23 @@ VALIDATEAMIS(AMIS,RESTYP) ;
 PRIMARYAMIS(PRIAMIS,ERRORNUM) ;
  I +PRIAMIS=0 S ERRORNUM=270 Q
  I $L(PRIAMIS) D
- .I +PRIAMIS=0 S ERRORNUM=270 Q
- .I +PRIAMIS=900 S ERRORNUM=273 Q
- .S PRIAMIS=$$AMISTOSTOPCODE(.PRIAMIS)
- .I +PRIAMIS=0 S ERRORNUM=270 Q
- .I $$RESCHKFAILED(+PRIAMIS,"P") S ERRORNUM=287 Q
- .I $$STOPCODEINACTIVE(+PRIAMIS,"P") S ERRORNUM=512 Q
+ . I +PRIAMIS=0 S ERRORNUM=270 Q
+ . I +PRIAMIS=900 S ERRORNUM=273 Q
+ . S PRIAMIS=$$AMISTOSTOPCODE(.PRIAMIS)
+ . I +PRIAMIS=0 S ERRORNUM=270 Q
+ . I $$RESCHKFAILED(+PRIAMIS,"P") S ERRORNUM=287 Q
+ . I $$STOPCODEINACTIVE(+PRIAMIS,"P") S ERRORNUM=512 Q
  Q
  ;
 SECONDARYAMIS(CREDITAMIS,ERRORNUM) ;
  I +CREDITAMIS=0 S ERRORNUM=271 Q
  I $L(CREDITAMIS) D
- .I +CREDITAMIS=0 S ERRORNUM=271 Q
- .I +CREDITAMIS=900 S ERRORNUM=273 Q
- .S CREDITAMIS=$$AMISTOSTOPCODE(.CREDITAMIS)
- .I +CREDITAMIS=0 S ERRORNUM=271 Q
- .I $$RESCHKFAILED(+CREDITAMIS,"S") S ERRORNUM=288 Q
- .I $$STOPCODEINACTIVE(+CREDITAMIS,"C") S ERRORNUM=513 Q
+ . I +CREDITAMIS=0 S ERRORNUM=271 Q
+ . I +CREDITAMIS=900 S ERRORNUM=273 Q
+ . S CREDITAMIS=$$AMISTOSTOPCODE(.CREDITAMIS)
+ . I +CREDITAMIS=0 S ERRORNUM=271 Q
+ . I $$RESCHKFAILED(+CREDITAMIS,"S") S ERRORNUM=288 Q
+ . I $$STOPCODEINACTIVE(+CREDITAMIS,"C") S ERRORNUM=513 Q
  Q
  ;
 AMISTOSTOPCODE(AMIS) ; Map from AMIS to Stop Code
@@ -338,3 +340,55 @@ CHECKFORDELMULT(SDERRORS,SDINPUTARRAY) ; Check subfile array entries for @
  ..I SDSUBFILE="SPECIAL INSTRUCTIONS",$P($G(SDINPUTARRAY(SDSUBFILE,SDIEN)),"|",2)="@" D ERRLOG^SDES2JSON(.SDERRORS,459,SDSUBFILE_": "_SDIEN)
  ..I $G(SDINPUTARRAY(SDSUBFILE,SDIEN,"DEFAULT"))="@" D ERRLOG^SDES2JSON(.SDERRORS,459,SDSUBFILE_" DEFAULT: "_SDIEN)
  Q
+ ; 862
+SENSITIVE(RESULT,DFN,SDDUZ,DGMSG,DGOPT) ;RPC/API entry point for patient sensitive & record access checks
+ ;Output array (Required)
+ ;    RESULT(1)= -1-RPC/API failed
+ ;                  Required variable not defined
+ ;                0-No display/action required
+ ;                  Not accessing own, employee, or sensitive record
+ ;                1-Display warning message
+ ;                  Sensitive and DG SENSITIVITY key holder
+ ;                  or Employee and DG SECURITY OFFICER key holder
+ ;                2-Display warning message/require OK to continue
+ ;                  Sensitive and not a DG SENSITIVITY key holder
+ ;                  Employee and not a DG SECURITY OFFICER key holder
+ ;                3-Access to record denied
+ ;                  Accessing own record
+ ;                4-Access to Patient (#2) file records denied
+ ;                  SSN not defined
+ ;   RESULT(2-10) = error or display messages
+ ;
+ ;Input parameters: DFN = Patient file entry (Required)
+ ;                  SDDUZ = User (Required)
+ ;                  DGMSG = If 1, generate message (optional)
+ ;                  DGOPT  = Option name^Menu text (Optional)
+ ;
+ K RESULT
+ I $G(DFN)="" D  Q
+ .S RESULT(1)=-1
+ .S RESULT(2)="Required variable missing."
+ S DGMSG=$G(DGMSG,0)
+ D OWNREC^DGSEC4(.RESULT,DFN,$G(SDDUZ),DGMSG)
+ I RESULT(1)=1 S RESULT(1)=3 Q
+ I RESULT(1)=2 S RESULT(1)=4 Q
+ K RESULT
+ D SENS^DGSEC4(.RESULT,DFN,$G(SDDUZ))
+ I RESULT(1)=1 D
+ .I $G(SDDUZ)="" D  Q
+ ..;SDDUZ must be defined to access sensitive record & update DG Security log
+ ..S RESULT(1)=-1
+ ..S RESULT(2)="Your user code is undefined.  This must be defined to access a restricted patient record."
+ Q
+ ;
+GETSUB(TXT)  ;
+ ; Output - Prior Number or Text with ~ delimiter
+ ; Input - Number or Text
+ N LAST
+ S LAST=""
+ I +TXT,+TXT=TXT S LAST=TXT-1 Q LAST ;- handle numeric
+ S LAST=$E(TXT,$L(TXT))
+ S LAST=$C($A(LAST)-1)
+ S LAST=$E(TXT,1,$L(TXT)-1)_LAST_"~"
+ Q LAST
+ ;

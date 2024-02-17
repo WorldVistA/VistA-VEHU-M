@@ -1,6 +1,6 @@
-MAGDTR02 ;WOIFO/PMK - Unread List for Consult/Procedure Request ; October 27, 2022
- ;;3.0;IMAGING;**46,54,328**;Mar 19, 2002;Build 5
- ;; Per VHA Directive 2004-038, this routine should not be modified.
+MAGDTR02 ;WOIFO/PMK/MKN - Unread List for Consult/Procedure Request ; April 13, 2023
+ ;;3.0;IMAGING;**46,54,353**;Mar 19, 2002;Build 7
+ ;; Per VA Directive 6402, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
@@ -132,6 +132,6 @@ TIMESTMP(UNREAD) ; update the transaction's timestamp and cross-reference
  . K:OLDTIME ^MAG(2006.5849,"AC",ACQSITE,ISPECIDX,IPROCIDX,OLDTIME,UNREAD)
  . S ^MAG(2006.5849,"AC",ACQSITE,ISPECIDX,IPROCIDX,NEWTIME,UNREAD)=""
  . Q
- I $P(^MAG(2006.5849,UNREAD,0),"^",9)="" S $P(^(0),"^",9)=NEWTIME  ;P328 - assign timestamp only if field is null
+ I $P(^MAG(2006.5849,UNREAD,0),"^",9)="" S $P(^(0),"^",9)=NEWTIME  ;P353 - assign timestamp only if field is null
  L -^MAG(2006.5849,UNREAD)
  Q NEWTIME

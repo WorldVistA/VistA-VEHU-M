@@ -1,5 +1,6 @@
-SDECAPI ;ALB/SAT,PC - VISTA SCHEDULING RPCS ;Apr 02, 2020@14:27
- ;;5.3;Scheduling;**627,694**;Aug 13, 1993;Build 61
+SDECAPI ;ALB/SAT,PC,TJB - VISTA SCHEDULING RPCS ;NOV 29, 2023@13:00
+ ;;5.3;Scheduling;**627,694,866**;Aug 13, 1993;Build 22
+ ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
  ;
@@ -120,10 +121,14 @@ CHECKIN(BSDR) ;EP; call to add checkin info to appt
  ;
  ; set checkin
  N SDFDA
- S SDFDA(44.003,IEN_","_BSDR("ADT")_","_BSDR("CLN")_",",302)=BSDR("USR")
+ ; S SDFDA(44.003,IEN_","_BSDR("ADT")_","_BSDR("CLN")_",",302)=BSDR("USR")
  S SDFDA(44.003,IEN_","_BSDR("ADT")_","_BSDR("CLN")_",",305)=$$NOW^XLFDT()
  S SDFDA(44.003,IEN_","_BSDR("ADT")_","_BSDR("CLN")_",",309)=BSDR("CDT")
- D UPDATE^DIE("","SDFDA")
+ D FILE^DIE("","SDFDA")
+ K SDFDA
+ ; Updating 302 separately because of trigger on field 309 uses logged-in DUZ
+ S SDFDA(44.003,IEN_","_BSDR("ADT")_","_BSDR("CLN")_",",302)=BSDR("USR")
+ D FILE^DIE("","SDFDA")
  ;
  ;S DIE="^SC("_BSDR("CLN")_",""S"","_BSDR("ADT")_",1,"
  ;S DA(2)=BSDR("CLN"),DA(1)=BSDR("ADT"),DA=IEN

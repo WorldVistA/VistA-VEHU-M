@@ -1,5 +1,5 @@
 VPRDPSOR ;SLC/MKB -- Medication extract by order ;8/2/11  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**1,4,18,28,32**;Sep 01, 2011;Build 6
+ ;;1.0;VIRTUAL PATIENT RECORD;**1,4,18,28,32,33**;Sep 01, 2011;Build 8
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -51,6 +51,7 @@ EN1(IFN,MED) ; -- return an order in MED("attribute")=value [from EN]
  N CLS,OI,X,LOC,DRUG,DA,CNT,VPRESP K MED
  S IFN=+$G(IFN) I IFN<1!'$D(^OR(100,IFN)) Q
  I $G(DFN),+$P($G(^OR(100,IFN,0)),U,2)'=DFN Q
+ I '$$RX(IFN) Q  ; p33 - make sure the order is a real med order.
  S ORPK=$$PKGID^ORX8(IFN)
  S X=$S(ORPK:$E(ORPK,$L(ORPK)),1:"Z") S:X=+X X="R" ;last char = PS file
  S CLS=$S("RSN"[X:"O","UV"[X:"I",1:$$GETCLS) ; p18 added package check in new function
@@ -168,3 +169,9 @@ GETCLS() ; p18 added package check
  I $P($G(^DIC(9.4,PKGIEN,0)),U)="INPATIENT MEDICATIONS" Q "I"
  I $P($G(^DIC(9.4,PKGIEN,0)),U)="OUTPATIENT PHARMACY" Q "O"
  Q $$GET1^DIQ(100,IFN_",",10,"I")
+ ;
+RX(ORIFN) ; -- is order really a med? (non-PS order in display group)
+ N X,Y,PKG S Y=0
+ S X=$P($G(^OR(100,+$G(ORIFN),0)),U,14),PKG=$$GET1^DIQ(9.4,+X_",",1)
+ I $E(PKG,1,2)="PS" S Y=1
+ Q Y

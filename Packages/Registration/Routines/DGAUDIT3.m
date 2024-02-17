@@ -1,5 +1,5 @@
 DGAUDIT3 ;ATG/JPN,ISL/DKA - VAS Audit Solution - Request System Parameters  ;May 17, 2021@15:12
- ;;5.3;Registration;**964**;Aug 13, 1993;Build 323
+ ;;5.3;Registration;**964,1108**;Aug 13, 1993;Build 17
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; Reference to GETS^DIQ in ICR #2056
@@ -13,6 +13,8 @@ DGAUDIT3 ;ATG/JPN,ISL/DKA - VAS Audit Solution - Request System Parameters  ;May
  ; Reference to ^XMB(3.8 in ICR #10111
  ; Reference to GOTLOCAL^XMXAPIG in ICR #3006
  ; Reference to $$MG^XMBGRP in ICR #1146
+ ; Reference to ^XUSEC(KEY,DUZ) in ICR #10076
+ ; Reference to EDITPAR^XPAREDIT in ICR #2336
  ;
  Q  ; No entry from top
  ;
@@ -90,6 +92,8 @@ DISPLAY ; Displays the Redis Server INFO, Status and XPAR values for the Audit s
  S DGEMAILI=$$GET^XPAR("ALL","DG VAS MONITOR GROUP")
  S DGEMAILE=$$GET1^DIQ(3.8,+$G(DGEMAILI),.01)
  W "DG VAS MONITOR GROUP: "_DGEMAILE,!
+ W "RECORDS TO SEND: "_$$PENDING^DGAUDIT1,!
+ ;
  S DIC=19.2,X="DG VAS EXPORT" D ^DIC
  I Y<0 W !,"No entry found in OPTION SCHEDULING file for DG VAS EXPORT",! Q
  S DIC="^DIC(19.2,",DA=+Y D EN^DIQ

@@ -1,5 +1,5 @@
 VPRDTST ;SLC/MKB -- Test VistA data XML RPC ;10/18/12 6:26pm
- ;;1.0;VIRTUAL PATIENT RECORD;**4,5,32**;Sep 01, 2011;Build 6
+ ;;1.0;VIRTUAL PATIENT RECORD;**4,5,32,33**;Sep 01, 2011;Build 8
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -159,10 +159,10 @@ TOTAL() ; -- select the max# to return
  Q Y
  ;
 FILTERS(LIST) ; -- define additional filters for domain
- I "^document^insurancePolicy^lab^accession^panel^med^pharmacy^order^problem^procedure^"'[(U_TYPE_U) S Y="" G FQ
+ ;I "^document^insurancePolicy^lab^accession^panel^med^pharmacy^order^problem^procedure^"'[(U_TYPE_U) S Y="" G FQ
  N X,Y,DIR,DUOUT,DTOUT,NAME
-F1 S DIR(0)="FAO^1:20",DIR("A")="Select FILTER: "
- S DIR("?")="Enter the name of an attribute, to filter this domain."
+F1 S DIR(0)="FAO^1:30",DIR("A")="Select FILTER: "
+ S DIR("?")="Enter the name of an attribute to filter this domain, where supported."
  D ^DIR S:$D(DTOUT) Y="^" I "^^"[Y G FQ
  S NAME=$$LOW^XLFSTR(Y) S:NAME="vatype" NAME="vaType"
  S DIR("A")="        VALUE: " K X,Y

@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: SDES ERROR CODES
 ZWR
-^SDEC(409.93,0)="SDES ERROR CODES^409.93I^535^535"
+^SDEC(409.93,0)="SDES ERROR CODES^409.93I^536^536"
 ^SDEC(409.93,1,0)="0^O"
 ^SDEC(409.93,1,1)="No Error Number Provided"
 ^SDEC(409.93,2,0)="1^PT"
@@ -1071,6 +1071,8 @@ ZWR
 ^SDEC(409.93,534,1)="Patient DFN does not match the DFN associated with this appointment request."
 ^SDEC(409.93,535,0)="535^AR"
 ^SDEC(409.93,535,1)="Invalid delete reason."
+^SDEC(409.93,536,0)="13^DT"
+^SDEC(409.93,536,1)="End date/time prior to begin date/time"
 ^SDEC(409.93,"B",0,1)=""
 ^SDEC(409.93,"B",1,2)=""
 ^SDEC(409.93,"B",2,3)=""
@@ -1085,6 +1087,7 @@ ZWR
 ^SDEC(409.93,"B",11,12)=""
 ^SDEC(409.93,"B",12,13)=""
 ^SDEC(409.93,"B",13,14)=""
+^SDEC(409.93,"B",13,536)=""
 ^SDEC(409.93,"B",14,15)=""
 ^SDEC(409.93,"B",15,16)=""
 ^SDEC(409.93,"B",16,17)=""
@@ -2060,6 +2063,7 @@ ZWR
 ^SDEC(409.93,"C","DT",503)=""
 ^SDEC(409.93,"C","DT",504)=""
 ^SDEC(409.93,"C","DT",505)=""
+^SDEC(409.93,"C","DT",536)=""
 ^SDEC(409.93,"C","O",1)=""
 ^SDEC(409.93,"C","O",45)=""
 ^SDEC(409.93,"C","O",48)=""

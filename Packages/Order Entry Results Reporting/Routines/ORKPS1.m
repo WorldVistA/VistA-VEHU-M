@@ -1,5 +1,8 @@
-ORKPS1 ; SLC/CLA - Order checking support procedures for medications ;Nov 16, 2021@14:00
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**232,272,346,352,345,311,402,457,469,481,578**;Dec 17, 1997;Build 3
+ORKPS1 ; SLC/CLA - Order checking support procedures for medications ; Aug 31, 2023@13:07:24
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**232,272,346,352,345,311,402,457,469,481,578,605**;Dec 17, 1997;Build 4
+ ;
+ ; Reference to ^PS(53.1 in ICR #2907
+ ; Reference to ZERO^PSS50P7 in ICR #4662
  Q
 PROCESS(OI,DFN,ORKDG,ORPROSP,ORGLOBL) ;process data from pharmacy order check API
  ;ORPROSP = pharmacy orderable item ien [file #50.7] ^ drug ien [file #50]
@@ -172,7 +175,9 @@ DT(TDATA) ;add duplicate therapy checks
  ...I $O(^PS(53.1,+OR531,1,0)) Q
  ...;no dispense drug, so display only name and dosage type (TAB, etc.)
  ...S OIIEN=$$GET1^DIQ(53.1,+OR531,108,"I")
- ...S ORDRUGX=$$GET1^DIQ(50.7,OIIEN,.01)_" "_$$GET1^DIQ(50.7,OIIEN,.02)
+ ...D ZERO^PSS50P7(OIIEN,,,"OID")
+ ...S ORDRUGX=$G(^TMP($J,"OID",OIIEN,.01))_" "_$P($G(^TMP($J,"OID",OIIEN,.02)),U,2)
+ ...K ^TMP($J,"OID")
  ..S ORDRUGS=ORDRUGS_$S($L(ORDRUGS):", ",1:"")_ORDRUGX_" ["_$$PHSTAT(DFN,ORNUM)_"]"
  ..;OR*3.0*578 end
  .;quit if no drugs have been set into ORDRUGS
@@ -196,7 +201,7 @@ PHSTAT(DFN,ORNUM) ;get the status of the order
  .N ORLAST
  .I $E($P(ORNUM,";"),1)="C" S ORLAST=$S($E($P(ORNUM,";"),2)=1:"V",$E($P(ORNUM,";"),2)=2:"U",1:"NV")
  .E  S ORLAST=$E(ORNUM,$L(ORNUM))
- .I ORLAST="0" S RET="UNRELEASED" Q
+ .I $L(ORNUM)=1,ORLAST="0" S RET="UNRELEASED" Q
  .I ORLAST="P" S RET="PENDING" Q
  .K ^TMP($J,"OROCLST") D RX^PSO52API(DFN,"OROCLST",$P(ORNUM,";",2),,"ST")
  .S RET=$P($G(^TMP($J,"OROCLST",DFN,$P(ORNUM,";",2),100)),U,2)

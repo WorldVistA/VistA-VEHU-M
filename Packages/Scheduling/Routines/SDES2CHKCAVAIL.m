@@ -1,0 +1,24 @@
+SDES2CHKCAVAIL ;ALB/LAB - VISTA SCHEDULING SDES2 CHECK CLIN AVAIL DEFINED ;NOV 01,2023
+ ;;5.3;Scheduling;**866**;Aug 13, 1993;Build 22
+ ;;Per VHA Directive 6402, this routine should not be modified
+ Q
+ ;
+CHECKAVAIL(RESULT,SDCONTEXT,SDPARM) ;
+ N ERRORS,RETURN
+ ;validate context array for accuracy
+ D VALCONTEXT^SDES2VALCONTEXT(.ERRORS,.SDCONTEXT)
+ D VALIDATE(.ERRORS,SDPARM("CLINIC IEN"))
+ I $D(ERRORS) S ERRORS("ClinicAvailabilityDefined")="" D BUILDJSON^SDES2JSON(.RESULT,.ERRORS) Q
+ S RETURN("ClinicAvailabilityDefined")=$$AVAILDEFINED(SDPARM("CLINIC IEN"))
+ D BUILDJSON^SDES2JSON(.RESULT,.RETURN)
+ ;
+ Q
+ ;
+VALIDATE(ERRORS,SDCLINIC) ;
+ ;validate clinic 
+ D VALFILEIEN^SDES2VALUTIL(,.ERRORS,44,SDCLINIC,1,"",18,19)
+ Q
+ ;
+AVAILDEFINED(SDCLINIC) ;GET: has the given clinic ever had any availability defined?
+ Q $S(+$O(^SC(SDCLINIC,"T",0)):1,1:0)
+ ;

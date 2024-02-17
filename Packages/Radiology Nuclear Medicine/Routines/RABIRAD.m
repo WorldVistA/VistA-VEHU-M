@@ -1,13 +1,16 @@
-RABIRAD ;;HIOFO/SM BI-RADS processing ; 03/18/09 11:50
- ;;5.0;Radiology/Nuclear Medicine;**97**;Mar 16, 1998;Build 6
+RABIRAD ;HIOFO/SM - BI-RADS processing ; Sep 25, 2023@08:38:32
+ ;;5.0;Radiology/Nuclear Medicine;**97,206**;Mar 16, 1998;Build 8
  Q
 EN1() ;called from ^DD(78.3,0,"ID","WRITE") node
- ;display file 78.3's EXPRESSION's external form from file 757.01
+ ;p206/KLM - ** Deprecated **display file 78.3's EXPRESSION's external form from file 757.01
+ ;Display file 78.3's DISPLAY TEXT field which replaced the EXPRESSION field.
  ; IA 1571
  ; ^(0) is ^RA(78.3,-,0)
  N RAX,RAY,RA2
  S RA2=$P(^(0),U,2) ;fld 2 description
- S RAX=$$GET1^DIQ(757.01,+$P(^(0),U,6),.01) ;Ext. expression fld 6
+ ;S RAX=$$GET1^DIQ(757.01,+$P(^(0),U,6),.01) ;**Deprecated** Ext. expression fld 6
+ ;p206/KLM - EXPRESSION is now in DISPLAY TEXT field 100 (Y defined in FM)
+ S RAX=$$GET1^DIQ(78.3,Y,100)
  I RAX'="" D  ;assume field 6 has data only for BIRADS records
  .S RAY="("_RAX_")"
  .Q
@@ -27,13 +30,14 @@ CKREQ ; check if case requires at least one BIRAD code
  ;
 CKDATA ;check if case has any BIRAD data
  Q:'RABIREQ
- N RAX,RAX2
+ N RAX,RAX2,RAX3
  S RABIENS="^" ;string of IENS that are BIRAD codes
  S RABIDAT=0 ;=0 no birad data, =1 has birad in either prim. or sec. diag
  ; find birad iens after ien 1099, look for:
- ; piece 1 has "BI-RADS CATEGORY" and piece 6 has numeric data
+ ; piece 1 has "BI-RADS CATEGORY" and field 100 has data
  S RAX=1099
- F  S RAX=$O(^RA(78.3,RAX)) Q:'RAX  S RAX2=$G(^(RAX,0)) I $P(RAX2,U)["BI-RADS CATEGORY",+$P(RAX2,U,6)>0 S RABIENS=RABIENS_RAX_"^"
+ ;p206 - Remove field 6 dependency, use field 100
+ F  S RAX=$O(^RA(78.3,RAX)) Q:'RAX  S RAX2=$G(^(RAX,0)),RAX3=$G(^RA(78.3,RAX,1)) I $P(RAX2,U)["BI-RADS CATEGORY",RAX3]"" S RABIENS=RABIENS_RAX_"^"
  I RABIENS[("^"_$P(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0),U,13)_"^") S RABIDAT=1 Q
  S RAX=0
  F  S RAX=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"DX","B",RAX)) Q:'RAX  I RABIENS[("^"_RAX_"^") S RABIDAT=1 Q

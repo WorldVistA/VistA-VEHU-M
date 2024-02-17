@@ -1,5 +1,5 @@
 XPDTA ;SFISC/RSD - Build Actions for Kernel Files ;02/14/2006
- ;;8.0;KERNEL;**15,44,58,131,229,393,498,539,713**;Jul 10, 1995;Build 15
+ ;;8.0;KERNEL;**15,44,58,131,229,393,498,539,713,796**;Jul 10, 1995;Build 4
  ;Per VHA Directive 2004-038, this routine should not be modified.
  Q
  ;^XTMP("XPDT",XPDA,"KRN",FILE,DA) is the global root
@@ -126,7 +126,7 @@ LOAD(X,XPD) ;load routine X, XPD=action^ien in Build file
  ;XPD = 0-load, 1-delete, 2-skip, returns checksum
  ;quit if routine is already saved
  Q:$D(^XTMP("XPDT",XPDA,"RTN",X)) $P(^(X),U,3)
- X ^%ZOSF("TEST") E  W !,X,?10,"Doesn't Exist" S XPDERR=1 Q  ;p713
+ X ^%ZOSF("TEST") E  W !,X,?10," Failed %ZOSF(""TEST"")! " S XPDERR=1 Q "" ;p713 ;p796 add ""
  N DIF,XCNP,%N,%A,FDA,IEN,LN2
  S DIF="^XTMP(""XPDT"",XPDA,""RTN"",X,",XCNP=0
  X ^%ZOSF("LOAD")

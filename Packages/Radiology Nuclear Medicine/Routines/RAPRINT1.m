@@ -1,5 +1,5 @@
-RAPRINT1 ;HISC/FPT-Abnormal Exam Report (cont.) ;20 Mar 2019 1:44 PM
- ;;5.0;Radiology/Nuclear Medicine;**34,97,47,157**;Mar 16, 1998;Build 2
+RAPRINT1 ;HISC/FPT-Abnormal Exam Report (cont.) ; Sep 11, 2023@14:32:32
+ ;;5.0;Radiology/Nuclear Medicine;**34,97,47,157,206**;Mar 16, 1998;Build 8
 DIV ; walk through tmp global, start with 'division'
  Q:'$D(^TMP($J))
  N RAFIRST,RAPRTSET,RASAME,RACURR,RAPREV,L1
@@ -97,7 +97,9 @@ PQ S I1("DX")=I
  Q
 EXPRESS ;output expression text
  N RAXPRESS
- S RAXPRESS=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+I,0)),U,6),.01)
+ ;p206/KLM - EXPRESSION field (#6) deprecated. Use DISPLAY TEXT field (#100)
+ ;S RAXPRESS=$$GET1^DIQ(757.01,$P($G(^RA(78.3,+I,0)),U,6),.01)
+ S RAXPRESS=$P($G(^RA(78.3,+I,1)),U)
  I RAXPRESS'="" W ?32,"(",RAXPRESS,")"
  Q
 HDR ; header

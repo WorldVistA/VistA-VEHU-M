@@ -1,0 +1,118 @@
+VPRSDAOB ;SLC/MKB/CMF -- SDA Observation utilities ;7/28/23  14:11
+ ;;1.0;VIRTUAL PATIENT RECORD;**33**;Sep 01, 2011;Build 8
+ ;;Per VHA Directive 6402, this routine should not be modified.
+ ;
+ ; External References          DBIA#
+ ; -------------------          -----
+ ; ^PXRMINDX                     4290
+ ; DIQ                           2056
+ ; GMRVUT0, ^UTILITY($J          1446
+ ; GMVBMI                        7437
+ ; GMVGETVT                      5047
+ ; GMVUTL                        5046
+ ; ^MDC(704.117                  5810
+ ;
+VITALS ; -- GMR Vital Measurements query [main]
+ ; Expects DSTRT, DSTOP, DMAX from DDEGET and returns DLIST(#)=ien
+ N GMRVSTR,VPRIDT,VPRTYP,ID,VPRN,X0,TYP,GUID
+ S GMRVSTR="BP;T;R;P;HT;WT;CVP;CG;PO2;PN" ;CPRS vitals data set
+ S GMRVSTR(0)=DSTRT_U_DSTOP_U_DMAX_"^1"
+ D EN1^GMRVUT0 S VPRN=0
+ S VPRIDT=0 F  S VPRIDT=$O(^UTILITY($J,"GMRVD",VPRIDT)) Q:VPRIDT<1  D  Q:VPRN'<DMAX
+ . S VPRTYP="" F  S VPRTYP=$O(^UTILITY($J,"GMRVD",VPRIDT,VPRTYP)) Q:VPRTYP=""  D
+ .. S ID=$O(^UTILITY($J,"GMRVD",VPRIDT,VPRTYP,0)) Q:'ID
+ .. ; check ^PXRM for 704.117 GUID instead of 120.5 ien
+ .. S X0=$G(^UTILITY($J,"GMRVD",VPRIDT,VPRTYP,ID)),TYP=$P(X0,U,3)
+ .. S GUID=$O(^PXRMINDX(120.5,"PI",DFN,TYP,+X0,"")) S:GUID="" GUID=ID
+ .. S VPRN=VPRN+1,DLIST(VPRN)=GUID
+ .. S ^TMP("VPRGMV",$J,GUID)=$G(^UTILITY($J,"GMRVD",VPRIDT,VPRTYP,ID))
+ K ^UTILITY($J,"GMRVD")
+ Q
+ ;
+VIT1(IEN) ; -- get info for one Vital measurement
+ ; Accepts IEN = #120.5 ien or #704.117 GUID
+ ; Returns VPRV array, VPRGMV=VPRV(0), VPRANGE, VPRTYPE to entity
+ S IEN=$G(IEN) I IEN="" S DDEOUT=1 Q
+ D GETREC^GMVUTL(.VPRV,IEN,1)
+ S VPRGMV=$G(VPRV(0)) I '$G(VPRV(0)) S DDEOUT=1 Q
+ I $$ISGUID($P(VPRGMV,U,8)) S DDEOUT=1 Q  ;don't pass rare but potential GUID strings as actual values
+ S VPRTYPE=$$FIELD^GMVGETVT(+$P(VPRGMV,U,3),2)
+ I VPRTYPE="WT" D  ;get BMI for weight record
+ . I $G(^TMP("VPRGMV",$J,IEN)) S $P(VPRGMV,U,14)=$P(^(IEN),U,14) Q
+ . ; get BMI from query array if available, else call GMVBMI
+ . N VPRBMI,DFN
+ . S VPRBMI(1)=+VPRGMV,VPRBMI(2)=$P(VPRGMV,U,8),DFN=+$P(VPRGMV,U,2)
+ . D CALBMI^GMVBMI(.VPRBMI,0)
+ . S:$G(VPRBMI)'="" $P(VPRGMV,U,14)=VPRBMI
+ S VPRANGE=$S($L(VPRTYPE):$$RANGE^VPRDGMV(VPRTYPE),1:"")
+ Q
+ ;
+VITQUAL ; -- build DLIST(#)=Qualifiers [code^name]
+ N I,X,QUALS
+ S QUALS=$G(VPRV(5))
+ F I=1:1 S X=$P(QUALS,U,I) Q:X=""  S DLIST(I)=X
+ Q
+ ;
+VITCODE(IEN,SFN) ; -- return [first] code for vital type
+ ; SubFileNumber = 120.518 for Vital Type
+ ;                 120.522 for Vital Qualifier
+ N VPRC,IENS,Y
+ D GETS^DIQ(SFN,"1,"_IEN_",","**",,"VPRC")
+ S IENS=$O(VPRC(SFN_1,""))
+ S Y=$S($L(IENS):$G(VPRC(SFN_1,IENS,.01,"I")),1:"")
+ Q Y
+ ;
+MDC(OBS) ; -- MDC OBSERVATION UPDATE protocol listener
+ N DFN,ID,ACT,VPROBS
+ M VPROBS=OBS
+ D:'$D(VPROBS) NOOBS ;currently not provided by MDC event
+ Q:$G(VPROBS("ERROR"))'=""
+ Q:$G(VPROBS("DOMAIN","VITALS"))'=1 
+ S DFN=+$G(VPROBS("PATIENT_ID","I")) Q:DFN<1
+ S ID=$G(VPROBS("OBS_ID","I")) Q:'$L(ID)
+ S ACT=$S('$G(VPROBS("STATUS","I")):"@",1:"")
+ D POST^VPRHS(DFN,"Observation",ID_";120.5",ACT)
+ Q
+ ;
+NOOBS ; -- called if OBS array was not created by MDCPROTD
+ ; MDC event called from ASTATUS index, so expects FM variables (DA, X1, X2)
+ N IEN,VPRERR,VPRGUID,Y
+ S IEN=$G(DA) I '+IEN S VPROBS("ERROR")="Invalid DA value passed to entry point." Q
+ D GETS^DIQ(704.117,IEN_",",".01;.08;.09","INR","^TMP(""VPROBS"",$J)","VPRERR")
+ I $D(VPRERR) D  Q
+ . S VPROBS("ERROR")=$G(VPRERR("DIERR",1))_U_$G(VPRERR("DIERR",1,"TEXT",1))
+ M VPROBS=^TMP("VPROBS",$J,704.117,IEN_",") K ^TMP("VPROBS",$J)
+ S VPROBS("DOMAIN","VITALS")=0
+ S VPRGUID=$$GET1^DIQ(704.117,IEN_",",.07)
+ F Y=1:1 Q:$T(MAP+Y)=""  I $P($T(MAP+Y),";",4)=VPRGUID S VPROBS("DOMAIN","VITALS")=1 Q
+ Q
+ ;
+ISGUID(MDX) ; Returns true if MDX is in the format of a GUID.  Copied from MDCLIO1
+ N X,Y
+ Q:$L(MDX)'=38 0
+ Q:MDX'?1"{"8UN1"-"4UN1"-"4UN1"-"4UN1"-"12UN1"}" 0
+ ; Scan for Uppercase character above F
+ S X=1 F Y=71:1:90 I MDX[$C(Y) S X=0 Q
+ Q X
+ ;
+MAP ;Contains the CLiO terms paired with a vital sign - vital;term_guid.  Copied from MDCLIO1
+ ;;ABDOMINAL GIRTH;{F70E6642-2719-22BE-BE87-DEF0A884F177}
+ ;;AUDIOMETRY;{FFD29134-8BB2-248E-0412-93C2C08B076F}
+ ;;BLOOD PRESSURE;{B15F2DF6-CE99-B847-FE6B-3D5F174A2BCD}
+ ;;CENTRAL VENOUS PRESSURE;{D30F98A7-4C5D-12E8-AB4D-9C85A4332EC3}
+ ;;CIRCUMFERENCE/GIRTH;{92A124D4-B75F-9FD9-1A51-605887BCEA79};
+ ;;FETAL HEART TONES;{A2E22A44-E924-ADDE-2B8E-0251666B4DE6}
+ ;;FUNDAL HEIGHT;{EEAB8762-624F-7BA3-4001-114FD229BA69}
+ ;;HEAD CIRCUMFERENCE;{33827E3C-5DBB-083C-D8BE-4DFD7D42071F}
+ ;;HEARING;{813CCC94-3D64-5093-BC6C-053EFD9948F9}
+ ;;HEIGHT;{B440216B-0FB3-1950-7859-7C1BE398FE4A}
+ ;;PAIN;{47A83DEA-BA95-38AD-DF2E-1F209122E684}
+ ;;PULSE;{FCA63B76-EF4C-EBE5-33C1-F1EEBD7A7BC4}
+ ;;PULSE OXIMETRY;{5F84DD55-3CCF-094C-2536-B51EB7FAD999}
+ ;;RESPIRATION;{973ED2C0-0625-7DF9-17DC-8FFF7E376F23}
+ ;;TEMPERATURE;{0F33223E-DF2C-6B8B-5201-5E091C5F9065}
+ ;;TONOMETRY;{C06989EF-4B0F-4941-B1A7-FA9D81A480FF}
+ ;;VISION CORRECTED;{ED022AC1-EBE4-E708-684D-63D00628A94C}
+ ;;VISION UNCORRECTED;{BEA5E565-D728-F5B3-0A3A-0528C42A45C4}
+ ;;WEIGHT;{CD2D8263-6B71-0E1C-0AFE-87B4B2C12632}
+ Q

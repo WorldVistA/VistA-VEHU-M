@@ -1,9 +1,14 @@
-GMRAPEM0 ; HIRMFO/WAA,FT - ALLERGY/ADVERSE REACTION PATIENT EDIT DRIVER ;May 4, 2022@12:17:44
- ;;4.0;Adverse Reaction Tracking;**2,5,17,21,36,50,58,63,51**;Mar 29, 1996;Build 190
+GMRAPEM0 ; HIRMFO/WAA,FT - ALLERGY/ADVERSE REACTION PATIENT EDIT DRIVER; October 18, 2023@08:47:00
+ ;;4.0;Adverse Reaction Tracking;**2,5,17,21,36,50,58,63,51,68**;Mar 29, 1996;Build 5
+ ;
+ ; Reference to $$ONOFF^ORB3USER in ICR #7211
+ ; Reference to CHKMEDS^ORWDAL32,GETPROV^ORWDAL32,SENDALRT^ORWDAL32 in ICR #6756
+ ;
 EN11 ; Entry point for GMRA USER E/E PAT REC DATA option
  ; GMRAUSER is a flag that indicates that this is a User
  ; If user has Verifier Key then user will act normal
  I '$D(^XUSEC("GMRA-ALLERGY VERIFY",DUZ)) S GMRAUSER=1
+ ;
 EN1 ; Entry for ENTER/EDIT PATIENT REACTION DATA option
  ; EDIT PATIENT A/AR (DFN UNK.)
  S GMRAOUT=0
@@ -12,6 +17,7 @@ EN1 ; Entry for ENTER/EDIT PATIENT REACTION DATA option
  K DFN,DIC,GMRAOUT,GMRARET,GMA,GMRAUSER
  D EXIT,EN1^GMRAKILL
  Q
+ ;
 EN21 ; Process patient data and determine if patient is NKA
  S GMRAOUT=$G(GMRAOUT,0)
  ; check patient assessment before enter/edit reaction
@@ -41,6 +47,7 @@ EN21 ; Process patient data and determine if patient is NKA
  .Q
  L -^XTMP("GMRAED",DFN) ;21
  Q
+ ;
 EN2 ; EDIT PATIENT A/AR (DFN KNOWN)
  ; Called from the GMRAOR ALLERGY ENTER/EDIT protocol
  I '$D(^XUSEC("GMRA-ALLERGY VERIFY",DUZ)) S GMRAUSER=1
@@ -51,6 +58,7 @@ EN2 ; EDIT PATIENT A/AR (DFN KNOWN)
  .Q
  K GMA,GMRARET,GMRAUSER
  Q
+ ;
 ALERT ; PROCESS ALERTS FOR ART
  N DFN,GMRAPA,GMRACNT,GMRAOUT,GMRANEW,GMRAUSER
  S (GMRACNT,GMRAOUT,GMRANEW)=0 D
@@ -73,6 +81,7 @@ ALERT ; PROCESS ALERTS FOR ART
  .  D EXIT,EN1^GMRAKILL
  .  Q
  Q
+ ;
 SELECT ;Select a patient reaction
  S GMRACNT=0 D 1^VADPT
  S GMRALOC=$P(VAIN(4),U,2),GMRANAM=VADM(1),GMRASEX=VADM(5),GMRAOUT=0,GMRAOTH=$O(^GMRD(120.83,"B","OTHER REACTION",0)) D KVAR^VADPT K VA,VAROOT
@@ -80,6 +89,7 @@ SELECT ;Select a patient reaction
  D REACT^GMRAPAT(DFN) ; Load all reaction for this patient.
  D EN1^GMRAPES0
  I GMRAPA>0 D TYPE D
+ .I $G(GMRAEVT) D XQOR ;post event if anything edited ;P68
  .I GMRAOUT D:$G(GMRANEW) DELETE S:'$$MISSREQ&('$P($G(GMRAPA(0)),U,12)) GMRAOUT=0,^TMP($J,"GMRASF","B",GMRAPA,GMRACNT)="",^TMP($J,"GMRASF",GMRACNT,GMRAPA)="" D:GMRAOUT UPOUT^GMRAPEM3 Q  ; 21,36
  .I GMRAERR D ERR^GMRAPEM3 Q  ;The reaction was entered in error
  .I $P(GMRAPA(0),U,12) D SIGNED^GMRAPEM3 Q  ;The reaction has been signed
@@ -88,9 +98,11 @@ SELECT ;Select a patient reaction
  .I GMRANEW D MEDCHK ; NSR 20070203
  .D UPDATE^GMRAPEM3
  .Q
+ K GMRAEVT
  Q
+ ;
 TYPE ; Select the type of the process to use this reaction
- S GMRAERR=0
+ S GMRAERR=0,GMRAEVT=0 K GMRAPA1
  ; If reaction is not new check to see if user want to enter in error
  I 'GMRANEW W @IOF N GMRADFN D EN1^GMRAPEE0 I GMRAERR!GMRAOUT Q
  ;If reaction is observed and signed off
@@ -102,7 +114,7 @@ TYPE ; Select the type of the process to use this reaction
  .N GMRAOD S GMRAOD=$D(^GMR(120.85,"C",GMRAPA)) ;Existing observation data?
 OBSDATE .;
  .S GMRALAGO=1 F  D EN2^GMRAU85 Q:GMRAPA1>0  Q:GMRAOUT  W !,"You must enter a valid date or an Up-arrow to exit",!,$C(7)
- .I 'GMRAOUT,GMRAPA1>0  D EN2^GMRAROBS
+ .I 'GMRAOUT,GMRAPA1>0  D EN2^GMRAROBS S:$P($G(^GMR(120.8,GMRAPA,0)),U,16)=1 GMRAEVT=1 ;P68
  .I '$D(^GMR(120.85,"C",GMRAPA)),$G(GMRANEW)!('$G(GMRANEW)&($G(GMRAOD))) D OBSPROB S GMRAOUT=0 G OBSDATE
  .Q
  ;Verify data
@@ -117,7 +129,7 @@ OBSDATE .;
  .N GMRARP
  .S GMRARP=0
  .D ASK^GMRAUTL("DO YOU WISH TO EDIT VERIFIED DATA? ",.GMRAOUT,.GMRARP) Q:GMRAOUT
- .D:GMRARP SITE^GMRAUTL,EN1^GMRAPED0
+ .I GMRARP D SITE^GMRAUTL,EN1^GMRAPED0 S GMRAEVT=1 ;P68
  .Q
  ;if the reaction is new or not signed off
  I '$P(GMRAPA(0),U,12) D
@@ -125,6 +137,7 @@ OBSDATE .;
  .I $P($G(^GMR(120.8,GMRAPA,0)),U,16) S GMRASLL(GMRAPA)=1
  .Q
  Q
+ ;
 EXIT S GMRAPA=0 F  S GMRAPA=$O(^TMP($J,"GMRASF","B",GMRAPA)) Q:GMRAPA<1  D UNLOCK^GMRAUTL(120.8,GMRAPA)
  K ^TMP($J,"GMRASF")
  K ^TMP($J,"GMRALST")
@@ -208,10 +221,11 @@ GMRACHK(GMRAPA) ;
  . D ^XMD
  . K ^XTMP("GMRACHK",$J)
  Q
+ ;
 MEDCHK ; NSR 20070203
  N GMRAMCHK
  W !!,?2,"Checking new allergy against the patient's active medication profile . . . "
- D CHKMEDS^ORWDAL32(.GMRAMCHK,$P(GMRAPA(0),"^"),$P(GMRAPA(0),"^",2)) ; ICR #6756
+ D CHKMEDS^ORWDAL32(.GMRAMCHK,$P(GMRAPA(0),"^"),$P(GMRAPA(0),"^",2))
  I GMRAMCHK'>0 W !!,?2,"No conflicts were discovered.",! K GMRAMCHK Q
  I GMRAMCHK>0 D
  . N GMRADA,GMRAYN,GMRAPROV,GMRASEND,GMRASLST,GMRALST,GMRAORD,GMRADUZ,GMRAOUT
@@ -219,7 +233,7 @@ MEDCHK ; NSR 20070203
  . S GMRADA=""
  . F  S GMRADA=$O(GMRAMCHK(GMRADA)) Q:GMRADA=""  I $D(GMRAMCHK(GMRADA)) D
  . . W !!,$P(GMRAMCHK(GMRADA),"^",3)_" (Order #"_$P(GMRAMCHK(GMRADA),"^")_") An alert will be sent to:"
- . . D GETPROV^ORWDAL32(.GMRAPROV,$P(GMRAMCHK(GMRADA),"^"),+$G(DFN)) ; ICR #6756
+ . . D GETPROV^ORWDAL32(.GMRAPROV,$P(GMRAMCHK(GMRADA),"^"),+$G(DFN))
  . . N PRVDA S PRVDA=""
  . . F  S PRVDA=$O(GMRAPROV(PRVDA)) Q:PRVDA=""  I $D(GMRAPROV(PRVDA)) D
  . . . S GMRASLST($P(GMRAMCHK(GMRADA),"^"),$P(GMRAPROV(PRVDA),";"))=GMRAPROV(PRVDA)
@@ -232,10 +246,11 @@ MEDCHK ; NSR 20070203
  . . K GMRAPROV
  . . S GMRAPROV=""
  . . I $D(GMRALST) M GMRAPROV=GMRALST
- . . D SENDALRT^ORWDAL32(.GMRASEND,GMRAORD,.GMRAPROV) ; ICR #6756
+ . . D SENDALRT^ORWDAL32(.GMRASEND,GMRAORD,.GMRAPROV)
  . K GMRASEND,GMRASLST
  K GMRAMCHK
  Q
+ ;
 ADDSTHR(GMRALST) ; NSR 20070203
  K GMRALST
  N DIC,I,GMRAYN,GMRAON,GMRANOTE,GMRAOUT,Y
@@ -245,8 +260,19 @@ ADDSTHR(GMRALST) ; NSR 20070203
  . S DIC="^VA(200,",DIC(0)="AEBQ"
  . S DIC("A")="Enter Recipient's Name: " D ^DIC
  . I +Y>0 D
- . . S GMRAON=$P($$ONOFF^ORB3USER(GMRANOTE,+Y,"","",""),U,1) ;ICR #7211
+ . . S GMRAON=$P($$ONOFF^ORB3USER(GMRANOTE,+Y,"","",""),U,1)
  . . I GMRAON="OFF" W !!,"   User is unable to receive the notification!",! Q
  . . S GMRALST($P(Y,"^"))=$P(Y,"^")_";VA(200,"_"^"_$P(Y,"^",2) K DIC,Y
  . S (GMRAOUT,GMRAYN)=0 D ASK^GMRAUTL("Add another recipient? ",.GMRAOUT,.GMRAYN) Q:GMRAOUT
+ Q
+ ;
+XQOR ; GMRA EDIT VERIFIED DATA event driver ;P68
+ N X S X=+$O(^ORD(101,"B","GMRA EDIT VERIFIED DATA",0))_";ORD(101,"
+ Q:'X  Q:'$G(GMRAPA)
+ S:'$D(GMRAPA(0)) GMRAPA(0)=$G(^GMR(120.8,+GMRAPA,0))
+ I $D(GMRAPA1) D
+ . S:$G(GMRAPA1)>0 GMRAPA1(0)=$G(^GMR(120.85,+GMRAPA1,0))
+ . ; cleanup GMRAPA1 if no selection (carried over from last edit)
+ . I $G(GMRAPA1)<0!($P(GMRAPA1(0),U,15)'=GMRAPA) K GMRAPA1
+ D:X EN^XQOR
  Q

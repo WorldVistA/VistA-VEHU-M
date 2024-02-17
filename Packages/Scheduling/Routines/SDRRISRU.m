@@ -1,5 +1,5 @@
 SDRRISRU ;ALB/MAH,BWF - Recall Reminder Utilities ;MAY 26, 2022
- ;;5.3;Scheduling;**536,627,648,799,818**;Aug 13, 1993;Build 9
+ ;;5.3;Scheduling;**536,627,648,799,818,866**;Aug 13, 1993;Build 22
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
 OPENSLOT(SDRRIEN,SDRRST,SDRRND) ; Function returns the number of open (available)
@@ -71,12 +71,15 @@ DELAPPT(SDRRIEN,APPT,CLIN1) ; Record deleted from Recall List because of appoint
 DELUSER(SDRRIEN) ; Record deleted by a user.
  N SDRRFDA
  S SDRRFDA(403.56,"+1,",201)=$E($$NOW^XLFDT(),1,12) ; delete date
- S SDRRFDA(403.56,"+1,",202)=DUZ ; delete clerk
+ ; DELUSER is defined by SDES2DISPRECALL to ensure the correct user is defined as the delete clerk
+ ; This will not be new'ed or killed in this routine. DELUSER is newed in SDES2DISPRECALL,
+ ; which is firing off this trigger cross reference.
+ S SDRRFDA(403.56,"+1,",202)=$S($G(DELUSER):$G(DELUSER),1:DUZ) ; delete clerk
  S:$G(SDRRFTR) SDRRFDA(403.56,"+1,",203)=SDRRFTR ; delete reason:
  D DELSET(SDRRIEN,.SDRRFDA)
  Q
 DELSET(SDRRIEN,SDRRFDA) ;
- N SDRRREC,EAS,NEWIEN,APPTIEN,SDRRFDA,FDA,RREMIEN
+ N SDRRREC,EAS,NEWIEN,APPTIEN,FDA,RREMIEN
  S SDRRREC=$G(^SD(403.5,SDRRIEN,0))
  S EAS=$G(^SD(403.5,SDRRIEN,1))
  S SDRRFDA(403.56,"+1,",.01)=$P(SDRRREC,U,1) ; patient

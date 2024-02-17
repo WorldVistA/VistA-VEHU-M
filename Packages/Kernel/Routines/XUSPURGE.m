@@ -1,19 +1,12 @@
-XUSPURGE ;SFISC/STAFF - PURGE ROUTINE FOR XUSEC ;03/18/10  07:10
- ;;8.0;KERNEL;**180,312,543**;Jul 10, 1995;Build 15
+XUSPURGE ;SFISC/STAFF - PURGE ROUTINE FOR XUSEC ; Oct 23, 2023@14:28:20
+ ;;8.0;KERNEL;**180,312,543,756**;Jul 10, 1995;Build 18
  ;Per VHA Directive 2004-038, this routine should not be modified.
-SCPURG ;Purge sign-on log to 30 days
- N XU1,XU2,XUDT,DIK,DA,DIE,DR,XUNOW
- S XUDT=$$FMADD^XLFDT(DT,-30),XUNOW=$$NOW^XLFDT() ;Set the limit
+SCPURG ;Purge sign-on log to 365 days
+ N XUDT,DA,XUNOW,XURETENT
  I $O(^XUSEC(0,0))'>0 Q
- F DA=0:0 S DA=$O(^XUSEC(0,DA)) Q:(DA'>0)!(DA>XUDT)  D
- . S XU1=$G(^XUSEC(0,DA,0)),XU2=+XU1
- . ;Enter a SIGN OFF time to clear the X-ref's p543
- . I $P(XU1,U,4)="" S DR="3////"_XUNOW,DIE="^XUSEC(0," D ^DIE
- . ;Now kill the record.
- . S DIK="^XUSEC(0," D ^DIK
- . ;Make sure the CUR X-ref is cleared.
- . I XU1 K ^XUSEC(0,"CUR",XU2,DA)
- . Q
+ S XURETENT=$$RETENTION ; get # of days to retain
+ S XUDT=$$FMADD^XLFDT(DT,-XURETENT),XUNOW=$$NOW^XLFDT() ;Set the limit
+ F DA=0:0 S DA=$O(^XUSEC(0,DA)) Q:(DA'>0)!('$$EXPIRED(DA,XUDT))  D DELETE(DA,XUNOW)
  Q
  ;
 AOLD ;
@@ -45,3 +38,25 @@ V02(XUDAYS) ;Purge old Verify code from each users VOLD x-ref
  Q
 ENDA K DIRUT,DIR,XUT,XUDAYS,XUDT,XUI,XUJ,XUK
  Q
+ ;
+RETENTION() ; returns number of days to retain SIGN-ON LOG file entries
+ N XURETENT
+ S XURETENT=$P(^XTV(8989.3,1,"XUS"),"^",21) ;p756
+ I ('XURETENT)!($G(XURETENT)<365) S XURETENT=365
+ I ($G(XURETENT)>9999) S XURETENT=9999
+ Q XURETENT
+ ;
+EXPIRED(XUDA,XUDT) ;Is XUDA older (smaller) than XUDT
+ Q XUDA<XUDT
+ ;
+DELETE(XUDA,XUNOW) ; delete entry XUDA from SIGN-ON LOG file
+ N DR,XU1,XU2,DIK,DIE
+ S XU1=$G(^XUSEC(0,XUDA,0)),XU2=+XU1
+ ;Enter a SIGN OFF time to clear the X-ref's p543
+ I $P(XU1,U,4)="" S DR="3////"_XUNOW,DIE="^XUSEC(0," D ^DIE
+ ;Now kill the record.
+ S DIK="^XUSEC(0," D ^DIK
+ ;Make sure the CUR X-ref is cleared.
+ I XU1 K ^XUSEC(0,"CUR",XU2,XUDA)
+ Q
+ ;

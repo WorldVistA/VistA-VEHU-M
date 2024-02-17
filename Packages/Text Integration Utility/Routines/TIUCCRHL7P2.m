@@ -1,5 +1,5 @@
 TIUCCRHL7P2 ; CCRA/PB - TIUHL7 Msg Processing; March 23, 2005
- ;;1.0;TEXT INTEGRATION UTILITIES;**337,348,349,352,354**;Jun 20, 1997;Build 24
+ ;;1.0;TEXT INTEGRATION UTILITIES;**337,348,349,352,354,356**;Sep 27, 2023;Build 26
  ; Reference to CMT^GMRCGUIB in ICR #2980
  ; Reference to SETCOM^GMRCGUIB, SETDA^GMRCGUIB in ICR #7223
  ; Reference to ^TMP("CSLSUR1" supported by DBIA #3498
@@ -10,7 +10,8 @@ TIUCCRHL7P2 ; CCRA/PB - TIUHL7 Msg Processing; March 23, 2005
  ;PB - Patch 349 modification to parse and file the consult factor from the note and file as a comment with the consult
  ;PB - Patch 352 modifications to set field 1205 in file 8925 to the value in field 2 in file 123 for the consult
  ;PB - Patch 354 modifications to keep the status of the consult after the note/addendum is filed whether the note/addendum
- ;     originates in CPRS or in HSRM.  
+ ;     originates in CPRS or in HSRM.
+ ;PB - Patch 356 modifications to file the note as a stand-alone note and not linked to a consult
  Q
 CONTINUE ; data verification
  ;
@@ -34,7 +35,9 @@ CONTINUE ; data verification
  .N MSGTEXT ;I '$D(^VA(200,TIU("AUIEN"))) D
  .S MSGTEXT="No valid Electronic Signature for "_$G(TIU("AUNAME"))_" Note is not signed." D MESSAGE^TIUCCRHL7P3(MSGID,VNUM,MSGTEXT) ;
  .K TIU("SIGNED"),TIU("CSIGNED")
- I $$MEMBEROF^TIUHL7U1(TIU("TITLE"),"CONSULTS") S TIU("VSTR")=$$VSTRBLD^TIUSRVP(TIU("VNUM")) ;D
+ ;I $$MEMBEROF^TIUHL7U1(TIU("TITLE"),"CONSULTS") S TIU("VSTR")=$$VSTRBLD^TIUSRVP(TIU("VNUM")) ;D
+ S CONSERVICEIEN=$$GET1^DIQ(123,CONSULTID_",",1,"I")
+ S VLOC=$$GETLOC(CONSERVICEIEN),TIU("LOC")=VLOC
  D CONTINUE^TIUCCRHL7P3
  Q
 MAKE(SUCCESS,DFN,TITLE,VDT,VLOC,VSIT,TIUX,VSTR,SUPPRESS,NOASF) ; New Document
@@ -49,13 +52,16 @@ MAKE(SUCCESS,DFN,TITLE,VDT,VLOC,VSIT,TIUX,VSTR,SUPPRESS,NOASF) ; New Document
  ; [NOASF] = if 1=Do Not Set ASAVE cross-reference
  ; TIUX    = (by ref) array containing field data and document body
  ;
+ N CONSERVICEIEN
+ S CONSERVICEIEN=$$GET1^DIQ(123,CONSULTID_",",1,"I")
  N TIU,TIUDA,LDT,NEWREC
  S SUCCESS=0
  I +$G(VSIT) S VSTR=$$VSTRBLD(+VSIT)
  I $L($G(VSTR)) D
  . S VDT=$S(+$G(VDT):+$G(VDT),1:$P(VSTR,";",2))
  . S LDT=$S(+$G(VDT):$$FMADD^XLFDT(VDT,"","",1),1:"")
- . S VLOC=$S(+$G(VLOC):+$G(VLOC),1:$P(VSTR,";"))
+ . ;S VLOC=$S(+$G(VLOC):+$G(VLOC),1:$P(VSTR,";"))
+ . S VLOC=$$GETLOC(CONSERVICEIEN),TIU("LOC")=VLOC
  . ; If note is for Ward Location, call MAIN^TIUMOVE
  . I $P($G(^SC(+VLOC,0)),U,3)="W" D MAIN^TIUMOVE(.TIU,DFN,"",VDT,LDT,1,"LAST",0,+VLOC) Q
  . ; Otherwise, call PATVADPT^TIULV
@@ -67,10 +73,13 @@ MAKE(SUCCESS,DFN,TITLE,VDT,VLOC,VSIT,TIUX,VSTR,SUPPRESS,NOASF) ; New Document
  . ; Otherwise, call MAIN^TIUVSIT
  . D MAIN^TIUVSIT(.TIU,DFN,"",VDT,LDT,"LAST",0,VLOC)
  I '+$G(TIU("VSTR")) D
+ . S VLOC=$$GETLOC($G(CONSERVICEIEN)),TIU("LOC")=VLOC
  . D EVENT^TIUSRVP1(.TIU,DFN)
  S TIU("INST")=$$DIVISION^TIULC1(+TIU("LOC"))
  I $S($D(TIU)'>9:1,+$G(DFN)'>0:1,1:0) S SUCCESS="0^"_$$EZBLD^DIALOG(89250001) Q
  ;
+ N % D NOW^%DTC
+ S (TIU("LOC"),TIU("VLOC"))=VLOC_"^"_$$GET1^DIQ(44,VLOC_",",.01,"E"),TIU("VSTR")=VLOC_"^"_%
  S TIUDA=$$GETREC(DFN,.TIU,TITLE,.NEWREC)
  I +TIUDA'>0 S SUCCESS="0^"_$$EZBLD^DIALOG(89250002) Q
  S SUCCESS=+TIUDA
@@ -89,8 +98,10 @@ MAKE(SUCCESS,DFN,TITLE,VDT,VLOC,VSIT,TIUX,VSTR,SUPPRESS,NOASF) ; New Document
  . D UPDTIRT^TIUDIRT(.TIU,TIUDA)
  ;Patch 352 - PB update field 1205 to be the FROM field (#2) in file 123
  I $G(TIUDA)>0 D
+ .Q
  .N FDA
- .S FDA(1,8925,TIUDA_",",1205)=$$GET1^DIQ(123,VNUM_",",2,"I")
+ .S FDA(1,8925,TIUDA_",",1205)=$$GET1^DIQ(123,CONSULTID_",",2,"I") ;PB - Sep 23 - Patch 356 changed to used the CONSULTID variable
+ .S FDA(1,8925,TIUDA_",",1211)=VLOC
  .D UPDATE^DIE("","FDA(1)","ZERR")
  K ^TIU(8925,+TIUDA,"TEMP")
  Q
@@ -226,7 +237,7 @@ ES(DA,TIUES,TIUI,TIUESIG) ; ^DIE call for /es/
  N GMRCA,GMRCAD,GMRCDUZ,GMRCMT,GMRCO,GMRCSTS,GMRCDA
  ;Patch 354 - PB - link the note or addendum to the consult then update the status of the consult to the original status
  D POST^TIUCNSLT(+DA,"ACTIVE")
- S GMRCO=VNUM,GMRCSTS=ORIGSTAT,GMRCA=3
+ S GMRCO=$G(CONSULTID),GMRCSTS=ORIGSTAT,GMRCA=3 ;PB - Sep 23 - changed to use CONSULTID for the lookup
  D STATUS^GMRCP
  S GMRCAD=$$NOW^XLFDT
  S DA=$$SETDA^GMRCGUIB  ;7223
@@ -234,7 +245,7 @@ ES(DA,TIUES,TIUI,TIUESIG) ; ^DIE call for /es/
  D SETCOM^GMRCGUIB(.GMRCMT,GMRCDUZ) ;ICR 7223
  ;PB - Feb 16, 2022 - patch 349 added code to add a comment to the consult activity log
  N COMMENT,NOTEDT
- S COMMENT(1)=$G(CFNOTE),NOTEDT=$$NOW^XLFDT,GMRCDA=VNUM
+ S COMMENT(1)=$G(CFNOTE),NOTEDT=$$NOW^XLFDT,GMRCDA=CONSULTID ;PB - Sep 23 - Patch 356 changed to use CONSULTID for the lookup
  D CMT^GMRCGUIB(GMRCDA,.COMMENT,GMRCDUZ,NOTEDT,GMRCDUZ)  ;icr 2980
  Q
 POST(TIUDA) ;Patch 354 - PB - link the note or addendum to the consult then update the status of the consult to the original status
@@ -250,3 +261,11 @@ POST1(TIUDA) ;Patch 354 - PB - link the note or addendum to the consult then upd
  D POST^TIUCNSLT(DA,"INCOMPLETE")
  D STATUS^GMRCP
  Q
+GETLOC(CONSERV) ;
+ ;gets the location for the visit from the consult service default clinic
+ N VLOCX,IENS
+ I CONSERV="" Q 0
+ S IENS="1,"_CONSERV_"," S VLOCX=$$GET1^DIQ(123.56,IENS,.01,"I")
+ S IENS=CONSERV_","
+ I $G(VLOCX)="" S VLOCX=$$CHECKLST^TIUCCHL7UT($$GET1^DIQ(123.5,IENS,.01,"E"))
+ Q VLOCX

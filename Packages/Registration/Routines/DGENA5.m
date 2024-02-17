@@ -1,5 +1,5 @@
-DGENA5 ;ISA/Zoltan,ALB/CKN,TEJ - Enrollment API - CD Processing ;8/15/08 11:10am
- ;;5.3;Registration;**232,688,850,894**;Aug 13, 1993;Build 48
+DGENA5 ;ALB/EZ,CKN,TEJ,KUM - Enrollment API - CD Processing ;8/15/08 11:10am
+ ;;5.3;Registration;**232,688,850,894,1109**;Aug 13, 1993;Build 13
  ;Phase II API's Related to Catastrophic Disability.
  ;
  ; The following variable names are used consistently in this routine:
@@ -147,6 +147,8 @@ RSNTOHL7(REASON,D2) ; Return HL7 Segment Value for this Reason.
  Q:REASON="" 0
  S D2=$S(11[$D(D2):D2,11[$D(HLECH):$E(HLECH),1:"~")
  N NAME,NUMBER,TABLE,FILE,CODE,HL7VAL
+ ;DG*5.3*1109 - Initialize HL7VAL to avoid hard error if REASON doesn't exist in #27.17
+ S HL7VAL=""
  I $$TYPE(REASON)="C" D
  . S CODE=$$CODE(REASON)
  . Q:CODE=""
@@ -175,7 +177,11 @@ DSCR2HL7(DGDFN,D2) ; Return HL7 Sequence Value for all Descriptors.
  I $D(DGTMP) S (I1,I2)=0 F  S I1=$O(DGTMP(I1)),I2=I2+1 Q:+I1=0  S DG2717=+DGTMP(I1,0),$P(DSCRTOHL7,$E(DGHLENCD,2),I2)=$$TOHL7()
  Q $G(DSCRTOHL7,0)
 TOHL7() ;
- I $P(^DGEN(27.17,DG2717,0),U,2)="DE" Q $P(^DGEN(27.17,DG2717,0),U,4)
+ ; DG*5.3*1109 - If TYPE of Catastrophic Disability Reason is DESCRIPTOR then return HL7 TRANSMISSION VALUE, otherwise return -1
+ ; Avoid an undefined DG2717 variable error if DG2717 is not defined
+ I $G(DG2717)="" Q -1
+ ;I $P(^DGEN(27.17,DG2717,0),U,2)="DE" Q $P(^DGEN(27.17,DG2717,0),U,4)
+ I $P($G(^DGEN(27.17,DG2717,0)),U,2)="DE" Q $P(^DGEN(27.17,DG2717,0),U,4)
  Q -1
  ;
 HLTOLIMB(HLVAL,D2) ; Convert HL7 transmission value to Limb code.

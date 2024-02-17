@@ -1,5 +1,5 @@
-ALPBGEN1 ;SFVAMC/JC - Parse and File HL7 PMU messages ;05/10/07
- ;;3.0;BAR CODE MED ADMIN;**8,37,102,122,125**;Mar 2004;Build 9
+ALPBGEN1 ;SFVAMC/JC - Parse and File HL7 PMU messages ;May 26, 2023@16:17
+ ;;3.0;BAR CODE MED ADMIN;**8,37,102,122,125,144**;Mar 2004;Build 7
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  Q
  ;
@@ -42,8 +42,13 @@ FILE ;Store File 200 data on backup system
  ;Try exact SSn lookup first
  K Y S DIC="^VA(200,",DIC(0)="X",X=ALPBSSN,D="SSN" D IX^DIC
  ;
- ;If SSN lookup fails, try name lookup and add User only if it does not have a Termination Date or DIUSER
- I +Y<1,'$G(ALPBTRM),'$G(ALPBDIS) S DLAYGO=200,DIC="^VA(200,",DIC(0)="LMX",X=ALPBNAM D ^DIC K DIC,DA,DR
+ ;If SSN lookup fails, try name lookup and add User only if Termination Date (if it exists)
+ ;is greater than today.
+ ;PSB*3.0*144: Evaluate termination date.
+ ;             ALPBTRMX=1 if termination date exists and is today or earlier.           
+ N ALPBTRMX
+ S ALPBTRMX=$S('$G(ALPBTRM):0,$$FMDIFF^XLFDT(ALPBTRM,DT)>0:0,1:1)
+ I +Y<1,'ALPBTRMX,'$G(ALPBDIS) S DLAYGO=200,DIC="^VA(200,",DIC(0)="LMX",X=ALPBNAM D ^DIC K DIC,DA,DR
  I +Y>0 S (ALPBDA,DA)=+Y S ALPBMENU=$O(^DIC(19,"B","PSB BCBU WRKSTN MAIN",0)) D
  . ;Update name too
  . S DIE="^VA(200,",DR=".01////"_ALPBNAM
@@ -58,7 +63,11 @@ FILE ;Store File 200 data on backup system
  . D IX1^DIK
  . ; VERIFY CODE needs to be set after re-indexing the record otherwise it will delete it because the ACCESS CODE was set
  . I $D(^VA(200,ALPBDA,0)) D
- . . S $P(^VA(200,ALPBDA,.1),"^",2)=$S($G(ALPBDIS)!$G(ALPBTRM):"",1:ALPBVC)
+ . . ;PSB*3.0*144: Do not null out Verify Code.
+ . . ;             Previous logic nulled out the Verify Code if Termination
+ . . ;             Date exists. There is no need to check variable ALPBTRMX
+ . . ;             because the logic will not get to this point if ALPBTRMX=1.
+ . . S $P(^VA(200,ALPBDA,.1),"^",2)=ALPBVC
  . . S $P(^VA(200,ALPBDA,.1),"^",1)=$H
  K ALPBDA,HL,ALPBDIS,ALPBI,ALBPJ,ALPBX,ALPBAC,ACLPVC,ALPBSSN,ALERR,ALPBNAM,ALPBTRM
  Q

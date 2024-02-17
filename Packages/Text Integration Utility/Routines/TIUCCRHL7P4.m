@@ -1,16 +1,16 @@
 TIUCCRHL7P4 ; CCRA/PB - TIU CCRA HL7 Msg Processing; January 6, 2006
- ;;1.0;TEXT INTEGRATION UTILITIES;**344**;Jun 20, 1997;Build 11
+ ;;1.0;TEXT INTEGRATION UTILITIES;**344,356**;Sep 27, 2023;Build 26
  ;
  ;PB - Patch 344 to modify how the note and addendum text is formatted
- ;
+ ;PB - Patch 356 modifications to file the note as a stand-alone note and not linked to a consult
  Q
 WORD ;
  K I1,CNT,LCNT,LEN,I,LINES,T2,LASTWORDS,TEST1,WORDS,WORDSLEN,XX
  S WORDS=$G(TIUZ("TEXT",1,0)),WORDSLEN=$L(TIUZ("TEXT",1,0))
  I $G(ADDENDUM)'="" D
- .S NOTEDATE=$$GETDATE
- .S NOTENUM=$$NOTENUM
- .S TIUIEN=$$TIULKUP^TIUCCHL7UT(VNUM,TIU("TITLE"),$G(NOTEDATE),$G(NOTENUM)) ;Patch 344 lookup the note in the consult to file the addendum with
+ .S:$G(NOTEDATE)="" NOTEDATE=$$GETDATE
+ .S:$G(NOTENUM)="" NOTENUM=$$NOTENUM
+ .S TIUIEN=$$TIULKUP^TIUCCHL7UT(CONSULTID,TIU("TDA"),$G(NOTEDATE),$G(NOTENUM)) ;Patch 344 lookup the note in the consult to file the addendum with, Patch 356, changed VNUM to CONSULTID
  .;S:$G(NOTENUM)'="" TIUIEN=$$TIULKUP^TIUCCHL7UT(VNUM,TIU("TITLE"),NOTEDATE,NOTENUM) ;Patch 344 lookup the note in the consult to file the addendum with
  .;S T2("VETERAN'S"_$C(160)_"CAREGIVER"_$C(160)_"CONTACT")="VETERAN'S CAREGIVER CONTACT",WORDS=$$REPLACE^XLFSTR(WORDS,.T2)
  F TEST1=1:1:WORDSLEN S LASTWORDS=$E(TIUZ("TEXT",1,0),WORDSLEN,(WORDSLEN-25))

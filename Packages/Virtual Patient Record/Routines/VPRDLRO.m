@@ -1,5 +1,5 @@
 VPRDLRO ;SLC/MKB -- Lab extract by order/panel ;8/2/11  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**2,5,7,11**;Sep 01, 2011;Build 6
+ ;;1.0;VIRTUAL PATIENT RECORD;**2,5,7,11,33**;Sep 01, 2011;Build 8
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -7,8 +7,8 @@ VPRDLRO ;SLC/MKB -- Lab extract by order/panel ;8/2/11  15:29
  ; ^DPT                         10035
  ; ^LAB(60                      10054
  ; ^LR                            525
- ; ^ORD(100.98)                   873
- ; ^VA(200)                     10060
+ ; ^ORD(100.98                    873
+ ; ^VA(200                      10060
  ; DIQ                           2056
  ; LR7OR1,^TMP("LRRR",$J)        2503
  ; LR7OU1                        2955
@@ -55,6 +55,8 @@ EN1(NUM,ORD) ; -- return an order in ORD("attribute")=value
  N ORPK,X0,IFN,OI,VPRSUB,VPRIDT,LR0,X,I,VPRL,VPRT
  K ORD,^TMP("VPRTEXT",$J)
  S X0=$G(^TMP("ORR",$J,ORLIST,NUM)),IFN=+X0
+ I '$$LAB(IFN) Q  ; p33 make sure this is really a lab order
+ I $G(DFN),+$P($G(^OR(100,IFN,0)),U,2)'=DFN Q
  S ORPK=$$PKGID^ORX8(+IFN) Q:'ORPK
  S ORD("id")=IFN,ORD("labOrderID")=ORPK
  S OI=$$OI^ORX8(+IFN),ORD("name")=$P(OI,U,2)
@@ -139,3 +141,9 @@ ADD(X) ; -- Add a line @VPR@(n)=X
  S VPRI=$G(VPRI)+1
  S @VPR@(VPRI)=X
  Q
+ ;
+LAB(ORIFN) ; -- is order really a lab (non-LR order in display group)
+ N X,Y,PKG S Y=0
+ S X=$P($G(^OR(100,+$G(ORIFN),0)),U,14),PKG=$$GET1^DIQ(9.4,+X_",",1)
+ I $E(PKG,1,2)="LR" S Y=1
+ Q Y

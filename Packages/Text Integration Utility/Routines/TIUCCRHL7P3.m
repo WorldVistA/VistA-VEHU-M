@@ -1,5 +1,5 @@
 TIUCCRHL7P3 ; CCRA/PB - TIUHL7 Msg Processing; March 23, 2005
- ;;1.0;TEXT INTEGRATION UTILITIES;**337,344,349**;Jun 20, 1997;Build 19
+ ;;1.0;TEXT INTEGRATION UTILITIES;**337,344,349,356**;Sep 27, 2023;Build 26
  ; Documented API's and Integration Agreements
  ; ----------------------------------------------
  ; IA #3473I  GET^GMRCTIU
@@ -7,7 +7,7 @@ TIUCCRHL7P3 ; CCRA/PB - TIUHL7 Msg Processing; March 23, 2005
  ;
  ;PB - Patch 344 to modify how the note and addendum text is formatted
  ;PB - Patch 349 modification to parse and file the consult factor from the note and file as a comment with the consult
- ;
+ ;PB - Patch 356 modifications to file the note as a stand-alone note and not linked to a consult
  Q
 CONTINUE ;
  ;
@@ -19,8 +19,8 @@ CONTINUE ;
  ;
 MAKEADD ;
  ; validate CONSULT title
- S TIU("CNCN")=VNUM
- I $$MEMBEROF^TIUHL7U1(TIU("TITLE"),"CONSULTS") S TIUZ(1405)=TIU("CNCN")_";GMR(123,"
+ ;S TIU("CNCN")=VNUM
+ ;I $$MEMBEROF^TIUHL7U1(TIU("TITLE"),"CONSULTS") S TIUZ(1405)=TIU("CNCN")_";GMR(123,"
  ;
  ; set appropriate DOCUMENT STATUS from document parameters
  S DUZ=$G(TIU("AUDA")),DUZ(2)=$$GETDIV^TIUHL7U1(DUZ),TIU("DIVISION")=DUZ(2)
@@ -33,6 +33,8 @@ MAKEADD ;
  S TIUZ(1202)=$G(TIU("AUDA"))
  S TIUZ(1204)=$G(TIU("AUDA"))
  S TIUZ(1208)=$G(TIU("CSDA"))
+ S TIUZ(1205)=$G(VLOC)
+ S TIUZ(1211)=$G(VLOC)
  S TIUZ(1212)=$G(TIU("DIVISION"))
  S TIUZ(1301)=$G(TIU("RFDT"))
  S TIUZ(1302)=$S(+$G(TIU("EBDA")):TIU("EBDA"),1:TIU("AUDA")),TIU("EBDA")=TIUZ(1302)
@@ -48,7 +50,7 @@ MAKEADD ;
  . I '+SUCCESS S MSGTEXT=$P(SUCCESS,U,2),STOP=1 D MESSAGE(MSGID,$G(VNUM),MSGTEXT),ANAK^TIUCCHL7UT(MSGID,$G(MSGTEXT),$G(VNUM)) ;D ERR^TIUCCHL7UT("TIU",1,"0000.000",$P(SUCCESS,U,2))
  . Q:$G(STOP)=1
  . N COMMENT,NOTEDT
- . S COMMENT(1)=CFNOTE,NOTEDT=$$NOW^XLFDT,GMRCDA=VNUM
+ . S COMMENT(1)=CFNOTE,NOTEDT=$$NOW^XLFDT,GMRCDA=CONSULTID ; PB - Sep 23 - Patch 356 changed to set GMRCDA to equal CONSULTID instead of VNUM
  . D CMT^GMRCGUIB(GMRCDA,.COMMENT,DUZ,NOTEDT,DUZ)  ;icr 2980
  . S $P(^TIU(8925,+SUCCESS,13),U,3)="U",$P(^TIU(8925,+SUCCESS,13),U,2)=$S(+$G(TIU("EBDA")):TIU("EBDA"),1:TIU("AUDA"))
  . D SIGNDOC^TIUHL7U1(+SUCCESS) I +TIU("EC") D ACK^TIUCCHL7UT(HL("MID"),TIUNAME,+SUCCESS) Q
@@ -73,10 +75,10 @@ MAKEADD ;
  ;
  ; document creation
  N SDCNT,TIUDIV1,TIUFPRIV,TIUPRM0,TIUPRM1,ORIGSTAT
- S ORIGSTAT=$$GET1^DIQ(123,VNUM_",",8,"I")   ;save the status of the consult before adding the note.
+ S ORIGSTAT=$$GET1^DIQ(123,CONSULTID_",",8,"I")   ;ICR 3983 - save the status of the consult before adding the note. PB - Sep 23 - patch 356 changes for lookup by by CONSULTID
  ;D MAKE^TIUSRVP(.TIUDA,DFN,TIU("TDA"),,,,.TIUZ,TIU("VSTR"))  ; This calls the FILE^TIUSRVP code which also calls the code to set the status of the consult
  ;;may need to copy the MAKE^TIUSRVP code to another routine and call our new code and suppress changing the status of the consult.
- D MAKE^TIUCCRHL7P2(.TIUDA,DFN,TIU("TDA"),,,,.TIUZ,TIU("VSTR"))
+ D MAKE^TIUCCRHL7P2(.TIUDA,DFN,TIU("TDA"),,,,.TIUZ,$G(TIU("VSTR")))
  ;I $G(TIUDA)>0 D SIGNDOC^TIUHL7U1(+TIUDA) I +TIU("EC") D ACK^TIUHL7U1("AE",TIUNAME,+TIUDA) Q
  I $G(TIUDA)>0 D SIGNDOC^TIUCCRHL7P2(+TIUDA) I +TIU("EC") D ACK^TIUCCHL7UT(HL("MID"),TIUNAME,+TIUDA) Q
  ;

@@ -1,5 +1,5 @@
 VPRDJ05 ;SLC/MKB -- Medications by order ;8/2/11  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**2,18**;Sep 01, 2011;Build 2
+ ;;1.0;VIRTUAL PATIENT RECORD;**2,18,33**;Sep 01, 2011;Build 8
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References: see VPRDJ05V for DBIA list
@@ -8,6 +8,7 @@ VPRDJ05 ;SLC/MKB -- Medications by order ;8/2/11  15:29
  ;
 PS1(ID) ; -- med order
  N ORPK,TYPE S ID=+$G(ID)
+ I '$$RX^VPRDPSOR(ID) Q  ; p33 make sure this is really a med order
  S ORPK=$$PKGID^ORX8(ID),TYPE=$E(ORPK,$L(ORPK)) S:TYPE=+TYPE TYPE="R"
  ;
  N ORUPCHUK,ORVP,ORPCL,ORDUZ,ORODT,ORSTRT,ORSTOP,ORL,ORTO,ORSTS,ORNP,ORPV,ORTX

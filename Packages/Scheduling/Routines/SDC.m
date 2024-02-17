@@ -1,10 +1,12 @@
-SDC ;MAN/GRR,ALB/LDB - CANCEL A CLINIC'S AVAILABILITY ;JAN 15, 2016
- ;;5.3;Scheduling;**15,32,79,132,167,478,487,523,545,627,684,724,758,780**;Aug 13, 1993;Build 17
+SDC ;MAN/GRR,ALB/LDB,LAB - CANCEL A CLINIC'S AVAILABILITY ;JAN 15, 2016
+ ;;5.3;Scheduling;**15,32,79,132,167,478,487,523,545,627,684,724,758,780,864**;Aug 13, 1993;Build 15
+ ;;Per VHA Directive 6402, this routine should not be modified
  N SDATA,SDCNHDL ; for evt dvr
 SDC1 K SDLT,SDCP S NOAP="" D LO^DGUTL
  S DIC=44,DIC(0)="MEQA",DIC("S")="I $P(^(0),""^"",3)=""C"",'$G(^(""OOS""))",DIC("A")="Select CLINIC NAME: " D ^DIC K DIC("S"),DIC("A") G:'$D(^SC(+Y,"SL")) END^SDC0
  S SC=+Y,SL=^("SL"),%DT="AEXF",%DT("A")="CANCEL '"_$P(Y,U,2)_"' FOR WHAT DATE: " D ^%DT K %DT G:Y<0 END^SDC0 ;NAKED REFERNCE - ^SC(IFN,"SL")
  S (SD,CDATE)=Y,%=$P(SL,U,6),SI=$S(%="":4,%<3:4,%:%,1:4),%=$P(SL,U,3),STARTDAY=$S($L(%):%,1:8) D NOW^%DTC S SDTIME=%
+ I '$D(^SC(SC,"ST",SD,1)) W !,*7,"CLINIC DOES NOT MEET ON THAT DAY" G SDC1
  K SDRE,SDIN,SDRE1 I $D(^SC(SC,"I")) S SDIN=+^("I"),SDRE=+$P(^("I"),"^",2),Y=SDRE D:Y DTS^SDUTL S SDRE1=$S(SDRE:" to "_Y,1:"")
  I $S('$D(SDIN):0,SDIN'>0!(SDIN>SD):0,SDRE'>SD&(SDRE):0,1:1) W !,*7,"Clinic is inactive ",$S('SDRE:"as of ",1:"from ") S Y=SDIN D DTS^SDUTL W Y,SDRE1 G SDC1
  I '$D(^SC(SC,"ST",SD,1)) S DH="" D B S ^SC(SC,"ST",SD,1)=$P("SU^MO^TU^WE^TH^FR^SA",U,DOW+1)_" "_$E(SD,6,7)_$J("",SI+SI-6)_DH,^(0)=SD G N

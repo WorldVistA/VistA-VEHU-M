@@ -1,5 +1,5 @@
 XPDIJ ;SFISC/RSD - Install Job ;08/14/2008
- ;;8.0;KERNEL;**2,21,28,41,44,68,81,95,108,124,229,275,506,672**;Jul 10, 1995;Build 28
+ ;;8.0;KERNEL;**2,21,28,41,44,68,81,95,108,124,229,275,506,672,796**;Jul 10, 1995;Build 4
  ;Per VHA Directive 2004-038, this routine should not be modified.
 EN ;install all packages
  ;XPDA=ien of first package
@@ -108,8 +108,12 @@ VOLERR(V,F) ;volume set not updated,V=volume set, F=flag
  ;come here on error, record error in Install file and cleanup var.
 ERR N XPDERROR,XQA,XQAMSG
  S XPDERROR=$$EC^%ZOSV
- ;record error, write message, reset terminal
- D ^%ZTER,BMES^XPDUTL(XPDERROR),EXIT^XPDID()
+ ;record error
+ D ^%ZTER
+ ;reset primary device back to home device
+ I $G(IO(0))]"" U IO(0) ;p796
+ ;write message, reset terminal
+ D BMES^XPDUTL(XPDERROR),EXIT^XPDID()
  S XQA(DUZ)="",XQAMSG="Install "_$E($P($G(^XPD(9.7,+$G(XPDA),0)),"^"),1,30)_" has encountered an Error."
  D SETUP^XQALERT G UNWIND^%ZTER
  ;

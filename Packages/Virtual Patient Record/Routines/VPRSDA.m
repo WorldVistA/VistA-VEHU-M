@@ -1,5 +1,5 @@
 VPRSDA ;SLC/MKB -- SDA utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,16,20,26,28,29,30,31**;Sep 01, 2011;Build 3
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,16,20,26,28,29,30,31,33**;Sep 01, 2011;Build 8
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -11,9 +11,6 @@ VPRSDA ;SLC/MKB -- SDA utilities ;10/25/18  15:29
  ; DIQ                           2056
  ; ETSLNC                        6731
  ; ETSRXN                        6758
- ; GMRVUT0, ^UTILITY($J          1446
- ; GMVGETVT                      5047
- ; GMVUTL                        5046
  ; ICPTCOD                       1995
  ; LEXTRAN                       4912
  ; VASITE                       10112
@@ -163,37 +160,3 @@ DEL1 ; -- ID Action for Delete entities, returns VPR0=data
  ;
 NOQ ; -- no query
  Q
- ;
- ;
-VIT1(IEN) ; -- get info for one Vital measurement
- ; returns VPRV array, VPRGMV=VPRV(0), VPRANGE, VPRTYPE to entity
- S IEN=$G(IEN) I IEN="" S DDEOUT=1 Q
- D GETREC^GMVUTL(.VPRV,IEN,1)
- S VPRGMV=$G(VPRV(0)) I '$G(VPRV(0)) S DDEOUT=1 Q
- S VPRTYPE=$$FIELD^GMVGETVT(+$P(VPRGMV,U,3),2)
- I VPRTYPE="WT" D  ;get BMI for weight record
- . I $G(^TMP("VPRGMV",$J,IEN)) S $P(VPRGMV,U,14)=$P(^(IEN),U,14) Q
- . ; get BMI from query array if available, else call GMRVUT0
- . N GMRVSTR,DFN,IDT,BMI
- . S GMRVSTR=VPRTYPE,GMRVSTR(0)=+VPRGMV_U_+VPRGMV_"^1^1",DFN=+$P(VPRGMV,U,2)
- . D EN1^GMRVUT0 S IDT=9999999-(+VPRGMV)
- . S BMI=$P($G(^UTILITY($J,"GMRVD",IDT,VPRTYPE,IEN)),U,14)
- . S:BMI'="" $P(VPRGMV,U,14)=BMI
- . K ^UTILITY($J,"GMRVD")
- S VPRANGE=$S($L(VPRTYPE):$$RANGE^VPRDGMV(VPRTYPE),1:"")
- Q
- ;
-VITQUAL ; -- build DLIST(#)=Qualifiers [code^name]
- N I,X,QUALS
- S QUALS=$G(VPRV(5))
- F I=1:1 S X=$P(QUALS,U,I) Q:X=""  S DLIST(I)=X
- Q
- ;
-VITCODE(IEN,SFN) ; -- return [first] code for vital type
- ; SubFileNumber = 120.518 for Vital Type
- ;                 120.522 for Vital Qualifier
- N VPRC,IENS,Y
- D GETS^DIQ(SFN,"1,"_IEN_",","**",,"VPRC")
- S IENS=$O(VPRC(SFN_1,""))
- S Y=$S($L(IENS):$G(VPRC(SFN_1,IENS,.01,"I")),1:"")
- Q Y

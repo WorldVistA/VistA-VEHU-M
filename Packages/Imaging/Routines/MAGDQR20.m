@@ -1,5 +1,5 @@
-MAGDQR20 ;VA/WOIFO/EdM,NST,MLH,BT,JSL - RPCs for Query/Retrieve SetUp ; 22 Jul 2021 4:27 PM
- ;;3.0;IMAGING;**119,301**;Mar 19, 2002;Build 4396;Apr 19, 2013
+MAGDQR20 ;WOIFO/EDM,NST,MLH,BT,JSL,ZEB - RPCs for Query/Retrieve SetUp ; 07 Dec 2023 1:21 PM
+ ;;3.0;IMAGING;**119,301,348**;Mar 19, 2002;Build 6;Apr 19, 2013
  ;; Per VHA Directive 2004-038, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -17,12 +17,14 @@ MAGDQR20 ;VA/WOIFO/EdM,NST,MLH,BT,JSL - RPCs for Query/Retrieve SetUp ; 22 Jul 2
  ;;
  Q
  ;
+ ;*zeb *348 pass on INCSERD to code that would actually include the series description
  ;This procedure called by STUDY^MAGDQR21 to generate IMAGE INFO lines
-WRTIMG(SERIESARRAY,D0,REQDFN,STUMO,INCDEL) ; Retrieve Image info and output to IMAGE INFO line
+WRTIMG(SERIESARRAY,D0,REQDFN,STUMO,INCDEL,INCSERD) ; Retrieve Image info and output to IMAGE INFO line
  N I
  N SERID  ;SERID(UID _ DCOM SERIES NUM, UID)
  N SERIES ;SERIES(UID _ DCOM SERIES NUM, DCOM IMAGE NUM, OBJECT GROUP)=""
  N SNUM,TMP
+ S INCSERD=$G(INCSERD)
  K ^TMP("MAG",$J,"S") ;Images info by IEN
  K ^TMP("MAG",$J,"M") ;RAD Procedure by IEN (1,IEN) and by SERIESUID (2,SERIESUID,Procedure)
  ;
@@ -30,7 +32,7 @@ WRTIMG(SERIESARRAY,D0,REQDFN,STUMO,INCDEL) ; Retrieve Image info and output to I
  D:$E($G(TMP),1,5)="^TMP(" WRTMAGM^MAGDQR20(.TMP,.STUMO) ;Save images and procedures, return STUMO (procedures)
  ;
  D GETSER^MAGDQR20(D0,.SERIES,.SERID,INCDEL) ;Get SERIESUID info, store in SERIES and SERID
- S SNUM="" F  S SNUM=$O(SERIES(SNUM)) Q:SNUM=""  D WRTSER^MAGDQR20(D0,.SERIESARRAY,.SERIES,SNUM,.SERID,REQDFN)
+ S SNUM="" F  S SNUM=$O(SERIES(SNUM)) Q:SNUM=""  D WRTSER^MAGDQR20(D0,.SERIESARRAY,.SERIES,SNUM,.SERID,REQDFN,INCSERD)
  ;
  S I="" F  S I=$O(^TMP("MAG",$J,"S",I)) Q:I=""  D WRTOUT^MAGDQR21("UNUSED_GROUP_INFO|"_^TMP("MAG",$J,"S",I))
  ;
@@ -181,7 +183,8 @@ GETDINUM(GRPIEN,CHLDIEN,SNUM,INUM) ; Get DICOM Serial Number and Image Number fo
  S:INUM="" INUM="?"
  Q
  ;
-WRTSER(D0,SERIESARRAY,SERIES,SNUM,SERID,REQDFN) ; Output to TMP based on SERIES array
+ ;*zeb *348 add Series Description as optional return
+WRTSER(D0,SERIESARRAY,SERIES,SNUM,SERID,REQDFN,INCSERD) ; Output to TMP based on SERIES array
  ; refresh temp image index
  ; SERIES(UID _ DCOM SERIES NUM, DCOM IMAGE NUM, OBJECT GROUP)=""
  N MAGTI
@@ -189,6 +192,7 @@ WRTSER(D0,SERIESARRAY,SERIES,SNUM,SERID,REQDFN) ; Output to TMP based on SERIES 
  N I0   ;OBJECT GROUP
  N UID  ;SERIES UID
  S MAGTI=0 ; temp image index
+ S INCSERD=$G(INCSERD)
  K ^TMP("MAG",$J,"TI") ;temp for sorting
  ;
  ; seek qualifying images (no QI or matching known DFN)
@@ -202,7 +206,7 @@ WRTSER(D0,SERIESARRAY,SERIES,SNUM,SERID,REQDFN) ; Output to TMP based on SERIES 
  ;quit if qualifying images were not found
  Q:'$D(^TMP("MAG",$J,"TI"))
  ;
- S UID="" F  S UID=$O(SERID(SNUM,UID)) Q:UID=""  D WRSERUID^MAGDQR20(UID,D0)
+ S UID="" F  S UID=$O(SERID(SNUM,UID)) Q:UID=""  D WRSERUID^MAGDQR20(UID,D0,INCSERD)
  ;
  D:SNUM'="?" WASGNSER^MAGDQR20(SNUM,.SERIESARRAY)  ; assign the series number
  S MAGTI="" F  S MAGTI=$O(^TMP("MAG",$J,"TI",MAGTI)) Q:'MAGTI  D WRTOUT^MAGDQR21(^TMP("MAG",$J,"TI",MAGTI))
@@ -248,8 +252,10 @@ SRTMAGTI(INUM,I0,REQDFN) ; Save IMAGE_IEN and GROUP_IEN lines
  ;
  Q
  ;
-WRSERUID(UID,D0) ; Output SERIES_IEN line
+ ;*zeb *348 add Series Description as optional return
+WRSERUID(UID,D0,INCSERD) ; Output SERIES_IEN line
  N M,X
+ S INCSERD=$G(INCSERD)
  ;
  D WRTOUT^MAGDQR21("NEXT_SERIES")
  D:UID'="?" WRTOUT^MAGDQR21("SERIES_UID|"_UID)
@@ -261,6 +267,9 @@ WRSERUID(UID,D0) ; Output SERIES_IEN line
  . S X=$S(X'="":"\",1:"")_M
  . Q
  D:X'="" WRTOUT^MAGDQR21("SERIES_MODALITY|"_X)
+ D:INCSERD
+ . S X=$$GET1^DIQ(2005,D0,10)
+ . D:X'="" WRTOUT^MAGDQR21("SERIES_DESCRIPTION|"_X)
  Q
  ;
 WASGNSER(SNUM,SERIESARRAY) ; Output SERIES_NUMBER line

@@ -1,5 +1,5 @@
-SDESRTVCLN2 ;ALB/MGD,ANU,LAB,MGD,ANU,JAS,LAB,DJS - Get Clinic Info based on Clinic IEN ;JUN 30, 2023
- ;;5.3;Scheduling;**823,825,827,828,833,836,851**;Aug 13, 1993;Build 10
+SDESRTVCLN2 ;ALB/MGD,ANU,LAB,MGD,ANU,JAS,LAB,DJS,JAS - Get Clinic Info based on Clinic IEN ;OCT 20, 2023
+ ;;5.3;Scheduling;**823,825,827,828,833,836,851,864**;Aug 13, 1993;Build 15
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -56,6 +56,10 @@ JSONCLNINFO(RETSDCLNJSON,SDCLNIEN,SDEAS,HASHFLG) ;Get Clinic info
  ;"PreCheckinAllowed": "",
  ;"Principal": "",
  ;"ProhibitAccessToClinic": "",
+ ;"Provider": {
+ ; "DefaultForClinic": "",
+ ; "IEN": "",
+ ; "Name": ""},
  ;"Reactivate Date": "",
  ;"ReqActionProfiles": "",
  ;"ReqXrayFilms": "",
@@ -207,10 +211,11 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  S SDX="",SDC=0
  S SDFIELDS="2600*"
  K SDDATA,SDMSG
- D GETS^DIQ(44,SDCLNIEN_",",SDFIELDS,"E","SDDATA","SDMSG")
+ D GETS^DIQ(44,SDCLNIEN_",",SDFIELDS,"IE","SDDATA","SDMSG")
  F  S SDX=$O(SDDATA(44.1,SDX)) Q:SDX=""  D
  . S SDC=SDC+1
  . S SDCLNSREC("Clinic","Provider",SDC,"Name")=$G(SDDATA(44.1,SDX,.01,"E"))
+ . S SDCLNSREC("Clinic","Provider",SDC,"IEN")=$G(SDDATA(44.1,SDX,.01,"I"))
  . S SDCLNSREC("Clinic","Provider",SDC,"DefaultForClinic")=$G(SDDATA(44.1,SDX,.02,"E"))
  ; Diagnosis Multiple
  S SDX="",SDC=0

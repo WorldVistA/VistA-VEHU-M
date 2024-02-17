@@ -1,6 +1,6 @@
 IBAMTED ;ALB/CPM,GN,PHH,EG - MEANS TEST EVENT DRIVER INTERFACE ; 11/30/05 1:48pm
- ;;2.0;INTEGRATED BILLING;**15,255,269,321,312**;21-MAR-94
- ;;Per VHA Directive 10-93-142, this routine should not be modified.
+ ;;2.0;INTEGRATED BILLING;**15,255,269,321,312,751**;21-MAR-94;Build 12
+ ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;IB*2*269 add IVM converted RX Copay Test update calls to a new API.
  ;
@@ -12,11 +12,12 @@ IBAMTED ;ALB/CPM,GN,PHH,EG - MEANS TEST EVENT DRIVER INTERFACE ; 11/30/05 1:48pm
  I '$D(EASZ06) D
  . ;this routine is called from the DG namespace and IB namespace
  . ;when coming in from the DG namespace, variable DGMTD and DGMTDT is
- . ;used to define the means test test.  When coming in
+ . ;used to define the means test.  When coming in
  . ;from the IB namespace, variable IBDT  OR IVMMTDT is used
  . I '$D(IBDT) N IBDT
  . S IBDT=$S($D(IBDT):IBDT,$D(IVMMTDT):IVMMTDT,$D(DGMTDT):DGMTDT,$D(DGMTD):DGMTD,1:0)
- . I $P($G(^DGMT(408.31,+$$LST^DGMTCOU1(DFN,IBDT,2),0)),"^",23)=2 Q
+ . S IBFLAG=0 ;RTW IB*2*751
+ . I $P($G(^DGMT(408.31,+$$LST^DGMTCOU1(DFN,IBDT,2),0)),"^",23)=2 D IVM Q:IBFLAG=0  ;RTW IB*2*751
  . I $G(^DGMT(408.31,+$$LST^DGMTCOU1(DFN,IBDT,2),"C",1,0))["Z06 MT via Edb" Q
  . D ^IBAMTED1
  . Q
@@ -66,7 +67,7 @@ IBAMTED ;ALB/CPM,GN,PHH,EG - MEANS TEST EVENT DRIVER INTERFACE ; 11/30/05 1:48pm
  .D MT^IBAMTBU2 ; create bulletin
  ;
 END K IBARR,IBCANCEL,IBCATCA,IBCATCP,IBDIQ,IBDUZ,IBEFDT,IBMT,IBI,IBC,IBPT,IBT
- K DIC,DIQ,DR,DA,VA,VAERR,VAEL,X,X1,X2,XMDUZ,XMTEXT,XMY,XMSUB
+ K DIC,DIQ,DR,DA,VA,VAERR,VAEL,X,X1,X2,XMDUZ,XMTEXT,XMY,XMSUB,IBFLAG,IBMTYR,IBTHSH
  ;***
  ;I $D(XRT0) S:'$D(XRTN) XRTN="IBAMTED" D T1^%ZOSV ;stop rt clock
  Q
@@ -80,3 +81,11 @@ ADD() ; Determine the billable status before adding a Means Test.
 EDIT() ; Determine the billable status before editing a Means Test.
  I $P(DGMTP,"^",3)'=1 Q $$CK^DGMTUB(DGMTP)
  S X1=+DGMTP,X2=-1 D C^%DTC Q $$BIL^DGMTUB(DFN,X)
+IVM ;If last MEANS TEST was an IVM check RX THRESHOLDS 354.3 against the current year means test. 
+ ;need to add code for dependent status of the patient and use that number. IB*2.0*751
+ ;rx thresholds are based on number of dependents.
+ S IBMTYR=$O(^DG(43,1,"MT",""),-1)
+ S IBTHSH=$P(^DG(43,1,"MT",IBMTYR,0),U,2)
+ I $D(DGMTA),$P(DGMTA,U,4)<IBTHSH S IBFLAG=1
+ D ^IBAMTED1
+ Q

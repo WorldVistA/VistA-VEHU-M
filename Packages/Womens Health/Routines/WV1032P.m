@@ -1,0 +1,31 @@
+WV1032P ;ISP/AGP - PATCH 32 INSTALLATION TASKS;Oct 24, 2023@15:18:53
+ ;;1.0;WOMEN'S HEALTH;**32**;Sep 30, 1998;Build 7
+ Q
+ ;
+PRE ;
+ D RENAME
+ Q
+ ;
+POST ;
+ D REINDEX
+ Q
+ ;
+REINDEX ;
+ N DIK
+ D BMES^XPDUTL("Reindexing file WV RESULTS/DIAGNOSIS")
+ S DIK="^WV(790.31,"
+ D IXALL2^DIK
+ D IXALL^DIK
+ D BMES^XPDUTL("  Done")
+ Q
+ ;
+RENAME ;
+ N DA
+ D BMES^XPDUTL("Renaming WV RESULTS/DIAGNOSIS entries")
+ S DA=+$O(^WV(790.31,"B","BI-RADS CATEGORY 0","")) I DA>0 D
+ .D BMES^XPDUTL("  BI-RADS CATEGORY 0 to BI-RADS CATEGORY 0 Need Additional Imaging Evaluation")
+ .S $P(^WV(790.31,DA,0),U)="BI-RADS CATEGORY 0 Need Additional Imaging Evaluation"
+ .K ^WV(790.31,"B","BI-RADS CATEGORY 0",DA)
+ .S ^WV(790.31,"B","BI-RADS CATEGORY 0 Need Additional Imaging Evaluation",DA)=""
+ D BMES^XPDUTL("  Done")
+ Q
