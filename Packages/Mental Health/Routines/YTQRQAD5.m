@@ -1,5 +1,5 @@
 YTQRQAD5 ;SLC/LLB - RESTful Calls to handle MHA assignments ; 10/07/2019
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,228**;Dec 30, 1994;Build 3
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,228,238**;Dec 30, 1994;Build 25
  ;
  ; Reference to VADPT in ICR #10061
  ; Reference to XLFDT in ICR #10103
@@ -28,6 +28,7 @@ EDITASMT(ARGS,DATA) ; save assignment, return /api/mha/assignment/edit/{assignme
  ; Loop through instruments in assignment and test if any progress in assignments and quit if assignment  progress is not 0.
  S I=0 F  S I=$O(^XTMP("YTQASMT-SET-"_SETID,1,"instruments",I)) Q:I=""  D
  . I $G(^XTMP("YTQASMT-SET-"_SETID,1,"instruments",I,"progress"))>0 S YTQRERRS=1
+ . I $G(^XTMP("YTQASMT-SET-"_SETID,1,"instruments",I,"adminId"))>0 S YTQRERRS=1  ;238 update
  I $D(YTQRERRS) Q $$DONE(400,"Cannot edit, Instrument in progress",1)
  I $D(^XTMP("YTQASMT-SET-"_SETID,2,"PNOTE")) M DATA(2,"PNOTE")=^XTMP("YTQASMT-SET-"_SETID,2,"PNOTE")
  S RETSTAT=$$FILASGN^YTQRQAD1(.ARGS,.DATA,SETID,"EDIT")
@@ -41,6 +42,7 @@ DONE(CODE,MSG,FAIL) ;
 GETGRAPH(ARGS,RESULT) ; Retrieve completed instrument score graphing data for a patient
  ; Report all scores for one patient/Instrument combination
  N YS,PAT,INSTID,DFN,ADMID,YSCORES,YSGRPS,XSTR,CNT,RCNT,YSDATA
+ N RPRIV
  S YSDATA=""
  S (CNT,RCNT)=1
  K RESULT
@@ -48,10 +50,12 @@ GETGRAPH(ARGS,RESULT) ; Retrieve completed instrument score graphing data for a 
  S INSTID=$O(^YTT(601.71,"B",YS("CODE"),0))
  S DFN=ARGS("dfn")
  S PAT=$P(^DPT(DFN,0),"^",1)
+ S RPRIV=1
  S RESULT(RCNT)="{""patient"":"""_PAT_""",""instrument"":"""_YS("CODE")_""",""adminDate"":["
  S ADMID=0 F  S ADMID=$O(^YTT(601.84,"C",DFN,ADMID)) Q:ADMID'>0  D
  . I $P(^YTT(601.84,ADMID,0),"^",3)'=INSTID Q  ;Exclude all but selected instrument
  . I $P(^YTT(601.84,ADMID,0),"^",9)'="Y" Q  ;Exclude incomplete instruments
+ . S RPRIV=$$IPRIV(ARGS("instrument")) Q:'RPRIV
  . S YS("AD")=$P(^YTT(601.84,ADMID,0),"^",1)
  . S YS("ADATE")=$P(^YTT(601.84,ADMID,0),"^",4)
  . K ^TMP($J,"YSCOR"),^TMP($J,"YSG") ;Kill temporary file before storing results
@@ -66,6 +70,12 @@ GETGRAPH(ARGS,RESULT) ; Retrieve completed instrument score graphing data for a 
  S CNT=0 F  S CNT=$O(RESULT(CNT)) Q:CNT=""  S ^TMP("YTQ-JSON",$J,CNT,0)=RESULT(CNT)
  K RESULT S RESULT=$NA(^TMP("YTQ-JSON",$J))
  Q
+IPRIV(TSTNM)  ;Can user see results for instrument
+ N YS,YSDATA,IPRIV
+ S IPRIV=1
+ S YS("CODE")=TSTNM D PRIVL^YTAPI5(.YSDATA,.YS)
+ I $G(YSDATA(1))["[DATA]" I $P($G(YSDATA(2)),U)=0 S IPRIV=0
+ Q IPRIV
  ;
 COLL ; Collect groups & scores for non-legacy instruments 
  N CNT,TYPE,YSCALENM,YSTSCORE,GCNT,GCNTMAX,YSRSCORE,FRSTYP

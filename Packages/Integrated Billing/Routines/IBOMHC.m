@@ -1,5 +1,5 @@
 IBOMHC ;SAB/EDE -  COMPACT ACT COPAY Review Report ;JUL 12 2021
- ;;2.0;INTEGRATED BILLING;**709,720,736**;21-MAR-94;Build 7
+ ;;2.0;INTEGRATED BILLING;**709,720,736,772**;21-MAR-94;Build 6
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to $$CODEC^ICDEX in ICR #5747
@@ -111,7 +111,7 @@ COLLECT ; review the copays in the specified period for possible COMPACT Act rel
  ..;If the copay is a RX copay, quit.
  ..Q:$$GET1^DIQ(350.1,$P(IBDATA,U,3)_",",.11,"I")=5
  ..;Extract date of service
- ..S:IBRFFL'=52 IBDOS=$P(IBDATA,U,14)
+ ..S IBDOS="" S:IBRFFL'=52 IBDOS=$P(IBDATA,U,14)  ; IB*2.0*772
  ..Q:'IBDOS
  ..; Check division  IB*2.0*720
  ..S IBDIV=""

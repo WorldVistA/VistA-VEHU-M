@@ -1,5 +1,5 @@
 SDEC07 ;ALB/SAT,PC,KML,MGD,LAB,TJB/BLB - ADD NEW APPOINTMENT ;Jun 23,2023
- ;;5.3;Scheduling;**627,642,651,658,665,669,671,672,701,686,740,694,785,788,790,799,801,805,816,819,842,843,847,851**;Aug 13, 1993;Build 10
+ ;;5.3;Scheduling;**627,642,651,658,665,669,671,672,701,686,740,694,785,788,790,799,801,805,816,819,842,843,847,851,869**;Aug 13, 1993;Build 13
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to ^GMR(123 is supported by IA #4837
@@ -87,8 +87,6 @@ APPADD(SDECY,SDECSTART,SDECEND,DFN,SDECRES,SDECLEN,SDECNOTE,SDECATID,SDECCR,SDMR
  ;validate XRAY date/time (optional)
  S SDXRAY=$G(SDXRAY)
  I SDXRAY'="" S %DT="T" S X=SDXRAY D ^%DT S SDXRAY=Y I Y=-1 S SDXRAY=""
- ;validate provider
- I '$D(^VA(200,+$G(PROVIEN),0)) S PROVIEN=""
  S SDID=$G(SDID)
  ;validate clini101
   S SDCL=$G(SDCL)
@@ -109,6 +107,13 @@ APPADD(SDECY,SDECSTART,SDECEND,DFN,SDECRES,SDECLEN,SDECNOTE,SDECATID,SDECCR,SDMR
  ;Reject if consult is not active or pending.  SD*5.3*686
  I $P(SDAPTYP,"|",1)="C" N CNSLTSTS,NOTOK S CNSLTSTS=$P($G(^GMR(123,+$P(SDAPTYP,"|",2),0)),U,12),NOTOK=0 D  Q:NOTOK  ;
  . I CNSLTSTS'=5,CNSLTSTS'=6 D ERR(SDECI+1,"Consult status is not PENDING or ACTIVE.  It cannot be scheduled.",DFN,1) S NOTOK=1 Q  ;SD,740
+ ;
+ ;
+ ;validate provider
+ I $G(PROVIEN),'$D(^VA(200,+$G(PROVIEN),0)) D ERR(SDECI+1,"SDEC07 Error: Invalid provider ID.",DFN,1) Q
+ I $G(PROVIEN)="" S PROVIEN=$$GETPROVIDER^SDESCREATEAPPT(SDCL,$P(SDAPTYP,"|",1),$P(SDAPTYP,"|",2))
+ ;
+ ;
  ;validate service connected
  S SDSVCPR=$G(SDSVCPR)
  I SDSVCPR'="" S:(+SDSVCPR<0)!(+SDSVCPR>100) SDSVCPR=""

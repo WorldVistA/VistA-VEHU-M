@@ -1,5 +1,5 @@
 VAFCPDAT ;BIR/CML/ALS-DISPLAY MPI/PD INFORMATION FOR SELECTED PATIENT ; 7/12/16 11:11am
- ;;5.3;Registration;**333,414,474,505,707,712,837,863,876,902,926,937,950,1059,1071**;Aug 13, 1993;Build 4
+ ;;5.3;Registration;**333,414,474,505,707,712,837,863,876,902,926,937,950,1059,1071,1112**;Aug 13, 1993;Build 1
  ;Registration has IA #3299 for MPI/PD to call START^VAFCPDAT
  ;
  ;variable DFN is not NEWed or KILLed in this routine as that variable is passed in
@@ -86,7 +86,7 @@ START ;Entry point without device call, used for RPC calls
  ..W !?25,"Date Created: ",?44,VAFCSOI(2.025,EN_","_DFN_",",.03)
  ..W !?25,"Date Last Updated: "_VAFCSOI(2.025,EN_","_DFN_",",.04)
  ..W:(+$O(^DPT(DFN,.025,EN))) !
- I SXOD'="" W !,"Sexual Orientation Description: ",SXOD
+ I SXOD'="" W !,"Sexual Orientation Free Text: ",SXOD
  ;PRONOUN
  I $O(^DPT(DFN,.2406,0))'="" W !,"Pronoun: " D
  .S EN=0 F  S EN=$O(^DPT(DFN,.2406,EN)) Q:'EN  D

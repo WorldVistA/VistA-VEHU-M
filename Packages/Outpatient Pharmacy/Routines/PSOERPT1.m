@@ -1,5 +1,5 @@
 PSOERPT1 ;BIRM/MFR - eRx Single Patient Medication Queue Supporting API's ; 12/10/22 10:57am
- ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**700,750**;DEC 1997;Build 6
  ;
 SETHDR() ; - Displays the Header Line
  N HDR,SRTORD,SRTPOS
@@ -82,7 +82,7 @@ MATCHSUG(ERXIEN) ; Match Suggestion Prompt
  ; Input: ERXIEN   - Pointer to ERX HOLDING QUEUE file (#52.49)
  ;Output: VISTAPAT - VistA Patient (Pointer to #2) or 0 (Not selected or no suggestion on file)
  ;
- N MATCHSUG,MATCHCNT,LSTMTCH,LSTERXID,CNT,ERXPAT,VPAT,QUIT,DIR,DIRUT,DIROUT,X,Y
+ N MATCHSUG,MATCHCNT,LSTMTCH,LSTERXID,CNT,ERXPAT,VPAT,QUIT,DIR,DIRUT,DIROUT,X,Y,II
  S ERXPAT=+$$GET1^DIQ(52.49,+$G(ERXIEN),.04,"I") I 'ERXPAT Q 0
  S (MATCHSUG,MATCHCNT,CNT,VPAT,QUIT)=0
  F  S VPAT=$O(^PS(52.49,"APATVPAT",ERXPAT,VPAT)) Q:'VPAT  S:'$$DEAD^PSONVARP(VPAT) MATCHCNT=MATCHCNT+1
@@ -183,6 +183,7 @@ VIDEO() ; Changes the Video Attributes for the list
  ; (Related to Filtered BY line in the header)
  D CNTRL^VALM10(1,1,79,IORVOFF,IOINORM)
  ;
+ I '$D(IORVOFF)!'$D(VALMEVL) Q
  F I=0:1:LINE D CNTRL^VALM10(I,1,80,IOINORM,IOINORM)
  ; - Highlighting the PRESCRIPTION line if SIG is displayed
  F I=1:1:LINE D

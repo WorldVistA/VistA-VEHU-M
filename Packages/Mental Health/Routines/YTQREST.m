@@ -1,5 +1,8 @@
 YTQREST ;SLC/KCM - RESTful API front controller ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,208,223**;Dec 30, 1994;Build 22
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,208,223,238**;Dec 30, 1994;Build 25
+ ;
+ ; Reference to EN^XPAR in ICR #2263
+ ; Reference to XUP in ICR #4409
  ;
  ; .HTTPREQ: HTTP-formatted request and JSON body (if present)
  ; .HTTPRSP: HTTP-formatted response and JSON body (if present)
@@ -115,8 +118,11 @@ GETCONN(ARGS,RESULTS) ;Respond to the connection check
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
 GETDTIM(ARGS,RESULTS) ;Return user DTIME timeout
- N DATAOUT,ERRARY,JSONOUT
+ N DATAOUT,ERRARY,JSONOUT,YSDTIME
  K ^TMP("YTQ-JSON",$J)
+ S YSDTIME=$$DTIME^XUP(DUZ)  ;User level first
+ S:+YSDTIME=0 YSDTIME=$$GET^XPAR("USR^SYS","ORWOR TIMEOUT CHART",1,"I")  ;ORWOR 2nd
+ I 'YSDTIME,$G(DTIME) S YSDTIME=DTIME  ;Default last
  S DATAOUT("timeout","dtime")=$G(DTIME)
  D ENCODE^XLFJSON("DATAOUT","JSONOUT","ERRARY")
  S ^TMP("YTQ-JSON",$J,1,0)=JSONOUT(1)

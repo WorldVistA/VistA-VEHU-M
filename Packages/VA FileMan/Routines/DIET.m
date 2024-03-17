@@ -1,5 +1,5 @@
 DIET ;SFISC/XAK - DISPLAY INPUT TEMPLATE    ALSO DOES AUDITING! ; Jun 05, 2023@14:22:18
- ;;22.2;VA FileMan;**21,22,25**;Jan 05, 2016;Build 6
+ ;;22.2;VA FileMan;**21,22,27**;Jan 05, 2016;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
  ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
@@ -45,7 +45,7 @@ Q Q
 WP(%F,FLD,IENS,DIEFNODE) ;AUDIT WP FIELD FLD IN (SUB)FILE %F
  N %,%D,%T,DIIX,X,Y,Z
  S %=+$P($G(^DD(%F,FLD,0)),U,2) Q:'%  Q:$P($G(^DD(+%,.01,0)),U,2)'["a"  Q:$G(^("AUDIT"))="e"&'$O(@DIEFNODE@(0))
- S Z=+%,X="",DIIX="3^"_FLD ;p22 define Z=subDD for audit condition ;p25 define DIIX
+ S Z=+%,X="",DIIX="3^"_FLD ;p22 define Z=subDD for audit condition ;p27 define DIIX
  F  Q:'IENS  S Y=%F,X=+IENS_","_X,IENS=$P(IENS,",",2,99)  Q:'$G(^DD(Y,0,"UP"))  S %F=^("UP"),%=$O(^DD(%F,"SB",Y,0)) I % S FLD=%_","_FLD
  I $D(^DD(Z,.01,"AX")) D  Q:'%  ;p21 execute audit condition, quit if false
  . N X,Y S X=""

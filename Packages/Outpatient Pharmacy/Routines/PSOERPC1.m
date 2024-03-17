@@ -1,5 +1,5 @@
 PSOERPC1 ;BIRM/MFR - All Patients (Patient Centric) eRx Queue - Supporting APIs 1 ; 12/10/22 10:07am
- ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**700,750**;DEC 1997;Build 6
  ;
 HDR ; - Displays the Header Line
  N LINE1,LINE2,HDR,SRTORD,SRTPOS
@@ -8,7 +8,7 @@ HDR ; - Displays the Header Line
  S:PSOCSERX'="Non-CS" LINE1=LINE1_" ("_$S(PSOCSSCH=1:"II",PSOCSSCH=2:"III-V",1:"II-V")_")"
  S LINE1=LINE1_IOINORM
  D INSTR^VALM1("MAX. QUEUE SIZE: "_IOINHI_$J(PSOMAXQS,4)_IOINORM,60,2)
- ;S $E(LINE1,60)="MAX. QUEUE SIZE: "_$J(PSOMAXQS,4)
+ ;
  S LINE2="ERX STATUS: "_IOINHI
  I PSOSTFLT="A" S LINE2=LINE2_"ALL"
  I PSOSTFLT="N" S LINE2=LINE2_"NEW"
@@ -183,7 +183,7 @@ ELIGSTS(VIEW,ERXSTS,MSGTYPE) ; Checks whether the eRx's status is eligible to be
  S STS=","_$S($E(ERXSTS)="H":$E(ERXSTS,1),$G(MBMSITE)&($E(ERXSTS,1,3)="REM"):"REM",1:ERXSTS)_","
  ; List is not Filtered
  I '$$FILTERED(VIEW),",RJ,RM,REM,PR,E,RXA,CXA,CAA,CXP,RXP,RXC,RRC,RXA,CAN,ICA,CNP,CRP,CRC,CXC,CNE,CRN,CRE,CRR,CRX,RRX,CXQ,RXA,"[STS Q 0
- I VIEW="PC",",RRE,RXI,RXW,RXR,RXE,RXN,RXD,RXF,CAR,CAP,CAX,CAF,CXD,CXN,CXV,CXY,CXE,CXI,CXW,CRE,N,I,W,H,"'[STS Q 0
+ I VIEW="PC",",RRE,RXI,RXW,RXR,RXE,RXN,RXD,RXF,CAH,CAO,CAP,CAR,CAX,CAF,CXD,CXN,CXV,CXY,CXE,CXI,CXW,CRE,N,I,W,H,"'[STS Q 0
  ; Match Status Filter (Only New, In Progress, Wait or Hold statuses are included)
  I $G(MATFLTR) I ",N,RXN,CXN,RXI,I,CXI,RXW,W,CXW,"'[STS Q 0
  ;
@@ -191,7 +191,6 @@ ELIGSTS(VIEW,ERXSTS,MSGTYPE) ; Checks whether the eRx's status is eligible to be
  I '$$FILTERED(VIEW) Q:((MSGTYPE="IE")&(ERXSTS'="RRE")&(ERXSTS'="CRE")) 0 Q:(MSGTYPE="RR") 0
  I VIEW="PC",'$$FILTERED(VIEW),MSGTYPE="RE","RXP,RXC,RXA,RRP,"[STS Q 0
  ;
- I '$G(STSFLTR),$G(MSTPFLTR)="",",CAN,ICA,CNP,CRP,CRC,CXP,CXC,CNE,CRN,CRR,CRX,RRX,CXA,CXQ,"[STS Q 0
  I '$G(STSFLTR),$G(MSTPFLTR)="",MSGTYPE="CR",ERXSTS="CRE" Q 0
  ;
  S SKIP=0
@@ -299,6 +298,7 @@ LOCK(PATIEN) ; Locks eRx Patient
  ; Input: PATIEN - eRx Patient IEN (Pointer to #52.46)
  ;Output: 1 - Patient Locked Successfully | Patient Not Locked (Already Locked)
  ; - Locking the eRx Patient
+ N ERXLOCK
  S ERXLOCK=$$L^PSOERX1A(PATIEN,1,1)
  I 'ERXLOCK D  Q 0
  . S VALMSG="Patient Locked"

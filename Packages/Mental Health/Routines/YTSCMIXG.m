@@ -1,5 +1,5 @@
 YTSCMIXG ;SLC/KCM - Score Case Mix Level ; 11/03/2020
- ;;5.01;MENTAL HEALTH;**174,187**;DEC 30,1994;Build 74
+ ;;5.01;MENTAL HEALTH;**174,187,238**;DEC 30,1994;Build 25
  ;
 DLLSTR(YSDATA,YS,YSMODE) ; main tag for both scores and report text
  ;.YSDATA(1)=[DATA]
@@ -57,7 +57,7 @@ LEVEL(QSTN,ADL,ADLD) ; Return Case Mix Level given questions(.QSTN) and ADL scor
  ;
  ; B: special nursing with tubefeedsing or treatments & monitoring
  N SPNURS S SPNURS=0
- I Q15>0,((Q13=1)!((Q13=2)&(Q14=2))) S SPNURS=1
+ I ((Q13=1)!(Q13=2))&(Q14=2) S SPNURS=1
  I SPNURS,(ADL="Low") Q "C"
  I SPNURS,(ADL="Medium") Q "F"
  I SPNURS,(ADL="High") Q "K"

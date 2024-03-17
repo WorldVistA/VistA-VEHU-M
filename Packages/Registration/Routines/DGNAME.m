@@ -1,5 +1,5 @@
-DGNAME ;SFISC/MKO-PATIENT NAME UTILITIES ;4 Dec 2018  11:53 AM
- ;;5.3;Registration;**974**;Aug 13, 1993;Build 2
+DGNAME ;SFISC/MKO-PATIENT NAME UTILITIES ; 12/10/23 11:20pm
+ ;;5.3;Registration;**974,1112**;Aug 13, 1993;Build 1
  ;**974,Story 841921 (mko): New routine for updating Name Components
  Q
  ;
@@ -42,6 +42,11 @@ GETNAMES(RETURN,PATIEN) ;Get the Name and Aliases
  ;
  ;Get Name Components for Patient Name
  S NCIEN=$P($G(^DPT(PATIEN,"NAME")),U)
+ ;**1112 - VAMPI-22440 (ckn)
+ ;If "NAME" node in Patient file #2 OR Entry in NAME COMPONENTS File OR both missing,
+ ;regenerate it using Patient file .01 field to avoid any error during update.
+ I NCIEN,'$$FNDNCIEN(PATIEN_",") S NCIEN=$$CREATENC(PATIEN)
+ I 'NCIEN S NCIEN=$$CREATENC(PATIEN)
  I NCIEN D GETCOMP(.RETURN,NCIEN) Q:$G(RETURN)<0
  ;
  ;Get each Alias
@@ -63,3 +68,24 @@ BLDERR(MSGROOT) ;Build an error from the error message array
  D MSG^DIALOG("AE",.ERRARR,"","",MSGROOT)
  S ERRMSG="",I=0 F  S I=$O(ERRARR(I)) Q:'I  S ERRMSG=ERRMSG_$S(ERRMSG]"":" ",1:"")_$G(ERRARR(I))
  Q ERRMSG
+ ;
+FNDNCIEN(IENS) ;
+ ;**1112 VAMPI-22440 (ckn) - Find Name Component entry using Patient's DFN
+ N DIERR,DIHELP,DIMSG,MSG,VAL
+ S VAL(1)=2,VAL(2)=.01,VAL(3)=IENS
+ Q $$FIND1^DIC(20,"","QX",.VAL,"BB","","MSG")
+ ;
+CREATENC(IEN) ;
+ ;**1112 VAMPI-22440 (ckn) - Generate NAME node and Name Component entry if missing
+ N DA,DIK,IENS,NCIEN
+ S IENS=IEN_","
+ S NCIEN=$$FNDNCIEN(IENS)
+ I 'NCIEN D
+ .S DIK="^DPT(",DA=IEN,DIK(1)=".01^ANAM01"
+ .D EN1^DIK
+ E  D
+ .N DIERR,DIHELP,DIMSG,FDA,MSG
+ .S FDA(2,IEN_",",1.01)=NCIEN
+ .D FILE^DIE("","FDA","MSG")
+ Q $$FNDNCIEN(IENS)
+ ;

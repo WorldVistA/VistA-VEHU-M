@@ -1,5 +1,5 @@
 DIAUTL ;GFT/MSC - UTILITIES TO TURN ON AND TO ANALYZE FILEMAN AUDITS; May 01, 2023@08:35:32
- ;;22.2;VA FileMan;**25**;Jan 05, 2016;Build 6
+ ;;22.2;VA FileMan;**27**;Jan 05, 2016;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;;Submitted to OSEHRA 5 January 2015 by the VISTA Expertise Network.
  ;;Based on Medsphere Systems Corporation's MSC FileMan 1051.
@@ -38,14 +38,14 @@ DDHD S DDHD="DATA DICTIONARY CHANGES, "_$P($G(^DIC(DIA,0)),U)_" FILE(#"_DIA_")" 
  ;
  ;
 TURNON(DIFILE,FLDS,DIMODE,DICOND) ;Turn on AUDITING
- ;Input: DIFILE=file #, FLDS=fields to audit, DIMODE=mode("y","n","e"), DICOND=audit condition ;p25
+ ;Input: DIFILE=file #, FLDS=fields to audit, DIMODE=mode("y","n","e"), DICOND=audit condition ;p27
  ;DICOND is only set if FLDS=single field
  N D,DIFIELD,DIE,DR,DA,DIQUIET,DIEZS,D0,DQ,DI,DIC,X
  K:$G(DIMODE)=1 DIMODE S DIMODE=$E($G(DIMODE,"y"))
  I DIMODE'="y",DIMODE'="e",DIMODE'="n" D BLD^DIALOG(200) Q
  S DIQUIET=1,DIEZS=1 Q:DIFILE<1.11&(DIFILE-.4)&(DIFILE-.401)&(DIFILE-.402)&(DIFILE-.403)&(DIFILE-.5)&(DIFILE-.7)&(DIFILE-.84)&(DIFILE-.847)
  D DT^DICRW
- I $G(DICOND)]"",FLDS=+FLDS,FLDS'=.001 D  Q  ;add Audit Condition to a field ;p25
+ I $G(DICOND)]"",FLDS=+FLDS,FLDS'=.001 D  Q  ;add Audit Condition to a field ;p27
  . S DIFIELD=FLDS D ON
  . Q:DIMODE="n"  ;quit if no audit
  . S DR="1.2////"_DICOND,DIE="^DD("_DIFILE_",",DA(1)=DIFILE,DA=DIFIELD

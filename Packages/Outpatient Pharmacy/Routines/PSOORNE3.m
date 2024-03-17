@@ -1,5 +1,5 @@
 PSOORNE3 ;ISC-BHAM/SAB - display pending orders from backdoor ;Oct 20, 2022@15:30
- ;;7.0;OUTPATIENT PHARMACY;**11,9,39,59,46,103,124,139,152,194,391,313,444,504,441,651,545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**11,9,39,59,46,103,124,139,152,194,391,313,444,504,441,651,545,734**;DEC 1997;Build 10
  ;Ext ref to ^SC (File #44) (DBIA 10040),^PSXOPUTL (DBIA 2200)
  ;^PS(50.606 (DBIA 2174),^PS(50.7 DBIA 2223),^PS(55,DBIA 2228)
  ;^PSDRUG (DBIA 221)
@@ -49,7 +49,8 @@ PSOORNE3 ;ISC-BHAM/SAB - display pending orders from backdoor ;Oct 20, 2022@15:3
 DSPL ;backdoor
  K ^TMP("PSOPO",$J) D DIN^PSONFI(PSODRUG("OI"),$S($G(PSODRUG("IEN")):PSODRUG("IEN"),1:"")) ;NFI
  I $D(RX0),$D(PSODRUG("IEN")) D
- .I PSODRUG("IEN")=$P(RX0,"^",6)!($P(PSLST,",",2)) D RST
+ .;PSO*7.0*734: Delete check for $P(PSLST,",",2)
+ .I PSODRUG("IEN")=$P(RX0,"^",6) D RST
  S IEN=0,IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="      Orderable Item: "_$P(^PS(50.7,PSODRUG("OI"),0),"^")_" "_$P(^PS(50.606,$P(^(0),"^",2),0),"^")_NFIO
  S:NFIO["DIN" NFIO=IEN_","_($L(^TMP("PSOPO",$J,IEN,0))-4)
  I $G(PSODRUG("NAME"))]"" D  G PST

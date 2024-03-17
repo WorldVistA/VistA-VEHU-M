@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MH INTRODUCTIONS
 ZWR
-^YTT(601.73,0)="MH INTRODUCTIONS^601.73^2535^2440"
+^YTT(601.73,0)="MH INTRODUCTIONS^601.73^2560^2447"
 ^YTT(601.73,1,0)=1
 ^YTT(601.73,1,1,0)="^^5^5^3110104^"
 ^YTT(601.73,1,1,1,0)=" "
@@ -9212,6 +9212,16 @@ ZWR
 ^YTT(601.73,2535,1,0)="^^2^2^3240117"
 ^YTT(601.73,2535,1,1,0)="Please rate how confident you are that you can do the following things at present despite the pain, where 0 is not at all confident and 6 is completely confident."
 ^YTT(601.73,2535,1,2,0)=" Remember, these questions are not asking whether or not you have been doing these things, but rather how confident you are that you can do them at present, despite the pain."
+^YTT(601.73,2549,0)=2549
+^YTT(601.73,2549,1,0)="^^1^1^3240317"
+^YTT(601.73,2549,1,1,0)="The following questionnaire is aimed at evaluating gambling symptoms. Please read the questions carefully before you answer."
+^YTT(601.73,2550,0)=2550
+^YTT(601.73,2550,1,0)="^^2^2^3240317"
+^YTT(601.73,2550,1,1,0)="To screen for potential gambling-related problems, please complete the following"
+^YTT(601.73,2550,1,2,0)="questions."
+^YTT(601.73,2551,0)=2551
+^YTT(601.73,2551,1,0)="^^1^1^3240317"
+^YTT(601.73,2551,1,1,0)="Please answer the following question."
 ^YTT(601.73,2553,0)=2553
 ^YTT(601.73,2553,1,0)="^^8^8^3240117"
 ^YTT(601.73,2553,1,1,0)="For these questions, please consider the most important things that you do, or wish to do, in your "
@@ -9222,6 +9232,18 @@ ZWR
 ^YTT(601.73,2553,1,6,0)="||Use the following scale"
 ^YTT(601.73,2553,1,7,0)="|0    -    1    -    2    -    3    -    4    -    5    -    6    -    7    -    8    -    9    -    10"
 ^YTT(601.73,2553,1,8,0)="|None of the Time                                                                    All of the time"
+^YTT(601.73,2555,0)=2555
+^YTT(601.73,2555,1,0)="^^1^1^3240317"
+^YTT(601.73,2555,1,1,0)="Please answer the following questions as accurately as possible."
+^YTT(601.73,2558,0)=2558
+^YTT(601.73,2558,1,0)="^^1^1^3240317"
+^YTT(601.73,2558,1,1,0)="|"
+^YTT(601.73,2559,0)=2559
+^YTT(601.73,2559,1,0)="^^1^1^3240317"
+^YTT(601.73,2559,1,1,0)="Keeping this (or these) experience(s) in mind, please indicate how much you agree with the following statements in terms of the impact of this experience (or experiences) in the last month."
+^YTT(601.73,2560,0)=2560
+^YTT(601.73,2560,1,0)="^^1^1^3240317"
+^YTT(601.73,2560,1,1,0)="Select a rating from 0 (not at all) to 6 (very much) for each of the following questions.  If the question does not apply, select not applicable.||Overall in the past 30 days:"
 ^YTT(601.73,"B",1,1)=""
 ^YTT(601.73,"B",2,2)=""
 ^YTT(601.73,"B",3,3)=""
@@ -11661,4 +11683,11 @@ ZWR
 ^YTT(601.73,"B",2531,2531)=""
 ^YTT(601.73,"B",2532,2532)=""
 ^YTT(601.73,"B",2535,2535)=""
+^YTT(601.73,"B",2549,2549)=""
+^YTT(601.73,"B",2550,2550)=""
+^YTT(601.73,"B",2551,2551)=""
 ^YTT(601.73,"B",2553,2553)=""
+^YTT(601.73,"B",2555,2555)=""
+^YTT(601.73,"B",2558,2558)=""
+^YTT(601.73,"B",2559,2559)=""
+^YTT(601.73,"B",2560,2560)=""

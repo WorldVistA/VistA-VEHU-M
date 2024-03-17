@@ -1,5 +1,5 @@
-YTSCORE ;SLC/KCM - Scoring for complex instruments ; 9/15/2015
- ;;5.01;MENTAL HEALTH;**119,123,142,141,217,234**;Dec 30, 1994;Build 38
+YTSCORE ;SLC/KCM - Scoring for complex instruments ;Jan 18, 2024@12:05:44
+ ;;5.01;MENTAL HEALTH;**119,123,142,141,217,234,244**;Dec 30, 1994;Build 5
  ;
  ;
  Q
@@ -14,7 +14,7 @@ DESGNTR(YSQN,DES) ; Create DESIGNTR variable, used for Reports
  Q:'$G(STR76)
  S DES=$P($P($G(^YTT(601.76,STR76,0)),U,5),".")
  Q
- ; 
+ ;
 LOADANSW(YSDATA,YS) ; patch 123, loads answers, builds YSDATA array
  ;input:AD = ADMINISTRATION #
  ;output: [DATA]
@@ -85,7 +85,7 @@ LDSCORES(YSDATA,YS) ;  new call for patch 123
  I YSAD'?1N.N S ^TMP($J,"YSCOR",1)="[ERROR]",^TMP($J,"YSCOR",2)="Bad ADMIN # in LDSCORES" Q  ;-->out
  S IEN71=$$GET1^DIQ(601.84,YSAD_",",2,"I") I IEN71'?1N.N D  Q
  .S ^TMP($J,"YSCOR",1)="[ERROR]",^TMP($J,"YSCOR",2)="No Instrument in 601.84"
- ;Check if scoring may have changed before loading scores 
+ ;Check if scoring may have changed before loading scores
  I '$$CHKSCRE D SCORSAVE^YTQAPI11(.YSDATA,.YS)
  I '$D(^YTT(601.92,"AC",YSAD)) S ^TMP($J,"YSCOR",1)="[ERROR]",^TMP($J,"YSCOR",2)="No entry in MH RESULTS" Q  ;-->out
  ;
@@ -107,7 +107,7 @@ UPDSCORE(YSDATA,YS) ; files entries in MH RESULTS (601.92)
  ;output: [DATA]
  N DIFF,IEN71,YSAD,YSCALE,YSC,YSG,Z
  S YSAD=$G(YS("AD"))
- I YSAD'?1N.N S ^TMP($J,"YSCOR",1)="[ERROR]",^TMP($J,"YSCOR",2)="No ADMIN # in UPDSCORE" Q  ;-->out 
+ I YSAD'?1N.N S ^TMP($J,"YSCOR",1)="[ERROR]",^TMP($J,"YSCOR",2)="No ADMIN # in UPDSCORE" Q  ;-->out
  S IEN71=$$GET1^DIQ(601.84,YSAD_",",2,"I")
  ; are there existing scores in MH RESULT
  I $D(^YTT(601.92,"AC",YSAD)) D OLDSCRES(.YSCALE,.YSAD)
@@ -157,6 +157,10 @@ ADDSCRE ;add score to MH RESULTS
  N FDA,FDAIEN,DIERR,STR,YSRNEW,YSRFND
  S YSRNEW=$P($G(^YTT(601.92,0)),U,3),YSRFND=0
  S:YSRNEW<100000 YSRNEW=100000
+ L +^YTT(601.92,0):DILOCKTM+10
+ I '$T D  QUIT
+ . S ^TMP($J,"YSCOR",1)="[ERROR]"
+ . S ^TMP($J,"YSCOR",2)="Could not get lock on MH RESULTS file"
  F  Q:YSRFND  D:'$D(^YTT(601.92,YSRNEW))  S YSRNEW=YSRNEW+1
  . L +^YTT(601.92,YSRNEW):DILOCKTM Q:'$T
  . S STR=$P(YSG,"=",2)
@@ -171,9 +175,10 @@ ADDSCRE ;add score to MH RESULTS
  . D UPDATE^DIE("","FDA","FDAIEN")
  . L -^YTT(601.92,YSRNEW)
  . S YSRFND=1
+ L -^YTT(601.92,0)
  I $D(DIERR) S ^TMP($J,"YSCOR",1)="[ERROR]",^TMP($J,"YSCOR",2)="Did not add MH RESULTS entry" Q
  Q
- ; 
+ ;
 OLDSCRES(YSCALE,YSAD) ; if existing score, build array containing them
  N IEN92,STR
  S IEN92=0
@@ -181,7 +186,7 @@ OLDSCRES(YSCALE,YSAD) ; if existing score, build array containing them
  .S STR=$G(^YTT(601.92,IEN92,0))
  .S YSCALE($P(STR,U,3))=STR
  Q
- ;  
+ ;
 SETREV(YSAD,IEN71) ; set revision value in MH ADMINISTRATIONS to value in MH TEST AND SURVEYS
  N FDA,DIERR
  S FDA(601.84,YSAD_",",14)=$$GET1^DIQ(601.71,IEN71_",",93)

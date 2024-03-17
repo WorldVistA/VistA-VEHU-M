@@ -1,5 +1,5 @@
 YTQRQAD ;SLC/KCM - RESTful Calls for Instrument Admin ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,158,181,187,199,204,208,223**;Dec 30, 1994;Build 22
+ ;;5.01;MENTAL HEALTH;**130,141,158,181,187,199,204,208,223,238**;Dec 30, 1994;Build 25
  ;
  ; Reference to ^DIC(3.1) in ICR #1234
  ; Reference to ^DIC(49) in ICR #10093
@@ -52,6 +52,20 @@ PID(ARGS,RESULTS) ; get patient identifiers
  S RESULTS("pid")="xxx-xx-"_$E($P($G(^DPT(DFN,0)),U,9),6,10)
  S RESULTS("ssn")=RESULTS("pid") ; TEMPORARY until a switch to PID
  S RESULTS("email")=$P($G(^DPT(DFN,.13)),U,3)
+ ;
+ N HASSITE,SITE,INST,UTC,NN
+ S HASSITE=$$DIV4^XUSER(.SITE,DUZ)
+ I 'HASSITE I $G(DUZ(2))]"" S SITE(DUZ(2))=""  ;Use Default site if not explicitly defined.
+ Q:'$D(SITE)
+ S INST=$O(SITE(""))  ;Use first in list-assume all are in same TZ
+ S NN=$$NOW^XLFDT(),UTC=""
+ S INST="" F  S INST=$O(SITE(INST)) Q:INST=""!(UTC'="")  D
+ . S UTC=$$UTC^DIUTC(NN,,$G(INST),,1)
+ . S:UTC<0 UTC=""
+ S RESULTS("time","fileman")=$P(UTC,U)
+ S RESULTS("time","external")=$P(UTC,U,2)
+ S RESULTS("time","offset")=$P(UTC,U,3)
+ S RESULTS("time","timezone")=$P(UTC,U,4)
  Q
 APPROXY() ; return 1 if this call is via application proxy
  N XQOPT D OP^XQCHK I $P(XQOPT,U)="YTQREST PATIENT ENTRY" Q 1
@@ -203,7 +217,8 @@ NM4DFN(ARGS,RESULTS) ; get patient name given DFN
 NM4DUZ(ARGS,RESULTS) ; get user name given DUZ
  N USER
  S USER=$G(ARGS("duz"))
- I '$D(^VA(200,DUZ,0)) D SETERROR^YTQRUTL(404,"Not Found: "_USER) QUIT
+ I +USER=0 D SETERROR^YTQRUTL(404,"Invalid user: "_USER) QUIT
+ I '$D(^VA(200,USER,0)) D SETERROR^YTQRUTL(404,"Not Found: "_USER) QUIT
  S RESULTS("duz")=USER
  S RESULTS("name")=$P($G(^VA(200,USER,0)),U)
  Q

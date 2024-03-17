@@ -1,5 +1,5 @@
 IBECEAU2 ;ALB/CPM - Cancel/Edit/Add... User Prompts ; 19-APR-93
- ;;2.0;INTEGRATED BILLING;**7,52,153,176,545,563,614,618,646,663,671,669,653,678,715,734**;21-MAR-94;Build 4
+ ;;2.0;INTEGRATED BILLING;**7,52,153,176,545,563,614,618,646,663,671,669,653,678,715,734,772**;21-MAR-94;Build 6
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 REAS(IBX) ; Ask for the cancellation reason.
@@ -37,6 +37,7 @@ UNIT(DEF) ; Ask for units for Rx copay charges
 FR(DEF) ; Ask Bill From Date
  ; Input:   DEF  --  Default value if previous charge is to be displayed
  N DA,DIR,DIRUT,DUOUT,DTOUT,X,X1,Y
+ N IBDOD  ; IB*2.0*772
 FRA S:$G(DEF) DIR("B")=$$DAT2^IBOUTL(DEF)
  S DIR(0)="DA^2901001:"_IBLIM_":EX"
  ; IB*2.0*715
@@ -48,6 +49,8 @@ FRA S:$G(DEF) DIR("B")=$$DAT2^IBOUTL(DEF)
  S DIR("?")="^D HFR^IBECEAU2"
  ;
  D ^DIR K DIR S IBFR=Y I 'Y W !!,$S(IBXA=4!(IBXA=7):"Visit",IBXA=5:"Rx",1:"Bill From")," Date not entered - transaction cannot be completed." S IBY=-1 G FRQ
+ ; check date of death
+ S IBDOD=$$GETDOD(DFN) I IBDOD>0,IBFR>IBDOD W !!,"This date is after patient's recorded date of death." G FRA  ; IB*2.0*772
  I IBXA=7 G FRQ
  I IBXA'=8,IBXA'=9,IBXA'=5,'IBUC,'$$BIL^DGMTUB(DFN,IBFR+.24) D CATC G FRA    ;IB*2.0*646 - added UC check.
  I IBXA>7,IBXA<10,$$LTCST^IBAECU(DFN,IBFR,1)<2 W !,"This patient is not LTC billable on this date.",! G FRA
@@ -138,3 +141,14 @@ TIER(IBATYP,IBEFDT,TIER) ; Prompt if needed for copay tier
  D ^DIR
  I $D(DIRUT) S IBY=-1 Q 0
  Q Y
+ ;
+GETDOD(DFN) ; get patient's date of death  IB*2.0*772
+ ;
+ ; DFN - patient's DFN
+ ;
+ ; returns patient's date of death (internal format) if available, or 0 otherwise.
+ ;
+ N VADM
+ I +DFN'>0 Q 0
+ D DEM^VADPT
+ Q +$P($G(VADM(6)),U)

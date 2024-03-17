@@ -1,5 +1,5 @@
-SDESGETCONSULTS ;ALB/BLB,MGD,RRM,BWF,CGP,BLB,ANU - VISTA SCHEDULING RPCS GET CONSULTS ;AUG 15, 2023
- ;;5.3;Scheduling;**815,820,824,837,842,847,857**;Aug 13, 1993;Build 14
+SDESGETCONSULTS ;ALB/BLB,MGD,RRM,BWF,CGP,BLB,ANU,LAB - VISTA SCHEDULING RPCS GET CONSULTS ;DEC 01,2023
+ ;;5.3;Scheduling;**815,820,824,837,842,847,857,867**;Aug 13, 1993;Build 8
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
@@ -83,6 +83,9 @@ GETSTOPCODES(REQUEST,SERVICEIEN,NUM) ;
  .S COUNT=COUNT+1
  .S STOPCODE=$$GET1^DIQ(123.5688,SUBIEN_","_SERVICEIEN_",",.01,"I")
  .S REQUEST("Request",NUM,"ConsultAssociatedStopCodes",COUNT,"StopCode")=STOPCODE
+ .S REQUEST("Request",NUM,"ConsultAssociatedStopCodes",COUNT,"StopCodeName")=$$GET1^DIQ(40.7,STOPCODE,.01,"E")
+ .S REQUEST("Request",NUM,"ConsultAssociatedStopCodes",COUNT,"AmisStopCode")=$$GET1^DIQ(40.7,STOPCODE,1,"I")
+ .S REQUEST("Request",NUM,"ConsultAssociatedStopCodes",COUNT,"RestrictionType")=$$GET1^DIQ(40.7,STOPCODE,5,"I")
  Q
  ;
 GETPID(CONSULTIEN) ;

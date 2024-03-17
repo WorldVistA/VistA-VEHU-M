@@ -1,5 +1,5 @@
-DGBTEF1 ;ALB/SCK - BENEFICIARY TRAVEL UPDATE PARAMETERS INTO FILES ;12/14/92 3/12/93
- ;;1.0;Beneficiary Travel;**2,14**;September 25, 2001;Build 7
+DGBTEF1 ;ALB/SCK - BENEFICIARY TRAVEL UPDATE PARAMETERS INTO FILES ; 1/5/24 11:29am
+ ;;1.0;Beneficiary Travel;**2,14,41**;September 25, 2001;Build 7
 RATES ;enter/edit bene travel parameters;option DGBT BENE TRAVEL RATES
  S DA=1,DR="720;723;721",DIE="^DG(43," D ^DIE G QUIT:X="^"!($D(DTOUT))!($D(Y)) K DA,DE,DQ,DR,DIE
  Q  ;This Q was added under direction of CBO to remove site's ability to edit rates
@@ -32,6 +32,7 @@ TYPE ;  select account to edit
  D ^DIC G TYPE:Y'>0
  S DA=+Y,DR="2:4",DIE="^DGBT(392.3," D ^DIE G TYPE
 NWACT ;enter/edit account file (392.3);option DGBT BENE TRAVEL ACCOUNT
+ Q  ;DGBT*1*41 Removing functionality
  W !!?3,"You are about to enter/edit Bene Travel account types.  Although",!?3,"this process is now decentralized, changes and additions should be",!?3,"made with extreme care.",!
  S DIR(0)="Y",DIR("A")="Are you sure you wish to continue",DIR("B")="No" D ^DIR K DIR I $D(DTOUT)!($D(DUOUT))!('Y) G QUIT1
 ED ;  edit data for new account

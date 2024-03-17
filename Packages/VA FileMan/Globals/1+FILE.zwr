@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3240117.15572
+^DIC(2,"%MSC")=3240317.082203
 ^DIC(3.05,0)="FAILED ACCESS ATTEMPTS LOG^3.05"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
@@ -1351,6 +1351,7 @@ ZWR
 ^DIC(9.9,"%D",19,0)="The person(s) who are in charge of monitoring patches at the site or"
 ^DIC(9.9,"%D",20,0)="perhaps for the VISN will be responsible for following up on delinquent"
 ^DIC(9.9,"%D",21,0)="patches."
+^DIC(9.9,"%MSC")=3240317.083625
 ^DIC(9.95,0)="PATCH MONITOR PARAMETER^9.95"
 ^DIC(9.95,0,"AUDIT")="#"
 ^DIC(9.95,0,"DD")="@"
@@ -2886,7 +2887,7 @@ ZWR
 ^DIC(44,"%D",0)=1
 ^DIC(44,"%D",1,0)="Contains locations found in the hospital (ie. Wards, Clinics)"
 ^DIC(44,"%D",2,0)=" *********DO NOT RE-INDEX THIS FILE**********"
-^DIC(44,"%MSC")=3230120.021102
+^DIC(44,"%MSC")=3240317.083457
 ^DIC(44.3,0)="SDAM DATA MAP^44.3"
 ^DIC(44.3,0,"AUDIT")="@"
 ^DIC(44.3,0,"DD")="@"
@@ -6815,7 +6816,7 @@ ZWR
 ^DIC(64,"%D",11,0)="FILE WITH SPECIFIC INFORMATION AT SPECIFIC INTERNAL FILE NUMBERS. NO"
 ^DIC(64,"%D",12,0)="ENTRIES SHOULD EVER BE DELETED. ADDITIONAL ENTRIES WILL BE DISTRIBUTED"
 ^DIC(64,"%D",13,0)="VIA GLOBAL TAPE WHEN NECESSARY."
-^DIC(64,"%MSC")=3230923.185141
+^DIC(64,"%MSC")=3240317.082524
 ^DIC(64.03,0)="WKLD LOG FILE^64.03"
 ^DIC(64.03,0,"GL")="^LRO(64.03,"
 ^DIC(64.03,0,"GL")="^LRO(64.03,"
@@ -6879,7 +6880,7 @@ ZWR
 ^DIC(64.061,"%D",5,0)=" "
 ^DIC(64.061,"%D",6,0)="This file is a standard file for many types of terms used in electronic"
 ^DIC(64.061,"%D",7,0)="messaging."
-^DIC(64.061,"%MSC")=3230923.185141
+^DIC(64.061,"%MSC")=3240317.082524
 ^DIC(64.062,0)="LAB ELECTRONIC SUBTYPES^64.062"
 ^DIC(64.062,0,"GL")="^LAB(64.062,"
 ^DIC(64.062,0,"GL")="^LAB(64.062,"
@@ -6911,7 +6912,7 @@ ZWR
 ^DIC(64.2,"%D",6,0)="will be distributed to all VAMC sites."
 ^DIC(64.2,"%D",7,0)="  Forward all request for additional codes not found in this file, contact"
 ^DIC(64.2,"%D",8,0)="Pathology Central Office, Attention Asst. Director for DHCP affairs. "
-^DIC(64.2,"%MSC")=3230923.185141
+^DIC(64.2,"%MSC")=3240317.082524
 ^DIC(64.21,0)="WKLD CODE LAB SECT^64.21"
 ^DIC(64.21,0,"GL")="^LAB(64.21,"
 ^DIC(64.21,0,"GL")="^LAB(64.21,"
@@ -7022,7 +7023,7 @@ ZWR
 ^DIC(64.81,"%D",9,0)="UPGRADE."
 ^DIC(64.81,"%D",10,0)=" "
 ^DIC(64.81,"%D",11,0)="The end user never uses this file for day to day laboratory activities. "
-^DIC(64.81,"%MSC")=3230923.185141
+^DIC(64.81,"%MSC")=3240317.082525
 ^DIC(64.9178,0)="LSRP AUDIT CONFIG^64.9178"
 ^DIC(64.9178,0,"GL")="^LABAUD(64.9178,"
 ^DIC(64.9178,0,"GL")="^LABAUD(64.9178,"
@@ -13104,7 +13105,7 @@ ZWR
 ^DIC(95.3,"%D",62,0)="liability for any omissions or errors in the LOINC database, and all "
 ^DIC(95.3,"%D",63,0)="EXPRESS AND IMPLIED WARRANTIES, INCLUDING THOSE RELATED TO MERCHANTABILITY"
 ^DIC(95.3,"%D",64,0)="OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED."
-^DIC(95.3,"%MSC")=3230923.185141
+^DIC(95.3,"%MSC")=3240317.082525
 ^DIC(95.31,0)="LAB LOINC COMPONENT^95.31"
 ^DIC(95.31,0,"AUDIT")="@"
 ^DIC(95.31,0,"DD")="@"
@@ -13123,7 +13124,7 @@ ZWR
 ^DIC(95.31,"%D",1,0)="This file contains the name of the component or analyte measured for the "
 ^DIC(95.31,"%D",2,0)="LAB LOINC file (#95.3).  This file is a standard file distributed"
 ^DIC(95.31,"%D",3,0)="by Dallas CIOFO and should not be edited locally."
-^DIC(95.31,"%MSC")=3230923.185141
+^DIC(95.31,"%MSC")=3240317.082525
 ^DIC(95.4,0)="LAB MAPPING TRANSPORT^95.4"
 ^DIC(95.4,0,"AUDIT")=""
 ^DIC(95.4,0,"DD")=""
@@ -29856,7 +29857,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3240217.052606
+^DIC(409.93,"%MSC")=3240317.083457
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"

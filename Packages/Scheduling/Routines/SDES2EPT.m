@@ -1,5 +1,5 @@
-SDES2EPT ;ALB/ANU,LAB - SDES2 GET PATIENT'S ExtendedProfile APPT INFO ; OCT 24,2023
- ;;5.3;Scheduling;**861**;Aug 13, 1993;Build 17
+SDES2EPT ;ALB/LAB,ANU - SDES2 GET PATIENT'S ExtendedProfile APPT INFO ; DEC 14,2023
+ ;;5.3;Scheduling;**861,867**;Aug 13, 1993;Build 8
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -66,7 +66,9 @@ GETPTINA(SDRETURN,SDDFN) ;
  . S SDCMBTV="No"
  . S SDCMBTVED="N/A"
  S SDRETURN("ExtendedProfile",SDCOUNT,"Combat Veteran")=$G(SDCMBTV)
- S SDRETURN("ExtendedProfile",SDCOUNT,"Combat Veteran End Date")=$G(SDCMBTVED)
+ ;867
+ I SDCMBTV="No" S SDRETURN("ExtendedProfile",SDCOUNT,"Combat Veteran End Date")=$G(SDCMBTVED)
+ I SDCMBTV'="No" S SDRETURN("ExtendedProfile",SDCOUNT,"Combat Veteran End Date")=$$FMTISO^SDAMUTDT($$CONVDATE^SDESCOMPPEN($G(SDCMBTVED)))
  ;
  ; PRISONER OF WAR - VADPT is not handling Unknown value
  I $G(PATIENTDATA(2,SDDFN_",",.525,"I"))="Y" S SDPOW="Yes"
@@ -92,6 +94,8 @@ GETPTINA(SDRETURN,SDDFN) ;
  S SDSTAT="" S SDSTAT=SDST_SDSTA
  S SDLADMT="" S SDLADMT=$P($G(DGPMVI(13,1)),"^",2)
  S SDRETURN("ExtendedProfile",SDCOUNT,"Status")=$G(SDSTAT)
- S SDRETURN("ExtendedProfile",SDCOUNT,"Last Admit/Lodger Date")=$G(SDLADMT)
+ ;867
+ ;S SDRETURN("ExtendedProfile",SDCOUNT,"Last Admit/Lodger Date")=$G(SDLADMT)
+ S SDRETURN("ExtendedProfile",SDCOUNT,"Last Admit/Lodger Date")=$$FMTISO^SDAMUTDT($$CONVDATE^SDESCOMPPEN($G(SDLADMT)))
  K DGPMVI,VAIP
  Q

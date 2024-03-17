@@ -1,5 +1,5 @@
-SDAMUTDT ;BPOIFO/JFW,TAW,KML-TESTING-Scheduling Encapsulation Utilities ;March 21, 2022
- ;;5.3;Scheduling;**266,805,809,813**;13 Aug 1993;Build 6
+SDAMUTDT ;BPOIFO/JFW,TAW,KML,LAB -Scheduling Encapsulation Utilities ;DEC 7,2023
+ ;;5.3;Scheduling;**266,805,809,813,867**;13 Aug 1993;Build 8
  ;
  ;*****************************************************************
  ;              CHANGE LOG
@@ -90,8 +90,8 @@ ISOTFM(SDGMTDT,SDCLINIC) ;convert ISO 8601 extended GMT date/time to fileman for
  I SDFM["-9999"!(POP) Q -1
  ;
  ;convert date(/time) from HL7 format back to Fileman
- I SDOFFSET'="" S SDFMDTM=$$HL7TFM^XLFDT(SDFM,"U")
- I SDOFFSET="" S SDFMDTM=$$HL7TFM^XLFDT(SDFM)
+ I +SDOFFSET S SDFMDTM=$$HL7TFM^XLFDT(SDFM,"U")
+ I '(+SDOFFSET) S SDFMDTM=$$HL7TFM^XLFDT(SDFM)
  Q:SDFMDTM<0 SDFMDTM ;error occurred in conversion
  ;check validity of date (including leap year check)
  S X=$$FMTE^XLFDT(SDFMDTM)

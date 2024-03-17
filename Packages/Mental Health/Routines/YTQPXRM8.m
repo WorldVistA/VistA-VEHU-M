@@ -1,5 +1,7 @@
-YTQPXRM8 ;ALB/ASF - PSYCH TEST API FOR CLINICAL REMINDERS ; 8/27/08 3:39pm
- ;;5.01;MENTAL HEALTH;**98,123,141**;Dec 30, 1994;Build 85
+YTQPXRM8 ;ALB/ASF - PSYCH TEST API FOR CLINICAL REMINDERS ;Jan 19, 2024@12:23:12
+ ;;5.01;MENTAL HEALTH;**98,123,141,244**;Dec 30, 1994;Build 5
+ ;
+ ;
  Q
 SETSCR(YSDATA,YS) ;save  scratch CR
  ;input: DFN = Patient ien
@@ -8,7 +10,7 @@ SETSCR(YSDATA,YS) ;save  scratch CR
  ;input: YS(1) thru YS(N) WP entries as
  ; QuestionID^AnswerID^LegacyValue^IsMultipleChoice
  ;output: [DATA] vs [ERROR]
- N YSHANDLE,YSDFN,YSTN,YSNOW,YSCODE,YSIEN,N,N2,N3,X,Y,%
+ N YSHANDLE,YSDFN,YSFLAG,YSTN,YSNOW,YSCODE,YSIEN,N,N2,N3,X,Y,%
  S YSDATA(1)="[ERROR]",YSDATA(2)=U_U_YS("CODE")
  S YSHANDLE=$G(YS("HANDLE"),0)
  S YSDFN=$G(YS("DFN"))
@@ -17,13 +19,22 @@ SETSCR(YSDATA,YS) ;save  scratch CR
  I YSDFN'?1N.N S YSDATA(2)="bad DFN setscr" Q  ;-->out
  I YSTN'?1N.N S YSDATA(2)="bad test num setcr" Q  ;-->out
  D NOW^%DTC S YSNOW=%
+ S YSFLAG=0
  S N=0
  F  S N=N+1 Q:'$D(YS(N))  D
- .S YSIEN=$$NEW^YTQLIB(601.94)
- .L +^YTT(601.94,YSIEN):10
+ .S YSIEN=$$NEW(601.94)
+ .I YSIEN'?1N.N D  QUIT
+ ..S YSFLAG=1
+ ..S YSDATA(1)="[ERROR]"
+ ..S YSDATA(2)="bad cr scratch ien"
+ . ;
+ .L +^YTT(601.94,YSIEN):DILOCKTM+10
+ .I '$T D  QUIT
+ ..S YSFLAG=1
+ ..S YSDATA(1)="[ERROR]"
+ ..S YSDATA(2)="time out"
  .S ^YTT(601.94,YSIEN,0)=YSIEN_U_YSDFN_U_YSNOW_U_YSTN_U_YS(N)_DUZ
  .S:YSHANDLE'=0 ^YTT(601.94,YSIEN,2)=YSHANDLE
- .S ^YTT(601.94,0)=$P(^YTT(601.94,0),U,1,2)_U_YSIEN_U_($P(^YTT(601.94,0),U,4)+1)
  .S ^YTT(601.94,"B",YSIEN,YSIEN)=""
  .S ^YTT(601.94,"AF",DUZ,YSDFN,YSTN,YSHANDLE,YSIEN)=""
  .S ^YTT(601.94,"AD",YSNOW,YSIEN)=""
@@ -31,8 +42,27 @@ SETSCR(YSDATA,YS) ;save  scratch CR
  .;answer wp
  .S N2=N,N3=0 F  S N2=$O(YS(N2)) Q:(N2=(N+1))!(N2'>0)  S N3=N3+1,^YTT(601.94,YSIEN,1,N3,0)=YS(N2)
  .L -^YTT(601.94,YSIEN)
- S YSDATA(1)="[DATA]",YSDATA(2)="OK"
+ I 'YSFLAG S YSDATA(1)="[DATA]",YSDATA(2)="OK"
  Q
+ ;
+NEW(YSFILEN) ;Adding New Entries - return an internal number - EXTRINSIC FUNCTION
+ ;if $D YSPROG then National and pointers less than 100,000 else pointers greater than 100,000
+ N MHQ2X,YS
+ K YSPROG
+ S:$D(^XUSEC("YSPROG",DUZ)) YSPROG=1
+ S YS=$P($G(^YTT(YSFILEN,0)),U,3) S:YS<1 YS=1
+ I $D(YSPROG) S YS=$S(YS<100000:YS,1:1)
+ I '$D(YSPROG) S YS=$S(YS>100000:YS,1:100000)
+ L +^YTT(YSFILEN,0):DILOCKTM+10
+ I '$T QUIT ""
+ F MHQ2X=YS:1 I '$D(^YTT(YSFILEN,MHQ2X)) D  Q:MHQ2XFND
+ . S MHQ2XFND=1
+ . S ^YTT(YSFILEN,MHQ2X,0)=MHQ2X
+ . S $P(^YTT(YSFILEN,0),U,3)=MHQ2X
+ . S $P(^YTT(YSFILEN,0),U,4)=$P($G(^YTT(YSFILEN,0)),U,4)+1
+ L -^YTT(YSFILEN,0)
+ Q MHQ2X
+ ;
 GETSCR(YSDATA,YS) ;get CR scratch -for a user,patient and instrument
  ; input: DFN as Patient Ien
  ; input: CODE as Instrument name- 601.71
@@ -85,15 +115,31 @@ KILLSCR(YSDATA,YS) ;delete scratch data
  I YSTN'?1N.N S YSDATA(2)="bad test num killscr" Q  ;-->out
  S YSIEN=0
  F  S YSIEN=$O(^YTT(601.94,"AF",DUZ,YSDFN,YSTN,YSHANDLE,YSIEN)) Q:YSIEN'>0  D
- . S DA=YSIEN,DIK="^YTT(601.94," D ^DIK
+ . D KILLS(YSDFN,YSTN,YSIEN)
  S YSDATA(1)="[DATA]"
  Q
 MULTT ;multiple test remover
  S YSTN=0 F  S YSTN=$O(^YTT(601.94,"AF",DUZ,YSDFN,YSTN)) Q:YSTN'>0  D
  . S YSIEN=0
- . F  S YSIEN=$O(^YTT(601.94,"AF",DUZ,YSDFN,YSTN,YSHANDLE,YSIEN)) Q:YSIEN'>0  S DA=YSIEN,DIK="^YTT(601.94," D ^DIK
+ . F  S YSIEN=$O(^YTT(601.94,"AF",DUZ,YSDFN,YSTN,YSHANDLE,YSIEN)) Q:YSIEN'>0  D
+ . . D KILLS(YSDFN,YSTN,YSIEN)
  S YSDATA(1)="[DATA]"
  Q
+ ;
+KILLS(YSDFN,YSTN,YSIEN) ;
+ N YSNODE0,DA,DIK
+ S YSNODE0=$G(^YTT(601.94,YSIEN,0))
+ Q:($P(YSNODE0,U,2)'=YSDFN)  ;--> out wrong patient
+ Q:($P(YSNODE0,U,9)'=DUZ)  ;--> out wrong user
+ Q:($P(YSNODE0,U,4)'=YSTN)  ;--> out wrong test
+ L +^YTT(601.94,0):DILOCKTM+10
+ I '$T QUIT
+ S DA=YSIEN
+ S DIK="^YTT(601.94,"
+ D ^DIK
+ L -^YTT(601.94,0)
+ Q
+ ;
 OLDKILL ;clean up scratch file
  N X1,X2,X,DA,DIK,YSWHEN,YSOUT
  S X1=DT,X2=-2 D C^%DTC

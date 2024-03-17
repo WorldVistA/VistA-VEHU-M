@@ -1,5 +1,5 @@
 YTQRQAD3 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181,187,199,207,202,204,208,221**;Dec 30, 1994;Build 11
+ ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181,187,199,207,202,204,208,221,238**;Dec 30, 1994;Build 25
  ;
  ; Reference to ^VA(200) in ICR #10060
  ; Reference to DIQ in ICR #2056
@@ -17,9 +17,17 @@ REPORT(ARGS,RESULTS) ; build report object identified by ARGS("adminId")
 REPORT1(ADMIN,REPORT,TYPE) ; fill in the report text for ADMIN
  N I,REPORT,COMMS,II,CRLF,BCNT,BARR
  N RM
+ N TSTNM,YS,YSDATA,RPRIV
  S RM=79
  I $G(TYPE)'="NOTE" S RM=512
  S CRLF=$C(10)
+ S RPRIV=1
+ I $G(TYPE)'="NOTE" D
+ . K YSDATA
+ . S TSTNM=$P($G(^YTT(601.71,$P(^YTT(601.84,ADMIN,0),U,3),0)),U)
+ . S YS("CODE")=TSTNM D PRIVL^YTAPI5(.YSDATA,.YS)
+ . I $G(YSDATA(1))["[DATA]" I $P($G(YSDATA(2)),U)=0 S RPRIV=0
+ I RPRIV=0 S RESULTS("text","\",1)="This is a restricted report" Q 
  D BLDRPT^YTQRRPT(.REPORT,ADMIN,RM)
  S BCNT=0 K BARR
  S I=0 F  S I=$O(REPORT(I)) Q:+I=0  D
@@ -169,7 +177,6 @@ NEEDCSGN(ARGS,RESULTS) ; GET /api/mha/permission/needcosign/:userId  208
  ; Returns "true" if userId requires a cosigner
  ; Returns "false" if userId does NOT require a cosigner
  N YSPERSON,YSTITLE,YSCREQ,INSTS,TEST,II,CONSULT,YSCREQ,CSLIST,INAM,CFLG
- ;M ^ZZKTL("NEEDCSGN","ARGS")=ARGS
  S INSTS=$G(ARGS("instrumentList"))
  S:INSTS="" INSTS=$G(ARGS("instrumentlist"))  ;If query param, xlated to lower
  S YSPERSON=$G(ARGS("userId"))

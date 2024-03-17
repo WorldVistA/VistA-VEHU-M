@@ -1,5 +1,5 @@
-DGBTDLT1 ;BLD - REPRINT BENEFICIARY TRAVEL DENIAL LETTER;03/04/2012@1400
- ;;1.0;Beneficiary Travel;**20,28,33**;September 25, 2001;Build 2
+DGBTDLT1 ;UNK/BLD - REPRINT BENEFICIARY TRAVEL DENIAL LETTER ; 1/8/24 12:37pm
+ ;;1.0;Beneficiary Travel;**20,28,33,41**;September 25, 2001;Build 7
  ;
  Q
  ;************************************************************************************************************
@@ -8,6 +8,7 @@ DGBTDLT1 ;BLD - REPRINT BENEFICIARY TRAVEL DENIAL LETTER;03/04/2012@1400
  ;
 REPRINT ;
  ;
+ Q  ;DGBT*1*41 Remove functionality
  D QUIT
  W !
  K ^UTILITY($J,"W"),^TMP("DGBT",$J)

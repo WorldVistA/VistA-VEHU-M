@@ -1,5 +1,5 @@
-SDESCHECKOUT ;ALB/BWF,CGP,ANU - Checkout Appointment - VISTA SCHEDULING RPCS ;AUG 07, 2023
- ;;5.3;Scheduling;**826,827,836,853**;Aug 13, 1993;Build 9
+SDESCHECKOUT ;ALB/BWF,CGP,JAS,ANU - Checkout Appointment - VISTA SCHEDULING RPCS ;JAN 11, 2024
+ ;;5.3;Scheduling;**826,827,836,853,867,869**;Aug 13, 1993;Build 13
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Reference to MAS PARAMETERS in ICR #483
  ; Reference to WARD LOCATION in ICR #1377
@@ -7,17 +7,16 @@ SDESCHECKOUT ;ALB/BWF,CGP,ANU - Checkout Appointment - VISTA SCHEDULING RPCS ;AU
  ; Reference to VISIT in ICR #2028
  ;
  Q
-CHECKOUT(SDECY,APPTIEN,CHKOUTDT) ;Check Out appointment
- ;CHECKOUT(SDECY,DFN,APPTDTTM,CHKOUTDT,SDECAPTID,VPRV)  external parameter tag is in SDEC
+CHECKOUT(SDECY,APPTIEN,CHKOUTDT) ;Check Out appt
  ; Returns   SDECY
- ; Input  -- APPTIEN     Appointment IEN from 409.84
- ;           CHKOUTDT    Appointment Checkout Date/Time in ISO format
+ ; Input  -- APPTIEN     Appt IEN from 409.84
+ ;           CHKOUTDT    Appt Checkout Date/Time in ISO
  ;
  N CLINICIEN,SDASK,SDCOACT,SDDA,SDLNE,SDQUIET,APPTIENS,RESOURCE,ERRORS,DFN,APPTDATA,DFN,RESOURCE,CLINICIEN,CHKOUT
  S APPTIEN=$G(APPTIEN),CHKOUTDT=$G(CHKOUTDT)
  D VALAPPTIEN^SDESVALUTIL(.ERRORS,APPTIEN)
  S APPTIENS=APPTIEN_","
- D GETS^DIQ(409.84,APPTIENS,".01;.05;.07;.12","I","APPTDATA")
+ D GETS^DIQ(409.84,APPTIENS,".01;.05;.07;.12;.16","I","APPTDATA")
  I $G(APPTDATA(409.84,APPTIENS,.12,"I")) D ERRLOG^SDESJSON(.ERRORS,322)
  S APPTDTTM=$G(APPTDATA(409.84,APPTIENS,.01,"I"))
  S DFN=$G(APPTDATA(409.84,APPTIENS,.05,"I"))
@@ -32,9 +31,7 @@ CHECKOUT(SDECY,APPTIEN,CHKOUTDT) ;Check Out appointment
  S SDCOACT="CO"
  S SDLNE=""
  S SDQUIET=1
- ;
  ;  Event driver "BEFORE" actions - from SD*5.3*717 10/25/18
- ;
  N SDATA,SDDA,SDCIHDL ;
  S SDDA=$$FIND(DFN,APPTDTTM,CLINICIEN)
  I 'SDDA D  Q
@@ -46,13 +43,13 @@ CHECKOUT(SDECY,APPTIEN,CHKOUTDT) ;Check Out appointment
  ;
  S SDATA=SDDA_U_DFN_U_APPTDTTM_U_CLINICIEN
  S SDCIHDL=$$HANDLE^SDAMEVT(1) ;
- ;  Event driver "BEFORE" actions
+ ;  Event driver "BEFORE"
  D BEFORE^SDAMEVT(.SDATA,DFN,APPTDTTM,CLINICIEN,SDDA,SDCIHDL) ;
  ; Appointment checkout
  D CHKOUT(DFN,APPTDTTM,CLINICIEN,SDDA,SDASK,CHKOUTDT,SDCOACT,SDLNE,APPTIEN,SDQUIET,VPRV,.ERRORS)
- ; Skip event driver actions if error occurred checking appointment out. - wtc SD*5.3*717 10/25/2018
+ ; Skip event driver actions if err occurred checking appointment out. - wtc SD*5.3*717 10/25/2018
  I $D(ERRORS) S ERRORS("CheckOut",1)="" D BUILDJSON^SDESBUILDJSON(.SDECY,.ERRORS) Q
- ;  Event driver "AFTER" actions
+ ;  Event driver "AFTER"
  D AFTER^SDAMEVT(.SDATA,DFN,APPTDTTM,CLINICIEN,SDDA,SDCIHDL) ;
  ;  Execute event driver.  5=check out (see #409.66), 2=non-interactive
  D EVT^SDAMEVT(.SDATA,5,2,SDCIHDL) ;
@@ -68,7 +65,7 @@ VALCHKOUTDT(ERRORS,CHKOUTDT,CLINIC) ;
  I $P(CHKOUTDTFM,".",2)="" D ERRLOG^SDESJSON(.ERRORS,321) Q CHKOUTDTFM
  ; checkout time cannot be in the future
  I CHKOUTDTFM>$$NOW^XLFDT D ERRLOG^SDESJSON(.ERRORS,320) Q CHKOUTDTFM
- ; make sure checkout time is after checkin time
+ ; checkout time is after checkin time
  I CHKOUTDTFM'>CHKIN D ERRLOG^SDESJSON(.ERRORS,52,"Check Out time must be at least 1 minute after the Check In time of "_$TR($$FMTE^XLFDT(CHKIN),"@"," ")_".")
  Q CHKOUTDTFM
  ;
@@ -87,7 +84,7 @@ FIND(DFN,APPTDTTM,CLINICIEN) ; -- return appt ifn for pat
  .I $D(^DPT(DFN,"S",APPTDTTM,0)),$$VALID(DFN,CLINICIEN,APPTDTTM,Y) S FOUND=1,RET=Y Q
  Q RET
  ;
-VALID(DFN,CLINICIEN,APPTDTTM,SDDA) ; -- return valid appt.
+VALID(DFN,CLINICIEN,APPTDTTM,SDDA) ;
  ;   input:        DFN := ifn of pat.
  ;            APPTDTTM := appt d/t
  ;                CLINICIEN := ifn of clinic
@@ -118,7 +115,7 @@ CHKOUT(DFN,APPTDTTM,CLINICIEN,SDDA,SDASK,CHKOUTDT,SDCOACT,SDLNE,SDECAPTID,SDQUIE
  ;-- if new encounter, pass to PCE
  I $$NEW(APPTDTTM) D  Q
  .N SDCOED
- .;ANU - Add ERRORS parameter
+ .;ANU - Add ERRORS
  .S SDOE=$$GETAPT(DFN,APPTDTTM,CLINICIEN,.ERRORS)
  .I $D(ERRORS) Q
  .;
@@ -131,7 +128,7 @@ CHKOUT(DFN,APPTDTTM,CLINICIEN,SDDA,SDASK,CHKOUTDT,SDCOACT,SDLNE,SDECAPTID,SDQUIE
 CODT(DFN,SDT,SDCL,SDDA) ; -- does appt have co date
  Q $$GET1^DIQ(44.003,SDDA_","_SDT_","_SDCL_",",303,"I")
  ;
-NEW(DATE) ;-- This function will return 1 if SD is turned on for
+NEW(DATE) ;-- return 1 if SD is turned on for
  ;   Visit Tracking and optionally check if the date is past
  ;   the cut over date for the new PCE interface.
  ; INPUT : DATE (Optional) Date to check for cut over.
@@ -146,8 +143,8 @@ NEW(DATE) ;-- This function will return 1 if SD is turned on for
  I SDX,SDY S SDRES=1
  Q SDRES
  ;
-GETAPT(DFN,SDT,SDCL,SDVIEN,ERRORS) ;Look-up Outpatient Encounter IEN for Appt
- ; ANU - Added ERRORS parameter
+GETAPT(DFN,SDT,SDCL,SDVIEN,ERRORS) ;
+ ; ANU - Added ERRORS
  ; This utility will return the existing IEN for an Outpatient
  ; Encounter. If it fails to find an existing encounter,
  ; it will create a new Encounter and return the new IEN.
@@ -159,8 +156,6 @@ GETAPT(DFN,SDT,SDCL,SDVIEN,ERRORS) ;Look-up Outpatient Encounter IEN for Appt
  ; Output -- Outpatient Encounter file IEN
  N Y
  S Y=$$GET1^DIQ(2.98,SDT_","_DFN_",",21,"I")
- ;ANU
- ;I 'Y D APPT(DFN,SDT,SDCL,$G(SDVIEN)) S Y=$$GET1^DIQ(2.98,SDT_","_DFN_",",21,"I")
  I 'Y D APPT(DFN,SDT,SDCL,$G(SDVIEN),.ERRORS)
  I $D(ERRORS) Q +$G(Y)
  I '$D(ERRORS) S Y=$$GET1^DIQ(2.98,SDT_","_DFN_",",21,"I")
@@ -169,7 +164,6 @@ GETAPT(DFN,SDT,SDCL,SDVIEN,ERRORS) ;Look-up Outpatient Encounter IEN for Appt
  Q +$G(Y)
  ;
  ; FROM APPT^SDVSIT
- ; Anu - Add Errros parameter 
 APPT(DFN,SDT,SDCL,SDVIEN,ERRORS) ; -- process appt
  ; input        DFN = ien of patient file entry
  ;              SDT = visit date internal format
@@ -205,14 +199,20 @@ APPT(DFN,SDT,SDCL,SDVIEN,ERRORS) ; -- process appt
  ; -- call logic to add opt encounter(s)
  S SDVSIT("ORG")=1,SDVSIT("REF")=SDDA,SDOE=$$SDOE(SDT,.SDVSIT,$G(SDVIEN))
  I SDOE D
- .N DA,DIE,DR
- .S DA=SDT,DA(1)=DFN,DR="21////"_SDOE,DIE="^DPT("_DFN_",""S""," D ^DIE
+ .;869 - Convert ///
+ .;N DA,DIE,DR
+ .;S DA=SDT,DA(1)=DFN,DR="21////"_SDOE,DIE="^DPT("_DFN_",""S""," D ^DIE
+ .N FDAIENS,ERR298,FDA298
+ .S FDAIENS=SDT_","_DFN_","
+ .S FDA298(2.98,FDAIENS,21)=SDOE
+ .D FILE^DIE(,"FDA298","ERR298")
+ .;
  D CSTOP(SDOE,SDCL,.SDVSIT,SDT)  ;Process credit stop if applicable
  D UNLOCK(.SDLOCK)
  Q
  ; FROM LOCK^SDVSIT
- ; Anu - Make it extrinsic function to return lock error to user
- ; Return Status = 1 if success, 0 if fail
+ ; Anu - function to return lock error
+ ; Status = 1 if success, 0 if fail
 LOCK(SDLOCK) ; -- lock "ADFN" node
  N SDC
  ;F  L +^SCE("ADFN",+$G(SDLOCK("DFN")),+$G(SDLOCK("EVENT DATE/TIME"))):$G(DILOCKTM,3) Q:$T  ;LLS - 05-JAN-15 - SD*5.3*630 added timeout on lock
@@ -231,7 +231,7 @@ SDOE(SDT,SDVSIT,SDVIEN,SDOEP) ; -- get visit & encounter
  I '$D(SDVSIT("PAR")),$G(SDVIEN)="" D  ;LLS 22-DEC-2014 - SD*5.3*630 - added the following section
  .N SDVISARR,SDVIEN1
  .S SDVIEN1="" F  S SDVIEN1=$O(^AUPNVSIT("AA",DFN,SDTR,SDVIEN1)) Q:SDVIEN1=""  D  Q:$G(SDVIEN)]""
- ..; COMPARE VISIT: SERVICE CATEGORY, POINTER TO CLINIC STOP FILE, POINTER TO HOSPITAL LOCATION
+ ..; COMPARE VISIT: SERVICE CATEGORY, POINTER TO CLINIC STOP FILE, POINTER TO #44
  ..; FILE, & ENCOUNTER TYPE BEFORE SELECTING EXISTING VISIT INSTEAD OF CREATING A NEW ONE
  ..D GETS^DIQ(9000010,SDVIEN1_",",".07;.08;.22;15003","I","SDVISARR")
  ..;Q:SDVISARR(9000010,SDVIEN1_",",.07,"I")'=$S($G(SDVSIT("SVC"))]"":SDVSIT("SVC"),$$INP^SDAM2(DFN,SDTR)="I":"I",1:"A")
@@ -297,8 +297,8 @@ CSTOP(SDOE,SDCL,SDVSIT,SDT) ;Process credit stop
  Q
 LOGDATA(SDOE,SDLOG) ; -- log user, date/time and other data
  N DIE,DA,DR,Y,X
- S SDLOG("USER")=$G(DUZ)                       ; -- editing user
- S SDLOG("DATE/TIME")=$$NOW^XLFDT()            ; -- last edited
+ S SDLOG("USER")=$G(DUZ)
+ S SDLOG("DATE/TIME")=$$NOW^XLFDT()
  S DIE="^SCE(",DA=SDOE,DR="[SD ENCOUNTER LOG]" D ^DIE
  Q
  ;
@@ -314,12 +314,20 @@ VIEN(SDOE,SDVIEN) ; -- stuff in Visit IEN if not already set
  Q:'$D(^SCE(+SDOE,0))
  ; -- set visit ien if vien not already set
  I '$$GET1^DIQ(409.68,+SDOE,.05,"I") D
- .N DIE,DA,DR
- .S DIE="^SCE(",DA=SDOE,DR=".05////"_SDVIEN D ^DIE
+ .;869 - Convert ////
+ .;S DIE="^SCE(",DA=SDOE,DR=".05////"_SDVIEN D ^DIE
+ .N FDA40968,ERR40968
+ .S FDA40968(409.68,SDOE_",",.05)=SDVIEN
+ .D FILE^DIE(,"FDA40968","ERR40968") K FDA40968
+ .;
  I '$$GET1^DIQ(409.68,+SDOE,.04,"I") D
- .N DIE,DA,DR,SDLOC
+ .;869 - Converting ////
+ .N SDLOC,FDA40968,ERR40968
  .S SDLOC=$$GET1^DIQ(9000010,SDVIEN,.22,"I")
- .I SDLOC S DIE="^SCE(",DA=SDOE,DR=".04////"_SDLOC D ^DIE
+ .;I SDLOC S DIE="^SCE(",DA=SDOE,DR=".04////"_SDLOC D ^DIE
+ .I SDLOC D
+ ..S FDA40968(409.68,SDOE_",",.04)=SDLOC
+ ..D FILE^DIE(,"FDA40968","ERR40968")
  Q
  ;
  ;CO^SDEC25B
@@ -327,51 +335,78 @@ CHKOUT2(SDOE,DFN,APPTDTTM,CLINICIEN,CHKOUTDT,SDECAPTID,SDQUIET,VPRV,ERRORS) ;EP;
  ;  Called by SDCO1
  ; SDOE      = Outpatient Encounter IEN
  ; DFN       = Patient IEN
- ; APPTDTTM  = Appointment Date/Time
+ ; APPTDTTM  = Appt Date/Time
  ; CLINICIEN = Clinic IEN
- ; CHKOUTDT  = APPOINTMENT CHECKOUT TIME [OPTIONAL - USED WHEN SDQUIET=1] USER ENTERED FORMAT
- ; SDECAPTID = APPOINTMENT ID - POINTER TO ^SDECAPPT
+ ; CHKOUTDT  = APPT CHECKOUT TIME [OPTIONAL - USED WHEN SDQUIET=1] USER ENTERED FORMAT
+ ; SDECAPTID = APPT ID - POINTER TO ^SDECAPPT
  ; SDQUIET   = ALLOW NO TERMINAL INPUT/OUTPUT 0=ALLOW; 1=DO NOT ALLOW
  ; VPRV      = V Provider IEN - pointer to V PROVIDER file
  ; ERRORS    = Returned Array of errors
  ;
  N DIE,DA,DR,SDECNOD,SDN,SDV,AUPNVSIT,PROVIEN40984,PSTAT
- S DIE="^SC("_CLINICIEN_",""S"","_APPTDTTM_",1,"
- S DA(2)=CLINICIEN,DA(1)=APPTDTTM
- S (DA,SDN)=$$SCIEN(DFN,CLINICIEN,APPTDTTM)
  ;
- S DR="303///"_CHKOUTDT_";304///`"_DUZ_";306///"_$$NOW^XLFDT
- D ^DIE
+ ; 869 - Convert ///
+ ;S DR="303///"_CHKOUTDT_";304///`"_DUZ_";306///"_$$NOW^XLFDT
+ ;D ^DIE
+ ;S DIE="^SC("_CLINICIEN_",""S"","_APPTDTTM_",1,"
+ ;S DA(2)=CLINICIEN,DA(1)=APPTDTTM
+ N IENS44,ERR44003,FDA
+ S (DA,SDN)=$$SCIEN(DFN,CLINICIEN,APPTDTTM)
+ S IENS44=$$GET44RECORDIENS^SDESCANCELAPPTS(CLINICIEN,APPTDTTM,DFN)
+ S FDA(44.003,IENS44,303)=CHKOUTDT
+ S FDA(44.003,IENS44,304)=DUZ
+ S FDA(44.003,IENS44,306)=$$NOW^XLFDT
+ D FILE^DIE(,"FDA","ERR44003") K ERR44003
+ ;
  ; if checked out and status not updated, do it now
  I $$GET1^DIQ(44.003,DA_","_APPTDTTM_","_CLINICIEN_",",303,"I")]"" D
- .;UPDATE APPOINTMENT SCHEDULE GLOBAL ^SDEC(409.84
+ .;UPDATE APPT SCHEDULE GLOBAL ^SDEC(409.84
  .I $G(SDECAPTID) D
  ..S PSTAT=$$GET1^DIQ(409.68,SDOE,.12,"I")
- ..S DIE="^SDEC(409.84,"
- ..S DA=SDECAPTID
- ..S DR=".14///"_$G(CHKOUTDT)_";.19///"_PSTAT
- ..D ^DIE
+ ..;869 - Convert ///
+ ..;S DA=SDECAPTID
+ ..;S DR=".14///"_$G(CHKOUTDT)_";.19///"_PSTAT
+ ..;D ^DIE
+ ..N FDA40984,ERR40984
+ ..S FDA40984(409.84,SDECAPTID_",",.14)=$G(CHKOUTDT)
+ ..S FDA40984(409.84,SDECAPTID_",",.19)=$G(PSTAT)
+ ..D FILE^DIE(,"FDA40984","ERR40984")
+ ..;
  ..;possibly update VProvider
  ..S SDECNOD=^SDEC(409.84,SDECAPTID,0)
  ..S PROVIEN40984=$$GET1^DIQ(409.84,SDECAPTID,.15,"I")
  ..I $G(VPRV),PROVIEN40984 D
- ...;get SDEC appointment schedule
- ...S DIE="^AUPNVPRV("
- ...S DA=PROVIEN40984
- ...S DR=".01///"_VPRV
- ...D ^DIE
+ ...;get SDEC appt schedule
+ ...;869 - Convert ///
+ ...;S DA=PROVIEN40984 ;S DR=".01///"_VPRV
+ ...;D ^DIE
+ ...N FDA91006,ERR91006
+ ...S FDA91006(9000010.06,PROVIEN40984_",",.01)=VPRV
+ ...D FILE^DIE(,"FDA91006","ERR91006") K FDA91006
  .;
  .Q:$$GET1^DIQ(409.68,SDOE,.12)="CHECKED OUT"
- .S DIE=409.68,DA=SDOE,DR=".12///14;101///"_DUZ_";102///"_$$NOW^XLFDT
- .D ^DIE
+ .;869 - Convert ///
+ .;S DIE=409.68,DA=SDOE,DR=".12///14;101///"_DUZ_";102///"_$$NOW^XLFDT
+ .;D ^DIE
+ .N FDA40968,ERR40968
+ .S FDA40968(409.68,SDOE_",",.12)=14
+ .S FDA40968(409.68,SDOE_",",101)=DUZ
+ .S FDA40968(409.68,SDOE_",",102)=$$NOW^XLFDT
+ .D FILE^DIE(,"FDA40968","ERR40968")
+ .;
  .; if visit pointer stored, update visit checkout date/time
  .S SDV=$$GET1^DIQ(409.68,SDOE,.05,"I") Q:'SDV
  .Q:'$D(^AUPNVSIT(SDV,0))  Q:$$GET1^DIQ(9000010,SDV,.05,"I")'=DFN
  .Q:$$GET1^DIQ(9000010,SDV,.11,"I")=1    ;deleted
  .;cmi/maw 5/1/2009 PATCH 1010 RQMT 34
- .S DIE="^AUPNVSIT(",DA=SDV
- .S DR=".18///"_$$GET1^DIQ(44.003,SDN_","_APPTDTTM_","_CLINICIEN_",",303,"I")
- .D ^DIE
+ .;869 - Convert ///
+ .;S DIE="^AUPNVSIT(",DA=SDV
+ .;S DR=".18///"_$$GET1^DIQ(44.003,SDN_","_APPTDTTM_","_CLINICIEN_",",303,"I")
+ .;D ^DIE
+ .N FDA9000010,ERR9000010
+ .S FDA9000010(9000010,SDV_",",.18)=$$GET1^DIQ(44.003,SDN_","_APPTDTTM_","_CLINICIEN_",",303,"I")
+ .D FILE^DIE(,"FDA9000010","ERR9000010") K FDA9000010
+ .;
  Q
  ;
 SCIEN(PAT,CLINIC,DATE) ;PEP; returns ien for appt in ^SC
