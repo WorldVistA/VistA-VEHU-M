@@ -1,5 +1,5 @@
-RARTE6 ;HISC/SM Restore deleted report ; Jun 29, 2021@10:11:35
- ;;5.0;Radiology/Nuclear Medicine;**56,95,99,47,163,182**;Mar 16, 1998;Build 1
+RARTE6 ;HISC/SM - Restore deleted report ; Nov 29, 2023@09:14:58
+ ;;5.0;Radiology/Nuclear Medicine;**56,95,99,47,163,182,209**;Mar 16, 1998;Build 3
  ;Supported IA #10060 ^VA(200
  ;Supported IA #2053 FILE^DIE, UPDATE^DIE
  ;Supported IA #2052 GET1^DID
@@ -251,7 +251,8 @@ FINISH ; clean up and exit
  Q
 DISPLAY ; Display exam specific info, edit/enter the report
  ; adapted from routine RARTE
- N RASSAN,RACNDSP S RASSAN=$$SSANVAL^RAHLRU1(RADFN,RADTI,RACNI)
+ ;p206/KLM - INC29784322: New RAOUT
+ N RASSAN,RACNDSP,RAOUT S RASSAN=$$SSANVAL^RAHLRU1(RADFN,RADTI,RACNI)
  S RACNDSP=$S((RASSAN'=""):RASSAN,1:RACN)
  S RA18EX=0 ;P18 for quit if uparrow inside PUTTCOM
  I '($D(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0))#2) D  D Q1^RARTE5 QUIT

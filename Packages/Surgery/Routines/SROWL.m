@@ -1,5 +1,5 @@
-SROWL ;B'HAM ISC/MAM - ENTER PATIENT ON WAITING LIST ; 4/18/07 11:55am
- ;;3.0;Surgery;**58,119,162**;24 Jun 93;Build 4
+SROWL ;B'HAM ISC/MAM - ENTER PATIENT ON WAITING LIST; APRIL 18, 2007@11:55am
+ ;;3.0;Surgery;**58,119,162,214**;24 Jun 93;Build 3
  ;
 ENTER ; enter a patient on the waiting list
  S SRSOUT=0 W @IOF K DIC S DIC(0)="QEAMZL",(DIC,DLAYGO)=133.8,DIC("A")="  Select Surgical Specialty: " D ^DIC K DIC,DLAYGO G:Y<0 END S SRSS=+Y,SRSS1=+Y(0)
@@ -54,7 +54,7 @@ PRMPT R !,"Is this a VA Physician from this facility?  (Y/N): <Y> ",SRCONT:DTIME
  M SRDABAK=DA,SRDICBAK=DIC,SRDZERO=D0,SRDRBAK=DR,SRXBAK=X,SRDOBAK=DO
  ; Setup variables and call ^DIC to lookup REFERRING PHYSICIAN from NEW PERSON file
  S DIC="^VA(200,",DIC(0)="E",DIC("B")=X
- D ^DIC
+ D ^DIC K DIC("B") ;SR*3*214 - KILL the default
  ; Restore FileMan's variables and arrays
  M DA=SRDABAK,DIC=SRDICBAK,D0=SRDZERO,DR=SRDRBAK,X=SRXBAK,DO=SRDOBAK
  K SRCONT,SRDABAK,SRDICBAK,SRDZERO,SRDRBAK,SRXBAK,SRDOBAK

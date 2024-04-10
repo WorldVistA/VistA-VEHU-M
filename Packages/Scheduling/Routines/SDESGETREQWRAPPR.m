@@ -1,5 +1,5 @@
-SDESGETREQWRAPPR ;ALB/BLB,MGD,JAS,LAB,TJB - VISTA SCHEDULING GET REQUEST RPCS ;JUL 18, 2023
- ;;5.3;Scheduling;**815,818,820,823,825,831,838,842,843,847,851**;Aug 13, 1993;Build 10
+SDESGETREQWRAPPR ;ALB/BLB,MGD,JAS,LAB,TJB/BLB - VISTA SCHEDULING GET REQUEST RPCS ;JUL 19, 2023
+ ;;5.3;Scheduling;**815,818,820,823,825,831,838,842,843,847,851,873**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -153,6 +153,7 @@ BUILDJSON(JSONRETURN,RETURN) ;
  ;
 APPTREQUEST(REQUEST,NUM) ;
  ;
+ S REQUEST("Request",NUM,"ChildRequestSequenceNumber")=""
  S REQUEST("Request",NUM,"InstitutionIEN")=""
  S REQUEST("Request",NUM,"InstitutionName")=""
  S REQUEST("Request",NUM,"RequestType")=""

@@ -1,11 +1,17 @@
 IBJDI41 ;ALB/CPM - PATIENTS WITH UNIDENTIFIED INSURANCE (CONT'D) ;17-DEC-96
- ;;2.0;INTEGRATED BILLING;**98,100,118,528**;21-MAR-94;Build 163
+ ;;2.0;INTEGRATED BILLING;**98,100,118,528,771**;21-MAR-94;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; - Entry point from IBJDI4.
  ;
  ; - Find inpatients treated within the user-specified date range.
+ N IBDCNT,IBFEED S IBDCNT=0  ;IB*771/DTG new var's
+ I IOST["C-" S IBFEED=21
+ E  S IBFEED=50 ; IB*771/DTG correct for excessive line feeds at end of report
+ I '$D(ZTQUEUED)&($E(IOST,1,2)="C-") W !,"Identify Patients "
  S IBD=IBBDT-.01 F  S IBD=$O(^DGPM("ATT3",IBD)) Q:'IBD!(IBD\1>IBEDT)  D  Q:IBQ
+ .; IB*771/DTG check for 'dots'
+ .I '$D(ZTQUEUED)&($E(IOST,1,2)="C-") S IBDCNT=IBDCNT+1 I IBDCNT#500=0 W "."
  .S IBPM=0 F  S IBPM=$O(^DGPM("ATT3",IBD,IBPM)) Q:'IBPM  D  Q:IBQ
  ..I IBPM#100=0 S IBQ=$$STOP^IBOUTL("Patients with Unidentified Insurance Report") Q:IBQ
  ..S IBPMD=$G(^DGPM(IBPM,0)) I 'IBPMD Q
@@ -19,6 +25,7 @@ EN ; - Entry point from IBJDI4.
  ;
  ; - Find outpatients treated within the user-specified date range.
  D CLOSE^IBSDU(.IBQUERY)
+ I '$D(ZTQUEUED)&($E(IOST,1,2)="C-") W !,"Gathering schedule info"  ;IB*771/DTG message before schedule check
  D OUTPT^IBJDI21("",IBBDT,IBEDT,"S:IBQ SDSTOP=1 I 'IBQ,$$ENCHK^IBJDI5(Y0) D ENC^IBJDI41(Y0)","Patients with Unidentified Insurance Report",.IBQ,"IBJDI41",.IBQUERY)
  D CLOSE^IBSDU(.IBQUERY)
  ;
@@ -27,7 +34,10 @@ EN ; - Entry point from IBJDI4.
  I IBRPT'="D" G PRT
  ;
  ; - Find data required for the report.
+ S IBDCNT=0  ; IB*771/DTG count for 'dot' display
+ I '$D(ZTQUEUED)&($E(IOST,1,2)="C-") W !,"Compiling Detail "
  S DFN=0 F  S DFN=$O(^TMP("IBJDI41",$J,DFN)) Q:'DFN  S IBX=^(DFN) D  Q:IBQ
+ .I '$D(ZTQUEUED)&($E(IOST,1,2)="C-") S IBDCNT=IBDCNT+1 I IBDCNT#1000=0 W "."  ; IB*771/DTG count for 'dot' display
  .I IBSEL=0,$P(IBX,U,4)'="*" Q
  .I DFN#100=0 S IBQ=$$STOP^IBOUTL("Patients with Unidentified Insurance Report") Q:IBQ
  .;
@@ -48,18 +58,28 @@ EN ; - Entry point from IBJDI4.
  ;
 PRT ; - Print the reports.
  ;
+ N IBDNXT S IBDNXT=""  ;IB*771/DTG for print loop management
  ; - Extract summary data.
  I $G(IBXTRACT) D  G ENQ
  .F X="BILL","DEC","HMO","IND","MEDC","MEDG","NO","NULL","TOT","UNK","YES" S IB(X)=$G(IB("ALL",X))
  .D E^IBJDE(4,0)
  ;
  S IBQ=0 D NOW^%DTC S IBRUN=$$DAT2^IBOUTL(%)
- S IBDIV="" F  S IBDIV=$O(IB(IBDIV)) Q:IBDIV=""  D  Q:IBQ
+ I IBOUT="E" W !  ; IB*771/DTG add additional line feed for excel at start of print
+ ;S IBDIV="" F  S IBDIV=$O(IB(IBDIV)) Q:IBDIV=""  D  Q:IBQ
+ S IBDIV="",IBDXT="" F  S IBDIV=$O(IB(IBDIV)) Q:IBDIV=""  S IBDNXT=$O(IB(IBDIV)) D  Q:IBQ  ;IB*771/DTG add check for next division
  .I IBRPT="D" D DET
- .I IBOUT="E" D EXCSUM,PAUSE Q
- .I 'IBQ D SUM,PAUSE
+ .;I IBOUT="E" D EXCSUM,PAUSE Q
+ .I IBOUT="E" D EXCSUM D:IBDNXT'="" PAUSE Q  ;IB*771/DTG check for next division
+ .;I 'IBQ D SUM,PAUSE
+ .I 'IBQ D SUM D:IBDNXT'="" PAUSE  ;IB*771/DTG check for next division
+ I '$G(IBQ) D EOR,PAUSE  ;IB*771/DTG print EOR message
  ;
 ENQ Q
+ ;
+EOR ; IB*771/DTG end of report
+ W ! W:$G(IBOUT)="R" ?30 W "*** END OF REPORT ***",!
+ Q
  ;
 ENC(IBOED) ; - Encounter extract for all patients loop.
  ; Input: IBOED = Outpatient encounter in file #409.68
@@ -125,7 +145,8 @@ DIV(X) ; - Return division name.
  Q Y
  ;
 DET ; - Print the detailed report.
- I IBSEL=0,'$D(^TMP("IBJDI42",$J,IBDIV,0)) S IBX=0 D HDET W !!,"There were no ",$$TITLE^IBJDI4(0)," during this period." G DETQ
+ ;I IBSEL=0,'$D(^TMP("IBJDI42",$J,IBDIV,0)) S IBX=0 D HDET W !!,"There were no ",$$TITLE^IBJDI4(0)," during this period." G DETQ
+ I IBSEL=0,'$D(^TMP("IBJDI42",$J,IBDIV,0)) S IBPAG=0,IBX=0 D HDET W !!,"There were no ",$$TITLE^IBJDI4(0)," during this period." G DETQ  ;IB*771/DTG add initialize of page number
  I IBSEL'=0 F X=1:1 S IBX=$P(IBSEL,",",X) Q:IBX=""  D
  .I '$D(^TMP("IBJDI42",$J,IBDIV,IBX)) S IBPAG=0 D HDET W !!,"There were no ",$$TITLE^IBJDI4(IBX)," during this period."
  ;
@@ -156,6 +177,7 @@ EXCOUT ; OUTPUT EXCEL FORMAT
  Q
  ;
 HDET ; - Write the detail report header.
+ I IBOUT="E" D EXCHDR Q  ;IB*771/DTG use excel header for excel
  W @IOF,*13 S IBPAG=$G(IBPAG)+1
  W !,$$TITLE^IBJDI4(IBX),$S(IBDIV'="ALL":" for "_IBDIV,1:""),?80,"Run Date: ",IBRUN,?123,"Page: ",IBPAG
  W !,"Patients treated in the period "_$$DAT1^IBOUTL(IBBDT)_" to "_$$DAT1^IBOUTL(IBEDT),"   NOTE: *=Had inpatient care, +=Billable insurance"
@@ -216,8 +238,8 @@ EXCSUM ; - Print the summary report in excel format.
  W !!,"PATIENT INSURANCE STATISTICS",!
  I IBDIV'="ALL" W ?(61-$L(IBDIV))\2,"SUMMARY REPORT for ",IBDIV
  E  W ?33,"SUMMARY REPORT"
- W !!,"Patients treated from ",$$DAT1^IBOUTL(IBBDT)," - ",$$DAT1^IBOUTL(IBEDT)
- W !!,"Run Date: ",IBRUN,!?20,$$DASH(40),!!
+ W !,"Patients treated from ",$$DAT1^IBOUTL(IBBDT)," - ",$$DAT1^IBOUTL(IBEDT)
+ W !,"Run Date: ",IBRUN,!
  ;
  S IBPER(1)=$J($S('IB(IBDIV,"TOT"):0,1:IB(IBDIV,"YES")/IB(IBDIV,"TOT")*100),0,2)
  S IBPER(2)=$J($S('IB(IBDIV,"TOT"):0,1:IB(IBDIV,"BILL")/IB(IBDIV,"TOT")*100),0,2)
@@ -261,9 +283,11 @@ INSC(X) ; - Return insurance company.
  Q $E($P(X,U),1,20)_$S($P(X,U,2)["Y"!($P(X,U,2)["*"):"+",1:"")
  ;
 PAUSE ; - Page break.
+ I $D(ZTQUEUED) Q  ;IB*771/DTG quit if report was queued
  I $E(IOST,1,2)'="C-" Q
  N IBX,DIR,DIRUT,DUOUT,DTOUT,DIROUT,X,Y
- F IBX=$Y:1:(IOSL-3) W !
+ ;F IBX=$Y:1:(IOSL-3) W !
+ F IBX=1:1:(IBFEED-$Y) W !  ;IB*771/DTG stop extra blank lines
  S DIR(0)="E" D ^DIR I $D(DIRUT)!($D(DUOUT)) S IBQ=1
  Q
  ;

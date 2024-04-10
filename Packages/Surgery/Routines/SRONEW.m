@@ -1,5 +1,5 @@
-SRONEW ;BIR/MAM - ENTER A NEW CASE ;11/01/2011
- ;;3.0;Surgery;**3,23,26,30,47,58,48,67,107,100,144,175,176,177,182,184**;24 Jun 93;Build 35
+SRONEW ;BIR/MAM - ENTER A NEW CASE; NOVEMBER 1, 2011
+ ;;3.0;Surgery;**3,23,26,30,47,58,48,67,107,100,144,175,176,177,182,184,214**;24 Jun 93;Build 3
  ;
  ; Reference to ^TMP("CSLSUR1" supported by DBIA #3498
  ;
@@ -38,7 +38,8 @@ ASURG ; attending surgeon
  K DIR S DIR(0)="130,.164",DIR("A")="Attending Surgeon" D ^DIR K DIR I $D(DTOUT)!(X="^") S SRSOUT=1 G DEL
  I Y=""!(X["^") W !!,"An Attending Surgeon must be entered when creating a case. Enter '^' to exit.",! G ASURG
  S SRATTND=+Y
-SPEC W ! K DIC S DIC=137.45,DIC(0)="QEAMZ",DIC("A")="Select Surgical Specialty: ",DIC("S")="I '$P(^(0),""^"",3)" D ^DIC I $D(DTOUT)!(X="^") S SRSOUT=1 G DEL
+ ;SR*3.0*214 - add KILL of DIC("A") on following line
+SPEC W ! K DIC S DIC=137.45,DIC(0)="QEAMZ",DIC("A")="Select Surgical Specialty: ",DIC("S")="I '$P(^(0),""^"",3)" D ^DIC K DIC("A") I $D(DTOUT)!(X="^") S SRSOUT=1 G DEL
  I Y<0!(X["^") W !!,"To create a surgical case, a Surgical Specialty MUST be selected.  Enter '^'",!,"to exit.",! G SPEC
  S SRSS=+Y
  ;

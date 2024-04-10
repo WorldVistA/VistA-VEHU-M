@@ -1,8 +1,8 @@
-ORCACT0 ;SLC/MKB - Validate order action ;Mar 24, 2021@10:21:55
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,27,48,72,86,92,94,141,165,177,173,190,215,243,289,204,306,350,425,434,377,413,539**;Dec 17, 1997;Build 41
+ORCACT0 ;SLC/MKB - Validate order action ;Sep 15, 2023@09:23
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,27,48,72,86,92,94,141,165,177,173,190,215,243,289,204,306,350,425,434,377,413,539,603**;Dec 17, 1997;Build 14
  ;
- ;Reference to REFILL^PSOREF supported by IA #2399
- ;Reference to OEL^PSOORRL supported by IA 2400
+ ; Reference to OEL^PSOORRL in ICR #2400
+ ; Reference to $$REFILL^PSOREF in ICR #2399
  ;
 VALID(IFN,ACTION,ERROR,NATR) ; -- Determines if action is valid for order IFN
  N OR0,OR3,ORA0,AIFN,PKG,DG,ORDSTS,ACTSTS,VER,X,Y,MEDPARM,CSORD,ORDLG,ORENVIR K ERROR
@@ -97,6 +97,7 @@ TRM I $$DONE G VQ ; ORDSTS=1,2,7,12,13
 EV I ACTION="EV" D  G VQ ; change delay event
  . I ORDSTS'=10,ORDSTS'=11 S ERROR="This order has been released!" Q
  . I DG="NV RX" S ERROR="Non-VA Med orders do not support this action!" Q
+ . I DG="C RX"!(DG="CI RX") S ERROR="Clinic Med/IV orders do not support this action!" Q
  . I $$EVTORDER^OREVNTX(IFN) S ERROR="The release event for this order may not be changed!" Q
  . S X=$P(ORA0,U,4) I X'=2,X'=3 S ERROR="Signed orders may not be delayed to another event!" Q
 DC2 I ACTION="DC",ACTSTS="" D  G VQ ; DC released order

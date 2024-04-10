@@ -1,5 +1,5 @@
 IBCNEHLU ;DAOU/ALA - HL7 Utilities ;10-JUN-2002  ; Compiled December 16, 2004 15:36:12
- ;;2.0;INTEGRATED BILLING;**184,300,416,438,497,549,702,752**;21-MAR-94;Build 20
+ ;;2.0;INTEGRATED BILLING;**184,300,416,438,497,549,702,752,771**;21-MAR-94;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 HLP(PROTOCOL) ;  Find the Protocol IEN
@@ -284,8 +284,9 @@ CODECHK(RSUPDT) ;  IB*2*497
  ;
  ; IB*752 Fix existing bug - only allow certain files to be updated. See array XXFILE.
  ;
- N IENS,FLD,FILE,FSCMSG,RES,SITE,SITENUM,TOFILE,NEWARRY,XX,XXFILE,Z,ZIENS
+ N IBXMY,IENS,FLD,FILE,FSCMSG,RES,SITE,SITENUM,TOFILE,NEWARRY,XX,XXFILE,Z,ZIENS
  S (IENS,FILE,FLD)="",Z=0
+ F XX=11:1:18,21 S XXFILE("365.0"_XX)=""  ;IB*771/DW Add original set of tables
  F XX=22:1:29,31:1:39,41:1:46 S XXFILE("365.0"_XX)=""
  F  S FILE=$O(RSUPDT(FILE)) Q:FILE=""  F  S IENS=$O(RSUPDT(FILE,IENS))  Q:IENS=""  D
  . F  S FLD=$O(RSUPDT(FILE,IENS,FLD)) Q:FLD=""  D
@@ -305,7 +306,10 @@ CODECHK(RSUPDT) ;  IB*2*497
  . . S SITE=$$SITE^VASITE,SITENUM=$P(SITE,U,3)
  . . S FSCMSG=TOFILE_U_SITENUM_U_RSUPDT(FILE,IENS,FLD)_U_$$GET1^DIQ(365,$G(RIEN)_",",.09)
  . . D MSG005^IBCNEMS1(FSCMSG)
- . . D MSG^IBCNEUT5("FSCECADMIN@domain.ext","X12 271 VistA tables, site #"_SITENUM_" new code added","MSG(")
+ . . ;IB*771/DW Corrected call to send to FSC outlook address (was sent in wrong parameter)
+ . . ;D MSG^IBCNEUT5("FSCECADMIN@domain.ext","X12 271 VistA tables, site #"_SITENUM_" new code added","MSG(")
+ . . S IBXMY="" I $$PROD^XUPROD(1) S IBXMY("FSCECADMIN@domain.ext")=""
+ . . D MSG^IBCNEUT5(,"X12 271 VistA tables, site #"_SITENUM_" new code added","MSG(",,.IBXMY)
  I $D(NEWARRY) D UPDATE^DIE("","NEWARRY")
  Q
  ;

@@ -1,5 +1,5 @@
-PSOPTPST ;BIR/DSD - Post Patient Selection Action ;07/25/96
- ;;7.0;OUTPATIENT PHARMACY;**7,71,88,146,157,143,225**;DEC 1997;Build 29
+PSOPTPST ;BIR/DSD - Post Patient Selection Action ; 21 Dec 2023  1:11 PM
+ ;;7.0;OUTPATIENT PHARMACY;**7,71,88,146,157,143,225,671**;DEC 1997;Build 3
  ;External reference to SDCO22 supported by DBIA 1579
  ;External reference to IBE(350.1,"ANEW" supported by DBIA 592
  ;External reference to PS(55 supported by DBIA 2228
@@ -76,6 +76,7 @@ REMARKS S PSOX=$G(^PS(55,PSODFN,1)) W !!,?5
 DIR K DIR W !
  S DIR(0)="Y",DIR("B")="NO",DIR("A")="Do You Want To Continue" D ^DIR K DIR
  S:'Y PSOQFLG=1 K X,Y,DIRUT,DTOUT,DUOUT
+ S:($G(PSOQFLG))&($G(PAT)) PSOPQUIT(PAT)="" ;p671
  Q
  ;
 EOJ K:PSOQFLG PSORX("CNH") K PSOPTPST,VAPA

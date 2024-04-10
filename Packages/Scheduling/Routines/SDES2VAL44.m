@@ -1,5 +1,5 @@
-SDES2VAL44 ;ALB/BWF,MGD - SDES2 Clinic validation utilities ;DEC 31, 2023
- ;;5.3;Scheduling;**853,857,864,866**;Aug 13, 1993;Build 22
+SDES2VAL44 ;ALB/BWF,MGD/BLB - SDES2 Clinic validation utilities ;DEC 31, 2023
+ ;;5.3;Scheduling;**853,857,864,866,871**;Aug 13, 1993;Build 13
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -339,3 +339,10 @@ LETTERIEN(ERRORS,LETTER) ;Look up the letter IEN
  .I +LETTER,$$GET1^DIQ(407.5,LETTER,.01)'="" Q
  .S LETTER=$O(^VA(407.5,"B",$E(LETTER,1,30),""))
  Q LETTER
+ ;
+VALPBSPID(ERRORS,PBSPID,FDATA) ;
+ N VAL
+ I $L(PBSPID)>100 D ERRLOG^SDES2JSON(.ERRORS,556)
+ S FDATA("PBSPID")=PBSPID
+ Q
+ ;

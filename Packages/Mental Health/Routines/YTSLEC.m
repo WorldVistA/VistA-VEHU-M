@@ -1,0 +1,81 @@
+YTSLEC ;ISP/LMT - Report for LEC ;Nov 29, 2023@08:59:02
+ ;;5.01;MENTAL HEALTH;**239**;Dec 30, 1994;Build 16
+ ;
+ ;
+DLLSTR(YSDATA,YS,YSTRNG) ; compute scores or report text based on YSTRNG
+ ; input
+ ;   YSDATA(2)=adminId^patientDFN^instrumentName^dateGiven^isComplete
+ ;   YSDATA(2+n)=questionId^sequence^choiceId
+ ;   YS("AD")=adminId
+ ;   YSTRNG=1 for score, 2 for report
+ ; output if YSTRNG=1: ^TMP($J,"YSCOR",n)=scaleId=score
+ ; output if YSTRNG=2: append special "answers" to YSDATA
+ ;
+ N YSN,YSTEXT
+ ;
+ I YSTRNG=1 QUIT  ; There is no custom scoring for this instrument
+ ;
+ I YSTRNG=2 D
+ . S YSTEXT=$$REPORT(.YSDATA)
+ . S YSN=$O(YSDATA(""),-1) ; get last node
+ . S YSN=YSN+1
+ . S YSDATA(YSN)="7771^9999;1^"_YSTEXT
+ Q
+ ;
+ ;
+REPORT(YSDATA) ;
+ ;
+ N YSANSWER,YSCHOICE,YSCNT,YSHDR,YSI,YSNODE,YSQUESTION,YSRESULT,YSSORT
+ ;
+ S YSI=2
+ F  S YSI=$O(YSDATA(YSI)) Q:'YSI  D
+ . S YSNODE=$G(YSDATA(YSI))
+ . S YSQUESTION=$P(YSNODE,U,1)
+ . S YSANSWER=$P(YSNODE,U,3)
+ . I YSQUESTION=""!(YSANSWER="") QUIT
+ . ;
+ . F YSCHOICE=5816:1:5819 D
+ . . I YSANSWER[$G(^YTT(601.75,YSCHOICE,1)) D
+ . . . S YSSORT(YSCHOICE,YSQUESTION)=""
+ ;
+ S YSHDR(5816)="Veteran Experienced:"
+ S YSHDR(5817)="Veteran Witnessed:"
+ S YSHDR(5818)="Veteran Learned About:"
+ S YSHDR(5819)="Job related:"
+ ;
+ S YSRESULT=""
+ F YSCHOICE=5816:1:5819 D
+ . S YSRESULT=YSRESULT_"||"_YSHDR(YSCHOICE)
+ . ;
+ . I '$D(YSSORT(YSCHOICE)) D  QUIT
+ . . S YSRESULT=YSRESULT_"|   N/A"
+ . ;
+ . S YSCNT=0
+ . S YSQUESTION=0 F  S YSQUESTION=$O(YSSORT(YSCHOICE,YSQUESTION)) Q:'YSQUESTION  D
+ . . S YSCNT=YSCNT+1
+ . . S YSRESULT=YSRESULT_$$QFORMAT(YSCNT,YSQUESTION,7)
+ ;
+ Q YSRESULT
+ ;
+QFORMAT(YSCNT,YSQUESTION,YSINDENT) ; format the question nicely
+ ;
+ N DIWF,DIWL,DIWR,X,YSI,YSLINE,YSRESULT
+ ;
+ S YSINDENT=$G(YSINDENT,7)
+ S DIWL=YSINDENT+3
+ S DIWR="78"
+ S DIWF="|"
+ K ^UTILITY($J,"W")
+ ;
+ S YSI=0 F  S YSI=$O(^YTT(601.72,YSQUESTION,1,YSI)) Q:'YSI  D
+ . S X=$G(^YTT(601.72,YSQUESTION,1,YSI,0))
+ . D ^DIWP
+ ;
+ S YSRESULT=""
+ S YSI=0 F  S YSI=$O(^UTILITY($J,"W",DIWL,YSI)) Q:'YSI  D
+ . S YSLINE=$G(^UTILITY($J,"W",DIWL,YSI,0))
+ . I YSI=1 D  QUIT
+ . . S YSRESULT="|"_$$RJ^XLFSTR(YSCNT_".  ",YSINDENT)_YSLINE
+ . S YSRESULT=YSRESULT_"|"_$$REPEAT^XLFSTR(" ",YSINDENT)_YSLINE
+ K ^UTILITY($J,"W")
+ Q YSRESULT

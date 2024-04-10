@@ -1,5 +1,5 @@
 IBCNINS ;AITC/TAZ - NIGHTLY INSURANCE PROCESS ;11/23/20 12:46p.m.
- ;;2.0;INTEGRATED BILLING;**687**;21-MAR-94;Build 88
+ ;;2.0;INTEGRATED BILLING;**687,771**;21-MAR-94;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -17,6 +17,9 @@ EN ;Main Entry Point for Nightly Process
  ;
  ; Process Nightly eIV Process
  D EN^IBCNEDE
+ ;
+ ; Send Daily Buffer Report email - Summary Version from production sites only
+ I $$PROD^XUPROD(1) D DBR^IBCNOR2
  ;
 ENQ ;Exit
  Q

@@ -1,6 +1,6 @@
 SDCCRCOR ;CCRA/LB,PB - Core Tags;APR 4, 2019
- ;;5.3;Scheduling;**707,730,735,764,741,795**;APR 4, 2019;Build 34
- ;;Per VA directive 6402, this routine should not be modified.
+ ;;5.3;Scheduling;**707,730,735,764,741,795,865**;APR 4, 2019;Build 51
+ ; Patch 865 changes the text in the NAK messages to be more meaningful for the end user
  Q
  ;
 HL72VATS(HL7TS) ; Converts HL7 formatted timestamps to VA format
@@ -314,6 +314,7 @@ ANAK(NAKMSG,USERMAIL,ICN,DFN,APTTM,CONID) ; Application Error
  S EIDS=$G(HL("EIDS"))
  S MSGN=$G(HL("MID"))
  S HLA("HLA",1)="MSA|AE|"_$G(MSGN)_"|"_$G(USERMAIL)_" "_$G(NAKMSG)_"|||"_$G(ICN)_"^"_$G(PATNAME)_"^"_SITE_"^"_CONID_"^"_APTTM
+ ;S HLA("HLA",1)="MSA|AE|"_$G(MSGN)_"|"_$G(NAKMSG)   ;PB - Patch 865 changing error messages
  D GENACK^HLMA1(EID,$G(HLMTIENS),EIDS,"LM",1,.RES)
  Q
 INT ;
@@ -343,6 +344,7 @@ TIMES(APPTTIME,SITECODE) ; convert/calculate appt times
  .S OFFSET1=$P($$UTC^DIUTC(XOUT,,$G(SITECODE),,1),"^",3)  ;,OFFSET1=OFFSET1*
  .I HSRMOFFSET1'=OFFSET1 S OFFSET=OFFSET1-DSTFL,OFFSET=OFFSET1-HSRMOFFSET1,APPT=$$FMADD^XLFDT(FMDTTM,,OFFSET)
  .I HSRMOFFSET1=OFFSET1 S APPT=FMDTTM
+ S STARTFM=APPT
  I $G(P694)=1 S Y=APPT X ^DD("DD") S APPT=Y
  K OFFSET1,EXP,EXP1,DSTFL
  Q APPT
@@ -394,3 +396,4 @@ DSTTABLE ;
  ;;2038^3380314^3381107
  ;;2039^3390313^3391106
  ;;2040^3400311^3401104
+ Q

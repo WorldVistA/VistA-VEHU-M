@@ -1,5 +1,5 @@
 IBJDI4 ;ALB/CPM - PATIENTS WITH UNIDENTIFIED INSURANCE ;17-DEC-96
- ;;2.0;INTEGRATED BILLING;**69,98,100,118,528**;21-MAR-94;Build 163
+ ;;2.0;INTEGRATED BILLING;**69,98,100,118,528,771**;21-MAR-94;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; - Option entry point.
@@ -45,6 +45,8 @@ FMT ; - Select output format.
  S IBOUT=$$OUT I $G(STOP) G ENQ
  ;
  I IBOUT="R",IBRPT="D" W !!,"You will need a 132 column printer for this report."
+ ; IB*771/DTG excel device message
+ I IBOUT="E" W !!,"For CSV output, turn logging or capture on now. To avoid undesired wrapping of the data saved to the file, please enter '0;256;99999' at the DEVICE: prompt"
  ;
 DEV ; - Select a device.
  W !!,"Note: This report may take a while to run."

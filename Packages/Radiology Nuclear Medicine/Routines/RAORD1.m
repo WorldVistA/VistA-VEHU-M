@@ -1,5 +1,5 @@
-RAORD1 ;HISC/CAH - AISC/RMO-Request An Exam ; Aug 05, 2021@08:26:18
- ;;5.0;Radiology/Nuclear Medicine;**10,45,41,75,86,183**;Mar 16, 1998;Build 1
+RAORD1 ;HISC/CAH,AISC/RMO - Request An Exam ; Nov 29, 2023@09:33:48
+ ;;5.0;Radiology/Nuclear Medicine;**10,45,41,75,86,183,209**;Mar 16, 1998;Build 3
  ;
  ;Supported IA #10035 reference to ^DPT(
  ;Supported IA #10040 reference to ^SC(
@@ -18,7 +18,8 @@ RAORD1 ;HISC/CAH - AISC/RMO-Request An Exam ; Aug 05, 2021@08:26:18
  ;  RABWDX is used in RABWORD* and RABWPCE*. 
  K RABWDX
  ;*
- S RAPKG="" N RAPTLKUP,RAGMTS,RACOPYOR
+ ;p209/KLM -INC29784322: New RAOUT
+ S RAPKG="" N RAPTLKUP,RAGMTS,RACOPYOR,RAOUT
  G ADDORD:$D(RAVSTFLG)&($D(RALIFN))&($D(RAPIFN))
  ;
  I '$D(RAREGFLG),'$D(RAVSTFLG) N RAPTLOCK K RAWARD D  G:'RAPTLKUP Q

@@ -1,12 +1,12 @@
-RAORD ;HISC/CAH,FPT,GJC AISC/RMO-Rad/NM Order Entry Main Menu ; Dec 23, 2020@09:58:39
- ;;5.0;Radiology/Nuclear Medicine;**133,168,174**;Mar 16, 1998;Build 2
+RAORD ;HISC/CAH,FPT,GJC,AISC/RMO - Rad/NM Order Entry Main Menu ; Dec 11, 2023@09:59:17
+ ;;5.0;Radiology/Nuclear Medicine;**133,168,174,209**;Mar 16, 1998;Build 3
  ;
  ;NAME    TAG            IA #      USAGE          CUSTODIAN
  ;----------------------------------------------------------
  ;%DTC    HELP           10000     Supported      VA FILEMAN
  ;
 2 ;;Schedule a Request
- N RAPTLOCK
+ N RAPTLOCK,RAMIN S RAMIN=-30
  ;//P174 ask to schedule or reschedule //
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
  S DIR("A")="Schedule or Re-schedule request(s)",DIR("B")="Schedule"
@@ -52,14 +52,23 @@ RAORD ;HISC/CAH,FPT,GJC AISC/RMO-Rad/NM Order Entry Main Menu ; Dec 23, 2020@09:
  ;W ! D ^%DT K %DT G Q2:Y<0 S RAOSCH=Y,RAOLP=0
  F  S RAOLP=+$O(RAORDS(RAOLP)) Q:'RAOLP!('+$G(RAORDS(RAOLP)))  D
  . N RAOIFN S RAOIFN=$G(RAORDS(RAOLP)) ;P174
+ . N RADIF,RAOK S RAOK=1 ;p209
  . S RAOIFN(0)=$G(^RAO(75.1,RAOIFN,0)),RAOIFN(21)=$P(RAOIFN(0),U,21)
  . ;1st param: RAOIFN(21) = date desired
  . ;2nd param: RAOSCH scheduled date
  . ;3rd param: 2nd can't exceed 1st by more than these # of days
- . I $$OUTXDAYS(RAOIFN(21),RAOSCH,210)=1  D  Q
+ . S RADIF=$$FMDIFF^XLFDT(RAOSCH,RAOIFN(21),1) ;p209/KLM get difference btwn DD and SD
+ . I $$OUTXDAYS(RAOIFN(21),RAOSCH,210)=1  D  S RAOK=0
  .. W !?3,"Procedure: "_$E($$GET1^DIQ(75.1,RAOIFN,2),1,20)_" not scheduled: date is out of range."
  .. Q
- . S RAOSTS=8 D ^RAORDU
+ . I RAOK=1,RADIF<RAMIN D  ;p209/KLM - lower bound warning (30days)
+ .. K DIR
+ .. W !?3,"Schedule date for "_$E($$GET1^DIQ(75.1,RAOIFN,2),1,20)_" is "_$P(RADIF,"-",2)_" days before the date desired!"
+ .. S DIR(0)="Y",DIR("B")="NO",DIR("A")="Do you want to continue" D ^DIR
+ .. I $D(DIRUT) S RAOK=0
+ .. S RAOK=Y
+ .. Q
+ . I RAOK=1 S RAOSTS=8 D ^RAORDU
  . Q
  D Q2 G 21
 Q2 ; Unlock if appropriate, kill vars

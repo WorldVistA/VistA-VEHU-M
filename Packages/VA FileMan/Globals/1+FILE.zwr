@@ -21353,7 +21353,7 @@ ZWR
 ^DIC(350.9,"%D",10,0)="This file should always be edited by use of the provided options."
 ^DIC(350.9,"%D",11,0)=" "
 ^DIC(350.9,"%D",12,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(350.9,"%MSC")=3240117.155549
+^DIC(350.9,"%MSC")=3240410.031814
 ^DIC(351,0)="MEANS TEST BILLING CLOCK^351I"
 ^DIC(351,0,"DD")="@"
 ^DIC(351,0,"GL")="^IBE(351,"
@@ -22453,7 +22453,7 @@ ZWR
 ^DIC(355.32,"%D",0)="^^2^2^2950808^^^^"
 ^DIC(355.32,"%D",1,0)="This file contains the detail by plan and effective date of the categories"
 ^DIC(355.32,"%D",2,0)="that may be restricted for insurance coverage."
-^DIC(355.32,"%MSC")=3240117.155549
+^DIC(355.32,"%MSC")=3240410.031814
 ^DIC(355.33,0)="INSURANCE VERIFICATION PROCESSOR^355.33"
 ^DIC(355.33,0,"AUDIT")="@"
 ^DIC(355.33,0,"DD")="@"
@@ -25504,7 +25504,7 @@ ZWR
 ^DIC(365.1,"%D",2,0)="specific criteria to generate an HL7 message.  These messages"
 ^DIC(365.1,"%D",3,0)="will be sent to the Eligibility Communicator for processing."
 ^DIC(365.1,"%D",4,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(365.1,"%MSC")=3230311.174522
+^DIC(365.1,"%MSC")=3240410.031814
 ^DIC(365.11,0)="IIV AUTO MATCH^365.11"
 ^DIC(365.11,0,"AUDIT")=""
 ^DIC(365.11,0,"DD")="@"
@@ -29857,7 +29857,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3240317.083457
+^DIC(409.93,"%MSC")=3240410.031634
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"

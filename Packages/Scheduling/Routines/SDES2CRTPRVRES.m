@@ -1,5 +1,5 @@
-SDES2CRTPRVRES ;ALB/LAB - VISTA SCHEDULING SDES2 CREATE PROVIDER RESOURCE ;JAN 04,2024
- ;;5.3;Scheduling;**869**;Aug 13, 1993;Build 13
+SDES2CRTPRVRES ;ALB/LAB - VISTA SCHEDULING SDES2 CREATE PROVIDER RESOURCE ;JAN 30,2024
+ ;;5.3;Scheduling;**869,871**;Aug 13, 1993;Build 13
  ;;Per VHA Directive 6402, this routine should not be modified
  Q
  ;
@@ -17,7 +17,8 @@ CREATEPRVRES(RESULT,SDCONTEXT,SDPARAM) ; create provider resource record 409.831
  Q
  ;
 VALIDATE(ERRORS,SDPARAM) ; validate input array variables
- D VALFILEIEN^SDES2VALUTIL(,.ERRORS,44,$G(SDPARAM("ClinicIEN")),1,"",18,19)
+ S SDPARAM("ClinicIEN")=$G(SDPARAM("ClinicIEN"))
+ D VALFILEIEN^SDES2VALUTIL(,.ERRORS,44,SDPARAM("ClinicIEN"),0,"","",19)
  D VALFILEIEN^SDES2VALUTIL(,.ERRORS,200,$G(SDPARAM("ProviderIEN")),1,"",53,54)
  Q:$D(ERRORS)
  ;validate if resource already exists for provider

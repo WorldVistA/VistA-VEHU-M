@@ -1,5 +1,5 @@
 IBJPI ;DAOU/BHS - IBJP eIV SITE PARAMETERS SCREEN ; 01-APR-2015
- ;;2.0;INTEGRATED BILLING;**184,271,316,416,438,479,506,528,549,601,621,659,668,687,702,732,763**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**184,271,316,416,438,479,506,528,549,601,621,659,668,687,702,732,763,771**;21-MAR-94;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;/vd-IB*2*668 - Removed the SSVI logic introduced with IB*2*528 in its entirety within VistA.
@@ -67,21 +67,32 @@ BLDGENE(SLINE,ELINE) ; Build the General Editable Parameters Section
  ;          ELINE   - Current Ending Section Line Number
  ; Output:  ELINE   - Updated Ending Section Line Number
  ;
+ ;IB*771/TAZ - Completely restructured the section
  N STRTLN,XX   ;/vd-IB*2*687 - added the STRTLN variable
  S ELINE=$$SETN("General Parameters (editable)",SLINE,1,1)
- S ELINE=$$SET("          Medicare Payer: ",$$GET1^DIQ(350.9,"1,",51.25),ELINE,1)
- S ELINE=$$SET("           HMS Directory: ",$$GET1^DIQ(350.9,"1,",13.01),ELINE,1)
+ S ELINE=$$SET("  Misc. Settings","",ELINE,1)
+ S ELINE=$$SET("     Insurance Import Enabled: ",$$GET1^DIQ(350.9,"1,",54.01),ELINE,1)
+ S ELINE=$$SET("                HMS Directory: ",$$GET1^DIQ(350.9,"1,",13.01),ELINE,1)
  ;IB*763/CKB - Added display for INSURANCE IMPORT SWITCH
- S STRTLN=ELINE
- S ELINE=$$SET("              EII Active: ",$$GET1^DIQ(350.9,"1,",13.02),ELINE,1)
- S ELINE=STRTLN
- S ELINE=$$SET("   Insurance Import Enabled: ",$$GET1^DIQ(350.9,"1,",54.01),ELINE,41)
+ ;S STRTLN=ELINE
+ S ELINE=$$SET("                   EII Active: ",$$GET1^DIQ(350.9,"1,",13.02),ELINE,1)
+ ;S ELINE=STRTLN
+ S ELINE=$$SET("",$J("",40),ELINE,1)            ; Spacing Blank Line
+ S ELINE=$$SET("  IIU Settings ","",ELINE,1)
  ;/vd-IB*2*687 - Added the following 3 lines.
- S STRTLN=ELINE
- S ELINE=$$SET("             IIU Enabled: ",$$GET1^DIQ(350.9,"1,",53.02),ELINE,1)
+ ;S STRTLN=ELINE
+ S ELINE=$$SET("                  IIU Enabled: ",$$GET1^DIQ(350.9,"1,",53.02),ELINE,1)
+ S ELINE=$$SET("",$J("",40),ELINE,1)            ; Spacing Blank Line
+ S ELINE=$$SET("  eIV Settings ","",ELINE,1)
+ S ELINE=$$SET("               Medicare Payer: ",$$GET1^DIQ(350.9,"1,",51.25),ELINE,1)
  ;IB*702/TAZ - Added display for EIV NO GRP NUM A/U
- S ELINE=STRTLN
- S ELINE=$$SET(" eIV No Group # Auto-Update: ",$$GET1^DIQ(350.9,"1,",51.34),ELINE,41)
+ ;S ELINE=STRTLN
+ S ELINE=$$SET("   eIV No Group # Auto-Update: ",$$GET1^DIQ(350.9,"1,",51.34),ELINE,1)
+ S ELINE=$$SET("  Daily Buffer Rpt Mail Group: ",$$GET1^DIQ(350.9,"1,",54.02),ELINE,1)
+ ;
+ ;The next line adds blank lines to force the non-editable to a new page
+ ;If any lines are added above this line will need to be adjusted.
+ F XX=1:1:3 S ELINE=$$SET("",$J("",40),ELINE,1)            ; Spacing Blank Line
  ;
  Q
  ;
@@ -144,8 +155,9 @@ BLDBE(SLINE,ELINE) ; Build the Batch Extract Parameters Section
  ;          ELINE   - Current Ending Section Line Number
  ; Output:  ELINE   - Updated Ending Section Line Number
  ;
- N IBEX,IBEX1,IBEIVB,IBST,IEN
- S ELINE=$$SET("",$J("",40),ELINE,1)            ; Spacing Blank Line
+ ;IB*771/TAZ - Added blank lines to start section on a new page
+ N IBEX,IBEX1,IBEIVB,IBST,IEN,XX
+ F XX=1:1:6 S ELINE=$$SET("",$J("",40),ELINE,1)            ; Spacing Blank Line
  S ELINE=$$SETN("Batch Extracts",ELINE,1,1)
  ;/vd-IB*2*687 - Commented the following section of code and re-wrote it to make it cleaner.
  ;               Also renamed variable IBIIVB to IBEIVB to better reflect the application name

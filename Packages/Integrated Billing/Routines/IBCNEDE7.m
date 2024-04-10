@@ -1,5 +1,5 @@
 IBCNEDE7 ;DAOU/DAC - eIV DATA EXTRACTS ; 04-JUN-2002
- ;;2.0;INTEGRATED BILLING;**271,416,438,497,601,621,668,702,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**271,416,438,497,601,621,668,702,737,771**;21-MAR-94;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q    ; no direct calls allowed
@@ -96,9 +96,9 @@ SETTQ(DATA1,DATA2,ORIG,OVERRIDE,DATA5) ;Set extract data in TQ file 365.1
  . S FDA(365.1,"+1,",.13)=$P(DATA2,U,4)       ; patient insur. ien
  ;
  I $D(ORIG) D
- . S FDA(365.1,"+1,",1.02)=$P(ORIG,U)   ; original ins co (in buffer)
- . S FDA(365.1,"+1,",1.03)=$P(ORIG,U,2)   ; original grp # (in buffer)
- . S FDA(365.1,"+1,",1.04)=$P(ORIG,U,3)   ; original grp name (in buffer)
+ . S FDA(365.1,"+1,",1.02)=$P(ORIG,U)     ; original ins co (in buffer)
+ . S FDA(365.1,"+1,",1.03)=$P(ORIG,U,2)   ; grp number (in buffer or patient record) ;IB*771/CKB
+ . S FDA(365.1,"+1,",1.04)=$P(ORIG,U,3)   ; grp name (in buffer or patient record) ;IB*771/CKB
  . S FDA(365.1,"+1,",1.05)=$P(ORIG,U,4)   ; original subscriber ID
  ;
  I $D(DATA5) D

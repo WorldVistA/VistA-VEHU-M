@@ -1,5 +1,5 @@
 IBCNBLL ;ALB/ARH - Ins Buffer: LM main screen, list buffer entries ;1 Jun 97
- ;;2.0;INTEGRATED BILLING;**82,149,153,183,184,271,345,416,438,435,506,519,528,549,601,595,631,664,668,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**82,149,153,183,184,271,345,416,438,435,506,519,528,549,601,595,631,664,668,737,771**;21-MAR-94;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; DBIA# 642 for call to $$LST^DGMTU
@@ -186,15 +186,30 @@ BLDLN(IBBUFDA,IBCNT,DFLG) ; build line to display on List screen for one Buffer 
  S IBY=$P(IB60,U,4),IBLINE=$$SETSTR^VALM1(IBY,IBLINE,50,13)
  S IBY=$$GET1^DIQ(355.12,$P(IB0,U,3),.03),IBLINE=$$SETSTR^VALM1($$SRCCNV(IBY),IBLINE,64,1)
  S IBY=$$DATE(+IB0),IBLINE=$$SETSTR^VALM1(IBY,IBLINE,66,8)
- S IBY="" D  S IBLINE=$$SETSTR^VALM1(IBY,IBLINE,76,5)
- . S IBY=IBY_$S(+$$INSURED^IBCNS1(DFN,DT):"i",1:" ")
- . S IBY=IBY_$S(+$G(VAIN(1)):"I",1:" ")
- . S IBY=IBY_$S(+$G(VADM(6)):"E",1:" ")
- . S IBMTS=$P($$LST^DGMTU(DFN),U,4)
- . S IBY=IBY_$S(IBMTS="C":"Y",IBMTS="G":"Y",1:" ")
- . S IBY=IBY_$S(+$$HOLD(DFN):"H",1:" ")
+ ;IB*771/TAZ - Moved Flags logic to FLAGS subroutine.
+ S IBY="" D FLAGS(DFN,.IBY) S IBLINE=$$SETSTR^VALM1(IBY,IBLINE,76,5)
 BLDLNQ ; IB*2*506/taz Tag added
  Q IBLINE
+ ;
+FLAGS(DFN,IBY) ;Build flag set for line
+ ;IB*771/TAZ - Segregated so that the code could be called from other routines.
+ ;INPUT:
+ ;  DFN   -  Patient IEN
+ ;  IBY   -  String to append the buffer flags to.  Must be initialized in calling routine.
+ ;
+ ;
+ ;OUTPUT:
+ ;  IBY   -  String with formatted flags appended.
+ ;
+ N IBMTS,VA,VADM,VAIN,VAERR
+ D DEM^VADPT,INP^VADPT
+ S IBY=IBY_$S(+$$INSURED^IBCNS1(DFN,DT):"i",1:" ")
+ S IBY=IBY_$S(+$G(VAIN(1)):"I",1:" ")
+ S IBY=IBY_$S(+$G(VADM(6)):"E",1:" ")
+ S IBMTS=$P($$LST^DGMTU(DFN),U,4)
+ S IBY=IBY_$S(IBMTS="C":"Y",IBMTS="G":"Y",1:" ")
+ S IBY=IBY_$S(+$$HOLD(DFN):"H",1:" ")
+ Q
  ;
 SET(LINE,CNT) ;  set up list manager screen display array
  S VALMCNT=VALMCNT+1

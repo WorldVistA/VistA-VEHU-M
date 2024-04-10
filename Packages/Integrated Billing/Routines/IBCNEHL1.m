@@ -1,5 +1,5 @@
 IBCNEHL1 ;DAOU/ALA - HL7 Process Incoming RPI Messages ; 26-JUN-2002
- ;;2.0;INTEGRATED BILLING;**300,345,416,444,438,497,506,549,593,601,595,621,631,668,687,702,732,743**;21-MAR-94;Build 18
+ ;;2.0;INTEGRATED BILLING;**300,345,416,444,438,497,506,549,593,601,595,621,631,668,687,702,732,743,771**;21-MAR-94;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -154,8 +154,17 @@ EN(EVENTYP) ;Entry Point
  N IBEIVUSR
  S IBEIVUSR="AUTOUPDATE,IBEIV"
  ;
- S AUTO=$$AUTOUPD(RIEN)
- I $G(ACK)'="AE",$G(ERACT)="",$G(ERTXT)="",'$D(ERROR),+AUTO D  Q
+ S AUTO=$$AUTOUPD(RIEN)  ; 1=AUTO-UPDATE response  0=Save response to the buffer
+ ;
+ ;IB*771/DW ***Temporary fix required by VA eInsurance eBusiness team 'ERROR'
+ ;             is set when there is a problem filing part of the eIV payer
+ ;             response. (i.e. payer sends code that is not in file #353.1)
+ ;             Per eBiz, (Dec. 2023) do not let the existence of ERROR stop a
+ ;             eIV response from Auto-Updating.
+ ;   
+ ;
+ ;I $G(ACK)'="AE",$G(ERACT)="",$G(ERTXT)="",'$D(ERROR),+AUTO D  Q
+ I $G(ACK)'="AE",$G(ERACT)="",$G(ERTXT)="",+AUTO D  Q
  . ;IB*743/TAZ - Updated code to lock the Buffer entries.
  . N AUBUFF,AUOK,AULOCK
  . S (AUOK,AULOCK)=0
@@ -307,11 +316,16 @@ AUTOUPD(RIEN) ;
  S ONEPOL=$$ONEPOL^IBCNEHLU(PIEN,IEN2)
  ;try to find a matching pat. insurance
  ;IB*732/CKB&TAZ - Modify next two lines to check for ISBLUE
- S IEN36="" F  S IEN36=$O(^DIC(36,"AC",PIEN,IEN36)) Q:IEN36=""  D  I 'ISBLUE&(RES>0) Q
- .S IEN312="" F  S IEN312=$O(^DPT(IEN2,.312,"B",IEN36,IEN312)) Q:IEN312=""  D  I ('ISBLUE)&(RES>0&('+MWNRTYP)) Q
+ ;IB*771/CKB - remove the check for ISBLUE and RES
+ ;S IEN36="" F  S IEN36=$O(^DIC(36,"AC",PIEN,IEN36)) Q:IEN36=""  D  I 'ISBLUE&(RES>0) Q
+ ;.S IEN312="" F  S IEN312=$O(^DPT(IEN2,.312,"B",IEN36,IEN312)) Q:IEN312=""  D  I ('ISBLUE)&(RES>0&('+MWNRTYP)) Q
+ S IEN36="" F  S IEN36=$O(^DIC(36,"AC",PIEN,IEN36)) Q:IEN36=""  D
+ .S IEN312="" F  S IEN312=$O(^DPT(IEN2,.312,"B",IEN36,IEN312)) Q:IEN312=""  D
  ..S IDATA0=$G(^DPT(IEN2,.312,IEN312,0)),IDATA3=$G(^DPT(IEN2,.312,IEN312,3))
  ..S IDATA7=$G(^DPT(IEN2,.312,IEN312,7))   ;IB*497 (vd)
- ..I $$EXPIRED^IBCNEDE2($P(IDATA0,U,4)) Q  ;Insurance policy has expired
+ .. ; IB*771/DTG brought expired check into routine from IBCNEDE2
+ ..;I $$EXPIRED^IBCNEDE2($P(IDATA0,U,4)) Q  ;Insurance policy has expired
+ ..I $$EXPIRED($P(IDATA0,U,4)) Q  ;Insurance policy has expired
  ..S ISSUB=$$PATISSUB^IBCNEHLU(IDATA0)
  ..;Patient is the subscriber
  ..I ISSUB,'$$CHK1^IBCNEHL3 Q
@@ -343,8 +357,12 @@ AUTOUPD(RIEN) ;
  ... .S GOK=0
  ..;IB*732/CKB&TAZ - Restructured building RES string
  ..I +MWNRTYP S RES=1_U_IEN2_U_MWNRA_U_MWNRB_U_1_U_ISSUB Q   ;Process MWNR
- ..I ISBLUE S P3=$P(RES,U,3),P3=P3_$S($L(P3):"~",1:"")_IEN312,RES=1_U_IEN2_U_P3_U_U_0_U_ISSUB Q  ;Process Blues
- ..S RES=1_U_IEN2_U_IEN312_U_U_0_U_ISSUB  ;Process non-MWNR and Non-Blue
+ ..;IB*771/CKB - Process Blues and non-MWNR
+ ..I 'MWNRTYP D 
+ ... S P3=$P(RES,U,3),P3=P3_$S($L(P3):"~",1:"")_IEN312
+ ... S RES=1_U_IEN2_U_P3_U_U_0_U_ISSUB ;Process Blues and non-MWNR 
+ ..;I ISBLUE S P3=$P(RES,U,3),P3=P3_$S($L(P3):"~",1:"")_IEN312,RES=1_U_IEN2_U_P3_U_U_0_U_ISSUB Q  ;Process Blues
+ ..;S RES=1_U_IEN2_U_IEN312_U_U_0_U_ISSUB  ;Process non-MWNR and Non-Blue
  Q RES
  ;
 EBFILE(DFN,IEN312,RIEN,AFLG) ;File eligibility/benefit data from file 365 into file 2.312
@@ -358,3 +376,11 @@ EBFILE(DFN,IEN312,RIEN,AFLG) ;File eligibility/benefit data from file 365 into f
  ;
  Q $$EBFILE^IBCNEHL5(DFN,IEN312,RIEN,AFLG)  ;IB*549 moved because of routine size
  ;
+ ; IB*771/DTG brought expired check into routine from IBCNEDE2
+EXPIRED(EXPDT) ; check if insurance policy has already expired
+ ; EXPDT - expiration date (2.312/3)
+ ; returns 1 if expiration date is in the past, 0 otherwise
+ N X1,X2
+ S X1=+$G(DT),X2=+$G(EXPDT)
+ I X1,X2 Q $S($$FMDIFF^XLFDT(DT,EXPDT,1)>0:1,1:0)
+ Q 0

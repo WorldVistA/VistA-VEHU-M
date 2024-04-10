@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MH INTRODUCTIONS
 ZWR
-^YTT(601.73,0)="MH INTRODUCTIONS^601.73^2560^2447"
+^YTT(601.73,0)="MH INTRODUCTIONS^601.73^2562^2452"
 ^YTT(601.73,1,0)=1
 ^YTT(601.73,1,1,0)="^^5^5^3110104^"
 ^YTT(601.73,1,1,1,0)=" "
@@ -9222,6 +9222,10 @@ ZWR
 ^YTT(601.73,2551,0)=2551
 ^YTT(601.73,2551,1,0)="^^1^1^3240317"
 ^YTT(601.73,2551,1,1,0)="Please answer the following question."
+^YTT(601.73,2552,0)=2552
+^YTT(601.73,2552,1,0)="^^2^2^3240410"
+^YTT(601.73,2552,1,1,0)="Instructions: Below is a list of problems that people sometimes have in response to a very stressful experience. Please read each problem and then select one of the options to indicate how much you have been bothered by that problem in the past "
+^YTT(601.73,2552,1,2,0)="day. The options include not at all, a little bit, moderately, quite a bit, and extremely. ||In the past day, how much were you bothered by:"
 ^YTT(601.73,2553,0)=2553
 ^YTT(601.73,2553,1,0)="^^8^8^3240117"
 ^YTT(601.73,2553,1,1,0)="For these questions, please consider the most important things that you do, or wish to do, in your "
@@ -9235,6 +9239,9 @@ ZWR
 ^YTT(601.73,2555,0)=2555
 ^YTT(601.73,2555,1,0)="^^1^1^3240317"
 ^YTT(601.73,2555,1,1,0)="Please answer the following questions as accurately as possible."
+^YTT(601.73,2557,0)=2557
+^YTT(601.73,2557,1,0)="^^1^1^3240410"
+^YTT(601.73,2557,1,1,0)="Listed below are a number of difficult or stressful things that sometimes happen to people. For each event check one or more of the boxes to the right to indicate that: (a) <u>it happened to you</u> personally; (b) you <u>witnessed it</u> happen to someone else; (c) you <u>learned about it</u> happening to a close family member or close friend; (d) you were exposed to it as <u>part of your job</u> (for example, paramedic, police, military, or other first responder); (e) you're <u> not sure</u> if it fits; or (f) it <u>doesn't apply</u> to you. ||Be sure to consider your entire life (growing up as well as adulthood) as you go through the list of events."
 ^YTT(601.73,2558,0)=2558
 ^YTT(601.73,2558,1,0)="^^1^1^3240317"
 ^YTT(601.73,2558,1,1,0)="|"
@@ -9244,6 +9251,15 @@ ZWR
 ^YTT(601.73,2560,0)=2560
 ^YTT(601.73,2560,1,0)="^^1^1^3240317"
 ^YTT(601.73,2560,1,1,0)="Select a rating from 0 (not at all) to 6 (very much) for each of the following questions.  If the question does not apply, select not applicable.||Overall in the past 30 days:"
+^YTT(601.73,2561,0)=2561
+^YTT(601.73,2561,1,0)="^^1^1^3240410"
+^YTT(601.73,2561,1,1,0)="As a child I was (or had):"
+^YTT(601.73,2562,0)=2562
+^YTT(601.73,2562,1,0)="^^1^1^3240410"
+^YTT(601.73,2562,1,1,0)="As a child in school I was (or had):"
+^YTT(601.73,2563,0)=2563
+^YTT(601.73,2563,1,0)="^^1^1^3240410"
+^YTT(601.73,2563,1,1,0)="Please answer the questions below, rating yourself on each of the criteria shown. As you answer each question, please select the answer that best describes how you have felt and conducted yourself over the past 6 months."
 ^YTT(601.73,"B",1,1)=""
 ^YTT(601.73,"B",2,2)=""
 ^YTT(601.73,"B",3,3)=""
@@ -11686,8 +11702,13 @@ ZWR
 ^YTT(601.73,"B",2549,2549)=""
 ^YTT(601.73,"B",2550,2550)=""
 ^YTT(601.73,"B",2551,2551)=""
+^YTT(601.73,"B",2552,2552)=""
 ^YTT(601.73,"B",2553,2553)=""
 ^YTT(601.73,"B",2555,2555)=""
+^YTT(601.73,"B",2557,2557)=""
 ^YTT(601.73,"B",2558,2558)=""
 ^YTT(601.73,"B",2559,2559)=""
 ^YTT(601.73,"B",2560,2560)=""
+^YTT(601.73,"B",2561,2561)=""
+^YTT(601.73,"B",2562,2562)=""
+^YTT(601.73,"B",2563,2563)=""

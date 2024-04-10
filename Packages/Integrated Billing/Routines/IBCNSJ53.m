@@ -1,5 +1,5 @@
 IBCNSJ53 ;AITC/DTG - INSURANCE PLAN MAINTENANCE ACTION VIEW SUBSCRIBER ; 15-MAY-2023
- ;;2.0;INTEGRATED BILLING;**763**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**763,771**;21-MAR-94;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;
@@ -242,9 +242,9 @@ BVA ; Build ALL subscribers
  S VALMCNT=0,VALMBG=1,IBLINE=0
  K @VALMAR
  S IBF=$G(^TMP("IBCNSJ53I",$J,0))
- I '+IBF D  Q
- . ;S VALMCNT=2,@VALMAR@(1,0)=" "
- . ;S @VALMAR@(2,0)=" ***Group Contains No Subscribers***"
+ I '+IBF D  Q  ; IB*771/DTG put none found back in display
+ . S VALMCNT=2,@VALMAR@(1,0)=" "
+ . S @VALMAR@(2,0)=" ***Group Contains No Subscribers***"
  ; go through the 3 level
  D BPAS
  Q

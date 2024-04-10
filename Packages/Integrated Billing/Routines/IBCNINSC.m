@@ -1,5 +1,5 @@
 IBCNINSC ;AITC/DG/TAZ - GENERAL INSURANCE UTILITIES - INSURANCE COMPANY LOOKUP ;02/01/23
- ;;2.0;INTEGRATED BILLING;**752,763**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**752,763,771**;21-MAR-94;Build 26
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to RECALL^DILFD supported by ICR #2055
@@ -26,7 +26,7 @@ INSOCAS(ARRY,IBNE,IBLIMIT,IBSCR) ; lookup for case insensitive
  ;
  ;IB*763/TAZ - Added IBSBR to new statement
  N C,DIR,DIROUT,DIRUT,DTOUT,DUOUT,IBA,IBB,IBC,IBCT,IBD,IBFILTER,IBFND,IBI,IBINDX,IBJ,IBK,IBL
- N IBLKNM,IBLKX,IBLM,IBLKUNM,IBN,IBNMA,IBNMR,IBNML,IBOK,IBOK1,IBPROMPT,IBR,IBRNM,IBSBR,IBTIC,IBTMPA
+ N IBLKNM,IBLKX,IBLM,IBLKUNM,IBN,IBNMA,IBNMR,IBNML,IBOK,IBOK1,IBOK2,IBPROMPT,IBR,IBRNM,IBSBR,IBTIC,IBTMPA
  N IBTMPFIL,IBTMPTRK,IBTN,IBX,IBXN,X,Y
  ;
  I $G(U)'="^" S U="^"
@@ -198,12 +198,14 @@ SELECTED(IBE) ; Check to see if selected.
 DISPADDR(IBNAME,IBNMIEN,IBNUM,IBPCK,IBRNM) ; display the item with identifying info
  ;
  ; IBNAME - Item name to display
- ; IBIEN - Item IEN
+ ; IBNMIEN - Item IEN
  ; IBNUM - item number
  ; IBPCK - is this a picked item
  ; IBRNM - If IBNAME is a synonym this is the real name (.01)
  ;
  N DIC,IBAA,IBAB,IBAC,X,Y
+ I +IBNMIEN<1 Q  ;IB*771/DTG to protect against bad IEN values
+ I '$D(^DIC(36,+IBNMIEN,0)) Q  ;IB*771/DTG to protect against bad index value
  S DIC="^DIC(36,",IBNUM=$G(IBNUM),IBPCK=+$G(IBPCK),IBRNM=$G(IBRNM)
  I 'IBPCK W !
  I IBNUM W ?5,IBNUM,?10
@@ -229,7 +231,11 @@ HLPLSA ; to list all without question
  N DIC,DIR,DTOUT,DUOUT,IBA,IBB,IBC,IBD,IBOK,X,Y
  S IBA="",IBC=0 K DIR
  F  S IBA=$O(^DIC(36,"B",IBA)) Q:IBA=""  S IBOK=1 D  Q:'IBOK
- . S IBB="" F  S IBB=$O(^DIC(36,"B",IBA,IBB)) Q:IBB=""  S IBC=IBC+1 D  Q:'IBOK
+ . ;S IBB="" F  S IBB=$O(^DIC(36,"B",IBA,IBB)) Q:IBB=""  S IBC=IBC+1 D  Q:'IBOK
+ . S IBB="" F  S IBB=$O(^DIC(36,"B",IBA,IBB)) Q:IBB=""  D  Q:'IBOK
+ .. I +IBB<1 Q  ;IB*771/DTG to protect against bad IEN values
+ .. I '$D(^DIC(36,+IBB,0)) Q  ;IB*771/DTG to protect against bad index value
+ .. S IBC=IBC+1
  .. D DISPADDR(IBA,IBB,"","")
  .. I IBC#20'=0 Q
  .. S DIR(0)="E" D ^DIR K DIR
