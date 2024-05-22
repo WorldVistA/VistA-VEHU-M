@@ -1,5 +1,5 @@
 IBCEF22 ;ALB/TMP - FORMATTER SPECIFIC BILL FUNCTIONS ;06-FEB-96
- ;;2.0;INTEGRATED BILLING;**51,137,135,155,309,349,389,432,488,516,577,608,623,641,727**;21-MAR-94;Build 34
+ ;;2.0;INTEGRATED BILLING;**51,137,135,155,309,349,389,432,488,516,577,608,623,641,727,759**;21-MAR-94;Build 24
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;  OVERFLOW FROM ROUTINE IBCEF2
@@ -227,6 +227,13 @@ SPLIT    ; Split codes into multiple lines as needed => baa ; 488
 VC80I(LN)  ; Extracts the data for the "INS" record for VALUE CODE 80 Line item.
  ; INPUT:      LN = Line counter
  ;
+ ; Value Code 80 is no longer required and no longer significant to this US.
+ ; however, the code and comments throughout make it appear as though it is.
+ ; forgetaboutem!!!
+ ; those don't hurt anything and with this being identified so late in the build, it was too much risk to rewrite.
+ ; those changes would have added at least two more routines to the build plus a number of output formatter entries
+ ; and all it would have gained is clarity for the next team that touches this
+ ;
  N VC80REC,IBLOOP,IBDOS
  S (VC80REC,IBLOOP)=""
  F  S IBLOOP=$O(IBXSV("VC80",IBLOOP)) Q:IBLOOP=""  Q:$P(IBXSV("VC80",IBLOOP),U)=80
@@ -243,9 +250,29 @@ VC80I(LN)  ; Extracts the data for the "INS" record for VALUE CODE 80 Line item.
  S IBDOS=$P($$GET1^DIQ(399,IBXIEN_",",151,"I"),".")
  I IBDOS="" S IBDOS=$P($$GET1^DIQ(399,IBXIEN_",",.03,"I"),".")
  S $P(IBXSAVE("INPT",VC80LN),U,2)=$S(IBDOS<3191001:"AAA00",1:"ZZZZZ")
- S $P(IBXSAVE("INPT",VC80LN),U,4)=$S(+IBLOOP:UNIT,1:0)
+ ;
+ ; WCJ;IB759;EBILL-3517; beginnning of changes
+ ; S $P(IBXSAVE("INPT",VC80LN),U,4)=$S(+IBLOOP:UNIT,1:0)  ; out with the old
+ ; LENGTH OF STAY for purpose of this INS record is just the STATEMENT COVERS FROM to the STATEMENT COVERS TO
+ ; do not include the through dates unless this is an interim bill (DISCHARGE STATUS=30 (STILL A PATIENT))
+ ; and if ADMIT/DISCHARGE is same day, it's a 1.
+ ;
+ ; Left the code in there to only add this to INS if there is a Value Code 80 (Covered Days), but I don't actually use the value associated with VC 80 anywhere.
+ ; That's just in the VC record, not the INS record.
+ N IBLOS,IBUNODE,IBCTLAST
+ S IBCTLAST=($$GET1^DIQ(399,IBXIEN,"162:.02")=30)
+ S IBUNODE=$G(^DGCR(399,IBXIEN,"U"))
+ S IBLOS=$$FMDIFF^XLFDT($P(IBUNODE,U,2),$P(IBUNODE,U))
+ I IBLOS=0!(IBCTLAST) S IBLOS=IBLOS+1
+ ;always LOS per defect EBILL-3594
+ ;S $P(IBXSAVE("INPT",VC80LN),U,4)=$S(+IBLOOP:IBLOS,1:0)
+ S $P(IBXSAVE("INPT",VC80LN),U,4)=IBLOS
+ ;
  S $P(IBXSAVE("INPT",VC80LN),U,9)=0
- S $P(IBXSAVE("INPT",VC80LN),U,13)=$S(+IBLOOP:"DA",1:"UN")
+ ;always DAys  per defect EBILL-3594
+ ;S $P(IBXSAVE("INPT",VC80LN),U,13)=$S(+IBLOOP:"DA",1:"UN")
+ S $P(IBXSAVE("INPT",VC80LN),U,13)="DA"
+ ; WCJ;IB759;EBILL-3517; end of changes
  Q
  ; /End IB*2.0*608
  ;

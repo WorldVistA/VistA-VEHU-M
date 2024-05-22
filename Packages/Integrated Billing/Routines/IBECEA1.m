@@ -1,10 +1,11 @@
 IBECEA1 ;ALB/RLW - Cancel/Edit/Add... Action Entry Points ; Sep 30, 2020@15:16:44
- ;;2.0;INTEGRATED BILLING;**15,27,45,176,312,663,630**;21-MAR-94;Build 39
+ ;;2.0;INTEGRATED BILLING;**15,27,45,176,312,663,630,784**;21-MAR-94;Build 8
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 PASS ; 'Pass a Charge' Entry Action (added by Jim Moore 4/30/92)
  N C,IBII,IBNOS,IBND,IBMSG,IBY,IBLINE,IBSTAT,IBAFY,IBATYP,IBHLDR,IBERROR
  N IBARTYP,IBN,IBSEQNO,IBSERV,IBTOTL,IBTRAN,IBIL,IBNOS2,Y,IBXA,IBVSTIEN,IBEXCOPAY
+ N IBATYPE,IBBLNO,IBCDCHK,IBFR,IBMHVST,IBOEEVDT,IBOENC,IBSTOPDA,Z  ; IB*2.0*784
  ;
  S VALMBCK="R" D EN^VALM2($G(XQORNOD(0)))
  I $D(VALMY) I '$$PFSSWARN^IBBSHDWN() S VALMBCK="R" Q
@@ -38,27 +39,40 @@ PASS ; 'Pass a Charge' Entry Action (added by Jim Moore 4/30/92)
  .I $P(IBND,"^",12) S IBMSG="was not passed - the charge already has an AR Transaction Number" Q
  .S IBSTAT=+$P(IBND,"^",5) I $P($G(^IBE(350.21,IBSTAT,0)),"^",4) S IBMSG="was not passed - the status indicates that the charge is billed" Q
  .I $P(IBND,"^",7)'>0 S IBMSG="was not passed - there is no charge amount" Q
- .S IBSEQNO=$P($G(^IBE(350.1,+$P(IBND,"^",3),0)),"^",5) I 'IBSEQNO S IBMSG="was not passed (Bulletin will be generated)",IBY="-1^IB023" Q
- .I $P($G(^IBE(350.1,+$P(IBND,"^",3),0)),"^",11)=6 S IBMSG="was not passed - CHAMPVA charges must be cancelled and rebilled" Q
+ .S IBATYPE=+$P(IBND,U,3)  ; IB*2.0*784
+ .S IBSEQNO=$P($G(^IBE(350.1,IBATYPE,0)),"^",5) I 'IBSEQNO S IBMSG="was not passed (Bulletin will be generated)",IBY="-1^IB023" Q  ; IB*2.0*784
+ .I $P($G(^IBE(350.1,IBATYPE,0)),"^",11)=6 S IBMSG="was not passed - CHAMPVA charges must be cancelled and rebilled" Q  ; IB*2.0*784
  .S IBHLDR=(IBSTAT=21)
  .; - pass charge to AR and update list
  .D ^IBR S IBY=$G(Y)
  .S IBND=$G(^IB(IBNOS2,0))
  .S (IBSTAT,Y)=$P(IBND,"^",5),C=$P($G(^DD(350,.05,0)),"^",2) D Y^DIQ
  .S IBLINE=$$SETSTR^VALM1(Y,IBLINE,+$P(VALMDDF("STATUS"),"^",2),+$P(VALMDDF("STATUS"),"^",3))
- .S IBLINE=$$SETSTR^VALM1($P($P(IBND,"^",11),"-",2),IBLINE,+$P(VALMDDF("BILL#"),"^",2),+$P(VALMDDF("BILL#"),"^",3))
+ .S IBBLNO=$P(IBND,U,11)  ; IB*2.0*784
+ .S IBLINE=$$SETSTR^VALM1($P(IBBLNO,"-",2),IBLINE,+$P(VALMDDF("BILL#"),"^",2),+$P(VALMDDF("BILL#"),"^",3))  ; IB*2.0*784
  .S ^TMP("IBACM",$J,IBII,0)=IBLINE
  .S IBMSG=$S(+IBY=-1:"was not passed -",IBSTAT=8:"has now been placed ON HOLD",1:"has now been passed")
- .;
+ .S IBFR=$P(IBND,U,14) ;  IB*2.0*784
  .;IB*2.0*663 If charge successfully passed, extract the bill number and update the visit tracking database if this is a CC URGENT CARE Charge
- .I $P(IBND,U,11)'="",$P($G(^IBE(350.1,+$P(IBND,"^",3),0)),"^")["CC URGENT CARE" D
+ .I IBBLNO'="",$P($G(^IBE(350.1,IBATYPE,0)),U)["CC URGENT CARE" D  ; IB*2.0*784
  .. ; send update to the Visit Tracking file.
- .. S IBVSTIEN=$$FNDVST^IBECEA4("ON HOLD",$P(IBND,U,14),$P(IBND,U,2))
+ .. S IBVSTIEN=$$FNDVST^IBECEA4("ON HOLD",IBFR,$P(IBND,U,2))  ; IB*2.0*784
  .. ;ADD THE NOT FOUND MESSAGE HERE?
- .. D:+IBVSTIEN UPDATE^IBECEA38(IBVSTIEN,2,$P(IBND,U,11),"",1,.IBERROR)
+ .. D:+IBVSTIEN UPDATE^IBECEA38(IBVSTIEN,2,IBBLNO,"",1,.IBERROR)  ; IB*2.0*784
+ .; IB*2.0*784
+ .S IBSTOPDA=$P(IBND,U,20),IBOEEVDT=$P(IBND,U,17),IBOENC=$P($P(IBND,U,4),";"),IBCDCHK=0
+ .I $P($G(^IBE(350.1,IBATYPE,0)),U)["CC MH" S IBCDCHK=1
+ .I 'IBCDCHK,$$CDCHK^IBECEAMH($$GET1^DIQ(352.5,IBSTOPDA_",",.01,"E"),IBFR) S IBCDCHK=1
+ .I 'IBCDCHK,$$ISCDELIG^IBECEAMH(IBFR) I $P(IBOENC,":")="409.68" S IBCDCHK=$$CHKST44^IBECEAMH($P(IBOENC,":",2))
+ .I 'IBCDCHK,$P(IBOENC,":")=409.68 S IBCDCHK=$$OECHK^IBECEAMH($P(IBOENC,":",2),IBOEEVDT)
+ .I IBBLNO'="",IBCDCHK D
+ ..S IBMHVST=$O(^IBMH(351.83,"D",IBNOS2,"")) Q:'IBMHVST
+ ..D MESS2B^IBECEAMH S Z=$$UPDATE^IBECEAMH(0,IBMHVST,2,IBBLNO,"",1,.IBERROR)
+ ..Q
+ .;
  .; - if there is no active billing clock, add one
  .;   added check for LTC, don't do this for LTC
- .S IBXA=$P($G(^IBE(350.1,+$P(IBND,"^",3),0)),"^",11)
+ .S IBXA=$P($G(^IBE(350.1,IBATYPE,0)),"^",11)  ; IB*2.0*784
  .I $P(IBND,"^",14),'$P($G(^IB(IBNOS2,1)),"^",5),'$D(^IBE(351,"ACT",DFN)),IBXA'=8,IBXA'=9 D
  ..W !,"This patient has no active billing clock.  Adding a new one... "
  ..S IBCLDT=$P(IBND,"^",14)

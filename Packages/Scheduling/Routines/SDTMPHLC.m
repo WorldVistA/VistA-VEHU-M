@@ -1,5 +1,5 @@
 SDTMPHLC ;TMP/DRF - TMP HL7 Routine;May 29, 2018
- ;;5.3;Scheduling;**780,806,798,821**;SEP 26, 2018;Build 9
+ ;;5.3;Scheduling;**780,806,798,821,863**;Aug 13, 1993;Build 14
  Q
  ;
 EN(CLINID,NCDATE,NCSTOP,FUNCTION,COMMENT) ;Entry to the routine to build an HL7 message
@@ -222,14 +222,16 @@ STATUS(X) ; a $Select to convert code to text too many characters in a single li
  S:X="NT" X1="NO ACTION TAKEN"
  S:X="S" X1="SCHEDULED"
  Q X1
-SEND(SC,DT,PATTERN) ;Send a transaction from SDBUILD - SD*5.3*806
+SEND(SC,DATE,PATTERN) ;Send a transaction from SDBUILD - SD*5.3*806
  ;SC = Clinic
- ;DT = Date
+ ;DATE = Date
  ;PATTERN = New pattern being recorded
- N OLDPAT,JOB
- S OLDPAT=$P($G(^SC(SC,"ST",DT,1)),"[",2),JOB=$J
+ N OLDPAT,JOB,LIMIT
+ S LIMIT=$$DAYSINFUTURE^SDB1(SC,DT)
+ I DATE>$$FMADD^XLFDT(DT,LIMIT) Q  ;Stop sending No Appointment Availability transactions *863
+ S OLDPAT=$P($G(^SC(SC,"ST",DATE,1)),"[",2),JOB=$J
  ;No appointments previously available, send unblock transaction
- I OLDPAT="",$P(PATTERN,"[",2)]"" S SEQ=$P($G(^XTMP("SDTMPX",JOB,"SEQ")),U,1)+1,^XTMP("SDTMPX",JOB,SEQ)=SC_"^"_$H_"^"_DT_"^"_DUZ_"^"_"UC",$P(^XTMP("SDTMPX",JOB,"SEQ"),U,1)=SEQ Q
+ I OLDPAT="",$P(PATTERN,"[",2)]"" S SEQ=$P($G(^XTMP("SDTMPX",JOB,"SEQ")),U,1)+1,^XTMP("SDTMPX",JOB,SEQ)=SC_"^"_$H_"^"_DATE_"^"_DUZ_"^"_"UC",$P(^XTMP("SDTMPX",JOB,"SEQ"),U,1)=SEQ Q
  ;Appointments previously available, now none - send block transaction
- I OLDPAT]"",$P(PATTERN,"[",2)="" S SEQ=$P($G(^XTMP("SDTMPX",JOB,"SEQ")),U,1)+1,^XTMP("SDTMPX",JOB,SEQ)=SC_"^"_$H_"^"_DT_"^"_DUZ_"^"_"C",$P(^XTMP("SDTMPX",JOB,"SEQ"),U,1)=SEQ Q
+ I OLDPAT]"",$P(PATTERN,"[",2)="" S SEQ=$P($G(^XTMP("SDTMPX",JOB,"SEQ")),U,1)+1,^XTMP("SDTMPX",JOB,SEQ)=SC_"^"_$H_"^"_DATE_"^"_DUZ_"^"_"C",$P(^XTMP("SDTMPX",JOB,"SEQ"),U,1)=SEQ Q
  Q  ;Change neither creates or deletes all availability, so no transaction sent

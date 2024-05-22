@@ -1,5 +1,5 @@
 RCDPEAP1 ;ALB/KML - AUTO POST MATCHING EFT ERA PAIR - CONT. ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**298,304,318,321,326,345,349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**298,304,318,321,326,345,349,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;Read ^IBM(361.1) via Private IA 4051
  ;
@@ -11,7 +11,7 @@ AUTOCHK(RCERA) ;Verify if ERA can be auto-posted - PRE-CHECK USED IN RCDPEM0
  ; Returns: 1 - Auto-Post candidate, 0 - Not an Auto-Post candidate
  ; Many checks done by this are also done AUTOCHK2 below so if these are changed, 
  ; may also need to be changed
- N NOTOK,RCDSUB,RCD0,RCSCR
+ N NOTOK,RCDSUB,RCD0,RCMATCH,RCSCR,RCZERO
  K ^TMP($J,"RCDPEWLA")
  ;
  ; Check for exceptions
@@ -26,18 +26,26 @@ AUTOCHK(RCERA) ;Verify if ERA can be auto-posted - PRE-CHECK USED IN RCDPEM0
  ;
  ; Ignore ERA if ERA level Adjustments exist
  I $O(^RCY(344.4,RCERA,2,0)) Q 0
- ; BEGIN PRCA*4.5*326
+ ;
  ; Ignore non-ACH type ERA to prevent CHK type ERA from automatically auto-posting in nightly job - PRCA*4.5*321
  ;I $$GET1^DIQ(344.4,RCERA_",",.15)'="ACH" Q 0 ; extended - PRCA*4.5*326
  ; Ignore non-valid auto-post ERA types
  I "^ACH^CHK^BOP^NON^"'[(U_$$GET1^DIQ(344.4,RCERA_",",.15)_U) Q 0
  ;
+ ; PRCA*4.5*424 - allow auto-post of zero dollar ERA
  ; ERA must be matched to an EFT to be eligible for mark for autopost
- I '$O(^RCY(344.31,"AERA",RCERA,"")) Q 0
- ; END PRCA*4.5*326
+ S RCMATCH=$$MATCHED(RCERA)
+ S RCZERO=$$ISZERO(RCERA)
+ I 'RCZERO,'RCMATCH Q 0 ; ERAs much be matched unless they are zero balance
+ ;
+ ; If this is a zero balance ERA and the site parameter for posting zero balance
+ ; ERAs is turned off, don't auto-post it 
+ I RCZERO,'$$GET1^DIQ(344.61,"1,",1.11,"I") Q 0
+ ; PRCA*4.5*424 - end modified code block
  ;
  ; Create scratchpad
- S RCSCR=$$SCRPAD^RCDPEAP(RCERA) Q:'RCSCR 0
+ ;I 'RCZERO S RCSCR=$$SCRPAD^RCDPEAP(RCERA) Q:'RCSCR 0       ;PRCA*4.5*424 added I 'RCZERO
+ S RCSCR=$$SCRPAD^RCDPEAP(RCERA,RCZERO) Q:'RCSCR 0       ;PRCA*4.5*424 added ,RCZERO
  ;
  ; Ignore ERA if claim level adjustments without payment exist
  ; This will only get set if the scratchpad is created, not if it already exists.  
@@ -45,6 +53,9 @@ AUTOCHK(RCERA) ;Verify if ERA can be auto-posted - PRE-CHECK USED IN RCDPEM0
  ; may get set for unbalanced pairs, which is found by the ZEROBAL function.  So, 
  ; I think this does not have a real purpose but was not 100% sure.
  I $D(^TMP($J,"RCDPEWLA","ERA LEVEL ADJUSTMENT EXISTS")) D CLEAR^RCDPEAP(RCSCR) Q 0
+ ;
+ ; PRCA*4.5*424 added line
+ I RCZERO Q 1
  ;
  ; ERA needs to drop to standard worklist if adjustment between matching 
  ; positive/negative does not create a zero balance
@@ -71,7 +82,7 @@ AUTOCHK2(RCERA,RCTYP) ; RCTYP added PRCA*4.5*321
  I (RCTYP>1)!(RCTYP<0) Q "0^Invalid Parameter" ; PRCA*4.5*321
  ;
  ; PRCA*4.5*345 - Added PNAM,PTIN,XX
- N NOTOK,PNAM,PTIN,RCCREATE,RCDSUB,RCERATYP,RCSCR,RCXCLDE,RC0,STATUS,XX
+ N NOTOK,PNAM,PTIN,RCCREATE,RCDSUB,RCERATYP,RCMATCH,RCSCR,RCXCLDE,RC0,RCZERO,STATUS,XX
  K ^TMP($J,"RCDPEWLA")
  ;
  ; Check if record exists
@@ -82,13 +93,16 @@ AUTOCHK2(RCERA,RCTYP) ; RCTYP added PRCA*4.5*321
  I STATUS=0 Q "0^Already marked for Auto-Posting"
  I STATUS=1 Q "0^Already partially Auto-Posted"
  I STATUS=2 Q "0^Already completely Auto-Posted"
- ;
- ; Check for matching
- I '$$GET1^DIQ(344.4,RCERA_",",.09,"I") Q "0^ERA not matched"
- ;
- ; Check for zero value ERA
+ ; 
+ ; PRCA*4.5*424 - allow auto-post of zero dollar ERA
+ ; ERA must be matched to an EFT to be eligible for mark for autopost
  S RC0=$G(^RCY(344.4,RCERA,0))
- I +$P(RC0,U,5)=0 Q "0^Zero value ERA"
+ S RCMATCH=$$MATCHED(RCERA)
+ S RCZERO=$$ISZERO(RCERA)
+ I 'RCZERO,'RCMATCH Q "0^ERA not matched" ; ERAs much be matched unless they are zero balance
+ ; Only Auto-post zero pay ERA if parameter is enabled
+ I RCZERO,'$$GET1^DIQ(344.61,"1,",1.11,"I") Q "0^Auto-post 0 balance disabled"
+ ; PRCA*4.5*424 - end modified code block
  ;
  ; Determine if ERA should be excluded using the site parameters
  S PNAM=$$GET1^DIQ(344.4,RCERA_",",.06,"E") ; PRCA*4.5*345 - Added line - Payer Name
@@ -138,14 +152,15 @@ AUTOCHK2(RCERA,RCTYP) ; RCTYP added PRCA*4.5*321
  ; CHK type ERA must be matched to an EFT to be eligible for mark for autopost
  ;I $P(RC0,U,15)="CHK",'$O(^RCY(344.31,"AERA",RCERA,"")) Q "0^ERA is not matched to an EFT" ; PRCA*4.5*321
  ;  CHK, NON and BOP type ERA must be matched to an EFT to be eligible for mark for autopost
- I "^CHK^BOP^NON^"'[(U_$P(RC0,U,15)_U),'$O(^RCY(344.31,"AERA",RCERA,"")) Q "0^ERA is not matched to an EFT" ; 
+ ;PRCA*4.5*424 Added 'RCZERO
+ I 'RCZERO,"^CHK^BOP^NON^"'[(U_$P(RC0,U,15)_U),'$O(^RCY(344.31,"AERA",RCERA,"")) Q "0^ERA is not matched to an EFT" ; 
  ; END PRCA*4.5*326
  ;
  ; Create scratchpad if needed
  S RCCREATE=0
  S RCSCR=+$O(^RCY(344.49,"B",RCERA,0))
- I 'RCSCR S RCSCR=$$SCRPAD^RCDPEAP(RCERA) S RCCREATE=1
- I 'RCSCR Q "0^Unable to create scratchpad"
+ I 'RCSCR S RCSCR=$$SCRPAD^RCDPEAP(RCERA,RCZERO) S RCCREATE=1   ;PRCA*4.5*424 Added ,RCZERO
+ I 'RCSCR,'RCZERO Q "0^Unable to create scratchpad"      ;PRCA*4.5*424 added 'RCZERO
  ;
  ; Check if claim level adjustments without payment exist
  ; Note that PRCA*298 sets this temp global only if the scratchpad is created by the call above ($$SCRPAD^RCDPEAP). If the
@@ -229,7 +244,7 @@ ZEROBAL(RCSCR) ;
  ; per requirements, only positive/negative payment pairs where payment 
  ; calculates to zero are allowed for auto-post
  ; if payment ends up less than zero or greater than zero then ERA cannot
- ;be autoposted.  
+ ; be autoposted.  
  ; ERA gets sent to the standard worklist for manual receipt processing
  ; note:  a payment pair represents 2 EEOB sequences with the same claim
  ;         RCSCR - 344.49 ien
@@ -371,3 +386,15 @@ UNBAL(RCERA) ; PRCA*4.5*318 added method
  . S RCLTOT=RCLTOT+$$GET1^DIQ(344.42,RCSUB_","_RCERA_",",.03)
  ;Return 1 if total of ERA lines does not match EFT
  Q $S(RCTOT=RCLTOT:0,1:1)
+ ;
+ ; PRCA*4.5*424 New subroutines MATCHED and is ZERO added
+MATCHED(IEN) ; Check if ERA is matched
+ ; Input IEN - Internal entry number of ERA #344.4
+ ; Returns 1 if ERA is matched, otherwise 0
+ I $O(^RCY(344.31,"AERA",RCERA,"")) Q 1
+ Q 0
+ISZERO(IEN) ; Check is ERA is zero balance (EP)
+ ; Input IEN - Internal entry number of ERA #344.4
+ ; Returns 1 if ERA is zero balance, otherwise 0
+ I +$P($G(^RCY(344.4,IEN,0)),U,5)=0 Q 1
+ Q 0

@@ -1,5 +1,5 @@
 IBCE837Q ;EDE/JWS - POST EXECUTE OUTPUT FOR 837 TRANSMISSION - CONTINUED ;
- ;;2.0;INTEGRATED BILLING;**742**;21-MAR-94;Build 36
+ ;;2.0;INTEGRATED BILLING;**742,759**;21-MAR-94;Build 24
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -115,4 +115,91 @@ UP11(IEN,EXSV) ;update file 364.8 record for use
  K ^TMP("IBXDATA",$J,1,96),^(97),^(101),^(103),^(104),^(104.2),^(104.4),^(170),^(173),^(176),^(177),^(193.3),^(193.6),^(194),^(194.3)
  S X=0 F  S X=$O(^TMP("IBXDATA",$J,1,191,X)) Q:X=""  K ^TMP("IBXDATA",$J,1,191,X,13),^(14)
  Q
+ ;
+14 ;IB*2.0*759;JWS;4/8/23;EBILL-2323;VistA will perform edits done by FSC's RemoveOtherPayerProviderInfromation.exe
+ ; remove the following segments from the 837 Output Formatter results
+ ; seq 170 - OP1: Other Payer Rendering Provider Data
+ ; seq 170.5 - OP1A: Other Payer Attending Physician Data
+ ; seq 171 - OP2: Other Payer Operating Physician Data
+ ; seq 172 - OP3: Other Payer Service Facility Data
+ ; seq 173 - OP4: Other Payer Referring Provider Data
+ ; seq 176 - OP7: Other Payer Service Facility Data
+ ; seq 177 - OP8: Other Payer Supervising Provider Data
+ ; seq 178 - OP9: Other Payer Other Operating Provider Data
+ ;; removed 4/24/23 seq 178.1 - OP10: Other Payer Assistant Surgeon
+ K ^TMP("IBXDATA",$J,1,170),^(170.5),^(171),^(172),^(173),^(176),^(177),^(178)  ;;,^(178.1)
+ Q
+ ;
+15 ;IB*2.0*759;JWS;4/24/23;EBILL-2324;VistA will perform edits done by FSC's RemoveSecondaryIDsFromClaims.exe
+ ; remove the following values if CI5-3 Payer Primary ID = 12B60, 12B53, 12B45, SB890, SB891, SB892
+ ; remove CI1A-6, CI1A-7, CI1A-8, CI1A-9 Billing Provider Secondary IDs
+ ; do not remove CI1A-2, CI1A-3 (2 and 3 are non-HIPAA CHC requirement, Site ID)
+ ; do not remove CI1A-4, CI1A-5 (4 and 5 are 'EI' and EIN (Tax ID) for entity)
+ N X,I
+ F I=6:1:9 K ^TMP("IBXDATA",$J,1,28,1,I)
+ ; remove SUB-7, SUB-8, SUB-9, SUB-10, SUB-11, SUB-12 Lab Facility Secondary IDs
+ F I=7:1:12 K ^TMP("IBXDATA",$J,1,57,1,I)
+ ; remove OPR2 Attending Provider Secondary IDs
+ K ^TMP("IBXDATA",$J,1,98)
+ ; remove OPR3 Operating Provider Secondary IDs
+ K ^TMP("IBXDATA",$J,1,99)
+ ; remove OPR4 Other Operating Provider Secondary IDs
+ K ^TMP("IBXDATA",$J,1,100)
+ ; remove OPR5 Referring Provider Secondary IDs
+ K ^TMP("IBXDATA",$J,1,101)
+ ; remove OPR8 Supervising Provider Secondary IDs
+ K ^TMP("IBXDATA",$J,1,104)
+ ; remove OPRA Rendering Provider Secondary IDs
+ K ^TMP("IBXDATA",$J,1,104.4)
+ ; remove OPRC Assistant Surgeon Secondary IDs
+ K ^TMP("IBXDATA",$J,1,104.61)
+ ; remove LOPE Line Level Operating Physician Secondary IDs
+ S X=0 F  S X=$O(^TMP("IBXDATA",$J,1,192,X)) Q:X=""  K ^(X,10),^(11),^(12),^(13),^(14),^(15)
+ ; remove LOP1 Line Level Other Operating Physician Secondary IDs
+ S X=0 F  S X=$O(^TMP("IBXDATA",$J,1,193,X)) Q:X=""  K ^(X,10),^(11),^(12),^(13),^(14),^(15)
+ ; remove LREN Line Level Rendering Provider Secondary IDs
+ S X=0 F  S X=$O(^TMP("IBXDATA",$J,1,193.3,X)) Q:X=""  K ^(X,10),^(11),^(12),^(13),^(14),^(15)
+ ; remove LPUR Line Level Purchase Service Provider Secondary IDs
+ S X=0 F  S X=$O(^TMP("IBXDATA",$J,1,193.6,X)) Q:X=""  K ^(X,6),^(7)
+ ; remove LSUP Line Level Supervising Provider Secondary IDs
+ S X=0 F  S X=$O(^TMP("IBXDATA",$J,1,194,X)) Q:X=""  K ^(X,10),^(11),^(12),^(13),^(14),^(15)
+ ; remove LREF Line Level Referring Provider Secondary IDs
+ S X=0 F  S X=$O(^TMP("IBXDATA",$J,1,194.3,X)) Q:X=""  K ^(X,10),^(11),^(12),^(13),^(14),^(15)
+ ; remove LSR1 Line Level Assistant Surgeon Secondary IDs
+ S X=0 F  S X=$O(^TMP("IBXDATA",$J,1,194.6,X)) Q:X=""  K ^(X,3),^(4),^(5),^(6),^(7),^(8)
+ Q
+ ;
+16 ;JWS;IB*2.0*759;EBILL-3312; ClearOI14whenEqualOI23.exe
+ N X1,X2,IBOI14,IBOI12
+ S X1=0 F  S X1=$O(^TMP("IBXDATA",$J,1,105,X1)) Q:X1=""  I $G(^(X1,4))'="" S IBOI14=$G(^(4)),IBOI12=$G(^(2)) D
+ . S X2=0 F  S X2=$O(^TMP("IBXDATA",$J,1,110,X2)) Q:X2=""  I $G(^(X2,2))=IBOI12,$G(^(3))=IBOI14 K ^TMP("IBXDATA",$J,1,105,X1,4)
+ . Q
+ Q
+ ;
+SW(IBIEN) ; check file 364.8
+ ;IB*2.0*759;JWS;5/22/23;EBILL-2923;Prevent claims going out via EDI with NOEXC Payer ID;need function to check file 364.8
+ N IBPID,FT,OK,IB3648,IB3648FT,IB3648TF,IBTPAID,IBCWS,IBTPAOID,IBEXSV
+ ; get payer id for claim COB value
+ S IBPID=$$PAYERID^IBCEF2(IBIEN)
+ ; if no payer id, quit not allowed for edi
+ I IBPID="" Q 1
+ ; get form type, 2 = prof, 3 = inst
+ S FT=$$FT^IBCEF(IBIEN)
+ ; if Primary Payer ID, CI5-3 is not in the PayerIDSwitch file, send as is.
+ S (OK,IB3648)=0 F  S IB3648=$O(^IBA(364.8,"B",IBPID,IB3648)) Q:IB3648=""  D  Q:OK
+ . ; has entry been deactivate or flagged as deleted
+ . I $P($G(^IBA(364.8,IB3648,0)),"^",9)=1 Q
+ . S IB3648FT=$P($G(^IBA(364.8,IB3648,0)),"^",4)
+ . I IB3648FT'=1,FT'=IB3648FT Q
+ . S IB3648TF=$P($G(^IBA(364.8,IB3648,0)),"^",8)
+ . I $$PROD^XUPROD(1),'+$$TEST^IBCEF4(IBIEN),IB3648TF Q
+ . S OK=1
+ . Q
+ ; if no entry found in COB-SWITCH file, quit not allowed for edi
+ I 'IB3648 Q 1
+ S IBEXSV=$P($G(^IBA(364.8,IB3648,0)),"^",11)
+ ; if entry in PAYER ID - COB SWITCH file is found for all form types or specific form, quit 0 (approved for EDI)
+ I IBEXSV=1!(IBEXSV=FT) Q 0
+ ; otherwise, quit not allowed for EDI
+ Q 1
  ;

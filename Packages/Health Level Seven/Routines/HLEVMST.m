@@ -1,5 +1,6 @@
 HLEVMST ;O-OIFO/LJA - Event Monitor MASTER JOB ;02/04/2004 14:42
- ;;1.6;HEALTH LEVEL SEVEN;**109,173**;Oct 13, 1995;Build 14
+ ;;1.6;HEALTH LEVEL SEVEN;**109,173,176**;Oct 13, 1995;Build 4
+ ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Calling STARTJOB always queues a new master job NOW...
  ;
@@ -259,7 +260,7 @@ CHKMLT(HLTSK,HLNWIEN) ;Check if multiple Master Jobs running; remove duplicate j
  S HLNOW=$$NOW^XLFDT,HLIEN=0 F  S HLIEN=$O(^HLEV(776.2,HLIEN)) Q:'HLIEN  D 
  .S HLIENS=HLIEN_"," I $$GET1^DIQ(776.2,HLIENS,6,"I")>HLNOW D
  ..Q:$$GET1^DIQ(776.2,HLIENS,4,"I")='"Q"  ;Quit if job not queued
- ..S HLSTSK=$$GET1^DIQ(776.2,HLIENS,5) I HLSTSK'=HLTSK Q:ZTSKMST=HLSTSK  D
+ ..S HLSTSK=$$GET1^DIQ(776.2,HLIENS,5) I HLSTSK'=HLTSK Q:$G(ZTSKMST)=HLSTSK  D
  ...S HLQTM=$$GET1^DIQ(776.2,HLIENS,6),HLNWQTM=$$GET1^DIQ(776.2,HLNWIENS,6) Q:HLQTM>HLNWQTM
  ...D UNQ^HLEVUTIL(HLIEN,HLSTSK,HLRSN)
  Q

@@ -1,9 +1,10 @@
-DGREG ;ALB/JDS,MRL,PJR,PHH,ARF,RN,JAM - REGISTER PATIENT ; 3/28/14 12:38pm
- ;;5.3;Registration;**1,32,108,147,149,182,245,250,513,425,533,574,563,624,658,864,886,915,926,1024,993,1040,1027,1045,1067,1075,1102**;Aug 13, 1993;Build 4
+DGREG ;ALB/JDS,MRL,PJR,PHH,ARF,RN,JAM,ARF - REGISTER PATIENT ; 3/28/14 12:38pm
+ ;;5.3;Registration;**1,32,108,147,149,182,245,250,513,425,533,574,563,624,658,864,886,915,926,1024,993,1040,1027,1045,1067,1075,1102,1111**;Aug 13, 1993;Build 18
  ; 
  ; DG*5.3*1075 - Fix line 1 for SAC compliance
  ; Reference to (#350.9,54.01) supported by ICR #7429
  ; Reference to BACKGND^IBCNRDV supported by ICR #4288
+ ;
 START ;
 EN D LO^DGUTL S DGCLPR=""
  N DGDIV
@@ -33,8 +34,8 @@ A D ENDREG($G(DFN))
  D ROMQRY
  ;
  ; DG*5.3*993 The DO YOU WISH TO ENROLL, ENROLLMENT DATE, and DO YOU WANT AN APPT questions
- ;   were moved here from the end of patient registration. Also, if the patient does not wish to enroll
- ;   a REGISTRATION REASON question will be asked
+ ; were moved here from the end of patient registration. Also, if the patient does not wish to enroll
+ ; a REGISTRATION REASON question will be asked
  N DGBACK,DGENRDT,DGENRIEN,DGENRRSN,DGENRYN,DGERR,DGEXIT,DGFDA,DGFDD,DGIEN,DGNOW,DGOUT,DGSTA,DGVET,DGX,DGY,DIE,DIR,DR,DTOUT,DUOUT
  ; Do you wish to enroll?
  S DGBACK=0,DGSTA="",DGIEN=$$FINDCUR^DGENA(DFN) I DGIEN S DGSTA=$$GET1^DIQ(27.11,DGIEN_",",.04)
@@ -43,22 +44,22 @@ A D ENDREG($G(DFN))
 ENRYN S DGBACK=0,DGENRYN="",DGVET=$$VET^DGENPTA(DFN) S:'DGVET DGENRYN=0
  ; DG*5.3*1045 - Newed DGINELIG,DGENPTA,DGIPTAPPLD variables
  N STATUS,DGPREXST,DGPTAPPLD,DGCURR,DGKEY,DGREQNAME,DGENSTAT,DGWSHTOEN,DGRESP,DGDEATH,DGDEAD,DGSHWPRMPT,DGNOENRLL,DGINELIG,DGENPTA,DGIPTAPPLD  ; DG*5.3*1027 - Newed E&E Webservice variables
- I $$GET^DGENPTA(DFN,.DGENPTA) S DGINELIG=$G(DGENPTA("INELDATE"))   ;DG*5.3*1045 Below two lines have logic for Ineligible Date 
+ I $$GET^DGENPTA(DFN,.DGENPTA) S DGINELIG=$G(DGENPTA("INELDATE")) ;DG*5.3*1045 Below two lines have logic for Ineligible Date 
  S DGDEAD=0,DGIPTAPPLD=""
  S DGDEATH=$$DEATH^DGENPTA(DFN) I DGDEATH'=0 S DGDEAD=1
  S DGPTAPPLD="",DGPREXST="",DGPREXST=$$PREEXIST(DFN),STATUS="",STATUS=$$STATUS^DGENA($G(DFN)) I STATUS=25 S DGENRYN=0,DGPREXST=0
  S DGCURR="",DGCURR=$$FINDCUR^DGENA(DFN) I DGCURR S DGPTAPPLD=$$GET1^DIQ(27.11,DGCURR_",",.14,"I")
  I DGPTAPPLD=1 S DGENRYN=1
- I $G(DGINELIG)'="",$G(DGPTAPPLD)="" S DGIPTAPPLD=$$GET1^DIQ(2,DFN,27.04,"I")   ;DG*5.3*1045 Below two lines have logic for Ineligible Date 
+ I $G(DGINELIG)'="",$G(DGPTAPPLD)="" S DGIPTAPPLD=$$GET1^DIQ(2,DFN,27.04,"I") ;DG*5.3*1045 Below two lines have logic for Ineligible Date 
  I $G(DGIPTAPPLD)=1 S DGENRYN=1
  ; DG*5.3*1027 Display DO YOU WISH TO ENROLL Prompt if Veteran AND
  ; PT APPLIED FOR ENROLLMENT in the Patient Enrollment file is NO
  ; There is NO Patient Enrollment record and The patient is unknown to ES
- ; Supported DBIA #2701:   The supported DBIA is used to access MPI
- ;                         APIs to retrieve ICN, determine if ICN
- ;                         is local and if site is LST.
+ ; Supported DBIA #2701: The supported DBIA is used to access MPI
+ ; APIs to retrieve ICN, determine if ICN
+ ; is local and if site is LST.
  ; Supported ICRs
- ; #3356  -  XQY0          ; Kernel Variable
+ ; #3356 - XQY0 ; Kernel Variable
  K ^TMP($J,"DGOLDVET")
  ; The ^TMP global is cleaned up in DG REGISTER PATIENT option EXIT ACTION
  S ^TMP($J,"DGOLDVET",DFN)=DGVET
@@ -67,14 +68,14 @@ ENRYN S DGBACK=0,DGENRYN="",DGVET=$$VET^DGENPTA(DFN) S:'DGVET DGENRYN=0
  S DGRESP=0,DGSHWPRMPT=0,DGNOENRLL=0
  I $P(DGKEY,"^",1)'=-1 S DGRESP=$$EN^DGREGEEWS(DGKEY,DGREQNAME,.DGENSTAT,.DGWSHTOEN)
  I '$$FINDCUR^DGENA(DFN),+DGRESP=0 S DGNOENRLL=1
- I ((DGNOENRLL=1)!($G(DGPTAPPLD)=0)) S DGSHWPRMPT=1     ; DG*5.3*1027 Modified DGPTAPPLD=0 per RSD
+ I ((DGNOENRLL=1)!($G(DGPTAPPLD)=0)) S DGSHWPRMPT=1 ; DG*5.3*1027 Modified DGPTAPPLD=0 per RSD
  I 'DGFDD,'DGDEAD,DGVET,DGSHWPRMPT F  D  Q:DGENRYN'=""!(DGBACK)
  . K DIR,DTOUT I ($G(DGPTAPPLD)=0) S DIR("B")="NO"
  . S DIR(0)="Y",DIR("A")="DO YOU WISH TO ENROLL"
  . S DIR("?")="Select Y or YES if the patient wants to apply for enrollment for VHA Healthcare benefits. Select N or NO if the patient only wants to register without applying for enrollment."
  . S DIR("??")="^D HELPENR^DGREG"
  . D ^DIR
- . I ($G(DGPTAPPLD)="")&((X["Y")!(X["y"))  D  Q
+ . I ($G(DGPTAPPLD)="")&((X["Y")!(X["y")) D  Q
  . . S DGENRYN=1
  . . N DGFDA,DGIENS,DGRSLT
  . . S DGRSLT=DGENRYN,DGIENS=DFN_",",DGFDA(2,DGIENS,27.04)=DGRSLT
@@ -83,21 +84,21 @@ ENRYN S DGBACK=0,DGENRYN="",DGVET=$$VET^DGENPTA(DFN) S:'DGVET DGENRYN=0
  . . S DGENRYN=0
  . . N DGFDA,DGIENS,DGRSLT
  . . S DGRSLT=DGENRYN,DGIENS=DFN_",",DGFDA(2,DGIENS,27.04)=DGRSLT
- . . D FILE^DIE("","DGFDA")  ;DG*5.3*1027
- . . I $P($G(XQY0),"^",1)="DG REGISTER PATIENT",$G(DGENRYN)=0,$$GET1^DIQ(2,DFN,1010.1512,"I")=1  D APPTCHG^DGRPC   ; DG*5.3*1027 Remove appointmnet request data when DGENRYN is changed from Y to N (DGPTAPPLD)=1
+ . . D FILE^DIE("","DGFDA") ;DG*5.3*1027
+ . . I $P($G(XQY0),"^",1)="DG REGISTER PATIENT",$G(DGENRYN)=0,$$GET1^DIQ(2,DFN,1010.1512,"I")=1 D APPTCHG^DGRPC ; DG*5.3*1027 Remove appointmnet request data when DGENRYN is changed from Y to N (DGPTAPPLD)=1
  . I ($G(DGPTAPPLD)=0)&(X["Y")!(X["y") W !!?5,"This is an existing patient. To complete the enrollment" W !?5,"application process, please use the Enrollment System."
  . I ($G(DGPTAPPLD)=0)&(X["Y")!(X["y") W !!!?5,"Press <Enter> to Continue or '^' to exit:" R X:DTIME
  . S:$D(DTOUT)!(X=U) DGBACK=1
  G:DGBACK A
  S:DGFDD DGENRYN=1
  S DGENRRSN="",DGNOW=$$NOW^XLFDT()
- ;I (DGENRYN=0)&('DGPREXST) D  G:DGENRRSN="^" ENRYN    ; Check this condition for prexist from DG 993
+ ;I (DGENRYN=0)&('DGPREXST) D G:DGENRRSN="^" ENRYN ; Check this condition for prexist from DG 993
  I (DGENRYN=0) D  G:DGENRRSN="^" ENRYN
  . ;REGISTRATION ONLY REASON
  . S DGY="",DGX=$$FINDCUR^DGENA(DFN) I DGX?1.N S DGY=$$GET1^DIQ(27.11,DGX_",",.15)
  . I (DGY=""),(STATUS=""),+DGRESP=0 D     ; DG*5.3*1027 Unknown to ES condition added
  . . ;W !,"SELF-REPORTED REGISTRATION ONLY REASON" ;DG*5.3*1027 - not needed - replaced with code below
- . . W !    ;DG*5.3*1027 place a line in between prompts
+ . . W ! ;DG*5.3*1027 place a line in between prompts
  . . F  D  Q:(DGENRRSN="^")!(DGENRRSN)
  . . . ; DG*5.3*1027 - Modification of the data entry to field .15 (REGISTRATION ONLY REASON) of the 27.11 (PATIENT ENROLLMENT) file
  . . . K DIR
@@ -128,14 +129,15 @@ ENRYN S DGBACK=0,DGENRYN="",DGVET=$$VET^DGENPTA(DFN) S:'DGVET DGENRYN=0
  D:'$G(DGNEW) WARN S DA=DFN,DGFC="^1",VET=$S($D(^DPT(DFN,"VET")):^("VET")'="Y",1:0)
  S %ZIS="N",IOP="HOME" D ^%ZIS S DGELVER=0 D EN^DGRPD I $D(DGRPOUT) D ENDREG($G(DFN)) D HL7A08^VAFCDD01 K DFN,DGRPOUT G A
  D HINQ^DG10
- I $D(^DIC(195.4,1,"UP")) I ^("UP") D ADM^RTQ3
- D REG^IVMCQ($G(DFN))  ; send financial query  
+ ;I $D(^DIC(195.4,1,"UP")) I ^("UP") D ADM^RTQ3;DG*5.3*1111-remove Select Admitting Area
+ D REG^IVMCQ($G(DFN)) ; send financial query 
  G A1
+ ;
  ;
 APPTREQ(DGENRDTT,DGBACK) ; Prompt for DO YOU WANT AN APPT. WITH A VA DOCTOR/PROVIDER AS SOON AS AVAILABLE?
  ; If YES, update fields #2,#1010.159 and #2,#1010.1511 (NOTE: This code came from DGEN)
- ; Input:  DGENRDTT - value for ENROLLMENT APPLICATION DATE field 1010.1511 in PATIENT file 
- ; Output:  DGBACK (Pass by Reference) - If set, the user has exited from the prompt
+ ; Input: DGENRDTT - value for ENROLLMENT APPLICATION DATE field 1010.1511 in PATIENT file 
+ ; Output: DGBACK (Pass by Reference) - If set, the user has exited from the prompt
  ;
  N DGSXS,DGAPPTAN,DA,DR,DIE
  S DGSXS="",DGBACK=0
@@ -168,13 +170,13 @@ PREEXIST(DFN) ;DG*5.3*993 - Did this patient exist before the installation of DG
  I DGICN=-1 Q 0
  K DGARR I DGICN'=-1 S DGEXIST=$$QUERYTF^VAFCTFU1(DGICN,"DGARR","") ; check Treating Facility returns 1^text if not found
  I $P(DGEXIST,"^",1)=1 Q 0
- S DGX=0,DGESKNOWN=0,I=0,DGREC="",DGINSTID="" F I=1:1 Q:'$D(DGARR(I))  S DGREC=DGARR(I)  D  Q:DGESKNOWN=1
+ S DGX=0,DGESKNOWN=0,I=0,DGREC="",DGINSTID="" F I=1:1 Q:'$D(DGARR(I))  S DGREC=DGARR(I) D  Q:DGESKNOWN=1
  . S DGINSTAT="",DGINST=$P(DGREC,"^",1)
  . S DGINSTID=$P($G(^DIC(4,DGINST,9999,1,0)),"^",2) I DGINSTID="200ESR" S DGINSTAT=$$GET1^DIQ(4,DGINST_",",99)
  . I (DGINSTID="200ESR")&(DGINSTAT="200ESR") S DGESKNOWN=1
- I (DGESKNOWN=1) S DGX=1  ;if exist to ES and applied="" it preexist
- I (DGESKNOWN=0)&(DGEXIST'=0) S DGX=0             ;not known to ES and not in treating facility (new record)
- I (DGESKNOWN=0)&(DGEXIST="") S DGX=0  ;new record 
+ I (DGESKNOWN=1) S DGX=1 ;if exist to ES and applied="" it preexist
+ I (DGESKNOWN=0)&(DGEXIST'=0) S DGX=0 ;not known to ES and not in treating facility (new record)
+ I (DGESKNOWN=0)&(DGEXIST="") S DGX=0 ;new record 
  Q DGX
  ;
 HELPENR ;DG*5.3*993 - Help for ?? on the DO YOU WISH TO ENROLL? question
@@ -184,12 +186,12 @@ HELPENR ;DG*5.3*993 - Help for ?? on the DO YOU WISH TO ENROLL? question
  Q
  ;
 REASON(Y,XQY0) ; DG*5.3*1027 - Screen logic/Input Transform for field .15 (REGISTRATION ONLY REASON) of the 27.11 (PATIENT ENROLLMENT) file
- ; Input:  Y - Entry to be checked
- ;         XQYO - String containing the option that is being run (may be null when accessing the field from Fileman)
- ; Returns:  TRUE if the entry Y is valid
+ ; Input: Y - Entry to be checked
+ ; XQYO - String containing the option that is being run (may be null when accessing the field from Fileman)
+ ; Returns: TRUE if the entry Y is valid
  ;
  ; Supported ICRs:
- ; Reference to variable XQY0 supported by ICR #3356          ; Kernel Variable
+ ; Reference to variable XQY0 supported by ICR #3356 ; Kernel Variable
  ; Reference to $$GET^XPAR supported by ICR #2263
  ; Reference to $$GET1^DIQ() supported by ICR #2056
  ;
@@ -223,7 +225,7 @@ PAUSE ;
  S DIR(0)="E" D ^DIR
  Q
  ;
-RT I $D(^DIC(195.4,1,"UP")) I ^("UP") S $P(DGFC,U,1)=DIV D ADM^RTQ3
+RT ;I $D(^DIC(195.4,1,"UP")) I ^("UP") S $P(DGFC,U,1)=DIV D ADM^RTQ3 ;DG*5.3*1111-remove Select Admitting Area from Register a Patient
  Q
  ;
  ; DG*5.3*1040 - If variable DGADDRE=-1, branch to Q due to timeout; if DGRPOUT=1, branch to Q as well
@@ -231,20 +233,22 @@ A1 W !,"Do you want to ",$S(DGNEW:"enter",1:"edit")," Patient Data" S %=1 D YN^D
  .I +$G(DGNEW) Q
  .S DGADDRE=$$ADD^DGADDUTL($G(DFN)) ; DG*5.3*1040 - Store the return value in DGADDRE
  G CH
-PR W !!,"Is the patient currently being followed in a clinic for the same condition" S %=0 D YN^DICN G Q:%=-1
- I '% W !?4,$C(7),"Enter 'Y' if the patient is being followed in clinic for condition for which",!?6,"registered, 'N' if not." G PR
- S CURR=% G SEEN
- ; Killing ^TMP($J,"DGOLDVET",DFN) below   ; DG*5.3*1027 cleaning the temp global
+ ;DG*5.3*1111 - Remove Is the patient currently being followed in a clinic for the same condition from Register a Patient process 
+PR G ABIL ;W !!,"Is the patient currently being followed in a clinic for the same condition" S %=0 D YN^DICN G Q:%=-1
+ ;I '% W !?4,$C(7),"Enter 'Y' if the patient is being followed in clinic for condition for which",!?6,"registered, 'N' if not." G PR
+ ;S CURR=% G SEEN
+ ; Killing ^TMP($J,"DGOLDVET",DFN) below ; DG*5.3*1027 cleaning the temp global
 CK S DGEDCN=1 D ^DGRPC
 CH S X=$S('$D(^DPT(DFN,.36)):1,$P(^(.36),"^",1)']"":1,1:0),X1=$S('$D(^DPT(DFN,.32)):1,$P(^(.32),"^",3)']"":1,1:0) I 'X,'X1 G CH1
 CH1 K ^TMP($J,"DGOLDVET",DFN) S DA=DFN G PR:'$D(^DPT("ADA",1,DA)) W !!,"There is still an open disposition--register aborted.",$C(7),$C(7) G Q
-SEEN W !!,"Is the patient to be examined in the medical center today" S %=1 D YN^DICN S SEEN=% G:%<0 Q I %'>0 W !!,"Enter 'Y' if the patient is to be examined today, 'N' if not.",$C(7) G SEEN
+ ;DG*5.3*1111 - remove Is the patient to be examined in the medical center today from Register a Patient process 
+SEEN ;W !!,"Is the patient to be examined in the medical center today" S %=1 D YN^DICN S SEEN=% G:%<0 Q I %'>0 W !!,"Enter 'Y' if the patient is to be examined today, 'N' if not.",$C(7) G SEEN
 ABIL D ^DGREGG
-ENR ; next line appears to be dead code.  left commented just to test.  mli 4/28/94
- ;S DE=0 F I=0:0 S I=$O(^DPT(DA,"DE",I)) Q:'I  I $P(^(I,0),"^",3)'?7N Q  D PR:'DE S L=+$P($S($D(^SC(L,0)):^(0),1:""),"^",1)
+ENR ; next line appears to be dead code. left commented just to test. mli 4/28/94
+ ;S DE=0 F I=0:0 S I=$O(^DPT(DA,"DE",I)) Q:'I I $P(^(I,0),"^",3)'?7N Q D PR:'DE S L=+$P($S($D(^SC(L,0)):^(0),1:""),"^",1)
 REG S (DIE,DIC)="^DPT("_DFN_",""DIS"",",%DT="PTEX",%DT("A")="Registration login date/time: NOW// "
  W !,%DT("A") R ANS:DTIME S:'$T ANS="^" S:ANS="" ANS="N" S X=ANS G Q:ANS="^" S DA(1)=DFN D CHK^DIE(2.101,.01,"E",X,.RESULT) G REG:RESULT="^"!('$D(RESULT)),PR3:'(RESULT#1) S Y=RESULT
- I (RESULT'="^") W "  ("_RESULT(0)_")"
+ I (RESULT'="^") W " ("_RESULT(0)_")"
  S DINUM=9999999-RESULT
  S (DFN1,Y1)=DINUM,APD=Y I $D(^DPT(DFN,"DIS",Y1)) W !!,"You must enter a date that does not exist.",$C(7),$C(7) G REG
  ;patch 886 changed to incremental lock and dilocktm
@@ -255,16 +259,13 @@ REG S (DIE,DIC)="^DPT("_DFN_",""DIS"",",%DT="PTEX",%DT("A")="Registration login 
  ; DG*5.3*993 Decoupling project code for register only 
  N DGSTUS,DGCHK
  S DGCHK=0
- S DGSTUS=$$STATUS^DGENA($G(DFN)) I DGSTUS=25 S DGCHK=1,DGENRYN=0  ; If DGSTUS=25 patient is Register Only ;27.11 TEST
- S DGENRYN=$G(DGENRYN) I DGENRYN=0 S DGCHK=1      ;DG*5.3*993 If DGENRYN=1 patient said YES to enroll
- I DGCHK=1 D
- . S DA=DFN1,DIE("NO^")=""
- . S DA(1)=DFN,DP=2.101
- . S DR="1///"_$S(SEEN=2:2,SEEN=1:0,1:0)_";Q;2//OUTPATIENT MEDICAL"_";7///"_$S(SEEN=2:0,SEEN=1:1,1:0)_";2.1//ALL OTHER;3//"_$S($P(^DG(43,1,"GL"),"^",2):"",1:"/")_$S($D(^DG(40.8,+$P(^DG(43,1,"GL"),"^",3),0)):$P(^(0),"^",1),1:"")_";4///"_DUZ
- I DGCHK=0 D
- . S DA=DFN1,DIE("NO^")=""
- . S DA(1)=DFN,DP=2.101
- . S DR="1///"_$S(SEEN=2:2,CURR=1:1,1:0)_";Q;2"_$S(CURR=1:"///3",1:"")_";2.1;3//"_$S($P(^DG(43,1,"GL"),"^",2):"",1:"/")_$S($D(^DG(40.8,+$P(^DG(43,1,"GL"),"^",3),0)):$P(^(0),"^",1),1:"")_";4////"_DUZ
+ S DGSTUS=$$STATUS^DGENA($G(DFN)) I DGSTUS=25 S DGCHK=1,DGENRYN=0 ; If DGSTUS=25 patient is Register Only ;27.11 TEST
+ S DGENRYN=$G(DGENRYN) I DGENRYN=0 S DGCHK=1 ;DG*5.3*993 If DGENRYN=1 patient said YES to enroll
+ ;DG*5.3*1111-Comments in COMMENTS^DGREG0
+ N DA,SP
+ S DA=DFN1,DIE("NO^")=""
+ S DA(1)=DFN,DP=2.101
+ S DR="3//"_$S($P(^DG(43,1,"GL"),"^",2):"",1:"/")_$S($D(^DG(40.8,+$P(^DG(43,1,"GL"),"^",3),0)):$P(^(0),"^",1),1:"")_";4////"_DUZ
  ;patch 886 changed lock to use dilocktm
  D EL K DIC("A") N DGNDLOCK S DGNDLOCK=DIE_DFN1_")" L +@DGNDLOCK:$G(DILOCKTM,3) G:'$T MSG D ^DIE L -@DGNDLOCK
  I $D(DTOUT) D  G Q
@@ -272,7 +273,7 @@ REG S (DIE,DIC)="^DPT("_DFN_",""DIS"",",%DT="PTEX",%DT("A")="Registration login 
  .N DA,DIK
  .S DA(1)=DFN,DA=DFN1,DIK="^DPT("_DFN_",""DIS"","
  .D ^DIK
- .W !!?5,"User Time-out.  Required registration data could be missing."
+ .W !!?5,"User Time-out. Required registration data could be missing."
  .W !,?5,"This registration has been deleted."
  ; check whether facility applying to (division) is inactive
  I '$$DIVCHK^DGREGFAC(DFN,DFN1) G CONT
@@ -283,7 +284,7 @@ ASKDIV W !!?5,"The facility chosen either has no pointer to an Institution"
  I $$DIVCHK^DGREGFAC(DFN,DFN1) G ASKDIV
 CONT ; continue
  S DGXXXD=1 D EL^DGREGE I $P(^DPT(DFN,"DIS",DFN1,0),"^",3)=4 S DA=DFN,DIE="^DPT(",DR=".368;.369" D ^DIE S DIE="^DPT("_DFN_",""DIS"",",DA(1)=DFN,DA=DFN1
- S DA=DFN,DR="[DGREG]",DIE="^DPT(" D ^DIE K DIE("NO^")
+ ;S DA=DFN,DR="[DGREG]",DIE="^DPT(" D ^DIE K DIE("NO^") ;DG*5.3*1111 - The DGREG input template prompts grouping is removed 
  I $D(^DPT(DFN,"DIS",DFN1,2)),$P(^(2),"^",1)="Y" S DIE="^DPT(",DR="[DG EMPLOYER]",DA=DFN D ^DIE
  G ^DGREG0
 PR2 W !!,"You can only enter new registrations through this option.",$C(7),$C(7) G REG
@@ -327,9 +328,9 @@ ENDREG(DFN) ;
 IFREG(DFN) ;
  ;Description: tests whether the lock set by BEGINREG is set
  ;
- ;Input:  DFN
+ ;Input: DFN
  ;Output:
- ;      Function Value = 1 if lock is set, 0 otherwise
+ ; Function Value = 1 if lock is set, 0 otherwise
  ;
  N RETURN
  Q:'$G(DFN) 0
@@ -362,5 +363,5 @@ ROMQRY ;**926 TRIGGER IB INSURANCE QUERY
  S DGMSG(1)="Insurance data retrieval has been initiated."
  S DGMSG(2)=" " D EN^DDIOL(.DGMSG)
  ;**915 all "register once" functionality eliminated additional
- ;      checks that use to be below this line.
- Q
+ ; checks that use to be below this line.
+ Q  ;**915 all register once functionality no longer executed and removed

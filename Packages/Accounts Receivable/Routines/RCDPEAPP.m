@@ -1,26 +1,27 @@
 RCDPEAPP ;OIFO-BAYPINES/PJH - AUTO POST REPORT ;Dec 20, 2014@18:42
- ;;4.5;Accounts Receivable;**298,304,326,345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**298,304,326,345,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;Read ^DGCR(399) via Private IA 3820
  ;Read ^DG(40.8) via Controlled IA 417
  ;Read ^IBM(361.1) via Private IA 4051
  ;Use DIVISION^VAUTOMA via Controlled IA 664
- ; PRCA*4.5*326 - Extensive re-write of this routine to add selection/sort by Payer TIN
 RPT ; entry point for Auto-Post Report [RCDPE AUTO-POST REPORT]
- N POP,RCDISP,RCDIV,RCDIVS,RCDTRNG,RCJOB,RCLAIM,RCPAGE,RCPAR,RCPARRAY,RCPAY,RCPROG,RCRANGE
+ N POP,RCDISP,RCDIV,RCDIVS,RCDTRNG,RCJOB,RCLAIM,RCPAGE,RCPAR,RCPARRAY
+ N RCPAY,RCPAYMNT,RCPROG,RCRANGE                    ; PRCA*4.5*424 added RCPAYMNT
  N RCSORT,RCTYPE,RCWHICH,STANAM,STANUM,X,Y
  S (RCDTRNG,RCPAGE)=0,RCPROG="RCDPEAPP",RCJOB=$J    ; Initialize page and start point
  S RCDIV=$$STADIV(.RCDIVS) Q:'RCDIV                 ; Select Filter/Sort by Division
  S RCTYPE=$$DETORSUM() Q:RCTYPE=-1                  ; Detail or Summary mode
+ S RCPAYMNT=$$PAYMNT^RCDPEAPQ() Q:RCPAYMNT=-1       ; PRCA*4.5*424 - ERAs with or without payments or both
  ;
- S RCLAIM=$$RTYPE^RCDPEU1() Q:RCLAIM=-1             ; PRCA*4.5*326 - Add Tricare filter to Med/Pharm/Both
- S RCWHICH=$$NMORTIN() Q:RCWHICH=-1                 ; PRCA*4.5*326 - Filter by Payer Name or TIN
+ S RCLAIM=$$RTYPE^RCDPEU1() Q:RCLAIM=-1
+ S RCWHICH=$$NMORTIN() Q:RCWHICH=-1
  ;
- S RCPAR("SELC")=$$PAYRNG^RCDPEU1(0,1,RCWHICH)      ; PRCA*4.5*326 - Selected or Range of Payers
- Q:RCPAR("SELC")=-1                                 ; PRCA*4.5*326 '^' or timeout
+ S RCPAR("SELC")=$$PAYRNG^RCDPEU1(0,1,RCWHICH)
+ Q:RCPAR("SELC")=-1
  S RCPAY=RCPAR("SELC")
  ;
- I RCPAR("SELC")'="A" D  Q:XX=-1                    ; PRCA*4.5*326 - Since we don't want all payers 
+ I RCPAR("SELC")'="A" D  Q:XX=-1
  . S RCPAR("TYPE")=RCLAIM
  . S RCPAR("SRCH")=$S(RCWHICH=2:"T",1:"N")          ; prompt for payers we do want
  . S RCPAR("FILE")=344.4
@@ -42,7 +43,7 @@ RPT ; entry point for Auto-Post Report [RCDPE AUTO-POST REPORT]
  . S ZTRTN="REPORT^RCDPEAPP"
  . S ZTDESC="EDI LOCKBOX AUTO POST REPORT"
  . S ZTSAVE("RC*")="" ;**FA** ,ZTSAVE("VAUTD")=""
- . S ZTSAVE("^TMP(""RCDPEU1"",$J,")="" ; PRCA*4.5*326
+ . S ZTSAVE("^TMP(""RCDPEU1"",$J,")=""
  . D ^%ZTLOAD
  . I $D(ZTSK) W !!,"Task number "_ZTSK_" was queued."
  . E  W !!,"Unable to queue this job."
@@ -199,7 +200,7 @@ REPORT ; Compile and print report
  D DISP                                     ; Display the Report
  ;
  ; Clear ^TMP global
- K ^TMP(RCPROG,$J),^TMP("RCSELPAY",RCJOB),^TMP("RCDPEAPP2",$J),^TMP("RCDPEU1",$J) ; PRCA*4.5*326
+ K ^TMP(RCPROG,$J),^TMP("RCSELPAY",RCJOB),^TMP("RCDPEAPP2",$J),^TMP("RCDPEU1",$J)
  Q
  ;
 DISP ; Format the display for screen/printer or MS Excel
@@ -276,7 +277,7 @@ DISP ; Format the display for screen/printer or MS Excel
  I '$D(GTOTAL) D                                ; Null Report
  . D HDR(.DIVS,.PAYERS)
  . W !!,?26,"*** NO RECORDS TO PRINT ***",!
- . W !,$$ENDORPRT^RCDPEARL D:'$G(ZTSK) ASK(.RCSTOP) ; PRCA*4.5*326
+ . W !,$$ENDORPRT^RCDPEARL D:'$G(ZTSK) ASK(.RCSTOP)
  ;
  ; Close device
  I '$D(ZTQUEUED) D ^%ZISC
@@ -316,7 +317,9 @@ HDR(DIVS,PAYERS) ; Print the report header
  S RCPAGE=RCPAGE+1
  W @IOF
  S MSG(1)="EDI LOCKBOX AUTO-POST REPORT - "_$S(RCTYPE="D":"DETAIL ",1:"SUMMARY")
- S MSG(1)=MSG(1)_$J("",47)_"Print Date: "_RCHDRDT_"    Page: "_RCPAGE
+ ; PRCA*4.5 Add payment type filter to header
+ S MSG(1)=MSG(1)_" "_$S(RCPAYMNT="Z":"ZERO",RCPAYMNT="P":"NON-ZERO",1:"ALL")_" PAYMENT TYPES"
+ S MSG(1)=MSG(1)_$J("",80-$L(MSG(1)))_"Print Date: "_RCHDRDT_"    Page: "_RCPAGE
  ;
  S LN=2,XX=""
  F  D  Q:XX=""                              ; Display Division filters
@@ -326,9 +329,9 @@ HDR(DIVS,PAYERS) ; Print the report header
  ;
  S MSG(LN)="CLAIM TYPE: "
  S MSG(LN)=MSG(LN)_$S(RCLAIM="P":"PHARMACY",RCLAIM="M":"MEDICAL",RCLAIM="T":"TRICARE",1:"ALL")
- S MSG(LN)=MSG(LN)_$J("",55-$L(MSG(LN)))_"SORTED BY: "_$S(RCSORT=0:"PAYER NAME",1:"PAYER TIN") ; PRCA*4.5*326
+ S MSG(LN)=MSG(LN)_$J("",55-$L(MSG(LN)))_"SORTED BY: "_$S(RCSORT=0:"PAYER NAME",1:"PAYER TIN")
  S LN=LN+1
- S MSG(LN)=$S(RCWHICH=2:"TINS",1:"PAYERS")_" : "_$S(RCPAY="S":"SELECTED",RCPAY="R":"RANGE",1:"ALL") ; PRCA*4.5*326
+ S MSG(LN)=$S(RCWHICH=2:"TINS",1:"PAYERS")_" : "_$S(RCPAY="S":"SELECTED",RCPAY="R":"RANGE",1:"ALL")
  S LN=LN+1
  S MSG(LN)="AUTOPOST POSTING RESULTS FOR DATE RANGE: "_START_" - "_END
  S LN=LN+1,MSG(LN)=LINE2

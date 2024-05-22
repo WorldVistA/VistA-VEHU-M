@@ -1,5 +1,5 @@
 RCDPEM ;ALB/TMK/PJH - POST EFT, ERA MATCHING TO EFT ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,255,269,276,283,298,304,318,321,326,345,349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**173,255,269,276,283,298,304,318,321,326,345,349,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ; IA 4050 covers call to SPL1^IBCEOBAR
  ; Note - keep processing in line with RCDPXPAP
@@ -36,7 +36,7 @@ EN ; Post EFT deposits, auto-match EFT's and ERA's
  .. S RCER(5)="   retransmitted to your site."
  .. D BULL^RCDPEM1(344.3,RC0,.RCER)
  .. S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,4)=+$G(^TMP($J,"RCXM",0))
- .. D STORERR^RCDPEM0(RCZ,.RCER)
+ .. D STORERR^RCDPEM0(344.3,RCZ,.RCER) ; PRCA*4.5*424. Old bug. Add file to parameter list.
  .. S DIE="^RCY(344.3,",DA=RCZ,DR=".1////1" D ^DIE
  .. S ^TMP($J,"RCTOT","CSUM")=$G(^TMP($J,"RCTOT","CSUM"))+1
  . ;
@@ -59,7 +59,7 @@ EN ; Post EFT deposits, auto-match EFT's and ERA's
  .. S RCER($O(RCER(""),-1)+1)="This EFT deposit can't be sent to FMS.  You must ask Austin to retransmit"
  .. D BULL^RCDPEM1(344.3,RC0,.RCER)
  .. S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,4)=+$G(^TMP($J,"RCXM",0))
- .. D STORERR^RCDPEM0(RCZ,.RCER)
+ .. D STORERR^RCDPEM0(344.3,RCZ,.RCER) ; PRCA*4.5*424.Old bug. Added file to parameter list
  .. S ^TMP($J,"RCTOT","ERR")=$G(^TMP($J,"RCTOT","ERR"))+1
  . ;
  . S DIE="^RCY(344.31," S Z=0 F  S Z=$O(^RCY(344.31,"B",RCZ,Z)) Q:'Z  S DA=Z,DR=".11////1" D ^DIE

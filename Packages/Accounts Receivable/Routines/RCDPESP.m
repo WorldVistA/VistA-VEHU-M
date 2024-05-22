@@ -1,5 +1,5 @@
 RCDPESP ;BIRM/EWL - ePayment Lockbox Site Parameters Definition - Files 344.61 & 344.6 ; 6/3/19 1:59pm
- ;;4.5;Accounts Receivable;**298,304,318,321,326,332,345,349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**298,304,318,321,326,332,345,349,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; entry point for EDI Lockbox Parameters [RCDPE EDI LOCKBOX PARAMETERS]
@@ -77,6 +77,12 @@ EN ; entry point for EDI Lockbox Parameters [RCDPE EDI LOCKBOX PARAMETERS]
  I $G(RCQUIT) D ABORT Q
  W !
  ;
+ W !,"### ZERO PAYMENT Auto-Post Parameters ###",!
+ ; PRCA*4.5*424 - Ask ZERO PAY Auto-Post questions
+ S RCQUIT=$$APOST^RCDPESPC(3)                   ; PRCA*4.5*424 Moved to RCDPESPC because of routine size
+ I $G(RCQUIT) D ABORT Q
+ W !
+ ;
  W !,"### EFT Lock-Out Parameters ###",!
  S RCQUIT=$$EFTLK  ; Set EFT lock-out paramters 
  I $G(RCQUIT) D ABORT Q
@@ -104,30 +110,6 @@ BULLDAY() ; Workload Notification Bulletin Days question
  W !
  Q 0
  ;
-APOST(AUPSTYP,ONOFF) ; Turn Auto-Posting On/Off for Medical,RX,TRICARE Claims
- ; PRCA*4.5*345
- ; Input: AUPSTYP - 0 - Medical Auto-Posting
- ;                  1 - Pharmacy Auto-Posting
- ;                  2 - TRICARE Auto-Posting
- ; Output: ONOFF passed by ref. 1 - Auto-Posting of Medical/Pharmacy/TRICARE Claims with Payments on, 0 otherwise
- ; Returns: 1 - User '^' or timed out, 0 otherwise
- N APCT,DIR,DIROUT,DIRUT,DTOUT,DUOUT,FLD,FDAEDI,RCAUDVAL
- S FLD=$S(AUPSTYP=0:.02,AUPSTYP=1:1.01,1:1.05) ; PRCA*4.5*349 - Add TRICARE
- S APCT=$$GET1^DIQ(344.61,"1,",FLD,"I")
- S DIR(0)="YA",DIR("B")=$S((APCT=1)!(APCT=""):"Yes",1:"No")
- S DIR("A")=$$PADPRMPT^RCDPESPB($$GET1^DID(344.61,FLD,,"TITLE"))
- S DIR("?")=$$GET1^DID(344.61,FLD,,"HELP-PROMPT")
- D ^DIR
- I $D(DTOUT)!$D(DUOUT) Q 1
- S ONOFF=Y
- I APCT'=Y D  ; User updated value
- . S FDAEDI(344.61,"1,",FLD)=Y
- . D FILE^DIE(,"FDAEDI")
- . D NOTIFY(Y,AUPSTYP)
- . S RCAUDVAL(1)="344.61^"_FLD_"^1^"_Y_U_APCT
- . D AUDIT(.RCAUDVAL)
- Q 0
- ;
  ; PRCA*4.5*349 - Refactored MPARMS to separate Auto-Post and Auto-Decrease questions
 MPARMS() ; Medical Auto-Posting Questions
  ; Returns: 1 - User '^' or timed out, 0 otherwise
@@ -143,7 +125,8 @@ MAUTOP(ONOFF) ; Medical Claims Auto-Posting/Auto-Decrease questions
  ;                              0 - otherwise
  ; Returns: 1 - User '^' or timed out, 0 otherwise
  N DIR,DIROUT,DIRUT,DTPIT,DUOUT,RCOLD,RCQUIT ; PRCA*4.5*349
- S RCQUIT=$$APOST(0,.ONOFF)  ; Auto-Posting of Med Claims parameter
+ ; PRCA*4.5*424 Moved to RCDPESPC because of routine size
+ S RCQUIT=$$APOST^RCDPESPC(0,.ONOFF)  ; Auto-Posting of Med Claims parameter
  Q:RCQUIT 1
  Q:ONOFF=0 0  ; Medical Claim Auto-Posting turned off
  ;
@@ -169,7 +152,8 @@ RXAUTOP(ONOFF) ; Rx Claims Auto-Posting/Auto-Decrease questions
  ;                              0 - otherwise
  ; Returns: 1 - User '^' or timed out, 0 otherwise
  N RETURN
- Q:$$APOST(1,.ONOFF) 1 ; Auto-Posting of Rx Claims parameter
+ ; PRCA*4.5*424 Moved to RCDPESPC because of routine size
+ Q:$$APOST^RCDPESPC(1,.ONOFF) 1 ; Auto-Posting of Rx Claims parameter
  Q:ONOFF=0 0 ; Rx Auto-Posting turned off
  D EXCLLIST(3) ; Display existing Payer exclusions for Rx Auto-Post
  Q:$$SETEXCL(3) 1 ; Set/Reset Payer Exclusions
@@ -202,7 +186,8 @@ TAUTOP(ONOFF) ; TRICARE Auto-Posting questions
  ;                              0 - otherwise
  ; Returns: 1 - User '^' or timed out, 0 otherwise
  N RCQUIT,RETURN
- S RCQUIT=$$APOST(2,.ONOFF)         ; Auto-Posting of TRICARE Claims parameter
+ ; PRCA*4.5*424 Moved to RCDPESPC because of routine size
+ S RCQUIT=$$APOST^RCDPESPC(2,.ONOFF) ; Auto-Posting of TRICARE Claims parameter
  I RCQUIT Q 1
  Q:ONOFF=0 0                        ; TRICARE Claim Auto-Posting turned off
  D EXCLLIST(5)                      ; Display existing Payer exclusions for TRICARE Auto-Post

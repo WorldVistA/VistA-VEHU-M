@@ -1,0 +1,118 @@
+IBY784PO ;YMG/EDE - IB*2.0*784 POST INSTALL;DEC 07 2023
+ ;;2.0;Integrated Billing;**784**;21-MAR-94;Build 8
+ ;Per VA Directive 6402, this routine should not be modified.
+ ;
+ Q
+ ;
+EN ; entry point
+ D BMES^XPDUTL(" >>  Starting the Post-Initialization routine for IB*2.0*784")
+ D SETPARAM
+ D NEWCANC
+ D UPDCANC
+ D INITMH
+ D BMES^XPDUTL(" >>  End of the Post-Initialization routine for IB*2.0*784")
+ Q
+ ;
+SETPARAM ; populate fields 350.9/71.03 and 350.9/71.04
+ N FDA
+ D MES^XPDUTL("     -> Initializing IB Site Parameters...")
+ S FDA(350.9,"1,",71.03)=3230627  ; Cleland-Dole effective date
+ S FDA(350.9,"1,",71.04)=3271229  ; Cleland-Dole end date
+ D FILE^DIE("","FDA")
+ D MES^XPDUTL("        Done.")
+ Q
+ ;
+NEWCANC ; add new cancellation reason to file 350.3
+ N FDA,IBCNNM,IBDATA,IBREAS,IENS,Z
+ D MES^XPDUTL("     -> Adding new Cancellation Reasons to file 350.3...")
+ F Z=1:1 S IBDATA=$T(REASDAT1+Z),IBCNNM=$P(IBDATA,";",3) Q:IBCNNM="END"  D
+ .S IBREAS=+$$FIND1^DIC(350.3,,"X",IBCNNM,"B"),IENS=$S(IBREAS>0:IBREAS_",",1:"+1,")
+ .S FDA(350.3,IENS,.01)=IBCNNM           ; name
+ .S FDA(350.3,IENS,.02)=$P(IBDATA,";",4) ; abbreviation
+ .S FDA(350.3,IENS,.03)=$P(IBDATA,";",5) ; limit
+ .S FDA(350.3,IENS,.04)=$P(IBDATA,";",6) ; can cancel UC
+ .S FDA(350.3,IENS,.05)=$P(IBDATA,";",7) ; UC visit processing
+ .S FDA(350.3,IENS,.07)=$P(IBDATA,";",8) ; MH visit processing
+ .S FDA(350.3,IENS,.08)=$P(IBDATA,";",9) ; Can cancel MH Visit
+ .I IBREAS D FILE^DIE("","FDA")
+ .I 'IBREAS D UPDATE^DIE("","FDA")
+ .K FDA
+ D MES^XPDUTL("        Done.")
+ Q
+ ;
+UPDCANC ; update field .07 in file 350.3
+ N FDA,IBCNNM,IBDATA,IBIEN,IBMH,IENS,Z
+ D MES^XPDUTL("     -> initializing MH Visit Processing and Can Cancel MH Visit fields in file 350.3...")
+ F Z=1:1 S IBDATA=$T(REASDAT+Z),IBCNNM=$P(IBDATA,";",3) Q:IBCNNM="END"  D
+ .S IBMH=$P(IBDATA,";",4)
+ .S IBIEN=$O(^IBE(350.3,"B",IBCNNM,""))
+ .I 'IBIEN D  Q
+ ..D BMES^XPDUTL("       >>  Unable to update the Charge Remove Reason "_IBCNNM_".")
+ ..D MES^XPDUTL("       >>  Please set the MH VISIT PROCESSING FIELD to "_$$EXTERNAL^DILFD(350.3,.07,,IBMH)_" and the CAN CANCEL MH VISIT field to Yes")
+ ..Q
+ .S IENS=IBIEN_","
+ .S FDA(350.3,IENS,.07)=IBMH
+ .S FDA(350.3,IENS,.08)=1
+ .D FILE^DIE("","FDA") K FDA
+ .Q
+ D MES^XPDUTL("        Done.")
+ Q
+ ;
+INITMH ; initialize file 351.83
+ N IBEDT,IBSDT
+ D MES^XPDUTL("     -> Populating IB MH VISIT TRACKING file...")
+ S IBSDT=$$GET1^DIQ(350.9,"1,",71.03,"I"),IBEDT=$$GET1^DIQ(350.9,"1,",71.04,"I")
+ D MHVST^IBMHUT1(IBSDT,IBEDT)
+ D MES^XPDUTL("        Done.")
+ Q
+ ;
+REASDAT ; Cancellation reasons (350.3) to update
+ ;;ADJUDICATED AS CATEGORY A;2
+ ;;AGENT ORANGE RELATED;2
+ ;;BILLED AT HIGHER TIER RATE;2
+ ;;BILLED LTC CHARGE;2
+ ;;CANCER OF HEAD/NECK;2
+ ;;CATASTROPHICALLY DISABLED;2
+ ;;CHANGE IN ELIGIBILITY;2
+ ;;CHECK OUT DELETED;1
+ ;;CLASS II DENTAL VISIT;2
+ ;;CLASSIFICATION CHANGED;2
+ ;;COMBAT VETERAN;3
+ ;;COMP & PENSION VISIT RECORDED;1
+ ;;COMPACT;3
+ ;;DUPLICATE;4
+ ;;ELIGIBILITY INCORRECT;2
+ ;;ENTERED IN ERROR;1
+ ;;EXEMPT:SCREENING;1
+ ;;HARDSHIP GRANTED;2
+ ;;HRFS FLAGGED;3
+ ;;INDIAN ATTESTATION;2
+ ;;INSURANCE CO PAID IN FULL;2
+ ;;IONIZING RAD RELATED;2
+ ;;KATRINA AFFECTED VETERAN;1
+ ;;MEDAL OF HONOR;1
+ ;;MILITARY SEXUAL TRAUMA;3
+ ;;MT CHARGE EDITED;1
+ ;;MT OP APPT CANCELLED;1
+ ;;MT OP APPT NO-SHOW;1
+ ;;MT STATUS CHANGED FROM YES;2
+ ;;PANDEMIC RESPONSE;2
+ ;;PATIENT DECEASED;2
+ ;;PROJECT 112/SHAD;2
+ ;;PURPLE HEART CONFIRMED;1
+ ;;RECD INPATIENT CARE;2
+ ;;REGISTRY EXAM;1
+ ;;RESEARCH VISIT/ADMISSION;2
+ ;;SERVICE CONNECTED VISIT/ADM;1
+ ;;SOUTHWEST ASIA RELATED;2
+ ;;TREATED AT OTHER FACILITY;2
+ ;;END
+ Q
+ ;
+REASDAT1 ; New cancellation reasons (350.3)
+ ;;CLELAND-DOLE;C-D;3;1;2;3;1
+ ;;HANNON ACT;HAN;3;1;2;2;1
+ ;;WORLD WAR II;WWII;3;1;2;2;1
+ ;;LEGAL;LG;3;1;2;2;1
+ ;;END
+ Q

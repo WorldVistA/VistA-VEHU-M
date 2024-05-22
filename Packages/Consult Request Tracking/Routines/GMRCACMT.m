@@ -1,7 +1,9 @@
-GMRCACMT ;SLC/DLT,DCM,MA,JFR - Comment Action and alerting ;4/29/14
- ;;3.0;CONSULT/REQUEST TRACKING;**4,14,18,20,22,29,35,47,55,75,99**;DEC 27, 1997;Build 29
+GMRCACMT ;SLC/DLT,DCM,MA,JFR - Comment Action and alerting ; Jan 17, 2024@13:17
+ ;;3.0;CONSULT/REQUEST TRACKING;**4,14,18,20,22,29,35,47,55,75,99,196**;DEC 27, 1997;Build 3
  ;
- ; This routine invokes IA #10060
+ ; Reference to ^VA(200 in ICR #10060
+ ;
+ ; Deprecated HCP interface via GMRC*3.0*196
  ;
 COMMENT(GMRCO) ;Add a comment without changing the status
  K GMRCQIT,GMRCQUT N GMRCA
@@ -20,7 +22,8 @@ COMMENT(GMRCO) ;Add a comment without changing the status
  .. W " automatically be ",!,"notified.",!
  . D PROCALRT("",1,20,GMRCO)
  . ;if a Non VA Care consult, notify HCP of the comment
- . I $$FEE^GMRCHL7H($$GET1^DIQ(123,GMRCO,1,"I")) D COMMENT^GMRCHL7H(GMRCO)
+ . ;I $$FEE^GMRCHL7H($$GET1^DIQ(123,GMRCO,1,"I")) D COMMENT^GMRCHL7H(GMRCO)  ;p196 Deprecated
+ . I $$FEE^GMRCHL7H($$GET1^DIQ(123,GMRCO,1,"I")) Q  ;p196 Deprecated
  . ;if a COMMUNITY CARE consult, notify CCRA of the comment
  . I $$FEE^GMRCHL7H($$GET1^DIQ(123,GMRCO,1,"I")) D COMMENT^GMRCCCRA(GMRCO) ;patch 99 to send to CCRA
  . ;update LAST ACTION field even though no status change

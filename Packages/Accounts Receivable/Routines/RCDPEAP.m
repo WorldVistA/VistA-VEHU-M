@@ -1,5 +1,5 @@
 RCDPEAP ;ALB/PJH - AUTO POST MATCHING EFT ERA PAIR ;Oct 15, 2014@12:36:51
- ;;4.5;Accounts Receivable;**298,304,318,321,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**298,304,318,321,326,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;Read ^IBM(361.1) via Private IA 4051
  ;
@@ -11,28 +11,32 @@ EN ;Auto-post ERA Receipts
  Q
  ;
 EN1 ;Auto-post newly matched and matched but unprocessed ERA
- N RCRZ,RCEFTDA
+ N RCRZ,RCEFTDA,RCZERO ; PRCA*4.5*424 Add RCZERO
  S RCRZ=0
  ;Scan ERA file for auto-post candidates with AUTO-POST STATUS = UNPOSTED
  F  S RCRZ=$O(^RCY(344.4,"E",0,RCRZ)) Q:'RCRZ  D
+ .S RCZERO=$$ISZERO^RCDPEAP1(RCRZ) ; PRCA*4.5*424 Check for Zero balance ERA
  .;Get EFT reference
- .S RCEFTDA=$O(^RCY(344.31,"AERA",RCRZ,"")) Q:'RCEFTDA
+ .;PRCA*4.5*424 next, line don't require matched EFT for zero balance ERAs
+ .S RCEFTDA=$O(^RCY(344.31,"AERA",RCRZ,"")) I 'RCZERO Q:'RCEFTDA
  .;Check that EFT funds were posted to FMS and Accepted by FMS.  If not, quit and go to next unposted ERA
  .N RCOK,RCDEPTDA,RCRECTDA
  .S RCOK=1
- .I $P($G(^RCY(344.3,+$G(^RCY(344.31,+RCEFTDA,0)),0)),U,8),$P($G(^RCY(344.31,+RCEFTDA,0)),U,7) D  Q:'RCOK
+ .;PRCA*4.5*424 next, line don't check matched EFT for zero balance ERAs
+ .I 'RCZERO,$P($G(^RCY(344.3,+$G(^RCY(344.31,+RCEFTDA,0)),0)),U,8),$P($G(^RCY(344.31,+RCEFTDA,0)),U,7) D  Q:'RCOK
  ..S RCDEPTDA=+$P($G(^RCY(344.3,+$G(^RCY(344.31,+RCEFTDA,0)),0)),U,3),RCRECTDA=+$O(^RCY(344,"AD",+RCDEPTDA,0)) ; Get deposit ticket and EFT receipt (CR - 8NZZ)
- ..I RCRECTDA N Z S Z=$P($$FMSSTAT^RCDPUREC(RCRECTDA),U,2) Q:$E(Z)="A"
+ ..I RCRECTDA N Z S Z=$P($$FMSSTAT^RCDPUREC(RCRECTDA),U,2) Q:$E(Z)="A"  Q:$E(Z)="O"  ; EFT Accepted by FMS or ON-LINE ENTRY - PRCA*4.5*326
  ..S RCOK=0
  .;
  .;Auto-Post
- .D AUTOPOST(RCEFTDA,RCRZ)
+ .D AUTOPOST(RCEFTDA,RCRZ,RCZERO) ; PRCA*4.5*424 add parameter
  Q
  ;
  ; Process ERA
-AUTOPOST(RCEFTDA,RCERA) ; 
+AUTOPOST(RCEFTDA,RCERA,RCZERO) ; PRCA*4.5*424 add parameter
  ; RCEFTDA = ien of file #344.31
  ; RCERA = ien of file #344.4
+ ; RCZERO = 1 if this ERA is zero balance, otherwise 0 ; PRCA*4.5*424
  ;
  ;Lock ERA
  L +^RCY(344.4,RCERA):5 Q:'$T
@@ -40,24 +44,35 @@ AUTOPOST(RCEFTDA,RCERA) ;
  ;Build Scratchpad and Verify Lines
  N ALLOK,RCERR,RCLINES,RCRCPTDA,RCSCR,RCTRDA,ZEROBAL ; PRCA*4.5*318 Variables placed in alpha order
  K ^TMP($J,"RCDPEWLA")
- S RCSCR=$$SCRPAD(RCERA)
+ S RCSCR=$$SCRPAD(RCERA,RCZERO)     ;**PRCA*4.5*424 Added ,RCZERO
  ; Re-set AUTO-POST STATUS  if unable to create scratchpad
- I 'RCSCR D SETSTA(RCERA,"@","Auto Posting: Removed from Auto Posting-Unable to create scratchpad") G AUTOQ
+ I 'RCSCR,'RCZERO D  Q                          ;PRCA*4.5*424 Added 'RCZERO
+ . D SETSTA(RCERA,"@","Auto Posting: Removed from Auto Posting-Unable to create scratchpad")
+ . D AUTOQ
  ;
- ; ERA cannot be autoposted; remove any pre-existing value to the AUTO-POST STATUS so ERA can be processed manually in the Worklist
- I $D(^TMP($J,"RCDPEWLA","ERA LEVEL ADJUSTMENT EXISTS")) D SETSTA(RCERA,"@","Auto Posting: Removed from Auto Posting-ERA level Adjustment(s)") G AUTOQ
+ ; ERA cannot be autoposted
+ ; remove any pre-existing value to the AUTO-POST STATUS so ERA can be processed manually in the Worklist
+ I $D(^TMP($J,"RCDPEWLA","ERA LEVEL ADJUSTMENT EXISTS")) D  Q
+ . D SETSTA(RCERA,"@","Auto Posting: Removed from Auto Posting-ERA level Adjustment(s)")
+ . D AUTOQ
  ;
  I $$UNBAL^RCDPEAP1(RCERA) D  Q  ; PRCA*4.5*318 Added line
- .D SETSTA(RCERA,"@","Auto Posting: Removed from Auto Posting-Unbalanced ERA") ; PRCA*4.5*321
+ . D SETSTA(RCERA,"@","Auto Posting: Removed from Auto Posting-Unbalanced ERA") ; PRCA*4.5*321
+ . D AUTOQ
  ;
- ;Check if all lines can be posted
+ ; Check if all lines can be posted
  S ALLOK=$$ALLOK(RCERA,RCSCR,.ZEROBAL,.RCLINES)
+ ;
+ ; ; PRCA*4.5*424 Added line - post zero balance ERA
+ I RCZERO D  Q  ;
+ . I ZEROBAL D  ;
+ . . D POST0^RCDPEAP2(RCERA)
+ . I 'ZEROBAL D  ;
+ . . D SETSTA(RCERA,"@","Auto Posting: Removed zero pay ERA has +/- Payments")
+ . D AUTOQ
  ;
  ;If $$ALLOK post entire ERA and reset AUTO-POST STATUS = COMPLETE
  I ALLOK D POSTALL(RCERA)
- ;
- ; If 'ALLOK and 'ZEROBAL(matching positive/negative pairs to not balance out to zero), then ERA needs to go to the standard worklist for manual receipt processing
- I 'ALLOK,'ZEROBAL D SETSTA(RCERA,"@","Auto Posting: Removed from Auto Posting-+/- pairs do not balance") G AUTOQ
  ;
  ;If 'ALLOK and some of the lines passed validation then post receipt to summary ERA and set AUTO-POST STATUS = PARTIAL
  ;Un-posted lines fall to APAR list for processing.
@@ -93,8 +108,6 @@ EN2 ;Auto-Post Previously Processed ERA
  . . I 'RCRCPTDA Q  ;PRCA*4.5*318 - Problem building receipt header
  . . K RCERR
  . . D RCPTDET^RCDPEMA(RCERA,RCRCPTDA,.RCLINES,.RCERR) ; Adds detail to a receipt based on file 344.49 and RCLINES array
- . . ;;Unable to create receipt - clear scratchpad, reset AUTO-POST STATUS = NULL - PRCA*4.5*318 - replaced following line
- . . ;;I $O(RCERR("")) D CLEAR(RCSCR),SETSTA(RCERA,"@","Auto Posting: Removed from Auto Posting-Unable to create receipt") Q
  . . I $O(RCERR("")) Q  ; PRCA*4.5*318 - Do not attempt to process partially filed receipt
  . . ;Lock ERA receipt and deposit ticket
  . . I '$$LOCKREC^RCDPRPLU(RCRCPTDA) Q
@@ -119,8 +132,6 @@ EN2 ;Auto-Post Previously Processed ERA
  D UNLOCKE
  Q
  ;
- ;Functions/Sub-routines in alpha order
- ;
 ACTIVE(EOBIEN) ;Verify claim is active
  ; EOBIEN - IEN of file 361.1
  N RCIFN,RCBILL,RCSTATUS
@@ -136,9 +147,11 @@ ACTIVE(EOBIEN) ;Verify claim is active
 ALLOK(RCERA,RCSCR,ZEROBAL,RCLINES) ;Verify which scratchpad lines are able to auto-post
  ; RCERA - 344.4 ien
  ; RCSCR - 344.49 ien
- ; ZEROBAL - flag that represents if ERA has zero payment balance after processing matched positive/negative pairs, passed by reference
+ ; ZEROBAL - flag that represents if ERA has zero payment balance after processing
+ ;           matched positive/negative pairs, passed by reference
  ; RCLINES - array of ERA line references (passed in by reference)
- ;           NOTE:  ORIGINAL ERA SEQUENCES (344.491, .09) can have multiple ERA line references separated by commas (e.g., 3,4)
+ ;           NOTE:  ORIGINAL ERA SEQUENCES (344.491, .09) can have multiple ERA line 
+ ;                  references separated by commas (e.g., 3,4)
  ; returns 0 or 1 (ALLOK)
  N ALLOK,AMT,ERALINE,STATUS,SUB,SUB1,CLAIM,WLINE,VERIFY
  K CLARRAY
@@ -151,6 +164,7 @@ ALLOK(RCERA,RCSCR,ZEROBAL,RCLINES) ;Verify which scratchpad lines are able to au
  . I $P(WLINE,U)?1N.N S VERIFY=1 S ERALINE=$P(WLINE,U,9) S:'$P(WLINE,U,13) ALLOK=0,RCLINES(ERALINE)="0^^1",VERIFY=0 Q
  . ; ignore zero valued lines
  . Q:AMT=0  Q:AMT="0.00"
+ . S ZEROBAL=0 ; PRCA*4.5*424 at least one line has non-zero balance
  . ;Get claim number from N.001 line - if not found treat as inactive
  . S CLAIM=$P(WLINE,U,7) I 'CLAIM S ALLOK=0,$P(RCLINES(ERALINE),U,3)=2 Q
  . ;Save claim number
@@ -167,7 +181,6 @@ ALLOK(RCERA,RCSCR,ZEROBAL,RCLINES) ;Verify which scratchpad lines are able to au
  ;
 AUDITLOG(DA,RCNEWST,RCREASON) ;
  ; Update the Auto-post Audit Log
- ;
  I '$G(DA) Q
  I $G(RCREASON)="" Q
  ;
@@ -187,10 +200,8 @@ AUDITLOG(DA,RCNEWST,RCREASON) ;
  Q
  ;
 BUILD(RCSCR,ARRAY) ; EP from EN2^RCDPEAD - Build list of ERA lines
- ;
  ; RCSCR = ien of file 344.49
  ; ARRAY = the array that will hold the list of ERA lines, passed by reference
- ;
  N ERALINE,FOUND,SCRLINE,SUB,SUB1
  K ARRAY
  S SUB=0,ARRAY=0
@@ -212,7 +223,6 @@ CHECKPAY(ARRAY,CLAIM) ;Check balance versus payments
  ;         e.g. ARRAY(430 ien) = 123.04
  ; CLAIM = AR BILL (344.491, .07) - IEN of file 430
  Q:'CLAIM 0
- ;
  ; BEGIN PRCA*4.5*326
  N RCADMIN,RCBAL,RCCOURT,RCINT,RCMAR,RCPRIN
  S RCPRIN=$$GET1^DIQ(430,CLAIM_",",71) ; Principle Balance
@@ -238,7 +248,6 @@ CLEAR(DA) ;Clear scratchpad
  Q
  ;
 COMPLETE(RCSCR) ;Check for non-zero lines without a receipt
- ;
  ; RCSCR = ien of file 344.49
  ; Returns status of check (1 or 0)
  N RCSUB,SCRSUB,COMPLETE,SCRLINE,RCERA
@@ -263,7 +272,6 @@ ERAREF(RCSCR,RCRCPTDA) ; update ERA reference and EFT record IEN in file 344
  Q
  ;
 NOTOK(RCSCR) ;Verify all scratchpad lines passed auto verify (V)
- ;
  ; RCSCR = ien of file 344.49
  ; Returns status of check (1 or 0)
  N NOTOK,SUB
@@ -274,9 +282,7 @@ NOTOK(RCSCR) ;Verify all scratchpad lines passed auto verify (V)
  Q NOTOK
  ;
 POSTALL(RCERA) ; all lines in ERA get posted on first attempt of auto-post
- ;
  ; RCERA = ien of 344.4
- ;
  ;ERA Receipt is created from scratchpad entry - type 14 is EDI Lockbox payment
  ; PRCA*4.5*326 begin modified code block
  N RCDUZ
@@ -324,10 +330,8 @@ POSTALL(RCERA) ; all lines in ERA get posted on first attempt of auto-post
  ;
 POSTERA(RCERA,RCLINES) ; only some of the EEOB lines passed validation on first attempt (DAY 1) of auto-post
  ; therefore assign the receipt number and 'partial' post status to ERA summary
- ;
  ; RCERA = ien of 344.4
  ; RCLINES = array of ERA line references
- ;
  ; no lines passed validation;  at lease 1 EEOB line needs to pass validation before assigning a receipt to the ERA
  I RCLINES=0 S RCRCPTDA="" G POSTERAQ
  ;ERA Receipt is created from scratchpad entry - type 14 is EDI Lockbox payment
@@ -358,11 +362,9 @@ POSTERAQ ;
  ;
 POSTLNS(RCERA,RCRCPTDA,RCLINES) ; this subroutine should only be called when some of the EEOB lines
  ;                                passed validation on FIRST attempt (DAY 1) of auto-post
- ;
  ; RCERA = ien of ERA entry in 344.4
  ; RCRCPTDA = ien of receipt entry in 344 or undefined if receipt not created since none of the lines passed validation
  ; RCLINES = array of ERA line references
- ;
  ;Mark ERA as processed to prevent reprocessing in EN2^RCDPEAP which runs next
  S ^TMP("RCDPEAP",$J,RCERA)=""
  S RCRCPTDA=$G(RCRCPTDA)
@@ -385,24 +387,22 @@ POSTLNS(RCERA,RCRCPTDA,RCLINES) ; this subroutine should only be called when som
  S DIE="^RCY(344.4,",DR="4.01////"_DT_";4.02////1",DA=RCERA D ^DIE
  Q
  ;
-SCRPAD(RCERA) ;Build Scratchpad entry in #344.49 for the ERA
- ;
- ; Input - RCERA - IEN for #344.4
- ;
+SCRPAD(RCERA,RCZERO) ;Build Scratchpad entry in #344.49 for the ERA
+ ; Input - RCERA    - IEN for #344.4
+ ;         RCZERO   - Optional, if passed, 1 if zero balance ERA. 0 otherwise 
  ; Output - RCSCR = Scratchpad IEN (Success) or 0 (Fail)
- ;
  N RC0,RC5,RCSCR,RCDAT,X
  S RC0=$G(^RCY(344.4,RCERA,0)),RC5=$G(^RCY(344.4,RCERA,5))
  ;Ignore is this ERA already has a receipt
  I +$P(RC0,U,8) Q 0
  ;Ignore if this is zero ERA
- I +$P(RC0,U,5)=0 Q 0
+ I '$G(RCZERO),+$P(RC0,U,5)=0 Q 0  ;PRCA*4.5*424 Added '$G(RCZERO),
  ; BEGIN PRCA*4.5*326
  ;Ignore if this is not a valid auto-post ERA type 
  ;I "^ACH^CHK^"'[(U_$P(RC0,U,15)_U) Q 0 ; added CHK - PRCA*4.5*321
  I "^ACH^CHK^NON^BOP^"'[(U_$P(RC0,U,15)_U) Q 0
  ;ERA must be matched to an EFT to be eligible for mark for autopost
- I '$O(^RCY(344.31,"AERA",RCERA,"")) Q 0
+ I '$G(RCZERO),'$O(^RCY(344.31,"AERA",RCERA,"")) Q 0  ;PRCA*4.5*424 Added '$G(RCZERO),
  ; END PRCA*4.5*326
  ;Scratchpad already exists
  S RCSCR=+$O(^RCY(344.49,"B",RCERA,0)) I RCSCR G SCRPADX
@@ -417,16 +417,14 @@ SETSTA(DA,STATUS,RCREASON) ;Set ERA auto-post status
  ; Log status change
  I '$G(DA) Q
  I $G(STATUS)="" Q
- ;
  D AUDITLOG(DA,STATUS,$G(RCREASON))
  ; Update status
  N DIE,DR
  S DIE="^RCY(344.4,"
  S DR="4.02////"_STATUS
- S DR=DR_";4.04///"_$S(STATUS=0&(DUZ'=.5):"`"_DUZ,1:"@")
+ S DR=DR_";4.04///"_$S(STATUS=0&(DUZ'=.5):DUZ,1:"@")
  D ^DIE
  Q
- ;
  ;
 UNLOCKR ;Unlock ERA receipt and deposit ticket
  L -^RCY(344,RCRCPTDA)

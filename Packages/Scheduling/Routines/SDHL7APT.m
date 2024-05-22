@@ -1,5 +1,5 @@
 SDHL7APT ;MS/TG,PH - TMP HL7 Routine;AUG 17, 2018
- ;;5.3;Scheduling;**704,714,754,773,780,798,810,817,821,848,859**;AUG 17, 2018;Build 10
+ ;;5.3;Scheduling;**704,714,754,773,780,798,810,817,821,848,859,863**;Aug 13, 1993;Build 14
  ;
  ;  Integration Agreements:
  Q
@@ -150,7 +150,7 @@ PROCSIU ;Process SI^S12 messages from the "TMP VISTA" Subscriber protocol
  .I $G(AIL(2,4,1,4))=$G(SDPARENT) S (INP(25),SCH(24,1,1),SDPARENT)=""  ;859 prevent adding parent in ARSET below
  .S:INP(3)="" INP(3)=DT S RTN=0 D ARSET^SDECAR2(.RTN,.INP)
  .S REQIEN=+$P(RTN,$c(30),2),SDAPTYP="A|"_REQIEN      ;817- define REQIEN for later  ;810- SDECAR2 routine should be used instead of SDHLAPT1 version of ARSET
- .I $G(SDMTC)=1 D CHKCHILD^SDHL7APU ; if multi check to see if the child order is in 409.85, if not add it
+ I $G(SDMTC)=1 D CHKCHILD^SDHL7APU ; if multi check to see if the child order is in 409.85, if not add it
  ;714 - PB get the division associated with the clinic and pass to the function to convert utc to local time
  N TMPSTART,D1,D2
  S:$G(SDCL)>0 D1=$P(^SC(SDCL,0),"^",15),D2=$$GET1^DIQ(40.8,D1_",",.07,"I")
@@ -237,6 +237,7 @@ PROCSIU ;Process SI^S12 messages from the "TMP VISTA" Subscriber protocol
  .M HLA("HLA")=HLA("HLS")
  .;the following HL* variables are created by DIRECT^HLMA
  .N HL,HLCS,HLDOM,HLECH,HLFS,HLINST,HLINSTN,HLMTIEN,HLNEXT,HLNODE,HLPARAM,HLPROD,HLQ,HLQUITQ,SDLINK,OROK,MSASEG,ERRRSP
+ .N SDPARENT,SDCHILD,SDMRTC,SDAPTYP,AIL  ;Fix 2464
  .;  more HL News, to protect Orig incoming HL* variables vs Intra/Inter msgs occurring real time below.   ;821
  .N HLL,HLMTIENS,HL771RF,HL771SF,HLARTYP,HLASTMSG,HLASTRSP,HLDBACK,HLDBSIZE,HLDP,HLDREAD,HLDRETR,HLDWAIT,HLIED,HLEIDS,HLENROU,HLFORMAT,HLHDRO,HLLSTN,HLMIDAR
  .N HLORNOD,HLOS,HLP,HLPID,HLPROU,HLQUIT,HLREC,HLRESLT,HLRETRA,HLFREQ,HLTCP,HLTCPADD,HLTCPCS,HLTPCI,HLTCPLNK,HLTCPO,HLTCPORT,HLTCPRET,HLTMBUF,HLEXROU,HLMTIENA
@@ -289,7 +290,7 @@ PROCSIU ;Process SI^S12 messages from the "TMP VISTA" Subscriber protocol
  S (SDMRTC,MSGARY("SDMRTC"))=$S($G(SDMRTC)=1:"TRUE",1:"FALSE"),SDLAB="",PROVIEN=MSGARY("PROVIEN")
  I $P(SDAPTYP,"|",1)="R" D
  .S $P(SDAPTYP,"|",1)="A"
- .I $P(SDAPTYP,"|",2)=$G(SDPARENT) S:$P($G(^SDEC(409.85,$G(SDPARENT),3)),"^")="" SDPARENT=""
+ .I $G(SDPARENT)]"",$P(SDAPTYP,"|",2)=$G(SDPARENT),$P($G(^SDEC(409.85,$G(SDPARENT),3)),"^")="" S SDPARENT=""   ;SDPARENT with no SDCHILD scenario-erase parent. 863 fix 2562, prevent null subscript
  K INP D INP^SDHL7APU
  S (ERRCND,ERRTXT)=""
  N SUCCESS
@@ -351,11 +352,5 @@ PROCSIU ;Process SI^S12 messages from the "TMP VISTA" Subscriber protocol
  I +ERRCND S ERRTXT=$$ERRLKP^SDHL7APU(ERRTXT)
  S ERRTXT=$$STRIP^SDHL7APU(ERRTXT)
  ;
- ;****BUILD THE RESPONSE MSA
- K @MSGROOT
- N HLA
- N ERR,LEN S ERR=""
- N FOUNDCN S FOUNDCN=0
- S HLA("HLA",1)="MSA"_HL("FS")_$S(ERRCND:"AE",1:"AA")_HL("FS")_HL("MID")_HL("FS")_$S(ERRCND:$E(ERRTXT,1,52),1:"")_HL("FS")
- D GENACK^HLMA1(HL("EID"),HLMTIENS,HL("EIDS"),"LM",1,.MYRESULT)
+ D ACK^SDHL7APU
  Q

@@ -1,5 +1,5 @@
 IBCE837P ;EDE/JWS POST EXECUTE - OUTPUT FOR 837 TRANSMISSION - CONTINUED ;
- ;;2.0;INTEGRATED BILLING;**718,727,743,742**;21-MAR-94;Build 36
+ ;;2.0;INTEGRATED BILLING;**718,727,743,742,759**;21-MAR-94;Build 24
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -10,7 +10,7 @@ POST ;POST execute for 837, called by IBCE837A@POST
  ; WCJ;IB718v22;quit if flag is not set to do the post workarounds
  Q:$G(IBXPOSTWA)'=1
  ;WCJ;IB718;SQA
- N I
+ N I,IBPID
  ;TPF;EBILL-2629;IB*2.0*718v20 remove EBILL-1641 (label 3 below) because of story implementation sequence issues
  ;JWS;EBILL-2517;IB*2.0*742; added 11 to 837 POST execute loop for PayerIDSwitches.exe VistA implementation
  ;JWS;EBILL-2517;IB*2.0*742; 11/1/2022: all subsequent FSC workarounds that modify PayerID MUST come after the call to 11^IBCE837Q.
@@ -20,7 +20,7 @@ POST ;POST execute for 837, called by IBCE837A@POST
  ; *** NOTE: all workarounds after PayerID switches need to be performed conditionally on [23] of file 350.9
  ;           including RemoveAB3, RemoveLCAS, RemoveAAA, SvcFacilityAddress
  I '$P($G(^IBE(350.9,1,8)),"^",23) D
- . N IBPID,COB,IBOPID
+ . N COB,IBOPID
  . D 11^IBCE837Q  ;Payer ID Switches implementation
  . ;IB*2.0*742v6;IBPID was getting set before Payer ID Switch occurred, needed to be after.
  . S IBPID=$G(^TMP("IBXDATA",$J,1,37,1,3))
@@ -44,8 +44,17 @@ POST ;POST execute for 837, called by IBCE837A@POST
  . I IBPID="SMDEV",$$FT^IBCEF(IBXIEN)=2 D 13^IBCE837Q
  . Q
  ;
+ ;JWS;IB*2.0*759;EBILL-2323; RemoveOtherPayerProviderInformation.exe
+ S IBPID=$G(^TMP("IBXDATA",$J,1,37,1,3))
+ ;JWS;IB*2.0*759;EBILL-2324; as part of 2323 and 2324, added check of version number
+ I $P($P($G(^IBA(364.7,1015,1)),"IBXDATA=""",2),".")>742 D
+ . I IBPID="SMTX1"!(IBPID="12M61") D 14^IBCE837Q
+ . ;JWS;IB*2.0*759;EBILL-2324; RemoveSecondaryIDsFromClaims.exe
+ . I $F(",12B60,12B53,12B45,SB890,SB891,SB892,",","_IBPID_",") D 15^IBCE837Q
+ . ;JWS;IB*2.0*759;EBILL-3312; ClearOI14whenEqualOI23.exe
+ . D 16^IBCE837Q
  Q
- ;;
+ ; 
 1 ;;IB*2.0*718;JWS;11/30/21;EBILL-1629;Incorporate FSC Override - clear PRF9 and PRF10 when there is an RX1 segment
  ;;for the same service line with a Service Date (refill)
  N X1,X2,XLN

@@ -1,5 +1,5 @@
 RCDPESP1 ;BIRM/SAB - ePayment Lockbox Site Parameter Reports ;29 Jan 2019 18:00:14
- ;;4.5;Accounts Receivable;**298,304,318,321,326,332,345,349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**298,304,318,321,326,332,345,349,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -102,7 +102,7 @@ SPRPT ; site parameter report entry point
  ; Display Parameters
  ; RCDPE PARAMETER file (#344.61)
  S Y=".02;.03;.04;.05;.06;.07;.1;.11;.12;.13;1.01;1.02;1.03;1.04"
- S Y=Y_";1.05;1.06;1.07;1.08;1.09;1.1" ; PRCA*4.5*349 - Add TRICARE
+ S Y=Y_";1.05;1.06;1.07;1.08;1.09;1.1;1.11" ; PRCA*4.5*349 - Add TRICARE  ;PRCA*4.5*423 added 1.11
  D GETS^DIQ(344.61,"1,",Y,"E",RCGLB(344.61))
  ;
  S Y=$$GET1^DID(344.61,.1,,"LABEL")_": "_@RCGLB(344.61)@(344.61,"1,",.1,"E") ; PRCA*4.5*321
@@ -128,6 +128,8 @@ SPRPT ; site parameter report entry point
  ;
  I (RCTYPE="T")!(RCTYPE="A") D TPARAMS^RCDPESPC(.RCPARM)  ; Display Rx parameters
  ; PRCA*4.5*349 - End modified block
+ ;
+ D ZPARAMS^RCDPESPC ; Display Zero Pay Auto=Post Parameter PRCA*4.5*424 added lines
  ;
  ; RCDPE PARAMETER file (#344.61)
  ;  ^DD(344.61,.06,0) > "MEDICAL EFT POST PREVENT DAYS"
@@ -352,6 +354,7 @@ AUTOD(PAID,WHICH,RCGLB,RCTYPE) ; Display auto-decrease parameters - PRCA*4.5*345
  ; Do not display Auto-Decrease questions when Auto-Post Disabled
  S ONOFF=$$AUTOPON^RCDPESPC(WHICH)
  I ONOFF=0 D  Q
+ . I PAID=0,WHICH=2 Q                           ;PRCA*4.5*424 added line
  . N WNAME
  . S WNAME=$S(WHICH=0:"Medical",WHICH=1:"Pharmacy",1:"TRICARE")
  . D AD2RPT("NOTICE: "_WNAME_" Auto-Decrease unavailable because Auto-Posting of "_WNAME_" Claims is currently disabled")

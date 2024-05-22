@@ -1,5 +1,5 @@
-PSOHLDS5 ;BIR/MV - Misc HL7 function ; 8/30/21 3:21pm
- ;;7.0;OUTPATIENT PHARMACY;**643,728**;DEC 1997;Build 5
+PSOHLDS5 ;BIR/MV - Misc HL7 function ; 23 Jan 2024  2:00 PM
+ ;;7.0;OUTPATIENT PHARMACY;**643,728,742**;DEC 1997;Build 1
  ;External reference to ^PS(50.606 supported by DBIA 2174
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference to ^PS(51.2 supported by DBIA 2226
@@ -13,7 +13,7 @@ PSOHLDS5 ;BIR/MV - Misc HL7 function ; 8/30/21 3:21pm
  ;External reference to EN^PSNPPIO supported by DBIA 3794
  ;External reference to BLDPID^VAFCQRY supported by DBIA 3630
  ;External reference to EN^VAFHLZTA supported by DBIA 758
- ;
+ ;External reference to $$PROD2^PSNAPIS supported by DBIA 2531
 HLSAVE(PSOLBL) ;Save HL data into PSOHLSV array
  NEW X,X1,X2,X3
  Q:'$D(PSOLBL)
@@ -224,7 +224,7 @@ NTE4(PSI) ;Profile information
 RXE(PSI) ;
  N PSOXN,PSOUNIT,PSOIPTR,PSODOSE,PSODOSEN,X,PSOVNAME,PSOXNDF1,PSORFRM,PRORFTOT,PSORFGIV,PSOSTALK,PSOCSUB,PSOCSUB1
  S PSOVNAME="" I PSOND1,PSOND3 D
- .S PSOVNAME=$P($$PROD0^PSNAPIS(PSOND1,PSOND3),"^")
+ .S PSOVNAME=$P($$PROD2^PSNAPIS(PSOND1,PSOND3),"^")
  .S (PSOXN,PSOXNDF1)=$$DFSU^PSNAPIS(PSOND1,PSOND3),PSOUNIT=$P($G(PSOXN),"^",6)
  S PSOXN=$P($G(PSOXN),"^",5)
  S PSOSTALK=+$G(^PS(55,"ASTALK",DFN))

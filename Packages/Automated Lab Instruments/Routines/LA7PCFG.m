@@ -1,14 +1,15 @@
-LA7PCFG ;DALOI/JMC - Configrure Lab Point of Care Interface; Jan 12, 2004
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**67**;Sep 27, 1994
+LA7PCFG ;DALOI/JMC - Configrure Lab Point of Care Interface; Oct 23, 2023@17:30
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**67,104**;Sep 27, 1994;Build 4
  ;
- ; Reference to DIV4^XUSER supported by DBIA #2533
+ ;Reference to DIV4^XUSER in ICR #2533
+ ;Reference to EDITPAR^XPAREDIT in ICR #2336
  Q
  ;
 EN ; Configure files #62.48, #62.4 and #68.2
  N DIR,DIROUT,DIRUT,DUOUT,LA7QUIT,LRLL,X,Y
  S LRLL=0
  F  D  Q:$D(DIRUT)
- . S DIR(0)="SO^1:LA7 MESSAGE PARAMETER (#62.48);2:LOAD/WORK LIST (#68.2);3:AUTO INSTRUMENT (#62.4);4:Print POC Test Code Mapping"
+ . S DIR(0)="SO^1:LA7 MESSAGE PARAMETER (#62.48);2:LOAD/WORK LIST (#68.2);3:AUTO INSTRUMENT (#62.4);4:Print POC Test Code Mapping;5:Define Reporting Lab;6:Display POC Reporting Facility Value Settings"
  . S DIR("A")="Select which file to setup"
  . D ^DIR
  . I $D(DIRUT) Q
@@ -16,6 +17,8 @@ EN ; Configure files #62.48, #62.4 and #68.2
  . I Y=2 D E682 Q
  . I Y=3 D E624 Q
  . I Y=4 D PRINT Q
+ . I Y=5 D REPLAB Q
+ . I Y=6 D PARLIST
  Q
  ;
  ;
@@ -227,6 +230,34 @@ DQP ; entry point from above and TaskMan
  ;
  I '$D(ZTQUEUED),'LA7EXIT,$E(IOST,1,2)="C-" D TERM
  D CLEAN
+ Q
+ ;
+ ;
+REPLAB ; Define Reporting Lab
+ ;LA*5.2*104: Optional to use parameter; only needed if existing logic is
+ ;            not retrieving correct reporting lab.
+ N DIR,DTOUT,DUOUT
+ S DIR("A",1)=" "
+ S DIR("A",2)="Defining a reporting lab using this option is not necessary if"
+ S DIR("A",3)="the reporting lab is currently displaying correctly."
+ S DIR("A",4)=" "
+ S DIR("A")="Do you wish to continue"
+ S DIR(0)="YN",DIR("B")="YES"
+ D ^DIR
+ I 'Y!($G(DTOUT))!($G(DUOUT)) Q
+ D EDITPAR^XPAREDIT("LR POC REPORTING LAB")
+ Q
+ ;
+ ;
+ ;PARLIST added with LA*5.2*104
+PARLIST ; List parameter values for LR POC REPORTING LAB
+ N LAXPAR,DIR
+ ;
+ S LAXPAR=$O(^XTV(8989.51,"B","LR POC REPORTING LAB",0))
+ Q:'LAXPAR
+ I LAXPAR<1 Q
+ ;
+ D ALLPAR^XPARLIST(LAXPAR)
  Q
  ;
  ;

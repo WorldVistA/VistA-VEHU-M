@@ -1,10 +1,12 @@
-LRVRPOC ;DALOI/JMC - POINT OF CARE VERIFICATION ;05/11/10  16:48
- ;;5.2;LAB SERVICE;**290,350,468,454**;Sep 27, 1994;Build 13
+LRVRPOC ;DALOI/JMC - POINT OF CARE VERIFICATION; Oct 23, 2023@17:30
+ ;;5.2;LAB SERVICE;**290,350,468,454,568**;Sep 27, 1994;Build 3
  ;
  ;5.2;LAB SERVICE; CHANGE FOR PATCH LR*5.2*468; Feb 10 2016
  ;
- ; Reference to DIVSET^XUSRB2 supported by DBIA #4055
- ; Reference to ADM^VADPT2 supported by DBIA #325
+ ;Reference to DIVSET^XUSRB2 in ICR #4055
+ ;Reference to ADM^VADPT2 in by ICR #325
+ ;Reference to HOSPITAL LOCATION (#44) file in ICR #10040
+ ;Reference to MEDICAL CENTER DIVISION (#40.8) file in ICR #7024
  ;
 EN ; Entry Point Call with LRLL=Load/Worklist IEN
  ;
@@ -19,6 +21,11 @@ EN ; Entry Point Call with LRLL=Load/Worklist IEN
  I '$D(^LRO(68.2,LRLL,0))#2 D END Q
  S LRLL(0)=^LRO(68.2,LRLL,0)
  ;
+ ;LR*5.2*568: Check parameter for reporting facility, if defined.
+ ;            LRDIV will be set equal to LRSYSDIV (if not null) in
+ ;            INIT^LRVRPOCU.
+ N LRSYSDIV,LRDIV
+ S LRSYSDIV=$$GET^XPAR("SYS","LR POC REPORTING LAB",1,"Q")
  D INIT^LRVRPOCU
  I LREND D  Q
  . D XQA^LA7UXQA(2,0,0,0,"POC: "_LAMSG,"")
@@ -190,6 +197,15 @@ DPT(DFN) ;
  I LRLLOC="" S LRLLOC="NO ABRV "_LROLLOC
  Q
  ;
+REPLAB(LROLLOC) ;Check parameter for reporting facility
+ ;added by LR*5.2*568
+ N LRXDIV
+ S LRXDIV=$$GET1^DIQ(44,LROLLOC_",",3.5,"I")
+ I LRXDIV="" Q LRXDIV
+ S LRXDIV=$$GET1^DIQ(40.8,LRXDIV_",",.07,"I")
+ I LRXDIV="" Q LRXDIV
+ S LRXDIV=$$GET^XPAR("DIV.`"_LRXDIV,"LR POC REPORTING LAB",1,"Q")
+ Q LRXDIV
  ;
 DATA(LRLL,LAIEN) ;Extract results into LROT(
  ;
@@ -203,7 +219,18 @@ DATA(LRLL,LAIEN) ;Extract results into LROT(
  S LRX=$G(^LAH(LRLL,1,LAIEN,.1,"OBR","ORDNLT"))
  ;
  ; Change division to ordering division
- S LRDUZ(2)=$S(LROLDIV:LROLDIV,1:LRDIV)
+ ;LR*5.2*568: Set reporting lab based on location's division
+ N LRLOCDIV
+ S LRLOCDIV=$$REPLAB(LROLLOC)
+ ;LRSYSDIV might be equal to LRDIV. Need to include in string
+ ;in case LRSYSDIV is null.
+ ;Variable recap:
+ ;  LRLOCDIV: Parameter specifies reporting lab for this division
+ ;  LRSYSDIV: Parameter specifies reporting lab for the system
+ ;   LROLDIV: INSTITUTION (#3) field in HOSPITAL LOCATION (#44) file
+ ;     LRDIV: lowest IEN in ^LRO(68,accession area,3,0)
+ S LRDUZ(2)=$S(LRLOCDIV:LRLOCDIV,LRSYSDIV:LRSYSDIV,LROLDIV:LROLDIV,1:LRDIV)
+ ;LR*5.2*568 end
  I LRDUZ(2)'=DUZ(2) D  Q:LRERR
  . N LA7X,LRY
  . S LRY=0

@@ -1,23 +1,22 @@
 IBECEA3 ;ALB/CPM - Cancel/Edit/Add... Add a Charge ;30-MAR-93
- ;;2.0;INTEGRATED BILLING;**7,57,52,132,150,153,166,156,167,176,198,188,183,202,240,312,402,454,563,614,618,646,651,656,663,677,678,682,728,716,704,776**;21-MAR-94;Build 1
+ ;;2.0;INTEGRATED BILLING;**7,57,52,132,150,153,166,156,167,176,198,188,183,202,240,312,402,454,563,614,618,646,651,656,663,677,678,682,728,716,704,776,784**;21-MAR-94;Build 8
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 ADD ; Add a Charge protocol
  N IBGMT,IBGMTR,IBUSNM,IBUC    ;IB*2.0*618 Add IBUSNM IB*2.0*646 Add IBUC
  N IBDUPIEN,IBDPDATA,IBDPXA,IBDPAMT,IBCONT,IBVST ; IB*2.0*678 added
  N IBCLDA,IBCLDY,IBCLEDT,IBCLST,IBCLSTDT,IBCLZ ;  IB*2.0*728
+ N IBSTCD,IBCDCHK,IBCDEDT,IBCDFLG,IBCDSDT,NUMVSTFL  ; IB*2.0*784
+ S (IBCDCHK,NUMVSTFL)="" ;  IB*2.0*784
  ; Check for IB EDIT key.  If not present
  I '$$IBEDIT^IBECEA36 Q
  S (IBGMT,IBGMTR,IBUC)=0
  S IBCOMMIT=0,IBEXSTAT=$$RXST^IBARXEU(DFN,DT),IBCATC=$$BILST^DGMTUB(DFN),IBCVAEL=$$CVA^IBAUTL5(DFN),IBLTCST=$$LTCST^IBAECU(DFN,DT,1)
- ;I 'IBCVAEL,'IBCATC,'$G(IBRX),+IBEXSTAT<1 W !!,"This patient has never been Means Test billable." S VALMBCK="" D PAUSE^VALM1 G ADDQ1
- ;
- ; - clear screen and begin
+ ; clear screen and begin
  D CLOCK^IBAUTL3 I 'IBCLDA S (IBMED,IBCLDAY,IBCLDOL,IBCLDT)=0
  D HDR^IBECEAU("A D D")
  I IBY<0 D NODED^IBECEAU3 G ADDQ
- ;
- ; - ask for the charge type
+ ; ask for the charge type
  D CHTYP^IBECEA33 G:IBY<0 ADDQ
  ;
  ;***IB*2.0*618 change to add more Action Types to this list...
@@ -26,9 +25,9 @@ ADD ; Add a Charge protocol
  N IBAFEE
  S IBUSNM=$P($G(^IBE(350.1,+$G(IBATYP),0)),"^",8)
  I IBUSNM'="" D
- . I IBUSNM="FEE SERVICE/OUTPATIENT" S IBAFEE=IBATYP Q
- . I (IBUSNM["CC")!(IBUSNM["CHOICE") D 
- . . I (IBUSNM["OPT")!(IBUSNM["OUTPATIENT")!(IBUSNM["URGENT") S IBAFEE=IBATYP  ;IB*2.0*646  added URGENT 
+ .I IBUSNM="FEE SERVICE/OUTPATIENT" S IBAFEE=IBATYP Q
+ .I (IBUSNM["CC")!(IBUSNM["CHOICE") D 
+ ..I (IBUSNM["OPT")!(IBUSNM["OUTPATIENT")!(IBUSNM["URGENT") S IBAFEE=IBATYP  ;IB*2.0*646  added URGENT 
  ;*** END IB*2.0*618 ***
  ;
  ; - process CHAMPVA charges
@@ -47,40 +46,38 @@ ADD ; Add a Charge protocol
  ;
  ; - ask date, units and maybe tier for rx copay charge
  I IBXA=5 D  G ADDQ:IBY<0,PROC
- . N IBA,IBB,IBC,IBX
- . ;; IBREBILL array is defined in REBILL^IBECEA4
- . S IBLIM=DT D FR^IBECEAU2($S($G(IBREBILL("EVDT"))'="":IBREBILL("EVDT"),1:0)) Q:IBY<0  ; IB*2.0*682
- . S (IBTO,IBEFDT)=IBFR
- . ;
- . ;PRCA*4.5*338 - if Community Care RX copay, set event date
- . S IBEVDA="*",IBEVDT=IBEFDT
- . ;I (IBXA=5),(IBUSNM["RX"),((IBUSNM["CC")!(IBUSNM["CHOICE")) S IBEVDA="*",IBEVDT=IBEFDT
- . ;
- . ; ask tier if needed
- . S IBTIER=$$TIER^IBECEAU2(IBATYP,IBEFDT) Q:IBY<0
- . ;
- . ; ask units
- . D UNIT^IBECEAU2(0) Q:IBY<0
- . ;
- . ; has patient been previously tracked for cap info
- . D TRACK^IBARXMN(DFN)
- . ;
- . D CTBB^IBECEAU3
- . ;
- . ; check if above cap
- . I IBY'<0 D
- .. N IBB,IBN,DIR,DIRUT,DUOUT,DTOUT,X,Y
- .. D NEW^IBARXMC(1,IBCHG,IBFR,.IBB,.IBN) Q:'IBN
- .. ;
- .. ; display message ask to proceed
- .. W !!,"This charge will put the patient > $",$J(IBN,0,2)," above their cap amount."
- .. S DIR(0)="Y",DIR("A")="Okay to proceed" D ^DIR S:'Y IBY=-1
- .. ;
+ .N IBA,IBB,IBC,IBX
+ .;; IBREBILL array is defined in REBILL^IBECEA4
+ .S IBLIM=DT D FR^IBECEAU2($S($G(IBREBILL("EVDT"))'="":IBREBILL("EVDT"),1:0)) Q:IBY<0  ; IB*2.0*682
+ .S (IBTO,IBEFDT)=IBFR
+ .;
+ .;PRCA*4.5*338 - if Community Care RX copay, set event date
+ .S IBEVDA="*",IBEVDT=IBEFDT
+ .;
+ .; ask tier if needed
+ .S IBTIER=$$TIER^IBECEAU2(IBATYP,IBEFDT) Q:IBY<0
+ .;
+ .; ask units
+ .D UNIT^IBECEAU2(0) Q:IBY<0
+ .;
+ .; has patient been previously tracked for cap info
+ .D TRACK^IBARXMN(DFN)
+ .;
+ .D CTBB^IBECEAU3
+ .;
+ .; check if above cap
+ .I IBY'<0 D
+ ..N IBB,IBN,DIR,DIRUT,DUOUT,DTOUT,X,Y
+ ..D NEW^IBARXMC(1,IBCHG,IBFR,.IBB,.IBN) Q:'IBN
+ ..;
+ ..; display message ask to proceed
+ ..W !!,"This charge will put the patient > $",$J(IBN,0,2)," above their cap amount."
+ ..S DIR(0)="Y",DIR("A")="Okay to proceed" D ^DIR S:'Y IBY=-1
+ ..;
  S IBLIM=$S(IBXA=4!(IBXA=3):DT,1:$$FMADD^XLFDT(DT,-1))
  ;
 FR ; - ask 'bill from' date
  D FR^IBECEAU2($S($G(IBREBILL("BILLFR"))'="":IBREBILL("BILLFR"),1:0))  ; IB*2.0*682
- ;
  ;IB*2.0*646/656
  ; If Urgent Care copay, skip clock checks, go to prompt for copay amount.
  I $G(IBUC),(IBFR<3190606) D  G ADDQ
@@ -144,18 +141,6 @@ UCPAY ;IB*2.0*646 Added to allow for skip of clock checks - required for Urgent 
  ; - perform outpatient edits
  N IBSTOPDA
  ;
- ;Start- IB*2.0*651
- ;Check to see if there is another medical copay (inpatient or outpatient) on that same day for this patient.
- ;If there is, print warning message to user and abort copay entry.
- ;I ((IBXA=4)!(IBXA=8)),$$BFCHK^IBECEAU(DFN,IBFR) D  G ADDQ
- ;. S IBVST=0
- ;. D PRTWRN  ;Print warning message
- ;. I IBUC D
- ;. . S IBVST=$$VSTCHK()
- ;. . I IBVST D ADDVST^IBECEA36(DFN,IBFR,"",4,5)
- ;end IB*2.0*651
- ;
- ;
  ;IB*2.0*678 Modified entire section to allow Dup Check to cancel existing lower copays or tell users they can't add a copay
  ;IB*2.0*663 Added changes for Urgent Care Visit Tracking
  I IBXA=4,IBUC D UCCHRG2^IBECEA36(DFN,IBFR) G ADDQ:IBY<0
@@ -165,29 +150,42 @@ UCPAY ;IB*2.0*646 Added to allow for skip of clock checks - required for Urgent 
  ;IB*2.0*776 start
  ; get the copay amount
  I IBXA=4,'IBUC D  G ADDQ:IBY<0
- .   ;  for visits prior to 12/6/01 or FEE
- .   I IBFR<3011206!($G(IBAFEE)) D OPT^IBECEA33 Q
- .   ;  for visits on or after 12/5/01
- .   I $G(IBUSNM)["OBSERVATION" D  Q
- .   .   S IBCHG=50,IBUNIT=1  ;initial copay amount
- .   .   S IBDESC=$G(IBUSNM),IBTO=IBFR  ;ensure that Billed To and Description are defined.
- .   D OPT^IBEMTSCU
+ .;  for visits prior to 12/6/01 or FEE
+ .I IBFR<3011206!($G(IBAFEE)) D OPT^IBECEA33 Q
+ .;  for visits on or after 12/5/01
+ .I $G(IBUSNM)["OBSERVATION" D  Q
+ ..S IBCHG=50,IBUNIT=1  ;initial copay amount
+ ..S IBDESC=IBUSNM,IBTO=IBFR  ;ensure that Billed To and Description are defined.
+ .D OPT^IBEMTSCU
  ;IB*2.0*776 end
  ;
- S IBDUPIEN=0
  S IBDUPIEN=$$BFCHK^IBECEAU(DFN,IBFR)
- I (IBXA=4),IBDUPIEN D  G ADDQ:'IBCONT
- . S IBDPDATA=$$DUPINFO(IBDUPIEN),IBDPXA=$P(IBDPDATA,U,2),IBDPAMT=$P(IBDPDATA,U)
- . S IBCONT=0
- . I (IBDPXA'=4),(IBDPXA'=8) D PRTWRN Q
- . S IBVST=0
- . D PRTWRN  ;Print warning message
- . I IBCHG>IBDPAMT D  Q    ; The new Outpatient charge is greater than existing charge.
- . . S IBCONT=1
- . . I '$$CANDUP(IBDUPIEN) S IBCONT=0 Q
- . I IBUC D
- . . S IBVST=$$VSTCHK()
- . . I IBVST D ADDVST^IBECEA36(DFN,IBFR,"",4,5)
+ I IBXA=4,IBDUPIEN D  G ADDQ:'IBCONT
+ .S IBDPDATA=$$DUPINFO(IBDUPIEN),IBDPXA=$P(IBDPDATA,U,2),IBDPAMT=$P(IBDPDATA,U)
+ .S IBCONT=0
+ .I IBDPXA'=4,IBDPXA'=8 D PRTWRN Q
+ .S IBVST=0
+ .D PRTWRN  ;Print warning message
+ .I IBCHG>IBDPAMT D  Q    ; The new Outpatient charge is greater than existing charge.
+ ..S IBCONT=1
+ ..I '$$CANDUP(IBDUPIEN) S IBCONT=0 Q
+ .I IBUC D
+ ..S IBVST=$$VSTCHK()
+ ..I IBVST D ADDVST^IBECEA36(DFN,IBFR,"",4,5)
+ ;
+ ;IB*2.0*784 - Cleland-Dole Benefit Check
+ S IBCDSDT=$$GET1^DIQ(350.9,"1,",71.03,"I"),IBCDEDT=$$GET1^DIQ(350.9,"1,",71.04,"I")
+ I IBFR'<IBCDSDT,IBFR'>IBCDEDT,IBUSNM["CC MH" S IBCDFLG=$$ASKMH^IBECEAMH() G:IBCDFLG=-1 ADDQ G:'IBCDFLG PROC S IBCDCHK=1    ;Cleland Dole Copay Type, definitely eligible.  IB*2.0*784
+ I 'IBCDCHK,$G(IBSTOPDA) D      ; Check stop code for Cleland-Dole Eligibility
+ .S IBSTCD=$$GET1^DIQ(352.5,IBSTOPDA_",",.01,"E")
+ .S IBCDCHK=$$CDCHK^IBECEAMH(IBSTCD,IBFR)
+ S NUMVSTFL=$$NUMVSTCK^IBECEAMH(DFN,IBFR)
+ I IBCDCHK,NUMVSTFL D  G ADDQ
+ .D MESS1^IBECEAMH
+ .I $$ASKCONT^IBECEAMH()'>0 Q
+ .D ADDVST^IBECEAMH(DFN,IBFR,"",1)
+ I IBCDCHK,'NUMVSTFL D MESS2^IBECEAMH   ;Alert user that Cleland-Dole max for the year has been reached.
+ ;end IB*2.0*784
  ;
  ;If outpatient copay and has passed all other checks, go to PROC
  G:IBXA=4 PROC
@@ -195,32 +193,27 @@ UCPAY ;IB*2.0*646 Added to allow for skip of clock checks - required for Urgent 
  ;end IB*2.0*678
  ;
  ; - if LTC outpatient calculate the charge
- ;I IBXA=8 D  G:IBY<0 ADDQ S (IBDT,IBTO,IBEVDT)=IBFR,IBDESC=$P(^IBE(350.1,IBATYP,0),"^",8),IBUNIT=1,IBEVDA="*" D COST^IBAUTL2,CALC^IBAECO,CTBB^IBECEAU3 G @$S(IBCHG:"PROC",1:"ADDQ")
  I IBXA=8 D  G:IBY<0 ADDQ S (IBDT,IBTO,IBEVDT)=IBFR,IBDESC=$P(^IBE(350.1,IBATYP,0),"^",8),IBUNIT=1,IBEVDA="*" D COST^IBAUTL2,CALC^IBAECO,CTBB^IBECEAU3 G:'IBCHG ADDQ
- . ;
- . ; is this day already a free day
- . I $D(^IBA(351.81,IBCLDA,1,"AC",IBFR)) W !!,"This day is already marked as a Free Day." S IBY=-1
- . ;
- . ; have we already billed for this day  IB*2.0*678 - moved below.
- . ;I $$BFO^IBECEAU(DFN,IBFR) W !!,"This patient has already been billed for this date." S IBY=-1
+ .; is this day already a free day
+ .I $D(^IBA(351.81,IBCLDA,1,"AC",IBFR)) W !!,"This day is already marked as a Free Day." S IBY=-1
  ;
  S IBCONT=0
  I IBXA=8 D  G:IBY<1 ADDQ
- . S IBY=1  ; assume no duplicate
- . S IBDUPIEN=$$BFCHK^IBECEAU(DFN,IBFR)
- . ; If so, either allow removal of duplicate or prevent user from continuing to bill
- . I IBDUPIEN D
- . . S IBY=0   ;Duplicate found
- . . ; Print Warning message
- . . D PRTWRN
- . . ; get Duplicate Bill info
- . . S IBDPDATA=$$DUPINFO(IBDUPIEN),IBDPXA=$P(IBDPDATA,U,2),IBDPAMT=$P(IBDPDATA,U)
- . . ; If an Inpatient Med, warn user and prevent further billing
- . . I (IBDPXA'=4),(IBDPXA'=8) S IBY=-1 Q
- . . ; If potential charge is greater than the amount already billed
- . . I IBCHG>IBDPAMT D
- . . . I '$$CANDUP(IBDUPIEN) S IBCONT=0 Q
- . . . S IBCONT=1
+ .S IBY=1  ; assume no duplicate
+ .S IBDUPIEN=$$BFCHK^IBECEAU(DFN,IBFR)
+ .; If so, either allow removal of duplicate or prevent user from continuing to bill
+ .I IBDUPIEN D
+ ..S IBY=0   ;Duplicate found
+ ..; Print Warning message
+ ..D PRTWRN
+ ..; get Duplicate Bill info
+ ..S IBDPDATA=$$DUPINFO(IBDUPIEN),IBDPXA=$P(IBDPDATA,U,2),IBDPAMT=$P(IBDPDATA,U)
+ ..; If an Inpatient Med, warn user and prevent further billing
+ ..I (IBDPXA'=4),(IBDPXA'=8) S IBY=-1 Q
+ ..; If potential charge is greater than the amount already billed
+ ..I IBCHG>IBDPAMT D
+ ...I '$$CANDUP(IBDUPIEN) S IBCONT=0 Q
+ ...S IBCONT=1
  ;
  G:IBXA=8 PROC
  ;
@@ -240,19 +233,19 @@ TO ; - ask 'bill to' date
  ;Check to see if there is another medical copay (inpatient or outpatient) on that same day for this patient.
  ;If there is, print warning message to user and abort copay entry.
  I ((IBXA<4)!(IBXA=9)) D  G:IBY<1 ADDQ
- . S IBDUPIEN=$$BFCHK^IBECEAU(DFN,IBFR)
- . ; If so, either allow removal of duplicate or prevent user from continuing to bill
- . S IBY=1
- . I IBDUPIEN D
- . . S IBY=0   ;Duplicate found
- . . ; Print Warning message
- . . D PRTWRN
- . . ; get Duplicate Bill info
- . . S IBDPDATA=$$DUPINFO(IBDUPIEN),IBDPXA=$P(IBDPDATA,U,2),IBDPAMT=$P(IBDPDATA,U)
- . . ; If an Inpatient Med, warn user and prevent further billing
- . . I (IBDPXA'=4),(IBDPXA'=8) S IBY=-1 Q
- . . ; Inpatient automatically forces outpatient copays to cancel
- . . I $$CANDUP(IBDUPIEN) S IBY=1 Q
+ .S IBDUPIEN=$$BFCHK^IBECEAU(DFN,IBFR)
+ .; If so, either allow removal of duplicate or prevent user from continuing to bill
+ .S IBY=1
+ .I IBDUPIEN D
+ ..S IBY=0   ;Duplicate found
+ ..; Print Warning message
+ ..D PRTWRN
+ ..; get Duplicate Bill info
+ ..S IBDPDATA=$$DUPINFO(IBDUPIEN),IBDPXA=$P(IBDPDATA,U,2),IBDPAMT=$P(IBDPDATA,U)
+ ..; If an Inpatient Med, warn user and prevent further billing
+ ..I IBDPXA'=4,IBDPXA'=8 S IBY=-1 Q
+ ..; Inpatient automatically forces outpatient copays to cancel
+ ..I $$CANDUP(IBDUPIEN) S IBY=1 Q
  ;end IB*2.0*651
  ;end IB*2.0*678
  ;
@@ -260,20 +253,20 @@ TO ; - ask 'bill to' date
  ;
  ;- IB*2.0*663 - check for Free days used in this billing period
  I IBXA=9 D  G ADDQ:IBY<0
- . F IBFEDT=IBFR:1:IBTO I $D(^IBA(351.81,IBCLDA,1,"AC",IBFEDT)) W !!,"One or more of the days in this period is marked as a Free Day." S IBY=-1 Q
+ .F IBFEDT=IBFR:1:IBTO I $D(^IBA(351.81,IBCLDA,1,"AC",IBFEDT)) W !!,"One or more of the days in this period is marked as a Free Day." S IBY=-1 Q
  ;end IB*2.0*663
  ;
  ; - calculate unit charge for LTC inpatient in IBCHG
  I IBXA=9 S IBDT=IBFR,IBEVDA=$$EVF^IBECEA31(DFN,IBFR,IBTO,IBNH),IBEVDT=$E(IBFR,1,5)_"01" D:IBEVDA<1  G ADDQ:IBY<0 D COST^IBAUTL2 I $E(IBFR,1,5)'=$E(IBTO,1,5) W !!,"  LTC Copayment charges cannot go from one month to another." G ADDQ
- . D NOEV^IBECEA31 I '$G(IBDG)!(IBY<0) S IBY=-1 Q
- . ; - build the event record
- . N IBNHLTC S IBNHLTC=1 D ADEV^IBECEA31
+ .D NOEV^IBECEA31 I '$G(IBDG)!(IBY<0) S IBY=-1 Q
+ .; - build the event record
+ .N IBNHLTC S IBNHLTC=1 D ADEV^IBECEA31
  ;
  ; - calculate units and total charge
  S IBUNIT=$$FMDIFF^XLFDT(IBTO,IBFR) S:IBXA'=3!(IBFR=IBTO) IBUNIT=IBUNIT+1
  I IBXA=1 D:IBGMT>0  D FEPR^IBECEA32 G ADDQ:IBY<0,EV
- . S IBGMTR=1
- . W !,"The patient has GMT Copayment Status! GMT rate must be applied.",!
+ .S IBGMTR=1
+ .W !,"The patient has GMT Copayment Status! GMT rate must be applied.",!
  S IBCHG=IBCHG*IBUNIT S:IBXA=2 IBCHG=$S(IBCLDOL+IBCHG>IBMED:IBMED-IBCLDOL,1:IBCHG)
  ;
  ; adjust the LTC charge based on the calculated copay cap
@@ -323,6 +316,12 @@ PROC ; - okay to proceed?
  .;
  .D ADDVST^IBECEA36(DFN,IBFR,IBEVDA,2)
  .Q
+ ;
+ ;IB*2.0*784 - Cleland-Dole - Update MH DB with billed entry
+ I IBCDCHK,'NUMVSTFL D 
+ .D MESS2B^IBECEAMH
+ .D ADDVST^IBECEAMH(DFN,IBFR,IBEVDA,2)
+ ;End IB*2.0*784
  ;
  ; - review the special inpatient billing case
  I $G(IBSIBC1) D CHK^IBAMTI1(IBSIBC1,IBEVDA)

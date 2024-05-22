@@ -1,5 +1,5 @@
 RCDPESP6 ;AITC/CJE - ePayment Lockbox Site Parameters - Notify Changes;29 Jan 2019 18:00:14
- ;;4.5;Accounts Receivable;**326,332,345,349**;;Build 44
+ ;;4.5;Accounts Receivable;**326,332,345,349,424**;;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -76,6 +76,7 @@ CHKCHNG(LINE) ;function, check for changes in EDI Lockbox site parameters
  D MEDCHNG(.HEAD,.COUNT,.LINE)  ; Medical parameter changes
  D RXCHNG(.HEAD,.COUNT,.LINE)  ; Pharmacy parameter changes
  D TRICHNG(.HEAD,.COUNT,.LINE) ; PRCA*4.5*349 - Check for TRICARE parameter changes
+ D ZERCHNG(.COUNT,.LINE)  ; Zero Payment ERA parameter changes PRCA*4.5*424
  D PAYEXC(.COUNT,.LINE)  ; Payer exclusions parameter changes
  D CARCHNG(.COUNT,.LINE)  ; CARC-RARC parameter changes
  Q COUNT
@@ -291,6 +292,33 @@ CARCHNG(COUNT,LINE)  ; Check for CARC-RARC parameter changes
  . ; PRCA*4.5*349 - End Modified Block
  Q
  ;
+ ; PRCA*4.5*424 - Subroutine added 
+ZERCHNG(COUNT,LINE) ; Check for TRICARE site parameter changes
+ ; Input:  COUNT - Current # of parameter changes
+ ;         LINE - Array of current site parameter changes
+ ; Output: COUNT - Updated # of parameter changes
+ ;         LINE - Array of updated site parameter changes
+ ;
+ N REC0,REC1,XNEW,XOLD
+ S REC1=^TMP("RCDPESP6",$J,344.61,1,1)
+ S XOLD=+$P(REC1,"^",11)
+ S XNEW=$$GET1^DIQ(344.61,"1,",1.11,"I")
+ I XNEW'=XOLD D  ;
+ . D LNOUT(.HEAD,.LINE,"AUTO-POST ZERO PAY ERAs ENABLED",XOLD,XNEW,"B",.COUNT)
+ . I XNEW D  ; Enabling auto post of zero pay triggers process to post historical ERAs
+ . . N ZTDESC,ZTRTN,ZTSAVE,ZTSK
+ . . S ZTRTN="ZEROPOST^RCDPESP8"
+ . . S ZTDESC="AUTO POST HISTORIC ZERO PAY ERAs"
+ . . S ZTIO=""
+ . . S ZTDTH=$$NOW^XLFDT()
+ . . S ZTPRI=1 ; Set as low priority
+ . . D ^%ZTLOAD
+ . . I $D(ZTSK) W !!,"Task number "_ZTSK_" was queued to auto-post historic zero payment ERAs" H 3
+ . . E  W !!,"Unable to queue auto post of historic zero pay ERAs." H 3
+ . . K IO("Q")
+ . . D HOME^%ZIS
+ Q
+ ;
 LNOUT(HEAD,LINE,TXT,XOLD,XNEW,TYPE,COUNT)   ; Format a line for the message
  ; PRCA*4.5*345 - Added parameter documentation
  ;Input:  HEAD: 0 if header not output into the line array for this section yet, 1 otherwise
@@ -301,9 +329,9 @@ LNOUT(HEAD,LINE,TXT,XOLD,XNEW,TYPE,COUNT)   ; Format a line for the message
  ;        XNEW: New Value (Internal Format)
  ;        TYPE: "B" - Boolean, "$" - Dollar amount, "D" - Days, "T" - Text
  ;        COUNT: count of changes
- ;Output:  HEAD: 1 if it came in as 0
- ;         LINE: Updated array of lines detail parameter changes for the current section
- ;         COUNT: Updated # of changes
+ ;Output: HEAD: 1 if it came in as 0
+ ;        LINE: Updated array of lines detail parameter changes for the current section
+ ;        COUNT: Updated # of changes
  ;
  N DOTS,RCFDA,RCIENS,Y
  S DOTS=$TR($J(" ",50)," ",".")

@@ -1,5 +1,5 @@
 RCDPESP8 ;AITC/CJE - ePayment Lockbox Site Parameters History
- ;;4.5;Accounts Receivable;**332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**332,424**;Mar 20, 1995;Build 11
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; entry point for EDI Lockbox Parameters History Report [RCDPE PARAMETER HISTORY REPORT]
@@ -135,3 +135,21 @@ PROMPTS(BDATE,EDATE,RCLM,RCXL) ; Propmt for report Parameters
  S RCLM=$$ASKLM^RCDPEARL() I RCLM=-1 S RETURN=-1
 PQ ; Common exit point for PROMPTS 
  Q RETURN
+ ;
+ ; PRCA*4.5*424 Subroutine added
+ZEROPOST ; Auto post historic zero payment ERAs - (EP) Tasked from RCDPESP6
+ N AMT,ERAIEN,REC0
+ ; Iterate through ERA file and find zero payment ERAs
+ S ERAIEN=0
+ F  S ERAIEN=$O(^RCY(344.4,ERAIEN)) Q:'ERAIEN  D  ;
+ . S REC0=$G(^RCY(344.4,ERAIEN,0))
+ . S AMT=+$P(REC0,"^",5)
+ . I AMT'=0 Q  ;
+ . ; Ignore ERA if it was posted or marked as MATCH ZERO PAY
+ . S STATUS=$P(REC0,"^",14),MATCH=$P(REC0,"^",9)
+ . I STATUS!MATCH Q
+ . ; Check if ERA if eligible for auto-posting. Payer not excluded, all detail lines have 0 payment
+ . I $$AUTOCHK2^RCDPEAP1(ERAIEN,1) D  ;
+ . . ; Mark this ERA as posted matched zero pay etc.
+ . . D POST0^RCDPEAP2(ERAIEN)
+ Q

@@ -1,5 +1,5 @@
-DGREG0 ;ALB/JDS/AEG-REGISTER A PATIENT, CONT. ;03 OCT 85
- ;;5.3;Registration;**108,121,91,149,326,624**;Aug 13, 1993
+DGREG0 ;ALB/JDS,AEG,JAM - REGISTER A PATIENT, CONT. ;03 OCT 85
+ ;;5.3;Registration;**108,121,91,149,326,624,1111**;Aug 13, 1993;Build 18
 REFILE F I=0,1,2,3 S A(I)="" S:$D(^DPT(DFN,"DIS",DFN1,I)) A(I)=^(I)
  S DIV=$S('$D(^DG(40.8,+$P(A(0),"^",4),0)):1,1:$P(A(0),"^",4))
  ;I $D(^DIC(195.4,1,"UP")) I ^("UP") S $P(DGFC,U,1)=DIV D ADM^RTQ3
@@ -68,3 +68,18 @@ MTDT ;Date of Test should be the same as the Registration Date
  S DIE="^DGMT(408.31,",DA=DGMTI,DR=".01///^S X="_DGMTDT D ^DIE
  D AFTER^DGMTEVT S DGMTINF=1 D EN^DGMTEVT
 MTDTQ Q
+ ;
+COMMENTS ;DG*5.3*1111 comments moved here due to size limit of DGREG
+ ;DG*5.3*1111 - Commented out the following code
+ ;I DGCHK=1 D
+ ;. S DA=DFN1,DIE("NO^")=""
+ ;. S DA(1)=DFN,DP=2.101
+ ;. S DR="1///"_$S(SEEN=2:2,SEEN=1:0,1:0)_";Q;2//OUTPATIENT MEDICAL"_";7///"_$S(SEEN=2:0,SEEN=1:1,1:0)_";2.1//ALL OTHER;3//"_$S($P(^DG(43,1,"GL"),"^",2):"",1:"/")_$S($D(^DG(40.8,+$P(^DG(43,1,"GL"),"^",3),0)):$P(^(0),"^",1),1:"")_";4///"_DUZ
+ ;I DGCHK=0 D
+ ;. S DA=DFN1,DIE("NO^")=""
+ ;. S DA(1)=DFN,DP=2.101
+ ;. S DR="1///"_$S(SEEN=2:2,CURR=1:1,1:0)_";Q;2"_$S(CURR=1:"///3",1:"")_";2.1;3//"_$S($P(^DG(43,1,"GL"),"^",2):"",1:"/")_$S($D(^DG(40.8,+$P(^DG(43,1,"GL"),"^",3),0)):$P(^(0),"^",1),1:"")_";4////"_DUZ
+ ;DG*5.3*1111-Removed the TYPE OF BENEFIT APPLIED FOR (#2) field and the TYPE OF CARE APPLIED FOR (#2.1) field of the DISPOSITION LOG-IN DATE/TIME file (#2.101) prompts from the DG REGISTER PATIENT process.
+ ; Removed updating the STATUS (#2.101,1) and EXAMINED IN MEDICAL CENTER (#2.101,7) fields due to the removal of the "Is the patient currently being followed in a clinic for the same condition" and
+ ; "Is the patient to be examined in the medical center today" prompts. These prompt set the SEEN and CURR variables that were used to set these fields.
+ Q

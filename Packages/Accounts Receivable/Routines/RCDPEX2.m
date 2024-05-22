@@ -1,5 +1,5 @@
 RCDPEX2 ;ALB/TMK/KML/PJH - ELECTRONIC EOB DETAIL EXCEPTION MAIN LIST TEMPLATE ;20 Dec 2018 17:20:51
- ;;4.5;Accounts Receivable;**173,269,298,304,326,345,409**;Mar 20, 1995;Build 17
+ ;;4.5;Accounts Receivable;**173,269,298,304,326,345,409,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 INIT ;EP from listman template RCDPEX EOB_SUM EXCEPTION LIST
@@ -66,6 +66,8 @@ BLD ;EP from RCDPEX3,RCDPEX31,RCDEPEX32
  . . . S DR=".01;.02;.03;.05;.07;.08;.1;.11;.12;.15;.24;9.01",DA=RCS
  . . . D DIQ3444(.DA,DR,.RCDPDATA)
  . . . S RCX1=$$SETSTR^VALM1($E(RCX("PAYFROM"),1,25)_"/"_$E(RCX("INCOID"),1,20),"",9,78)
+ . . . S RCX("SVCDT")=$$SDATE^RCDPEX4(RCMSG,RCS),RCX("SVCDT")=$E(RCX("SVCDT"),5,6)_"/"_$E(RCX("SVCDT"),7,8)_"/"_$E(RCX("SVCDT"),3,4)
+ . . . S RCX1=$$SETSTR^VALM1(RCX("SVCDT"),RCX1,63,8)
  . . . S RCSEQ=RCSEQ+1
  . . . S RCX=$$SETSTR^VALM1($E(RCSEQ_$J("",4),1,4)_"  "_$G(RCX("TRACE")),"",1,80)
  . . . S XX=$G(RCDPDATA(344.4,RCMSG_",",.04,"I"))     ; ERA Date

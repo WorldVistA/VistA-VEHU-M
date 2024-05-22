@@ -1,5 +1,5 @@
 IBCSC10 ;ALB/MJB - MCCR SCREEN 10 (UB-82 BILL SPECIFIC INFO)  ;27 MAY 88 10:20
- ;;2.0;INTEGRATED BILLING;**432,547,574,592**;21-MAR-94;Build 58
+ ;;2.0;INTEGRATED BILLING;**432,547,574,592,759**;21-MAR-94;Build 24
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;MAP TO DGCRSC8
@@ -23,11 +23,15 @@ Q Q
  ;WCJ;IB*2.0*547
 ACINTEL(IBINSDAT,IBNEXT) ; build some intelligence in this Alternate ID branching logic called from both screen 10 templates.
  ;
+ ; assumes IBIFN = the ien to file 399
+ ;
  ; Input:
  ; IBINSDAT - INS DATA node
- ; IBNEXT -where to branch if not correct plan
+ ; IBNEXT - where to branch if not correct plan
  ;
  ; Returns - where to branch to
+ ; kind of misleading.  It either changes IBNEXT to null or leaves it alone.
+ ; Assumes calling routine knew where to branch to if it failed
  ;
  N IBPLAN,IBEPT,IBINSPRF
  S IBPLAN=$P(IBINSDAT,U,18)
@@ -38,6 +42,7 @@ ACINTEL(IBINSDAT,IBNEXT) ; build some intelligence in this Alternate ID branchin
  I IBEPT="" Q IBNEXT
  I IBEPT="MX" Q:'$D(^IBE(350.9,1,81,"B")) IBNEXT  ; no medicare set up in site parameters
  I IBEPT'="MX" Q:'$D(^IBE(350.9,1,82,"B")) IBNEXT   ; no commercial set up in site parameters
+ ;
  ; Use form type not charge type 09/07/2016
  ;S IBINSPRF=$$INSPRF^IBCEF(IBIFN)
  S IBINSPRF=$$FT^IBCEF(+IBIFN)=3  ; set IBINST flag=1 if it is institutional,0 for professional.
@@ -60,4 +65,20 @@ ACINTEL(IBINSDAT,IBNEXT) ; build some intelligence in this Alternate ID branchin
  . S IBFOUND=1
  I IBFOUND Q ""
  Q IBNEXT
+ ;
+ ;WCJ;IB759
+BBB(IBIFN) ; aka Baby Bird Beaks
+ ; this is an API to tell if any insurer on the claim has Alternate Payer IDs properly defined.
+ ; If not, it returns a 0 and the section of the billing screen is uneditable
+ ; which shows as <#> to the biller
+ ;
+ ; Input:
+ ; IBIFN - Internalk Entry Number to file 399
+ ;
+ ; Returns 1 or 0, yay or nay
+ N IBDATA,IBRESULT,IBLOOP,IBX
+ S IBRESULT=0
+ F IBLOOP=1:1:3 S IBDATA=$G(^DGCR(399,IBIFN,"I"_IBLOOP)) I IBDATA]""  S IBX=$$ACINTEL(IBDATA,"@WHATEVER") I IBX'="@WHATEVER" S IBRESULT=1 Q
+ Q IBRESULT
+ ;
  ;IBCSC10

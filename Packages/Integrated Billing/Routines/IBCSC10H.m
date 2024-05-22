@@ -1,5 +1,5 @@
 IBCSC10H ;ALB/ARH - MCCR SCREEN 10 (BILL SPECIFIC INFO) CMS-1500 ;4/21/92
- ;;2.0;INTEGRATED BILLING;**432,488,547,592**;21-MAR-94;Build 58
+ ;;2.0;INTEGRATED BILLING;**432,488,547,592,759**;21-MAR-94;Build 24
  ;;Per VA Directive 6402, this routine should not be modified.
  ; CMS-1500 screen 10
  ;
@@ -14,7 +14,12 @@ EN ;
  ;
  ;WCJ;IB*2.0*547
  ;S IBSR=10,IBSR1="H",IBV1="000000000" S:IBV IBV1="111111111"
- S IBSR=10,IBSR1="H",IBV1="0000000000" S:IBV IBV1="1111111111"
+ ;
+ ;S IBSR=10,IBSR1="H",IBV1="0000000000" S:IBV IBV1="1111111111"
+ S IBSR=10,IBSR1="H",IBV1="0000000000"    ; all sections editable on screen
+ S:'+$$BBB^IBCSC10(IBIFN) $E(IBV1,8)=1  ;WCJ;IB759; make undeditable if not set up for payer
+ S:IBV IBV1="1111111111"   ; uneditable if view only
+ ;
  ;JWS;IB*2.0*592 US1108 - Dental form 7
  I $$FT^IBCU3(IBIFN)=7 S IBV1="1001100010" S:IBV IBV1="11111111"
  ;F I="U","U1","UF2","UF3","UF32","U2","M","TX",0,"U3" S IB(I)=$G(^DGCR(399,IBIFN,I))
@@ -158,7 +163,7 @@ EN ;
  S IBZ=$$GET1^DIQ(8932.1,+$P(IB("U3"),U,11),"SPECIALTY CODE") W $S(IBZ'="":" ("_IBZ_")",1:"")
  ;
  ; Section 8
- ;WCJ;IB*2.0*5471
+ ;WCJ;IB*2.0*547
  ;Adding ALT PRIMARY IDS and moving sections down to make room
  S Z=8,IBW=1 X IBWW
  W " Alt Prim Payer ID  : "

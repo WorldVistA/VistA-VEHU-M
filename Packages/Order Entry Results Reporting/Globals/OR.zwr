@@ -4,6 +4,7 @@ ZWR
 ^OR(100.04,"B","Benefit of Therapy Outweighs Risk",1)=""
 ^OR(100.04,"B","Documentation of Allergy/Adverse Reaction is in Error",6)=""
 ^OR(100.04,"B","Documentation of Allergy/Adverse Reaction is to different agent in same drug class",7)=""
+^OR(100.04,"B","Indicated for procedure",9)=""
 ^OR(100.04,"B","Patient report per interview is inconsistent with remote allergy data",8)=""
 ^OR(100.04,"B","Patient tolerating current therapy with this medication",2)=""
 ^OR(100.04,"B","Previous Adverse Reaction signs/symptoms managed by patient",3)=""

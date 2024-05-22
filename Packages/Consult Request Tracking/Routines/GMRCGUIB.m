@@ -1,8 +1,10 @@
-GMRCGUIB ;SLC/DCM,JFR,MA/AFS,PB - GUI actions for consults ; 12/18/20 12:10pm
- ;;3.0;CONSULT/REQUEST TRACKING;**4,12,18,20,17,22,29,30,35,45,53,55,64,46,75,86,90,91,99,168**;DEC 27, 1997;Build 3
+GMRCGUIB ;SLC/DCM,JFR,MA/AFS,PB - GUI actions for consults ; Jan 17, 2024@13:17
+ ;;3.0;CONSULT/REQUEST TRACKING;**4,12,18,20,17,22,29,30,35,45,53,55,64,46,75,86,90,91,99,168,196**;DEC 27, 1997;Build 3
  ;
- ; This routine invokes IA #2980
- ; This routine invokes IA #6755 - DE6745 - PB Apr 12, 2017
+ ; Reference to MEDLKUP^MCARUTL3 in ICR #3280
+ ; Reference to POST^HMPEVNT in ICR #6755
+ ;
+ ; Deprecated HCP interface via GMRC*3.0*196
  ;
 SETDA() ;set DA of where audit actions are to be filed
  S:'$D(^GMR(123,+GMRCO,40,0)) ^GMR(123,GMRCO,40,0)="^123.02DA^^"
@@ -48,7 +50,8 @@ CMT(GMRCO,GMRCOM,GMRCADUZ,GMRCWHN,GMRCWHO) ;add comment to consult
  S GMRCA=20,GMRCAD=GMRCWHN S:$G(GMRCWHO) GMRCORNP=GMRCWHO
  D SETCOM(.GMRCOM,$G(GMRCWHO))
  ;if a Non VA Care consult, notify HCP of the comment
- I $$FEE^GMRCHL7H($$GET1^DIQ(123,+GMRCO,1,"I")) D COMMENT^GMRCHL7H(+GMRCO)
+ ;I $$FEE^GMRCHL7H($$GET1^DIQ(123,+GMRCO,1,"I")) D COMMENT^GMRCHL7H(+GMRCO) ;p196 Deprecated
+ I $$FEE^GMRCHL7H($$GET1^DIQ(123,+GMRCO,1,"I")) Q  ;p196 Deprecated
  ;if a Non VA Care consult, notify CCRA of the comment
  I $$FEE^GMRCCCRA($$GET1^DIQ(123,+GMRCO,1,"I")) D COMMENT^GMRCCCRA(+GMRCO) ;patch 99 to send to CCRA
  D  ;update LAST ACTION field even though no status change

@@ -1,5 +1,5 @@
 RCRPU2 ;EDE/YMG - REPAYMENT PLAN UTILITIES;02/03/2021  8:40 AM
- ;;4.5;Accounts Receivable;**381,378,389**;Mar 20, 1995;Build 36
+ ;;4.5;Accounts Receivable;**381,378,389,429**;Mar 20, 1995;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -69,7 +69,6 @@ ASKRCL ; select CS bills to recall  PRCA*4.5*389
  .W !!,"   Select bills using the following formats: (A)ll or (N)one or 1,2,3 and/or 1-3",!
  .S DIR(0)="FO^^"
  .S DIR("A")="Choose Bills to recall: "
- .S DIR("B")="ALL"
  .S DIR("?")="Select bills using the following formats: (A)ll or (N)one or 1,2,3 and/or 1-3"
  .D ^DIR
  .I $D(DIRUT)!$D(DTOUT)!$D(DUOUT)!$D(DIROUT) S DONE=1 Q

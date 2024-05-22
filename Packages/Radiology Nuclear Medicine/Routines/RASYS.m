@@ -1,9 +1,19 @@
-RASYS ;HISC/CAH AISC/TMP-System Definition Menu ; Jan 29, 2021@08:58:56
- ;;5.0;Radiology/Nuclear Medicine;**42,47,178**;Mar 16, 1998;Build 2
+RASYS ;HISC/CAH AISC/TMP - System Definition Menu ; Feb 07, 2024@06:40:30
+ ;;5.0;Radiology/Nuclear Medicine;**42,47,178,210**;Mar 16, 1998;Build 1
 1 ;;Division Parameter Set-up
  S DIC="^RA(79,",DIC(0)="AELMQ",DIC("A")="Select Division: ",DLAYGO=79
  D ^DIC K DIC,DLAYGO I Y<0 K X,Y G Q1
- S DA=+Y,DIE="^RA(79,",DR="[RA DIVISION PARAMETERS]",RAXIT=0 D ^DIE
+ ;p210/KLM begin - option to enter the new phone number field w/o going thru the whole template. 
+ S RAY=+Y K DIR,Y
+ S DIR("A")="Would you like to enter/edit the FACILITY PHONE NUMBER only"
+ S DIR(0)="Y",DIR("B")="NO",DIR("?")="Enter 'YES' to add/edit the phone number, or 'NO' to edit all division parameters."
+ D ^DIR I $D(DIRUT) G Q1
+ I Y=1 D  K DIR,Y G Q1
+ . S DA=RAY,DIE="^RA(79,",DR=200 D ^DIE
+ . Q
+ K DIR,Y
+ ;p210 end
+ S DA=RAY,DIE="^RA(79,",DR="[RA DIVISION PARAMETERS]",RAXIT=0 D ^DIE
  I $O(^RA(79,DA,"L",0)) D
  . D:'$D(IOF) HOME^%ZIS W @IOF S RAINC=0
  . F  S RAINC=$O(^RA(79,DA,"L",RAINC)) Q:RAINC'>0  D  Q:RAXIT
@@ -11,7 +21,7 @@ RASYS ;HISC/CAH AISC/TMP-System Definition Menu ; Jan 29, 2021@08:58:56
  .. Q
  . Q
  K %,%X,%Y,C,D0,DA,DE,DQ,DIE,DR,RAINC,RAXIT D Q1 W ! G 1
-Q1 K D,DDC,DG,DI,DIG,DIH,DIU,DIV,DIW,DISYS,DST,DUOUT,I,J,POP
+Q1 K D,DDC,DG,DI,DIG,DIH,DIU,DIV,DIW,DISYS,DST,DUOUT,I,J,POP,RAY,RAT
  Q
  ;
 2 ;;Print Division Parameter List

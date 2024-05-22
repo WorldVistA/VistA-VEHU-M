@@ -1,5 +1,5 @@
 DGENDD ;ALB/CJM,JAN,LBD,AMA,ERC,JAM - Enrollment Data Dictionary Functions; 13 JUN 1997;6-28-01 ;5/8/07 11:28am
- ;;5.3;Registration;**121,351,503,733,754,1015**;Aug 13,1993;Build 7
+ ;;5.3;Registration;**121,351,503,733,754,1015,1111**;Aug 13,1993;Build 18
  ;
 SET1(DFN,DGENRIEN) ;
  ;Description: sets the "AENRC" X-ref on the patient file
@@ -62,12 +62,14 @@ KILL2(DGENRIEN,STATUS) ;
  Q
  ;
 SETREM(DGENRIEN,STATUS) ;
+ ; DG*5.3*1111 - All ENROLLMENT STATUS (file #27.15) entries of REJECTED renamed to DEFERRED.
+ ;  The comments and code below are modified to reflect this.
  ;This set logic is called by the Enrollment Status field (#.04) in 
  ;the Patient Enrollment file (#27.11).  If the Enrollment Status
- ;contains the word REJECTED, then "**REJECTED**" will be stuffed
+ ;contains the word DEFERRED, then "**DEFERRED**" will be stuffed
  ;into the Remarks field (#.091) of the Patient file (#2).  If the
- ;Enrollment Status does not contain REJECTED, then the word
- ;"**REJECTED**" will be removed.
+ ;Enrollment Status does not contain DEFERRED, then the word
+ ;"**DEFERRED**" will be removed.
  ;Input:
  ;  DGENRIEN - IEN of the enrollment record
  ;  STATUS - enrollment status
@@ -80,14 +82,14 @@ SETREM(DGENRIEN,STATUS) ;
  Q:'DFN  Q:$G(^DPT(DFN,0))=""
  L +^DPT(DFN,0):5 I '$T Q
  S REM=$P(^DPT(DFN,0),U,10)
- ;The enrollment status contains REJECTED, set REMARKS
+ ;The enrollment status contains DEFERRED, set REMARKS
  I "^11^12^13^14^22^"[(U_STATUS_U) D  G SETREMQ
- . I REM["**REJECTED**" Q  ;Remarks already contain REJECTED
- . S REM=REM_"**REJECTED**"
+ . I REM["**DEFERRED**" Q  ;Remarks already contain REJECTED
+ . S REM=REM_"**DEFERRED**"
  . S $P(^DPT(DFN,0),U,10)=REM
- ;The enrollment status does not contain REJECTED, remove REMARKS
- I REM'["**REJECTED**" G SETREMQ
- S REM=$P(REM,"**REJECTED**",1)_$P(REM,"**REJECTED**",2,99)
+ ;The enrollment status does not contain DEFERRED, remove REMARKS
+ I REM'["**DEFERRED**" G SETREMQ
+ S REM=$P(REM,"**DEFERRED**",1)_$P(REM,"**DEFERRED**",2,99)
  S $P(^DPT(DFN,0),U,10)=REM
 SETREMQ L -^DPT(DFN,0)
  Q

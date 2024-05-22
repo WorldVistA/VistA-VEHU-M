@@ -1,5 +1,5 @@
-YSCLDIS ;HINOI/RTW,HEC/hrubovcak - DISCONTINUE CLOZAPINE PATIENT STATUS ;8 Nov 2019 15:21:58
- ;;5.01;MENTAL HEALTH;**122,154**;Dec 30, 1994;Build 48
+YSCLDIS ;HINOI/RTW,HEC/HRUBOVCAK - DISCONTINUE CLOZAPINE PATIENT STATUS ; Jun 12, 2023@17:11
+ ;;5.01;MENTAL HEALTH;**122,154,227**;Dec 30, 1994;Build 17
  ;
  Q
  ; Reference to ^DPT supported by IA #10035
@@ -17,27 +17,33 @@ YSCLDIS ;HINOI/RTW,HEC/hrubovcak - DISCONTINUE CLOZAPINE PATIENT STATUS ;8 Nov 2
  ; prescription or Inpatent Clozapine Order in the last 56 days, the Active Treatment will STOP
  ; YSCLPT("dataFound?") is true if reason found to NOT discontinue the patient
  ; routine rewritten for YS*5.01*154 - 27 September 2019
+ ; OPT and IPT subroutines rewritten to use Pharmacy APIs for YS*5.01*227 - 20 June 2023
  ;
 START ; called from XMIT^YSCLTST5
  D DT^DICRW
  ; YSEND used in DMG^YSCLTST5
  ; YSPTDISC - patients discontinued this run
- N DFN,X,Y,YSCLPT,YSEND,YSPTDISC,YSFMCLOZ,YSLN
+ N DCONPD,DFN,X,Y,YSCLPT,YSEND,YSPTDISC,YSFMCLOZ,YSLN
+ ; YS*5.01*227 - Change to use Fileman "parameter" field instead of hard-coded values
+ S DCONPD=$$GET1^DIQ(603.03,"1,",13)
  S YSEND=$$FMADD^XLFDT(DT,366)
  K ^TMP($J,"YSCLDATA") D XTMPZRO  ; update ^XTMP("YSCLDIS",0)
  D LIST^DIC(603.01,,1,"I",,,,,,,"YSFMCLOZ")  ; 603.01,1 - CLOZAPINE PATIENT - 0;2 POINTER TO PATIENT FILE (#2)
  ;
  F YSLN=1:1 Q:'$D(YSFMCLOZ("DILIST","ID",YSLN))  S DFN=YSFMCLOZ("DILIST","ID",YSLN,1) D:DFN
- . K YSCLPT
+ . K YSCLPT,^TMP($J,"YSCLDIS")
+ . ; YS*5.01*227 - Use Pharmacy APIs instead of direct Fileman calls per ICR
  . ; (#53) CLOZAPINE REGISTRATION NUMBER [1F]
- . S YSCLPT("reg#")=$$GET1^DIQ(55,DFN,53) Q:YSCLPT("reg#")=""
- . S YSCLPT("clozStatus")=$$GET1^DIQ(55,DFN,54,"I")
+ . D PSS^PSS781(DFN,,"YSCLDIS")
+ . S YSCLPT("reg#")=$G(^TMP($J,"YSCLDIS",DFN,53)) Q:YSCLPT("reg#")=""
+ . S YSCLPT("clozStatus")=$P($G(^TMP($J,"YSCLDIS",DFN,54)),U)
  . Q:YSCLPT("clozStatus")="D"   ;Not checking those already discontinued
- . S YSCLPT("regDate")=$$GET1^DIQ(55,DFN,58,"I")
+ . S YSCLPT("regDate")=$P($G(^TMP($J,"YSCLDIS",DFN,58)),U)
  . S YSCLPT("numDays")=$$FMDIFF^XLFDT(DT,YSCLPT("regDate"))
  . I YSCLPT("reg#")?1U6N D:YSCLPT("numDays")>4  Q   ;temps greater than 4 days since registration
  ..  S YSCLPT("disconReason")=3 D SVPTINFO,DSCNPT,DMG^YSCLTST5
- . Q:YSCLPT("numDays")<28                     ;Not checking those registered 27 days or less
+ . ; YS*5.01*227 - Change to use Fileman parameter field instead of hard-coded 28-day value
+ . Q:YSCLPT("numDays")<DCONPD                     ;Not checking those registered 27 days or less
  . S ^TMP($J,"YSCLDATA",DT,DFN)=YSCLPT("reg#")_U_YSCLPT("regDate"),YSCLPT("dataFound?")=0
  . S YSCLPT("newReg?")=1                       ;Registration is new unless clozapine orders are found
  . D OPT Q:YSCLPT("dataFound?")  ;Not checking further
@@ -48,40 +54,52 @@ START ; called from XMIT^YSCLTST5
  D MSGTRNS
  Q
 OPT ; Outpatient orders
- N YSUNTDOS,YSCLOPT,YSCLRX,YSCLDRG,YSCLFLDT,YSCLSPDT,X,X1,X2,YSCLFLDA
- D LIST^DIC(55.03,","_DFN_",",,"I",,,,,,,"YSUNTDOS")
- S YSCLOPT="A" F  S YSCLOPT=$O(YSUNTDOS("DILIST",1,YSCLOPT),-1) Q:'YSCLOPT  D  Q:YSCLPT("dataFound?")
- . S YSCLRX=YSUNTDOS("DILIST",1,YSCLOPT),YSCLDRG=$$GET1^DIQ(52,YSCLRX,6,"I") Q:'YSCLDRG
- . Q:'$L($$GET1^DIQ(50,YSCLDRG,17.5))  ;'$D(^PSDRUG("ACLOZ",+YSCLDRG))
- . S YSCLFLDT=$$GET1^DIQ(52,YSCLRX,22,"I") Q:YSCLFLDT<YSCLPT("regDate")   ;Fill Date before Registration
+ N I,YSSTDT,YSUNTDOS,YSCLOPT,YSCLRX,YSCLDRG,YSCLFLDT,YSCLSPDT,X,X1,X2,YSCLFLDA
+ ; YS*5.01*227 - Rewrite to use Pharmacy APIs because ICR for Fileman reads is deprecated
+ S YSSTDT=$$FMADD^XLFDT(DT,-DCONPD)
+ D RX^PSO52API(DFN,"YSUNTDOS",,,"2",YSSTDT)
+ S I="A" F  S I=$O(^TMP($J,"YSUNTDOS",DFN,I),-1) Q:'I  D  Q:YSCLPT("dataFound?")
+ . S YSCLRX=$G(^TMP($J,"YSUNTDOS",DFN,I,.01)),YSCLDRG=$P($G(^TMP($J,"YSUNTDOS",DFN,I,6)),U)
+ . ;Q:'$L($$GET1^DIQ(50,YSCLDRG,17.5))  ;'$D(^PSDRUG("ACLOZ",+YSCLDRG))
+ . D LAB^PSS50(YSCLDRG,,,,,"YSCLDRG")
+ . Q:'$L($G(^TMP($J,"YSCLDRG",YSCLDRG,17.5)))
+ . S YSCLFLDT=$P($G(^TMP($J,"YSUNTDOS",DFN,I,22)),U) Q:YSCLFLDT<YSCLPT("regDate")
  . S YSCLPT("newReg?")=0  ; Registration isn't new
- . S YSCLSPDT=$$GET1^DIQ(52,YSCLRX,26,"I")
+ . S YSCLSPDT=$P($G(^TMP($J,"YSUNTDOS",DFN,I,26)),U)
  . I YSCLSPDT'<DT S YSCLPT("dataFound?")=1 Q  ; Not Expired yet
  . S X1=DT,X2=YSCLFLDT D ^%DTC S YSCLFLDA=X
- . I YSCLFLDA<56 S YSCLPT("dataFound?")=1
+ . ; YS*5.01*227 - Change to use Fileman parameter field instead of hard-coded value
+ . I YSCLFLDA<DCONPD S YSCLPT("dataFound?")=1
+ K ^TMP($J,"YSUNTDOS"),^TMP($J,"YSCLDRG")
  Q
  ;
 INP ;Inpatient Orders
  ; YSDSPDRG - DISPENSE DRUG (sub-file 55.07)
  ; YSUNTDOS - UNIT DOSE (sub-file 55.07)
  N YSUNTDOS,YSDSPDRG,YSCLIPT,YSLINE,YSCLDRG,YSCLORDT,YSCLSPDT,YSCLORDA,X,X1,X2
- D LIST^DIC(55.06,","_DFN_",",,"I",,,,,,,"YSUNTDOS")
- S YSCLIPT="A" F  S YSCLIPT=$O(YSUNTDOS("DILIST",1,YSCLIPT),-1) Q:'YSCLIPT  D  Q:YSCLPT("dataFound?")
- . S YSLINE=YSUNTDOS("DILIST",2,YSCLIPT)
- . D LIST^DIC(55.07,","_YSLINE_","_DFN_",",,"I",,,,,,,"YSDSPDRG")
- . S YSCLDRG=+$G(YSDSPDRG("DILIST",1,1)) Q:'$G(YSCLDRG)
- . Q:$$GET1^DIQ(50,YSCLDRG,17.5)'="PSOCLO1"
- . S YSCLORDT=$$GET1^DIQ(55.06,YSLINE_","_DFN,27,"I") Q:YSCLORDT<YSCLPT("regDate")  ;Order date before Registration
+ ; YS*5.01*227 - Rewrite to use Pharmacy APIs because ICR for Fileman reads is deprecated
+ D PSS431^PSS55(DFN,,,,"YSUNTDOS")
+ D PSS433^PSS55(DFN,"YSUNTDOS2")
+ S YSCLIPT="A" F  S YSCLIPT=$O(^TMP($J,"YSUNTDOS",YSCLIPT),-1)  Q:'YSCLIPT  D  Q:YSCLPT("dataFound?")
+ . S YSCLDRG=$O(^TMP($J,"YSUNTDOS",YSCLIPT,"DDRUG",0))  Q:'$G(YSCLDRG)
+ . S YSCLDRG=+$G(^TMP($J,"YSUNTDOS",YSCLIPT,"DDRUG",YSCLDRG,.01))  Q:'$G(YSCLDRG)
+ . ;Q:$$GET1^DIQ(50,YSCLDRG,17.5)'="PSOCLO1"
+ . D LAB^PSS50(YSCLDRG,,,,,"YSCLDRG")
+ . Q:$G(^TMP($J,"YSCLDRG",YSCLDRG,17.5))'="PSOCLO1"
+ . S YSCLORDT=+$G(^TMP($J,"YSUNTDOS",YSCLIPT,27)) Q:YSCLORDT<YSCLPT("regDate")  ;Order date before Registration
  . S YSCLPT("newReg?")=0  ; Registration not new
- . S YSCLSPDT=$$GET1^DIQ(55.06,YSLINE_","_DFN,34,"I")
+ . S YSCLSPDT=+$G(^TMP($J,"YSUNTDOS2",YSCLIPT,34))
  . I '(YSCLSPDT<DT) S YSCLPT("dataFound?")=1 Q  ;Not Stopped yet
  . S X1=DT,X2=YSCLORDT D ^%DTC S YSCLORDA=X
- . I YSCLORDA<56 S YSCLPT("dataFound?")=1
+ . ; YS*5.01*227 - Change to use Fileman parameter field instead of hard-coded value
+ . I YSCLORDA<DCONPD S YSCLPT("dataFound?")=1
+ K ^TMP($J,"YSUNTDOS"),^TMP($J,"YSUNTDOS2"),^TMP($J,"YSCLDRG")
  Q
  ;
 SVPTINFO ; save reason for discontinue
  N J,C,N
- S J=YSCLPT("disconReason"),C=$S(J=1:"28 days",J=2:"56 days",1:"temp # expired"),N=$$NOW^XLFDT
+ ; Change to use Fileman paremeter field instead of hard-coded discontinue period
+ S J=YSCLPT("disconReason"),C=$S(J=1!(J=2):DCONPD_" days",1:"temp # expired"),N=$$NOW^XLFDT
  S ^XTMP("YSCLDIS",N,DFN,0)=J_U_C,YSPTDISC(DFN)=YSCLPT("disconReason")
  S ^XTMP("YSCLDIS",N,DFN,"STATUS")=YSCLPT("clozStatus")
  Q
@@ -97,7 +115,7 @@ MSGTRNS ; transmit message
  N XMERR,YSBODY,YSFROM,YSITE,YSXMDUZ,YSXMINSTR,YSXMSUBJ,YSXMTO,YSXMZ
  K ^TMP("XMERR",$J),^TMP($J,"YSCLXDISCMSG")
  ; ^DD(8989.3,501,0) 'PRODUCTION^RS^0:No;1:Yes' Forum for production
- I $$GET1^DIQ(8989.3,1,501,"I") S YSXMTO("G.CLOZAPINE ROLL-UP@AADOMAIN.EXT")=""
+ I $$GET1^DIQ(8989.3,1,501,"I") S YSXMTO("G.CLOZAPINE ROLL-UP@FORUM.DOMAIN.EXT")=""
  S YSXMTO("G.PSOCLOZ")=""  ; always send locally
  D YSXMTEXT
  S YSXMINSTR("FROM")="CLOZAPINE MONITOR"
@@ -114,12 +132,13 @@ MSGTRNS ; transmit message
  Q
  ;
 YSXMTEXT ; build message of discontinued clozapine patients data for NCC
+ ; YS*5.01*227 - Change to use Fileman parameter field instead of hard-coded discontinue period
  N J,YSCLRSN
  S YSCLRSN(1,1)="The patient status has changed to 'Discontinued' because the new clozapine"
- S YSCLRSN(1,2)="patient has not filled the prescription/order within 28 days of being"
+ S YSCLRSN(1,2)="patient has not filled the prescription/order within "_DCONPD_" days of being"
  S YSCLRSN(1,3)="marked 'Active'."
  S YSCLRSN(2,1)="The patient status has changed to 'Discontinued' because the active clozapine"
- S YSCLRSN(2,2)="patient has not filled the prescription/order within 56 days of"
+ S YSCLRSN(2,2)="patient has not filled the prescription/order within "_DCONPD_" days of"
  S YSCLRSN(2,3)="being prescribed/ordered."
  S YSCLRSN(3,1)="The patient status has changed to 'Discontinued' because the temporary local"
  S YSCLRSN(3,2)="authorization number assigned has expired and NCCC has not issued"

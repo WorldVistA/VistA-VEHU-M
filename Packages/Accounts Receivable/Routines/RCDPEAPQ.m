@@ -1,5 +1,5 @@
 RCDPEAPQ ;AITC/CJE - AUTO POST REPORT -CONTINUED ;Dec 20, 2014@18:42
- ;;4.5;Accounts Receivable;**298,304,326,345**;Mar 20, 1995;Build 34
+ ;;4.5;Accounts Receivable;**298,304,326,345,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ; PRCA*4.5*326 - Routine created as an overflow for RCDPEAPP due to size
  Q
@@ -147,6 +147,7 @@ COMPILE ; Generate the Auto Posting report ^TMP array
  ;          RCSORT  - 0 - Sort by Payer Name, 1 - Sort by Payer TIN
  ;          RCWHICH - 1 - Filter by Payer Name, 2 - Filter by Payer TIN
  ;          RCTYPE  - 'D' for detail report, 'S' for summary
+ ;          RCPAYMNT - 'Z' - Zero pay ERAs only, 'P' - Non-Zero ERAs only, 'A' All - PRCA*4.5*424
  ;          ^TMP("RCSELPAY",RCJOB) - Selected Payer Names or TINs
  ; Ouput:   GTOTAL  - A1^A2^A3^A4 Where:
  ;                     A1 - Total Count
@@ -157,7 +158,7 @@ COMPILE ; Generate the Auto Posting report ^TMP array
  ;                      A1 - CTR
  ;                      A2 - Payer Name if RCWHICH=1 else Payer TIN
  ;                      A3 - Payer TIN if RCWHICH=1 else Payer Name
- N APDATE,CNT,END,ERAIEN,IEN,OKAY,RCECME,RCRZ,STA,STNAM,STNUM
+ N APDATE,CNT,END,ERAIEN,IEN,OKAY,RCECME,RCAMT,RCRZ,STA,STNAM,STNUM ; PRCA*4.5*424 add RCAMT
  S APDATE=$$FMADD^XLFDT($P(RCRANGE,U,2),-1)
  S END=$P(RCRANGE,U,3),CNT=0
  ;
@@ -169,6 +170,10 @@ COMPILE ; Generate the Auto Posting report ^TMP array
  . . ; Check division - Note return values are set to UNKNOWN if not available
  . . D ERASTA(ERAIEN,.STA,.STNUM,.STNAM)
  . . I RCDIV=2,'$D(RCDIVS(STA)) Q
+ . . ; 
+ . . ; PRCA*4.5*424 - Filter by payment type
+ . . S RCAMT=+$P($G(^RCY(344.4,ERAIEN,0)),"^",5)
+ . . I RCPAYMNT'="A",(RCAMT=0&(RCPAYMNT="P"))!(RCAMT&(RCPAYMNT="Z")) Q
  . . ;
  . . ; PRCA*4.5*304 - Check if we include this ERA in report
  . . I RCPAY="A",RCLAIM'="A" D  Q:'OKAY  ; PRCA*4.5*326 If all payers included, check by type
@@ -204,3 +209,21 @@ BUILD(RCSCR) ; Build cross-reference of ERA detail lines to ERA scratch-pad line
  . . S ERADET=$P(ERALINE,",",CNT)
  . . I ERADET S ^TMP("RCDPEAPP2",$J,RCSCR,ERADET)=+$G(^RCY(344.49,RCSCR,1,SUB1,0))
  Q
+ ;
+ ; PRCA*4.5*424 - Subroutine added
+PAYMNT() ; Payment Type (Zero/Payment or Both) Selection. EP from RCDPEAPP
+ ; Input:   None
+ ; Output:  None
+ ; Returns: A - All ERAs, P - ERAs with payments, Z - Zero payment ERAs
+ N DIR,DTOUT,DUOUT,RCTYPEDF
+ K DIR S DIR(0)="SA^A:ALL;P:PAYMENT;Z:ZERO;"
+ S DIR("A")="Display (A)ll ERAs, those with (P)ayments or (Z)ero Dollar ERAs?: "
+ S DIR("B")="B"
+ S DIR("?",1)="Select (A)ALL to see both zero and non-zero amount ERAs."
+ S DIR("?",2)="Select (P)AYMENT to only see ERAs with a non-zero amount paid."
+ S DIR("?")="Select (Z)ERO to only see ERAs with a zero total amount paid."
+ S DIR("B")="A"     ; Default is all ERAs
+ W !
+ D ^DIR
+ I $D(DTOUT)!$D(DUOUT) Q -1
+ Q Y

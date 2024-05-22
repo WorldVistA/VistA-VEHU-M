@@ -1,5 +1,5 @@
 IBCU7C ;EDE/WCJ - LINE LEVEL MODIFIER SELECTION ;10-NOV-2022
- ;;2.0;INTEGRATED BILLING;**742**;21-MAR-94;Build 36
+ ;;2.0;INTEGRATED BILLING;**742,759**;21-MAR-94;Build 24
  ;;Per VA Directive 6402, this routine should not be modified.
  G AWAY
 AWAY Q
@@ -9,6 +9,7 @@ EN(IBPROCP) ;
  N MODARR,SAVEDA,SAVEDIC,CNT,FIRST,DELETE
  M SAVEDA=DA,SAVEDIC=DIC
  N DA,DIC
+ N DIE,DR,DLAYGO,LOOP  ;WCJ;IB759;missed NEW'ing some variables in IB742 version which promptly bit me in the a$$ - at least one of them did so fixing them all.
  S FIRST=1
  ;
 AGAIN K MODARR,DA,DIC,CNT,DIR
@@ -39,7 +40,7 @@ AGAIN K MODARR,DA,DIC,CNT,DIR
  I $D(DIRUT) D
  . S FIRST=1  ; rest so it defaults again after deletion
  . S X=$G(DIR("B"))
- . S DELETE=1  
+ . S DELETE=1
  ;
  ; an existing exact match on an external modifier so the question is which one.
  I $D(MODARR("ZZREF3",X)) D  G AGAIN

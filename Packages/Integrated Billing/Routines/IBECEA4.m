@@ -1,8 +1,10 @@
 IBECEA4 ;ALB/CPM - Cancel/Edit/Add... Cancel a Charge ;11-MAR-93
- ;;2.0;INTEGRATED BILLING;**27,52,150,240,663,671,669,678,682**;21-MAR-94;Build 15
+ ;;2.0;INTEGRATED BILLING;**27,52,150,240,663,671,669,678,682,784**;21-MAR-94;Build 8
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
 ONE ; Cancel a single charge.
+ N IBLPFLG
+ ; 
  D:'+$G(IBAPI) HDR^IBECEAU("C A N C E L")
  ;
  ; - perform up-front edits
@@ -14,7 +16,11 @@ ONE ; Cancel a single charge.
  ;
 REAS ; - ask for the cancellation reason
  N IBSVIEN  ; IB*2.0*682
+ N IBOENC,IBOEEVDT,IBSTCD,IBSTOPDA,NUMVSTFL
  ;
+ S IBLPFLG=0  ;Set the reason loop flag for bad Cancel Reason selections
+ ;
+ S IBFLG=0
  D REAS^IBECEAU2("C")
  ;IB*2.0*678 - Correct error or no reason functionality
  I IBCRES<0 D  G ONEQ
@@ -34,6 +40,49 @@ REAS ; - ask for the cancellation reason
  I ('$$GET1^DIQ(350.3,IBCRES_",",.04,"I")),($$GET1^DIQ(350.1,$P(IBND,U,3)_",",.01,"E")["URGENT CARE") D  G:IBY<0 ONEQ
  . S IBY=-1
  . W !!,"This is an Urgent Care Copayment. Please use an Urgent Care cancellation reason.",!,"This transaction cannot be completed.",!
+ ;
+ ;IB*2.0*784 - Cleland-Dole Benefit Check
+ S IBSTCHCK=0
+ ; Check to see if Bill is eligible for Cleland-Dole tracking.
+ I $P($G(^IBE(350.1,$P(IBND,U,3),0)),U,11)=4 D   ;Only Outpatient Copays are eligible for C-D tracking.
+ . I +$O(^IBMH(351.83,"D",IBN,"")) S IBSTCHCK=1 Q   ;Bill currently in DB
+ . I $P($G(^IBE(350.1,$P(IBND,U,3),0)),U)["CC MH" S IBSTCHCK=1 Q
+ . S IBSTOPDA=$P(IBND,U,20)    ;Get the stop code
+ . ;Get encounter info.
+ . S IBOEEVDT=$P(IBND,U,17),IBOENC=$P($P(IBND,U,4),";")
+ . I IBSTOPDA'="" D
+ . . S IBSTCD=$$GET1^DIQ(352.5,IBSTOPDA_",",.01,"E")
+ . . S IBSTCHCK=$$CDCHK^IBECEAMH(IBSTCD,$P(IBND,U,17)) ;Check for C-D eligibility for Stop Code
+ . . I 'IBSTCHCK,$$ISCDELIG^IBECEAMH(IBFR) I $P(IBOENC,":")="409.68" S IBSTCHCK=$$CHKST44^IBECEAMH($P(IBOENC,":",2))
+ . ; Eligible for Cleland Dole, proceed with Cancel.
+ . Q:IBSTCHCK    ;C-D eligible. 
+ . ; If OutP Encounter, check the encounter.
+ . I $P(IBOENC,":")=409.68 S IBSTCHCK=$$OECHK^IBECEAMH($P(IBOENC,":",2),IBOEEVDT)
+ ;
+ I IBSTCHCK,'$$GET1^DIQ(350.3,IBCRES_",",.08,"I") D  G ONEQ  ; check if cancellation reason can be used for C-D copay  IB*2.0*784
+ .S IBY=-1
+ .W !!,"This is a Cleland-Dole eligible Copayment. Please use an appropriate cancellation reason.",!,"This transaction cannot be completed.",!
+ .Q
+ ;
+ ;Check to see if the Cleland-Dole cancellation reason was chosen. If so, check to see if the copays was Cleland dole eligible and process accordingly
+ I 'IBSTCHCK,($$GET1^DIQ(350.3,IBCRES_",",.01,"E")="CLELAND-DOLE") D  G REAS
+ . D MESS3^IBECEAMH(0)
+ ;
+ ;Check # C-D free visits
+ I IBSTCHCK D  G:IBLPFLG REAS
+ . S NUMVSTFL=$$NUMVSTCK^IBECEAMH(DFN,IBFR)  ; Visit Check Flag
+ . Q:NUMVSTFL  ; Free visits available. Continue with Cancellation. 
+ . ;
+ . ;Check to see if the Cleland Dole Cancellation reason was chosen, but no more free visits are available.
+ . I ($$GET1^DIQ(350.3,IBCRES_",",.01,"E")="CLELAND-DOLE") D  Q
+ . . D MESS3^IBECEAMH(1)
+ . . S IBLPFLG=1
+ . ; Code in place if a DoS sequence to the benefit is needed vs the current FIFO sequence
+ . ;S IBCDEVDT=$P(IBND,U,17)
+ . ;I $$DTCHK^IBECEAMH(DFN,IBCDEVDT) D  Q
+ . ;. S IBY=-1
+ . ;. D MESS2A^IBECEAMH  ;Alert user to review Bill cancellation sequence for Cleland-Dole before cancelling this bill.
+ ;end IB*2.0*784
  ;
  ; - okay to proceed?
  D PROC^IBECEAU4("cancel") G:IBY<0 ONEQ
@@ -57,6 +106,13 @@ REAS ; - ask for the cancellation reason
  ; - handle incomplete and regular transactions
  D CANC^IBECEAU4(IBN,IBCRES,1) G:IBY<1 ONEQ
  ;
+ ;IB*2.0*784
+ ;If performing a C-D cancellation, Update the tracking DB.
+ I IBSTCHCK D
+ . S IBCNMH=$$GET1^DIQ(350.3,IBCRES_",",.07,"I")   ; Find out how the Mental Health DB should be updated.
+ . D:IBCNMH>0 UPDVST^IBECEAMH(IBSVIEN,IBCNMH)              ; Update If the Mental Health DB is supposed to be updated.
+ ;End IB*2.0*784
+ ;
  ; - handle updating of clock
  ;I "^1^2^3^"'[("^"_IBXA_"^") G ONEQ
  ;I 'IBCHG G ONEQ
@@ -73,7 +129,7 @@ ONEQ ;Exit utility
  I $G(IBAPI) S IBCNRSLT=IBY
  D ERR^IBECEAU4:IBY<0,PAUSE^IBECEAU
  K IBCHG,IBCRES,IBDESC,IBIL,IBND,IBSEQNO,IBTOTL,IBUNIT,IBATYP,IBIDX,IBCC
- K IBN,IBREB,IBY,IBEVDA,IBPARNT,IBH,IBCANTR,IBXA,IBSL,IBFR,IBTO,IBNOS,IBCANC,IBAMC
+ K IBN,IBREB,IBY,IBEVDA,IBPARNT,IBH,IBCANTR,IBXA,IBSL,IBFR,IBTO,IBNOS,IBCANC,IBAMC,IBSTCHCK,IBCNMH
  Q
  ;
 PASS ; Pass the action to Accounts Receivable.

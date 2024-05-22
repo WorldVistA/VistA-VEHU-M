@@ -1,8 +1,8 @@
-LRVRPOCU ;DALOI/JMC - POINT OF CARE UTILITY PROGRAM ;05/11/10  16:38
- ;;5.2;LAB SERVICE;**290,350**;Sep 27, 1994;Build 230
+LRVRPOCU ;DALOI/JMC - POINT OF CARE UTILITY PROGRAM; Oct 23, 2023@17:30
+ ;;5.2;LAB SERVICE;**290,350,568**;Sep 27, 1994;Build 3
  ;
- ; Reference to DUZ^XUP supported by DBIA #4129
- ; Reference to DIVSET^XUSRB2 supported by DBIA #4055
+ ;Reference to DUZ^XUP in ICR #4129
+ ;Reference to DIVSET^XUSRB2 in ICR #4055
  ;
  Q
  ;
@@ -97,7 +97,8 @@ INIT ; Initialize user
  . S LAMSG="Load/Work List "_$P(LRLL(0),"^")_" not set to POC type."
  ;
  ; Determine division to set user LRLAB,POC.
- S LRDIV=$O(^LRO(68,LRDAA,3,0))
+ ;LR*5.2*568: LRSYSDIV is set in EN^LRVRPOC.
+ S LRDIV=$S(LRSYSDIV:LRSYSDIV,1:$O(^LRO(68,LRDAA,3,0)))
  I LRDIV<1 D  Q
  . S LREND=1
  . S LAMSG="No associated division for accession area "_$$GET1^DIQ(68,LRDAA_",",.01)

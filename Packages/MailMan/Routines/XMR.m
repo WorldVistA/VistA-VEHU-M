@@ -1,5 +1,5 @@
 XMR ;ISC-SF/GMB-SMTP Receiver (RFC 821) ;09/24/2003  12:25
- ;;8.0;MailMan;**22**;Jun 28, 2002
+ ;;8.0;MailMan;**22,51**;Jun 28, 2002;Build 9
 ENT ; INITIALIZE
  S ER=0
  S XMC("NOREQUEUE")=1
@@ -23,7 +23,7 @@ RECEIVE ; BEGINNING OF INTERPRETER
  ; TURN command, which alternates sending and receiving.
  S XMC("DIR")="R"
  D KILL
- S XMEC=0,XMCONT="^HELP^NOOP^RSET^QUIT^VRFY^EXPN^STAT^CHRS^ECHO^"
+ S XMEC=0,XMCONT="^HELP^NOOP^RSET^QUIT^STAT^CHRS^ECHO^"
  D DOTRAN^XMC1(42300,$$FMTE^XLFDT(DT,5)) ;Transcript Date: |1|
  S XMSTATE="^HELO^QUIT^"
  I 'XMC("BATCH") D
@@ -75,6 +75,8 @@ ECHO ;;ECHO TEST
  S XMSG="250 End of echo mode" X XMSEN
  Q
 EXPN ;;EXPAND MAILING LIST
+ ; disable EXPN command due to Tenable 10249 Multiple Mail Server EXPN/VRFY Information Disclosure
+ Q
  N XMIEN,XMPTR,XMCNT,XMNETNAM,Y,X,DIC
  S X=XMP
  I X["<" S X=$P($P(X,"<",2),">")
@@ -152,6 +154,8 @@ TURN ;;
  D KILL
  G SEND^XMS
 VRFY ;;VERIFY USER EXISTS
+ ; disable VRFY command due to Tenable 10249 Multiple Mail Server EXPN/VRFY Information Disclosure
+ Q 
  N XMNAME
  S XMINSTR("ADDR FLAGS")="X" ; Do not expand
  S XMNAME=$$LOOKUP^XMR1(XMP,.XMINSTR)

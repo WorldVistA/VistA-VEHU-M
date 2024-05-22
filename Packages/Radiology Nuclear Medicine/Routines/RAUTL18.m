@@ -1,9 +1,15 @@
-RAUTL18 ;HISC/DAD,GJC-PROCEDURE FILE UTILITIES ;9/11/97  14:46
- ;;5.0;Radiology/Nuclear Medicine;;Mar 16, 1998
+RAUTL18 ;HISC/DAD,GJC - PROCEDURE FILE UTILITIES ; Mar 11, 2024@08:19:32
+ ;;5.0;Radiology/Nuclear Medicine;**208**;Mar 16, 1998;Build 4
 EN(RAPROCD0,PROCTYPE) ;
  ; Check/delete DESCENDENT multiple when the TYPE OF PROCEDURE changes
  ;  Input:  PROCEDURE file (#71) IEN (RAPROCD0)
  ;          New TYPE OF PROCEDURE value in internal format (PROCTYPE)
+ ;
+ QUIT 0
+ ;RA*5.0*208: This tag, EN, is called from the RIS' Procedure
+ ;file (#71). The Type of Procedure (#6) field's input transform
+ ;will not be executed. The input transform will be updated in a
+ ;future radiology patch.
  ;
  I PROCTYPE="P" G EN1
  I PROCTYPE'="P" G EN2

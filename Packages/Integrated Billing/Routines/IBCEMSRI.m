@@ -1,5 +1,5 @@
 IBCEMSRI ;EDE/JWS - RPC FOR IENS LIST AND CLAIM DATA FOR TAS PRINTED CLAIMS REPORT ;
- ;;2.0;INTEGRATED BILLING;**727**;21-MAR-94;Build 34
+ ;;2.0;INTEGRATED BILLING;**727,759**;21-MAR-94;Build 24
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -7,26 +7,32 @@ IBCEMSRI ;EDE/JWS - RPC FOR IENS LIST AND CLAIM DATA FOR TAS PRINTED CLAIMS REPO
 GET(RESULT,ARG) ;RPC ; PCR - get list of claim iens to extract
  ;
  N IBSAVE,IBY,IBDT,VARRAY,IBDT,IBIEN,IBDATA,IBRTN,IBDV,IBINS,IBTOP,IBRCX,IBRVCDS
- N IBRTDS,IBPTYP,INSCO,IBFTYP,IBTYPE,IBBLLR,CT,X,STOPCT
+ N IBRTDS,IBPTYP,INSCO,IBFTYP,IBTYPE,IBBLLR,CT,X,STOPCT,IBSTT
  D DTNOLF^DICRW
  S IBY=$E(DT,1,3)-$S(+$E(DT,4,5)<10:2,1:1),IBDT=IBY_1000 ; set 
  ; Use the existing AP x-ref to narrow down the list of claims by date,
- ; then check field 27 to see if it's appropriate to put it on the report (1=LOCAL PRINT)
+ ; then perform the same filtering as the VistA Printed Claims Report to determine if claim should be included in PCR report data
  ;
  D INIT
  S IBSAVE("site")=$P($$SITE^VASITE(),"^",3)
- ;JWS;EBILL-3063;11/17/22;issue with speed, added STOPCT
+ ;JWS;EBILL-3063;11/17/22;issue with speed, added STOPCT and last date successfully run
  S X=$P($G(^IBE(350.9,1,8)),"^",22) I +X>IBDT S IBDT=X-1
- F  S IBDT=$O(^DGCR(399,"AP",IBDT)) Q:'IBDT  S STOPCT=$G(STOPCT)+1  D  I STOPCT>99 Q  ; Identify those claims within the selected date range
- . S IBIEN=0 F  S IBIEN=$O(^DGCR(399,"AP",IBDT,IBIEN)) Q:'IBIEN  D
+ ;JWS;5/1/23;IB*2.0*759v2;EBILL-3377;set IBSTT = time stamp to check, needs to complete in < 30 seconds due to TAS-API express timeout
+ S IBSTT=$P($H,",",2)
+ ; Identify those claims within the selected date range
+ F  S IBDT=$O(^DGCR(399,"AP",IBDT)) Q:'IBDT  S STOPCT=$G(STOPCT)+1 D  I STOPCT>99 Q
+ . ;5/2/23;EBILL-3377;IB*2.0*759v2;added Q:STOPCT>99;if processing is >25 seconds, setting STOPCT=100
+ . S IBIEN=0 F  S IBIEN=$O(^DGCR(399,"AP",IBDT,IBIEN)) Q:'IBIEN  D  Q:STOPCT>99
+ .. ;5/2/23;IB*2.0*759v2;EBILL-3377;move check for already on PCR report up, in an attempt to make faster
+ .. I $P($G(^DGCR(399,IBIEN,"S1")),"^",10)=1 Q   ; claim is already on the report
  .. S IBDATA=$G(^DGCR(399,IBIEN,0))
  .. I $P(IBDATA,"^",13)'=4 Q  ; don't include canceled claims
  .. I $P($G(^DGCR(399,IBIEN,"TX")),"^",8)'=1 Q   ; Is the Bill "FORCE LOCAL PRINT"?
  .. ;;testing. W !,"IEN: ",IBIEN,?15,$P(^DGCR(399,IBIEN,0),"^") R !,"Change? ",x i x=1 S $P(^DGCR(399,IBIEN,"TX"),"^",8)=1
- .. I $P($G(^DGCR(399,IBIEN,"S1")),"^",10)=1 Q   ; claim is already on the report
  .. ; don't include US Labor Dept claims
  .. ;;S IBINS=$$CURR^IBCEF2(IBIEN) Q:$D(VARRAY("IBULD",IBINS))
- .. S IBINS=$$FINDINS^IBCEF1(IBIEN) I $D(VARRAY("IBULD",IBINS)) Q
+ .. ;;JWS;5/1/23;IB*2.0*759v2;EBILL-3381;Patient responsible claims don't seem to have insurance; found at Cleveland site#541;added Q:IBINS=""
+ .. S IBINS=$$FINDINS^IBCEF1(IBIEN) Q:IBINS=""  I $D(VARRAY("IBULD",IBINS)) Q
  .. ; don't count claims where EDI is inactive (user has to print those)
  .. I $$INSOK^IBCEF4(IBINS)'=1 Q
  .. S IBRTN=$P(IBDATA,"^",7),IBDV=+$P(IBDATA,"^",22)  ; Get Rate Type and division
@@ -39,7 +45,11 @@ GET(RESULT,ARG) ;RPC ; PCR - get list of claim iens to extract
  ... S IBRVCDS=$S(IBRVCDS="":X,1:IBRVCDS_","_X)  ; Get Revenue Codes.
  .. I IBRCX=1 Q  ; bill contains at least one of the excluded revenue codes
  .. S CT=$G(CT)+1,IBSAVE("PCRiens",CT,"ien")=IBIEN
+ .. ;JWS;5/2/23;IB*2.0*742v11;EBILL-3377;checking for processing time.  everything needs completed in 30 sec due to TAS-API express timeout
+ .. I ($P($H,",",2)-IBSTT)>25 S STOPCT=100
  .. Q
+ . ;JWS;5/2/23;IB*2.0*759v2;EBILL-3377;if no claims were found for a given date, set the last search date for PCR report
+ . I '$D(IBSAVE("PCRiens")),+$G(IBDT)>+$P(^IBE(350.9,1,8),"^",22) S $P(^(8),"^",22)=IBDT
  . Q
  D ENCODE^XLFJSON("IBSAVE","RESULT")
  D FINISH
@@ -107,6 +117,7 @@ GET1(RESULT,ARG) ;get claim data for PCR Power BI report
  S IBSAVE("division")=$G(IBDIVD)
  F I=1:1 Q:$P(IBRVCDS,",",I)=""  S IBSAVE("revenueCodes",I,":")="{""revenueCode"":"_$P(IBRVCDS,",",I)_"}"
  S IBSAVE("insuranceCompany")=INSCO
+ ;JWS;12/5/2022;IB*2.0*727v16;should be field 14 Last Printed date, not field .14 Status Date
  S X=$$GET1^DIQ(399,IBIEN_",",14,"I") I X'="" S IBDATE=$S($E(X)=3:20,1:19)_$E(X,2,3)_"-"_$E(X,4,5)_"-"_$E(X,6,7)
  S IBSAVE("datePrinted")=IBDATE
  S IBSAVE("siteName")=IBSN
@@ -135,9 +146,11 @@ PUT(RESULT,ARG) ; successful posting of claim data to Sql database for PowerBI P
  . D ^DIE
  . Q
  ;JWS;EBILL-3063;11/17/22;issue with speed;added last date searched
- I +IBIEN D
- . S IBFPDT=$P($G(^DGCR(399,IBIEN,"S")),"^",12)
- . I +IBFPDT>+$P(^IBE(350.9,1,8),"^",22) S $P(^(8),"^",22)=IBFPDT
+ ;JWS;5/2/23;IB*2.0*759v2;EBILL-3377;commented out the setting of last completed date for PCR until there no claims left for a given date
+ ; this data will now be set in GET^IBCEMSRI when there are no claims left to process.
+ ;;I +IBIEN D
+ ;;. S IBFPDT=$P($G(^DGCR(399,IBIEN,"S")),"^",12)
+ ;;. I +IBFPDT>+$P(^IBE(350.9,1,8),"^",22) S $P(^(8),"^",22)=IBFPDT
  S RES("ien")=IBIEN
  S RES("status")=RES  ;result of update
  D ENCODE^XLFJSONE("RES","RESULT")
@@ -148,7 +161,7 @@ CL ;reset [10] of file 399 at ^DGCR(399,#,"S1")
  N A,B
  S A="" F  S A=$O(^DGCR(399,"AP",A)) Q:'A  D
  . S B=0 F  S B=$O(^DGCR(399,"AP",A,B)) Q:'B  D
- .. I $P($G(^DGCR(399,B,"S1")),"^",10) S $P(^("S1"),"^",10)=0
+ .. I $P($G(^DGCR(399,B,"S1")),"^",10) S $P(^("S1"),"^",10)=0 W !,B,?10,$P(^DGCR(399,B,0),"^")
  .. Q
  . Q
  Q

@@ -1,5 +1,5 @@
 RCDPEM0 ;ALB/TMK - ERA MATCHING TO EFT (cont) ;Jun 11, 2014@13:04:03
- ;;4.5;Accounts Receivable;**173,208,220,298,304,345,375,349,409**;Mar 20, 1995;Build 17
+ ;;4.5;Accounts Receivable;**173,208,220,298,304,345,375,349,409,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -9,8 +9,9 @@ MATCH(RCZ,RCPROC) ;EP from RCDPEM
  ;          RCPROC  - 1 if called from EFT-EOB automatch, 0 if from manual match
  ;
  ; PRCA*4.5*345 - Alphabetized and added MS1,TIN1,TR1,TTL0,TTL1,XX below
- N DA,DIE,DR,MS1,NAM0,RCER,RCERATYP,RCMATCH,RCRZ,RCXCLDE,RC0,RC3444,RC34431
- N TIN0,TIN1,TR1,TTL0,TTL1,X,XX,Y,Z,Z0
+ ; PRCA*4.5*424 - Removed NAM0,RCERATYP,RCXCLDE,TIN0 to new method PAYEREXC^RCDPEAP2
+ N DA,DIE,DR,MS1,RCER,RCMATCH,RCRZ,RC0,RC3444,RC34431
+ N TIN1,TR1,TTL0,TTL1,X,XX,Y,Z,Z0
  ;
  ; Find ERA to match to EFT by trace, date, amt
  ; PRCA*4.5*345 Begin - Added lines
@@ -82,18 +83,10 @@ MATCH(RCZ,RCPROC) ;EP from RCDPEM
  . ; Quit if this is not nightly job
  . Q:'RCPROC
  . Q:+$P($G(^RCY(344.4,RCRZ,0)),U,5)=0       ; Quit if this is a zero value ERA
- . S NAM0=$$GET1^DIQ(344.4,RCRZ_",",.06,"E") ; PRCA*4.5*345 - Added line - Payer Name
- . S TIN0=$$GET1^DIQ(344.4,RCRZ_",",.03,"E") ; PRCA*4.5*345 - Added line - Payer TIN
- . S XX=$$GETPAY^RCDPEU1(NAM0,TIN0)          ; PRCA*4.5*345 - Get the IEN from 344.6
  . ;
- . ; Determine if ERA should be excluded using the site parameters
- . I $$CHKTYPE^RCDPEU1(XX,"T") S RCERATYP=2  ; PRCA*4.5*349 - Check if this is TRICARE ERA
- . E  S RCERATYP=$$PHARM^RCDPEAP1(RCRZ)      ; Else it must be a Medical or Rx ERA
- . S RCXCLDE=0
- . S:RCERATYP=0 RCXCLDE=$$EXCLUDE^RCDPEAP1(RCRZ)    ; PRCA*4.5*345 - Changed to =0 from 'RCERATYP
- . S:RCERATYP=1 RCXCLDE=$$EXCLDRX^RCDPEAP1(RCRZ)    ; PRCA*4.5*345 - Changed to =1 from RCERATYP
- . S:RCERATYP=2 RCXCLDE=$$EXCLDTR^RCDPEAP1(RCRZ)    ; PRCA*4.5*349 - Added Line
- . Q:RCXCLDE                                 ; Quit if the Payer is excluded from Auto-Post
+ . ; PRCA*4.5*424 Added new method to move code from below to RCDPEAP2 so that it
+ . ; can also be checked when auto-posting ZERO balance ERAs
+ . Q:$$PAYEREXC^RCDPEAP2(RCRZ)               ; Quit if the payer is excluded
  . ;
  . ; Ignore ERA with exceptions, zero balance, or ERA-level adjustments
  . Q:'$$AUTOCHK^RCDPEAP1(RCRZ)

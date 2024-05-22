@@ -1,5 +1,5 @@
-SDESGETCONSULTS ;ALB/BLB,MGD,RRM,BWF,CGP,BLB,ANU,LAB - VISTA SCHEDULING RPCS GET CONSULTS ;DEC 01,2023
- ;;5.3;Scheduling;**815,820,824,837,842,847,857,867**;Aug 13, 1993;Build 8
+SDESGETCONSULTS ;ALB/BLB,MGD,RRM,BWF,CGP,BLB,ANU,LAB - VISTA SCHEDULING RPCS GET CONSULTS ;MAR 13,2024
+ ;;5.3;Scheduling;**815,820,824,837,842,847,857,867,875**;Aug 13, 1993;Build 25
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
@@ -132,6 +132,7 @@ GETCONSULT(REQUEST,CONSULTIEN) ;Build a consult record for every consult
  S REQUEST("Request",NUM,"Type")="Consult"
  S REQUEST("Request",NUM,"PatientIEN")=DFN
  S REQUEST("Request",NUM,"PatientICN")=$$GETPATICN^SDESINPUTVALUTL(DFN)
+ S REQUEST("Request",NUM,"PatientLast4")=$$LAST4SSN^SDESINPUTVALUTL(DFN)
  S REQUEST("Request",NUM,"PatientName")=$G(CONDATA(123,CONSULTIEN_",",.02,"E"))
  S REQUEST("Request",NUM,"RequestIEN")=CONSULTIEN
  S REQUEST("Request",NUM,"ConsultRequestType")=$G(CONDATA(123,CONSULTIEN_",",13,"E"))

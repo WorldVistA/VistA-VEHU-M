@@ -1,5 +1,5 @@
-ORKCHK ; SLC/CLA - Main routine called by OE/RR to initiate order checks ;Jun 23, 2021@11:33:53
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**6,32,94,105,123,232,267,243,280,345,539,405**;Dec 17, 1997;Build 212
+ORKCHK ; SLC/CLA - Main routine called by OE/RR to initiate order checks ; Oct 11, 2023@08:49:55
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**6,32,94,105,123,232,267,243,280,345,539,405,612**;Dec 17, 1997;Build 3
 EN(ORKY,ORKDFN,ORKA,ORKMODE,OROIL,ORDODSG) ;initiate order checking
  ;ORKY: array of returned msgs in format: ornum^orderchk ien^clin danger^msg
  ;ORKDFN: patient dfn
@@ -46,13 +46,13 @@ EN(ORKY,ORKDFN,ORKA,ORKMODE,OROIL,ORDODSG) ;initiate order checking
  ;
  ;if SESSION mode & pharmacy order occurred in session get unsigned med orders
  I ORKMODE="SESSION" D
- .S ORKDG=$P(ORKA(1),"|",2)
- .I $E($G(ORKDG),1,2)="PS" D
- ..S ORKDGI=0,ORKDGI=$O(^ORD(100.98,"B","PHARMACY",ORKDGI))
- ..K ^TMP("ORR",$J)
- ..D EN^ORQ1(DFN_";DPT(",ORKDGI,11,"","","",0,0)
- ..;store unsigned med orders in ^TMP("ORR",$J for processing in ORKPS
- ;
+ .N I,J S I=1,J=0 F  S I=$O(ORKA(I)) Q:'I!(J)  D
+ ..S ORKDG=$P(ORKA(I),"|",2)
+ ..I $E($G(ORKDG),1,2)="PS" D
+ ...S ORKDGI=0,ORKDGI=$O(^ORD(100.98,"B","PHARMACY",ORKDGI))
+ ...K ^TMP("ORR",$J)
+ ...D EN^ORQ1(DFN_";DPT(",ORKDGI,11,"","","",0,0) S J=1
+ ...;store unsigned med orders in ^TMP("ORR",$J for processing in ORKPS
  ;main processing loop:
  S (ORKX,ORIVORDR)="" F  S ORKX=$O(ORKA(ORKX)) Q:ORKX=""  D
  .S ORKOI=$P(ORKA(ORKX),"|")

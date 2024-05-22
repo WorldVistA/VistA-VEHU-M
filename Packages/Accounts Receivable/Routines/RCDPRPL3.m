@@ -1,5 +1,5 @@
 RCDPRPL3 ;WISC/RFJ-receipt profile listmanager options ;1 Jun 99
- ;;4.5;Accounts Receivable;**114,148,153,173,301,326,367,371,409**;Mar 20, 1995;Build 17
+ ;;4.5;Accounts Receivable;**114,148,153,173,301,326,367,371,409,424**;Mar 20, 1995;Build 11
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -50,7 +50,7 @@ PAUSE() ; Pause at end of each page for user input
  Q Y
  ;
 PROCESS ;  option: process receipt
- N CRTR,RC,RCAMT,RCHMP,RCEFT,RCEFT1,RCERA,RCHAC,RCOK,RCQUIT,X,XX,YY,Z  ;PRCA*4.5*409 Added XX,YY
+ N CRTR,RC,RCAMT,RCHMP,RCEFT,RCEFT1,RCERA,RCHAC,RCOK,RCQUIT,X,XX,Z  ;PRCA*4.5*409 Added XX,YY; PRCA*4.5*424 Removed YY
  D FULL^VALM1
  S VALMBCK="R"
  ;
@@ -209,17 +209,7 @@ PROCESS ;  option: process receipt
  . D EDITREC^RCDPUREC(RCRECTDA,".06;")
  . S (RCDEPTDA,RCDPDATA(344,RCRECTDA,.06,"I"))=$P(^RCY(344,RCRECTDA,0),"^",6)
  ;
- ;PRCA*4.5*409 Begin Added lines
- S XX=+$G(RCDPDATA(344,RCRECTDA,.04,"I"))           ; AR Event Type (341.1)
- S YY=$$TXLINE(RCRECTDA)                            ; 1 if non-cancelled Transaction Lines
- ;
- ;PRCA*4.5*409 Check Receipts and OGC-CHK Receipts must have a deposit in order to be processed
- I 'RCDEPTDA,YY,((XX=4)!(XX=19)) D  Q
- . W !!,"CHECK/MO PAYMENT and OGC-CHK Receipts with at least one non-cancelled Payment"
- . W !,"MUST have a deposit in order to be processed."
- . D UNLOCK
- ;
- ;PRCA*4.5*409 End Added lines 
+ ; PRCA*4.5*424 - Removed requirement for deposit ticket on CHECK/MO and OGC-CHK receipts
  ;
  ; Deposit ticket added
  I RCDEPTDA D

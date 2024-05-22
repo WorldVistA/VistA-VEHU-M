@@ -1,5 +1,5 @@
-YSCLHLAB ;DALOI/JCH-RETURN DATE RANGE LAB DATA FOR CLOZAPINE ; 10/17/20 5:34am
- ;;5.01;MENTAL HEALTH;**149**;Dec 30, 1994;Build 72
+YSCLHLAB ;DALOI/JCH - RETURN DATE RANGE LAB DATA FOR CLOZAPINE ; Jun 06, 2023@15:56
+ ;;5.01;MENTAL HEALTH;**149,227**;Dec 30, 1994;Build 17
  ;
  ; Reference to ^LAB(60 supported by IA #333
  ; Reference to ^PS(55 supported by IA #787
@@ -12,11 +12,13 @@ YSCLHLAB ;DALOI/JCH-RETURN DATE RANGE LAB DATA FOR CLOZAPINE ; 10/17/20 5:34am
  ; 
 CL(DFN,YSCLPSD,YSCLDAYS) ; Search for Lab Results
  ; Start Date (YSCLPSD) (optional). If no start date is passed, defaults to Today. 
- ; Days backward (YSCLDAYS) from Start Date to search (optional). If nothing passed, defaults to -7 (7 days back)
+ ; Days backward (YSCLDAYS) from Start Date to search (optional). If nothing passed, defaults to -30 (30 days back)
  ;
  K ^TMP("LRRR",$J)
  N YSCLSD,RESULTS,YSCLYWBC,YSCLRANC,YSCLYANC,YSCLXANC,YSCLXWBC,YSCLRWBC,YSCLFRQ
  N YSCLTDT,YSCLEDT,YSCLIEN,YSCLREGX,YSCLTPT,YSCL55AR,X,I
+ S YSCLDAYS=$G(YSCLDAYS,$$GET1^DIQ(603.03,"1,",12)) ; YS*5.01*227 - Change default to new field in parameters file
+ S:YSCLDAYS>0 YSCLDAYS=-1*YSCLDAYS ; YS*5.01*227 - Ensure lookback is negative
  I '$G(DUZ(2)) N DUZ S DUZ=.5,DUZ(2)=$O(^VA(200,DUZ,2,0))
  I 'DFN Q "-1^-1^-1^-1^-1^-1^-1"
  N ARRAY D LIST^DIC(603.01,,1,"I",,,DFN,"C",,,"ARRAY")
@@ -31,9 +33,11 @@ CL(DFN,YSCLPSD,YSCLDAYS) ; Search for Lab Results
  S YSCLSD=DT ; Default to Today
  I $G(YSCLPSD)?7N!($G(YSCLPSD)?7N.1".".N) D
  .Q:$$FMDIFF^XLFDT(YSCLPSD,DT,1)>0  ; No future dates
- .S YSCLSD=YSCLPSD,YSCLDAYS=$S($G(YSCLDAYS)>0:"-"_$G(YSCLDAYS),'$G(YSCLDAYS):"-7",1:$G(YSCLDAYS))
+ .;S YSCLSD=YSCLPSD,YSCLDAYS=$S($G(YSCLDAYS)>0:"-"_$G(YSCLDAYS),'$G(YSCLDAYS):"-7",1:$G(YSCLDAYS))
+ .S YSCLSD=YSCLPSD ; YS*5.01*227 - Move YSCLDAYS default setting to top of subroutine
  .S X1=YSCLSD,X2=YSCLDAYS D C^%DTC S YSCLEDT=X
- I '$G(YSCLEDT)!'$G(YSCLSD) S X1=DT,X2="-7" D C^%DTC S YSCLSD=DT,YSCLEDT=X  ; If missing start or end date, revert to defaults
+ ; YS*5.01*227 - Change default lookback below to use new field in parameters file
+ I '$G(YSCLEDT)!'$G(YSCLSD) S X1=DT,X2=$$GET1^DIQ(603.03,"1,",12) D C^%DTC S YSCLSD=DT,YSCLEDT=X  ; If missing start or end date, revert to defaults
  K ARRAY D LIST^DIC(603.41,",1,",,"I",,,,,,,"ARRAY")
  F I=1:1 Q:'$D(ARRAY("DILIST",2,I))  S YSCLA=ARRAY("DILIST",2,I) D
  . N YSCLTNM,YSCLTTP,YSCLTFR S YSCLTNM=$$GET1^DIQ(603.41,YSCLA_",1,",.01,"I")
@@ -43,7 +47,7 @@ CL(DFN,YSCLPSD,YSCLDAYS) ; Search for Lab Results
  F I=1:1 Q:'$D(ARRAY("DILIST",1,I))  S YSCLTL=ARRAY("DILIST",1,I) D
  . D RR^LR7OR1(DFN,,YSCLEDT,YSCLSD,,YSCLTL,"L")
  . S YSCLSB1="" F  S YSCLSB1=$O(^TMP("LRRR",$J,DFN,YSCLSB1)) Q:YSCLSB1=""  D
- . . S YSCLTDT="" F  S YSCLTDT=$O(^TMP("LRRR",$J,DFN,YSCLSB1,YSCLTDT)) Q:YSCLTDT=""  I $P(YSCLTDT,".",2)]"" D
+ . . S YSCLTDT="" F  S YSCLTDT=$O(^TMP("LRRR",$J,DFN,YSCLSB1,YSCLTDT)) Q:YSCLTDT=""  D  ;YS*5.01*227 - No longer excluding dates without times
  . . . S YSCLTA="" F  S YSCLTA=$O(^TMP("LRRR",$J,DFN,YSCLSB1,YSCLTDT,YSCLTA)) Q:YSCLTA=""  I YSCLTA D
  . . . . S RESULTS1=^TMP("LRRR",$J,DFN,YSCLSB1,YSCLTDT,YSCLTA)
  . . . . S RESULTS(YSCLTL,YSCLTDT)=$P(RESULTS1,"^",2)
@@ -107,6 +111,7 @@ KILL ;
  ;Q:$D(PSLAST7)  ;RTW
  K FDA,YSCLSGS,Y15,RESULTS,RESULTS1,YSCLA,YSCLA1,YSCLMTCH,YSCLSB1,YSCLSD,YSCLTA,YSCLMULT
  K YSCLTL,YSCLTLS,X1,X2
+ K ^TMP("LRRR",$J)
  Q
  ;
 GETREGYS(PSODFN)   ; Get file 603.01 IEN currently registered to patient

@@ -1,5 +1,6 @@
-YSCLSRV2 ;DALOI/RLM,HEC/hrubovcak - Clozapine data server ;16 Oct 2019 19:31:54
- ;;5.01;MENTAL HEALTH;**69,90,92,154,166**;Dec 30, 1994;Build 19
+YSCLSRV2 ;DALOI/RLM,HEC/HRUBOVCAK,NCR/MCF - Clozapine data server ; Jun 06, 2023@13:48
+ ;;5.01;MENTAL HEALTH;**69,90,92,154,166,227**;Dec 30, 1994;Build 17
+ ;
  ; Reference to ^%ZOSF supported by IA #10096
  ; Reference to ^DPT supported by IA #10035
  ; Reference to ^DD("DD" supported by IA #10017
@@ -11,6 +12,7 @@ YSCLSRV2 ;DALOI/RLM,HEC/hrubovcak - Clozapine data server ;16 Oct 2019 19:31:54
  ; Reference to $$FMTE^XLFDT() supported by IA #10103
  ; Reference to ^PSDRUG supported by IA #221
  ; Reference to ^LAB(60 supported by IA #333
+ ; Reference to ^%DT supported by DBIA #10003
  ; 
 REPORT ;send report of current registrations to the Clozapine group on Forum
  ;
@@ -100,14 +102,28 @@ CL1API ;
   G EXIT^YSCLSERV
  ;
 DCON ;
+ N DR,YSA,YSCLDA,YSCLSTAT
  F  X XMREC Q:XMER<0  S XMRG=$TR(XMRG,"- ","") D
   . ;Verify that a valid Clozapine number is listed
   . S (YSA,YSCLDA)=$E(XMRG,1,7)
   . I YSCLDA'?2U5N S YSCLER=" is not a valid Clozapine number " D OUT Q
   . S YSCLDA=$O(^YSCL(603.01,"B",YSCLDA,"")),YSCLDA=$P($G(^YSCL(603.01,YSCLDA,0)),U,2)
   . I 'YSCLDA S YSCLER=" is not in the local database." D OUT Q
-  . I $P(^PS(55,YSCLDA,"SAND"),U,2)'="D" S YSCLER=YSA_" is not discontinued" D OUT Q
-  . S YSCLER=YSA_" was "_$P(^PS(55,YSCLDA,"SAND"),U,2)_" is now ""A""" D OUT
-  . S $P(^PS(55,YSCLDA,"SAND"),U,2)="A"
+  . ; YS*5.01*227 - I $P(^PS(55,YSCLDA,"SAND"),U,2)'="D" S YSCLER=YSA_" is not discontinued" D OUT Q
+  . ;             - S YSCLER=YSA_" was "_$P(^PS(55,YSCLDA,"SAND"),U,2)_" is now ""A"" " D OUT
+  . ;             - S $P(^PS(55,YSCLDA,"SAND"),U,2)="A"
+  . ;
+  . ; YS*5.01*227 - begin logic to toggle between "A" and "D". Active and Discontinued.
+  . D PSS^PSS781(YSCLDA,YSA,"YSDC")
+  . S YSCLSTAT=$P(^TMP($J,"YSDC",YSCLDA,54),U,1)
+  . S DR=$S(YSCLSTAT="A":"D",YSCLSTAT="D":"A",1:0)
+  . I DR=0 S YSCLER=" is neither in the Active or Discontinued state and cannot be toggled at site " D OUT Q
+  . S YSCLSTAT=$S(YSCLSTAT="A":"Discontinued",YSCLSTAT="D":"Active",1:0) ; set to opposite status.
+  . D WRT^PSS781(YSCLDA,DR,"YSDC")
+  . I '^TMP($J,"YSDC",0) K ^TMP($J,"YSDC") S YSCLER="Failed to set patient status to "_YSCLSTAT_" at site " D OUT Q
+  . K ^TMP($J,"YSDC")
+  . S YSCLER=" has been toggled to a status of "_YSCLSTAT_" at site " D OUT
+  . ; end
+  G EXIT^YSCLSERV ; YS^5.01^227 - set up to send mail.
   Q
  ;

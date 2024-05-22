@@ -1,6 +1,8 @@
-GMRCIERR ;SLC/JFR - process IFC message error alert ;07/08/03 11:16
- ;;3.0;CONSULT/REQUEST TRACKING;**22,28,30,35,58,167**;DEC 27, 1997;Build 22
+GMRCIERR ;SLC/JFR - process IFC message error alert ; Dec 28, 2022@09:19
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,28,30,35,58,167,196**;DEC 27, 1997;Build 3
+ ;
  ;;Per VHA Directive 2004-038, this routine should not be modified.
+ ;
  Q
 EN(GMRCLOG,GMRCDA,GMRCACT,GMRCRPT) ;start here
  ;Build ^TMP array for processing alert
@@ -30,15 +32,14 @@ EN(GMRCLOG,GMRCDA,GMRCACT,GMRCRPT) ;start here
  D F4^XUAF4($$STA^XUAF4($P(^GMR(123,GMRCDA,0),U,23)),.GMRCSITE)
  N LN S LN=1
  S ^TMP("GMRCIERR",$J,LN,0)="An error occurred transmitting the following inter-facility consult ",LN=LN+1
- S ^TMP("GMRCIERR",$J,LN,0)="activity to "_GMRCSITE("NAME")_":",LN=LN+1
+ S ^TMP("GMRCIERR",$J,LN,0)="activity to "_$S('$D(GMRCSITE("NAME")):"[site not defined]",1:GMRCSITE("NAME"))_":",LN=LN+1
  S ^TMP("GMRCIERR",$J,LN,0)="",LN=LN+1
- S ^TMP("GMRCIERR",$J,LN,0)="Consult #: "_GMRCDA,LN=LN+1
- S ^TMP("GMRCIERR",$J,LN,0)="Remote Consult #: "_GMRCFCN,LN=LN+1
- S ^TMP("GMRCIERR",$J,LN,0)="Patient Name: "_GMRCPNM,LN=LN+1
- S ^TMP("GMRCIERR",$J,LN,0)="SSN: "_GMRCSSN,LN=LN+1
- S ^TMP("GMRCIERR",$J,LN,0)="To Service: "_GMRCSS,LN=LN+1
- I $L(GMRCPROC) S ^TMP("GMRCIERR",$J,LN,0)="Procedure: "_GMRCPROC,LN=LN+1
- S ^TMP("GMRCIERR",$J,LN,0)="",LN=LN+1
+ S ^TMP("GMRCIERR",$J,LN,0)="Consult #: "_$S($D(GMRCDA):GMRCDA,1:"[not defined]"),LN=LN+1
+ S ^TMP("GMRCIERR",$J,LN,0)="Remote Consult #: "_$S($D(GMRCFCN):GMRCFCN,1:"[not defined]"),LN=LN+1
+ S ^TMP("GMRCIERR",$J,LN,0)="Patient Name: "_$S($D(GMRCPNM):GMRCPNM,1:"[not defined]"),LN=LN+1
+ S ^TMP("GMRCIERR",$J,LN,0)="SSN: "_$S($D(GMRCSSN):GMRCSSN,1:"[not defined]"),LN=LN+1
+ S ^TMP("GMRCIERR",$J,LN,0)="To Service: "_$S($L(GMRCSS):GMRCSS,1:"[not defined]"),LN=LN+1
+ S ^TMP("GMRCIERR",$J,LN,0)="Procedure: "_$S($L(GMRCPROC):GMRCPROC,1:"[not defined]"),LN=LN+1 S ^TMP("GMRCIERR",$J,LN,0)="",LN=LN+1
  I '$D(GMRCRPT) D ACTLG(GMRCDA,GMRCACT,GMRCLOG,.LN)
  Q
 ACTLG(GMRCDA,GMRCACT,LOG,LN) ;build activity log entry
@@ -153,7 +154,7 @@ PTERRMSG(GMRCPID,GMRCSTA,GMRCDOM,GMRCOBR,GMRCCRNR,GMRCMSGI) ;send IFC pt err to 
  S GMRCMSG(5,0)="User Manual and Master Patient Index/Patient Demographics Exception"
  S GMRCMSG(6,0)="Handling Manuals to resolve this error so the request may be processed."
  S GMRCMSG(7,0)=" ",GMRCMSG(8,0)=" "
- S GMRCMSG(9,0)="Patient demographics from "_GMRCSITE("NAME")
+ S GMRCMSG(9,0)="Patient demographics from "_$S('$D(GMRCSITE("NAME")):"[site not defined]",1:GMRCSITE("NAME"))
  S GMRCMSG(10,0)=" Patient name: "_GMRCNAM
  S GMRCMSG(11,0)=" SSN: "_$P(GMRCPID,"|",19)
  S GMRCMSG(12,0)=" Date of birth: "_GMRCDOB

@@ -1,5 +1,5 @@
-DPTLK7 ;OAK/ELZ - MAS PATIENT LOOKUP ENTERPRISE SEARCH ;15 May 2020  2:31 PM
- ;;5.3;Registration;**915,919,926,967,981,1000,1024**;Aug 13, 1993;Build 1
+DPTLK7 ;OAK/ELZ,ARF - MAS PATIENT LOOKUP ENTERPRISE SEARCH ;15 May 2020  2:31 PM
+ ;;5.3;Registration;**915,919,926,967,981,1000,1024,1111**;Aug 13, 1993;Build 18
  ;
 SEARCH(DGX,DGXOLD) ; do a search, pass in what the user entered
  ; DGX is what the user originally entered, name is assumed unless it
@@ -161,8 +161,12 @@ START S DGOUT=0
  M DG20NAME=DGX
  S DIR("PRE")="D:X'=""@"" NCEVAL^DPTNAME1(DGCOMP,.X)"
  W !,"Patient name components--"
- F DGI=1:1:6 S DGC($P(DGCOM,U,DGI),DGI)=""
- F DGI=1:1:6 Q:DGOUT  D
+ ;DG*5.3*1111 removed PREFIX (#4) and DEGREE (#6) of the NAME COMPONENTS (#20) file
+ ;F DGI=1:1:6 S DGC($P(DGCOM,U,DGI),DGI)=""
+ F DGI=1:1:3,5 S DGC($P(DGCOM,U,DGI),DGI)=""
+ ;DG*5.3*1111 removed PREFIX (#4) and DEGREE (#6) of the NAME COMPONENTS (#20) file
+ ;F DGI=1:1:6 Q:DGOUT  D
+ F DGI=1:1:3,5 Q:DGOUT  D
 AGAIN .S DGCOMP=$P(DGCOM,U,DGI)
  . S DIR("A")=DGCOMP_$P(DGCX,U,DGI)
  . S DIR(0)=$S(DGI=1:"F^"_$P(DGCL,U,DGI),1:"FO^"_$P(DGCL,U,DGI))
@@ -248,7 +252,9 @@ FLDS(DGFLDS,DGNAME,DGOUT) ;- prompt for the various FM fields
  ;I $D(DUOUT) S DGOUT=1 Q
  ;S DGFLDS("EDIPI")=X
  ;K DIR
- F DGFLD=.03,.02,"ASKREQID",.2403,.092,.093,994,.131 D  Q:$D(DTOUT)!($D(DUOUT))
+ ;DG*5.3*1111 removed the PLACE OF BIRTH [CITY] (#.092) and PLACE OF BIRTH [STATE] (#.093) of PATIENT (#2) file
+ ;F DGFLD=.03,.02,"ASKREQID",.2403,.092,.093,994,.131 D  Q:$D(DTOUT)!($D(DUOUT))
+ F DGFLD=.03,.02,"ASKREQID",.2403,994,.131 D  Q:$D(DTOUT)!($D(DUOUT))
  . ;**1000,Story 1171329 (mko): Use ASKREQID as an indicator to prompt for three additional fields at this point
  . ;**1024,Story 1258907 (mko): Merge DPTIDS=DGFLDS. The input transform for VETERAN (Y/N)? looks at DOB response in DPTIDS(.03)
  . I DGFLD="ASKREQID" N DPTIDS M DPTIDS=DGFLDS D ASKREQID(.DGNAME,.DPTIDS) M:'$D(DUOUT) DGFLDS=DPTIDS Q

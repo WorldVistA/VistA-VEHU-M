@@ -1,6 +1,7 @@
 SDTMPUT0 ;MS/SJA - TELEHEALTH SEARCH UTILITY ;Dec 17, 2020
- ;;5.3;Scheduling;**773,779,812,817,821,832,859**;Aug 13, 1993;Build 10
+ ;;5.3;Scheduling;**773,779,812,817,821,832,859,863**;Aug 13, 1993;Build 14
  ;Reference to ^DGCN(391.91 supported by IA #4943
+ ;Reference to ^DIA(920.X,"C") supported by IA #2602
  ;
  N II,ARR,CNT,CODE,DEA,DFN,FAC,F407,S407,ICNHA,SIEN,MPI,NODE1,NODE8,NODE99,FICN,SDCL,NODE0,DIV,MCD,INST,INSF
  N LTZ,SDASH,CTRY,TZEX,SDSL,SDRE,SDIN,SDNO,STP1,STP2,OPT,VADM,XX,ZD
@@ -27,24 +28,27 @@ EN W @IOF W ?22,"Telehealth Inquiries",!!
  G EN
  ;
 C ; Search by clinic
- K DIC,SDCL,SDNO,NOD0,PNODE,DIV,SDSL,MCD,INST,INSF,LTZ,CTRY,TZEX,CHAR4,CHAR4DSC
+ K DIC,SDCL,SDNO,NOD0,PNODE,DIV,SDSL,MCD,INST,INSTD,INSF,LTZ,CTRY,TZEX,CHAR4,CHAR4DSC
  S DIC="^SC(",DIC(0)="AEMQZ",DIC("S")="I $P(^(0),""^"",3)=""C"",'$G(^(""OOS""))"
  S DIC("A")="Select CLINIC: " D ^DIC K DIC("S"),DIC("A") Q:"^"[X  I +Y'>0 G:+Y<0 C
- S SDCL=Y,(DIV,MCD,INST,INSF,LTZ,CTRY,TZEX)=""  ;859
+ S SDCL=Y,(DIV,MCD,INST,INSTD,INSF,LTZ,CTRY,TZEX)=""  ;859
  S SDNO="",NODE0=$G(^SC(+SDCL,0)),DIV=$P(NODE0,U,15),SDSL=$G(^SC(+SDCL,"SL"))
  I DIV D  ;859
- . S MCD=$G(^DG(40.8,DIV,0)),INST=$P(MCD,U,7)
- . S INSF=$G(^DIC(4,INST,8)),LTZ=$P(INSF,U),CTRY=$P(INSF,U,2),TZEX=$P(INSF,U,3)
+ . S MCD=$G(^DG(40.8,DIV,0))
+ . S INSTD=$P(MCD,U,7),INST=$P(NODE0,U,4)
+ . S INSF=$G(^DIC(4,INSTD,8)),LTZ=$P(INSF,U),CTRY=$P(INSF,U,2),TZEX=$P(INSF,U,3)
  S CHAR4=$$CHAR4^SDESUTIL($P(SDCL,U,2)) S CHAR4DSC=$S(CHAR4="":"",1:CHAR4_"-"_$$CHAR4DSC^SDTMPUTL(CHAR4))
- W !!,SDASH,!
+ W !!,SDASH
  W !,"Clinic",?18,": ",$TR(SDCL,"^","-")
- W !,"Default Provider",?18,": " I $P(NODE0,U,13) W $P(NODE0,U,13),"-",$P(^VA(200,$P(NODE0,U,13),0),U)
+ W !,"Default Provider",?18,": " I $P(NODE0,U,13) W $P(NODE0,U,13),"-",$P(^VA(200,$P(NODE0,U,13),0),U) W ?50,$$AUDIT(+SDCL)
  W !,"Provider",?18,": "
  S II=0 F  S II=$O(^SC(+SDCL,"PR",II)) Q:'II  D
  . I $D(^SC(+SDCL,"PR",II,0)) S PNODE=^SC(+SDCL,"PR",II,0) W ?20,+PNODE,"-",$P(^VA(200,+PNODE,0),U),?50,$S($P(PNODE,U,2):" << Default >>",1:""),!
  W:'$O(^SC(+SDCL,"PR",0)) ! W "Medical Division",?18,": " W:DIV DIV,"-",$$GET1^DIQ(40.8,DIV,.01)
  W !,"Institution",?18,": " W:INST INST,"-",$$GET1^DIQ(4,INST,.01)
  W !,"Station Number",?18,": ",$$GET1^DIQ(4,INST_",",99,"E")
+ W !,"Instit.(derived)",?18,": " W:INSTD INSTD,"-",$$GET1^DIQ(4,INSTD,.01)
+ W !,"Station (derived)",?18,": ",$$GET1^DIQ(4,INSTD_",",99,"E")
  W !,"Stop Code",?18,": " I $P(NODE0,U,7) W $P(NODE0,U,7),"-",$$GET1^DIQ(40.7,$P(NODE0,U,7),.01)," (",$$GET1^DIQ(40.7,$P(NODE0,U,7),1),")"
  W !,"Credit Stop Code",?18,": " I $P(NODE0,U,18) W $P(NODE0,U,18),"-",$$GET1^DIQ(40.7,$P(NODE0,U,18),.01)," (",$$GET1^DIQ(40.7,$P(NODE0,U,18),1),")"
  W !,"CHAR4",?18,": " W:$D(CHAR4DSC) CHAR4DSC ;821
@@ -55,7 +59,7 @@ C ; Search by clinic
  W !,"Spec Instructions",?18,":"
  D SI
  D ACT
- W !,SDASH,!! G C
+ W !,SDASH,! G C
  Q
  ;
 M ; Search by Medical Center Division
@@ -276,3 +280,13 @@ SI ;Parse and display special instructions
 R ;Clinic schedule queuing report
  D BEGIN^SDTMPPRC
  Q
+ ;
+AUDIT(CLN) ; default provider audit
+ N DATE,SDIEN,NODE,X
+ K ^TMP($J,"AUDIT")
+ S DATE="" F  S DATE=$O(^DIA(44,"C",DATE)) Q:'DATE  D
+ . F SDIEN=0:0 S SDIEN=$O(^DIA(44,"C",DATE,SDIEN)) Q:'SDIEN  S NODE=$G(^DIA(44,SDIEN,0)) D
+ . . I $P(NODE,U,3)=16,($P(NODE,U)=CLN) S ^TMP($J,"AUDIT",DATE)=SDIEN_U_$$FMTE^XLFDT($P(NODE,U,2),"5MZ")
+ Q:'$D(^TMP($J,"AUDIT")) ""
+ S X=$O(^TMP($J,"AUDIT",""),-1)
+ Q $P(^TMP($J,"AUDIT",X),U,2)

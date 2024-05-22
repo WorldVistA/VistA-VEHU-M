@@ -1,5 +1,5 @@
 XPDANLYZ6 ;OAK/RSF- BUILD ANALYZER ;10/28/22
- ;;8.0;KERNEL;**782**;Jul 10, 1995;Build 4
+ ;;8.0;KERNEL;**782,792**;Jul 10, 1995;Build 4
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
 BUILDME ;Ask for build and build user choices on the type of report when running the option
@@ -16,8 +16,10 @@ BUILDME ;Ask for build and build user choices on the type of report when running
  Q:'+XPDBIEN
  S XPDARR("BUILD",XPDBIEN,"NAME")=$P(XPDTOP,"^",2)
  S:$P(XPDTOP,"^",2)["*" XPDSPC=$P($P(XPDTOP,"^",2),"*"),XPNS(XPDSPC)=""
+ S:$P(XPDTOP,"^",2)'["*" XPDSPC=$P($P(XPDTOP,"^",2)," "),XPDSPC=$$TRIM^XLFSTR(XPDSPC),XPNS(XPDSPC)="" ;p792
  S PFL=$$GET1^DIQ(9.6,XPDBIEN_",",1,"I") I PFL?.N S PFL=$$GET1^DIQ(9.6,XPDBIEN_",",1,"E")
  I $G(PFL)]"",$G(XPDSPC)']"" S XPDSPC=PFL,XPNS(XPDSPC)=""
+ ;I $G(PFL)="",$G(XPDSPC)="" S:$P(XPDTOP,"^",2)[" " XPDSPC=$P($P(XPDTOP,"^",2)," "),XPNS(XPDSPC)="" ;p792
  N XPNSM,J S J=" " F  S J=$O(^XPD(9.6,XPDBIEN,"ABNS","B",J)) Q:J']""  S XPNSM(J)="",XPNS(J)="" ;BUILD CROSS REF
  N XPDLL S XPDLL=$O(^DIC(9.4,"C",XPDSPC,9999),-1) S:'$G(XPDLL) XPDLL=$O(^DIC(9.4,"C2",XPDSPC,0))
  I XPDLL  D  ;D GETS^DIQ(9.4,XPDLL_",","14*","I","XPNS") ;DIC(9.4 - package file

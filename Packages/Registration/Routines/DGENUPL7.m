@@ -1,5 +1,5 @@
 DGENUPL7 ;ISA/KWP,CKN,TMK,TDM,LBD,HM,KUM - PROCESS INCOMING (Z11 EVENT TYPE) HL7 MESSAGES ;9/12/20 5:48pm
- ;;5.3;REGISTRATION;**232,367,397,417,379,431,513,628,673,653,742,688,797,871,972,952,977,993,1014,1027,1045,1082,1090**;Aug 13,1993;Build 16
+ ;;5.3;REGISTRATION;**232,367,397,417,379,431,513,628,673,653,742,688,797,871,972,952,977,993,1014,1027,1045,1082,1090,1111**;Aug 13,1993;Build 18
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;Phase II split from DGENUPL
@@ -151,7 +151,8 @@ Z11(MSGIEN,MSGID,CURLINE,DFN,ERRCOUNT) ;
  ..;
  ..; removed EGT consistency check with DG*5.3*628
  ..;Phase II EGT consistency checks (SRS 6.5.1.3)
- ..;Only do the EGT consistency checks for Rejected-Fiscal Year (11),Rejected-Mid Cycle (12),Rejected-Stop enrolling new apps (13),Rejected-Initil App by VAMC (14),Rejected below EGT threshold (22)
+ ..; DG*5.3*1111 - ENROLLMENT STATUS (file #27.15) entries of REJECTED renamed to DEFERRED.  Comment below modified
+ ..;Only do the EGT consistency checks for Deferred-Fiscal Year (11),Deferred-Mid Cycle (12),Deferred-Stop enrolling new apps (13),Deferred-Initial App by VAMC (14),Deferred below EGT threshold (22)
  ..;I "^11^12^13^14^22^"[("^"_DGENR("STATUS")_"^"),$$ABOVE^DGENEGT1(DGENR("DFN"),DGENR("PRIORITY"),DGENR("SUBGRP"),"","",1) D  Q
  ..;.S ERROR=1
  ..;.S ERRMSG="THE ENROLLMENT RECORD DID NOT PASS THE EGT CONSISTENCY CHECKS."

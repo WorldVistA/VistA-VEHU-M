@@ -1,5 +1,5 @@
 DGRPE ;ALB/MRL,LBD,BRM,TMK,BAJ,PWC,JAM,JAM,JAM,LEG,ARF - REGISTRATIONS EDITS ;23 May 2017  1:51 PM
- ;;5.3;Registration;**32,114,139,169,175,247,190,343,397,342,454,415,489,506,244,547,522,528,555,508,451,626,638,624,677,672,702,689,735,688,797,842,865,871,887,941,985,997,1014,1040,1044,1056,1067,1064,1085**;Aug 13, 1993;Build 13
+ ;;5.3;Registration;**32,114,139,169,175,247,190,343,397,342,454,415,489,506,244,547,522,528,555,508,451,626,638,624,677,672,702,689,735,688,797,842,865,871,887,941,985,997,1014,1040,1044,1056,1067,1064,1085,1111**;Aug 13, 1993;Build 18
  ;
  ;DGDR contains a string of edits; edit=screen*10+item #
  ;
@@ -68,7 +68,10 @@ SETFLDS(DGDR) ; Set up fields to edit
 101 ;;
 102 ;;1;
 103 ;;.091;
-104 ;;.134;.135;@21;S X=$$YN1316^DGRPE(DFN);S:(X["N")&($P($G(^DPT(DFN,.13)),"^",3)="") Y="@25";S:(X["N")&($P($G(^DPT(DFN,.13)),"^",3)]"") Y="@24";.133;S:($P($G(^DPT(DFN,.13)),U,16)="Y")&($G(X)="") Y="@21";S Y="@25";@24;.133///@;@25;.1317///NOW;
+ ; DG*5.3*1111 - PAGER moved to DR104^DGRPE1, Email Address Indicator moved to YN1316^DGRPE1
+ ;                Handle timeout/exits from either field edit
+104 ;;.134;I '$$DR104^DGRPE1 S Y="@99";@21;S X=$$YN1316^DGRPE1(DFN) I +$G(DGTMOT) S Y="@99";S:(X["N")&($P($G(^DPT(DFN,.13)),"^",3)="") Y="@25";S:(X["N")&($P($G(^DPT(DFN,.13)),"^",3)]"") Y="@24";
+104000 ;;.133;S:($P($G(^DPT(DFN,.13)),U,16)="Y")&($G(X)="") Y="@21";S Y="@25";@24;.133///@;@25;.1317///NOW;@99;
  ;105 ;;D DR207^DGRPE;7LANGUAGE DATE/TIME;D LANGDEL^DGRPE;
  ;LANGUAGE DATE/TIME removed from 105 with patch DG*5.3*1085
 105 ;;D DR207^DGRPE1;
@@ -91,7 +94,8 @@ SETFLDS(DGDR) ; Set up fields to edit
  ; DG*5.3*1014;jam; add K ^DIE("NO^") after enty of confidential address so if we loop back to beginning, we can exit
  ; DG*5.3*1040 - Add check for variable DGTMOT
 114000 ;;K DR(2,2.141);N RET S RET=1 D EN^DGREGTED(DFN,"CONF",.RET) K DIE("NO^") S:'RET&('+$G(DGTMOT)) Y=.14105;@111;K DIE("NO^");
-201 ;;.05;.08;.092;.093;.2401:.2403;57.4//NOT APPLICABLE;
+ ;DG*5.3*1111-Removed FATHER'S NAME & MOTHER'S NAME on PATIENT DATA, SCREEN <2> for Group 1.
+201 ;;.05;.08;.092;.093;.2403;57.4//NOT APPLICABLE;
 202 ;;1010.15//NO;S:X'="Y" Y="@22";S DIE("NO^")="";1010.152;I X']"" W !?4,*7,"But I need to know where you were treated most recently." S Y=1010.15;1010.151;1010.154;S:X']"" Y="@22";1010.153;@22;K DIE("NO^");
 203 ;;D DR203^DGRPE;6ETHNICITY;2RACE;K DR(2,2.02),DR(2,2.06);
 205 ;;.181;
@@ -303,22 +307,6 @@ CMP(X) ; Function to determine if service component is valid for
  ; branch of service ien in X   0 = invalid  1 = valid  
  ; Component only valid for ARMY/AIR FORCE/MARINES/COAST GUARD/NOAA/USPHS/SPACE FORCE
  Q $S('$G(X):0,X'>5!(X=9)!(X=10)!(X=15):1,1:0)  ;DG*5.3*1044 - added 15 for SPACE FORCE branch of service
- ;
-YN1316(DFN) ;Email address indicator - DG*5.3*865
- N %,RSLT
- S DIE("NO^")=""
-P1316 ;
- S %=0
- W !,"DOES THE PATIENT HAVE AN EMAIL ADDRESS? Y/N"
- D YN^DICN
- I %=0 W !,"    If the patient has a valid Email Address, please answer with 'Yes'.",!,"    If no Email Address please answer with 'No'." G P1316
- I %=-1 W !,"    EXIT NOT ALLOWED ??" G P1316
- S RSLT=$S(%=1:"Y",%=2:"N")
- N FDA,IENS
- Q:'$G(DFN)
- S IENS=DFN_",",FDA(2,IENS,.1316)=RSLT
- D FILE^DIE("","FDA")
- Q RSLT
  ;
 INPXF207 ; Input transform for field 7 in file ;*///*
  I $L(X)>60!($L(X)<1) K X Q

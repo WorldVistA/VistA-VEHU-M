@@ -1,5 +1,5 @@
 IBCSC102 ;ALB/MJB - MCCR SCREEN 10 (UB-04 BILL SPECIFIC INFO) ;27 MAY 88 10:20
- ;;2.0;INTEGRATED BILLING;**432,447,461,547**;21-MAR-94;Build 119
+ ;;2.0;INTEGRATED BILLING;**432,447,461,547,759**;21-MAR-94;Build 24
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; DEM;432 - Moved IBCSC8* billing screen routines to IBCSC10* billing screen
@@ -13,7 +13,12 @@ EN S IBCUBFT=$$FT^IBCU3(IBIFN) I IBCUBFT=2 K IBCUBFT G ^IBCSC10H ;CMS-1500
  ;
  ;WCJ;IB*2.0*547
  ;S IBSR=10,IBSR1=2,IBV1="0000000" S:IBINP $E(IBV1,2)=1 S:IBV IBV1="1111111"
- S IBSR=10,IBSR1=2,IBV1="00000000" S:IBINP $E(IBV1,2)=1 S:IBV IBV1="11111111"
+ ;WCJ;IB*2.0*759
+ ;S IBSR=10,IBSR1=2,IBV1="00000000" S:IBINP $E(IBV1,2)=1 S:IBV IBV1="11111111"
+ S IBSR=10,IBSR1=2,IBV1="00000000"   ; all sections editable on screen
+ S:IBINP $E(IBV1,2)=1   ; starting exceptions
+ S:'+$$BBB^IBCSC10(IBIFN) $E(IBV1,6)=1   ;WCJ;IB759; make undeditable if not set up for payer
+ S:IBV IBV1="11111111"     ; uneditable if view only
  ;
  ;WCJ;IB*2.0*547
  ;F I="U","U1",0,"UF3","UF31","UF32","U2","TX","U3" S IB(I)=$G(^DGCR(399,IBIFN,I))

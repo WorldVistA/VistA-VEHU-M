@@ -1,10 +1,11 @@
-DGENA3 ;ALB/CJM,ISA/KWP,RTK,TDM,LBD,PHH,PJR,TDM,KUM - Enrollment API - Consistency check ;03/23/20 12:41pm
- ;;5.3;Registration;**232,306,327,367,417,454,456,491,514,451,808,993,1027**;Aug 13,1993;Build 70
+DGENA3 ;ALB/CJM,ISA,KWP,RTK,TDM,LBD,PHH,PJR,TDM,KUM,JAM - Enrollment API - Consistency check ;03/23/20 12:41pm
+ ;;5.3;Registration;**232,306,327,367,417,454,456,491,514,451,808,993,1027,1111**;Aug 13,1993;Build 18
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ;CHECKand TESTVAL moved from DGENA1
 CHECK(DGENR,DGPAT,ERRMSG) ;
- ;Phase II consistency checks do not include INACTIVE(3),REJECTED(4),SUSPENDED(5),EXPIRED(8),PENDING(9) enrollment statuses.  References to these statuses have been removed.
+ ; DG*5.3*1111 - ENROLLMENT STATUS (file #27.15) entries of REJECTED renamed to DEFERRED.  Comment below modified to reflect this.
+ ;Phase II consistency checks do not include INACTIVE(3),DEFERRED(4),SUSPENDED(5),EXPIRED(8),PENDING(9) enrollment statuses.  References to these statuses have been removed.
  ;Description: Does validation checks on the enrollment contained in the
  ;     DGENR array.
  ;Input:
@@ -50,9 +51,10 @@ CHECK(DGENR,DGPAT,ERRMSG) ;
  .;.S ERRMSG="ENROLLMENT PRIORITY IS INCONSISTENT WITH ELIGIBILITY DATA - PRIORITY SHOULD BE "_$P(PRIGRP,"^")_$$EXTERNAL^DILFD(27.11,.12,"F",$P(PRIGRP,"^",2))
  .; end of temporary comments
  .;
- .;Phase II require priority if status is VERIFIED(2),REJECTED-INITIAL APP(14),REJECTED-FISCAL YEAR(11),REJECTED-MIDCYCLE(12),REJECTED-STOP ENROLL(13),REJECTED BELOW EGT THRESHOLD(SRS 6.5.1.2 b)
+ .; DG*5.3*1111 - ENROLLMENT STATUS (file #27.15) entries of REJECTED renamed to DEFERRED.
+ .;Phase II require priority if status is VERIFIED(2),DEFERRED-INITIAL APP(14),DEFERRED-FISCAL YEAR(11),DEFERRED-MIDCYCLE(12),DEFERRED-STOP ENROLL(13),DEFERRED-BELOW EGT THRESHOLD(22) (SRS 6.5.1.2 b)
  .I (DGENR("STATUS")=2)!(DGENR("STATUS")=14)!(DGENR("STATUS")=11)!(DGENR("STATUS")=12)!(DGENR("STATUS")=13)!(DGENR("STATUS")=22),DGENR("PRIORITY")="" D  Q
- ..S ERRMSG="ENROLLMENT PRIORITY IS REQUIRED WITH ENROLLMENT STATUSES: VERIFIED,REJECTED-INITIAL APPLICATION BY VAMC,REJECTED-FISCAL YEAR,REJECTED-MID-CYCLE,REJECTED-STOP NEW ENROLLMENTS,REJECTED-BELOW EGT"
+ ..S ERRMSG="ENROLLMENT PRIORITY IS REQUIRED WITH ENROLLMENT STATUSES: VERIFIED,DEFERRED-INITIAL APPLICATION BY VAMC,DEFERRED-FISCAL YEAR,DEFERRED-MID-CYCLE,DEFERRED-STOP NEW ENROLLMENTS,DEFERRED-BELOW EGT"
  .;Phase II require enrollment date when status is verified(2)(SRS 6.5.1.2 d)
  .I DGENR("STATUS")=2,DGENR("DATE")="" S ERRMSG="ENROLLMENT DATE IS REQUIRED WHEN STATUS IS VERIFIED" Q
  .;Phase II if enrollment date present with statuses other than verified then veteran must be previously VERIFIED(2) and enrolled (SRS 6.5.1.2 d)

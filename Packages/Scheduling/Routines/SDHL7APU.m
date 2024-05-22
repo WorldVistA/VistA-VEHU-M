@@ -1,6 +1,5 @@
 SDHL7APU ;MS/TG,PH - TMP HL7 Routine;OCT 16, 2018
- ;;5.3;Scheduling;**704,714,773,780,798,810,859**;AUG 17, 2018;Build 10
- ;
+ ;;5.3;Scheduling;**704,714,773,780,798,810,859,863**;Aug 13, 1993;Build 14
  ;  Integration Agreements:
  ;
  Q
@@ -416,6 +415,7 @@ APPTYPE(CL) ;Determines APPTYPE by STOP CODES associated with CLINIC (SD*5.3*780
 GETSTA(STA) ;Return Parent STA or self if No parent
  N PSTA S:($E(STA,4,5)="A")!($E(STA,4,5)="B") STA=+STA S PSTA=+$P($$PRNT^XUAF4(STA),U,2)
  Q $S(PSTA:PSTA,1:STA)
+ ;
 ERRS ;
  ;;already has appt at^Patient already has an appt at that datetime
  ;;already has appt at^Patient already has an appt
@@ -445,3 +445,15 @@ ERRS ;
  ;;Cancelled by patient appointment cannot be uncancelled.^Cannot be uncancelled
  ;;FileMan add toS DPT error: Patient=^FileMan add toS DPT error
  ;;Another user is working with this patient's record.  Please try again later^Patient record locked
+ ;;
+ ;
+ACK ;****BUILD THE RESPONSE MSA (Cont. of SDHL7APT)
+ K @MSGROOT
+ N HLA,ERR,LEN,FOUNDCN
+ D INIT^HLFNC2(EIN,.HL)
+ S HL("FS")="|",HL("ECH")="^~\&"
+ S (ERR,FOUNDCN)=0
+ S HL("MID")=$S($G(HL("MID")):HL("MID"),1:ACKMSG)
+ S HLA("HLA",1)="MSA"_HL("FS")_$S(ERRCND:"AE",1:"AA")_HL("FS")_HL("MID")_HL("FS")_$S(ERRCND:$E(ERRTXT,1,52),1:"")_HL("FS")
+ D GENACK^HLMA1(HL("EID"),HLMTIENS,HL("EIDS"),"LM",1,.MYRESULT)
+ Q

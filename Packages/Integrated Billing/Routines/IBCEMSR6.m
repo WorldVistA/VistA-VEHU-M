@@ -1,5 +1,5 @@
 IBCEMSR6 ;ALB/VAD - IB PRINTED CLAIMS REPORT - Sort ;09-SEP-2015
- ;;2.0;INTEGRATED BILLING;**547**;21-MAR-94;Build 119
+ ;;2.0;INTEGRATED BILLING;**547,759**;21-MAR-94;Build 24
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 SRCH ; Collect Information
@@ -19,8 +19,8 @@ SRCH ; Collect Information
  . . Q:'$D(IBDIVS(IBDV))  ; Not one of the selected Divisions
  . . S TOTCNT=TOTCNT+1  ; Accumulate Total Printed for selected divisions.
  . . I $P($G(^DGCR(399,IBIFN,"TX")),U,8)'=1 Q   ; Is the Bill "FORCE LOCAL PRINT"?
- . . ; don't include US Labor Dept claims
- . . S IBINS=$$CURR^IBCEF2(IBIFN) Q:$D(VARRAY("IBULD",IBINS))
+ . . ; don't include US Labor Dept claims; 5/1/23;IB*2.0*759v2;EBILL-3377;Patient resp claims may have no insurance, Q:IBINS=""
+ . . S IBINS=$$CURR^IBCEF2(IBIFN) Q:IBINS=""  Q:$D(VARRAY("IBULD",IBINS))
  . . ; don't count claims where EDI is inactive (user has to print those)
  . . Q:$$INSOK^IBCEF4(IBINS)'=1
  . . Q:'$D(VARRAY("RTYPES",IBRTN))  ;Is this one of the selected Rate Types?

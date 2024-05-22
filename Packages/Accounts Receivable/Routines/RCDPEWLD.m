@@ -1,5 +1,5 @@
 RCDPEWLD ;ALB/CLT - Continuation of routine RCDPEWL0 ;09 DEC 2016
- ;;4.5;Accounts Receivable;**252,317,321,326,332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**252,317,321,326,332,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -158,7 +158,6 @@ P1 S RCAUTOPDF=$G(^TMP("RCERA_PARAMS",$J,"RCAUTOP")) ; PRCA*4.5*326
  W !
  D ^DIR
  I $D(DTOUT)!$D(DUOUT) Q 1
- G:'$$VALP(Y) P1 ; PRCA*4.5*326
  S ^TMP("RCERA_PARAMS",$J,"RCAUTOP")=Y
  ; If including auto-post ERA ask for auto-post status filters
  I Y'="N" Q $$AUTOPST() ; PRCA*4.5*326
@@ -215,7 +214,7 @@ PAYR() ; Payer Selection
  ; PRCA*4.5*332 - wrapped prompts in a for loop to allow the payer range prompt to return to inital prompt if
  ;                user cancels out
  S (RCQUIT,RCDONE,RCOUT)=0
- F  Q:RCDONE  D  ; PRCA*4.5*332 - Remove GOTO and instead make FOR loop
+ F  Q:RCDONE  D
  . K DIR S DIR(0)="SA^A:ALL;R:RANGE"
  . S DIR("A")="(A)LL payers, (R)ANGE of payer names: "
  . S DIR("B")="ALL"
@@ -295,11 +294,3 @@ VALM(INP) ; Compare input match type filter to other filters
  .W !!,"NOT MATCHED is an invalid selection for AUTO-POSTING ERAs"
  Q 1
  ;
-VALP(INP) ; Compare input posting method filter to other filters
- ; Input INP - Y value from ^DIR
- ; Output 1 = Valid 0 = Invalid
- ;
- I INP="A",$G(^TMP("RCERA_PARAMS",$J,"RCPAYMNT"))="Z" D  Q 0
- .W !!,"AUTO-POSTING is an invalid selection for ZERO ERAs"
- Q 1
- ; END PRCA*4.5*326

@@ -1,8 +1,38 @@
 RCDPESPC ;AITC/MBS - ePayment Lockbox Site Parameter Reports ; 4/23/19 8:52am
- ;;4.5;Accounts Receivable;**349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**349,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
+ ;
+APOST(AUPSTYP,ONOFF) ;EP from RCDPESP Turn Auto-Posting On/Off for Medical,RX,TRICARE Claims
+ ; PRCA*4.5*345
+ ; PRCA*4.5*424 Moved from RCDPESP because of routine size 
+ ; Input: AUPSTYP - 0 - Medical Auto-Posting
+ ;                  1 - Pharmacy Auto-Posting
+ ;                  2 - TRICARE Auto-Posting
+ ;                  3 - Zero Pay Auto-Posting   ;*PRCA*4.5.424 Added line
+ ; Output: ONOFF passed by ref. 1 - Auto-Posting, 0 otherwise
+ ; Returns: 1 - User '^' or timed out, 0 otherwise
+ N APCT,DIR,DIROUT,DIRUT,DTOUT,DUOUT,FLD,FDAEDI,RCAUDVAL
+ S FLD=$S(AUPSTYP=0:.02,AUPSTYP=1:1.01,AUPSTYP=2:1.05,1:1.11) ; PRCA*4.5*349 - Add TRICARE, PRCA*4.5*424 - Add ZERO PAY
+ S APCT=$$GET1^DIQ(344.61,"1,",FLD,"I")
+ S DIR(0)="YA",DIR("B")=$S((APCT=1)!(APCT=""):"Yes",1:"No")
+ S DIR("A")=$$PADPRMPT^RCDPESPB($$GET1^DID(344.61,FLD,,"TITLE"))
+ S DIR("?")=$$GET1^DID(344.61,FLD,,"HELP-PROMPT")
+ D ^DIR
+ I $D(DTOUT)!$D(DUOUT) Q 1
+ S ONOFF=Y
+ I APCT'=Y D  ; User updated value
+ . S FDAEDI(344.61,"1,",FLD)=Y
+ . D FILE^DIE(,"FDAEDI")
+ . ;
+ . ; Changed D NOTIFY to D NOTIFY^RCDPESP
+ . D NOTIFY^RCDPESP(Y,AUPSTYP)
+ . S RCAUDVAL(1)="344.61^"_FLD_"^1^"_Y_U_APCT
+ . ;
+ . ; Changed D AUDIT to D AUDIT^RCDPESP
+ . D AUDIT^RCDPESP(.RCAUDVAL)
+ Q 0
  ; PRCA*4.5*349 - New subroutine to display parameter settings by category
 SPRPT ; EP from RCDPESP1
  ; Site parameter report entry point updated to select categories
@@ -34,7 +64,8 @@ SPRPT ; EP from RCDPESP1
  D GETS^DIQ(342,"1,",".01;.14;.15;7.02;7.03;7.04;7.05;7.06;7.07;7.08;7.09","E",RCGLB(342)) ; PRCA*4.5*345
  ; RCDPE PARAMETER file (#344.61),  *future build*, add Tricare auto-decrease fields
  S Y=".02;.03;.04;.05;.06;.07;.1;.11;.12;.13;1.01;1.02;1.03;1.04"  ; PRCA*4.5*345
- S Y=Y_";1.05;1.06;1.07;1.08;1.09;1.1" ; PRCA*4.5*349 - Add TRICARE
+ S Y=Y_";1.05;1.06;1.07;1.08;1.09;1.1"  ; PRCA*4.5*349 - Add TRICARE
+ S Y=Y_";1.11"                          ; PRCA*4.5*424 - Add Zero Pay Auto Post parameter
  D GETS^DIQ(344.61,"1,",Y,"E",RCGLB(344.61)) ; PRCA*4.5*321/PRCA*4.5*326/PRCA*4.5*332
  ; add site to header data
  S RCHDR("SITE")="Site: "_@RCGLB(342)@(342,"1,",.01,"E")
@@ -122,6 +153,8 @@ RPTAP ; Display Auto-Post Parameters
  I (RCTYPE="T")!(RCTYPE="A") D
  . D AD2RPT^RCDPESP1("*** TRICARE Auto-Post Parameters ***")
  . D TRIAUTOP^RCDPESP1(.RCPARM)  ; Display TRICARE parameters
+ ;
+ D ZPARAMS ; Display Zero Pay Auto=Post Parameter PRCA*4.5*424
  Q
  ;
 RPTAD ; Auto-Decrease Parameteers
@@ -162,6 +195,19 @@ RPTLK ; Display EFT Lock-Out Parameters
  . Q:(RCFLD=.13)&'((RCTYPE="T")!(RCTYPE="A"))  ; PRCA*4.5*349 - Don't display if not showing TRICARE params
  . S Y=$$GET1^DID(344.61,RCFLD,,"TITLE")_" "_@RCGLB(344.61)@(344.61,"1,",RCFLD,"E")
  . D AD2RPT^RCDPESP1(Y)
+ Q
+ ;
+ ; PRCA*4.5*424 Added Subroutine ZPARAMS
+ZPARAMS ; Display Zero Pay Auto-Post Parameters for Report
+ ; Input: RCGLB - ^TMP($J,"RC344.61") - RCDPE PARAMETER file (#344.61)
+ N V,X,Y
+ D AD2RPT^RCDPESP1(" ")
+ D AD2RPT^RCDPESP1("*** ZERO PAYMENT AMOUNT ERA Auto-Post Parameters ***")
+ S X=$$GET1^DID(344.61,1.11,,"TITLE") ;
+ S V=" (Y/N)" S:X[V X=$P(X,V,1)_$P(X,V,2) ; Remove yes/no prompt
+ S Y=X_" "_@RCGLB(344.61)@(344.61,"1,",1.11,"E")
+ D AD2RPT^RCDPESP1(Y)
+ D AD2RPT^RCDPESP1(" ")
  Q
  ;
 SRTCATS(CATS) ; If user selected both Auto-Post and Auto-Decrease, ensure AD displays after AP
@@ -224,6 +270,9 @@ AP ; Ask Auto-Post Questions
  I '$G(RCQUIT) D
  . W !!,"*** TRICARE Auto-Post Parameters ***",!
  . S RCQUIT=$$TAUTOP^RCDPESP
+ I '$G(RCQUIT) D
+ . W !!,"*** ZERO PAY Auto-Post Parameters ***",!
+ . S RCQUIT=$$APOST(3)
  W !
  Q
  ;
@@ -425,6 +474,7 @@ TPARAMS(RCPARM) ; Display TRICARE Parameters for Report
  D TRIAUTOP^RCDPESP1(.RCPARM)
  D AD2RPT^RCDPESP1(" ")
  D TRIAUTOD^RCDPESP1(.RCPARM,RCTYPE)
+ Q
  ;
 LMHDR(HDR,RCTYPE,RCCATS) ; EP from RCDPESP1
  ; HDR passed by ref.

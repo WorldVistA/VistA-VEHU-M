@@ -1,99 +1,97 @@
-RAMAIN2 ;HISC/GJC-Radiology Utility File Maintenance (Part Two) ;19 Apr 2019 2:40 PM
- ;;5.0;Radiology/Nuclear Medicine;**45,62,71,65,127,138,158**;Mar 16, 1998;Build 2
+RAMAIN2 ;HISC/GJC - Radiology Utility File Maintenance (Part Two) ; Jan 24, 2024@13:27:08
+ ;;5.0;Radiology/Nuclear Medicine;**45,62,71,65,127,138,158,208**;Mar 16, 1998;Build 4
  ; 08/12/2005 bay/kam Remedy Call 104630 Patch 62
  ; 03/02/2006 BAY/KAM Remedy Call 131482 Patch RA*5*71
  ; 
  ;Supported IA #10141 reference to MES^XPDUTL
  ;Supported IA #10142 reference to EN^DDIOL
  ;Supported IA #10103 reference to DT^XLFDT
- ; 
+ ;
+ ;*** start of RA5p208 updates ***
 2 ;;Procedure Enter/Edit
  ; *** This subroutine once resided in RAMAIN i.e, '2^RAMAIN'. ***
  ; RA PROCEDURE option
- N RACTIVE,RAENALL,RAY,RAFILE,RASTAT,RAXIT,RAIEN,RANEW,RASEED,RANEWPRO K ^XTMP("RAMAIN4",$J)
+ N RADA,RACTIVE,RAENALL,RAY,RAFILE,RASTAT,RAXIT,RAIEN,RANEW,RANEW71
  S (RAENALL,RANEW71,RAXIT,RANEW)=0 K ^XTMP("RAMAIN4",$J)
- N RADIO,RAPTY,RAASK,RAROUTE ;used by the edit template
- F  D  Q:$G(RAXIT)=0!($G(RAXIT)="")!($G(^XTMP("RAMAIN4",$J,"RAEND"))=1)  G:$G(^XTMP("RAMAIN4",$J,"RAEND"))=1 END
- . K DA,DD,DIC,DINUM,DLAYGO,DO,RACMDIFF,RATRKCMA,RATRKCMB
- . S DIC="^RAMIS(71,",DIC(0)="QEAMLZ",DLAYGO=71,DIC("DR")=6
- . W ! D ^DIC K D,DD,DIC,DINUM,DLAYGO,DO
- . I $G(Y)<0!($G(Y)="") S ^XTMP("RAMAIN4",$J,"RAEND")=1 Q
- . S (DA,RADA)=+Y,RAY=Y,RAFILE=71
- . ;RA*5*71 changed next line for Remedy Call 131482
- . S RANEW71=$S($P(Y,U,3)=1:1,1:0) ;used in template, edit CPT Code if new rec.
- . L +^RAMIS(RAFILE,RADA):5
- . I '$T D  Q
- .. W !?5,"This record is currently being edited by another user."
- .. W !?5,"Try again later!",$C(7) S RAXIT=1
- .. Q
- . Q
-21 ;ENTRY POINT FROM RANPRO, RA*5.0*127
- S (RAENALL,RANEW71,RAXIT,RANEW)=0 S:$G(RACTIVE)="" RACTIVE="" K ^XTMP("RAMAIN4",$J)
- I RACTIVE="" S RACTIVE=$P($G(^RAMIS(71,RADA,"I")),"^")
- S RAFILE=71,RAY=RAYY S:$G(RASTAT)="" RASTAT=$S(RACTIVE="":1,RACTIVE>DT:1,1:0)
- D  ;ENTER INTO STRUCTURE PROCESS
- . S RAPNM=$P($G(Y(0)),U) ;proc. name for display purposes in template
- . S RACTIVE=$P($G(^RAMIS(71,RADA,"I")),"^")
- . S RASTAT=$S(RACTIVE="":1,RACTIVE>DT:1,1:0)
- . D TRKCMB^RAMAINU(DA,.RATRKCMB) ;tracks existing
- . ; CM definition before editing. RATRKCMB ids the before CM values
- . I $G(RANEW)=1 Q  ;RA*50*127 NEW PROCEDURE
- . S DIE="^RAMIS(71,",DR="[RA PROCEDURE EDIT]" D ^DIE
- . S RACPT=$P(^RAMIS(71,RADA,0),U,9)
- . K RAPNM S RAPROC(0)=$G(^RAMIS(71,RADA,0))
- . ;
- . ;check for data consistency between the 'CONTRAST MEDIA USED' &
- . ;'CONTRAST MEDIA' fields.
- . D CMINTEG^RAMAINU1(RADA,RAPROC(0))
- . ;
- . D TRKCMA^RAMAINU(RADA,RATRKCMB,.RATRKCMA,.RACMDIFF)
- . I $O(^RAMIS(71,RADA,"NUC",0)),($P(RAPROC(0),"^",2)=1) D DELRADE(RADA)
- . S RACTIVE=$P($G(^RAMIS(71,RADA,"I")),"^")
- . S RASTAT=RASTAT_"^"_$S(RACTIVE="":1,RACTIVE>DT:1,1:0)
- . ; 08/12/2005 104630 KAM - added '$G(RANEW71) to next line
- . I RAPROC(0)]"",("^B^P^"'[(U_$P(RAPROC(0),"^",6)_U)),('+$P(RAPROC(0),"^",9)),'+$G(RANEW71) D
- .. K %,C,D0,DE,DI,DIE,DQ,DR
- .. W !?5,$C(7),"...no CPT code entered..."
- .. W !?5,"...will change type to a 'broad' procedure.",!
- .. S DA=RADA,DIE="^RAMIS(71,",DR="6///B" D ^DIE
- .. Q
- . ;08/12/2005 104630 - KAM added next 5 lines
- . I RAPROC(0)]"",("^B^P^"'[(U_$P(RAPROC(0),"^",6)_U)),('+$P(RAPROC(0),"^",9)),+$G(RANEW71) D
- .. K %,C,D0,DE,DI,DIK,DQ,DR
- .. W !?5,$C(7),"...no CPT code entered..."
- .. W !?5,"...will delete the record at this time.",!
- .. S DIK="^RAMIS(71,",DA=RADA D ^DIK K DIK
- . ;if an active parent w/o descendants, inactivate the parent
- . I $P(RASTAT,U,2),($P(RAPROC(0),U,6)="P"),('$O(^RAMIS(71,RADA,4,0))) D
- .. K D,D0,D1,DA,DI,DIC,DIE,DQ,DR
- .. W !!?5,"Inactivating this parent procedure - no descendents.",!,$C(7)
- .. S DA=RADA,DIE="^RAMIS(71,",DR="100///"_$S($D(DT):DT,1:$$DT^XLFDT())
- .. D ^DIE K D,D0,D1,DA,DI,DIC,DIE,DQ,DR S $P(RASTAT,U,2)=0 ;inactive
- .. Q
- . I $P($G(^RA(79.2,+$P(RAPROC(0),U,12),0)),U,5)="Y",(+$O(^RAMIS(71,RADA,"NUC",0))) D VRDIO(RADA)
- . I "^B^P^"[(U_$P(RAPROC(0),U,6)_U),($P(RAPROC(0),U,9)]"") D
- .. K %,D,D0,DA,DE,DIC,DIE,DQ,DR
- .. S DA=RADA,DIE="^RAMIS(71,",DR="9///@" D ^DIE
- .. W !!?5,"...CPT code deleted because "_$S($P(RAPROC(0),U,6)="B":"Broad",1:"Parent")_" procedures",!?5,"should not have CPT codes.",!,$C(7)
- .. Q
- . K %,%X,%Y,C,D,D0,D1,DA,DE,DI,DIE,DQ,DR,RAIMAG,RAMIS,RAPROC,X,Y
- .;send Orderable Item HL7 msg to CPRS if the ORDER DIALOG (#101.41)
- .;file exists unconditionally
- .D:$$ORQUIK^RAORDU()=1 PROC^RAO7MFN(RAENALL,RAFILE,RASTAT,RAY)
- .;
- . L -^RAMIS(RAFILE,RADA) K RADA
- .;unconditionally update the parent procedure if the descendent
- .I $O(^RAMIS(71,"ADESC",+RAY,0)) D UPDATP^RAO7UTL(RAY)
- .;has been edited
- . Q
- I $G(RANEW)=1 D EN^RANPRO(RAYY,RATYPE,RANEW)  ;RA*5.0*127 NEW PROCEDURE
- K DIR,RACMDIFF,RATRKCMA,RATRKCMB
- I $G(^XTMP("RAMAIN4",$J,"RAEND"))=1 G END
- D EXIT G END
- Q
- ;W !,?3,"Running validity check on CPT and stop codes." H 1 D ^RAPERR G EXIT  ;RA*5*127
-22 ; RA*5*127
- K DIR
+ N RADIO,RAPNM,RAPTY,RAASK,RAROUTE ;used by the edit template
+ ;F  D  Q:$G(RAXIT)=0!($G(RAXIT)="")!($G(^XTMP("RAMAIN4",$J,"RAEND"))=1)  G:$G(^XTMP("RAMAIN4",$J,"RAEND"))=1 END
+ K DA,DD,DIC,DINUM,DLAYGO,DO,RACMDIFF,RATRKCMA,RATRKCMB
+ S DIC="^RAMIS(71,",DIC(0)="QEAMLZ",DLAYGO=71,DIC("DR")=6
+ W ! D ^DIC K D,DD,DIC,DINUM,DLAYGO,DO Q:+Y=-1  ;-1 no selection - exit
+ ;I $G(Y)<0!($G(Y)="") S ^XTMP("RAMAIN4",$J,"RAEND")=1 Q
+ S (DA,RADA)=+Y,RAY=Y,RAFILE=71
+ S RAPNM=$G(Y(0,0)) ;proc. name for display purposes in template
+ ;RA*5*71 changed next line for Remedy Call 131482
+ S RANEW71=$S($P(Y,U,3)=1:1,1:0) ;used in template, edit CPT Code if new rec.
+ L +^RAMIS(RAFILE,RADA):5
+ I '$T D  Q
+ .W !?5,"This record is currently being edited by another user."
+ .W !?5,"Try again later!",$C(7) S RAXIT=1
+ .Q
+21 ;ENTRY POINT FROM RANPRO, RA*5.0*127 (de-activation of LOINC) RA5p208
+ ;S (RAENALL,RANEW71,RAXIT,RANEW)=0 S:$G(RACTIVE)="" RACTIVE="" K ^XTMP("RAMAIN4",$J)
+ S RACTIVE=$P($G(^RAMIS(71,RADA,"I")),"^")
+ S:$G(RASTAT)="" RASTAT=$S(RACTIVE="":1,RACTIVE>DT:1,1:0) ;<-- RAY & RAFILE set above. RA5P208
+ S RASTAT=$S(RACTIVE="":1,RACTIVE>DT:1,1:0)
+ D TRKCMB^RAMAINU(DA,.RATRKCMB) ;tracks existing
+ ; CM definition before editing. RATRKCMB ids the before CM values
+ ;I $G(RANEW)=1 Q  ;RA*50*127 NEW PROCEDURE <- commented out w/RA5p208
+ S DIE="^RAMIS(71,",DR="[RA PROCEDURE EDIT]" D ^DIE
+ S RACPT=$P(^RAMIS(71,RADA,0),U,9)
+ K RAPNM S RAPROC(0)=$G(^RAMIS(71,RADA,0))
+ ;
+ ;check for data consistency between the 'CONTRAST MEDIA USED' &
+ ;'CONTRAST MEDIA' fields.
+ D CMINTEG^RAMAINU1(RADA,RAPROC(0))
+ ;
+ D TRKCMA^RAMAINU(RADA,RATRKCMB,.RATRKCMA,.RACMDIFF)
+ I $O(^RAMIS(71,RADA,"NUC",0)),($P(RAPROC(0),"^",2)=1) D DELRADE(RADA)
+ S RACTIVE=$P($G(^RAMIS(71,RADA,"I")),"^")
+ S RASTAT=RASTAT_"^"_$S(RACTIVE="":1,RACTIVE>DT:1,1:0)
+ ; 08/12/2005 104630 KAM - added '$G(RANEW71) to next line
+ I RAPROC(0)]"",("^B^P^"'[(U_$P(RAPROC(0),"^",6)_U)),('+$P(RAPROC(0),"^",9)),'+$G(RANEW71) D
+ .K %,C,D0,DE,DI,DIE,DQ,DR
+ .W !?5,$C(7),"...no CPT code entered..."
+ .W !?5,"...will change type to a 'broad' procedure.",!
+ .S DA=RADA,DIE="^RAMIS(71,",DR="6///B" D ^DIE
+ .Q
+ ;08/12/2005 104630 - KAM added next 5 lines
+ I RAPROC(0)]"",("^B^P^"'[(U_$P(RAPROC(0),"^",6)_U)),('+$P(RAPROC(0),"^",9)),+$G(RANEW71) D
+ .K %,C,D0,DE,DI,DIK,DQ,DR
+ .W !?5,$C(7),"...no CPT code entered..."
+ .W !?5,"...will delete the record at this time.",!
+ .S DIK="^RAMIS(71,",DA=RADA D ^DIK K DIK
+ ;if an active parent w/o descendants, inactivate the parent
+ I $P(RASTAT,U,2),($P(RAPROC(0),U,6)="P"),('$O(^RAMIS(71,RADA,4,0))) D
+ .K D,D0,D1,DA,DI,DIC,DIE,DQ,DR
+ .W !!?5,"Inactivating this parent procedure - no descendents.",!,$C(7)
+ .S DA=RADA,DIE="^RAMIS(71,",DR="100///"_$S($D(DT):DT,1:$$DT^XLFDT())
+ .D ^DIE K D,D0,D1,DA,DI,DIC,DIE,DQ,DR S $P(RASTAT,U,2)=0 ;inactive
+ .Q
+ I $P($G(^RA(79.2,+$P(RAPROC(0),U,12),0)),U,5)="Y",(+$O(^RAMIS(71,RADA,"NUC",0))) D VRDIO(RADA)
+ I "^B^P^"[(U_$P(RAPROC(0),U,6)_U),($P(RAPROC(0),U,9)]"") D
+ .K %,D,D0,DA,DE,DIC,DIE,DQ,DR
+ .S DA=RADA,DIE="^RAMIS(71,",DR="9///@" D ^DIE
+ .W !!?5,"...CPT code deleted because "_$S($P(RAPROC(0),U,6)="B":"Broad",1:"Parent")_" procedures",!?5,"should not have CPT codes.",!,$C(7)
+ .Q
+ K %,%X,%Y,C,D,D0,D1,DA,DE,DI,DIE,DQ,DR,RAIMAG,RAMIS,RAPROC,X,Y
+ ;send Orderable Item HL7 msg to CPRS if the ORDER DIALOG (#101.41)
+ ;file exists unconditionally
+ D:$$ORQUIK^RAORDU()=1 PROC^RAO7MFN(RAENALL,RAFILE,RASTAT,RAY)
+ ;
+ L -^RAMIS(RAFILE,RADA)
+ ;unconditionally update the parent procedure if the descendent
+ I $O(^RAMIS(71,"ADESC",+RAY,0)) D UPDATP^RAO7UTL(RAY)
+ ;has been edited
+ ;commented out w/RA5p208 BEGIN
+ ;I $G(RANEW)=1 D EN^RANPRO(RAYY,RATYPE,RANEW)  ;RA*5.0*127 NEW PROCEDURE
+ ;K DIR,RACMDIFF,RATRKCMA,RATRKCMB
+ ;I $G(^XTMP("RAMAIN4",$J,"RAEND"))=1 G END
+ ;D EXIT G END
+ ;Q
+ ;commented out w/RA5p208 END
+ ;Running validity check on CPT and stop codes.
+ N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
  S DIR(0)="YAO",DIR("B")="NO"
  S DIR("A")="Want to run a validity check on CPT and stop codes? "
  S DIR("?",1)="Answer 'YES' to print a list of Radiology/Nuclear Medicine Procedures"
@@ -103,10 +101,11 @@ RAMAIN2 ;HISC/GJC-Radiology Utility File Maintenance (Part Two) ;19 Apr 2019 2:4
  S DIR("?",5)="To be valid, Stop Codes must be in the Imaging Stop Codes file 71.5;"
  S DIR("?",6)="CPT's must be nationally active."
  S DIR("?")="Please answer 'YES' or 'NO'."
- W ! D ^DIR K DIR G:$D(DIRUT) EXIT
+ W ! D ^DIR K DIR Q:$D(DIRUT)#2
  D:Y ^RAPERR
-EXIT K RADA,RANEW71,X,Y
  Q
+ ; *** end of RA5p208 updates *** 
+ ;
 13 ;;Rad/Nuc Med Common Procedure File Enter/Edit
  ; RA COMMON PROCEDURE option RA5P158
  N RADA,RAENALL,RAY,RAFILE,RALOW,RAMIS713,RASTAT,RAIMGTYI S RAENALL=0

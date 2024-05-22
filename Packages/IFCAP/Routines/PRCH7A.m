@@ -1,7 +1,6 @@
 PRCH7A ;WISC/PLT-Receiver documents - ORA from ORACLE ; 07/01/98  3:37 PM
-V ;;5.1;IFCAP;**20*232**;Oct 20, 2000;Build 2
+V ;;5.1;IFCAP;**20,233**;Oct 20, 2000;Build 3
  ;;Per VA Directive 6402, this routine should not be modified.
- ;
  QUIT  ;invalid entry
  ;
  ;invoked from task manager (see trin^prcosrv2)
@@ -26,9 +25,9 @@ COPY(PRCA) ;PRCA=ri of file 423.6
  S PRCSYS=1
  S X="NEW",X("DR")="1///NOW;6///T" D ADD^PRC0B1(.X,.Y,"440.8;^PRCH(440.8,") QUIT:Y<1
  S PRCRI(440.8)=+Y
- S PRCC="",PRCTTC=0 ;PRC*5.1*232
+ S PRCC=$O(^PRCF(423.6,PRCA,1,9999)),PRCTTC=0
  D EDIT^PRC0B(.X,"440.8;^PRCH(440.8,;"_PRCRI(440.8),"2///NOW")
- F  S PRCC=$O(^PRCF(423.6,PRCA,1,PRCC)) Q:'PRCC  S PRCD=$TR(^(PRCC,0),";","-") D:PRCD["~"    ;PRC*5.1*232
+ F  S PRCC=$O(^PRCF(423.6,PRCA,1,PRCC)) Q:'PRCC  S PRCD=^(PRCC,0) D:PRCD["~"
  . S PRCT=$P(PRCD,"^")
  . S PRCX=$P(PRCD,"^",22)
  . D:PRCT="CCT"
@@ -50,7 +49,7 @@ COPY(PRCA) ;PRCA=ri of file 423.6
  .. D EDIT^PRC0B(.X,"440.6;^PRCH(440.6,;"_PRCRI(440.6),A)
  .. QUIT
  . D:PRCT="CC1"&$G(PRCRI(440.6))
- .. S A="31////"_$P(PRCD,"^",2)_";32////"_$P(PRCD,"^",3)_";33////"_$P(PRCD,"^",4)_";34////"_$P(PRCD,"^",5)_";35////"_$P(PRCD,"^",6)_";36////"_$TR($P(PRCD,"^",7,8),"^","")
+ .. S A="31////"_$TR($P(PRCD,"^",2),";","-")_";32////"_$P(PRCD,"^",3)_";33////"_$P(PRCD,"^",4)_";34////"_$P(PRCD,"^",5)_";35////"_$P(PRCD,"^",6)_";36////"_$TR($P(PRCD,"^",7,8),"^","")    ;PRC*5.1*233
  .. D EDIT^PRC0B(.X,"440.6;^PRCH(440.6,;"_PRCRI(440.6),A)
  .. S PRCRI(440.6)=""
  .. QUIT

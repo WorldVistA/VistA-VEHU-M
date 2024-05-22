@@ -1,5 +1,5 @@
-RCDPESPA ;OICO/hrubovcak - ePayment Lockbox Parameter Audit Report ;29 Jan 2019 18:00:14
- ;;4.5;Accounts Receivable;**332,345,349**;Oct 11, 2018;Build 44
+RCDPESPA ;OICO/HRUBOVCAK - ePayment Lockbox Parameter Audit Report ;29 Jan 2019 18:00:14
+ ;;4.5;Accounts Receivable;**332,345,349,424**;Oct 11, 2018;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -126,7 +126,7 @@ AUDPARM ;EP from RCDPESP2
  . . S RCPARAM=Y_RCPARAM_X
  . ; format Boolean values, only if non-null
  . I RCPARAM("file")=342 D:"^7.05^7.06^7.07^7.08^7.09^"[(U_RCPARAM("fld")_U) YESNO(.RCPARAM,RCTMP)
- . I RCPARAM("file")=344.61 D:"^.02^.03^.11^1.01^1.02^"[(U_RCPARAM("fld")_U) YESNO(.RCPARAM,RCTMP)
+ . I RCPARAM("file")=344.61 D:"^.02^.03^.11^1.01^1.02^1.11^"[(U_RCPARAM("fld")_U) YESNO(.RCPARAM,RCTMP) ; PRCA*4.5*424 add 1.11
  . ; PRCA*4.5*349 - Next line add 3.01 and 3.07 for TRICARE
  . I RCPARAM("file")=344.62 D:"^.02^.08^2.01^3.01^3.07^"[(U_RCPARAM("fld")_U) YESNO(.RCPARAM,RCTMP)
  . ;

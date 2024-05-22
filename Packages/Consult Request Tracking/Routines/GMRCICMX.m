@@ -1,5 +1,5 @@
-GMRCICMX ;SLC/WAS - IFC Possible Erroneous Comments Excel Report; Jul 31,2023@08:53:03
- ;;3.0;CONSULT/REQUEST TRACKING;**199**;DEC 27, 1997;Build 52
+GMRCICMX ;SLC/WAS - IFC Possible Erroneous Comments Excel Report; Jan 19, 2024@14:31
+ ;;3.0;CONSULT/REQUEST TRACKING;**199,196**;DEC 27, 1997;Build 3
  ;
  ;
  Q
@@ -80,7 +80,8 @@ GETIFCS ; Get IFCs
  . Q
  Q
 ACTS ; Get IFC activities
- S GMRCACT=0
+ N ERRCMT,CMTIDX,I
+ S (GMRCACT,CMTIDX,I)=0,ERRCMT=""
  F  S GMRCACT=$O(^GMR(123,GMRCO,40,GMRCACT)) Q:'GMRCACT  D
  . S GIDX=GIDX+1 H:'(GIDX#10000) 1
  . ; Get only COMPLETE/UPDATE activities
@@ -91,9 +92,12 @@ ACTS ; Get IFC activities
  . Q:(GMRCX<GMBEG)
  . ; Look for associated results or remote associated results to screen out admin completes
  . I ($D(^GMR(123,GMRCO,50,"AR")))!($D(^GMR(123,GMRCO,51,"AR"))) D
- .. I $G(^GMR(123,GMRCO,40,GMRCACT,1,1,0))'="" D
- ... S GMRCSITE=$P(^GMR(123,GMRCO,0),U,23)
- ... S ^TMP("GMRCICMX",$J,GMRCISIT,GMRCO,GMRCACT,0)="" S TOTCNT=TOTCNT+1
+ .. S CMTIDX=0 S CMTIDX=$P($G(^GMR(123,GMRCO,40,GMRCACT,1,0)),U,4) ;p196
+ .. F I=1:1:CMTIDX S ERRCMT=$S(I=1:$G(^GMR(123,GMRCO,40,GMRCACT,1,I,0)),1:ERRCMT_" "_$G(^GMR(123,GMRCO,40,GMRCACT,1,I,0))) ;p196
+ .. I CMTIDX>0 D
+ ... I $TR(ERRCMT,"")'="" D
+ .... S ^TMP("GMRCICMX",$J,GMRCISIT,GMRCO,GMRCACT,0)="" S TOTCNT=TOTCNT+1
+ ... Q
  .. Q
  . Q
  S ^TMP("GMRCICMX",$J,"TOTCNT")=TOTCNT
@@ -114,10 +118,9 @@ RPTACT ;
  I $D(^GMR(123,+GMRCO,40,+GMRCDA,2)) D
  . S GMRCISIT=$P(^GMR(123,+GMRCO,0),U,23) Q:'GMRCISIT
  . S GMRCISIT=$$GET1^DIQ(4,GMRCISIT,.01)
- ; Only report if comments exist
- I $D(^GMR(123,+GMRCO,40,+GMRCDA,1)) D
- . D RPTCSLT
- . D RPTCMTS
+ ; Only reporting if comments exist
+ D RPTCSLT
+ D RPTCMTS
  Q
 RPTCSLT ;
  I HDRFLG=0 D HDR

@@ -1,5 +1,5 @@
-DGENA6 ;ALB/CJM,ISA,KWP,RTK,LBD,CKN,RN - Enrollment API to create enrollment record; 04/24/03 ; 8/31/05 2:44pm
- ;;5.3;Registration;**232,327,417,491,513,672,940,993,1014,1045**;Aug 13, 1993;Build 15
+DGENA6 ;ALB/CJM,ISA,KWP,RTK,LBD,CKN,RN,JAM - Enrollment API to create enrollment record; 04/24/03 ; 8/31/05 2:44pm
+ ;;5.3;Registration;**232,327,417,491,513,672,940,993,1014,1045,1111**;Aug 13, 1993;Build 18
  ;
  ;CREATE line tag moved from DGENA in DG*5.3*232.;MM  
  ;
@@ -78,8 +78,9 @@ CREATE(DFN,APP,EFFDATE,REASON,REMARKS,DGENR,ENRDATE,END,DGENRYN) ;  DG*5.3*993 A
  .N DGEGTIEN,DGEGT,DGENRC,DGENRIEN
  .S DGEGTIEN=$$FINDCUR^DGENEGT
  .S DGEGT=$$GET^DGENEGT(DGEGTIEN,.DGEGT)
+ .; DG*5.3*1111 - All ENROLLMENT STATUS (file #27.15) entries of REJECTED renamed to DEFERRED. Comments below modified to reflect this.
  .;If patient's enrollment status not above enrollment group threshold 
- .;set status to Rejected:  Initial Application by VAMC)
+ .;set status to DEFERRED: INITIAL APPLICATION BY VAMC
  .I $G(PRIORITY)'="",'$$ABOVE2^DGENEGT1(DFN,$G(APP),PRIORITY,$P(PRIGRP,U,2)) D  Q
  ..;Find patient's current enrollment record
  ..S DGENRIEN=$$FINDCUR^DGENA(DFN)
@@ -87,7 +88,7 @@ CREATE(DFN,APP,EFFDATE,REASON,REMARKS,DGENR,ENRDATE,END,DGENRYN) ;  DG*5.3*993 A
  ..S DGENR("DATE")=$S($G(DGENRC("DATE"))'="":DGENRC("DATE"),1:"")  ;enrollment date
  ..S DGENR("END")=$G(APP)  ;enrollment end date = application date
  ..S EFFDATE=$G(APP)  ; effective date = application date
- ..S DGENR("STATUS")=14  ;Rejected: Initial Application by VAMC
+ ..S DGENR("STATUS")=14  ;DEFERRED; INITIAL APPLICATION BY VAMC
  .S DGENR("STATUS")=1 Q  ;UNVERIFIED
  S DGENR("FACREC")=$$INST^DGENU()
  S DGENR("PRIORITY")=PRIORITY

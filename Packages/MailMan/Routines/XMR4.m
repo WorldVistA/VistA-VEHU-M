@@ -1,8 +1,8 @@
 XMR4 ;ISC-SF/GMB-SMTP HELP ;04/17/2002  11:17
- ;;8.0;MailMan;;Jun 28, 2002
+ ;;8.0;MailMan;**51**;Jun 28, 2002;Build 9
 HELPME ;
  N XMALL
- S XMALL="HHHH^EXPN^HELO^HELP^MAIL^NOOP^QUIT^RCPT^RSET^TURN^VRFY"
+ S XMALL="HHHH^HELO^HELP^MAIL^NOOP^QUIT^RCPT^RSET^TURN^DATA"
  I XMP="ALL" D ALL G END
  I U_XMALL_U[(U_XMP_U) D SHOW(XMP) G END
  D SHOW("HHHH")
@@ -27,9 +27,7 @@ HHHH ;;
  ;;NOOP (which does nothing)
  ;;RSET <reason for> which stops transmission of message
  ;;STAT (which displays the current status of the receiver)
- ;;VRFY <user> (which verifies the existence of a user)
  ;;TURN (Which turns around the line; Sender becomes receiver)
- ;;EXPN <mail group> (which lists the members of a group)
  ;;QUIT (which terminates the connection)
  ;; 
  ;;CHRS <domain> initialize a remote domain

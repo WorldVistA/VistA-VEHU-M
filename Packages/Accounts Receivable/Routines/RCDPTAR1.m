@@ -1,5 +1,5 @@
 RCDPTAR1 ;ALB/DMB - EFT TRANSACTION AUDIT REPORT (Summary) ;08/19/15
- ;;4.5;Accounts Receivable;**303,326,380,409**;Mar 20, 1995;Build 17
+ ;;4.5;Accounts Receivable;**303,326,380,409,424**;Mar 20, 1995;Build 11
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -167,7 +167,7 @@ COMPILE(RCDT1,RCDT2) ; Compile the report (original summary mode)
  . . . ;
  . . . ; Date Received^Deposit #^EFT Amount^Date Matched^Date Posted^Trace #^Payer Name^Payer ID^Stale/Lock
  . . . S ^TMP("RCDPTAR1",$J,EFTIEN)=$$DATE^RCDPRU($P(EFTDATA,U,13),"2ZD")_U_$$GET1^DIQ(344.3,LOCKIEN_",",.03,"E")
- . . . S $P(^TMP("RCDPTAR1",$J,EFTIEN),U,3)=$P(EFTDATA,U,7)
+ . . . S $P(^TMP("RCDPTAR1",$J,EFTIEN),U,3)=$S($P(EFTDATA,U,16)="D":"-",1:"")_$P(EFTDATA,U,7)
  . . . S $P(^TMP("RCDPTAR1",$J,EFTIEN),U,4)=$$DATE^RCDPRU(MDATE,"2ZD")
  . . . S $P(^TMP("RCDPTAR1",$J,EFTIEN),U,5)=$$DATE^RCDPRU($P(LOCKDATA,U,11),"2ZD")
  . . . S $P(^TMP("RCDPTAR1",$J,EFTIEN),U,6)=$P(EFTDATA,U,4)
@@ -222,7 +222,7 @@ COMPILE2(RCDNUM,RCDDT) ; Compile the report (new summary mode)
  . . S $P(^TMP("RCDPTAR1",$J,EFTIEN),"^",2)=XX        ; Deposit Date
  . . S XX=$$DATE^RCDPRU($P(EFTDATA,"^",13),"2ZD")
  . . S $P(^TMP("RCDPTAR1",$J,EFTIEN),"^",3)=XX        ; Date Received
- . . S XX=$P(EFTDATA,"^",7),GTOT=GTOT+XX
+ . . S XX=$S($P(EFTDATA,U,16)="D":"-",1:"")_$P(EFTDATA,"^",7),GTOT=GTOT+XX
  . . S $P(^TMP("RCDPTAR1",$J,EFTIEN),"^",4)=XX        ; EFT Amount of Payment
  . . S XX=$P(EFTDATA,"^",4)
  . . S $P(^TMP("RCDPTAR1",$J,EFTIEN),"^",5)=XX        ; Trace #

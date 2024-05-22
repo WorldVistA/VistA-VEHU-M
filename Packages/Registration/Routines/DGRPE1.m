@@ -1,5 +1,5 @@
-DGRPE1 ;ALB/MRL,RTK,BRM,RGL,ERC,TDM,ARF,JAM - REGISTRATIONS EDITS (CONTINUED) ;4/2/09 11:26am
- ;;5.3;Registration;**114,327,451,631,688,808,804,909,952,1085,1093**;Aug 13, 1993;Build 12
+DGRPE1 ;ALB/MRL,RTK,BRM,RGL,ERC,TDM,ARF,JAM,ARF - REGISTRATIONS EDITS (CONTINUED) ;4/2/09 11:26am
+ ;;5.3;Registration;**114,327,451,631,688,808,804,909,952,1085,1093,1111**;Aug 13, 1993;Build 18
  ; Reference to DO^DIC1 in ICR #10007
  ;
  ;***CONTAINS ISM SPECIFIC CODE TO AVOID STORE ERRORS WITH ELIG.***
@@ -87,3 +87,67 @@ DR207 ; DG*5.3*1085 - Prompt for PREFERRED LANGUAGE (#2.07,.02)
  S DGFDA(2.07,"+1,"_DFN_",",.02)=Y
  D UPDATE^DIE("","DGFDA",,"DGERR")
  Q
+ ;
+DR104() ;DG*5.3*1111-Prompt for the PAGER NUMBER (#.135) field of the PATIENT file #2 only if currently populated
+ ;Returns:  1 - processing of fields beyond the PAGER NUMBER should continue
+ ;          0 - processing should not continue (e.g. the user is exiting or a timeout occurred)
+ ; Quit if PAGER NUMBER field is not currently populated
+ Q:$$GET1^DIQ(2,DFN,.135)="" 1
+ ;
+ ; New input parameters for UPDATE^DIE call
+ N DGFDA
+ N DGERR
+ N DIR
+ ;
+ ; New DIR output vars that are always returned
+ N X ; Unprocessed user response
+ N Y ; Processed user response
+ ;
+ ; New DIR output vars that are conditionally returned
+ N DTOUT  ;User time out
+ N DUOUT  ;User entered caret (^)
+ N DIRUT  ;User entered caret (^), pressed ENTER, or @ entered, or timed out
+ N DIROUT ;User entered two carets (^^)
+ ;
+ ; Prompt for the PAGER NUMBER
+ S DIR(0)="2,.135" D ^DIR K DIR
+ S DGFDA(2,DFN_",",.135)=Y
+ ;
+ ; Quit if TIMED READ (# OF SECONDS) maximum reached
+ I $D(DTOUT) S DGTMOT=1 Q 0
+ ;
+ ; Quit when ^ or ^^ is entered
+ I ($D(DUOUT))!($D(DIROUT)) Q 0
+ ;
+ ; If user wants to delete PAGER NUMBER, then ask user to verify deletion
+ I X["@" S DIR(0)="YA",DIR("B")="NO",DIR("A")="SURE YOU WANT TO DELETE? " N X,Y D ^DIR K DIR
+ ;
+ ; Quit if timeout or exit
+ I $D(DTOUT) S DGTMOT=1 Q 0
+ I ($D(DUOUT))!$D(DIROUT) Q 0
+ ;
+ ; Quit if answered NO to SURE YOU WANT TO DELETE?
+ I (X["N") W " <NOTHING DELETED>" Q 1
+ ;
+ ; Update PAGER NUMBER (#.135) field
+ D UPDATE^DIE("","DGFDA",,"DGERR")
+ Q 1
+ ;
+ ; DG*5.3*1111 - code moved here from DGRPE due to size limitations of DGRPE
+YN1316(DFN) ;Email address indicator - DG*5.3*865
+ N %,RSLT
+ S DIE("NO^")=""
+P1316 ;
+ S %=0
+ W !,"DOES THE PATIENT HAVE AN EMAIL ADDRESS? Y/N"
+ D YN^DICN
+ ; DG*5.3*1111 - process a timeout
+ I $D(DTOUT) S DGTMOT=1 Q 0
+ I %=0 W !,"    If the patient has a valid Email Address, please answer with 'Yes'.",!,"    If no Email Address please answer with 'No'." G P1316
+ I %=-1 W !,"    EXIT NOT ALLOWED ??" G P1316
+ S RSLT=$S(%=1:"Y",%=2:"N")
+ N FDA,IENS
+ Q:'$G(DFN)
+ S IENS=DFN_",",FDA(2,IENS,.1316)=RSLT
+ D FILE^DIE("","FDA")
+ Q RSLT

@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: SDES ERROR CODES
 ZWR
-^SDEC(409.93,0)="SDES ERROR CODES^409.93I^557^557"
+^SDEC(409.93,0)="SDES ERROR CODES^409.93I^558^558"
 ^SDEC(409.93,1,0)="0^O"
 ^SDEC(409.93,1,1)="No Error Number Provided"
 ^SDEC(409.93,2,0)="1^PT"
@@ -1115,6 +1115,8 @@ ZWR
 ^SDEC(409.93,556,1)="Invalid provider based scheduling profile ID."
 ^SDEC(409.93,557,0)="557^CR"
 ^SDEC(409.93,557,1)="Missing provider based scheduling profile ID."
+^SDEC(409.93,558,0)="558^CR"
+^SDEC(409.93,558,1)="An appointment exists within this time range."
 ^SDEC(409.93,"B",0,1)=""
 ^SDEC(409.93,"B",1,2)=""
 ^SDEC(409.93,"B",2,3)=""
@@ -1672,6 +1674,7 @@ ZWR
 ^SDEC(409.93,"B",555,555)=""
 ^SDEC(409.93,"B",556,556)=""
 ^SDEC(409.93,"B",557,557)=""
+^SDEC(409.93,"B",558,558)=""
 ^SDEC(409.93,"C","AP",15)=""
 ^SDEC(409.93,"C","AP",16)=""
 ^SDEC(409.93,"C","AP",22)=""
@@ -2105,6 +2108,7 @@ ZWR
 ^SDEC(409.93,"C","CR",554)=""
 ^SDEC(409.93,"C","CR",556)=""
 ^SDEC(409.93,"C","CR",557)=""
+^SDEC(409.93,"C","CR",558)=""
 ^SDEC(409.93,"C","DT",10)=""
 ^SDEC(409.93,"C","DT",11)=""
 ^SDEC(409.93,"C","DT",12)=""

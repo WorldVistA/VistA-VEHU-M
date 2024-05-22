@@ -1,5 +1,5 @@
 RCDPTAR ;ALB/TJB - EFT TRANSACTION AUDIT REPORT ;1/02/15
- ;;4.5;Accounts Receivable;**303,321,326,380,371**;Mar 20, 1995;Build 29
+ ;;4.5;Accounts Receivable;**303,321,326,380,371,424**;Mar 20, 1995;Build 11
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -55,22 +55,26 @@ DET ; Entry point for detailed report
  ;
 DET1 ; Prompt for user selection criteria
  K DIR
- S DIR(0)="SO^N:Deposit Number;D:Deposit Date;R:Receipt Number;T:Trace Number"
- S DIR("PRE")="S:X?1N X=$S(X=1:""N"",X=2:""d"",X=3:""r"",X=4:""t"",1:""X"")"
+ S DIR(0)="SO^N:Deposit Number;D:Deposit Date;R:Receipt Number;T:Trace Number;F:FMS Document Number"
+ ; PRCA*4.5*424 - Begin changed block - Add search by FMS document number
+ S DIR("PRE")="S:X?1N X=$S(X=1:""N"",X=2:""D"",X=3:""R"",X=4:""T"",X=5:""F"",1:""X"")"
  S DIR("L",1)="Search for EFT Number by:"
  S DIR("L",2)=""
  S DIR("L",3)="  1. Deposit (N)umber"
  S DIR("L",4)="  2. Deposit (D)ate"
  S DIR("L",5)="  3. (R)eceipt #"
- S DIR("L")="  4. (T)race #"
+ S DIR("L",6)="  4. (T)race #"
+ S DIR("L")="  5. (F)MS Document Number"
  S DIR("A")="Search for EFT by"
+ ; End PRCA*4.5*424 changes
  D ^DIR
  I $D(DTOUT)!$D(DUOUT)!(Y="") Q                 ;PRCA*4.5*371 Changed G DETQ to Q
  S RCDET=Y
  ;
  ; Do lookup of EFTs based on the user selection above
  S RCDATA=""
- D @($S(RCDET="N":"DN",RCDET="D":"DT",RCDET="R":"RC",1:"TR")_"(.RCDATA)")
+ ; PRCA*4.5*424 - Move subroutine RC to RCDPTAR2 for size and add FMS doc ID search
+ D @($S(RCDET="N":"DN",RCDET="D":"DT",RCDET="R"!(RCDET="F"):"RC^RCDPTAR2",1:"TR")_"(.RCDATA)")
  ;PRCA*4.5*371 Moved lines that were here to new method SHOWONE
  Q
  ;
@@ -217,56 +221,6 @@ DT2 ; Multiple entries found so prompt for the one that is wanted ;PRCA*4.5*371 
  ;PRCA*4.5*371 - Added lines End
  Q
  ;
-RC(RCDATA) ; Lookup by Receipt Number
- ; Input:   RCDATA  - null on entry
- ; Output:  RCDATA  - passed by refence - see subroutine EFTDATA for delimited list of fields
- ;
- N D,DIC,DTOUT,DUOUT,RCDTN,RCED,RCIEN,STOP,X,Y  ;PRCA*4.5*371 Added Stop
- S STOP=0                                       ;PRCA*4.5*371 Added line
-RC2 ;                                           ;PRCA*4.5*371 Added looping Tag
- W !
- S DIC="^RCY(344,",DIC(0)="QEAMn",DIC("A")="Select RECEIPT: "
- S DIC("W")="D DICW^RCDPUREC"
- S DIC("S")="I $$EDILBEV^RCDPEU($P($G(^(0)),U,4))"
- D ^DIC
- I $D(DTOUT)!$D(DUOUT)!(Y=-1) S RCDATA=-1 Q
- ;
- ; Check if there is a pointer to the AR Deposit
- S RCDATA=""
- S RCIEN=$P($G(^RCY(344,+Y,0)),U,6)
- ;
- ; If there is, then get the EFT via AR Deposit and EDI LockBox files
- I RCIEN D
- . ; Get Ticket Number
- . S RCDTN=$P($G(^RCY(344.1,RCIEN,0)),U,1)
- . I RCDTN="" Q
- . ;
- . ; Get EDI Lockbox Deposit File
- . S RCED=$O(^RCY(344.3,"C",RCDTN,""))
- . I RCED="" Q
- . S RCDATA=$$EFT(RCED)
- ;
- ; If this AR Deposit record is not found, check if it is a receipt on the ERA
- I 'RCIEN D
- . S ERAIEN=$O(^RCY(344.4,"H",+Y,""))
- . I 'ERAIEN S ERAIEN=$O(^RCY(344.4,"ARCT",+Y,""))
- . I 'ERAIEN Q
- . S EFTIEN=$O(^RCY(344.31,"AERA",ERAIEN,""))
- . I EFTIEN S RCDATA=$$EFTDATA(EFTIEN)
- ;
- I RCDATA="" D  G RC2                           ;PRCA*4.5*371 Changed Q to G RC2
- . W !!,"EFT NOT FOUND - please check Receipt"
- . D PAUSE
- ;
- ;PRCA*4.5*371 - Added lines Begin
- Q:RCDATA=-1
- Q:RCDATA=""                                    ; No EFTs found
- D SHOWONE(.STOP)                               ; Display output
- Q:STOP
- G RC2
- ;PRCA*4.5*371 - Added lines End
- Q
- ;
 TR(RCDATA) ; Lookup by Trace Number
  ; Input:   RCDATA  - null on entry
  ; Output:  RCDATA  - passed by refence - see subroutine EFTDATA for delimited list of fields
@@ -278,7 +232,7 @@ TR2 ; Use "F" index in EDI EFT Detail file      ;PRCA*4.5*371 Added looping Tag
  S DIC="^RCY(344.31,",DIC(0)="QEASn",D="F",DIC("A")="Select TRACE: "
  ; DIC("W") may need to be fixed if Trace numbers go over 32 characters. The fields
  ; displayed are the EFT#, Insurance company name, amount and Date Recieved.
- S DIC("W")="D EN^DDIOL($J($P(^(0),U,1),7)_"" ""_$$LJ^XLFSTR($E($P(^(0),U,2),1,20),20)_$J($P(^(0),U,7),10)_"" ""_$$DATE^RCDPRU($P(^(0),U,13)),,""?32"")"
+ S DIC("W")="D EN^DDIOL($J($P(^(0),U,1),7)_"" ""_$$LJ^XLFSTR($E($P(^(0),U,2),1,20),20)_$J(($S($P(^(0),U,16)=""D"":""-"",1:"""")_$P(^(0),U,7)),10)_"" ""_$$DATE^RCDPRU($P(^(0),U,13)),,""?32"")"
  D IX^DIC
  I $D(DTOUT)!$D(DUOUT)!(Y=-1) S RCDATA=-1 Q
  S RCDATA=$$EFTDATA(+Y)
@@ -481,7 +435,7 @@ HEADER(RCNOW,RCPG,RCHR,RCDATA) ; Print Header Section
  S LINE=RCNOW_"   PAGE: "_RCPG_" "
  W ?(IOM-$L(LINE)),LINE
  ; Added EFT line identifier nnn.nn - PRCA*4.5*326
- W !,"EFT#: ",$$AGED(+$P(RCDATA,U,3)),$$GET1^DIQ(344.31,$P(RCDATA,U,3)_",",.01,"E"),?19,"DEPOSIT#: ",$P($G(^RCY(344.3,+$P(RCDATA,U,2),0)),U,6),?42,"EFT TOTAL AMT: "_$P(EFTDATA,U,7)
+ W !,"EFT#: ",$$AGED(+$P(RCDATA,U,3)),$$GET1^DIQ(344.31,$P(RCDATA,U,3)_",",.01,"E"),?19,"DEPOSIT#: ",$P($G(^RCY(344.3,+$P(RCDATA,U,2),0)),U,6),?42,"EFT TOTAL AMT: "_$S($P(EFTDATA,U,16)="D":"-",1:"")_$P(EFTDATA,U,7)
  W !,"EFT TRACE#: ",$P(EFTDATA,U,4)
  W !,"DATE RECEIVED: ",$$DATE^RCDPRU($P(EFTDATA,U,12)),?26,"PAYER/ID: "_$P(EFTDATA,U,2)_"/"_$P(EFTDATA,U,3)
  ;

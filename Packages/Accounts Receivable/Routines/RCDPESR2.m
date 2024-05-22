@@ -1,5 +1,5 @@
 RCDPESR2 ;ALB/TMK/DWA - Server auto-upd - EDI Lockbox ;30 July 2018 20:13:45
- ;;4.5;Accounts Receivable;**173,216,208,230,252,264,269,271,298,321,332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**173,216,208,230,252,264,269,271,298,321,332,424**;Mar 20, 1995;Build 11
  ;Per VA Directive 6402, this routine should not be modified.
  ; IA 4042 (IBCEOB)
  ;Reference to $$VALECME^BPSUTIL2 supported by IA# 6139
@@ -26,7 +26,14 @@ NEWERA(RCTDA,RCREFILE) ;Tasked
  S RCDUPERR=$S($G(RCERR)="DUP"!($G(RCERR(1))=-2):$G(RCERR(1)),1:0) K RCERR(1)
  I RCRTOT,'RCR1 S DIE="^RCY(344.5,",DR=".07////"_RCRTOT,DA=RCTDA D ^DIE
  D:RCDUPERR'=-2 UPDEOB(RCTDA,5,$S('$G(RCREFILE):RCDUPERR,1:-1)) ; Add EOB det to IB
- I RCRTOT D UPDCON^RCDPESR6(RCRTOT),UPDADJ^RCDPESR6(RCRTOT),UPD3444^RCDPESR6(.RCRTOT) ; Bills added 344.41
+ ;PRCA*4.5*424 - Mark new zero balance ERA for auto-post
+ I RCRTOT D  ;
+ . D UPDCON^RCDPESR6(RCRTOT),UPDADJ^RCDPESR6(RCRTOT),UPD3444^RCDPESR6(.RCRTOT) ; Bills added 344.41
+ . I $$ISZERO^RCDPEAP1(RCRTOT),$$AUTOCHK2^RCDPEAP1(RCRTOT,1) D  ;
+ . . N RCFDA
+ . . S RCFDA(344.4,RCRTOT_",",4.02)=0
+ . . D FILE^DIE("","RCFDA")
+ ; PRCA*4.5*424 - End modified code block
  I RCRTOT,RCTDA S DIE="^RCY(344.5,",DR=".08////0;.1///@",DA=RCTDA D ^DIE
  I 'RCRTOT D  G QNEW
  . I RCDUPERR Q:'RCTDA  D  S RCTDA="" Q
@@ -76,7 +83,7 @@ UPDEOB(RCTDA,RCFILE,DUP) ;Upd 361.1 from ERA msg in 344.5 or .4
  ;N RCPAYER,RCFILED,RCEOBD,RCNOUPD,REFORM,RCSD,RCERR1,C5,ECMENUM
  ; PRCA*4.5*321 - re-ordered newed fields and added RCSTART
  N C5,DA,DIE,DR,ECMENUM,N,Q,RC,RC0,RCBILL,RCCT,RCCT1,RCDPBNPI,RCEOB,RCEOBD,RCERR
- N RCERR1,RCET,RCFILED,RCGBL,RCIB,RCIFN,RCMNUM,RCNOUPD,RCPAYER,RCSD,RCSTAR,RCSTART
+ N RCERR1,RCET,RCFILED,RCGBL,RCIB,RCIFN,RCMNUM,RCNOUPD,RCPAYER,RCSD,RCSRV,RCSTART
  N RCX,RCXMG,REFORM,X,Y,Z
  K ^TMP($J,"RCDP-EOB"),^TMP("RCDPERR-EOB",$J)
  ;
@@ -101,20 +108,20 @@ UPDEOB(RCTDA,RCFILE,DUP) ;Upd 361.1 from ERA msg in 344.5 or .4
  ;
  ;srv dates
  S RCSD=$NA(^TMP($J,"RCSRVDT")) K @RCSD
- S RCSTART=0 ; PRCA*4.5*321
+ S RCSRV=0 ; PRCA*4.5*424
  N CP5 S CP5="",RC=1,C5=0 ;retrofit 264 into 269
  F  S RC=$O(@RCGBL@(RC)) Q:'RC  S RC0=$G(^(RC,0)) D
  .I RC0<5 Q
- .;Statement Start Date - 05 Record is mandatory
- .I +RC0=5 S RCSTART=+$P(RC0,U,9) ; PRCA*4.5*321
- .I +RC0=5 S C5=RC,CP5=$P(RC0,U,2) Q  ;retrofit 264 into 269
+ .; PRCA*4.5*424 Use statement start date if service date is not present
+ .;              Statement Start Date - 05 Record is mandatory
+ .I +RC0=5 D  Q  ;
+ ..S C5=RC,CP5=$P(RC0,U,2) ;retrofit 264 into 269
+ ..S @RCSD@(C5)=+$P(RC0,U,9)
+ ..S RCSRV=0
  .; service date for possible ECME# matching
  .; PRCA*4.3*321 BEGIN
- .I +RC0=40,$$VALECME^BPSUTIL2(CP5),C5,'$D(@RCSD@(C5)) D
- ..I $P(RC0,U,19) S @RCSD@(C5)=+$P(RC0,U,19) Q
- ..; If service date not present use statement start date instead
- ..S:RCSTART @RCSD@(C5)=RCSTART
- ; PRCA*4.5*321 END
+ .I +RC0=40,$$VALECME^BPSUTIL2(CP5),C5,'RCSRV D
+ ..I $P(RC0,U,19) S @RCSD@(C5)=+$P(RC0,U,19),RCSRV=1
  ;
  S RC=1,(RCCT,RCCT1,RCX,REFORM)=0,RCBILL=""
  S RCERR1=$NA(^TMP("RCERR1",$J)) K @RCERR1

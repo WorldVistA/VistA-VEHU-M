@@ -1,5 +1,5 @@
 DGRP1 ;ALB/MRL,ERC,BAJ,PWC,JAM,JAM,ARF - DEMOGRAPHIC DATA ;19 Jul 2017  3:02 PM
- ;;5.3;Registration;**109,161,506,244,546,570,629,638,649,700,653,688,750,851,907,925,941,985,1014,1033,1056**;Aug 13, 1993;Build 18
+ ;;5.3;Registration;**109,161,506,244,546,570,629,638,649,700,653,688,750,851,907,925,941,985,1014,1033,1056,1111**;Aug 13, 1993;Build 18
  ;
 EN ;
  ; JAM - Patch DG*5.3*941, Reformatting Registration screen 1.  New field layout.
@@ -38,9 +38,11 @@ EN ;
  ;
  ; DG*5.3*985; JAM - Move pager up to same line across from cell phone
  ;* Output Pager
- W ?47,"Pager #: "
- I $P(DGRP(.13),U,5)'="" W ?56,$P(DGRP(.13),U,5)
- I $P(DGRP(.13),U,5)="" W ?56,"UNANSWERED"
+ ; DG*5.3*1111; The Pager: label is only displayed when the PAGER NUMBER (#.135) field of the PATIENT (#2)
+ ;              file is populated and will no longer display "UNANSWERED" when the field is NULL.
+ I $P(DGRP(.13),U,5)'="" W ?47,"Pager #: ",?56,$P(DGRP(.13),U,5)
+ ;I $P(DGRP(.13),U,5)'="" W ?56,$P(DGRP(.13),U,5)
+ ;I $P(DGRP(.13),U,5)="" W ?56,"UNANSWERED"
  ;
  ;* Output Email Address
  W !,"    Email Address: "

@@ -1,5 +1,5 @@
-DGENEGT1 ;ALB/KCL,KWP,LBD,RGL,BRM,DLF,TDM,KUM,ARF - Enrollment Group Threshold API's ; 6/17/09 11:05am
- ;;5.3;Registration;**232,417,454,491,513,451,564,672,717,688,803,754,1018,1090**;Aug 13, 1993;Build 16
+DGENEGT1 ;ALB/KCL,KWP,LBD,RGL,BRM,DLF,TDM,KUM,ARF,JAM - Enrollment Group Threshold API's ; 6/17/09 11:05am
+ ;;5.3;Registration;**232,417,454,491,513,451,564,672,717,688,803,754,1018,1090,1111**;Aug 13, 1993;Build 18
  ;
  ;
 NOTIFY(DGEGT,OLDEGT) ;
@@ -146,7 +146,8 @@ OVRRIDE(DPTDFN,EGT) ;check for previous EGT override by HEC and new rules
  S ENRCAT=$P($G(^DGEN(27.15,+EGTENR("STATUS"),0)),"^",2)
  ; If enrollment status was overridden at HEC, then cont. enroll.
  I EGTENR("SOURCE")=2,ENRDT'<EGT("EFFDATE"),ENRCAT="E" Q 1
- ; If status is Rejected or Cancelled/Declined, quit (no cont. enroll.)
+ ; DG*5.3*1111 - ENROLLMENT STATUS (file #27.15) entries of REJECTED renamed to DEFERRED. Modified comment below.
+ ; If status is Deferred or Cancelled/Declined, quit (no cont. enroll.)
  I "^4^7^11^12^13^22^"[(U_EGTENR("STATUS")_U) Q 0
  ; If Application Date or Effective Date of Change are prior to the
  ; EGT Effective Date then cont. enroll.
