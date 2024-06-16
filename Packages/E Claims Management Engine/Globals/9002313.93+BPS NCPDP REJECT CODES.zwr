@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: BPS NCPDP REJECT CODES
 ZWR
-^BPSF(9002313.93,0)="BPS NCPDP REJECT CODES^9002313.93I^1534^1532"
+^BPSF(9002313.93,0)="BPS NCPDP REJECT CODES^9002313.93I^1535^1533"
 ^BPSF(9002313.93,1,0)="01^M/I IIN Number"
 ^BPSF(9002313.93,2,0)="02^M/I Version/Release Number"
 ^BPSF(9002313.93,3,0)="03^M/I Transaction Code"
@@ -1533,6 +1533,7 @@ ZWR
 ^BPSF(9002313.93,1532,0)="DN6^M/I N Transaction Payer Identification Segment"
 ^BPSF(9002313.93,1533,0)="DN7^N Transaction Payer Identification Segment Incorrectly Formatted"
 ^BPSF(9002313.93,1534,0)="DN8^N Transaction Payer Identification Segment Required For Adjudication"
+^BPSF(9002313.93,1535,0)="DN9^Invalid Submission Clarification Code Combination"
 ^BPSF(9002313.93,"B",10,10)=""
 ^BPSF(9002313.93,"B",11,11)=""
 ^BPSF(9002313.93,"B",12,12)=""
@@ -2727,6 +2728,7 @@ ZWR
 ^BPSF(9002313.93,"B","DN6",1532)=""
 ^BPSF(9002313.93,"B","DN7",1533)=""
 ^BPSF(9002313.93,"B","DN8",1534)=""
+^BPSF(9002313.93,"B","DN9",1535)=""
 ^BPSF(9002313.93,"B","DP",119)=""
 ^BPSF(9002313.93,"B","DQ",121)=""
 ^BPSF(9002313.93,"B","DR",120)=""

@@ -1,5 +1,5 @@
-SDES2GETAPPTREQ ;ALB/BWF - SDES2 GET APPT REQ RPCS ;FEB 07, 2024
- ;;5.3;Scheduling;**873**;Aug 13, 1993;Build 10
+SDES2GETAPPTREQ ;ALB/BWF,JAS - SDES2 GET APPT REQ RPCS ;APR 16, 2024
+ ;;5.3;Scheduling;**873,877**;Aug 13, 1993;Build 14
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to ^VA(200 in ICR #10060 ;
@@ -169,6 +169,7 @@ GETREQUEST(REQUEST,REQUESTIEN,SDDUZ) ;
  S REQUEST("Request",NUM,"PatientIEN")=DFN
  S REQUEST("Request",NUM,"PatientICN")=$$GETPATICN^SDESINPUTVALUTL(DFN)
  S REQUEST("Request",NUM,"PatientName")=REQDATA(FN,REQUESTIEN_",",.01,"E") ;
+ S REQUEST("Request",NUM,"PatientPhone")=$$GET1^DIQ(2,DFN_",",.131,"E")
  S REQUEST("Request",NUM,"RequestIEN")=REQUESTIEN
  S REQUEST("Request",NUM,"RequestComments")=REQDATA(FN,REQUESTIEN_",",25,"E")
  S REQUEST("Request",NUM,"CreateDate")=$$FMTISO^SDAMUTDT(REQDATA(FN,REQUESTIEN_",",1,"I"))

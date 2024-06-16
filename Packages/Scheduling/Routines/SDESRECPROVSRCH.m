@@ -1,5 +1,5 @@
-SDESRECPROVSRCH  ;ALB/MGD/ANU/JAS - VISTA SCHEDULING RECALL PROVIDER USER SEARCH RPC; May 11, 2023
- ;;5.3;Scheduling;**823,827,845**;Aug 13, 1993;Build 8
+SDESRECPROVSRCH  ;ALB/MGD/ANU/JAS,TJB - VISTA SCHEDULING RECALL PROVIDER USER SEARCH RPC; Apr 15, 2024
+ ;;5.3;Scheduling;**823,827,845,877**;Aug 13, 1993;Build 14
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
@@ -66,9 +66,8 @@ GETPROVLIST(SEARCHSTRING,USERLIST) ; pull matching providers using the first inp
  . S IEN40354=RESULTS("DILIST",2,SUB3)
  . Q:($$GET1^DIQ(403.54,IEN40354_",",5,"I")="I")
  . S USERDUZ=$G(RESULTS("DILIST","ID",SUB3,.01,"I"))
- . S USRISACTIVE=$$ACTIVPRV^PXAPI(USERDUZ,DT) ;check if user is not TERMINATED or DIUSER'ed or User cannot sign-on (no AC/VC assigned)
- . Q:$P(USRISACTIVE,"^")'=1  ;Quit if User is TERMINATED or DIUSER'ed or User cannot sign-on (no AC/VC assigned)
- .;SD*5.3*827
+ . S USRISACTIVE=$$ACTIVE^XUSER(USERDUZ)
+ . Q:$P(USRISACTIVE,"^")'=1  ;Quit if User is TERMINATED or DISUSER'ed or User cannot sign-on (no AC/VC assigned)
  . S USERTEAM=$G(RESULTS("DILIST","ID",SUB3,1,"E"))
  . S USERLOC=$G(RESULTS("DILIST","ID",SUB3,2,"E"))
  . S USERLIST(CNT)=USERDUZ_"^"_USERTEAM_"^"_USERLOC

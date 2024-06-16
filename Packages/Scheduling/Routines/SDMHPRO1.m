@@ -1,5 +1,6 @@
-SDMHPRO1 ;MAF/ALB - MENTAL HEALTH PROACTIVE HIGH RISK REPORT (BGJ CONT.);AUGUST 31, 2010
- ;;5.3;Scheduling;**588**;Aug 13,1993;Build 53
+SDMHPRO1 ;MAF/ALB,JAS - MENTAL HEALTH PROACTIVE HIGH RISK REPORT (BGJ CONT.) ; MAR 29, 2024@14:00
+ ;;5.3;Scheduling;**588,877**;Aug 13,1993;Build 14
+ ;;Per VHA Directive 6402, this routine should not be modified
 DATA ; Set up the data for the patient
  ;       piece 1 = dfn
  ;       piece 2 = Appointment Date and time
@@ -7,9 +8,9 @@ DATA ; Set up the data for the patient
  ;       piece 4 = PID last 4 of SSN
  ;       piece 5 = clinic ien   ^SC(
  ;       piece 6 = stop code ien ^DIC(40.7
- ;   
  ;
-EN ;PRINT OF THE ^TMP 
+ ;
+EN ;PRINT OF THE ^TMP
  N SDXDIV,SDXCLIN,SDXDFN,SDXSTOP,SDXREM,SDXNM,SDCOUNT,SDATE
  S (SDXDFN,SDXREM,SDCOUNT)=0
  K SDPAT
@@ -26,7 +27,7 @@ EN ;PRINT OF THE ^TMP
  ....F  S SDXCLIN=$O(^TMP(NAMSPC1,$J,SDXDIV,SDXNM,SDATE,SDXCLIN)) Q:SDXCLIN']""!(SDUP)   D
  .....S SDXSTOP=0
  .....F  S SDXSTOP=$O(^TMP(NAMSPC1,$J,SDXDIV,SDXNM,SDATE,SDXCLIN,SDXSTOP)) Q:'SDXSTOP!(SDUP)  D
- ......I $D(^TMP(NAMSPC1,$J,SDXDIV,SDXNM,SDATE,SDXCLIN,SDXSTOP)) Q:$D(SDPAT(SDXDIV,$O(^DPT("B",SDXNM,0))))  D PRT
+ ......I $D(^TMP(NAMSPC1,$J,SDXDIV,SDXNM,SDATE,SDXCLIN,SDXSTOP)) Q:$D(SDPAT(SDXDIV,$O(^DPT("B",$E(SDXNM,1,30),0))))  D PRT
  .N SDX S SDX=$$SETSTR(" ",X,1,81) D SET1(SDX)
  Q
  ;
@@ -56,10 +57,10 @@ PRT ;Print  report
  ;
  ;
 SETSTR(W,X,Y,Z) ;SET UP THE STRING
- ;W= String 
+ ;W= String
  ;X= Variable to set it into
  ;Y= column to set it into
- ;Z= length of the strubg
+ ;Z= length of the string
  S X=$$SETSTR^SDUL1(W,X,Y,Z)
  Q X
 SET1(X) ;Sets the XMTEXT global
@@ -88,7 +89,7 @@ FUT ; FUTURE SCHEDULED APPTS.
  . S SDFA=0 F  S SDFA=$O(^TMP($J,"SDAMA301",SDXDFN,SDFA)) Q:SDFA=""  D  ;!($P($G(SDFA),".",1))'=$P(SDBEG,".",1)  D
  ..S (SDX,X)=""
  ..S SDFUTDT=$$FMTE^XLFDT(SDFA,"5") S SDFNODE=^TMP($J,"SDAMA301",SDXDFN,SDFA)
- ..N SDCLCD S SDCLCD=$P($P($G(SDFNODE),"^",2),";",1) I SDCLCD]"" S SDCLCD=$P($G(^SC(SDCLCD,0)),"^",15) Q:SDXDIV'=$P($G(^DG(40.8,SDCLCD,0)),"^",1) 
+ ..N SDCLCD S SDCLCD=$P($P($G(SDFNODE),"^",2),";",1) I SDCLCD]"" S SDCLCD=$P($G(^SC(SDCLCD,0)),"^",15) Q:SDXDIV'=$P($G(^DG(40.8,SDCLCD,0)),"^",1)
  ..I '$D(SDXX) S SDX=$$SETSTR(SDFUTDT,X,32,16)_$$SETSTR($P($P(SDFNODE,"^",2),";",2),X,2,30)
  ..I $D(SDXX) S SDX=SDXX_$$SETSTR(SDFUTDT,X,2,16)_$$SETSTR($P($P(SDFNODE,"^",2),";",2),X,2,30) K SDXX
  ..D SET1(SDX)

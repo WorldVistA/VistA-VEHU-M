@@ -1,10 +1,11 @@
-SDESPROVSEARCH ;BAYPINES/KML,MGD - Get Provider based on Search String ;Sept 23, 2022
- ;;5.3;Scheduling;**819,826**;Aug 13, 1993;Build 18
+SDESPROVSEARCH ;BAYPINES/KML,MGD,JAS - Get Provider based on Search String ;Apr 5, 2024
+ ;;5.3;Scheduling;**819,826,877**;Aug 13, 1993;Build 14
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
  ;-------------------
  ; Reference to $$ACTIVPRV^PXAPI is supported by IA #2349
+ ; Reference to $$ACTIVE^XUSER is supported by IA #2343
  Q
  ; rpc = SDES SEARCH PROVIDERS
 PROVIDERSEARCH(JSONRETURN,SEARCHSTRING) ;Search for Healthcare Providers and provide return of providers in JSON STRING
@@ -79,7 +80,7 @@ SCREEN(USERDUZ,DATE) ;
  I '+$G(USERDUZ) Q 0
  S:'+$G(DATE) DATE=DT
  S DATE=$P(DATE,".")
- I $$ACTIVPRV^PXAPI(USERDUZ,DATE) Q 1
+ I $$ACTIVPRV^PXAPI(USERDUZ,DATE)&($$ACTIVE^XUSER(USERDUZ)) Q 1
  Q 0
  ;
 BUILDRETURN(PROVIDERLIST,PROVIDERETURN) ;Build return array with provider data

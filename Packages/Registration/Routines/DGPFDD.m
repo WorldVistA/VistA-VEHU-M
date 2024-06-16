@@ -1,5 +1,5 @@
 DGPFDD ;ALB/RPM - PRF DATA DICTIONARY UTILITIES ; 9/06/06 1:14pm
- ;;5.3;Registration;**425,554,650**;Aug 13, 1993;Build 3
+ ;;5.3;Registration;**425,554,650,1113**;Aug 13, 1993;Build 10
  ;
  Q  ;No direct entry
  ;
@@ -41,6 +41,7 @@ INACT(DGIEN,DGSTAT,DGFILE,DGUSER) ;Inactivate flag trigger
  . . S DGPFAH("ASSIGNDT")=$$NOW^XLFDT()
  . . S DGPFAH("ENTERBY")=DGUSER
  . . S DGPFAH("APPRVBY")=DGUSER
+ . . S DGPFAH("ORIGFAC")=+$$SITE^VASITE
  . . S DGPFAH("COMMENT",1,0)="Assignment Inactivated automatically due to Flag Inactivation."
  . . I $$STOALL^DGPFAA(.DGPFA,.DGPFAH)
  Q

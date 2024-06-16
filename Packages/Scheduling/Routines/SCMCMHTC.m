@@ -1,5 +1,6 @@
-SCMCMHTC ;BP/DMR - PCMM/MH API ;02/27/2015
- ;;5.3;Scheduling;**575,603**;AUG 13, 1993;Build 79
+SCMCMHTC ;BP/DMR,MJE - PCMM/MH API ;04/01/2024
+ ;;5.3;Scheduling;**575,603,877**;AUG 13, 1993;Build 14
+ ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;This API provides the Mental Health Treatment Coordinator
  ;from PCMM for display in CPRS, or used as a stand alone API.
@@ -9,7 +10,7 @@ SCMCMHTC ;BP/DMR - PCMM/MH API ;02/27/2015
  ;Output - IEN^MHTC^Team Position^Role^Team
  ;
 START(DFN) ; Get patient MHTC info.
- Q:'$G(DFN)
+ Q:'$G(DFN) 0
  N ACT,IEN,PNAM,PRO,TIEM,TPUR,TEAM
  N TP,TPR,TPRIEN,ADATE,UDATE,SAVE,NP,TNAM,SCNOW
  S MHTC="",SAVE=""

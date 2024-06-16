@@ -1,5 +1,5 @@
 RCXFMSUR ;WISC/RFJ-revenue source codes ;10/19/10 1:47pm
- ;;4.5;Accounts Receivable;**90,101,170,203,173,220,231,273,310,315,338,360**;Mar 20, 1995;Build 10
+ ;;4.5;Accounts Receivable;**90,101,170,203,173,220,231,273,310,315,338,360,435**;Mar 20, 1995;Build 3
  ;;Per VA Directive 6402, this routine should not be modified.
  ;Read ^DGCR(399) via IA 3820
  Q
@@ -216,6 +216,7 @@ SHOW ;  show/calculate revenue source code for a selected bill
  I DT<$$ADDPTEDT^PRCAACC() W !,"funds 5287.1,5287.3,5287.4,4032"
  ;
  N %,%Y,BILLDA,C,DIC,FUND,I,RCRJFLAG,RSC,X,Y
+ N CATEG  ;PRCA*4.5*435 Temporary fix
  ;
  F  D  Q:$G(RCRJFLAG)
  .   S DIC="^PRCA(430,",DIC(0)="QEAM"
@@ -228,6 +229,17 @@ SHOW ;  show/calculate revenue source code for a selected bill
  .   ; only recalculate fund number if Accrued fund
  .   I $$PTACCT^PRCAACC(FUND) S FUND=$$GETFUNDB^RCXFMSUF(BILLDA,1)
  .   ;end PRCA*4.5*338
+ .   ;
+ .   ;PRCA*4.5*435 - Temporary fix for Manual BOCs (cat = 18,22,23) that may not have a fund 
+ .   ;A permanent fix for both the fund and RSC will occur as a future enhancement
+ .   I $G(FUND)="" D
+ .   .   S CATEG=+$P($G(^PRCA(430,BILLDA,0)),"^",2)
+ .   .   ;Valid categories are: 18 - C (MEANS TEST), 22 - RX CO-PAYMENT/SC VET, 23 - RX CO-PAYMENT/NSC VET
+ .   .   I CATEG'=18&(CATEG'=22)&(CATEG'=23) Q
+ .   .   ;Calculate and store the fund
+ .   .   S FUND=$$GETFUNDB^RCXFMSUF(BILLDA)
+ .   ;end PRCA*4.5*435
+ .   ;
  .   W !!,"        Bill Number: ",$P($G(^PRCA(430,BILLDA,0)),"^")
  .   W !,"               Fund: ",FUND
  .   I '$$PTACCT^PRCAACC(FUND),FUND'=4032 D  Q

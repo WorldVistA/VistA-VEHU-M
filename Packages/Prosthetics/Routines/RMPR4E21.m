@@ -1,5 +1,5 @@
-RMPR4E21 ;PHX/HNC - CLOSE OUT PURCHASE CARD TRANSACTION ;3/1/1996
- ;;3.0;PROSTHETICS;**3,12,26,28,30,34,41,45,62,111,78,114,118,133,137,182,198**;Feb 09, 1996;Build 6
+RMPR4E21 ;PHX/HNC - CLOSE OUT PURCHASE CARD TRANSACTION; MAR 1, 1996
+ ;;3.0;PROSTHETICS;**3,12,26,28,30,34,41,45,62,111,78,114,118,133,137,182,198,211**;Feb 09, 1996;Build 10
  ;TH  Patch #78 - 08/04/03 - Add shipment date. Call routine ^RMPR4E23
  ;RVD patch #62 - PCE processing and link to suspense
  ;
@@ -48,9 +48,22 @@ L1 K DIR S DIR(0)="FO",DIR("A")="Select ITEM"
  S DIC=661,DIC(0)="ENMZ" D ^DIC I +Y'>0 W !,"** No Item selected.." G DS
  G:$D(DTOUT)!$D(DUOUT) L
  D PROC G L1
+ ;
+ ;RMPR*3.0*211 changes; called by "DEL" node code on the .01 field of the #664.02 multiple
+IC() ;DETERMINE NUMBER OF ITEMS FOR PURCHASING AND CLOSE-OUT
+ N RMPRICS,RMPRIC
+ S RMPRICS=0 I $D(RMPRA) F  S RMPRICS=$O(^RMPR(664,RMPRA,1,RMPRICS)) Q:RMPRICS'>0  S RMPRIC=$G(RMPRIC)+1
+ Q:RMPRIC'=1 RMPRIC
+IC1 ;DISPLAY TEXT FOR DELETE (@) ATTEMPTS FOR MULTIPLES OF ONLY 1 ITEM
+ W !!,"You may not delete the single remaining item in the BILLING ITEM"
+ W !,"sub-file. If you want to change the existing item to a different"
+ W !,"item, add the new item and then delete the desired item.",!!
+ S X="?"
+ Q RMPRIC
+ ;End of RMPR*3.0*211 changes
  ;***process items*******************************************************
 PROC N NEW S HY=+Y I $D(^RMPR(664,RMPRA,1,"B",+Y)) S DA=$O(^RMPR(664,RMPRA,1,"B",+Y,0)) G CHK
-FILE S Y=HY,NUM=$P(^RMPR(664,RMPRA,1,0),U,4)+1,$P(^(0),U,4)=NUM,$P(^(0),U,3)=$P(^(0),U,3)+1,^RMPR(664,RMPRA,1,NUM,0)=+Y,DA=NUM,^RMPR(664,RMPRA,1,"B",+Y,NUM)="" S NEW=1
+FILE S Y=HY,NUM=$P(^RMPR(664,RMPRA,1,0),U,3)+1,$P(^(0),U,3)=NUM,$P(^(0),U,4)=$P(^(0),U,4)+1,^RMPR(664,RMPRA,1,NUM,0)=+Y,DA=NUM,^RMPR(664,RMPRA,1,"B",+Y,NUM)="" S NEW=1
 ENT K DR,DQ S DA(1)=RMPRA,DIE="^RMPR(664,"_RMPRA_",1,"
  ;S DR=$S($D(NEW):"",1:".01;")
  I '$D(NEW),($P(^RMPR(664,RMPRA,1,DA,0),U,7)="") S $P(^(0),U,7)=$P(^(0),U,3)

@@ -1,5 +1,5 @@
-SDES2UTIL ;ALB/MGD,ANU,TJB - SDES2 UTILITIES ;OCT 23, 2023
- ;;5.3;Scheduling;**853,857,864**;Aug 13, 1993;Build 15
+SDES2UTIL ;ALB/MGD,ANU,TJB,BWF - SDES2 UTILITIES ;OCT 23, 2023
+ ;;5.3;Scheduling;**853,857,864,877**;Aug 13, 1993;Build 14
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to INSTITUTION in #2251
@@ -253,9 +253,16 @@ SECONDARYAMIS(CREDITAMIS,ERRORNUM) ;
 AMISTOSTOPCODE(AMIS) ; Map from AMIS to Stop Code
  ; Input: AMIS = (Req) the AMIS REPORTING STOP CODE (#1) field from the CLINIC STOP (#40.7) file.
  ; Output: 0:validation failed, IEN for the Stop Code that matches to the passed in AMIS code.
- S AMIS=$$FIND1^DIC(40.7,"","X",AMIS,"C")
- I +AMIS,$D(^DIC(40.7,AMIS,0)) Q AMIS
- Q 0
+ N STOPIEN,STOPINACTDT,STOPCOUNT,STOPFOUND
+ I '$G(AMIS) Q 0
+ S (STOPIEN,STOPCOUNT,STOPFOUND)=0
+ F  S STOPIEN=$O(^DIC(40.7,"C",AMIS,STOPIEN)) Q:'STOPIEN  D
+ .S STOPINACTDT=$$GET1^DIQ(40.7,STOPIEN,2,"I")
+ .I STOPINACTDT,STOPINACTDT<DT!(STOPINACTDT=DT) Q
+ .S STOPCOUNT=STOPCOUNT+1
+ .S STOPFOUND=STOPIEN
+ I STOPCOUNT>1 Q 0
+ Q STOPFOUND
  ;
 STOPCODETOAMIS(STOPIEN) ; Map from Stop Code IEN to AMIS Stop Code Number
  ;  Input: STOPIEN = (Req) The IEN of the Stop Code in the CLINIC STOP (#40.7) file.

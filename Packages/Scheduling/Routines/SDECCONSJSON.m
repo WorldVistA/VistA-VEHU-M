@@ -1,5 +1,5 @@
-SDECCONSJSON ;ALB/ANU,MGD,LAB - VISTA SCHEDULING RPCS ;MAR 31, 2022@14:39
- ;;5.3;Scheduling;**784,785,788,805,807,813**;Aug 13, 1993;Build 6
+SDECCONSJSON ;ALB/ANU,MGD,LAB/BLB - VISTA SCHEDULING RPCS ;MAR 31, 2022@14:39
+ ;;5.3;Scheduling;**784,785,788,805,807,813,877**;Aug 13, 1993;Build 14
  ;
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
@@ -49,7 +49,7 @@ INIT ; initialize values needed
  S PENDING=$O(^ORD(100.01,"B","PENDING",0))
  S ERRPOP=0,SDECI=0,ERRMSG=""
  Q
- ; 
+ ;
 VALIDATE ; validate incoming parameters
  ;*Add validation of DFN
  I '(+DFN) D

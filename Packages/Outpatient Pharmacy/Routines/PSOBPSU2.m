@@ -1,5 +1,5 @@
 PSOBPSU2 ;BIRM/MFR - BPS (ECME) Utilities 2 ;10/15/04
- ;;7.0;OUTPATIENT PHARMACY;**260,287,289,341,290,358,359,385,421,459,482,512,544,562,660,681**;DEC 1997;Build 11
+ ;;7.0;OUTPATIENT PHARMACY;**260,287,289,341,290,358,359,385,421,459,482,512,544,562,660,681,703**;DEC 1997;Build 16
  ; Reference to ^VA(200 in ICR #10060
  ; Reference to DUR1^BPSNCPD3 in ICR #4560
  ; Reference to $$NCPDPQTY^PSSBPSUT in ICR #4992
@@ -277,34 +277,47 @@ UPDFL(RXREC,SUB,INDT) ;update fill date with release date when NDC changes at CM
  ;Input: RXREC = Prescription File IEN
  ;         SUB = Refill
  ;        INDT = Release date
- N DA,DIE,DR,DTOUT,DUOUT,PSOX,SFN,DEAD,XOK,OLD,X,II,EXDAT,OFILLD,COM,CNT,RFCNT,RF
- S DEAD=0,SFN=""
+ N COM,DA,DEAD,DIE,DR,DTOUT,DUOUT,EXDAT,EXPDATE,II,OFILLD
+ N PSOSUSPA,RXRECI
+ ;
+ S DEAD=0
  S EXDAT=INDT
  I EXDAT["." S EXDAT=$P(EXDAT,".")
+ ;
+ ; If the expiration date of the prescription is on or before
+ ; the Released Date, then Quit out (i.e. do not change the
+ ; Fill Date, do not add an entry to the Activity Log).
+ ;
+ S EXPDATE=$$GET1^DIQ(52,RXREC,26,"I")
+ I EXPDATE'="",EXPDATE'>EXDAT Q
+ ;
  I '$D(SUB) S SUB=0 F II=0:0 S II=$O(^PSRX(RXREC,1,II)) Q:'II  S SUB=+II
- I 'SUB S OFILLD=$$GET1^DIQ(52,RXREC,22,"I") Q:OFILLD=EXDAT  D
- . S (X,OLD)=$P(^PSRX(RXREC,2),"^",2)
+ I 'SUB D
+ . S OFILLD=$$GET1^DIQ(52,RXREC,22,"I")
+ . I OFILLD=EXDAT Q
  . S DA=RXREC
- . S DR="22///"_EXDAT_";101///"_EXDAT
  . S DIE=52
+ . S DR="22///"_EXDAT_";101///"_EXDAT
  . D ^DIE
  . K DIE,DA
  . Q
- I SUB S (OLD,X)=+$P($G(^PSRX(RXREC,1,SUB,0)),"^"),DA(1)=RXREC,DA=SUB,OFILLD=$$GET1^DIQ(52.1,DA_","_RXREC,.01,"I") Q:OFILLD=EXDAT  D
+ I SUB D
+ . S OFILLD=$$GET1^DIQ(52.1,SUB_","_RXREC,.01,"I")
+ . I OFILLD=EXDAT Q
+ . S DA=SUB
+ . S DA(1)=RXREC
  . S DIE="^PSRX("_DA(1)_",1,"
  . S DR=".01///"_EXDAT
  . D ^DIE
  . K DIE
- . S $P(^PSRX(RXREC,3),"^")=EXDAT
+ . S $P(^PSRX(RXREC,3),"^")=EXDAT  ; Field# 101, Last Dispensed Date
  . Q
  I $D(DTOUT)!($D(DUOUT)) Q
- ;start of pso 660 code
- N PSOSUSPA,RXRECI S RXRECI=$O(^PS(52.5,"B",RXREC,0)) S:RXRECI PSOSUSPA=$P($G(^PS(52.5,RXRECI,0)),"^",5)
+ ;
+ S RXRECI=$O(^PS(52.5,"B",RXREC,0))
+ I RXRECI S PSOSUSPA=$P($G(^PS(52.5,RXRECI,0)),"^",5)
  S COM="Change "_$S($G(PSOSUSPA):"Partial",'$G(SUB):"Fill",1:"Refill")_" Date "_$E(OFILLD,4,5)_"/"_$E(OFILLD,6,7)_"/"_$E(OFILLD,2,3)_" to "_$E(INDT,4,5)_"/"_$E(INDT,6,7)_"/"_$E(INDT,2,3)
  D RXACT(RXREC,SUB,COM,"S",DUZ)
- ;S DA=RXREC
- ;D AREC^PSOSUCH1
- ; end of pso 660 code
 FIN ;
  Q
  ;

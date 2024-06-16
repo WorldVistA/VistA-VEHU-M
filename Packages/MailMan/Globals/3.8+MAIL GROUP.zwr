@@ -3501,7 +3501,7 @@ ZWR
 ^XMB(3.8,428,2,5,0)="clinic inactivation messages will error out. The routine"
 ^XMB(3.8,428,2,6,0)="SDNACT needs this mail group in order to work properly."
 ^XMB(3.8,428,3)=11720
-^XMB(3.8,429,0)="REMINDER MANAGEMENT^PU^n^59^3230902^^1"
+^XMB(3.8,429,0)="REMINDER MANAGEMENT^PU^n^60^3240616^^1"
 ^XMB(3.8,429,1,0)="^3.81P^2^2"
 ^XMB(3.8,429,1,1,0)="1^I"
 ^XMB(3.8,429,1,2,0)="11720^I"

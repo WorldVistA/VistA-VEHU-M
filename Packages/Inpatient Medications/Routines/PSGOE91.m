@@ -1,5 +1,5 @@
 PSGOE91 ;BIR/CML - ACTIVE ORDER EDIT (CONT.) ;May 03, 2023@17:45
- ;;5.0;INPATIENT MEDICATIONS;**50,64,58,110,111,136,113,179,265,267,285,315,334,373,366,327,441**;16 DEC 97;Build 1
+ ;;5.0;INPATIENT MEDICATIONS;**50,64,58,110,111,136,113,179,265,267,285,315,334,373,366,327,441,451**;16 DEC 97;Build 1
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;Reference to ^PS(55 in ICR #2191.
  ;Reference to ^PS(50.7 in ICR #2180
@@ -50,7 +50,7 @@ A10 ; start date/time edit
  . W !!?5,"Start Date/Time may not be edited for active complex orders." D PAUSE^VALM1
  K PSGSDX
  W !,"START DATE/TIME: "_$S($P(PSGSDN,"^")]"":$P(PSGSDN,"^")_"// ",1:"") R X:DTIME I X="^"!'$T W:'$T $C(7) S PSGOEE=0 G DONE
- I X="",PSGSD W "  "_PSGSDN G DONE
+ I X="",PSGSD W "  "_$P(PSGSDN,"^") G DONE     ;P451
  ;I X="P" D ENPREV^PSGDL W:'$D(X) $C(7) G:'$D(X) A10 S PSGSD=+X,PSGSDN=$$ENDD^PSGMI(PSGSD)_"^"_$$ENDTC^PSGMI(PSGSD) W "  ",$P(PSGSDN,"^") G DONE  ;373
  I X="P" D ENPREV^PSGDL W:'$D(X) $C(7) G:'$D(X) A10 S PSGSD=+X,PSGSDN=$$ENDD^PSGMI(PSGSD)_"^"_$$ENDTC2^PSGMI(PSGSD) W "  ",$P(PSGSDN,"^") G DONE  ;373
  I X="@"!(X?1."?") W:X="@" $C(7),"  (Required)" S:X="@" X="?" D ENHLP^PSGOEM(55.06,10)
@@ -151,7 +151,7 @@ W34 ;Compare to Start Date
 DONE ;
  ;Display Expected First Dose;BHW;PSJ*5*136
  ;BHW;PSJ*5*179; - Remove EFD call.  Added to PSGOEE.
- I PSGOEE G:'PSGOEEF(PSGF2) @BACK S PSGOEE=PSGOEEF(PSGF2)
+ I PSGOEE G:'$G(PSGOEEF(PSGF2)) @BACK S PSGOEE=PSGOEEF(PSGF2)     ;P451
  D:+$G(PSGDUR) VERTIMES ;*315
  S:'+$G(PSGRF) PSGRF=+$$GET1^DIQ(50.7,$G(PSGPDRG),12,"I")
  K F,F0,F1,PSGF2,F3,PSG,SDT,ORIG Q

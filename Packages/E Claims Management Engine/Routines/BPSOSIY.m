@@ -1,6 +1,7 @@
 BPSOSIY ;BHAM ISC/FCS/DRS/DLF - Updating BPS Transaction record ;11/7/07  17:29
- ;;1.0;E CLAIMS MGMT ENGINE;**1,3,5,6,7,8,10,11,20,26,29**;JUN 2004;Build 41
+ ;;1.0;E CLAIMS MGMT ENGINE;**1,3,5,6,7,8,10,11,20,26,29,36**;JUN 2004;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
+ ;
  Q
  ;
  ; INIT - Update BPS Transaction
@@ -75,7 +76,23 @@ INIT(IEN59,BP77,BPSNB) ;EP - from BPSOSIZ
  S FDA(FN,REC,510)=$P(B1,U,9) ;Billing Unit
  S FDA(FN,REC,901)=1          ;Current VA Insurer
  S FDA(FN,REC,1201)=$G(MOREDATA("RX ACTION")) ;RX Action
+ ;
+ ; If the expiration date of the prescription is on or before
+ ; the date of service, then attempt to use the date of
+ ; service from the initial claim sent for this transaction.
+ ;
  S FDA(FN,REC,1202)=$G(MOREDATA("DATE OF SERVICE")) ;Date of Service
+ N EXPDATE
+ S EXPDATE=$$GET1^DIQ(52,MOREDATA("RX"),26,"I")
+ I EXPDATE'="",EXPDATE'>MOREDATA("DATE OF SERVICE") D
+ . ; Determine DOS from initial submission.
+ . N DOS,INITTRAN
+ . S INITTRAN=$O(^BPSTL("B",IEN59,""))
+ . I INITTRAN="" Q
+ . S DOS=$$GET1^DIQ(9002313.57,INITTRAN,1202,"I")
+ . I DOS'="" S FDA(FN,REC,1202)=DOS
+ . Q
+ ;
  S FDA(FN,REC,901.04)=$G(MOREDATA("ELIG")) ;Eligibility info returned from billing determination
  ;
  ; File secondary billing fields

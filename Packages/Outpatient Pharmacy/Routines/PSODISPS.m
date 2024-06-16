@@ -1,11 +1,11 @@
 PSODISPS ;BIR/SAB - CONTINUATION OF RELEASE FUNCTION ;3/2/93
- ;;7.0;OUTPATIENT PHARMACY;**15,13,9,27,67,71,156,118,148,247,200,385**;DEC 1997;Build 27
- ;External reference ^PS(59.7 supported by DBIA 694
- ;External reference to ^PSDRUG("AQ" supported by DBIA 3165
- ;External reference ^XTMP("PSA" supported by DBIA 1036
- ;External reference $$SERV^IBARX1 supported by DBIA 2245
- ;External reference ^PSDRUG( supported by DBIA 221
- ;Reference to ^DIC(19.2 supported by DBIA 1064
+ ;;7.0;OUTPATIENT PHARMACY;**15,13,9,27,67,71,156,118,148,247,200,385,703**;DEC 1997;Build 16
+ ; Reference to ^PS(59.7 in ICR #694
+ ; Reference to ^PSDRUG("AQ" in ICR #3165
+ ; Reference to ^XTMP("PSA" in ICR #1036
+ ; Reference to $$SERV^IBARX1 in ICR #2245
+ ; Reference to ^PSDRUG( in ICR #221
+ ; Reference to ^DIC(19.2 in ICR #1064
  ;
 QTY ; Refill Release
  S PSOCPN=$P(^PSRX(RXP,0),"^",2),QDRUG=$P(^PSRX(RXP,0),"^",6) K LBLP
@@ -37,9 +37,13 @@ QTY ; Refill Release
  ..S ^XTMP("PSA",+PSOSITE,+QDRUG,DT)=$G(^XTMP("PSA",+PSOSITE,+QDRUG,DT))+$P($G(^PSRX(RXP,XTYPE,YY,0)),"^",4)
  .;initialize bingo board variables
  .I $G(IFN),$P($G(^PSRX(RXP,XTYPE,IFN,0)),"^",2)["W" S BINGRPR="W",BNGPDV=$P(^PSRX(RXP,XTYPE,IFN,0),"^",9),BINGNAM=$P($G(^PSRX(RXP,0)),"^",2)
+ ;
+ I $G(IFN),XTYPE="P" S PSOPARTIAL=1
+ E  S PSOPARTIAL=0
+ ;
  W:$G(IFN) !?7,"Prescription Number "_$P(^PSRX(RXP,0),"^")_$S('$G(XTYPE):" Partial Fill",1:" Refill(s)")_" Released" I $G(SPEED) G XMIT
  W:'$G(IFN) !?7,"No "_$S($G(XTYPE):"Refill(s)",1:"Partial(s)")_" to be Released"
- I $G(IFN),$$STATUS^PSOBPSUT(RXP)]"",$$WINFILL^PSODISPS(RXP) D SIGMSG^PSODISPS K IFN
+ I $G(IFN),$$STATUS^PSOBPSUT(RXP)]"",$$WINFILL^PSODISPS(RXP),'$G(PSOPARTIAL) D SIGMSG^PSODISPS K IFN
 XMIT I $G(PSODISP)=2.4 D  ;build an send HL7 v2.4 messages to dispense system
  . F I=0:0 S SUB=$O(^PSRX(RXP,"A",I)) Q:'I  I $P(^PSRX(RXP,"A",I,0),"^",2)="N" D
  .. D NOW^%DTC S PSODTM=% K ^UTILITY($J,"PSOHL")
@@ -48,10 +52,12 @@ XMIT I $G(PSODISP)=2.4 D  ;build an send HL7 v2.4 messages to dispense system
  .. S ZTRTN="INIT^PSORELDT",ZTDESC="EXTERNAL INTERFACE FOR RELEASE DATE/TIME",ZTIO="",ZTDTH=$H,ZTSAVE("^UTILITY($J,""PSOHL"",")="",ZTSAVE("PSOSITE")="",ZTSAVE("RXP")="" D ^%ZTLOAD K ^UTILITY($J,"PSOHL")
  K IFN
  Q
+ ;
 STAT S RX0=^PSRX(RXP,0),$P(RX0,"^",15)=+^("STA"),RX2=^PSRX(RXP,2),J=RXP D ^PSOFUNC
  W !!?5,$C(7),$C(7),"Rx# "_$P(^PSRX(RXP,0),"^")_" has a status of "_ST_" and is not eligible for",!?5,"release."_$S('$D(^XUSEC("PSORPH",DUZ)):"  Please check with a Pharmacist!",1:"")
  K RX0,ST
  Q
+ ;
 OERR I '$D(PSOPAR) D ^PSOLSET I '$D(PSOPAR) W $C(7),!!,?5,"Site Parameters must be defined to use the Release option!",! S VALMBCK="" Q
  S VALMBCK="Q",Y=$G(^PS(59,PSOSITE,"IB")),PSOIBSS=$$SERV^IBARX1(+Y) I 'PSOIBSS D IBSSR^PSOUTL I 'PSOIBFL D  S VALMBCK="" G EX
  .W $C(7),!!,"The IB SERVICE/SECTION defined in your site parameter file is not valid.",!,"You will not be able to release any medication until this is corrected!",!

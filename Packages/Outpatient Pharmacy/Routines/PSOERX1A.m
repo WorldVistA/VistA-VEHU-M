@@ -1,5 +1,5 @@
 PSOERX1A ;ALB/BWF - eRx Utilities/RPC's ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**467,527,508,551,581,617,669,700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**467,527,508,551,581,617,669,700,743**;DEC 1997;Build 24
  ;
  Q
  ; select an item
@@ -212,7 +212,7 @@ VPROV ;
  ;
  W !?64,"Updating..."
  ; Setting the eRx Audit Log
- S NEWVAL(1)=$$GET1^DIQ(200,NEWPIEN,.01)_" (DEA#: "_$$DEA^XUSER(0,NEWPIEN)_")"
+ S NEWVAL(1)=$$GET1^DIQ(200,NEWPIEN,.01)_" (DEA#: "_$P($$VADEA^PSOERXU8(NEWPIEN,PSOIEN),"^",2)_")"     ; PSO*7*743
  D AUDLOG^PSOERXUT(+PSOIENS,"PROVIDER",DUZ,.NEWVAL)
  ;
  ; change existing entry

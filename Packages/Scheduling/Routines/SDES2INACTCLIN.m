@@ -1,5 +1,5 @@
-SDES2INACTCLIN ;ALB/TJB - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;September 25, 2023
- ;;5.3;Scheduling;**864**;Aug 13, 1993;Build 15
+SDES2INACTCLIN ;ALB/TJB,MGD - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;Mar 18, 2024
+ ;;5.3;Scheduling;**864,877**;Aug 13, 1993;Build 14
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -10,7 +10,7 @@ SDES2INACTCLIN ;ALB/TJB - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;Septem
  Q
  ;
 SDINACTCLN(SDRETURN,SDCONTEXT,SDPARAM) ;Inactivate Clinic
- ;INPUT - 
+ ;INPUT -
  ; SDCONTEXT("ACHERON AUDIT ID") = Up to 40 Character unique ID number. Ex: 11d9dcc6-c6a2-4785-8031-8261576fca37
  ; SDCONTEXT("PATIENT DFN") = The DFN/IEN of the target patient from the calling application.
  ; SDCONTEXT("PATIENT ICN") = The ICN of the target patient from the calling application.
@@ -53,10 +53,8 @@ VALIDATE(ERRORS,INACTIVEDATE,CLINICIEN) ; validate incoming parameters
  ; Validate the inactivation date
  S FMDATE=$$ISOTFM^SDAMUTDT(INACTIVEDATE)
  I FMDATE=-1 D ERRLOG^SDES2JSON(.ERRORS,46,"For Clinic Inactivation")
- I FMDATE<DT D ERRLOG^SDES2JSON(.ERRORS,46,"Clinic Inactivation can't be before today")
+ I FMDATE>0,(FMDATE<DT) D ERRLOG^SDES2JSON(.ERRORS,46,"Clinic Inactivation can't be before today")
  I (FMDATE>$$FMADD^XLFDT(DT,182)) D ERRLOG^SDES2JSON(.ERRORS,46,"Inactivation Date greater than 6 Months in the future")
- ; Check to see if the clinic is already inactive
- I $$INACTIVE^SDES2UTIL(CLINICIEN,FMDATE) D ERRLOG^SDES2JSON(.ERRORS,510,$$GET1^DIQ(44,CLINICIEN,.01,"E"))
  Q
  ; Make sure there are no active appointments after the inactivation date
 NOAPPOINTMENTS(CLINICIEN,INACTDATE,ERRORS) ;
@@ -84,11 +82,10 @@ BLDCINREC(SDCINREC,CLINICIEN,INACTIVEDATE,ERRORS) ;Inactivate Clinic
 UPDATECLNRES(SDCLINICIEN,INACTIVATIONDATE,SDDUZ,ERRORS) ;Update INACTIVATED DATE/TIME and INACTIVATED BY USER in SDEC RESOURCE File #409.831
  N SDRESFDA,SDCLINRES,SDERR,FMDATE
  S SDCLINRES=$$GETRES^SDES2UTIL1(SDCLINICIEN,1)
- Q:SDCLINRES=""  ; no resource associated with clinic 
+ Q:SDCLINRES=""  ; no resource associated with clinic
  S FMDATE=$$ISOTFM^SDAMUTDT(INACTIVATIONDATE)
  S SDRESFDA(409.831,SDCLINRES_",",.021)=$P(FMDATE,".")
  S SDRESFDA(409.831,SDCLINRES_",",.022)=$S(SDDUZ'="":SDDUZ,1:DUZ)
  D FILE^DIE("","SDRESFDA","SDERR")
  I $D(SDERR) D ERRLOG^SDES2JSON(.ERRORS,81,"File 409.831 not updated with the inactivation date for Resource IEN="_SDCLINRES)
- Q 
- ;
+ Q

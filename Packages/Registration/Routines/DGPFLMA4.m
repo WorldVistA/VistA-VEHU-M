@@ -1,5 +1,5 @@
 DGPFLMA4 ;ALB/KCL - PRF ASSIGNMENT LM PROTOCOL ACTIONS CONT. ; 10/18/06 9:41am
- ;;5.3;Registration;**425,554,650,951**;Aug 13, 1993;Build 135
+ ;;5.3;Registration;**425,554,650,951,1113**;Aug 13, 1993;Build 10
  ;
  ;no direct entry
  Q
@@ -113,6 +113,7 @@ CO ;Entry point for DGPF CHANGE ASSIGNMENT OWNERSHIP action protocol.
  .S DGPFAH("ACTION")=2                ;continue
  .S DGPFAH("ASSIGNDT")=$$NOW^XLFDT()  ;current date/time
  .S DGPFAH("ENTERBY")=DUZ             ;current user
+ .S DGPFAH("ORIGFAC")=+$$SITE^VASITE
  .; relinquishing ownership should remove existing review date when
  .; new owner is not a local division
  .I '$D(^DG(40.8,"APRF",DGPFA("OWNER"))) S DGPFA("REVIEWDT")=""

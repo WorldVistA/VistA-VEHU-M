@@ -1,5 +1,5 @@
-SDES2BLDAPPT44 ;ALB/LAB - VISTA SCHEDULING BUILDING APPT OBJECT FOR CLINIC ;JAN 15, 2024
- ;;5.3;Scheduling;**871**;Aug 13, 1993;Build 13
+SDES2BLDAPPT44 ;ALB/LAB,TJB - VISTA SCHEDULING BUILDING APPT OBJECT FOR CLINIC ;APR 29, 2024
+ ;;5.3;Scheduling;**871,877**;Aug 13, 1993;Build 14
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -72,6 +72,5 @@ GET44003INFO(APPTOBJ,CLINIEN,SDIEN,RECCNT) ; Build appointment object for HOSPIT
  S APPTOBJ("Appointment",RECCNT,"WardLocation")=$G(ARRAY44003(44.003,SDIEN,4,"I"))
  S APPTOBJ("Appointment",RECCNT,"XRAY")=$G(ARRAY44003(44.003,SDIEN,2,"I"))
  S APPTOBJ("Appointment",RECCNT,"Clinic","IsOverbook")=$S($G(ARRAY44003(44.003,SDIEN,9,"I"))="O":1,1:0)
- S APPTOBJ("Appointment",RECCNT,"DateAppointmentMade")=$$FMTISO^SDAMUTDT($G(ARRAY44003(44.003,SDIEN,8,"I"))) ;this field is defined twice on purpose, this will overlay if 44 record
  Q
  ;

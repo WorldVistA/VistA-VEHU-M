@@ -1,0 +1,65 @@
+DG531113 ;ALB/DTA - PRF CREATED BY SITE FIXES; OCT 24, 2023@01:19
+ ;;5.3;Registration;**1113**;Aug 13, 1993;Build 10
+ ;
+ ;
+ Q
+INIT ;Locate PRF's with unknown Created by site
+ N DGPAH,DGPRFD,DGPRFA,DGDAT,DGHIEN,DGFDA,DGPAT,DGCNT,DGDO,DGDTLT,DGERR,DGIEN,DGIENS,DGPDAT,DGPRFIEN
+ S DGCNT=0
+ S DGPRFIEN=0
+ S DGPRFA=0
+ D DGPATCH
+ W !,"Updating the Created by Site (.09) field for the PRF Assignment History (#26.14) file."
+ S DGPAH=0 F  S DGPAH=+$O(^DGPF(26.14,DGPAH)) Q:'DGPAH  D
+ . Q:'$D(^DGPF(26.14,DGPAH,0))
+ . I $P(^DGPF(26.14,DGPAH,0),"^",9)="" D
+ .. S DGPRFD=$P(^DGPF(26.14,DGPAH,0),"^",2) Q:DGPRFD<DGPDAT
+ .. S DGPRFA=$P(^DGPF(26.14,DGPAH,0),"^",1) D
+ ... Q:DGPRFIEN=DGPRFA
+ ... D LASTHIST
+ ... S DGPRFIEN=DGPRFA
+ ... Q
+ .. S DGCNT=DGCNT+1
+ .. D PRFASHST
+ .. D FILE^DIE("","DGFDA","DGERR")
+ .. I $D(DGERR) S DGIEN=0
+ .. Q
+ . Q
+ W !,DGCNT_" RECORDS UPDATED"
+ Q
+DGPATCH ;Get date/time patch was installed
+ S DGDO=0
+ F  S DGDO=$O(^XPD(9.7,DGDO)) Q:'DGDO  D
+ . Q:'$D(^XPD(9.7,DGDO,0))
+ . S DGPAT=$P(^XPD(9.7,DGDO,0),"^",1) Q:DGPAT'="DG*5.3*1078"
+ . S DGPDAT=$P(^XPD(9.7,DGDO,1),"^",3)
+ . Q
+ Q
+LASTHIST ;retrieve list of history IENs for an assignment
+ Q:DGPAH=$D(DGHIEN)
+ S DGHIEN=0
+ I $G(DGPRFA)>0,$D(^DGPF(26.13,DGPRFA)) D
+ . S DGDAT=$O(^DGPF(26.14,"C",DGPRFA,DGPRFD),-1)
+ . I DGDAT>0 D
+ . . S DGHIEN=$O(^DGPF(26.14,"C",DGPRFA,DGDAT,0))
+ Q $S($G(DGHIEN)>0:DGHIEN,1:0)
+PRFASHST ;Does PRF Assignment = Last history record Originating site
+ N DGPRFHC,DGPRVH,DGOWNS,DGOCBS
+ S DGIENS=DGPAH_","
+ S DGOWNS=$P(^DGPF(26.13,DGPRFA,0),"^",4)
+ Q:DGHIEN'>0  S DGOCBS=$P(^DGPF(26.14,DGHIEN,0),"^",9)
+ Q:'$D(^DGPF(26.14,DGPAH,1,1,0))
+ S DGPRFHC=$P(^DGPF(26.14,DGPAH,1,1,0),"^")
+ I DGPRFHC["Change of flag assignment ownership"!("Ownership transfer request has been received for this flag.") D
+ . S DGDTLT=9999999
+ . F  S DGDTLT=$O(^DGPF(26.14,"C",DGPRFA,DGDTLT),-1) Q:'DGDTLT  D
+ .. S DGPRVH=0 S DGPRVH=$O(^DGPF(26.14,"C",DGPRFA,DGDTLT,DGPRVH))
+ .. I $P(^DGPF(26.14,DGPRVH,0),"^",3)=1 S DGOCBS=$P(^DGPF(26.14,DGPRVH,0),"^",9) Q
+ .. I $P($G(^DGPF(26.14,DGPRVH,0)),"^",9) S DGOCBS=$P(^DGPF(26.14,DGPRVH,0),"^",9)
+ .. Q
+ . Q
+ I DGOWNS=DGOCBS D
+ . S DGFDA(26.14,DGIENS,.09)=DGOWNS
+ . Q
+ E  S DGFDA(26.14,DGIENS,.09)=DGOCBS
+ Q

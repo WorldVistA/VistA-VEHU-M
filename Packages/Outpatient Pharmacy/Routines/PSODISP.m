@@ -1,14 +1,16 @@
 PSODISP ;BIR/SAB,PWC - MANUAL BARCODE RELEASE FUNCTION ;Nov 23, 2021@09:00
- ;;7.0;OUTPATIENT PHARMACY;**15,71,131,156,185,148,247,200,385,391,441**;DEC 1997;Build 209
- ;Reference to $$SERV^IBARX1 supported by DBIA 2245
- ;Reference to ^PSD(58.8 supported by DBIA 1036
- ;Reference to ^PS(55 supported by DBIA 2228
- ;Reference to ^PSDRUG supported by DBIA 221
- ;Reference to ^PSDRUG("AQ" supported by DBIA 3165
- ;Reference to ^XTMP("PSA" supported by DBIA 1036
- ;Reference to ^PS(59.7 supported by DBIA 694
- ;Reference to ^DIC(19.2 supported by DBIA 1064
+ ;;7.0;OUTPATIENT PHARMACY;**15,71,131,156,185,148,247,200,385,391,441,703**;DEC 1997;Build 16
+ ; Reference to $$SERV^IBARX1 in ICR #2245
+ ; Reference to ^PSD(58.8 in ICR #1036
+ ; Reference to ^PS(55 in ICR #2228
+ ; Reference to ^PSDRUG in ICR #221
+ ; Reference to ^PSDRUG("AQ" in ICR #3165
+ ; Reference to ^XTMP("PSA" in ICR #1036
+ ; Reference to ^PS(59.7 in ICR #694
+ ; Reference to ^DIC(19.2 in ICR #1064
+ ;
 AC K CX,PSODA,PSODT,PSRH,DA,DR,DIE,X,X1,X2,Y,RXP,CX,PX,REC,DIR,YDT,REC,RDUZ,DIRUT,PSOCPN,PSOCPRX,YY,QDRUG,QTY,TYPE,XTYPE,DUOUT,PSOPID
+ N PSOPARTIAL
  K ^UTILITY($J,"PSOHL") S PSOPID=1
  I '$D(PSOPAR) D ^PSOLSET I '$D(PSOPAR) W $C(7),!!,?5,"Site Parameters must be defined to use the Release option!",! G EXIT
  S Y=$G(^PS(59,PSOSITE,"IB")),PSOIBSS=$$SERV^IBARX1(+Y) I 'PSOIBSS D IBSSR^PSOUTL I 'PSOIBFL D   G EXIT
@@ -78,23 +80,28 @@ UPDATE I $G(ISUF) W $C(7),!!?7,"Prescription "_$P(^PSRX(RXP,0),"^")_" - Original
  N BFILL S BFILL=0
  S PSOCPRX=$P(^PSRX(RXP,0),"^") D CP^PSOCP
  W !?7,"Prescription Number "_$P(^PSRX(RXP,0),"^")_" Released"
- I $$STATUS^PSOBPSUT(RXP)]"",$$WINFILL^PSODISPS(RXP) D SIGMSG^PSODISPS
+ I $$STATUS^PSOBPSUT(RXP)]"",$$WINFILL^PSODISPS(RXP),'$G(PSOPARTIAL) D SIGMSG^PSODISPS
  ;initialize bingo board variables
  I $G(LBLP),$P(^PSRX(RXP,0),"^",11)["W" S BINGRO="W",BINGNAM=$P(^PSRX(RXP,0),"^",2),BINGDIV=$P(^PSRX(RXP,2),"^",9)
  I $G(PSODISP)=2.4 D    ;HL7 v2.4 dispensing machines
  . F I=0:0 S SUB=$O(^PSRX(RXP,"A",I)) Q:'I  I $P(^PSRX(RXP,"A",I,0),"^",2)="N" D XMIT    ;only send release dt/time transmission for dispensed orders
  Q
+ ;
 EXIT ;
  K OUT,RX2,RXFD,RESK,ISUF,SUPN,%,DIC,IFN,J,DA,DR,DIE,X,X1,X2,Y,RXP,CX,PX,REC,DIR,YDT,REC,RDUZ,DIRUT,PSOCPN,PSOCPRX,PSOIBSS,PSOIBFL,PSOIBLP,PSOIBST,YY,QDRUG,QTY,TYPE,XTYPE,DUOUT,PSRH,XX,Y,PSIN,MAN,PSODISP,SUB
  Q
+ ;
 GETFILL ; get the fill number
  S NFLD=0,UU="" F  S UU=$O(^PSRX(+RXP,1,UU)) Q:UU=""  S:$D(^PSRX(+RXP,1,UU,0)) NFLD=NFLD+1
  Q
+ ;
 HELP W !!,"Wand the barcode number of the prescription or manually key in",!,"the number below the barcode or the prescription number.",!,"The barcode number should be of the format - 'NNN-NNNNNNN'"
  Q
+ ;
 BCI S RXP=0
 RXP S RXP=$O(^PSRX("B",X,RXP)) I $P($G(^PSRX(+RXP,"STA")),"^")=13 G RXP ;GET RECORD NUMBER FROM SCRIPT NUMBER
  Q
+ ;
 DCHK ;checks for duplicate
  Q:'$G(MAN)
  I $D(DISGROUP),$D(BINGNAM),($D(BINGDIV)!$D(BNGPDV)!$D(BNGRDV)),($D(BINGRO)!$D(BINGRPR)) D REL^PSOBING1 K BINGNAM,BINGDIV,BINGRO,BINGRPR,BNGPDV,BNGRDV
@@ -106,6 +113,7 @@ DCHK ;checks for duplicate
  I $D(DISGROUP),$D(BINGNAM),($D(BINGDIV)!$D(BNGPDV)!$D(BNGRDV)),($D(BINGRO)!$D(BINGRPR)) D REL^PSOBING1 K BINGNAM,BINGDIV,BINGRO,BINGRPR,BNGPDV,BNGRDV
  G DCHK
  Q
+ ;
 XMIT D NOW^%DTC S PSODTM=%
  S IDGN=$P(^PSRX(+RXP,0),"^",6)
  K ^UTILITY($J,"PSOHL")

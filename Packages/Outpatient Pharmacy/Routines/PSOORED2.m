@@ -1,10 +1,10 @@
 PSOORED2 ;ISC-BHAM/SAB - edit orders from backdoor con't ;Jan 20, 2022@11:19:32
- ;;7.0;OUTPATIENT PHARMACY;**2,51,46,78,102,114,117,133,159,148,247,260,281,289,276,358,251,385,427,538,574,562,441**;DEC 1997;Build 209
- ;Reference to $$DIVNCPDP^BPSBUTL supported by IA 4719
- ;Reference to $$ECMEON^BPSUTIL supported by IA 4410
- ;called from psooredt. cmop edit checks.
- ; PSO*7*538/INC1491667 Modification to review Issue Date During Rx Edit
+ ;;7.0;OUTPATIENT PHARMACY;**2,51,46,78,102,114,117,133,159,148,247,260,281,289,276,358,251,385,427,538,574,562,441,703**;DEC 1997;Build 16
+ ; Reference to $$DIVNCPDP^BPSBUTL in ICR #4719
+ ; Reference to $$ECMEON^BPSUTIL in ICR #4410
+ ;
  Q
+ ;
 ISDT D CHK K RF I $G(CMRL) W !,"Released by CMOP.  No editing allowed on Issue Date." D PAUSE^VALM1 K CMRL Q
  ; PSO*7*538 Modified Next Line (Added Call to PSOUTL)
  S %DT="AEX",%DT(0)=-$P(^PSRX(DA,2),"^",2),Y=$P(RX0,"^",13) X ^DD("DD") S %DT("A")="ISSUE DATE: ",%DT("B")=Y D ^%DT D CID^PSOUTL I "^"[$E(X) K X,Y,%DT,DTOUT,DUOUT Q
@@ -16,6 +16,7 @@ ISDT D CHK K RF I $G(CMRL) W !,"Released by CMOP.  No editing allowed on Issue D
  ;S DR="1///"_Y,DIE=52 D ^DIE
  D KV K X,Y,%DT
  Q
+ ;
 FLDT D CHK K RF I $G(CMRL) W !,"Released by CMOP.  No editing allowed on Fill Date." D PAUSE^VALM1 K CMRL Q
  D KV S Y=$P(^PSRX(DA,2),"^",2) X ^DD("DD") S DIR("A")="FILL DATE",DIR("B")=Y
  S DIR(0)="D^"_$P(RX0,"^",13)_":"_$P(PSORXED("RX2"),"^",6)_":EX"
@@ -26,14 +27,17 @@ FLDT D CHK K RF I $G(CMRL) W !,"Released by CMOP.  No editing allowed on Fill Da
  K X,Y
 KV K DIR,DUOUT,DTOUT,DIRUT
  Q
+ ;
 CHK I $D(^PSRX("AR",+$P(PSORXED("RX2"),"^",13),PSORXED("IRXN"))) S CMRL=1 Q
  F RF=0:0 S RF=$O(^PSRX(PSORXED("IRXN"),1,RF)) Q:'RF  I $D(^PSRX("AR",+$P(^PSRX(PSORXED("IRXN"),1,RF,0),"^",18),PSORXED("IRXN"))) S CMRL=1
  Q
+ ;
 CHK1 I +^PSRX(PSORXED("IRXN"),"STA")=5 D  Q:'$G(CMRL)
  .S SURX=$O(^PS(52.5,PSORXED("IRXN"),0)) Q:'SURX  I $P(^PS(52.5,SURX,0),"^",7)']""!($P(^(0),"^",7)="Q") S CMRL=1
  .E  S CMRL=0
  F FEV=0:0 S FEV=$O(^PSRX(PSORXED("IRXN"),4,FEV)) Q:'FEV  I '$P(^PSRX(PSORXED("IRXN"),4,FEV,0),"^",3),$P(^(0),"^",4)<3 S CMRL=0
  Q
+ ;
 REF ;shows refill info
  S RFN=0 F N=0:0 S N=$O(^PSRX(PSORXED("IRXN"),1,N)) Q:'N  S RFM=N,RFN=RFN+1
  ;G:RFM=1 SRF
@@ -53,14 +57,20 @@ SRF W !!,"#  Log Date   Refill Date  Qty               Routing  Lot #       Phar
 RFM I '$D(^PSRX(PSORXED("IRXN"),1,Y,0)) W !,$C(7),"Invalid selection.",! G SRF
  S CMRL=0 I $D(^PSRX("AR",+$P(^PSRX(PSORXED("IRXN"),1,Y,0),"^",18),PSORXED("IRXN"),Y)) S CMRL=1 G RFX
  F FEV=0:0 S FEV=$O(^PSRX(PSORXED("IRXN"),4,FEV)) Q:'FEV  I $P(^PSRX(PSORXED("IRXN"),4,FEV,0),"^",3)=Y,$P(^(0),"^",4)<3 S CMRL=1
-RFX N RFL,NDC,DAW,FLDS,QUIT,CHGNDC,CHANGED
+RFX N RFL,NDC,DAW,FLDS,QUIT,CHGNDC,CHANGED,FLDPRE
  W ! S DA=Y,DIE="^PSRX("_DA(1)_",1,",DR=$S('CMRL:".01;1.1",1:"1.2:5;8")
  D GETS^DIQ(52.1,DA_","_DA(1)_",",".01;1;1.1;8;11;81","I","FLDS")
  S:$D(^PSRX(DA(1),1,DA,0)) PSORXED("RX1")=^PSRX(DA(1),1,DA,0),(RFED,RFL)=DA
  I $G(ST)=11!($G(ST)=12)!($G(ST)=14)!($G(ST)=15),$$STATUS^PSOBPSUT(PSORXED("IRXN"),RFL)'="" S QUIT=0 D RFE Q  ;short circuit for DC'd/Expired ECME RXs
- N PSORFILL S PSORFILL=DA   ;*276
- D ^DIE S QUIT=$D(Y)
- ;*276
+ N PSORFILL S PSORFILL=DA
+ ;
+ ; Get REFILL DATE before user prompt.
+ S FLDPRE=$$GET1^DIQ(52.1,PSORFILL_","_PSORXED("IRXN")_",",.01,"I")
+ D ^DIE
+ S QUIT=$D(Y)
+ ; If REFILL DATE was edited, conditionally clear out the Suspense Hold Date.
+ I FLDPRE'=$$GET1^DIQ(52.1,PSORFILL_","_PSORXED("IRXN")_",",.01,"I") D CLRSHD^PSOBPSU4(PSORXED("IRXN"),PSORFILL)
+ ;
  I '$D(^PSRX(PSORXED("IRXN"),1,PSORFILL)),'$G(PSOSFN) D
  .N DA,NOW,IR,FDA
  .S DA=$G(PSORXED("IRXN")) Q:'DA
@@ -78,6 +88,7 @@ RFX N RFL,NDC,DAW,FLDS,QUIT,CHGNDC,CHANGED
  I $G(PSOFRPK)!$G(PSOTOPK) K SAVDA M SAVDA=DA S SAVDIE=DIE,SAVFLD=$G(FLD)
  I $G(PSOFRPK) K DA S (DA,PSDA)=PSORXED("IRXN") D UNPARK^PSOPRK K DA M DA=SAVDA K Y S DIE=SAVDIE,FLD=SAVFLD
  I $G(PSOTOPK) K DA S DA=PSORXED("IRXN") D PRK^PSOPRK(DA) K DA M DA=SAVDA K Y S DIE=SAVDIE,FLD=SAVFLD   ;PAPI 441 END
+ ;
 RFE I '$D(^PSRX(PSORXED("IRXN"),1,RFL)) Q
  ;
  I 'QUIT,$$STATUS^PSOBPSUT(PSORXED("IRXN"),RFL)'="" D
@@ -85,7 +96,7 @@ RFE I '$D(^PSRX(PSORXED("IRXN"),1,RFL)) Q
  . D SAVDAW^PSODAWUT(PSORXED("IRXN"),RFL,+$G(DAW))
  . Q
  ;
- ; PSO*7*427 - NDC edit checks are in NDC^PSODRG
+ ; NDC edit checks are in NDC^PSODRG
  I 'QUIT D
  . S NDC=$$GETNDC^PSONDCUT(PSORXED("IRXN"),RFL)
  . D NDC^PSODRG(PSORXED("IRXN"),RFL,,.NDC) I $G(NDC)="^"!($G(NDC)="") Q
@@ -108,6 +119,7 @@ RFE I '$D(^PSRX(PSORXED("IRXN"),1,RFL)) Q
  . . I $$FIND^PSOREJUT(RX,RFL) S X=$$HDLG^PSOREJU1(RX,RFL,"79,88,943","ED","IOQ","Q")
  K DIE,CMRL,DA,DR
  Q
+ ;
 CHANGED(RX,RFL,PRIOR) ; - Check if fields have changed and should for 3rd Party Claim resubmission
  ;Input:  (r) RX    - Rx IEN
  ;        (r) RFL   - Refill #
@@ -121,9 +133,11 @@ CHANGED(RX,RFL,PRIOR) ; - Check if fields have changed and should for 3rd Party 
  ;
 DAT S DAT="",DTT=DTT\1 Q:DTT'?7N  S DAT=$E(DTT,4,5)_"/"_$E(DTT,6,7)_"/"_$E(DTT,2,3)
  Q
+ ;
 DIE S DIE=52 D ^DIE I $D(Y) S PSORXED("DFLG")=1
  K DIE,DR,X,Y
  Q
+ ;
 RFD ;check for deleted refill
  M PSOZ1("PSOL")=PSORX("PSOL") N I,J,K,PSOX2,PSOX3,PSOX9 S (I,K)=0 D
  .F  S I=$O(PSOZ1("PSOL",I)) Q:'I!(K)  S PSOX2=PSOZ1("PSOL",I) I PSOX2[(PSORXED("IRXN")_",") S PSOX9="" D
@@ -133,12 +147,14 @@ RFD ;check for deleted refill
  ..I K S:PSOX9]"" PSORX("PSOL",I)=PSOX9_"," K:PSOX9="" PSORX("PSOL",I)
  K PSOZ1("PSOL")
  Q
+ ;
 EDTDOSE ;edit med instructions fields
  S PSOEDDOS=1 ; identifies origin of call to PSOORED3 for dosing
  I '$O(^PSRX(PSORXED("IRXN"),6,0)) D DOSE^PSOORED5 Q
  D ^PSOORED3
  K PSOEDDOS
  Q
+ ;
 UPD ;updates dosing array
  S HENT=ENT
 UPD1 I $G(PSORXED("CONJUNCTION",(HENT+1)))]"",'$D(PSORXED("DOSE",(HENT+2))) K PSORXED("CONJUNCTION",(HENT+1)) Q
@@ -160,6 +176,7 @@ UPD1 I $G(PSORXED("CONJUNCTION",(HENT+1)))]"",'$D(PSORXED("DOSE",(HENT+2))) K PS
  ..K PSORXED("VERB",(HENT+1)),PSORXED("ODOSE",(HENT+1))
  S PSORXED("ENT")=HENT K HENT,SENT D EN^PSOFSIG(.PSORXED)
  Q
+ ;
 UPD2 I $G(PSORXED("CONJUNCTION",(HENT+1)))]"",'$D(PSORXED("DOSE",(HENT+2))) K PSORXED("CONJUNCTION",(HENT+1)) Q
  I $G(PSORXED("CONJUNCTION",(HENT+1)))]"" S PSORXED("CONJUNCTION",HENT)=PSORXED("CONJUNCTION",(HENT+1)) D  G UPD1
  .K PSORXED("CONJUNCTION",(HENT+1)) I $D(PSORXED("DOSE",(HENT+2))) D

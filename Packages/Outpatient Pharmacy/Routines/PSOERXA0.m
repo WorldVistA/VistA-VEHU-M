@@ -1,5 +1,5 @@
 PSOERXA0 ;ALB/BWF - eRx Utilities/RPC's ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**467,586,617,651,545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**467,586,617,651,545,743**;DEC 1997;Build 24
  ;
  Q
  ; All parameters are optional, however at least one needs to be passed in for processing to be sucessful.
@@ -93,22 +93,29 @@ TPRVMTCH ;
  ; DEA - Providers' DEA number
  ; CS - controlled substance (1-yes, 0 or "" - no)
 PRVMTCH(PSORES,NPI,DEA,CS) ;
- N NPIEN,MATCH,VAL,NVAL,INDEX,NPCNT,NPLIST,DEACNT,SRCH,DEACNT,DEAMTCH,NDMTCH,DEAIEN
+ N NPIEN,MATCH,VAL,NVAL,INDEX,NPCNT,NPLIST,DEACNT,SRCH,DEACNT,DEAMTCH,NDMTCH,DEAIEN,DEABASE
  N DEACHK
  S (PSORES,MATCH)=0
- S NPI=$G(NPI,""),DEA=$G(DEA,"")
+ S NPI=$G(NPI,""),DEA=$G(DEA,""),DEABASE=$P(DEA,"-")
  I NPI="",DEA="" S PSORES="0^NPI and DEA# missing." Q
  I $G(CS),DEA="" S PSORES="0^DEA # must be provided with controlled substances." Q
  I $G(CS),NPI="" S PSORES="0^NPI must be provided with controlled substances." Q
  I $G(CS),'$D(^VA(200,"ANPI",NPI)) S PSORES="0^NPI# does not exist in this system." Q
- I $G(CS),'$D(^VA(200,"PS1",DEA)) S PSORES="0^DEA# does not exist in this system." Q
+ I $G(CS),'$D(^VA(200,"PS4",DEABASE)) S PSORES="0^DEA# does not exist in this system." Q  ; PSO*7*743
  I '$G(CS),NPI="" D  Q
  .I DEA="" S PSORES="0^Missing DEA number." Q
- .I '$D(^VA(200,"PS1",DEA)) S PSORES="0^DEA# does not exist at this location." Q
- .S (DEACHK,DEACNT)=0 F  S DEACHK=$O(^VA(200,"PS1",DEA,DEACHK)) Q:'DEACHK  D
+ .I '$D(^VA(200,"PS4",DEABASE)) S PSORES="0^DEA# does not exist at this location." Q  ; PSO*7*743
+ .S (DEACHK,DEACNT)=0 F  S DEACHK=$O(^VA(200,"PS4",DEABASE,DEACHK)) Q:'DEACHK  D  ; PSO*7*743
+ ..I DEA["-" N DEAFIEN,DEASUF,DEATYPE,DEANPIEN D  Q  ; PSO*7*743 Begin - Institutional DEA suffix check
+ ...S DEAFIEN=$O(^XTV(8991.9,"B",DEABASE,0)) Q:'DEAFIEN
+ ...S DEATYPE=$P($G(^XTV(8991.9,DEAFIEN,0)),"^",7)
+ ...Q:DEATYPE=2  S DEANPIEN=$O(^VA(200,DEACHK,"PS4","B",DEABASE,0))
+ ...Q:'DEANPIEN
+ ...S DEACNT=$G(DEACNT)+1,DEAIEN=DEACHK              ; PSO*7*743 End
  ..S DEACNT=$G(DEACNT)+1
+ .I DEACNT=0 S PSORES="0^DEA# does not exist at this location." Q
  .I DEACNT>1 S PSORES="0^Multiple DEA matches found." Q
- .I DEACNT=1 S DEAIEN=$O(^VA(200,"PS1",DEA,0))
+ .I DEACNT=1,'$G(DEAIEN) S DEAIEN=$O(^VA(200,"PS4",DEA,0))  ; PSO*7*743
  .I '$$MEDAUTH(DEAIEN) S PSORES="0^DEA match, not authorized to write medication orders." Q
  .S PSORES=DEAIEN_U_$$GET1^DIQ(200,DEAIEN,.01,"E")
  I '$D(^VA(200,"ANPI",NPI)) S PSORES="0^No matching NPI." Q
@@ -125,7 +132,13 @@ PRVMTCH(PSORES,NPI,DEA,CS) ;
  .S PSORES=NDMTCH_U_$$GET1^DIQ(200,$O(NPLIST(0)),.01,"E")
  ; if this is a controlled substance, we must match both the NPI and the DEA#
  S (SRCH,DEACNT)=0 F  S SRCH=$O(NPLIST(SRCH)) Q:'SRCH  D
- .I '$D(^VA(200,"PS1",DEA,SRCH)) Q
+ .I '$D(^VA(200,"PS4",DEABASE,SRCH)) Q
+ .I DEA["-" N DEAFIEN,DEASUF,DEATYPE,DEANPIEN D  Q  ; PSO*7*743 Begin - Institutional DEA suffix check
+ ..S DEAFIEN=$O(^XTV(8991.9,"B",DEABASE,0)) Q:'DEAFIEN
+ ..S DEATYPE=$P($G(^XTV(8991.9,DEAFIEN,0)),"^",7)
+ ..Q:DEATYPE=2  S DEANPIEN=$O(^VA(200,SRCH,"PS4","B",DEABASE,0))
+ ..Q:'DEANPIEN  S DEASUF=$P(^VA(200,SRCH,"PS4",DEANPIEN,0),"^",2)
+ ..S DEACNT=$G(DEACNT)+1,DEAMTCH(SRCH)=""          ; PSO*7*743 End
  .S DEAMTCH(SRCH)="",DEACNT=$G(DEACNT)+1
  I DEACNT>1 S PSORES="0^Multiple DEA matches found." Q
  I DEACNT=0 S PSORES="0^NPI match, DEA mismatch." Q

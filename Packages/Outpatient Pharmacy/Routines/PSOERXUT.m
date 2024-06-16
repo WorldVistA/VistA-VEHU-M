@@ -1,5 +1,5 @@
 PSOERXUT ;ALB/MR - eRx CS utilities ;7/21/2020 9:57am
- ;;7.0;OUTPATIENT PHARMACY;**617,667,651,718,700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**617,667,651,718,700,743**;DEC 1997;Build 24
  Q
  ;
 CSFILTER(ERXIEN) ; Check eRx against CS Filter Prompt Answers
@@ -41,7 +41,7 @@ PRDRVAL(RESULT,ACTION,ERXIEN,PROVIEN,DRUGIEN) ; API used to Verify Provider and 
  ;       (o)DRUGIEN - Dispense Drug IEN. Pointer to the DRUG file (#50)
  ;Output: RESULT - 1 (Valid Selection) | 0 (Invalid Selection) ^ Compiled Restriction ("W": Warning / "B": Block)
  ;                                       RESULT(1..n)=[Invalid Selection Reason]^Restriction (e.g., RESULT(1)="eRx Provider does not have a valid DEA#.")
- N ERXPROV,DSERXFLG,ERXPRNPI,ERXPRDEA,VAPRNPI,RXWRDATE,VADRSCH,ERXDRSCH,VADEANUM,VACSDRUG,VADEADSP
+ N ERXPROV,DSERXFLG,ERXPRNPI,ERXPRDEA,VAPRNPI,RXWRDATE,VADRSCH,ERXDRSCH,VADEANUM,VACSDRUG,VADEADSP,VADEASUF,VADEASTR,VADEAEXP,VADEADFL
  K RESULT S RESULT=1 S ERXIEN=+$G(ERXIEN),PROVIEN=+$G(PROVIEN),DRUGIEN=+$G(DRUGIEN)
  I 'PROVIEN,$$GET1^DIQ(52.49,ERXIEN,2.3,"I")>0 S PROVIEN=+$$GET1^DIQ(52.49,ERXIEN,2.3,"I")
  I 'DRUGIEN,$$GET1^DIQ(52.49,ERXIEN,3.2,"I")>0 S DRUGIEN=+$$GET1^DIQ(52.49,ERXIEN,3.2,"I")
@@ -63,33 +63,40 @@ PRDRVAL(RESULT,ACTION,ERXIEN,PROVIEN,DRUGIEN) ; API used to Verify Provider and 
  . . S RESULT($O(RESULT(""),-1)+1)="Provider NPI mismatch (eRx: "_ERXPRNPI_" | VistA: "_VAPRNPI_")"
  . ; Digitally Signed Order
  . I DSERXFLG D
- . . S VADEANUM=$$UP^XLFSTR($$DEA^XUSER(0,PROVIEN,RXWRDATE)),VADEADSP=$P(VADEANUM,"^")
+ . . ; 743 - Check provider's profile for eRx DEA
+ . . S VADEADFL=$P($$UP^XLFSTR($$VADEA^PSOERXU8(PROVIEN,ERXIEN)),"^"),(VADEANUM,VADEADSP)=VADEADFL
+ . . S VADEAEXP=$$DEAXDT^XUSER($P(VADEANUM,"-"))
  . . I VADEANUM="" D
  . . . S RESULT($O(RESULT(""),-1)+1)="VistA Provider does not have a valid DEA# on file."
  . . I ERXPRDEA="" D
  . . . S RESULT($O(RESULT(""),-1)+1)="eRx Provider does not have a valid DEA#."
- . . I ERXPRDEA'="",$L(VADEANUM)>2,$P(VADEANUM,"^")'=ERXPRDEA D
- . . . I ($P(ERXPRDEA,"-")=VADEANUM) S ERXSUFF=1 Q
+ . . I ERXPRDEA'="",$L(VADEANUM)>3,(VADEANUM'=ERXPRDEA) D  ; PSO*7*743
+ . . . I ($P(ERXPRDEA,"-")=$P(VADEANUM,"-")) S ERXSUFF=1 Q
  . . . S RESULT($O(RESULT(""),-1)+1)="Provider DEA mismatch (eRx: "_ERXPRDEA_" | VistA: "_VADEADSP_")."
+ . . I ERXPRDEA'="",$L(VADEANUM)>3,($P(VADEANUM,"-")=$P(ERXPRDEA,"-")),(RXWRDATE>VADEAEXP) D  ; PSO*7*743
+ . . .  S RESULT($O(RESULT(""),-1)+1)="eRx Written Date/Issue Date is after the VistA Provider DEA expiration date ("_$$FMTE^XLFDT(VADEAEXP)_")."
  . . ; VistA Drug Selected (Additional Checks for CS and Detox drugs)
  . . I DRUGIEN D
  . . . I $$VADRSCH(DRUGIEN)'="" D
+ . . . . N DEAFOUND S DEAFOUND=0
  . . . . S VACSDRUG=1
  . . . . S VADRSCH=$$VADRSCH(DRUGIEN)
- . . . . S VADEANUM=$$UP^XLFSTR($$SDEA^XUSER(0,PROVIEN,$P(VADRSCH,"^"),RXWRDATE))
- . . . . S VADEADSP=$$DEA^XUSER(0,PROVIEN,RXWRDATE)
+ . . . . I ERXPRDEA'="" S DEAFOUND=$$DEAFOUND^PSOERXU8(ERXPRDEA,PROVIEN)  ; Does the DEA# exist on the provider's profile?
+ . . . . I DEAFOUND S VADEANUM=$$UP^XLFSTR($$SDEA^XUSER(0,PROVIEN,$P(VADRSCH,"^"),RXWRDATE,$P(ERXPRDEA,"-"))),VADEADSP=$P($$VADEA^PSOERXU8(PROVIEN,ERXIEN),"^")  ; PSO*7*743 - If found, valid for drug?
+ . . . . I 'DEAFOUND D  ;  PSO*7*743 Begin - If eRx DEA is not found on provider's profile, find default DEA to display
+ . . . . . S:VADEADFL="" VADEADFL=$$DEA^XUSER(0,PROVIEN)
+ . . . . . S:VADEADFL="" (VADEANUM,VADEADSP)=1  ; No DEA on file
+ . . . . . I VADEADFL'="" S (VADEANUM,VADEADSP)=VADEADFL  ; PSO*7*743 - Use matching DEA if present, default DEA if no match
+ . . . . . ; PSO*7*743 End
  . . . . I $P(VADEANUM,"^")=2 D
  . . . . . S RESULT($O(RESULT(""),-1)+1)="VistA Provider "_$$GET1^DIQ(200,PROVIEN,.01)_" is NOT authorized to write to the schedule ("_$P(VADRSCH,"^",3)_") of the VistA Drug selected."
- . . . I $$DETOX^PSSOPKI(DRUGIEN),$$DETOX^XUSER(PROVIEN,RXWRDATE)'?2A7N D
- . . . . S VACSDRUG=1
- . . . . S RESULT($O(RESULT(""),-1)+1)="VistA Provider "_$$GET1^DIQ(200,PROVIEN,.01)_" does not have a valid DETOX#."
  . ; All checks are OK
  . ; Add DEA Suffix mismatch message
  . I $G(ERXSUFF) D  Q
  . . I '$O(RESULT(0)) D SUFFWARN(.RESULT,ERXPRDEA,$S($L($G(VADEADSP)):VADEADSP,1:VADEANUM),0) S RESULT="0^W" Q
  . . I ACTION="EP"!(ACTION="VP"),'VACSDRUG D SUFFWARN(.RESULT,ERXPRDEA,$S($L($G(VADEADSP)):VADEADSP,1:VADEANUM),0) S RESULT="0^W" Q
  . . I ACTION="EP" D SUFFWARN(.RESULT,ERXPRDEA,$S($L($G(VADEADSP)):VADEADSP,1:VADEANUM),0) S RESULT="0^W" Q
- . . I ACTION="VP"!(ACTION="AC") D SUFFWARN(.RESULT,ERXPRDEA,$S($L($G(VADEADSP)):VADEADSP,1:VADEANUM),1) S RESULT="0^B" Q
+ . . I ACTION="VP"!(ACTION="AC") D SUFFWARN(.RESULT,ERXPRDEA,$S($L($G(VADEADSP)):VADEADSP,1:VADEANUM),0) S RESULT="0^B" Q
  . I '$O(RESULT(0)) S RESULT=1 Q
  . ; VistA Drug is not Selected or it is not a CS Drug
  . I ACTION="EP"!(ACTION="VP")!(ACTION="AC"),'VACSDRUG D  Q
@@ -123,23 +130,32 @@ PRDRVAL(RESULT,ACTION,ERXIEN,PROVIEN,DRUGIEN) ; API used to Verify Provider and 
  . I PROVIEN D
  . . ; CS VistA Drug
  . . I VACSDRUG D
- . . . S VADEANUM=$$UP^XLFSTR($$SDEA^XUSER(0,PROVIEN,$P(VADRSCH,"^"),RXWRDATE))
- . . . S VADEADSP=$$DEA^XUSER(0,PROVIEN,RXWRDATE)
- . . . I ERXPRDEA'="",$L($P(VADEADSP,"^",1))>2,(ERXPRDEA["-"),$P(ERXPRDEA,"-")=VADEADSP,'$G(ERXSUFF) D
- . . . . S RESULT($O(RESULT(""),-1)+1)="Provider DEA suffix mismatch (eRx: "_ERXPRDEA_" | VistA: "_($G(VADEADSP))
- . . . . S RESULT=$S($G(RESULT)="0^B":RESULT,1:"0^W")
+ . . . N DEAFOUND S DEAFOUND=0  ; PSO*7*743 Begin
+ . . . I ERXPRDEA'="" S DEAFOUND=$$DEAFOUND^PSOERXU8(ERXPRDEA,PROVIEN)  ; Does the DEA# exist on the provider's profile?
+ . . . I DEAFOUND S VADEANUM=$$UP^XLFSTR($$SDEA^XUSER(0,PROVIEN,$P(VADRSCH,"^"),RXWRDATE,$P(ERXPRDEA,"-"))),(VADEADSP,VADEADFL)=$P($$VADEA^PSOERXU8(PROVIEN,ERXIEN),"^")  ; PSO*7*743 - If found, valid for drug?
+ . . . I 'DEAFOUND D  ;  PSO*7*743 Begin - If eRx DEA is not found on provider's profile, find default DEA to display
+ . . . . S VADEADFL=$P($$UP^XLFSTR($$VADEA^PSOERXU8(PROVIEN,ERXIEN)),"^")  ; PSO*7*743
+ . . . . S:VADEADFL="" VADEADFL=$$DEA^XUSER(0,PROVIEN)
+ . . . . S:VADEADFL="" (VADEANUM,VADEADSP)=1  ; No DEA on file
+ . . . . I VADEADFL'="" S (VADEANUM,VADEADSP)=VADEADFL  ; PSO*7*743 - Use matching DEA if present, default DEA if no match
  . . . I $P(VADEANUM,"^")=1 D  Q
  . . . . S RESULT="0^B"
  . . . . S RESULT($O(RESULT(""),-1)+1)="VistA Provider "_$$GET1^DIQ(200,PROVIEN,.01)_" does not have a valid DEA# on file."
+ . . . . D SUFCHK^PSOERXU8(.RESULT,ERXPRDEA,VADEADFL,$G(ERXSUFF))
  . . . I $P(VADEANUM,"^")=2 D  Q
  . . . . S RESULT="0^"_$S(ACTION="ED"&($P($G(RESULT),"^",2)'="B"):"W",1:"B")
  . . . . S RESULT($O(RESULT(""),-1)+1)="VistA Provider "_$$GET1^DIQ(200,PROVIEN,.01)_" is NOT authorized to write to the schedule ("_$P(VADRSCH,"^",3)_") of the VistA Drug selected."
+ . . . . D SUFCHK^PSOERXU8(.RESULT,ERXPRDEA,VADEADFL,$G(ERXSUFF))
  . . . I $P(VADEANUM,"^")=4 D  Q
  . . . . S RESULT="0^"_$S(ACTION="ED"&($P($G(RESULT),"^",2)'="B"):"W",1:"B")
- . . . . S RESULT($O(RESULT(""),-1)+1)="eRx Written Date/Issue Date is after the VistA Provider DEA expiration date ("_$P(VADEANUM,"^",2)_")."
- . . . I ERXPRDEA'="",$L($P(VADEANUM,"^",1))>2,$P(VADEANUM,"^")'=$P(ERXPRDEA,"-") D
+ . . . . S RESULT($O(RESULT(""),-1)+1)="eRx Written Date/Issue Date is after the VistA Provider DEA expiration date ("_$$FMTE^XLFDT($P(VADEANUM,"^",2))_")."  ; PSO*7*743
+ . . . . D SUFCHK^PSOERXU8(.RESULT,ERXPRDEA,VADEADFL,$G(ERXSUFF))
+ . . . I ERXPRDEA'="",$L($P(VADEANUM,"^",1))>8,($P($P(VADEANUM,"^"),"-")'=$P(ERXPRDEA,"-")) D  Q
  . . . . S RESULT="0^B"
  . . . . S RESULT($O(RESULT(""),-1)+1)="Provider DEA mismatch (eRx: "_ERXPRDEA_" | VistA: "_VADEANUM_")."
+ . . . . D SUFCHK^PSOERXU8(.RESULT,ERXPRDEA,VADEADFL,$G(ERXSUFF))
+ . . . D SUFCHK^PSOERXU8(.RESULT,ERXPRDEA,VADEADFL,$G(ERXSUFF))
+ . . . ; PSO*7*743 End
  . . ; Detox VistA Drug
  . . I $$DETOX^PSSOPKI(DRUGIEN),$$DETOX^XUSER(PROVIEN,RXWRDATE)'?1"X"1A7N D
  . . . S RESULT="0^"_$S(ACTION="ED"&($P($G(RESULT),"^",2)'="B"):"W",1:"B")
@@ -253,7 +269,8 @@ SUFFWARN(RESULT,ERXPRDEA,VADEADSP,HEADER) ; Append suffix warning to end of RESU
  ;        (r) VADEADSP - VA DEA #
  ;        (o) HEADER - Print Message Heading
  ; Output: RESULT - DEA Number suffix mismatch warning text
- I $G(HEADER) D
+ N RESCNT S RESCNT=$O(RESULT(""),-1)
+ I $G(HEADER)!RESCNT D
  . S RESULT($O(RESULT(""),-1)+1)="*******************************  WARNING(S)  *******************************"
  S RESULT($O(RESULT(""),-1)+1)="Provider DEA suffix mismatch (eRx: "_ERXPRDEA_" | VistA: "_VADEADSP_")."
  Q
@@ -281,47 +298,10 @@ DEFROUTE(OIIEN) ; Returns the Default Route for Orderable Item
  Q DEFROUTE
  ;
 ERXSIG(ERXIEN) ; Returns the eRx SIG
- ; Input: (r) ERXIEN - Pointer to ERX HOLDING QUEUE File (#52.49)
- ;Output:     ERXSIG - eRx SIG in one string
- ;
- N ERXSIG,SIG,I,S2017,MSGTYPE,RESTYPE,MEDIEN
- S ERXSIG=""
- I '$D(^PS(52.49,+$G(ERXIEN),0)) Q ERXSIG
- S S2017=+$G(^PS(52.49,ERXIEN,312))
- S MSGTYPE=$P($G(^PS(52.49,ERXIEN,0)),"^",8)
- S RESTYPE=$P($G(^PS(52.49,ERXIEN,52)),"^")
- I S2017 D
- . I MSGTYPE="CX" S MEDIEN=$O(^PS(52.49,ERXIEN,311,"C","P",0))
- . I MSGTYPE="RE",(RESTYPE="R") S MEDIEN=$O(^PS(52.49,ERXIEN,311,"C","MR",0))
- . I MSGTYPE="N"!'$G(MEDIEN) S MEDIEN=$O(^PS(52.49,ERXIEN,311,0))
- . I '$G(MEDIEN) Q
- . F I=1:1 Q:'$D(^PS(52.49,ERXIEN,311,MEDIEN,8,I))  D
- . . S ERXSIG=ERXSIG_" "_$G(^PS(52.49,ERXIEN,311,MEDIEN,8,I,0))
- I 'S2017 D
- . S ERXSIG=$P($G(^PS(52.49,ERXIEN,7)),"^")
- Q ERXSIG
+ Q $$ERXSIG^PSOERXU8(ERXIEN)
  ;
 VISTASIG(ERXIEN) ; Returns the VistA SIG, if present
- ; Input: (r) ERXIEN   - Pointer to ERX HOLDING QUEUE File (#52.49)
- ;Output:     VISTASIG - VistA SIG in one string
- ;
- N VISTASIG,SIG
- S VISTASIG=""
- S SIG=0 F  S SIG=$O(^PS(52.49,ERXIEN,"SIG",SIG)) Q:'SIG  D
- . S VISTASIG=VISTASIG_$G(^PS(52.49,ERXIEN,"SIG",SIG,0))
- ; VA Patient Instructions
- I $$GET1^DIQ(52.49,ERXIEN,27)'="" D
- . S VISTASIG=VISTASIG_$S($E(VISTASIG,$L(VISTASIG))=" ":"",1:" ")_$$GET1^DIQ(52.49,ERXIEN,27)
- Q VISTASIG
+ Q $$VISTASIG^PSOERXU8(ERXIEN)
  ;
 RENEWALS(ERXIEN) ; Returns whether Renewals are Prohibited or no
- ; Input: ERXIEN   - Pointer to ERX HOLDING QUEUE File (#52.49)
- ;Output: RENEWALS - 1: Renewals are Allowed | 0 - Renewals are Prohibited
- N RENEWALS,MTYPE,CHGMESRQ,CHGMESRI,RESPVAL
- S RENEWALS=0,MTYPE=$$GET1^DIQ(52.49,ERXIEN,.08,"I")
- S CHGMESRQ=$$GET1^DIQ(52.49,ERXIEN,315.1,"I")
- S CHGMESRI=$$GET1^DIQ(52.45,CHGMESRQ,.01,"I")
- S RESPVAL=$$GET1^DIQ(52.49,ERXIEN,52.1,"E")
- I MTYPE="N"!((MTYPE="CX")&($$PROHIBIT^PSOERX1D(RESPVAL,CHGMESRI))) D
- . S RENEWALS=$S($$GET1^DIQ(52.49,ERXIEN,301.3,"I"):0,1:1)
- Q RENEWALS
+ Q $$RENEWALS^PSOERXU8(ERXIEN)

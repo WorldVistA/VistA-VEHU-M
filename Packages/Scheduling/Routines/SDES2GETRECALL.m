@@ -1,6 +1,8 @@
-SDES2GETRECALL ;ALB/TJB,BWF - VISTA SCHEDULING - GET RECALL REQUESTS ;FEB 14, 2024
- ;;5.3;Scheduling;**871,873**;Aug 13, 1993;Build 10
+SDES2GETRECALL ;ALB/TJB,BWF,JAS - VISTA SCHEDULING - GET RECALL REQUESTS ;APR 16, 2024
+ ;;5.3;Scheduling;**871,873,877**;Aug 13, 1993;Build 14
  ;;Per VHA Directive 6402, this routine should not be modified
+ ;
+ ; Reference to ^VA(200 in ICR #10060 ;
  ;
  ; SDES2 GET RECALL BY IEN
  ; SDES2 GET RECALLS BY DFN
@@ -74,6 +76,7 @@ GETRECALL(REQUEST,RECALLIEN,DFN,SDDUZ) ;
  S REQUEST("Request",NUM,"PatientIEN")=DFN
  S REQUEST("Request",NUM,"PatientICN")=$$GETPATICN^SDESINPUTVALUTL(DFN)
  S REQUEST("Request",NUM,"PatientName")=RECARY(F,IENS,.01,"E")
+ S REQUEST("Request",NUM,"PatientPhone")=$$GET1^DIQ(2,DFN_",",.131,"E")
  S REQUEST("Request",NUM,"RequestIEN")=RECALLIEN
  S REQUEST("Request",NUM,"EnrollmentPriorityGroup")=PRIOGROUP
  S REQUEST("Request",NUM,"EASTrackingNumber")=RECARY(F,IENS,100,"E")

@@ -1,5 +1,5 @@
 PSODEARV ;WILM/BDB - EPCS Utilities and Reports; [5/7/02 5:53am] ;10/5/21  14:50
- ;;7.0;OUTPATIENT PHARMACY;**545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**545,756**;DEC 1997;Build 3
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002
  ;
  Q
@@ -73,11 +73,13 @@ COMPILE(PSCPRSSA,PSOEDS,PSOCPRSU,PSOPROB)  ; -- Compile the report lines into th
  . . S PSOLINE=PSOLINE_PSONPOBJ(29)_"|"                ; SERVICE/SECTION        #200,    #29
  . . S PSCOUNT1=PSCOUNT1+1
  . . S PSOTD=$S(PSOTD:PSOTD,1:1)
- . . S ^TMP($J,"PSODEARP",PSOTD,PSODNOBJ(1.1),PSCOUNT1,1)=PSOLINE
+ . . ;p756 use Name field .01 from file 200
+ . . S ^TMP($J,"PSODEARP",PSOTD,PSONPOBJ(.01),PSCOUNT1,1)=PSOLINE
  . . ;
  . . D:PSONPOBJ(53.9)'=""
  . . . S PSOLINE=PSOLINE_"REMARKS: "_PSONPOBJ(53.9)_"|"    ; REMARKS FIELD          #200,    #53.9
- . . . S ^TMP($J,"PSODEARP",PSOTD,PSODNOBJ(1.1),PSCOUNT1,1)=PSOLINE
+ . . . ;p756 use Name field .01 from file 200
+ . . . S ^TMP($J,"PSODEARP",PSOTD,PSONPOBJ(.01),PSCOUNT1,1)=PSOLINE
  Q
  ;
 TEST(PSODNOBJ,PSONPOBJ,PSCPRSSA,PSOEDS,NPIEN,PSOCPRSU)  ; -- Perform the requested test for screening critera

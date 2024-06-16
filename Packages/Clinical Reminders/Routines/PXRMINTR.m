@@ -1,5 +1,8 @@
-PXRMINTR ;SLC/PKR,PJH - Input transforms for Clinical Reminders. ;04/07/2016  13:53
- ;;2.0;CLINICAL REMINDERS;**4,12,16,18,26,45**;Feb 04, 2005;Build 566
+PXRMINTR ;SLC/PKR,PJH - Input transforms for Clinical Reminders. ;02/26/2024
+ ;;2.0;CLINICAL REMINDERS;**4,12,16,18,26,45,86**;Feb 04, 2005;Build 9
+ ;References          ICR#
+ ;^LAB(60,LABTEST,0)  91
+ ;
  ;=======================================================
 VASP(DA,X) ;Check for valid associate sponsor in file 811.6.
  ;Do not execute as part of a verify fields.
@@ -9,10 +12,12 @@ VASP(DA,X) ;Check for valid associate sponsor in file 811.6.
  ;Make sure that an associated sponsor does not point to itself.
  I X=DA D  Q 0
  . D EN^DDIOL("An associated sponsor cannot point to itself.")
+ . I '$D(DIQUIET) H 2
  ;A sponsor cannot be an associated sponsor if it contains associated
  ;sponsors.
  I $D(^PXRMD(811.6,X,2,"B")) D  Q 0
  . D EN^DDIOL("A sponsor cannot be selected as an associated sponsor if it contains associated sponsors.")
+ . I '$D(DIQUIET) H 2
  ;The class of an associated sponsor must match that of the sponsor.
  N ASCLASS,SCLASS
  S SCLASS=$P(^PXRMD(811.6,DA,0),U,2)
@@ -21,6 +26,7 @@ VASP(DA,X) ;Check for valid associate sponsor in file 811.6.
  . N TEXT
  . S TEXT="The associated sponsor's class is "_ASCLASS_", it does not match the sponsor's class which is "_SCLASS_". They must match."
  . D EN^DDIOL(TEXT)
+ . I '$D(DIQUIET) H 2
  Q 1
  ;
  ;=======================================================
@@ -32,6 +38,7 @@ VCLASS(X) ;Check for valid CLASS field, ordinary users cannot create
  I $G(PXRMEXCH) Q 1
  I (X["N"),(($G(PXRMINST)'=1)!(DUZ(0)'="@")) D  Q 0
  . D EN^DDIOL("You are not allowed to create a NATIONAL class")
+ . I '$D(DIQUIET) H 2
  E  Q 1
  ;
  ;=======================================================
@@ -47,6 +54,7 @@ VDT(X) ;Check for a valid date/time. Input transform on
  . N TEXT
  . S TEXT=X_" is not a valid date/time"
  . D EN^DDIOL(TEXT)
+ . I '$D(DIQUIET) H 2
  Q VALID
  ;
  ;=======================================================
@@ -92,14 +100,18 @@ VHF(X) ;Check for valid health factor findings. It must be a factor, not
  S TYPE=$P(TEMP,U,10)
  I TYPE="C" D  Q 0
  . D EN^DDIOL("Category health factors cannot be used as a finding!")
+ . I '$D(DIQUIET) H 2
  I TYPE'="F" D  Q 0
  . D EN^DDIOL("Only factor health factors can be used as a finding!")
+ . I '$D(DIQUIET) H 2
  ;Make sure that the health factor has a category.
  S CAT=$P(TEMP,U,3)
  I CAT="" D  Q 0
  . D EN^DDIOL("Factor health factors must have a category!")
+ . I '$D(DIQUIET) H 2
  I '$D(^AUTTHF(CAT)) D  Q 0
  . D EN^DDIOL("The category for this health factor does not exist!")
+ . I '$D(DIQUIET) H 2
  Q 1
  ;
  ;=======================================================
@@ -128,9 +140,11 @@ VIGNAC(X) ;Check X to see if it contains valid IGNORE ON N/A codes.
  I LEN=1 D  Q 0
  . S TEXT=TEMP_" is not a valid IGNORE ON N/A code!"
  . D EN^DDIOL(TEXT)
+ . I '$D(DIQUIET) H 2
  I LEN>1 D  Q 0
  . S TEXT=TEMP_" are not valid IGNORE ON N/A codes!"
  . D EN^DDIOL(TEXT)
+ . I '$D(DIQUIET) H 2
  Q 1
  ;
  ;=======================================================
@@ -145,6 +159,7 @@ VLAB(X) ;Check for valid lab findings. Everything but a panel is ok.
  I (SUB="BB")!(SUB="WK") D  Q 0
  . S TEXT=SUB_" tests cannot be used as reminder findings."
  . D EN^DDIOL(.TEXT)
+ . I '$D(DIQUIET) H 2
  ;The concept of lab panel only applies to CH tests.
  I SUB'["CH" Q 1
  S DATANAME=$P(LAB0,U,5)
@@ -153,6 +168,7 @@ VLAB(X) ;Check for valid lab findings. Everything but a panel is ok.
  . S TEXT(1)=$P(LAB0,U,1)_" is a lab panel, it cannot be used as a reminder finding!"
  . S TEXT(2)="Contact your Lab ADPAC for help"
  . D EN^DDIOL(.TEXT)
+ . I '$D(DIQUIET) H 2
  Q 1
  ;
  ;=======================================================
@@ -163,13 +179,13 @@ VNAME(NAME) ;Check for a valid .01 value. The names of national reminder
  I $G(DIUTIL)="VERIFY FIELDS" Q 1
  ;Do not execute as part of exchange.
  I $G(PXRMEXCH) Q 1
- N AUTH,STEXT,TEXT,VALID
+ N AUTH,CHAR,LEN,STEXT,TEXT,VALID
  S NAME=$$UP^XLFSTR(NAME)
  S VALID=1
  I NAME["~" D
  . S TEXT="Name cannot contain the ""~"" character."
  . D EN^DDIOL(TEXT)
- . H 2
+ . I '$D(DIQUIET) H 2
  . S VALID=0
  S STEXT=$E(NAME,1,3)
  I (STEXT="VA-") D
@@ -177,8 +193,14 @@ VNAME(NAME) ;Check for a valid .01 value. The names of national reminder
  . I 'AUTH D
  .. S TEXT="Name cannot start with ""VA-"", reserved for national reminder components!"
  .. D EN^DDIOL(TEXT)
- .. H 2
+ .. I '$D(DIQUIET) H 2
  .. S VALID=0
+ S LEN=$L(NAME),CHAR=$E(NAME,LEN)
+ I $A(CHAR)<33 D
+ . S TEXT="Name cannot have trailing non-printing characters."
+ . D EN^DDIOL(TEXT)
+ . I '$D(DIQUIET) H 2
+ . S VALID=0
  Q VALID
  ;
  ;=======================================================
@@ -197,6 +219,7 @@ VPRIOL(X) ;Check for a valid Priority List.
  . S VALID=0
  . S TEXT=CHAR_" is not valid for the Priority List"
  . D EN^DDIOL(TEXT)
+ . I '$D(DIQUIET) H 2
  Q VALID
  ;
  ;=======================================================
@@ -219,6 +242,7 @@ VSPONSOR(X) ;Make sure file Class and Sponsor Class match.
  . S SCLASS=$$EXTERNAL^DILFD(811.6,100,"",SCLASS)
  . S TEXT="Sponsor Class is "_SCLASS_", File Class is "_FCLASS_" they must match!"
  . D EN^DDIOL(TEXT)
+ . I '$D(DIQUIET) H 2
  . S VALID=0
  Q VALID
  ;
@@ -229,6 +253,7 @@ VTAX(X) ;Make sure the taxonomy is active.
  S INACTIVE=$P(^PXD(811.2,IEN,0),U,6)
  I INACTIVE D  Q 0
  . D EN^DDIOL("This taxonomy is inactive and cannot be selected.")
+ . I '$D(DIQUIET) H 2
  Q 1
  ;
  ;=======================================================
@@ -263,8 +288,10 @@ VUSAGE(X) ;Check X to see if it contains valid USAGE codes.
  I LEN=1 D  Q 0
  . S TEXT=TEMP_" is not a valid USAGE code!"
  . D EN^DDIOL(TEXT)
+ . I '$D(DIQUIET) H 2
  I LEN>1 D  Q 0
  . S TEXT=TEMP_" are not valid USAGE codes!"
  . D EN^DDIOL(TEXT)
+ . I '$D(DIQUIET) H 2
  Q 1
  ;

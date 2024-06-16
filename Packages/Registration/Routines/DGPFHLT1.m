@@ -1,5 +1,5 @@
 DGPFHLT1 ;SHRPE/YMG - PRF HL7 QBP/RSP PROCESSING ; 05/02/18
- ;;5.3;Registration;**951**;Aug 13, 1993;Build 135
+ ;;5.3;Registration;**951,1113**;Aug 13, 1993;Build 10
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; This is the main driver for processing QBP^Q11 (PRF flag transfer request) messages.
@@ -177,6 +177,7 @@ UPDASGN(AFLG,DGIEN,DATA,DGPFA) ; update PRF assignment and assignment history
  S DGPFAH("ENTERBY")=$G(DATA("REVDUZ"))
  S DGPFA("REVIEWDT")=""
  S DGPFA("STATUS")=1 ; flag status = Active
+ S DGPFAH("ORIGFAC")=+$$SITE^VASITE
  S DGPFAH("COMMENT",1,0)="Ownership transfer request has been received for this flag."
  ; add DBRS data to DGPFAH array
  D GETDBRS^DGPFUT6(.DBRSDATA,DGIEN)

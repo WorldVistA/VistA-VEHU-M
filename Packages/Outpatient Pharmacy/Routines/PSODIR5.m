@@ -1,5 +1,5 @@
 PSODIR5 ;DAL/JCH - ASK FOR DEA RX DATA ;11/08/21 4:03pm
- ;;7.0;OUTPATIENT PHARMACY;**545,731**;DEC 1997;Build 18
+ ;;7.0;OUTPATIENT PHARMACY;**545,731,743**;DEC 1997;Build 24
  ;External reference PSDRUG( supported by DBIA 221
  ;External reference PS(50.7 supported by DBIA 2223
  ;External reference to VA(200 is supported by DBIA 10060
@@ -160,7 +160,7 @@ SLDEA(PROVIEN,PSORX,DFLTDEA,PSODRIEN) ;
  I $P(DEARY(0),U)=0&(('$L(VA))!'$$VAPROV(PROVIEN)) D WM1 Q ""
  ;no DEA# then use VA#
  I ($P(DEARY(0),U)=0)&($L(VA))&$$VAPROV(PROVIEN) Q $$USEVA(PROVIEN,VA,.PSORX)
- ;DEA# is expired, check Failover flag
+ ;DEA# is expired, check Failover flag.
  I $P(DEARY(0),U)=$P(DEARY(0),U,3)&('$L(VA)!'$$VAPROV(PROVIEN)) D WM2,DISPONLY(.DEARY) Q DEASEL
  I $P(DEARY(0),U)=$P(DEARY(0),U,3)&($$VAPROV(PROVIEN)) S DEASEL=$$FAILOVER(.DEARY,VA,SDEA) Q DEASEL
  I $P(DEARY(0),U)=1&($P(DEARY(0),U,2))=1&($D(DEARY(2))) S Y=1 D DISP3($P(DEARY(2,1),U),Y,.PSORX) Q PSORX("RXDEA")
@@ -168,6 +168,8 @@ SLDEA(PROVIEN,PSORX,DFLTDEA,PSODRIEN) ;
  . W !,"Provider not authorized to write Federal Schedule "_SDEA_" prescriptions."
  . W !,"Please contact the provider.",!
  . D DISPONLY(.DEARY)
+ ;743 - One active DEA# with valid schedule and another DEA# that expired more than a year ago
+ I '$D(DEARY(1)),('$D(DEARY(3))),($O(DEARY(2,""))=$O(DEARY(2,""),-1)) S Y=1 Q $$DISP3($P(DEARY(2,1),U),Y,.PSORX)
  I $P(DEARY(0),U,1)>1 D
  . Q:$D(DEARY(3))&('$D(DEARY(2)))
  . W !!,"This provider has multiple DEA registrations." W !,"Please select the correct DEA number for the prescription being entered"

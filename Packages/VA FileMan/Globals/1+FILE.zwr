@@ -2147,7 +2147,7 @@ ZWR
 ^DIC(26.13,"%D",5,0)="Records in this file should not be added or edited except through the use"
 ^DIC(26.13,"%D",6,0)="of the Patient Record Flag software that is part of Registration.  Doing"
 ^DIC(26.13,"%D",7,0)="so would likely cause Patient Record Flag database corruption."
-^DIC(26.13,"%MSC")=3190524.162551
+^DIC(26.13,"%MSC")=3240616.080651
 ^DIC(26.14,0)="PRF ASSIGNMENT HISTORY^26.14"
 ^DIC(26.14,0,"GL")="^DGPF(26.14,"
 ^DIC(26.14,0,"GL")="^DGPF(26.14,"
@@ -2163,7 +2163,7 @@ ZWR
 ^DIC(26.14,"%D",8,0)="through the use of the Patient Record Flag software that is part of "
 ^DIC(26.14,"%D",9,0)="Registration.  Doing so would likely cause the Patient Record Flag "
 ^DIC(26.14,"%D",10,0)="database to become corrupted."
-^DIC(26.14,"%MSC")=3190524.162551
+^DIC(26.14,"%MSC")=3240616.080651
 ^DIC(26.15,0)="PRF NATIONAL FLAG^26.15"
 ^DIC(26.15,0,"GL")="^DGPF(26.15,"
 ^DIC(26.15,0,"GL")="^DGPF(26.15,"
@@ -29886,7 +29886,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3240522.033724
+^DIC(409.93,"%MSC")=3240616.080311
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
@@ -35186,6 +35186,7 @@ ZWR
 ^DIC(664,"%D",4,0)="option.  Normally, purging this file may be done for transactions over"
 ^DIC(664,"%D",5,0)="180 days old.  The purge retaining time is set in the site parameter file."
 ^DIC(664,"%D",6,0)="PARAMETER file (669.9)."
+^DIC(664,"%MSC")=3240616.080559
 ^DIC(664.1,0)="PROSTHETIC 2529-3^664.1ID"
 ^DIC(664.1,0,"GL")="^RMPR(664.1,"
 ^DIC(664.1,0,"GL")="^RMPR(664.1,"
@@ -56833,7 +56834,7 @@ ZWR
 ^DIC(9002313.22,"%D",5,0)="No local changes should ever be made to this file."
 ^DIC(9002313.22,"%D",6,0)=" "
 ^DIC(9002313.22,"%D",7,0)="Per VHA Directive 2004-038, this file definition should not be modified."
-^DIC(9002313.22,"%MSC")=3231216.222035
+^DIC(9002313.22,"%MSC")=3240616.080536
 ^DIC(9002313.23,0)="BPS NCPDP REASON FOR SERVICE CODE^9002313.23"
 ^DIC(9002313.23,0,"AUDIT")="@"
 ^DIC(9002313.23,0,"DD")="@"
@@ -57589,7 +57590,7 @@ ZWR
 ^DIC(9002313.93,"%D",6,0)="are nationally distributed."
 ^DIC(9002313.93,"%D",7,0)=" "
 ^DIC(9002313.93,"%D",8,0)="Per VHA Directive 2004-038, this file definition should not be modified."
-^DIC(9002313.93,"%MSC")=3231216.222035
+^DIC(9002313.93,"%MSC")=3240616.080536
 ^DIC(9002313.99,0)="BPS SETUP^9002313.99"
 ^DIC(9002313.99,0,"AUDIT")="@"
 ^DIC(9002313.99,0,"DD")="@"

@@ -1,0 +1,28 @@
+SDUPDATECONSPID ;ALB/BLB -  Feb 29, 2024 - Entry point for SD PID/CID UPDATE OR protocol - attached to GMRC EVSEND OR
+ ;;5.3;Scheduling;**877**;Aug 13, 1993;Build 14
+ ;;Per VHA Directive 6402, this routine should not be modified
+ ;
+ Q
+ ;
+UPDATECONSULTPID(CONSULT) ;6208
+ N CONSULTIEN,PID,DFN,COUNT
+ ;
+ I $G(NEWPID) Q
+ I $D(APPOINTMENT) Q
+ I $G(SDDDT)!($D(APPTARRAY)) Q
+ I $L($G(NOSHOW))!($L($G(SDECNS))) Q
+ I $D(NOSHOW) Q
+ ;
+ S COUNT=0
+ F  S COUNT=$O(CONSULT(COUNT)) Q:'COUNT  D
+ .I $E($G(CONSULT(COUNT)),1,3)="ORC" D
+ ..S CONSULTIEN=$P($P($P($G(CONSULT(COUNT)),U,2),"|",2),";")
+ ..S PID=$$HL7TFM^XLFDT($P($G(CONSULT(COUNT)),U,6))
+ .;
+ .I $E($G(CONSULT(COUNT)),1,3)="PID" D
+ ..S DFN=$P($G(CONSULT(COUNT)),"|",4)
+ I '$G(CONSULTIEN)!('$G(DFN))!('$G(PID)) Q
+ ;
+ D UPDATECONSULTPID^SDES2APPTUTIL(CONSULTIEN,PID,DFN) ;
+ Q
+ ;

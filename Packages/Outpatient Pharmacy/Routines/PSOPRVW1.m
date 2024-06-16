@@ -1,5 +1,5 @@
 PSOPRVW1 ;BIR/BI,MHA-enter/edit/view provider ; 11/9/2018
- ;;7.0;OUTPATIENT PHARMACY;**545,731**;DEC 1997;Build 18
+ ;;7.0;OUTPATIENT PHARMACY;**545,731,743**;DEC 1997;Build 24
  ;External reference to sub-file NEW DEA #'S (#200.5321) is supported by DBIA 7000
  ;External reference to DEA NUMBERS file (#8991.9) is supported by DBIA 7002
  ;
@@ -247,7 +247,7 @@ IPSLOOP ; Loop to prevent the user from existing without selecting a DEA number 
  ;
 DELDEA(NPDEALST,NPIEN) ; -- Code used to add/edit/delete the VA Number
  N ACNT,D,DA,DEATYPE,DI,DIC,DIE,DIE1,DIEDA,DIEL,DIETMP,DIEXREF,DIFLD,DIR,DNDEAIEN
- N DNDETOX,DR,NPDEACNT,NPDEATXT,RESPONSE,VANUMBER,X,Y,SELECTED
+ N DNDETOX,DR,NPDEACNT,NPDEATXT,RESPONSE,VANUMBER,X,Y,SELECTED,PSOLDEA,PSODELDEA
  S RESPONSE=0
  I '$G(NPDEALST(0)) D  Q RESPONSE
  . W " ** No DEA Numbers to Delete ** "
@@ -280,10 +280,10 @@ DELDEA(NPDEALST,NPIEN) ; -- Code used to add/edit/delete the VA Number
  S ACNT=ACNT+1,DIR("A",ACNT)=" "
  S DIR(0)="Y" D ^DIR K DIR G:Y'=1 DELDEAQ
  S DIE="^VA(200,"_DA(1)_",""PS4"",",DR=".01///@" D ^DIE K DIE,DR,DA
- I DEATYPE=2 D
- . S DA=DNDEAIEN,DIK="^XTV(8991.9," D ^DIK K DIK,DA
- . N PSOLDEA,PSODELDEA S PSOLDEA=$$GET1^DIQ(200,NPIEN,53.2),PSODELDEA=$P($G(NPDEALST(+$G(SELECTED))),"^")  ; 731 - Remove DEA# field (#53.2) if no remaining DEAs
- . Q:PSOLDEA=""  I (PSOLDEA=PSODELDEA)!(($O(NPDEALST(999),-1)=1)&(SELECTED=1)) K DIE,DA,DR,X S DIE="^VA(200,",DA=NPIEN,DR="53.2///@" D ^DIE K DIE,DR,DA
+ S PSOLDEA=$$GET1^DIQ(200,NPIEN,53.2),PSODELDEA=$P($G(NPDEALST(+$G(SELECTED))),"^")
+ I (PSOLDEA]"") D  ; 731 - Remove DEA# field (#53.2) if no remaining DEAs
+ . ; 743 - Do not delete DEA numbers from DEA NUMBERS file (#8991.9)
+ . I (PSOLDEA=PSODELDEA)!(($O(NPDEALST(999),-1)=1)&(SELECTED=1)) K DIE,DA,DR,X S DIE="^VA(200,",DA=NPIEN,DR="53.2///@" D ^DIE K DIE,DR,DA
  S RESPONSE=1
 DELDEAQ  ; -- Common Exit Point
  Q RESPONSE

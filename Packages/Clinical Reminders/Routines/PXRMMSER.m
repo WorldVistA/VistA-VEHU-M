@@ -1,5 +1,8 @@
-PXRMMSER ;SLC/PKR,AJB - Computed findings for military service information. ;12/17/2019
- ;;2.0;CLINICAL REMINDERS;**11,12,21,24,26,42**;Feb 04, 2005;Build 245
+PXRMMSER ;SLC/PKR,AJB - Computed findings for military service information. ;02/08/2024
+ ;;2.0;CLINICAL REMINDERS;**11,12,21,24,26,42,86**;Feb 04, 2005;Build 9
+ ;Reference       ICR#
+ ;MSDATA^DGMSE    5354
+ ;OEIF^DGMSE      5354
  ;
  ;===============
 AORANGE(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,DATA,TEXT) ;This computed
@@ -40,7 +43,7 @@ COMBAT(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,DATA,TEXT) ;This computed
  ;
  ;===============
 CVELIG(DFN,NGET,BDT,EDT,NFOUND,TEST,DATE,DATA,TEXT) ;Computed finding for
- ;combat vet eligiblity data. VA-COMBAT VET ELIGIBILITY.
+ ;combat vet eligibility data. VA-COMBAT VET ELIGIBILITY.
  N CV,EDATE,ELIG,RESULT
  ;DBIA #4156
  S RESULT=$$CVEDT^DGCV(DFN,$$NOW^PXRMDATE)
@@ -75,41 +78,50 @@ ELIG(DFN,TEST,DATE,DATA,TEXT) ;
  ;using ELIG^VADPT. The Computed Finding Parameter can be used to
  ;check for a particular eligibility.
  ;CF.VA-ELIGIBILITY
- N DONE,CFPARAM,DEFTEXT,P1,P2,PARAM,SUB,SUB1,SUB2,VAEL,VAERR,VAL
+ N DONE,CFPARAM,DEFTEXT,IND,P1,P2,PARAM,PS1,PS2,PSUB,SUB,SUB1,SUB2
+ N TEMP,TPARAM,VAEL,VAERR,VAL
  S CFPARAM=TEST
  I CFPARAM="" S TEST=0 Q
  S PARAM=$P(CFPARAM,"|",1)
  S DEFTEXT=$P(CFPARAM,"|",2)
  S DATE=$$NOW^PXRMDATE
  D ELIG^VADPT
+ ;Store secondary eligibilities by name.
+ S IND=0
+ F  S IND=+$O(VAEL(1,IND)) Q:IND=0  D
+ . S TEMP=$P(VAEL(1,IND),U,2)
+ . S VAEL("SE",TEMP)=1
  ;Initialize undefined VAEL elements in CFPARAM.
  S (DONE,P1)=0
+ S TPARAM=$TR(PARAM,"""","")
  F  Q:DONE  D
- . S P1=$F(PARAM,"VAEL(",P1)
+ . S P1=$F(TPARAM,"VAEL(",P1)
  . I P1=0 S DONE=1 Q
- . S P2=$F(PARAM,")",P1)
- . S SUB=$E(PARAM,P1,P2-2)
+ . S P2=$F(TPARAM,")",P1)
+ . S SUB=$E(TPARAM,P1,P2-2)
  . I SUB'["," D  Q
  .. I '$D(VAEL(SUB)) S VAEL(SUB)=""
  . S SUB1=$P(SUB,",",1),SUB2=$P(SUB,",",2)
  . I '$D(VAEL(SUB1,SUB2)) S VAEL(SUB1,SUB2)=""
- I $G(PXRMDEBG)=1 D
- . K ^TMP("PXRMELIG",$J)
- . M ^TMP("PXRMELIG",$J)=VAEL
+ I $G(PXRMDEBG)=1 M ^TMP("PXRMELIG",$J)=VAEL
  I VAERR=1 S TEST=0 Q
  S TEST=0
  I @PARAM D
+ . N PSUB
  . I DEFTEXT'="" S TEXT=DEFTEXT_"\\"_" CFPARAM="_PARAM
  . E  S TEXT="CFPARAM="_PARAM
  . S TEST=1
- . S (DONE,P1)=0
+ . S (DONE,P1,PS1)=0
  . F  Q:DONE  D
- .. S P1=$F(PARAM,"VAEL(",P1)
+ .. S P1=$F(TPARAM,"VAEL(",P1)
  .. I P1=0 S DONE=1 Q
- .. S P2=$F(PARAM,")",P1)
- .. S SUB=$E(PARAM,P1,P2-2)
+ .. S P2=$F(TPARAM,")",P1)
+ .. S SUB=$E(TPARAM,P1,P2-2)
+ .. S PS1=$F(PARAM,"VAEL(",PS1)
+ .. S PS2=$F(PARAM,")",PS1)
+ .. S PSUB=$E(PARAM,PS1,PS2-2)
  .. S VAL=$S(SUB'[",":VAEL(SUB),1:VAEL($P(SUB,",",1),$P(SUB,",",2)))
- .. S TEXT=TEXT_"\\"_" VAEL("_SUB_")="_VAL
+ .. S TEXT=TEXT_"\\"_" VAEL("_PSUB_")="_VAL
  D KVAR^VADPT
  Q
  ;

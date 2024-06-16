@@ -1,0 +1,110 @@
+PXRMCLEH ;SLC/PKR - Utilities for managing Change Logs/Edit Histories. ;02/28/2024
+ ;;2.0;CLINICAL REMINDERS;**86**;Feb 04, 2005;Build 9
+ ;
+ ;===============
+CHANGELOG(CLOGSFN,IEN,CLOGTEXT) ;Add a CHANGE LOG/EDIT HISTORY entry.
+ N FDA,IENS,MSG
+ I IEN'>0 Q
+ S IENS="+1,"_IEN_","
+ S FDA(CLOGSFN,IENS,.01)=$$NOW^XLFDT
+ S FDA(CLOGSFN,IENS,1)=DUZ
+ S FDA(CLOGSFN,IENS,2)="CLOGTEXT"
+ D UPDATE^DIE("","FDA","","MSG")
+ I $D(MSG) D
+ . D BMES^XPDUTL("CHANGELOG^PXRMCLEH, Change Log/Edit History write failed.")
+ . D AWRITE^PXRMUTIL("MSG")
+ . D MES^XPDUTL("")
+ . D AWRITE^PXRMUTIL("FDA")
+ Q
+ ;
+ ;===============
+GETCLOGSFN(FILENUM) ;Determine if this file has a CHANGE LOG or EDIT HISTORY field.
+ ;If it does, return the subfile number.
+ N FIELDNUM,SPECIFIER,TARGET
+ S FIELDNUM=$$FLDNUM^DILFD(FILENUM,"CHANGE LOG")
+ I FIELDNUM=0 S FIELDNUM=$$FLDNUM^DILFD(FILENUM,"EDIT HISTORY")
+ I FIELDNUM=0 Q 0
+ D FIELD^DID(FILENUM,FIELDNUM,"","SPECIFIER","TARGET")
+ Q +$G(TARGET("SPECIFIER"))
+ ;
+ ;===============
+LASTINSTALL(PXRMRIEN,FILENUM,IEN) ;
+ N CHANGELOG,CLTEXT,FIELDNUM,GLOBAL,LAST,TEMP,TESTTEXT
+ S FIELDNUM=$$FLDNUM^DILFD(FILENUM,"CHANGE LOG")
+ I FIELDNUM=0 S FIELDNUM=$$FLDNUM^DILFD(FILENUM,"EDIT HISTORY")
+ I FIELDNUM=0 Q 0
+ S GLOBAL=$$GET1^DID(FILENUM,"","","GLOBAL NAME")
+ S CHANGELOG=GLOBAL_IEN_","_FIELDNUM_")"
+ S LAST=+$O(@CHANGELOG@("A"),-1)
+ I LAST=0 Q 0
+ S CLTEXT(1)=$G(@CHANGELOG@(LAST,1,1,0))
+ ;If there are no Comments quit.
+ I CLTEXT(1)="" Q 0
+ S TESTTEXT(1)="Exchange Install"
+ I CLTEXT(1)'=TESTTEXT(1) Q 0
+ S TEMP=$G(^PXD(811.8,PXRMRIEN,0))
+ S CLTEXT(2)=$g(@CHANGELOG@(LAST,1,2,0))
+ I CLTEXT(2)="" Q 0
+ S TESTTEXT(2)="Reminder Exchange entry: "_$P(TEMP,U,1)
+ S CLTEXT(3)=$G(@CHANGELOG@(LAST,1,3,0))
+ I CLTEXT(3)="" Q 0
+ S TESTTEXT(3)="Date Packed: "_$$EDATE^PXRMDATE($P(TEMP,U,3))
+ I (CLTEXT(2)'=TESTTEXT(2))!(CLTEXT(3)'=TESTTEXT(3)) D  Q 0
+ . W !,"The last update was:"
+ . W !,CLTEXT(2)
+ . W !,CLTEXT(3)
+ . W !,"This is update:"
+ . W !,TESTTEXT(2)
+ . W !,TESTTEXT(3)
+ Q 1
+ ;
+ ;===============
+RMEHIST(FILENUM,IEN) ;Remove the edit history for a reminder file.
+ N FIELDNUM
+ S FIELDNUM=$$FLDNUM^DILFD(FILENUM,"CHANGE LOG")
+ I FIELDNUM=0 S FIELDNUM=$$FLDNUM^DILFD(FILENUM,"EDIT HISTORY")
+ I FIELDNUM=0 Q
+ N DA,DIK,GLOBAL,ROOT
+ S GLOBAL=$$GET1^DID(FILENUM,"","","GLOBAL NAME")
+ ;Edit History is stored in node 110 for all files.
+ S DA(1)=IEN
+ S DIK=GLOBAL_IEN_","_FIELDNUM_","
+ S ROOT=GLOBAL_IEN_","_FIELDNUM_",DA)"
+ S DA=0
+ F  S DA=+$O(@ROOT) Q:DA=0  D ^DIK
+ Q
+ ;
+ ;===============
+SEHIST(FILENUM,ROOT,IEN) ;Set the edit date and edit by and prompt the
+ ;user for the edit comment.
+ N DIC,DIR,DWLW,DWPK,ENTRY,FDA,FDAIEN,IENS,IND,MSG,SFN,TARGET,X,Y
+ K ^TMP("PXRMWP",$J)
+ S SFN=$$GETCLOGSFN(FILENUM)
+ I SFN=0 Q
+ S ENTRY=ROOT_IEN_",110)"
+ S IND=$O(@ENTRY@("B"),-1)
+ S IND=IND+1
+ S IENS="+"_IND_","_IEN_","
+ S FDAIEN(IEN)=IEN
+ S FDA(SFN,IENS,.01)=$$FMTE^XLFDT($$NOW^XLFDT,"5Z")
+ S FDA(SFN,IENS,1)="`"_DUZ
+ ;Prompt the user for edit comments.
+ S DIC="^TMP(""PXRMWP"",$J,"
+ S DWLW=72
+ S DWPK=1
+ W !,"Input your edit comments."
+ S DIR(0)="Y"_U_"AO"
+ S DIR("A")="Edit"
+ S DIR("B")="NO"
+ D ^DIR
+ I Y D
+ . D EN^DIWE
+ . K ^TMP("PXRMWP",$J,0)
+ . I $D(^TMP("PXRMWP",$J)) S FDA(SFN,IENS,2)="^TMP(""PXRMWP"",$J)"
+ D UPDATE^DIE("E","FDA","FDAIEN","MSG")
+ I $D(MSG) D
+ . D BMES^XPDUTL("SEHIST^PXRMCLEH error setting Change Log.")
+ . D AWRITE^PXRMUTIL("MSG") W ! D AWRITE^PXRMUTIL("FDA")
+ K ^TMP("PXRMWP",$J)
+ Q
+ ;

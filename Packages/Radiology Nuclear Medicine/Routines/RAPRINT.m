@@ -1,5 +1,5 @@
-RAPRINT ;HISC/FPT AISC/DMK-Abnormal Exam Report ; 5/5/09 2:25pm
- ;;5.0;Radiology/Nuclear Medicine;**97**;Mar 16, 1998;Build 6
+RAPRINT ;HISC/FPT AISC/DMK - Abnormal Exam Report ; Mar 13, 2024@09:00:52
+ ;;5.0;Radiology/Nuclear Medicine;**97,212**;Mar 16, 1998;Build 1
  ;
  ; This report uses the 'AD' cross reference on File 70 to create a
  ; report of exams that use certain diagnostic codes. The Diagnostic
@@ -58,7 +58,7 @@ START ;
  S:$D(ZTQUEUED) ZTREQ="@"
  U IO K I S CNT=0,RAOUT=0,PDATE=+$E(DT,4,5)_"/"_+$E(DT,6,7)_"/"_$E(DT,2,3) S RAEND=ENDDATE-1,QQ="",$P(QQ,"=",80)="=",I1("DIV")="",I1("IT")="",I1("DX")=""
  D HDR^RAPRINT1 G:RAOUT END
- F I=0:0 S I=$O(^RADPT("AD",I)) Q:I'>0!(RAOUT)  I $D(^RA(78.3,I,0)),($D(^TMP($J,"RA DX CODES",$P(^RA(78.3,I,0),"^")))) F J=0:0 S J=$O(^RADPT("AD",I,J)) Q:J'>0!(RAOUT)  F K=RAEND:0 S K=$O(^RADPT("AD",I,J,K)) Q:K'>0!(K>BEGDATE)!(RAOUT)  D PAT1
+ F I=0:0 S I=$O(^RADPT("AD",I)) Q:I'>0!(RAOUT)  I $D(^RA(78.3,I,0)),($D(^TMP($J,"RA DX CODES",$P(^RA(78.3,I,0),"^"),I))) F J=0:0 S J=$O(^RADPT("AD",I,J)) Q:J'>0!(RAOUT)  F K=RAEND:0 S K=$O(^RADPT("AD",I,J,K)) Q:K'>0!(K>BEGDATE)!(RAOUT)  D PAT1
  D DIV^RAPRINT1,NEGRPT
 END ;
  K ^TMP($J),BEGDATE,CNT,DIR,DIROUT,DIRUT,DTOUT,DUOUT,ENDDATE,I,I1,J,K,L,PDATE,POP,QQ

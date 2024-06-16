@@ -1,7 +1,8 @@
 PSOORFI5 ;BIR/SJA - finish cprs orders ;Oct 21, 2022@11:13
- ;;7.0;OUTPATIENT PHARMACY;**225,315,266,391,372,416,504,505,557,617,441,545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**225,315,266,391,372,416,504,505,557,617,441,545,743**;DEC 1997;Build 24
  ;External references UL^PSSLOCK supported by DBIA 2789
  ;External reference to ^DPT supported by DBIA 10035
+ ;External reference to ^PSSUTLA1 supported by DBIA 3373   
  ;
 FLG W ! K MEDP,MEDA,POERR("DFLG"),DIR D KQ S PSOSORT="FLAGGED^FLAGGED"
  N SECSORT S SECSORT=$$DIR^PSOORFI6("FL:FLAGGED","FLAGGED") Q:SECSORT=U
@@ -186,6 +187,8 @@ PRV(PROV,DRG,ORN) ;
  I PROV="" Q
  ;*545 - show DEA label only, get the stored DEA#
  S:$L($G(PSORX("RXDEA"))) DEA=PSORX("RXDEA")
+ ;If renew, try to get DEA from the renewal from CPRS rather than the original RX, provider may have changed
+ I $G(PSOORRNW),$G(ORN) S DEA=$$RXDEA^PSOUTIL(,ORN)
  I '$L($G(DEA)) S DEA=$S($G(PSONEW("OIRXN")):$$RXDEA^PSOUTIL(PSONEW("OIRXN")),$G(ORN):$$RXDEA^PSOUTIL(,ORN),1:$$DEA^XUSER(0,PROV)) S:DEA]"" PSORX("RXDEA")=DEA
  S:$L($G(PSORX("DETX"))) DETN=PSORX("DETX")
  S LBL="DEA#: " I $G(ADDS) S LBL=" "_LBL

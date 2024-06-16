@@ -1,5 +1,5 @@
 PSOBPSU4 ;AITC/MRD - BPS (ECME) Utilities 4 ;10/29/2020
- ;;7.0;OUTPATIENT PHARMACY;**561,648**;DEC 1997;Build 15
+ ;;7.0;OUTPATIENT PHARMACY;**561,648,703**;DEC 1997;Build 16
  ;
 BYPASSACT(PSORX) ; 'BY' hidden action, Bypass 3/4 Day Supply.
  ;
@@ -62,6 +62,13 @@ BYPASSACT(PSORX) ; 'BY' hidden action, Bypass 3/4 Day Supply.
  I $P($$SUSPFILL(PSORX),"^",1)="" S PSOREASON="E"
  E  S PSOREASON="S"
  D RXACT^PSOBPSU2(PSORX,PSOFILL,PSOCOMMENT,PSOREASON,DUZ)
+ ;
+ ; If the user flipped the flag from 'Yes' to 'No', then clear out
+ ; the Suspense Hold Date.  This will cause the system to make an
+ ; additional Activity Log entry the next time the 3/4 days supply
+ ; check causes the prescription to be left in suspense.
+ ;
+ I PSOFLAG="NO" D CLRSHD(PSORX,PSOFILL)
  ;
  Q
  ;
@@ -261,3 +268,21 @@ SUSPFILL(PSORX) ; Determine the fill# currently on the suspense queue.
  ;
  Q $$GET1^DIQ(52.5,PSOSUSPIEN,9)_"^"_PSOSUSPIEN
  ;
+CLRSHD(PSORX,PSOFILL) ; Clear Suspense Hold Date
+ ;
+ ; PSORX = Rx IEN
+ ; PSOFILL = Fill #
+ ;
+ ; If 3/4 Bypass Flag is YES, Quit.
+ ;
+ I $$FLAG(PSORX,PSOFILL)="YES" Q
+ ;
+ ; If Rx has an entry in the Suspense file, set the
+ ; SUSPENSE HOLD DATE field to nil.
+ ;
+ N PSOX
+ S PSOX=$O(^PS(52.5,"B",PSORX,""))
+ I PSOX="" Q
+ S PSOX(52.5,PSOX_",",10)=""
+ D FILE^DIE("","PSOX","")
+ Q
