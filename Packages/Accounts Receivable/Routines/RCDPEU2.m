@@ -1,5 +1,5 @@
 RCDPEU2 ;AITC/CJE - ELECTRONIC PAYER UTILITIES ;05-NOV-02
- ;;4.5;Accounts Receivable;**326,332,409**;Mar 20, 1995;Build 17
+ ;;4.5;Accounts Receivable;**326,332,409,436**;Mar 20, 1995;Build 3
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -12,6 +12,14 @@ EFT344(PROMPT,IEN344,AREVTYPE) ; Select and EFT and update reciept - EP
  N FDA,IEN34431,SCREEN
  S:'$D(AREVTYPE) AREVTYPE=""                    ;PRCA*4.5*409 Added line
  S SCREEN="I '$O(^RCY(344,""AEFT"",+Y,0)),$P($G(^RCY(344.31,+Y,0)),U,8)=0"
+ ;
+ ;PRCA*4.5*436 Begin
+ I AREVTYPE=18 D
+ . S SCREEN=SCREEN_",$E($P($G(^RCY(344.31,+Y,0)),U,4),1,3)=""OGC"""
+ I AREVTYPE=14 D
+ . S SCREEN=SCREEN_",$E($P($G(^RCY(344.31,+Y,0)),U,4),1,3)'=""OGC"""
+ ;PRCA*4.5*436 End
+ ;
  S IEN34431=$$ASKEFT(PROMPT,SCREEN)
  I IEN34431>0,IEN344 D  ;
  . S FDA(344,IEN344_",",.17)=IEN34431

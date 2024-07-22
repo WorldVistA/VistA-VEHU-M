@@ -1,5 +1,5 @@
 DGAUDIT3 ;ATG/JPN,ISL/DKA - VAS Audit Solution - Request System Parameters  ;May 17, 2021@15:12
- ;;5.3;Registration;**964,1108**;Aug 13, 1993;Build 17
+ ;;5.3;Registration;**964,1108,1120**;Aug 13, 1993;Build 6
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; Reference to GETS^DIQ in ICR #2056
@@ -19,7 +19,7 @@ DGAUDIT3 ;ATG/JPN,ISL/DKA - VAS Audit Solution - Request System Parameters  ;May
  Q  ; No entry from top
  ;
 EN ; Main entry point
- N DA,DIC,DIE,DGFLD,DGVPARR,DGVPNAME,DGVSTAT,DGVSTATI,DR,Y,DGSNDON,DGCSTAT,AUDGREF,CNTREC,DGDATE,DGREC,FILENUM,GREF,I,DGBADSRVR,DGMGROK
+ N DA,DIC,DIE,DGFLD,DGVPARR,DGVPNAME,DGVSTAT,DGVSTATI,DR,Y,DGSNDON,DGCSTAT,AUDGREF,CNTREC,DGDATE,DGREC,FILENUM,GREF,I,DGBADSRVR,DGMGROK,DGAUDDATA
  I '$D(^XUSEC("DG SECURITY OFFICER",+$G(DUZ))) W !,*7,"You do not have the appropriate access privileges to modify the AUDIT settings." Q
  ; Display the current values of our DG VAS CONFIG fields   ; FLS Changed VSRA TO VAS 3/16/2021
  S DGCSTAT=$$GET1^DIQ(46.5,1,.02,"I") ; Get status flag and save value
@@ -45,7 +45,7 @@ EN ; Main entry point
  .. S DIR("A")="Do you want to set the Status to 'Don't generate or send data'" D ^DIR
  .. I $G(Y) N FDA,DA S DA=1,FDA(46.5,"1,",.02)=0 D FILE^DIE(,"FDA","DGERR")
  Q:$D(Y)
- S DGVSTAT=$$GET1^DIQ(46.5,1,.02)
+ S DGVSTAT=$$GET1^DIQ(46.5,1,.02),DGVSTATI=$$GET1^DIQ(46.5,1,.02,"I")
  W !,"Status:       ",$S(DGVSTAT'="":DGVSTAT,1:"STATUS is blank (Data is being sent to VAS)")   ; FLS Changed VSRA TO VAS 3/16/2021
  S DGVPARR(2,"DG VAS BATCH SIZE")=100
  S DGVPARR(8,"DG VAS DEBUGGING FLAG")=1          ; Changed XPAR names from VSRA to VAS 3/17/21
@@ -57,16 +57,43 @@ EN ; Main entry point
  F  S DGVPNAME=$O(DGVPARR(DGVPNAME)) Q:DGVPNAME=""  Q:'$$PROMPT($O(DGVPARR(DGVPNAME,"")),DGVPARR(DGVPNAME,$O(DGVPARR(DGVPNAME,""))))
  ;JPN/FLS check for data in DGAUDIT1 if flag set to send to set DGAUDIT1 global to what is in DIA to get point forward
  I (+DGCSTAT=0)&$$GET1^DIQ(46.5,1,.02,"I")=1 D
+ . N DGEXIEN
  . S (CNTREC,FILENUM)=0,DGDATE=$$NOW^XLFDT
  . S AUDGREF=$NA(^DIA),GREF=$NA(^DGAUDIT1)
- . F I=1:1:$P(^DGAUDIT1(0),"^",3) K ^DGAUDIT1(I) ; FLS Reset DGAUDIT1
- . K ^DGAUDIT1("B")
- . F I=3,4 S $P(^DGAUDIT1(0),"^",I)=0
  . F  S FILENUM=$O(@AUDGREF@(FILENUM)) Q:'FILENUM  D  ; Fred
  .. Q:'$$PATREL^DGAUDIT1(FILENUM)
  .. S DGREC=$$GET1^DIQ(1.1,FILENUM,.03) Q:DGREC=""
- .. K DIC S DIC="^DGAUDIT1(",X=FILENUM D ^DIC D:Y<1  Q:Y'>0
+ .. K DIC S DIC="^DGAUDIT1(",X=FILENUM D ^DIC S DGEXIEN=Y
+ .. ; 1120 - don't reset valid pointers
+ .. I DGEXIEN>0 D
+ ... N DG1PTR S DG1PTR=$G(^DGAUDIT1(+DGEXIEN,0))
+ ... Q:$P(DG1PTR,"^",3)  ; Quit if pointer already defined
+ ... N DIK,DA S DIK="^DGAUDIT1(",DA=DGEXIEN D ^DIK  ; If pointer is not defined, remove corrputed stub, so it can be set correctly in next step
+ .. I '(DGEXIEN>0) D
  ... K DIC,DR,DA S DIC="^DGAUDIT1(",DIC(0)="",DA=+Y,DIC("DR")=".01///"_FILENUM_";.02///"_DGREC_";.03///"_$TR($G(@AUDGREF@(FILENUM,DGREC,0)),U,"%")_";.04///"_DGDATE D FILE^DICN
+ ; 1120 - Send Switch Alert
+ I +DGCSTAT'=+DGVSTATI D
+ . N DGSWTXTO,DGSWTXTN,DGALRTAR,DGAUDNUM,DGINST,DGALRTLN,DGINSTXT,DGDATE,DGTIME
+ . S DGDATE=$$FMTE^XLFDT($$NOW^XLFDT),DGTIME=$P(DGDATE,"@",2),DGDATE=$P(DGDATE,"@")
+ . S DGINST=+$$STA^XUAF4($$KSP^XUPARAM("INST"))
+ . S DGINSTXT="" I DGINST>0 D F4^XUAF4(DGINST,.DGINSTXT)
+ . S DGALRTLN=1
+ . S DGINST=DGINST_$S($$PROD^XUPROD(1):" (Prod)",1:" (Test)")
+ . S DGALRTAR(DGALRTLN)="The VistA Audit Solution (VAS) send status switch was changed at",DGALRTLN=DGALRTLN+1
+ . S DGALRTAR(DGALRTLN)="Station "_DGINST_" ("_$G(DGINSTXT("NAME"))_") on "_DGDATE_" at "_DGTIME,DGALRTLN=DGALRTLN+1
+ . S DGALRTAR(DGALRTLN)="",DGALRTLN=DGALRTLN+1
+ . S DGSWTXTO=$S(DGCSTAT=0:"Don't generate or send data",DGCSTAT=1:"Generate and send data",DGCSTAT=2:"Generate data, don't send",1:"Unknown")
+ . S DGSWTXTN=$S(DGVSTATI=0:"Don't generate or send data",DGVSTATI=1:"Generate and send data",DGVSTATI=2:"Generate data, don't send",1:"Unknown")
+ . S DGALRTAR(DGALRTLN)="New Value: '"_DGSWTXTN_"'",DGALRTLN=DGALRTLN+1
+ . S DGALRTAR(DGALRTLN)="Old Value: '"_DGSWTXTO_"'",DGALRTLN=DGALRTLN+1
+ . S DGALRTAR(DGALRTLN)="",DGALRTLN=DGALRTLN+1
+ . D FILE^DID(46.3,,"ENTRIES","DGAUDDATA")
+ . S DGAUDNUM=$G(DGAUDDATA("ENTRIES"))
+ . S DGALRTAR(DGALRTLN)="The ^DGAUDIT global contains "_DGAUDNUM_" entr"_$S(DGAUDNUM=1:"y",1:"ies")_".",DGALRTLN=DGALRTLN+1
+ . S DGALRTAR(DGALRTLN)="The maximum number of entries in the queue is "_$$GET^XPAR("ALL","DG VAS MAX QUEUE ENTRIES")_".",DGALRTLN=DGALRTLN+1
+ . S DGALRTAR(DGALRTLN)="["_+$G(DUZ)_"]",DGALRTLN=DGALRTLN+1
+ . S DGALRTAR(DGALRTLN)="",DGALRTLN=DGALRTLN+1
+ . D SNDMSG^DGAUDIT(.DGALRTAR,,"VAS EXPORT SWITCH ALERT")
  Q
  ;
 PROMPT(PNAME,DEFVALUE) ; Prompt for value for a given PARAMETER DEFINITION

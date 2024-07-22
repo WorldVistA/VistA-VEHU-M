@@ -1,5 +1,5 @@
 YTSCOREX ;SLC/KCM - Score tests without admins ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**223**;Dec 30, 1994;Build 22
+ ;;5.01;MENTAL HEALTH;**223,224**;Dec 30, 1994;Build 17
  ;
 CALC(TEST,ANSWERS,SCORES) ; Calculate and return .SCORES given ANSWERS
  ;  TEST=name or IEN of instrument
@@ -75,7 +75,7 @@ COMPLEX(TEST,ANSWERS,SCORES) ; score by calling routine
  . I $L(TSCORE) S SCORES(SEQ,"tscore")=TSCORE
  Q
 MKYSDATA(TEST,ANSWERS,YSDATA) ; Convert "tree" array of answers to YSDATA format
- N I,N,QSTN,CTNT,QSEQ,SSEQ,RTYP,CHOICE
+ N I,N,QSTN,CTNT,QSEQ,SSEQ,RTYP,CHOICE,VAL
  S YSDATA(1)="[DATA]",YSDATA(2)=U_TEST_U_$P($G(^YTT(601.71,TEST,0)),U)
  S N=2
  S I=0 F  S I=$O(ANSWERS(I)) Q:'I  D
@@ -84,6 +84,7 @@ MKYSDATA(TEST,ANSWERS,YSDATA) ; Convert "tree" array of answers to YSDATA format
  . S CTNT=$O(^YTT(601.76,"AE",QSTN,""))
  . S QSEQ=0 I CTNT S QSEQ=+$P(^YTT(601.76,CTNT,0),U,3)
  . S RTYP=$P($G(^YTT(601.72,QSTN,2)),U,2)
+ . S VAL=$G(ANSWERS(I,"value")) I VAL="c1155"!(VAL="c1156")!(VAL="c1157") S RTYP=1
  . ; handle common MCHOICE questions
  . I RTYP=1 D  QUIT
  . . S CHOICE=$G(ANSWERS(I,"value"))

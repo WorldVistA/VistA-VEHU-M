@@ -1,10 +1,11 @@
 ONCACD0 ;HINES OIFO/GWB - NAACCR extract driver ;09/22/11
- ;;2.2;ONCOLOGY;**1,4,5,8,6,10,12,13,14,15,17**;Jul 31, 2013;Build 6
+ ;;2.2;ONCOLOGY;**1,4,5,8,6,10,12,13,14,15,17,19**;Jul 31, 2013;Build 4
  ;P6 V16
  ;P10 V18
  ;P13 V21
  ;P14 XML format for State and RCRS
  ;P17 V22
+ ;P19 CC option is for State extract only
 EN1(DEVICE,STEXT) ;Entry point
 EN2 N ACO,BDT,DATE,DIAGYR,EDT,EXTRACT,NCDB,ONCSPIEN,QUEUE,SDT,STAT,STAT1,STAT2,YESNO,DATE1,ONCDATE,ONCDT,ONCLDT
  N ACCN,ONCDT11,ONCDATE1,SCREEN,CYR,ONC91AS,PTR,CLASSOFCASE,ONCPHI,ONCCLCA,ONCR12,ONCRCL
@@ -13,7 +14,7 @@ EN2 N ACO,BDT,DATE,DIAGYR,EDT,EXTRACT,NCDB,ONCSPIEN,QUEUE,SDT,STAT,STAT1,STAT2,Y
  S (EDT,EXTRACT,DATE,OUT,QUEUE,SDT,STAT,ONCDT)=0
  ;P2.2*4
  W !
- W !,"Protected Health Information codes are excluded in NCDB, State and SEER reports!",!
+ W !,"Protected Health Information codes are excluded in State reports!",!
  S ONCPHI=1
  ;S DIR("A")=" Exclude PHI COMORBIDITY codes: "
  ;S DIR("B")="YES",DIR(0)="Y"
@@ -25,7 +26,8 @@ EN2 N ACO,BDT,DATE,DIAGYR,EDT,EXTRACT,NCDB,ONCSPIEN,QUEUE,SDT,STAT,STAT1,STAT2,Y
  ;S ONCPHI=Y
  ;
  I (STEXT=0)!(STEXT=2)!(STEXT=3) S EXTRACT=$O(^ONCO(160.16,"B","NCDB EXTRACT V22.0",0))
- I STEXT=1 D GETREC(.EXTRACT,.OUT)
+ I (STEXT=1)&(DEVICE=1) D GETREC(.EXTRACT,.OUT) ;p19
+ I (STEXT=1)&(DEVICE=0) S ONCRCL=4,EXTRACT=5 W !,"The current record layout (v22.0) is for all states (including SEER states)."
  I 'OUT S STAT=$$GETHOSP
  I 'STAT S OUT=1
  I 'OUT S STAT1=$P(STAT,U,1),STAT2=$P(STAT,U,2)
@@ -39,26 +41,20 @@ EN2 N ACO,BDT,DATE,DIAGYR,EDT,EXTRACT,NCDB,ONCSPIEN,QUEUE,SDT,STAT,STAT1,STAT2,Y
  D EXIT
  Q
  ;
-GETREC(EXTRACT,OUT) ;Select VACCR, STATE or SEER record layout
+GETREC(EXTRACT,OUT) ;Select VACCR, STATE record layout
  W !!," Available record layouts:",!
  W !,"  1) VACCR Record Layout v22.0 (VA Registry)"
- W !,"  2) NAACCR State Record Layout v18.0"
- W !,"  3) SEER State Record Layout v18.0"
- W !,"  4) NAACCR State Record Layout v22.0"
- W !,"  5) SEER State Record Layout v22.0"
+ W !,"  2) State Record Layout v22.0"
  W !
  N DIR,X,Y
- S DIR(0)="SAO^1:VACCR Record Layout v22.0;2:NAACCR State Record Layout v18.0;3:SEER State Record Layout v18.0;4:NAACCR State Record Layout v22.0;5:SEER State Record Layout v22.0"
+ S DIR(0)="SAO^1:VACCR Record Layout v22.0;2:State Record Layout v22.0"
  S DIR("A")=" Select record layout: "
  S DIR("?")="Select the record layout to use"
  D ^DIR
  I $D(DIRUT) S OUT=1 K DIRUT Q
  I +Y<1 S OUT=1 Q
  I Y=1 S EXT="VACCR",EXTRACT=$O(^ONCO(160.16,"B","VACCR EXTRACT V22.0",0))
- I Y=2 S EXT="STATE",EXTRACT=$O(^ONCO(160.16,"B","STATE EXTRACT V18.0",0))
- I Y=3 S EXT="STATE",EXTRACT=$O(^ONCO(160.16,"B","SEER EXTRACT V18.0",0))
- I Y=4 S EXT="STATE",EXTRACT=$O(^ONCO(160.16,"B","STATE EXTRACT V22.0",0))
- I Y=5 S EXT="STATE",EXTRACT=$O(^ONCO(160.16,"B","SEER EXTRACT V22.0",0))
+ I Y=2 S EXT="STATE",EXTRACT=$O(^ONCO(160.16,"B","STATE EXTRACT V22.0",0))
  S ONCRCL=Y
  I ONCRCL=1 D
  .S DIR("A")=" Exclude PHI COMORBIDITY codes: "

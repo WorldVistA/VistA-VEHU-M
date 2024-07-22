@@ -1,5 +1,5 @@
 XUS9 ;SF/RWF,ISD/HGW - Find a user ; 1/18/12 8:20am
- ;;8.0;KERNEL;**258,590**;Jul 10, 1995;Build 4
+ ;;8.0;KERNEL;**258,590,804**;Jul 10, 1995;Build 8
  ;Per VHA Directive 2004-038, this routine should not be modified
  N %,%DT,%H,DA,DIC,I,Y,X,X1,XU1,XU2,XU3,XU4,XU5,XU6,XU7,XUSER,XUJOB,XUVOL,XUCI,XUDT,XUNODE
 1 X ^%ZOSF("UCI") S XU1=$P(Y,",",1),XU2=^%ZOSF("VOL"),X="T-1",%DT="" D ^%DT S XU4=Y
@@ -16,6 +16,7 @@ B ;Find
  S XUCI=$P(XU3,"^",8),XUVOL=$P(XU3,"^",5),Y=XU5,XUJOB=$P(XU3,"^",3),XU6=XUJOB D DD^%DT S XUDT=Y
  I XUJOB>2048 S X1=16,X=XUJOB D CNV^XTBASE S XU6=XUJOB_" ("_Y_")"
  D GETENV^%ZOSV S XU7=$P(Y,"^",3) ; p590 Get node of current user
+ S XU7=$P(XU7,".") ;P804
  S XUNODE=$S($P(XU3,"^",10)]"":$P(XU3,"^",10),1:"unknown") ; p590 Identify node in sign-on log
  Q:XUCI'=XU1!(XUVOL'=XU2)  ;G:$S($D(^XUTL("XQ",XUJOB,"DUZ")):^("DUZ"),1:0)'=DA REMOVE ; p590
  I XU7=XUNODE G:$S($D(^XUTL("XQ",XUJOB,"DUZ")):^("DUZ"),1:0)'=DA REMOVE ; p590 XUJOB is only unique to a node

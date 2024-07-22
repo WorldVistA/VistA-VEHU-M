@@ -1,5 +1,5 @@
 RCTCSP4E ;HAF/ASF - CS Debt Referral Stop Reactivate Report ;6/1/2017
- ;;4.5;Accounts Receivable;**350**;Mar 26, 2019;Build 66
+ ;;4.5;Accounts Receivable;**350,433**;Mar 26, 2019;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -70,6 +70,7 @@ EXCELHD ; print an Excel header record (only 1 Excel header should print for the
  S RCH=$$CSV(RCH,"Bill#")
  ;S RCH=$$CSV(RCH,"Current Balance")
  ;S RCH=$$CSV(RCH,"Current Status")
+ S RCH=$$CSV(RCH,"AR CAT") ;PRCA*4.5*433
  S RCH=$$CSV(RCH,"Status")
  ;S RCH=$$CSV(RCH,"Category Name")
  ;S RCH=$$CSV(RCH,"Category Abbr")
@@ -94,6 +95,7 @@ EXCELN ; write a line of Excel data
  ;S RCZ=$$CSV(RCZ,$P(DEBTDATA,U,3))                        ; SSN
  S RCZ=$$CSV(RCZ,$P(BILLDATA,U,1))                        ; bill#
  ;S RCZ=$$CSV(RCZ,+$P(BILLDATA,U,2))                       ; current balance
+ S RCZ=$$CSV(RCZ,$P(BILLDATA,U,4))                        ; AR Category Name PRCA*4.5*433
  S RCZ=$$CSV(RCZ,$P(BILLDATA,U,3))                        ; AR status name
  ;S RCZ=$$CSV(RCZ,$P(BILLDATA,U,4))                        ; AR category name
  ;S RCZ=$$CSV(RCZ,$P(BILLDATA,U,8))                        ; AR category abbr
@@ -129,7 +131,8 @@ DIVHDR ;
  I RCTCDEBT1=("FIRST")&(RCTCDEBT2="LAST") W "ALL"
  E  W RCTCDEBT1,":",RCTCDEBT2
  W !,SEPLINE
- W !,"Debtor Name",?24,"Division",?34,"Pt ID",?44,"Bill#",?55,"Status",?67,"Letter1",?77,"StopDate",?89,"Reason",?99,"CS STOP",?109,"User"
+ W !,"Debtor Name",?24,"Division",?34,"Pt ID",?44,"Bill#",?55,"AR CAT",?66,"Status",?78,"Letter1",?88,"StopDate",?100,"Reason",?110,"CS STOP",?120,"User" ;PRCA*4.5*433
+ ;W !,"Debtor Name",?24,"Division",?34,"Pt ID",?44,"Bill#",?55,"Status",?67,"Letter1",?77,"StopDate",?89,"Reason",?99,"CS STOP",?109,"User"
  W !,SEPLINE
  Q
 DLEVEL ; stop/reactivate report at 340 debtor level

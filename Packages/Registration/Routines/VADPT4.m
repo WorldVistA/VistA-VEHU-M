@@ -1,5 +1,5 @@
 VADPT4 ;ALB/MRL,MJK,ERC,DIC,PWC,ARF,JMM - PATIENT VARIABLES ;12 DEC 1988 ;10/13/10 4:43pm
- ;;5.3;Registration;**343,342,528,689,688,790,797,935,952,1007,1018,1090,1103**;Aug 13, 1993;Build 7
+ ;;5.3;Registration;**343,342,528,689,688,790,797,935,952,1007,1018,1090,1103,1118**;Aug 13, 1993;Build 7
 7 ;Eligibility [ELIG]
  F I=.15,.3,.31,.32,.36,.361,"INE","TYPE","VET" S VAX(I)=$S($D(^DPT(DFN,I)):^(I),1:"")
  S VAZ=$P(VAX(.36),"^",1) S:$D(^DIC(8,+VAZ,0)) VAZ=VAZ_"^"_$P(^(0),"^",1) S @VAV@($P(VAS,"^",1))=VAZ
@@ -52,7 +52,8 @@ VADPT4 ;ALB/MRL,MJK,ERC,DIC,PWC,ARF,JMM - PATIENT VARIABLES ;12 DEC 1988 ;10/13/
  ;SHAD - added with DG*5.3*688
  S VAX(3)=14,VAZ=$S($P(VAX(.321),U,15)]"":1,1:0),@VAV@($P(VAS,U,VAX(3)))=VAZ I VAZ S @VAV@($P(VAS,U,VAX(3)),1)=$S($P(VAX(.321),U,15)=1:"1^YES",1:"0^NO")
  ; DG*5.3*1103 - add TERA indicator
- S VAX(3)=15,VAZ=$S($P(VAX(.321),U,16)=1:"1^YES",$P(VAX(.321),U,16)=0:"0^NO",1:""),@VAV@($P(VAS,U,VAX(3)))=VAZ
+ ; DG*5.3*1118 - add UNKNOWN to the TERA indicator
+ S VAX(3)=15,VAZ=$S($P(VAX(.321),U,16)=1:"1^YES",$P(VAX(.321),U,16)=0:"0^NO",1:"^UNKNOWN"),@VAV@($P(VAS,U,VAX(3)))=VAZ
  Q
  ;
 91 ;date fields

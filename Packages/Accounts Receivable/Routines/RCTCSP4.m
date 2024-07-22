@@ -1,5 +1,5 @@
 RCTCSP4 ;HAF/ASF - CS Debt Referral Stop Reactivate Report ;6/1/2017
- ;;4.5;Accounts Receivable;**315,339,350**;Mar 25, 2019;Build 66
+ ;;4.5;Accounts Receivable;**315,339,350,433**;Mar 25, 2019;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -17,7 +17,7 @@ EN ; main report entry point
  S RCTCDIV="" I RCTCDB="B" D DIVSEL Q:RCTCDIV=""
  D FORMAT Q:RCTCEXCEL=""
  D DEVICE
- D COMP
+ ;D COMP ;PRCA*4.5*433 COMMENTED OUT LINE
  K ^TMP("RCTCSP4",$J)             ; kill scratch global at end
  D ^%ZISC                         ; close the device
  Q
@@ -184,7 +184,7 @@ FORMAT ; output format is Excel format or normal report output
 DEVICE() ; Device Selection
  N ZTRTN,ZTDESC,ZTSAVE,POP,RET,ZTSK,DIR,X,Y
  S RET=1
- I 'RCTCEXCEL W !!,"It is recommended that you Queue this report to a device ",!,"that is 132 characters wide",!
+ I 'RCTCEXCEL W !!,"It is recommended that you Queue this report to a device ",!,"that is 140 or greater characters wide",!
  I RCTCEXCEL D
  . W !!,"To capture as an Excel format, it is recommended that you queue this report to"
  . W !,"a spool device with margins of 256 and page length of 99999,"
@@ -200,6 +200,7 @@ DEVICE() ; Device Selection
  S ZTSAVE("RCTC(")=""
  S ZTSAVE("RCTCDB")=""
  S ZTSAVE("RCTCDIV")=""
+ S ZTSAVE("RCARCAT")="" ;PRCA*4.5*433
  S ZTSAVE("RCTCFLG")=""
  S ZTSAVE("RCTCDEBT1")=""
  S ZTSAVE("RCTCDEBT2")=""
@@ -227,7 +228,7 @@ COMIPLX ;
  Q
  ;
 COMP ; compile data into scratch global
- N ARTTIEN,RCTCTT,RCTCDTENT,RC433,P0,RCIBN,USER,RCTTNAME,RC340,DEBTNAME,FLAG,RCDEBTOR,RCBILLNUM
+ N ARTTIEN,RCTCTT,RCTCDTENT,RC433,P0,RCIBN,USER,RCTTNAME,RC340,DEBTNAME,FLAG,RCDEBTOR,RCBILLNUM,RCARCAT ;PRCA*4.5*433
  ;
  ; first identify the AR Transaction types eligible for this report (CS STOP PLACED or CS STOP DELETED)
  ; load into the RCTCTT local array
@@ -247,6 +248,7 @@ COMP ; compile data into scratch global
  .. S RC433=0 F  S RC433=$O(^PRCA(433,"AT",ARTTIEN,RCTCDTENT,RC433)) Q:'RC433  D
  ... S P0=$G(^PRCA(433,RC433,0))
  ... S RCIBN=+$P(P0,U,2) Q:'RCIBN                 ; bill# ien
+ ... S RCARCAT=$E($$GET1^DIQ(430,RCIBN,2,"E"),1,10) ;AR Category PRCA*4.5*433
  ... S USER=$P($G(^VA(200,+$P(P0,U,9),0)),U,1)    ; processed by user
  ... S RCTTNAME=$$GET1^DIQ(433,RC433,12)          ; trans type name
  ... ; now get some bill data from 430
@@ -290,7 +292,7 @@ COMP ; compile data into scratch global
  .... S RCX=RCBILLNUM                                        ; bill#
  .... S $P(RCX,U,2)=$$GET1^DIQ(430,RCIBN,11)                 ; current balance
  .... S $P(RCX,U,3)=$$GET1^DIQ(430,RCIBN,8)                  ; current ar status name
- .... S $P(RCX,U,4)=$$GET1^DIQ(430,RCIBN,2)                  ; ar category name
+ .... S $P(RCX,U,4)=$E($$GET1^DIQ(430,RCIBN,2),1,10)         ; AR category name first 10 char ;PRCA*4.5*433
  .... S $P(RCX,U,5)=$$GET1^DIQ(430,RCIBN,61,"I")             ; letter1 date FM format
  .... S $P(RCX,U,6)=$$GET1^DIQ(430,RCIBN,158,"I")            ; stop tcsp referral eff. date FM format
  .... S $P(RCX,U,7)=$$GET1^DIQ(430,RCIBN,159)                ; stop tcsp referral reason desc
@@ -356,16 +358,17 @@ RPTLN ; display one line on the report - either normal or Excel
  W ?34,$P(DEBTDATA,U,1)                                      ; Pt ID
  ;W ?38,$P(DEBTDATA,U,3)                                     ;SSN 
  W ?41,$P(BILLDATA,U,1)                                      ; bill#
+ W ?55,$P(BILLDATA,U,4)                                      ;AR Category PRCA*4.5*433
  ;W ?34,$$RJ^XLFSTR($FN($P(BILLDATA,U,2),"",2),10)           ; current balance
- W ?54,$E($P(BILLDATA,U,3),1,12)                             ; current status
+ W ?66,$E($P(BILLDATA,U,3),1,11)                             ; current status PRCA*4.5*433/PRCA*4.5*433
  ;W ?64,$P(BILLDATA,U,8)                                     ; category abbr
- W ?67,$$FMTE^XLFDT($P(BILLDATA,U,5),"2Z")                   ; letter 1 date
- W ?77,$$FMTE^XLFDT($P(BILLDATA,U,6),"2Z")                   ; stop date
- W ?86,$E($P(BILLDATA,U,7),1,10)                             ; stop reason
+ W ?78,$$FMTE^XLFDT($P(BILLDATA,U,5),"2Z")                   ; letter 1 date PRCA*4.5*433
+ W ?88,$$FMTE^XLFDT($P(BILLDATA,U,6),"2Z")                   ; stop date PRCA*4.5*433
+ W ?100,$E($P(BILLDATA,U,7),1,9)                             ; stop reason PRCA*4.5*433/PRCA*4.5*433
  S TT=$P(TRANDATA,U,1)
- W ?100,$S(TT["DELETED":"DEL",TT["PLACED":"ADD",1:"UNK")     ; transaction type
+ W ?110,$S(TT["DELETED":"DEL",TT["PLACED":"ADD",1:"UNK")     ; transaction type PRCA*4.5*433
  ;W ?105,$$FMTE^XLFDT($P(TRANDATA,U,2),"2Z")                 ; date entered
- W ?105,$E($P(TRANDATA,U,3),1,17)                            ; user
+ W ?120,$E($P(TRANDATA,U,3),1,17)                            ; user PRCA*4.5*433
  Q
 RPTLNDIV ;Lines for division
  N TT

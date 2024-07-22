@@ -1,5 +1,5 @@
 IBCNEDEP ;DAOU/ALA - Process Transaction Records ;14-OCT-2015
- ;;2.0;INTEGRATED BILLING;**184,271,300,416,438,506,533,549,601,621,713,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**184,271,300,416,438,506,533,549,601,621,713,737,778**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;  This program finds records needing HL7 msg creation
@@ -175,6 +175,7 @@ EXIT ;  Finish
  K NRETR,NTRAN,OVRIDE,PAYR,PID,QFL,QUERY,RETR,RETRYFLG,RSIEN,SRVDT,STA,TRANSR,X
  K ZMID,^TMP("IBQUERY",$J),Y,DOD,DGREL,TMSG,RSTYPE,OMSGID,QFL
  K IBCNETOT,HLP,SUBID,VNUM,BNDL,IBDATA,PATID,C1CODE
+ K GRPNUM,GRPNAM,TRANSR1  ;IB*778/CKB - clean up variables
  Q
  ;
 VER ;  Initialize HL7 variables protocol for Verifications
@@ -263,6 +264,50 @@ ID ;  Send Identification Msgs
  ;
  Q
  ;
+XMIT1(IEN) ; Transmit one transaction at time.  Currently only used for Appointment Extract.
+ ; created tag with IB*778/TAZ
+ ; Input:  IEN  - the Transaction Queue entry
+ ;
+ ; Note:  IHCNT and VNUM are used for subsequent calls. It is not needed for this functionality.
+ ;
+ N DFN,GT1,HL,IHCNT,IN1,PID,QUERYFLG,VNUM
+ K ^TMP("HLS",$J)
+ ;
+ S IHCNT=0
+ ;
+ I '$G(IEN) G XMIT1Q
+ S QUERYFLG=$$GET1^DIQ(365.1,IEN_",",.11,"I")  ;I or V
+ ;
+ ; If not I or V set TQ entry to Communication Failure, then quit
+ I QUERYFLG="" D SST^IBCNEUT2(IEN,5) G XMIT1Q
+ ;
+ ; Set up outbound HL7 protocol
+ S IBCNHLP=$S(QUERYFLG="V":"IBCNE IIV RQV OUT",1:"IBCNE EIV RQP OUT")
+ D INIT^IBCNEHLO
+ ;
+ ; Quit if test site and not a valid test case
+ I '$$XMITOK^IBCNETST(IEN) G XMIT1Q
+ ;
+ ; Process TQ record and quit if errors
+ I '$$PROC G XMIT1Q
+ ;
+ D GENERATE^HLMA(IBCNHLP,"GM",1,.HLRESLT,"",.HLP)
+ K ^TMP("HLS",$J),HLP
+ ;
+ ; If not successful
+ I $P(HLRESLT,U,2)]"" D HLER^IBCNEDEQ G XMIT1Q
+ ;
+ ; If successful
+ D SCC^IBCNEDEQ
+ ;
+ ; Update LAST EICD RUN for ID transactions
+ I QUERYFLG="I" D
+ . S DA=DFN,DIE="^DPT(",DR="2001///"_DT
+ . D ^DIE
+ ;
+XMIT1Q ;Exit
+ Q
+ ;
  ;IB*713/TAZ - Convert to function call
 PROC() ;  Process TQ record
  ;Output:
@@ -275,8 +320,12 @@ PROC() ;  Process TQ record
  S IRIEN=$P(TRANSR,U,13),HCT=0,NTRAN=$P(TRANSR,U,7),NRETR=$P(TRANSR,U,8)
  S SUBID=$P(TRANSR,U,16),OVRIDE=$P(TRANSR,U,14),STA=$P(TRANSR,U,4)
  S FRDT=$P(TRANSR,U,17),PATID=$P(TRANSR,U,19),EICDVIEN=$P(TRANSR,U,21)
+ ;IB*778/CKB - added TRANSR1,GRPNUM,GRPNAM. GRPNUM,GRPNAM will be used to build HL7 msg
+ S TRANSR1=$G(^IBCN(365.1,IEN,1))
+ S GRPNUM=$P(TRANSR1,U,3),GRPNAM=$P(TRANSR1,U,4)
  ;
  ;  Build the HL7 msg
+ S VNUM=$G(VNUM,1)  ;Default is "1" if VNUM is ""  ; IB*778/TAZ
  S HCT=HCT+1,^TMP("HLS",$J,HCT)="PRD|NA"
  D PID^IBCNEHLQ I PID=""!(PID?."*") Q
  S HCT=HCT+1,^TMP("HLS",$J,HCT)=$TR(PID,"*","")

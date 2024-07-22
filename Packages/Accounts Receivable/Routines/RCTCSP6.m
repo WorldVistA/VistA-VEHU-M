@@ -1,5 +1,5 @@
 RCTCSP6 ;ALB/YG - Cross-Servicing Re-Referred Bills Report;03/15/14 3:34 PM
- ;;4.5;Accounts Receivable;**350**;Mar 20, 1995;Build 66
+ ;;4.5;Accounts Receivable;**350,433**;Mar 20, 1995;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;
@@ -33,7 +33,7 @@ BILLREP ;Cross-servicing bill report, prints individual bills that make up a cro
  ;
 BILLREPP ;Call to build array of bills referred
  U IO
- N BILL,B7,B14,B15,B16,D4,FND,BAMT,DIRUT,TNM,TID,TDT,DASH,CSTAT,PAGE,DASH,TMP,I,DATE,DTFRM,DTTO,DATDATE,REASON,COMMENT,USER,OAMT,LIEN,NAME,NODE,SSN
+ N BILL,B7,B14,B15,B16,D4,FND,BAMT,DIRUT,TNM,TID,TDT,DASH,CSTAT,PAGE,DASH,TMP,I,DATE,DTFRM,DTTO,DATDATE,REASON,COMMENT,USER,OAMT,LIEN,NAME,NODE,SSN,PTID,RCARCAT
  K ^TMP("RCTCSP6",$J)
  S DASH="",$P(DASH,"-",78)=""  ;(as per PRCA*4.5*315)
  S (DATE,DTFRM)=$$FMADD^XLFDT(+$P(DTFRMTO,U,2)),DTTO=$P(DTFRMTO,U,3)
@@ -41,13 +41,14 @@ BILLREPP ;Call to build array of bills referred
  ; rewritten to sort by "TCSP" (#151 date referred to TCSP) not the "AB" xref... PRCA*4.5*315 (TV8)
  F  S BILL=$O(^PRCA(430,"TCSP",BILL)) Q:BILL=""!($D(DIRUT))  D:$$RR^RCTCSPU(BILL)
  .S DEBTOR=$P($G(^PRCA(430,BILL,0)),U,9)
- .S DFN=$P($G(^RCD(340,DEBTOR,0)),U) Q:DFN'[";DPT" 
+ .S DFN=$P($G(^RCD(340,DEBTOR,0)),U) Q:DFN'[";DPT"
  .S DFN=+DFN
  .D DEM^VADPT
  .I $G(VAERR)>0 D KVAR^VADPT Q
  .S NAME=$G(VADM(1))
  .I NAME']"" D KVAR^VADPT Q
  .S SSN=$P(VADM(2),U,1)
+ .S PTID=$E(VADM(1),1)_$S(SSN'="":$E(SSN,6,9),1:"0000") ;PRCA*4.5*433
  .Q:'+$G(^PRCA(430,BILL,15))
  .S DATDATE=$P($G(^PRCA(430,BILL,15)),U) Q:DATDATE<DTFRM!(DATDATE>DTTO)
  .S B7=$G(^PRCA(430,BILL,7))
@@ -57,29 +58,32 @@ BILLREPP ;Call to build array of bills referred
  S DEBTOR="" F  S DEBTOR=$O(^TMP("RCTCSP6",$J,DEBTOR)) Q:'DEBTOR!($D(DIRUT))  D  Q:$D(DIRUT)
  . S BILL=0 F  S BILL=$O(^TMP("RCTCSP6",$J,DEBTOR,BILL)) Q:'BILL  D  Q:$D(DIRUT)
  ..Q:'+$G(^PRCA(430,BILL,15))
+ ..S RCARCAT=$$GET1^DIQ(430,BILL,2,"E") ;PRCA*4.5*433
  ..S NODE=^TMP("RCTCSP6",$J,DEBTOR,BILL),BAMT=$P(NODE,U),NAME=$P(NODE,U,2),SSN=$P(NODE,U,3)
  ..S FND=1 W !,$P(^PRCA(430,BILL,0),U) ; Bill
+ ..I 'EXCEL W ?12,$E(RCARCAT,1,9) ;PRCA*4.5*433
+ ..I EXCEL W U,$E(RCARCAT,1,9) ;PRCA*4.5*433
  ..S CSTAT=$P(^(0),U,8),B7=$G(^(7)),B15=$G(^(15)),B16=$G(^(16))
- ..I 'EXCEL W ?14,$E(NAME,1,17) ; Name
+ ..I 'EXCEL W ?22,$E(NAME,1,17) ; Name ;PRCA*4.5*433
  ..I EXCEL W U,NAME
- ..I 'EXCEL W ?34,SSN ; SSN
- ..I EXCEL W U,SSN
- ..I 'EXCEL W ?45,$$FMTE^XLFDT($P(B15,U,1),"2Z") ; Rerefer date
+ ..I 'EXCEL W ?40,PTID ; Patient ID ;PRCA*4.5*433
+ ..I EXCEL W U,PTID
+ ..I 'EXCEL W ?46,$$FMTE^XLFDT($P(B15,U,1),"2Z") ; Rerefer date ;PRCA*4.5*433
  ..I EXCEL W U,$$FMTE^XLFDT($P(B15,U,1),"2Z")
  ..S OAMT=$P(B16,U,9) I OAMT'>0 S OAMT=$P($G(^PRCA(430,BILL,30)),U,10)
- ..I 'EXCEL W ?55,$J("$"_$FN(OAMT,",",2),11) ; Original Amt
+ ..I 'EXCEL W ?57,$J("$"_$FN(OAMT,",",2),11) ; Original Amt ;PRCA*4.5*433
  ..I EXCEL W U,"$"_$FN(OAMT,",",2)
- ..I 'EXCEL W ?70,$J("$"_$FN(BAMT,",",2),11) ; Curr Amt
+ ..I 'EXCEL W ?70,$J("$"_$FN(BAMT,",",2),11) ; Curr Amt ;PRCA*4.5*433
  ..I EXCEL W U,"$"_$FN(BAMT,",",2)
- ..I 'EXCEL,OAMT-BAMT'=0 W ?85,$J("$"_$FN(OAMT-BAMT,",",2),11) ; diff amt
+ ..I 'EXCEL,OAMT-BAMT'=0 W ?82,$J("$"_$FN(OAMT-BAMT,",",2),11) ; diff amt ;PRCA*4.5*433
  ..I EXCEL W U W:OAMT-BAMT'=0 "$",$FN(OAMT-BAMT,",",2)
  ..S LIEN=$O(^PRCA(430,BILL,15.5,"B",0,""),-1)
  ..S REASON=$P(^PRCA(430,BILL,15.5,LIEN,0),U,4)
  ..S REASON=$S(REASON="T":"Treas RVSL",REASON="R":"Recall Error",REASON="D":"DFLT RPP",REASON="O":"Other")
  ..S USER=$P(^PRCA(430,BILL,15.5,LIEN,0),U,3),USER=$P(^VA(200,USER,0),U)
- ..I 'EXCEL W ?100,$E(REASON,1,15)
+ ..I 'EXCEL W ?95,$E(REASON,1,15) ;PRCA*4.5*433
  ..I EXCEL W U,REASON
- ..I 'EXCEL W ?116,$E(USER,1,16)
+ ..I 'EXCEL W ?109,$E(USER,1,16) ;PRCA*4.5*433
  ..I EXCEL W U,USER
  ..;check for end of page here, if necessary form feed and print header
  ..I ($Y+3)>IOSL D
@@ -104,8 +108,10 @@ BILLREPH ;header for cross-servicing bill report
  ;I EXCEL W "PAGE "_PAGE_U_"CROSS-SERVICING BILL REPORT"_U_U_$$FMTE^XLFDT(DT,"2Z")
  ;N RCHDR,RCSSN
  ;S RCHDR=$$ACCNTHDR^RCDPAPLM(DEBTOR),RCSSN=$S($P(RCHDR,U,2)["P":$E($P(RCHDR,U,2),7,11),1:$E($P(RCHDR,U,2),6,9))  ;Pseudo SSN shouldn't be allowed but we allowed for it to print
- I EXCEL W !,"Bill #",U,"Debtor Name",U,"SSN",U,"Re-Refer Date",U,"Orig Amt",U,"Curr Amt",U,"Diff Amt",U,"Reason",U,"User ID" Q
- W !,"Bill #",?19,"Debtor Name",?37,"SSN",?43,"Re-Refer Date",?57,"Orig Amt",?72,"Curr Amt",?87,"Diff Amt",?102,"Reason",?120,"User ID"
+ ;I EXCEL W !,"Bill #",U,"Debtor Name",U,"SSN",U,"Re-Refer Date",U,"Orig Amt",U,"Curr Amt",U,"Diff Amt",U,"Reason",U,"User ID" Q
+ I EXCEL W !,"Bill #",U,"AR Cat",U,"Debtor Name",U,"PT ID",U,"Re-Refer Date",U,"Orig Amt",U,"Curr Amt",U,"Diff Amt",U,"Reason",U,"User ID" Q  ;PRCA*4.5*433
+ ;W !,"Bill #",?19,"Debtor Name",?37,"SSN",?43,"Re-Refer Date",?57,"Orig Amt",?72,"Curr Amt",?87,"Diff Amt",?102,"Reason",?120,"User ID"
+ W !,"Bill #",?12,"AR Cat",?22,"Debtor Name",?40,"PT ID",?46,"Re-Refer Dt",?58,"Orig Amt",?71,"Curr Amt",?83,"Diff Amt",?95,"Reason",?110,"User ID" ;PRCA*4.5*433
  D ULINE^RCDMCUT2("=",$G(IOM))
  Q
  ;

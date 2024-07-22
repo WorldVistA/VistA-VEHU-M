@@ -1,5 +1,5 @@
 IBCNEDE4 ;AITC/DM - EICD (Electronic Insurance Coverage Discovery) extract; 24-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,416,621,602,668,702**;21-MAR-94;Build 53
+ ;;2.0;INTEGRATED BILLING;**184,271,416,621,602,668,702,778**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; **Program Description**
@@ -41,7 +41,9 @@ EN ; EICD extract entry
  ;
  ; Loop through clinics 
  S CLNC=0 F  S CLNC=$O(^SC(CLNC)) Q:'CLNC  D
- . D CLINICEX^IBCNEDE2 Q:'OK  ; clinic excluded
+ . ;IB*778/TAZ - Redirected CLINICEX call to IBCNEDE6
+ . ;D CLINICEX^IBCNEDE2 Q:'OK  ; clinic excluded
+ . D CLINICEX^IBCNEDE6 Q:'OK  ; clinic excluded
  . S ^TMP($J,"IBCNEDE4",CLNC)=""
  ;
  ; Set up variables for scheduling api and call
@@ -79,7 +81,9 @@ EN ; EICD extract entry
  ... S IBWK1=$G(^TMP($J,"SDAMA301",CLNC,DFN,IBAPPTDT))
  ... S ELG=$P(IBWK1,U,8)
  ... S:ELG="" ELG=$$GET1^DIQ(2,DFN_",",.361) ; "PRIMARY ELIGIBILITY CODE" 
- ... D ELG^IBCNEDE2 Q:'OK  ; eligibility exclusion
+ ... ;IB*778/TAZ - Redirected ELG call to IBCNEDE6
+ ... ;D ELG^IBCNEDE2 Q:'OK  ; eligibility exclusion
+ ... D ELG^IBCNEDE6 Q:'OK  ; eligibility exclusion
  ... ;IB*602/TAZ Screen out bad pointers to File 36
  ... ;IB*702/TAZ - Active Insurance check was moved to EACTPOL^IBCNEUT5 
  ... I $$EACTPOL^IBCNEUT5 Q  ; Active policies on patient. (screen out bad ptr's to File 36)

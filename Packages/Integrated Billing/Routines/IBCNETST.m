@@ -1,5 +1,5 @@
 IBCNETST ;DAOU/ALA - eIV Gate-keeper test scenarios ; 11-OCT-2017
- ;;2.0;INTEGRATED BILLING;**601,732**;21-MAR-94;Build 13
+ ;;2.0;INTEGRATED BILLING;**601,732,778**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -11,6 +11,7 @@ IBCNETST ;DAOU/ALA - eIV Gate-keeper test scenarios ; 11-OCT-2017
  ; IB*2*601/DM XMITOK() Gate-keeper routine moved from IBCNEUT7
  ; IB*2*732/TZ added Test patients for auto-update with no group number
  ; IB*2*732/CKB added Test patients for 'Blues'
+ ; IB*2*778/DJW changed acceptable SUBSCRIBER ID for 2 of the scenarios
  ;
  Q
  ;
@@ -86,7 +87,8 @@ XMITOK(TQIEN) ;EP
  . Q:PATSEX'="F"
  . S GOOD=1
  ;
- I PAYRNM="CIGNA",GRPNUM="GRP NUM 5442",SUBID="012345678" D  Q:GOOD 1
+ ; IB*778/DJW SUBID below is more generic
+ I PAYRNM="CIGNA",GRPNUM="GRP NUM 5442",SUBID="87654321CI" D  Q:GOOD 1
  . Q:SUBNM'="IBSUB,AAAERROR"
  . Q:PATDOB'="19470211"
  . Q:PATSEX'="M"
@@ -133,7 +135,8 @@ XMITOK(TQIEN) ;EP
  . S GOOD=1
  ;
  ; IB*2*732/TAZ - Added Medicare patient scenario for auto-update, no group number
- I PAYRNM="CMS",GRPNUM="PART A",SUBID="12345678" D  Q:GOOD 1
+ ; IB*778/DJW SUBID below is more generic
+ I PAYRNM="CMS",GRPNUM="PART A",SUBID="12345678ME" D  Q:GOOD 1
  . Q:SUBNM'="IB,MEDICARENOGRP"
  . Q:PATDOB'="19381110"
  . Q:PATSEX'="F"
@@ -181,7 +184,7 @@ MBI ;
  . S GOOD=1
  ;
  I PAYRNM="CMS MBI ONLY",SUBID="MBIrequest" D  Q:GOOD 1
- . Q:SUBNM'="IB,"   ;Q:SUBNM'="IB,MBIPATIENTFIVE"   ;** melanie needed request w/missing first name to go to FSC at FSC's request
+ . Q:SUBNM'="IB,MBIPATIENTFIVE"
  . Q:PATDOB'="19500827"
  . Q:PATSEX'="M"
  . S GOOD=1

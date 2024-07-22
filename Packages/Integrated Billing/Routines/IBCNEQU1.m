@@ -1,5 +1,5 @@
 IBCNEQU1 ;AITC/TAZ - eIV REQUEST ELECTRONIC INSURANCE INQUIRY CONT'D; 20-MAY-2021
- ;;2.0;INTEGRATED BILLING;**702**;21-MAR-94;Build 53
+ ;;2.0;INTEGRATED BILLING;**702,778**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; eIV - Insurance Verification Interface
@@ -37,7 +37,9 @@ EICDREQ ; User requested an EICD Discovery
  ;Patient Eligibility requirements
  I '$$EPAT^IBCNEUT5(.MSG) G EICDREQX
  S ELG=$$GET1^DIQ(2,DFN_",",.361) ; "PRIMARY ELIGIBILITY CODE"
- D ELG^IBCNEDE2 I 'OK G EICDREQX  ;Eligibility Exclusion
+ ; IB*778/TAZ - Redirected call to IBCNEDE6
+ ;D ELG^IBCNEDE2 I 'OK G EICDREQX  ;Eligibility Exclusion
+ D ELG^IBCNEDE6 I 'OK G EICDREQX  ;Eligibility Exclusion
  ;
  ; Cannot have Active Insurance
  I $$EACTPOL^IBCNEUT5() G EICDREQX

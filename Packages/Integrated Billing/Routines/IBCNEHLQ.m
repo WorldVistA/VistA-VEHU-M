@@ -1,5 +1,5 @@
 IBCNEHLQ ;DAOU/ALA - HL7 RQI Message ;17-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,271,300,361,416,438,467,497,533,516,601,621,631,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**184,271,300,361,416,438,467,497,533,516,601,621,631,737,778**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -185,9 +185,12 @@ IN1 ;  Insurance Segment
  . S $P(IN1,HLFS,3)=$$ENCHL7($P(^IBE(365.12,PAYR,0),U,2))_HLECH_HLECH_HLECH_"USVHA"_HLECH_"VP"_HLECH
  . S $P(IN1,HLFS,4)=$$ENCHL7($P(^IBE(365.12,PAYR,0),U,1))
  . S $P(IN1,HLFS,17)=$$PATREL(PREL)
- . S IENS=IRIEN_","_DFN_","
- . S $P(IN1,HLFS,8)=$$ENCHL7($$GET1^DIQ(2.312,IENS,21,"E"))
- . S $P(IN1,HLFS,9)=$$ENCHL7($$GET1^DIQ(2.312,IENS,20,"E"))
+ . ;IB*778/CKB - use variables GRPNUM,GRPNAM that were set in PROC^IBCNEDEP
+ . ;S IENS=IRIEN_","_DFN_","
+ . ;S $P(IN1,HLFS,8)=$$ENCHL7($$GET1^DIQ(2.312,IENS,21,"E"))
+ . ;S $P(IN1,HLFS,9)=$$ENCHL7($$GET1^DIQ(2.312,IENS,20,"E"))
+ . S $P(IN1,HLFS,8)=$$ENCHL7(GRPNUM)
+ . S $P(IN1,HLFS,9)=$$ENCHL7(GRPNAM)
  . I $P(IN1,HLFS,17)="" S $P(IN1,HLFS,17)=18
  ;
  ; IB*2.0*621/DM add EICD Verification, use data from EIV EICD TRACKING (#365.18) 
@@ -283,7 +286,8 @@ ENCHL7(STR) ; Encode HL7 escape seqs in data fields
  ;
  N CHR,NEW,RPLC,CNT,LOOP
  ;
- ; Replace "\" "&" "~" "|" with \F\ \R\ \E\ \T\ respectively
+ ;IB*778/CKB - corrected the comment below:
+ ;    Replace "|" "~" "\" "&" with \F\ \R\ \E\ \T\ respectively
  F CHR="\","&","~","|" S CNT=$L(STR,CHR) I CNT>1 D
  . S NEW=$P(STR,CHR)
  . S RPLC="\"_$TR(CHR,"|~\&","FRET")_"\"

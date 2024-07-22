@@ -1,5 +1,5 @@
 IBCNEDE6 ;DAOU/DAC - eIV DATA EXTRACTS ;15-OCT-2002
- ;;2.0;INTEGRATED BILLING;**184,271,345,416,497,506,621,668**;21-MAR-94;Build 28
+ ;;2.0;INTEGRATED BILLING;**184,271,345,416,497,506,621,668,778**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q    ; no direct calls allowed
@@ -62,3 +62,17 @@ TFL(DFN) ; Examines treating facility list,
  ; Look for remote facilities of type VAMC:
  F  S IBZ=$O(IBZ(IBZ)) Q:IBZ<1  I +IBZ(IBZ)>0,+IBZ(IBZ)'=IBS,$P(IBZ(IBZ),U,5)="VAMC" S IBC=1 Q
  Q IBC
+ ;
+ ;IB*778/TAZ - Moved CLINICEX from IBCNEDE2
+CLINICEX ; Clinic exclusion
+ S OK=1
+ I $D(^DG(43,1,"DGPREC","B",CLNC)) S OK=0
+ Q
+ ;
+ ;IB*778/TAZ - Moved ELG from IBCNEDE2
+ELG ;  Eligibility exclusion
+ I ELG="" S OK=0 Q
+ I $D(^DG(43,1,"DGPREE","B",ELG)) S OK=0 Q
+ S OK=1
+ Q
+ ;

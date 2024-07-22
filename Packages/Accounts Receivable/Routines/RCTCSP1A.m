@@ -1,5 +1,5 @@
 RCTCSP1A ;ALBANY/PAW-CROSS-SERVICING REPORT ;03/15/14 3:34 PM
- ;;4.5;Accounts Receivable;**315,341**;Mar 20, 1995;Build 2
+ ;;4.5;Accounts Receivable;**315,341,433**;Mar 20, 1995;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -10,11 +10,12 @@ CSRPRTH1 ;header for cross-servicing print report 1
  I 'EXCEL D  Q
  .W !,"PAGE "_PAGE,?16,"BILLS AT CROSS-SERVICING (SORTED BY BILL NO.)",?68,$$FMTE^XLFDT(DT,"2Z")
  .W !,DASH
- .W !,"BILL NO.",?14,"DEBTOR",?35,"Pt ID",?43,"ORIG AMT",?55,"CS REF DATE",?67," CURR AMT"  ; limited SSN to 4 char - (as per PRCA*4.5*315)
- .W !,"---- ---",?14,"------",?35,"-----",?43,"---- ---",?55,"-- --- ----",?67," ---- ---"
+ .; Added AR CAT to column header
+ .W !,"BILL NO.",?14,"AR CAT",?25,"DEBTOR",?46,"Pt ID",?54,"ORIG AMT",?66,"CS REF DATE",?79,"CURR AMT"  ; limited SSN to 4 char - (as per PRCA*4.5*315)
+ .W !,"---- ---",?14,"------",?25,"------",?46,"-----",?54,"--------",?66,"-----------",?79,"--------"
  ;EXCEL FORMAT
  W !,"PAGE "_PAGE_U_U_"BILLS AT CROSS-SERVICING (SORTED BY BILL NO.)"_U_U_$$FMTE^XLFDT(DT,"2Z")
- W !,"BILL NO."_U_"DEBTOR"_U_"Pt ID"_U_"ORIG AMT"_U_"CS REF DATE"_U_" CURR AMT"  ; limited SSN to 4 char - (as per PRCA*4.5*315)
+ W !,"BILL NO."_U_"AR CAT"_U_"DEBTOR"_U_"Pt ID"_U_"ORIG AMT"_U_"CS REF DATE"_U_" CURR AMT"  ; limited SSN to 4 char - (as per PRCA*4.5*315)
  Q
  ;
 CSRPRTH2 ;header for cross-servicing print report 2
@@ -23,11 +24,11 @@ CSRPRTH2 ;header for cross-servicing print report 2
  I 'EXCEL D  Q
  .W !,"PAGE "_PAGE,?16,"BILLS AT CROSS-SERVICING (SORTED BY DEBTOR)",?68,$$FMTE^XLFDT(DT,"2Z")
  .W !,DASH
- .W !,"DEBTOR",?21,"BILL NO.",?35,"Pt ID",?43,"ORIG AMT",?55,"CS REF DATE",?67," CURR AMT"  ;limited SSN to 4 char - (as per PRCA*4.5*315)
- .W !,"------",?21,"---- ---",?35,"-----",?43,"---- ---",?55,"-- --- ----",?67," ---- ---"
+ .W !,"DEBTOR",?21,"AR CAT",?33,"BILL NO.",?46,"Pt ID",?54,"ORIG AMT",?66,"CS REF DATE",?79," CURR AMT" ;PRCA*4.5*433
+ .W !,"------",?21,"------",?33,"--------",?46,"-----",?54,"--------",?66,"-----------",?79," --------" ;PRCA*4.5*433
  ;EXCEL FORMAT
  W !,"PAGE "_PAGE_U_U_"BILLS AT CROSS-SERVICING (SORTED BY DEBTOR)"_U_U_$$FMTE^XLFDT(DT,"2Z")
- W !,"DEBTOR"_U_"BILL NO."_U_"Pt ID"_U_"ORIG AMT"_U_"CS REF DATE"_U_" CURR AMT"  ; limited SSN to 4 char - (as per PRCA*4.5*315)
+ W !,"DEBTOR"_U_"AR CAT"_U_"BILL NO."_U_"Pt ID"_U_"ORIG AMT"_U_"CS REF DATE"_U_" CURR AMT" ;PRCA*4.5*433
  Q
  ;
 CSRPRTH3 ;header for cross-servicing print report 3
@@ -36,11 +37,11 @@ CSRPRTH3 ;header for cross-servicing print report 3
  I 'EXCEL D  Q
  .W !,"PAGE "_PAGE,?11,"BILLS AT CROSS-SERVICING (SORTED BY CS REFERRED DATE)",?68,$$FMTE^XLFDT(DT,"2Z")
  .W !,DASH
- .W !,"CS REF DT",?12,"DEBTOR",?34,"BILL NO.",?49,"Pt ID",?58,"ORIG AMT",?67," CURR AMT"  ;limited SSN to 4 char - (as per PRCA*4.5*315)
- .W !,"-- --- ----",?12,"------",?34,"---- ---",?49,"-----",?58,"---- ---",?67," ---- ---"
+ .W !,"CS REF DT",?13,"AR CAT",?25,"DEBTOR",?47,"BILL NO.",?60,"Pt ID",?68,"ORIG AMT",?79," CURR AMT" ;PRCA*4.5*433
+ .W !,"-----------",?13,"------",?25,"------",?47,"---- ---",?60,"-----",?68,"--------",?79," --------"  ;PRCA*4.5*433
  ;EXCEL FORMAT
  W !,"PAGE "_PAGE_U_U_"BILLS AT CROSS-SERVICING (SORTED BY CS REFERRED DATE)"_U_U_$$FMTE^XLFDT(DT,"2Z")
- W !,"CS REF DATE"_U_"DEBTOR"_U_"BILL NO."_U_"Pt ID"_U_"ORIG AMT"_U_" CURR AMT"  ; limited SSN to 4 char - (as per PRCA*4.5*315)
+ W !,"CS REF DATE"_U_"AR CAT"_U_"DEBTOR"_U_"BILL NO."_U_"Pt ID"_U_"ORIG AMT"_U_" CURR AMT"  ; limited SSN to 4 char - (as per PRCA*4.5*315)
  Q
  ;
 COUNTRY(Z) ;
@@ -105,4 +106,51 @@ JD() ; returns today's Julian date YDOY
  S XMDT=$E(XMNOW,1,7)
  S XMDDD=$$RJ^XLFSTR($$FMDIFF^XLFDT(XMDT,$E(XMDT,1,3)_"0101",1)+1,3,"0")
  Q $E(DT,3)_XMDDD
+ ;
+REC5B ;Create record 5B for Treasury ;PRCA*4.5*433 Tag REC5B Moved from routine RCTCSP1 for SACC size compliance
+ ;  trnnum     transaction number file #433 pass in
+ ;  trntyp     transaction type pointer to 430.3
+ ;  trntypa    aia transaction type  (aio: dmc agency internal offset, abal: decrease adjustment) 
+ N REC,KNUM,DEBTNR,DEBTORNB,TAMOUNT,TAMTPBAL,TAMTIBAL,TAMTABAL,TAMTFBAL,TAMTCBAL,AMTRFRRD,TRNTYP,TRNTYPA,TRANSNB
+ N AMTPBAL,AMTIBAL,AMTABAL,AMTFBAL,AMTCBAL,TRN3,TRNNUME,CSPCD
+ S TRNTYPA="AIO"
+ S REC="C5B"_ACTION_"3636001200"_"DM1D "_"L"
+ S KNUM=$P($P(B0,U,1),"-",2)
+ S DEBTNR=$$AGDEBTID^RCTCSPD,REC=REC_DEBTNR ; PRCA*4.5*350
+ S DEBTORNB=$E(SITE,1,3)_$TR($J(DEBTOR,12)," ",0)
+ S REC=REC_DEBTORNB
+ S TRNTYP=$P($G(^PRCA(433,TRNNUM,1)),U,2) I ",35,73,74,"[TRNTYP S TRNTYPA="ABAL"
+ S REC=REC_$$LJSF^RCTCSP1(TRNTYPA,9)
+ S TRNNUME=$$RJZF^RCTCSP1(TRNNUM,10)
+ S TRNNUME=$E(TRNNUME,5,10) ;max is 999999
+ I TRNNUME="000000" S TRNNUME="000001" ;min is 1
+ S REC=REC_$$RJZF^RCTCSP1(TRNNUME,10)
+ S REC=REC_$$DATE8^RCTCSP1(DT)
+ S TRANSNB=$E(SITE,1,3)_$TR($J(TRNNUM,12)," ",0)
+ S REC=REC_TRANSNB
+ S REC=REC_$$BLANK^RCTCSP1(9)
+ S TRN3=$G(^PRCA(433,TRNNUM,3))
+ S TAMTPBAL=$P(TRN3,U,1) ;transaction principle balance
+ S TAMTIBAL=$P(TRN3,U,2) ;transaction interest balance
+ S TAMTABAL=$P(TRN3,U,3) ;transaction administrative balance
+ S TAMTFBAL=$P(TRN3,U,4) ;transaction marshal fee
+ S TAMTCBAL=$P(TRN3,U,5) ;transaction court cost
+ I (TAMTPBAL+TAMTIBAL+TAMTABAL+TAMTFBAL+TAMTCBAL)=0 S TAMTPBAL=TRNAMT
+ S TAMOUNT=$$AMOUNT^RCTCSP1(TAMTPBAL,TRNTYP)
+ S TAMOUNT=TAMOUNT_$$AMOUNT^RCTCSP1(TAMTIBAL,TRNTYP)
+ S TAMOUNT=TAMOUNT_$$AMOUNT^RCTCSP1(TAMTABAL,TRNTYP)
+ S TAMOUNT=TAMOUNT_$$AMOUNT^RCTCSP1(TAMTFBAL+TAMTCBAL,TRNTYP)
+ S REC=REC_TAMOUNT
+ S REC=REC_$$AMOUNT^RCTCSP1(TRNAMT,TRNTYP)
+ S REC=REC_$$BLANK^RCTCSP1(450-$L(REC))
+ S AMTPBAL=$P(B7,U,1) ;principle balance
+ S AMTIBAL=$P(B7,U,2) ;interest balance
+ S AMTABAL=$P(B7,U,3) ;administrative balance
+ S AMTFBAL=$P(B7,U,4) ;marshal fee
+ S AMTCBAL=$P(B7,U,5) ;court cost
+ S AMTRFRRD=AMTPBAL+AMTIBAL+AMTABAL+AMTFBAL+AMTCBAL
+ I ACTION="U" S $P(^PRCA(430,BILL,16),U,10)=AMTRFRRD
+ S ^XTMP("RCTCSPD",$J,BILL,ACTION,"5B",TRNNUM)=REC
+ S ^XTMP("RCTCSPD",$J,"BILL",ACTION,BILL)=$$TAXID^RCTCSP1(DEBTOR)_"^"_$S(TRNTYP=73!(TRNTYP=74):"",1:"-")_+$E(REC,174,184)_"."_$E(REC,185,186)
+ Q
  ;

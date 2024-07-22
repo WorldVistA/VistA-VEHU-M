@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3240317.082203
+^DIC(2,"%MSC")=3240722.04261
 ^DIC(3.05,0)="FAILED ACCESS ATTEMPTS LOG^3.05"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
@@ -2454,7 +2454,7 @@ ZWR
 ^DIC(38.6,"%D",3,0)="individual checks on or off the user should not alter or add to this"
 ^DIC(38.6,"%D",4,0)="file in any way.  Making any modification to this file will definitely"
 ^DIC(38.6,"%D",5,0)="cause the consistency checker to function improperly."
-^DIC(38.6,"%MSC")=3240522.033508
+^DIC(38.6,"%MSC")=3240722.042611
 ^DIC(39.4,0)="ADT/HL7 TRANSMISSION^39.4"
 ^DIC(39.4,0,"AUDIT")="@"
 ^DIC(39.4,0,"DD")="@"
@@ -16564,7 +16564,7 @@ ZWR
 ^DIC(160,"%D",1,0)="Demographic and followup data concerning Oncology patients is stored"
 ^DIC(160,"%D",2,0)="in this file.  (Tumor-related data is stored in the Primary File)."
 ^DIC(160,"%D",3,0)="Data is NOT exported with this file, but it is populated on site."
-^DIC(160,"%MSC")=3230714.233913
+^DIC(160,"%MSC")=3240722.042259
 ^DIC(160.1,0)="ONCOLOGY SITE PARAMETERS^160.1I"
 ^DIC(160.1,0,"GL")="^ONCO(160.1,"
 ^DIC(160.1,0,"GL")="^ONCO(160.1,"
@@ -16651,7 +16651,7 @@ ZWR
 ^DIC(160.16,0,"WR")="@"
 ^DIC(160.16,"%D",0)="^^1^1^2990419^^"
 ^DIC(160.16,"%D",1,0)="This file contains the ONCOLOGY Data Extract Formats."
-^DIC(160.16,"%MSC")=3231216.222116
+^DIC(160.16,"%MSC")=3240722.042259
 ^DIC(160.17,0)="ONCOLOGY PCE EXTRACT FORMAT^160.17"
 ^DIC(160.17,0,"AUDIT")="@"
 ^DIC(160.17,0,"DD")="@"
@@ -17646,7 +17646,7 @@ ZWR
 ^DIC(164,"%D",4,0)=" "
 ^DIC(164,"%D",5,0)="This file comes with data, which overwrite the site's data.  It is not"
 ^DIC(164,"%D",6,0)="recommended that sites modify this file."
-^DIC(164,"%MSC")=3231216.222116
+^DIC(164,"%MSC")=3240722.042259
 ^DIC(164.08,0)="ICDO-SITES^164.08I"
 ^DIC(164.08,0,"GL")="^ONCO(164.08,"
 ^DIC(164.08,0,"GL")="^ONCO(164.08,"
@@ -17891,7 +17891,7 @@ ZWR
 ^DIC(164.46,"%D",4,0)=" "
 ^DIC(164.46,"%D",5,0)="This file comes with data, which overwrite the site's data.  It is not"
 ^DIC(164.46,"%D",6,0)="recommended that sites modify this file."
-^DIC(164.46,"%MSC")=3231216.222116
+^DIC(164.46,"%MSC")=3240722.042259
 ^DIC(164.47,0)="ONCOLOGY SCHEMA DISCRIMINATOR CODES^164.47"
 ^DIC(164.47,0,"AUDIT")="@"
 ^DIC(164.47,0,"DD")="@"
@@ -18189,7 +18189,7 @@ ZWR
 ^DIC(165.5,"%D",1,0)="Tumor-related data for Oncology patients is stored in this file."
 ^DIC(165.5,"%D",2,0)="(Demographic and follow-up data is in the Oncology Patient File)."
 ^DIC(165.5,"%D",3,0)="File is populated in the field by using the abstracting options."
-^DIC(165.5,"%MSC")=3231216.222116
+^DIC(165.5,"%MSC")=3240722.042259
 ^DIC(165.55,0)="CONVERSION FLAGS^165.55"
 ^DIC(165.55,0,"AUDIT")="@"
 ^DIC(165.55,0,"DD")="@"
@@ -18260,7 +18260,7 @@ ZWR
 ^DIC(165.8,"%D",1,0)="This file contains the T, N and M codes as well as the T Suffixes and"
 ^DIC(165.8,"%D",2,0)="N Suffixes and AJCC Chapter and Name for the AJCC Cancer Staging Manual"
 ^DIC(165.8,"%D",3,0)="8th Edition."
-^DIC(165.8,"%MSC")=3230714.233913
+^DIC(165.8,"%MSC")=3240722.0423
 ^DIC(165.9,0)="ONCOLOGY EOD SCHEMAS^165.9"
 ^DIC(165.9,0,"AUDIT")="@"
 ^DIC(165.9,0,"DD")="@"
@@ -18279,7 +18279,7 @@ ZWR
 ^DIC(165.9,"%D",0)="^^2^2^3190308^"
 ^DIC(165.9,"%D",1,0)="This file contains the site-specific codes and descriptions for the"
 ^DIC(165.9,"%D",2,0)="SEER EOD (Extent of Disease) data items."
-^DIC(165.9,"%MSC")=3231216.222117
+^DIC(165.9,"%MSC")=3240722.0423
 ^DIC(166,0)="CASEFINDING SOURCE^166"
 ^DIC(166,0,"AUDIT")="@"
 ^DIC(166,0,"DD")="@"
@@ -18566,7 +18566,7 @@ ZWR
 ^DIC(169.3,"%D",0)="^^2^2^3010523^"
 ^DIC(169.3,"%D",1,0)="This file contains the International Classification of Diseases for Oncology,"
 ^DIC(169.3,"%D",2,0)="Third Edition (ICD-O-3) morphology codes and code descriptions."
-^DIC(169.3,"%MSC")=3231216.222117
+^DIC(169.3,"%MSC")=3240722.0423
 ^DIC(169.99,0)="ONCOLOGY PACKAGE STATUS^169.99"
 ^DIC(169.99,0,"AUDIT")="@"
 ^DIC(169.99,0,"DD")="@"
@@ -21354,7 +21354,7 @@ ZWR
 ^DIC(350.9,"%D",10,0)="This file should always be edited by use of the provided options."
 ^DIC(350.9,"%D",11,0)=" "
 ^DIC(350.9,"%D",12,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(350.9,"%MSC")=3240522.033126
+^DIC(350.9,"%MSC")=3240722.042645
 ^DIC(351,0)="MEANS TEST BILLING CLOCK^351I"
 ^DIC(351,0,"DD")="@"
 ^DIC(351,0,"GL")="^IBE(351,"
@@ -29886,7 +29886,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3240616.080311
+^DIC(409.93,"%MSC")=3240722.042802
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"

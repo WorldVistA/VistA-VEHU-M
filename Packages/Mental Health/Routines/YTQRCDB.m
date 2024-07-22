@@ -1,5 +1,5 @@
 YTQRCDB ;BAL/KTL - MHA CLOUD DATABASE ADMIN RPC CALLS; 1/25/2017
- ;;5.01;MENTAL HEALTH;**239**;Dec 30, 1994;Build 16
+ ;;5.01;MENTAL HEALTH;**239,224**;Dec 30, 1994;Build 17
  ;
  ;
  Q
@@ -21,7 +21,7 @@ SCORADM(ARGS,DATA) ;Score administration
  I '$D(SCORES) D   Q "/api/mha/cdb/instrument/admin/scores/NOTOK"
  . D SETERROR^YTQRUTL(500,"Error Scoring Answers")
  . S ^TMP("YTQ-JSON",$J,1,0)="ERROR",YTQRRSLT=$NA(^TMP("YTQ-JSON",$J))
- S CNT=1,^TMP("YTQ-JSON",$J,CNT,0)="["
+ S CNT=1,^TMP("YTQ-JSON",$J,CNT,0)="{""results"":["
  S I=0 F  S I=$O(SCORES(I)) Q:I=""  D
  . S YSID=$G(SCORES(I,"id"))
  . S YSNAM=$G(SCORES(I,"name"))
@@ -29,7 +29,7 @@ SCORADM(ARGS,DATA) ;Score administration
  . S YSTSCR=$G(SCORES(I,"tscore"))
  . S CNT=CNT+1,^TMP("YTQ-JSON",$J,CNT,0)="{""id"":"_YSID_", ""name"":"""_YSNAM_""", ""raw"":"_YSRAW_$S(YSTSCR]"":", ""tscore"":"_YSTSCR_"},",1:"},")
  S ^TMP("YTQ-JSON",$J,CNT,0)=$E(^TMP("YTQ-JSON",$J,CNT,0),1,$L(^TMP("YTQ-JSON",$J,CNT,0))-1)
- S CNT=CNT+1,^TMP("YTQ-JSON",$J,CNT,0)="]"
+ S CNT=CNT+1,^TMP("YTQ-JSON",$J,CNT,0)="]}"
  S YTQRRSLT=$NA(^TMP("YTQ-JSON",$J))
  Q "/api/mha/cdb/instrument/admin/scores/OK"
  ;
@@ -67,7 +67,9 @@ FILADMIN(DATA)  ;Get YSARR and file mh administration
  N ANSWERS,TEST
  N I,ACNT,VAL,ADMIN
  S TEST=$G(DATA("name")) I TEST="" D SETERROR^YTQRUTL(404,"Missing Test") Q 0
- S DATA("instrumentId")=$O(^YTT(601.71,"B",TEST,0)) I DATA("instrumentId")="" D SETERROR^YTQRUTL(404,"Test not found") Q 0
+ S DATA("instrumentId")=$O(^YTT(601.71,"B",TEST,0))
+ I DATA("instrumentId")="" S DATA("instrumentId")=$O(^YTT(601.71,"B",$TR(TEST,"_"," "),0))
+ I DATA("instrumentId")="" D SETERROR^YTQRUTL(404,"Test not found") Q 0
  I '$D(DATA("answers")) D SETERROR^YTQRUTL(404,"Missing Answers") Q 0
  I '$D(DATA("patientId")) D SETERROR^YTQRUTL(404,"Missing patient id") Q 0
  I '$D(DATA("orderedById")) D SETERROR^YTQRUTL(404,"Missing ordering clinician") Q 0
@@ -188,7 +190,9 @@ SCOREIT(DATA,SCORES) ; Score instrument based on incoming answers.
  N TEST,ANSWERS,YSLG
  I '$D(N) N N S N=0  ;Initialize for reports if needed.
  S TEST=$G(DATA("name")) I TEST="" D SETERROR^YTQRUTL(404,"Missing Test") Q
- S DATA("instrumentId")=$O(^YTT(601.71,"B",TEST,0)) I DATA("instrumentId")="" D SETERROR^YTQRUTL(404,"Test not found") Q
+ S DATA("instrumentId")=$O(^YTT(601.71,"B",TEST,0))
+ I DATA("instrumentId")="" S DATA("instrumentId")=$O(^YTT(601.71,"B",$TR(TEST,"_"," "),0))
+ I DATA("instrumentId")="" D SETERROR^YTQRUTL(404,"Test not found") Q
  I '$D(DATA("answers")) D SETERROR^YTQRUTL(404,"Missing Answers") Q
  S YSLG=$$GET1^DIQ(601.71,DATA("instrumentId")_",",23)
  I YSLG="Yes" D LGSCORE(.DATA,.SCORES) Q  ;-->out Score legacy answers in 601.85

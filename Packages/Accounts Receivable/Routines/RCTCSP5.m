@@ -1,13 +1,14 @@
 RCTCSP5 ;ALBANY/PAW-CROSS-SERVICING RECALL REPORT ;03/15/14 3:34 PM
- ;;4.5;Accounts Receivable;**315,339**;Mar 20, 1995;Build 2
+ ;;4.5;Accounts Receivable;**315,339,433**;Mar 20, 1995;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
  ;
-CSRCLRT ;cross-servicing recall report, prints sorted individual bills that make up a cross-servicing account
+CSRCLRT ;
+ ;cross-servicing recall report, prints sorted individual bills that make up a cross-servicing account
  N RCSORT,PAGE,DASH,DTOUT,DUOUT,DIROUT,VALUE,SSN,PROMPT,EXCEL,RCIEN,BILLN,RCDTV,RCUSER,RCTRAN,RCDATE,TERMDIG,CURDT,DATE,DBTR
- N DTFRM,DTTO,DTFRMTO,POP,ZTDESC,ZTREQ,ZTSAVE,ZTRTN,ZTSK,X,Y,DIRUT,STOP,FLAG,TRANTYP
- S PAGE=0,DASH="",$P(DASH,"-",78)="",SSN=0000
+ N DTFRM,DTTO,DTFRMTO,POP,ZTDESC,ZTREQ,ZTSAVE,ZTRTN,ZTSK,X,Y,DIRUT,STOP,FLAG,TRANTYP,RCARCAT ;PRCA*4.5*433
+ S PAGE=0,DASH="",$P(DASH,"-",91)="",SSN=0000
  W !
  K ^TMP("RCTCSP5",$J)
  S DIR(0)="S^1:Bill Number;2:Debtor Name",DIR("A")="Sort by",DIR("B")=2 D ^DIR K DIR
@@ -17,6 +18,7 @@ CSRCLRT ;cross-servicing recall report, prints sorted individual bills that make
  S EXCEL=0,PROMPT="CAPTURE Report data to an Excel Document",DIR(0)="Y",DIR("?")="^D HEXC^RCTCSJR"
  S EXCEL=$$SELECT^RCTCSJR(PROMPT,"NO") I "01"'[EXCEL S STOP=1 Q
  I EXCEL=1 D EXCMSG^RCTCSJR ; Display Excel display message
+ I 'EXCEL W !,"It is recommended that you Queue this report to a device that is 132 characters wide. "
  K IOP,IO("Q") S %ZIS="MQ",%ZIS("B")="" D ^%ZIS Q:POP
  I $D(IO("Q")) D  Q
  .S ZTSAVE("RCSORT")="",ZTSAVE("EXCEL")="",ZTSAVE("DTFRM")="",ZTSAVE("DTTO")=""
@@ -34,13 +36,14 @@ PRTSORT ;loop through all bills, find recall bills and corrsponding tranactions
  .S FLAG=0
  .Q:('+$P($G(^PRCA(430,RCIEN,15)),U,2))  ;QUIT if 'TCSP RECALL FLAG' is Null
  .I $P($G(^PRCA(430,RCIEN,15)),U,3)'="" Q:$P($G(^PRCA(430,RCIEN,15)),U,3)<DTFRM!($P($G(^PRCA(430,RCIEN,15)),U,3)>DTTO)  ;If using "recall effective date" to screen
- .K RCLIST,LIST,MSG D GETS^DIQ(430,RCIEN_",",".01;9;155;151;153;154","IE","LIST","MSG") Q:$D(LIST)<10  S RCLIST=$NA(LIST(430,RCIEN_","))
+ .K RCLIST,LIST,MSG D GETS^DIQ(430,RCIEN_",",".01;2;9;155;151;153;154","IE","LIST","MSG") Q:$D(LIST)<10  S RCLIST=$NA(LIST(430,RCIEN_",")) ;PRCA*4.5*433
  .S DEBTOR=$P($G(^PRCA(430,RCIEN,0)),U,9)
  .I '$D(^RCD(340,DEBTOR,0)) S SSN="    "  ;set SSN to blank if not VA employee or Patient
  .I $D(^RCD(340,DEBTOR,0)) S SSN=$E($$SSN^RCFN01($P($G(^RCD(340,DEBTOR,0)),"^")),6,9) S TERMDIG=$E(@RCLIST@(9,"E"),1)_$S(SSN'="":SSN,1:"     ")
  .;
  .;locate recall transaction - loop thru backwards, getting the most recent transaction. stop when we find one.
  .S RCUSER="",RCTRAN=""
+ .S RCARCAT=$E(@RCLIST@(2,"E"),1,10)  ;PRCA*4.5*433
  .;
  .; TCSP RECALL EFFECTIVE DATE is not there
  .I $P(^PRCA(430,RCIEN,15),U,3)="" D
@@ -67,14 +70,14 @@ PRTSORT ;loop through all bills, find recall bills and corrsponding tranactions
  .;
  .;write records to ^TMP
  .I RCSORT=1 D
- ..S ^TMP("RCTCSP5",$J,@RCLIST@(.01,"E"),RCDTV)=@RCLIST@(.01,"E")_U_$E(@RCLIST@(9,"E"),1,17)_U_TERMDIG
+ ..S ^TMP("RCTCSP5",$J,@RCLIST@(.01,"E"),RCDTV)=@RCLIST@(.01,"E")_U_RCARCAT_U_$E(@RCLIST@(9,"E"),1,16)_U_TERMDIG ;PRCA*4.5*433
  ..S ^TMP("RCTCSP5",$J,@RCLIST@(.01,"E"),RCDTV)=^TMP("RCTCSP5",$J,@RCLIST@(.01,"E"),RCDTV)_U_$J(@RCLIST@(155,"E"),9,2)_U_$S($L(RCDTV)=8:$$FMTE^XLFDT(-RCDTV,"2Z"),1:"Pending")_U_@RCLIST@(154,"I")_"-"_$E(@RCLIST@(154,"E"),1,7)_U_RCUSER
  .I RCSORT=2 D  ; rewrite for EXCEL and faster processing, added User ID (as per PRCA*4.5*315)
  .. I EXCEL D  Q
- ...S ^TMP("RCTCSP5",$J,@RCLIST@(9,"E"),RCIEN,RCDTV)=$E(@RCLIST@(9,"E"),1,16)_U_@RCLIST@(.01,"E")_U_TERMDIG_U_$J(@RCLIST@(155,"E"),9,2)_U
+ ...S ^TMP("RCTCSP5",$J,@RCLIST@(9,"E"),RCIEN,RCDTV)=$E(@RCLIST@(9,"E"),1,16)_U_RCARCAT_U_@RCLIST@(.01,"E")_U_TERMDIG_U_$J(@RCLIST@(155,"E"),9,2)_U ;PRCA*4.5*433
  ...S ^TMP("RCTCSP5",$J,@RCLIST@(9,"E"),RCIEN,RCDTV)=^TMP("RCTCSP5",$J,@RCLIST@(9,"E"),RCIEN,RCDTV)_$S($L(RCDTV)=8:$$FMTE^XLFDT(-RCDTV,"2Z"),1:"Pending")_U_@RCLIST@(154,"I")_"-"_$E(@RCLIST@(154,"E"),1,7)_U_RCUSER Q
  ..I 'EXCEL D  Q
- ...S ^TMP("RCTCSP5",$J,@RCLIST@(9,"E"),RCIEN,RCDTV)=$E(@RCLIST@(9,"E"),1,16)_U_@RCLIST@(.01,"E")_U_SSN_U_$J(@RCLIST@(155,"E"),9,2)_U_$S($L(RCDTV)=8:$$FMTE^XLFDT(-RCDTV,"2Z"),1:"Pending")
+ ...S ^TMP("RCTCSP5",$J,@RCLIST@(9,"E"),RCIEN,RCDTV)=$E(@RCLIST@(9,"E"),1,16)_U_RCARCAT_U_@RCLIST@(.01,"E")_U_TERMDIG_U_$J(@RCLIST@(155,"E"),9,2)_U_$S($L(RCDTV)=8:$$FMTE^XLFDT(-RCDTV,"2Z"),1:"Pending") ;PRCA*4.5*433
  ...S ^TMP("RCTCSP5",$J,@RCLIST@(9,"E"),RCIEN,RCDTV)=^TMP("RCTCSP5",$J,@RCLIST@(9,"E"),RCIEN,RCDTV)_U_@RCLIST@(154,"I")_"-"_$E(@RCLIST@(154,"E"),1,7)_U_RCUSER
  ;
  ;^TMP global loaded, now print report
@@ -84,9 +87,11 @@ PRTSORT ;loop through all bills, find recall bills and corrsponding tranactions
  .S (BILLN,RCDTV)="" F  S BILLN=$O(^TMP("RCTCSP5",$J,BILLN)) Q:BILLN=""!$D(DIRUT)  F  S RCDTV=$O(^TMP("RCTCSP5",$J,BILLN,RCDTV)) Q:RCDTV=""!$D(DIRUT)  D  Q:$D(DIRUT)
  ..I EXCEL W !,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,1,4)_U_$S($L(RCDTV)=8:$$FMTE^XLFDT(-RCDTV,"2Z"),1:"Pending")_U_$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,6,10) Q
  .. ; non-Excel output
- ..W !,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U),?13,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,2),?31,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,3)
- ..W ?33,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,4),?47,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,5)
- ..W ?56,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,6),?67,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,7)
+ ..W !,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U),?13,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,2),?25,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,3)
+ ..W ?43,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,4),?50,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,5)
+ ..W ?61,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,6),?71,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,7),?83,$P(^TMP("RCTCSP5",$J,BILLN,RCDTV),U,8)
+ ..;.W !,"BILL NO.",?13,"AR CAT",?25,"DEBTOR",?43,"Pt ID",?50,"RECL AMT",?61,"RECL DT",?71,"RECALL RSN",?83,"USER ID" ;PRCA*4.5*433
+ ..;W !,"----------",?13,"----------",?25,"----------------",?43,"-----",?50,"--------",?61,"--------",?71,"----------",?83,"-------" ;PRCA*4.5*433
  .. ; check for page breaks
  .. I ($Y+3)>IOSL D
  ... I $E(IOST,1,2)="C-" S DIR(0)="E" K DIRUT D ^DIR K DIR Q:$D(DIRUT)
@@ -98,9 +103,9 @@ PRTSORT ;loop through all bills, find recall bills and corrsponding tranactions
  ..I EXCEL W !,^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV) Q
  .. ; non-Excel output
  ..W !,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U),?18,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,2)
- ..W ?31,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,3),?36,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,4)
- ..W ?47,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,5),?56,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,6)
- ..W ?67,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,7)
+ ..W ?30,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,3),?43,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,4)
+ ..W ?49,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,5),?61,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,6)
+ ..W ?71,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,7),?83,$P(^TMP("RCTCSP5",$J,DBTR,RCIEN,RCDTV),U,8)
  .. ; check for page breaks
  .. I ($Y+3)>IOSL D
  ... I $E(IOST,1,2)="C-" S DIR(0)="E" K DIRUT D ^DIR K DIR Q:$D(DIRUT)
@@ -119,26 +124,26 @@ CSRCLH1 ;header for cross-servicing recall report 1
  S PAGE=PAGE+1
  I 'EXCEL D  Q
  .W @IOF
- .W !,"PAGE "_PAGE,?12,"CROSS-SERVICING RECALL REPORT (SORTED BY BILL NUMBER)",?68,$$FMTE^XLFDT(DT,"2Z")
+ .W !,"PAGE "_PAGE,?12,"CROSS-SERVICING RECALL REPORT (SORTED BY BILL NUMBER)",?81,$$FMTE^XLFDT(DT,"2Z") ;PRCA*4.5*433
  .W !,DASH
- .W !,"BILL NO.",?13,"DEBTOR",?31,"Pt ID",?37,"RECL AMT",?47,"RECL DT",?56,"RECALL RSN",?67,"USER ID"
- .W !,"--------",?13,"------",?31,"-----",?37,"--------",?47,"-------",?56,"----------",?67,"-------"
+ .W !,"BILL NO.",?13,"AR CAT",?25,"DEBTOR",?43,"Pt ID",?50,"RECL AMT",?61,"RECL DT",?71,"RECALL RSN",?83,"USER ID" ;PRCA*4.5*433
+ .W !,"----------",?13,"----------",?25,"----------------",?43,"-----",?50,"---------",?61,"--------",?71,"----------",?83,"-------" ;PRCA*4.5*433
  ;EXCEL FORM
  W !,"PAGE "_PAGE_U_U_"CS RECALL RPT (BILL)"_U_U_$$FMTE^XLFDT(DT,"2Z")
- W !,"BILL NO."_U_"DEBTOR"_U_"Pt ID"_U_"RECL AMT"_U_"RECALL DT"_U_"RECALL RSN"_U_"USER ID"
+ W !,"BILL NO."_U_"AR CAT"_U_"DEBTOR"_U_"Pt ID"_U_"RECL AMT"_U_"RECALL DT"_U_"RECALL RSN"_U_"USER ID" ;PRCA*4.5*433
  Q
  ;
 CSRCLH2 ;header for cross-servicing recall report 2
  S PAGE=PAGE+1
  I 'EXCEL D  Q
  .W @IOF
- .W !,"PAGE "_PAGE,?14,"CROSS-SERVICING RECALL REPORT (SORTED BY DEBTOR)",?68,$$FMTE^XLFDT(DT,"2Z")
+ .W !,"PAGE "_PAGE,?14,"CROSS-SERVICING RECALL REPORT (SORTED BY DEBTOR)",?81,$$FMTE^XLFDT(DT,"2Z") ;PRCA*4.5*433
  .W !,DASH
- .W !,"DEBTOR",?18,"BILL NO.",?31,"Pt ID",?37,"RECL AMT",?47,"RECL DT",?56,"RECALL RSN",?67,"USER ID"
- .W !,"------",?18,"--------",?31,"-----",?37,"--------",?47,"-------",?56,"----------",?67,"-------"
+ .W !,"DEBTOR",?18,"AR CAT",?30,"BILL NO.",?43,"Pt ID",?50,"RECL AMT",?61,"RECL DT",?71,"RECALL RSN",?83,"USER ID" ;PRCA*4.5*433
+ .W !,"----------------",?18,"----------",?30,"-----------",?43,"-----",?50,"--------",?61,"--------",?71,"----------",?83,"-------" ;PRCA*4.5*433
  ;EXCEL FORMAT
  W !,"PAGE "_PAGE_U_U_"CS RECALL RPT (DEBTOR)"_U_U_$$FMTE^XLFDT(DT,"2Z")
- W !,"DEBTOR"_U_"BILL NO."_U_"Pt ID"_U_"RECL AMT"_U_"RECALL DT"_U_"RECALL RSN"_U_"USER ID"
+ W !,"DEBTOR"_U_"AR CAT"_U_"BILL NO."_U_"Pt ID"_U_"RECL AMT"_U_"RECALL DT"_U_"RECALL RSN"_U_"USER ID" ;PRCA*4.5*433
  Q
  ;
 IAIRPT ;Treasury Cross-Servicing IAI Report

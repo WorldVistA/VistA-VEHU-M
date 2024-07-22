@@ -1,6 +1,6 @@
-ONCSAPIR ;Hines OIFO/SG - COLLABORATIVE STAGING (REQUEST)  ; 2/8/07 8:28am
- ;;2.2;ONCOLOGY;**1**;Jul 31, 2013;Build 8
- ;
+ONCSAPIR ;HINES OIFO/SG - COLLABORATIVE STAGING (REQUEST)  ; 2/8/07 8:28am
+ ;;2.2;ONCOLOGY;**1,19**;Jul 31, 2013;Build 4
+ ; ...P19 testing CS Encryption
  ; ONC8DST ------------- DESCRIPTOR OF THE DESTINATION BUFFER
  ;                       (a parameter of HEADER, PUT, and TRAILER)
  ;
@@ -154,7 +154,13 @@ REQUEST(URL,ONC8RSP,ONC8REQ) ;
  S (RC,REPCNT)=0  D
  . F  S REPEAT=0  D  Q:'REPEAT
  . . ;--- Call the web service
- . . S RC=$$GETURL^ONCX10(URL,60,ONC8RSP,.ONCRHDR,$G(ONC8REQ),.ONCSHDR)
+ . . M ^TMP("ONC",$J)=ONCREQ
+ ..S ONCEXEC="G" D T3^ONCWEB1
+ ..;S ONCEXEC="P" D T3^ONCWEB1
+ ..M ^TMP("ONCSAPIV",$J)=^TMP("ONCSED01R",$J)
+ ..M ^TMP("ONCSAPIT",$J)=^TMP("ONCSED01R",$J)
+ ..;S RC=$$GETURL^ONCX10(URL,60,ONC8RSP,.ONCRHDR,$G(ONC8REQ),.ONCSHDR)
+ ..S RC="200^OK"   ;check the HWSC return code
  . . S HS=+RC  Q:HS=200
  . . ;--- Temporary redirection
  . . I HS=302  D  Q

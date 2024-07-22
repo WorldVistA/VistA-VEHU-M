@@ -1,5 +1,5 @@
 DGRP6EF ;ALB/TMK,EG,BAJ,JLS,ARF,JAM,ARF,JMM - REGISTRATION SCREEN 6 FIELDS FOR EXPOSURE FACTORS ;05 Feb 2015  11:06 AM
- ;;5.3;Registration;**689,659,737,688,909,1014,1018,1075,1084,1090,1103**;Aug 13,1993;Build 7
+ ;;5.3;Registration;**689,659,737,688,909,1014,1018,1075,1084,1090,1103,1118**;Aug 13,1993;Build 7
  ;
 EN(DFN,QUIT) ; Display Environmental exposure factors/allow to edit
  N I,IND,DG321,DG322,DGCT,DIR,Z,X,Y,DIE,DR,DA,DGNONT
@@ -59,7 +59,11 @@ EN1 D CLEAR^VALM1
  ;
  ; DG*5.3*1103 - add data group 6 for TERA indicator
  S Z="<6>"
- S DGCT=DGCT+1,DIR("A",DGCT)=Z_"         TERA: "_$$GET1^DIQ(2,DFN_",",.32116,"E")
+ ;S DGCT=DGCT+1,DIR("A",DGCT)=Z_"         TERA: "_$$GET1^DIQ(2,DFN_",",.32116,"E")
+ ; DG*5.3*1118 - get TERA indicator for display purposes
+ N DGTERA
+ S DGTERA=$$GET1^DIQ(2,DFN_",",.32116,"I"),DGTERA=$S(DGTERA=1:"YES",DGTERA=0:"NO",1:"UNKNOWN")
+ S DGCT=DGCT+1,DIR("A",DGCT)=Z_"         TERA: "_DGTERA
  ;
  ; DG*5.3*1075 - If DGELV flag is set display informational message
  ; DG*5.3*1090 - The display informational message has been updated

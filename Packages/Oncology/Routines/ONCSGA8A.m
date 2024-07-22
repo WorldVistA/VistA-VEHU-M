@@ -1,5 +1,5 @@
 ONCSGA8A ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/09/19
- ;;2.2;ONCOLOGY;**10,12,17**;Jul 31, 2013;Build 6
+ ;;2.2;ONCOLOGY;**10,12,17,19**;Jul 31, 2013;Build 4
  ;
  ;
 6 ;CERVICAL LN AND UNK PRIMARIES OF HEAD AND NECK
@@ -216,8 +216,8 @@ ONCSGA8A ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/09/19
  I STGIND="C" D
  .S M=$E(M,2,5)
  .I T="Tis",N="N0",M="M0" S SG=0 Q
- .I ((T="T1")!(T="T2")),N="N0",M="M0" S SG=1 Q
- .I ((T="T1")!(T="T2")),((N="N1")!(N="N2")!(N="N3")),M="M0" S SG="2A" Q
+ .I ((T["T1")!(T="T2")),N="N0",M="M0" S SG=1 Q
+ .I ((T["T1")!(T="T2")),((N="N1")!(N="N2")!(N="N3")),M="M0" S SG="2A" Q
  .I ((T="T3")!(T="T4a")),N="N0",M="M0" S SG="2B" Q
  .I ((T="T3")!(T="T4a")),((N="N1")!(N="N2")!(N="N3")),M="M0" S SG=3 Q
  .I T="T4b",M="M0" S SG="4A" Q
@@ -225,13 +225,13 @@ ONCSGA8A ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/09/19
  I STGIND="P" D
  .S M=$E(M,2,5)
  .I T="Tis",N="N0",M="M0" S SG=0 Q
- .I T="T1",N="N0",M="M0" S SG="1A" Q
- .I T="T1",N="N1",M="M0" S SG="1B" Q
+ .I T["T1",N="N0",M="M0" S SG="1A" Q
+ .I T["T1",N="N1",M="M0" S SG="1B" Q
  .I T="T2",N="N0",M="M0" S SG="1B" Q
- .I T="T1",N="N2",M="M0" S SG="2A" Q
+ .I T["T1",N="N2",M="M0" S SG="2A" Q
  .I T="T2",N="N1",M="M0" S SG="2A" Q
  .I T="T3",N="N0",M="M0" S SG="2A" Q
- .I T="T1",N="N3a",M="M0" S SG="2B" Q
+ .I T["T1",N="N3a",M="M0" S SG="2B" Q
  .I T="T2",N="N2",M="M0" S SG="2B" Q
  .I T="T3",N="N1",M="M0" S SG="2B" Q
  .I T="T4a",N="N0",M="M0" S SG="2B" Q
@@ -240,7 +240,7 @@ ONCSGA8A ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/09/19
  .I T="T4a",N="N1",M="M0" S SG="3A" Q
  .I T="T4a",N="N2",M="M0" S SG="3A" Q
  .I T="T4b",N="N0",M="M0" S SG="3A" Q
- .I T="T1",N="N3b",M="M0" S SG="3B" Q
+ .I T["T1",N="N3b",M="M0" S SG="3B" Q
  .I T="T2",N="N3b",M="M0" S SG="3B" Q
  .I T="T3",N="N3a",M="M0" S SG="3B" Q
  .I T="T4a",N="N3a",M="M0" S SG="3B" Q
@@ -253,15 +253,15 @@ ONCSGA8A ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/09/19
  .I M="M1" S SG=4 Q
  I STGIND="PT" D
  .S M=$E(M,2,5)
- .I ((T="T1")!(T="T2")),N="N0",M="M0" S SG=1 Q
- .I T="T1",N="N1",M="M0" S SG=1 Q
+ .I ((T["T1")!(T="T2")),N="N0",M="M0" S SG=1 Q
+ .I T["T1",N="N1",M="M0" S SG=1 Q
  .I T="T3",N="N0",M="M0" S SG=2 Q
  .I T="T2",N="N1",M="M0" S SG=2 Q
- .I T="T1",N="N2",M="M0" S SG=2 Q
+ .I T["T1",N="N2",M="M0" S SG=2 Q
  .I T="T4a",N="N0",M="M0" S SG=2 Q
  .I T="T3",N="N1",M="M0" S SG=2 Q
  .I T="T2",N="N2",M="M0" S SG=2 Q
- .I T="T1",N="N3",M="M0" S SG=2 Q
+ .I T["T1",N="N3",M="M0" S SG=2 Q
  .I T="T4a",N="N1",M="M0" S SG=3 Q
  .I T="T3",N="N2",M="M0" S SG=3 Q
  .I T="T2",N="N3",M="M0" S SG=3 Q
@@ -275,7 +275,7 @@ ONCSGA8A ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/09/19
 181 ;
  S M=$E(M,2,5)
  I T="Tis",N="N0",M="M0" S SG=0 Q
- I ((T="T1")!(T="T2")),N="N0",M="M0" S SG=1 Q
+ I ((T["T1")!(T="T2")),N="N0",M="M0" S SG=1 Q
  I T="T3",N="N0",M="M0" S SG="2A" Q
  I T="T4",N="N0",M="M0" S SG="2B" Q
  I N="N1",M="M0" S SG="3A" Q

@@ -1,8 +1,8 @@
 YTSIJSS ;SLC/BLD- MHAX ANSWERS SPECIAL HANDLING ;2/7/2018
- ;;5.01;MENTAL HEALTH;**123,147**;DEC 30,1994;Build 283
+ ;;5.01;MENTAL HEALTH;**123,147,224**;DEC 30,1994;Build 17
  ;
- ;Public, Supported ICRs
- ; #2056 - Fileman API - $$GET1^DIQ
+ ;
+ ; Reference to $$GET1^DIQ in ICR #2056
  ;
  Q
  ;
@@ -63,6 +63,7 @@ DLLSTR(YSDATA,YS,YSTRNG) ;
  N TOTALT,GENSATT,PAYT,ADVANCET,SUPERT,COWORKERT,HOWT
  N TOTAL,GENSAT,PAY,ADVANCE,SUPER,COWORKER,HOW,IJSS
  S (TOTAL,GENSAT,PAY,ADVANCE,SUPER,COWORKER,HOW)=""
+ I '$D(N) N N S N=$O(YSDATA(""),-1) ; get last node
  S N=N+1
  ;
  ; IJSS returns a scale score which is calculated and stored, no special text in report

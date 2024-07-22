@@ -1,5 +1,5 @@
-ONCEDIT2 ;Hines OIFO/GWB - ONCOLOGY INTERFIELD EDITS (continued);11/30/10
- ;;2.2;ONCOLOGY;**1,10,12**;Jul 31, 2013;Build 8
+ONCEDIT2 ;HINES OIFO/GWB - ONCOLOGY INTERFIELD EDITS (continued);11/30/10
+ ;;2.2;ONCOLOGY;**1,10,12,19**;Jul 31, 2013;Build 4
  ;
 IF1213 I BCOD=2,SSTI'=0 D  D ERRMSG
  .S MSG(1)="BEHAVIOR CODE = 2 (In situ)"
@@ -105,35 +105,37 @@ IF2627 S PDTH=$$GET1^DIQ(160,PTN,21)         ;PLACE OF DEATH
  .S MSG(2)="PLACE OF DEATH may not be blank"
  K MSG,PDTH
  ;
-RACE S RACE1=$$GET1^DIQ(160,PTN,8)   ;RACE 1
+RACE ;RACE
+ S RACE1=$$GET1^DIQ(160,PTN,8)   ;RACE 1
  S RACE2=$$GET1^DIQ(160,PTN,8.1) ;RACE 2
  S RACE3=$$GET1^DIQ(160,PTN,8.2) ;RACE 3
  S RACE4=$$GET1^DIQ(160,PTN,8.3) ;RACE 4
  S RACE5=$$GET1^DIQ(160,PTN,8.4) ;RACE 5
- I RACE1="White",((RACE2'="NA")&(RACE2'="Unknown")&(RACE2'="")) D  D ERRMSG
- .S MSG(1)="RACE 1 = "_RACE1
- .S MSG(2)="RACE 2 = "_RACE2
- .S MSG(3)="RACE 3 = "_RACE3
- .S MSG(4)="RACE 4 = "_RACE4
- .S MSG(5)="RACE 5 = "_RACE5
- .S MSG(6)="For race combinations RACE 1 may not be 'White'"
- I (RACE1="")!(RACE2="")!(RACE3="")!(RACE4="")!(RACE5="") G RACEX
- S RACE(RACE1)="" I ((RACE2'="NA")&(RACE2'="Unknown")),$D(RACE(RACE2)) D DUPRACE
- S RACE(RACE2)="" I ((RACE3'="NA")&(RACE3'="Unknown")),$D(RACE(RACE3)) D DUPRACE
- S RACE(RACE3)="" I ((RACE4'="NA")&(RACE4'="Unknown")),$D(RACE(RACE4)) D DUPRACE
- S RACE(RACE4)="" I ((RACE5'="NA")&(RACE5'="Unknown")),$D(RACE(RACE5)) D DUPRACE
+ ;I RACE1="White",((RACE2'="NA")&(RACE2'="Unknown")&(RACE2'="")) D  D ERRMSG
+ ;.S MSG(1)="RACE 1 = "_RACE1
+ ;.S MSG(2)="RACE 2 = "_RACE2
+ ;.S MSG(3)="RACE 3 = "_RACE3
+ ;.S MSG(4)="RACE 4 = "_RACE4
+ ;.S MSG(5)="RACE 5 = "_RACE5
+ ;.S MSG(6)="For race combinations RACE 1 may not be 'White'"
+ ;I (RACE1="")!(RACE2="")!(RACE3="")!(RACE4="")!(RACE5="") G RACEX
+ ;S RACE(RACE1)="" I ((RACE2'="NA")&(RACE2'="Unknown")),$D(RACE(RACE2)) D DUPRACE
+ ;S RACE(RACE2)="" I ((RACE3'="NA")&(RACE3'="Unknown")),$D(RACE(RACE3)) D DUPRACE
+ ;S RACE(RACE3)="" I ((RACE4'="NA")&(RACE4'="Unknown")),$D(RACE(RACE4)) D DUPRACE
+ ;S RACE(RACE4)="" I ((RACE5'="NA")&(RACE5'="Unknown")),$D(RACE(RACE5)) D DUPRACE
  K MSG,RACE,RACE1,RACE2,RACE3,RACE4,RACE5
  ;
 RACEX K BCOD,COCI,COCE,DDXI,DDXE,HSTI,HSTE,SSTI,SSTE,STAT,TOPI,TOPE,TRSI,TRSE
  Q
  ;
-DUPRACE S MSG(1)="RACE 1 = "_RACE1
- S MSG(2)="RACE 2 = "_RACE2
- S MSG(3)="RACE 3 = "_RACE3
- S MSG(4)="RACE 4 = "_RACE4
- S MSG(5)="RACE 5 = "_RACE5
- S MSG(6)="A specific race code may not occur more than once"
- D ERRMSG
+DUPRACE ;DUPLICATE RACE
+ ;S MSG(1)="RACE 1 = "_RACE1
+ ;S MSG(2)="RACE 2 = "_RACE2
+ ;S MSG(3)="RACE 3 = "_RACE3
+ ;S MSG(4)="RACE 4 = "_RACE4
+ ;S MSG(5)="RACE 5 = "_RACE5
+ ;S MSG(6)="A specific race code may not occur more than once"
+ ;D ERRMSG
  Q
  ;
 ERRMSG ;Error message

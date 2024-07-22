@@ -1,5 +1,5 @@
 PSOORED5 ;BIR/SAB-Rxs without dosing info ;1 Oct 2019 12:31:04
- ;;7.0;OUTPATIENT PHARMACY;**46,75,78,100,99,117,133,251,378,372,416,313,450,486,402,500,507,525,537,555,457,574**;DEC 1997;Build 53
+ ;;7.0;OUTPATIENT PHARMACY;**46,75,78,100,99,117,133,251,378,372,416,313,450,486,402,500,507,525,537,555,457,574,754**;DEC 1997;Build 1
  ;Reference to ^PS(51.2 supported by DBIA 2226
  ;Reference to ^PS(50.7 supported by DBIA 2223
  ;Reference to ^PSDRUG( supported by DBIA 221
@@ -93,15 +93,16 @@ DUR ;
  S DIR("B")=$S($D(DUR):DUR,$G(PSORXED("DURATION",ENT))]"":PSORXED("DURATION",ENT),1:"") K:DIR("B")="" DIR("B")
  D ^DIR I X[U,$L(X)>1 S FIELD="DUR" G JUMP
  G EX:$D(DTOUT),EXE:$D(DUOUT)
+ ;PSO*7*754 comment out code added with PSO*7*457
  ;; START NCC REMEDIATION >> 457*RJS - ADJUST FOR 4 DAY SUPPLY
  ;/RBN Begin modification for #326 ;/MZR Added a message and correct checking for Hours/Minutes
- I $G(DIR("B"))!$G(PSORXED("DURATION",ENT)) N Z,MAX D  I Z>MAX S PSORXED("DURATION",$G(PSORXED("ENT")))=MAX G DUR
- .I X=+X S Z=X
- .E  S Z=$E(X,$L(X)),Z=$S(Z="L":30*X,Z="W":7*X,Z="H":X/24,Z="M":X/1440,1:+X)
- .S MAX=$S($G(DIR("B")):+DIR("B"),1:$G(PSORXED("DURATION",ENT)))
- .I Z>MAX D
- ..W " ("_$S(X["L":"MONTHS",X["W":"WEEKS",X["H":"HOURS",X["M":"MINUTES",1:"DAYS")_")"
- ..W !,"NOT MORE THAN ",MAX," DAYS"
+ ;I $G(DIR("B"))!$G(PSORXED("DURATION",ENT)) N Z,MAX D  I Z>MAX S PSORXED("DURATION",$G(PSORXED("ENT")))=MAX G DUR
+ ;.I X=+X S Z=X
+ ;.E  S Z=$E(X,$L(X)),Z=$S(Z="L":30*X,Z="W":7*X,Z="H":X/24,Z="M":X/1440,1:+X)
+ ;.S MAX=$S($G(DIR("B")):+DIR("B"),1:$G(PSORXED("DURATION",ENT)))
+ ;.I Z>MAX D
+ ;..W " ("_$S(X["L":"MONTHS",X["W":"WEEKS",X["H":"HOURS",X["M":"MINUTES",1:"DAYS")_")"
+ ;..W !,"NOT MORE THAN ",MAX," DAYS"
  ;; END NCC REMEDIATION << 457*RJS
  D DUR1^PSOOREDX
  ;

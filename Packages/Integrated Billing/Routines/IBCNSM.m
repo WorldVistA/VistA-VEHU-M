@@ -1,5 +1,5 @@
 IBCNSM ;ALB/AAS - INSURANCE MANAGEMENT, LIST MANAGER INIT ROUTINE ; 30-NOV-2021
- ;;2.0;INTEGRATED BILLING;**28,46,56,52,82,103,199,276,435,528,659,713,763**;21-MAR-94;Build 29
+ ;;2.0;INTEGRATED BILLING;**28,46,56,52,82,103,199,276,435,528,659,713,763,778**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;
@@ -64,7 +64,16 @@ BLD ; -- build list of bills
  .S X=$$SETFLD^VALM1($$DAT1^IBOUTL($P(IBCDFND,"^",8)),X,"EFFDT")
  .S X=$$SETFLD^VALM1($$DAT1^IBOUTL($P(IBCDFND,"^",4)),X,"EXPIRE")
  .S X=$$SETFLD^VALM1($E($P($G(^IBE(355.1,+$P(IBCPOLD,"^",9),0)),U),1,8),X,"TYPE")
- .S X=$$SETFLD^VALM1($P($G(^IBE(355.1,+$P($G(^IBA(355.3,+$P(IBCDFND,"^",18),0)),"^",9),0)),"^"),X,"TYPEPOL")
+ .;
+ .; IB*778/DTG change to display abbreviation if Type of Plan name is longer than 15 characters.
+ .;S X=$$SETFLD^VALM1($P($G(^IBE(355.1,+$P($G(^IBA(355.3,+$P(IBCDFND,"^",18),0)),"^",9),0)),"^"),X,"TYPEPOL")
+ .N IBTYPA,IBTYPN,IBTYPO,IB3551IEN
+ .S IB3551IEN=$$GET1^DIQ(355.3,+$P(IBCDFND,"^",18)_",",".09","I")
+ .S IBTYPN=$$GET1^DIQ(355.1,IB3551IEN_",",".01")  ;name
+ .S IBTYPA=$$GET1^DIQ(355.1,IB3551IEN_",",".02")  ;abbrev
+ .S IBTYPO=IBTYPN I $L(IBTYPN)>15&(IBTYPA'="") S IBTYPO=IBTYPA
+ .S X=$$SETFLD^VALM1(IBTYPO,X,"TYPEPOL")  ; type of plan
+ .;
  .S X=$$SETFLD^VALM1($E($P($G(^VA(200,+$P(IBCDFND1,"^",4),0)),U),1,15),X,"VERIFIED BY")
  .S X=$$SETFLD^VALM1($$DAT1^IBOUTL($P(IBCDFND1,"^",3)),X,"VERIFIED ON")
  .S X=$$SETFLD^VALM1($$YN($P(IBCPOLD,"^",6)),X,"PRECERT")

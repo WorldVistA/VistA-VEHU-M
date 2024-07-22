@@ -1,5 +1,5 @@
 IBCNOR2 ;AITC/TAZ - IBCN BUFFER DAILY REPORT ;15-AUG-2023
- ;;2.0;INTEGRATED BILLING;**771**;16-SEP-09;Build 26
+ ;;2.0;INTEGRATED BILLING;**771,778**;16-SEP-09;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Variables:
@@ -145,9 +145,14 @@ SNAPSHOT ;Grab a snapshot of the data right now.
  S DATE="",(BCNT,CNT,WCNT)=0,CRT=+$G(CRT)
  I CRT W !,"Building Snapshot..."
  F  S DATE=$O(^IBA(355.33,"AEST","E",DATE)) Q:'DATE  D
- . I CNT<1 S ^TMP($J,"IBCNOR2","SUM","OLDEST DATE")=DATE
+ . ;I CNT<1 S ^TMP($J,"IBCNOR2","SUM","OLDEST DATE")=DATE  ;IB*778/DTG moved to avoid bad records.
+ . ;
  . S IEN=""
  . F  S IEN=$O(^IBA(355.33,"AEST","E",DATE,IEN)) Q:'IEN  D
+ .. ;
+ .. I '$D(^IBA(355.33,IEN,0)) Q  ; IB*778/DTG if node 0 for IEN not there, go back
+ .. I CNT<1 S ^TMP($J,"IBCNOR2","SUM","OLDEST DATE")=DATE  ;IB*778
+ .. ;
  .. N IBARY,IBY,IENS,DFN
  .. S IENS=IEN_",",CNT=CNT+1 I CRT,'(CNT#100) W "."
  .. I DATE<BACKLOG S BCNT=BCNT+1
@@ -160,7 +165,12 @@ SNAPSHOT ;Grab a snapshot of the data right now.
  S ^TMP($J,"IBCNOR2","SUM","TOTAL ENTRIES")=CNT
  S ^TMP($J,"IBCNOR2","SUM","BACKLOG")=BCNT
  S ^TMP($J,"IBCNOR2","SUM","WBACKLOG")=WCNT
- S OLDEST=$G(^TMP($J,"IBCNOR2","SUM","OLDEST DATE")) S ^TMP($J,"IBCNOR2","SUM","AGE")=$S(OLDEST:$$FMDIFF^XLFDT(DT,OLDEST),1:0)
+ ;
+ ; IB*778/DTG change for oldest date check
+ ; S OLDEST=$G(^TMP($J,"IBCNOR2","SUM","OLDEST DATE")) S ^TMP($J,"IBCNOR2","SUM","AGE")=$S(OLDEST:$$FMDIFF^XLFDT(DT,OLDEST),1:0)
+ S OLDEST=$S(CNT<1:"",1:$G(^TMP($J,"IBCNOR2","SUM","OLDEST DATE")))
+ S ^TMP($J,"IBCNOR2","SUM","AGE")=$S(OLDEST:$$FMDIFF^XLFDT(DT,OLDEST),1:0)
+ ;
  Q
  ;
 BACKLOG(DATE,WED) ;Calculate Backlog Date to T-6 business days so that T-7 inclusive shows on the report.

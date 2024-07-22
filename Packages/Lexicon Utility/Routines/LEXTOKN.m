@@ -1,12 +1,11 @@
-LEXTOKN ;ISL/KER - Parse term into words ;04/21/2014
- ;;2.0;LEXICON UTILITY;**80**;Sep 23, 1996;Build 1
+LEXTOKN ;ISL/KER - Parse term into words ; 04/21/2014
+ ;;2.0;LEXICON UTILITY;**80,150**;Sep 23, 1996;Build 1
  ;               
  ; Global Variables
  ;    ^TMP("LEXTKN")      SACC 2.3.2.5.1
  ;               
  ; External References
- ;    $$UP^XLFSTR         ICR  10104
- ;               
+ ; DBIA #10104
  ;               
  ; External References
  ;    $$SW^LEXTOKN2
@@ -63,7 +62,7 @@ PTX ; Entry point to parse string (X must exist)
  S LEXTOKS=$TR(LEXTOKS,"?`~!@#$%^&*()_-+={}[]\:;,<>","                            ")
  ;   Conditionally remove slashes
  S:$D(LEXIDX) LEXTOKS=$TR(LEXTOKS,"/"," ")
- S:$E($P(LEXTOKS,".",2),1)'?1N LEXTOKS=$TR(LEXTOKS,"."," ")
+ S:$E($P(LEXTOKS,".",2),1)'?1(1N,1U) LEXTOKS=$TR(LEXTOKS,"."," ")
  S LEXTOKS=$TR(LEXTOKS,"""","")
  ;   Swtich to UPPERCASE (lower case is not specified by LEXLOW)
  S:'$D(LEXLOW) LEXTOKS=$$UP^XLFSTR(LEXTOKS)

@@ -1,5 +1,5 @@
 IBCNSJ53 ;AITC/DTG - INSURANCE PLAN MAINTENANCE ACTION VIEW SUBSCRIBER ; 15-MAY-2023
- ;;2.0;INTEGRATED BILLING;**763,771**;21-MAR-94;Build 26
+ ;;2.0;INTEGRATED BILLING;**763,771,778**;21-MAR-94;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;
@@ -93,7 +93,7 @@ VSUBS ; entry from list template protocol 'IBCNSJ PLAN VIEW SUBSCRIBERS' from th
  ...S $P(IBPTHOLD,"^",7)=XX
  ...S XX=$$GET1^DIQ(2.312,IBPTINS_","_IBPTDFN_",",5.01,"I")  ; Patient ID
  ...S $P(IBPTHOLD,"^",8)=XX
- ...S:$G(LENPID)<$L(XX) LENPID=$L(XX)
+ ...; IB*778/DTG removed code for unused variable LENPID
  ...;active or inactive
  ...S (IBACT,IBINACT)=0 D  S $P(IBPTHOLD,U,9)=IBACT,$P(IBPTHOLD,U,10)=IBINACT
  ....;

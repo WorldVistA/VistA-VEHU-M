@@ -1,15 +1,21 @@
 ONCGENED ;HINES OIFO/GWB - EDITS API ;10/19/11
- ;;2.2;ONCOLOGY;**1,4,6,10,13,16,17**;Jul 31, 2013;Build 6
+ ;;2.2;ONCOLOGY;**1,4,6,10,13,16,17,19**;Jul 31, 2013;Build 4
  ;P10 V18 NAACCR / P16 WRONG EXTVER variable
  ;P17 V22 metafile
+ ;P19 Edits of XML DATA to DC Cloud Web Service
 NAACCR D CLEAR^ONCSAPIE(1)
  K ^TMP("ONC",$J)
  K ^TMP("ONC1",$J)
- N BLANK,DEVICE,DXH,EXT,IINPNT,MSGLST,NINE,OIEN,ONCEDLST,OSP
- N PAGE,PAGEX,STAT1,ZERO,ZNINE
+ N BLANK,DEVICE,DXH,EXT,IINPNT,MSGLST,NINE,OIEN,ONCEDLST,OSP,ACD160
+ N PAGE,PAGEX,STAT1,ZERO,ZNINE,ONCCSID,ONCCSTP,ONCREID,ONCDTTIM
  S ABSTAT=$$GET1^DIQ(165.5,D0,91,"I")
  S:(ABSTAT=3)&($$GET1^DIQ(165.5,D0,282,"I")="N") $P(^ONCO(165.5,D0,"EDITS"),U,3)="U"
  S:($$GET1^DIQ(165.5,D0,282,"I")="") $P(^ONCO(165.5,D0,"EDITS"),U,3)="N"
+ S ACD160=$$GET1^DIQ(165.5,D0,.02,"I")
+ D PID^ONCOCOP S ONCCSID=X
+ ;S ONCREID=$$ICN^ONCACDU2(ACD160)
+ S ONCREID=D0
+ S ONCCSTP=$$GET1^DIQ(165.5,D0,282,"I")
  S BLANK=" "
  S ZERO=0
  S NINE=9
@@ -27,11 +33,21 @@ NAACCR D CLEAR^ONCSAPIE(1)
  S IEN=D0
  S ONCDST=$NA(^TMP("ONC",$J))
  S MSGLST=$NA(^TMP("ONC1",$J))
+ ;P19
+ D XMLHDR^ONCSED01                      ;build XML request header
+ D XMLEDIT^ONCSED01                     ;build XML request message body
+ K ^TMP("ONCSED01R",$J)                 ;clear the response ^TMP global
+ S ONCEXEC="P" D T3^ONCWEB1             ;send request to cloud server
+ S ERRFLG=0 D PARSE^ONCWEBP1            ;new code parse rspns from cloud server
+ I ERRFLG=2 W !,"XML/server problem" Q  ;error in server call
+ I ERRFLG=1 D DISPLAY^ONCWEBP1 Q        ;display EDITs errors from server
+ I ERRFLG=0 Q                           ;case complete
  ;
+ ;S RC=$$PARSE^ONCSED02(.ONCSAPI,ONC8RDAT,ONC8MSG) ;this is part of P19 testing
  ;S RC=$$RBQPREP^ONCSED01(.ONCSAPI,.ONCDST)  ;comment for testing
- S RC=$$RBQPREP^ONCSED01(.ONCSAPI,.ONCDST,"DEBUG") ;remove comment for testing
- S ERRFLG=RC
- I RC<0 D PRTERRS^ONCSAPIE() Q
+ ;S RC=$$RBQPREP^ONCSED01(.ONCSAPI,.ONCDST,"DEBUG") ;comment for cloud server
+ ;S ERRFLG=RC  ; comment out for Patch 19
+ ;I RC<0 D PRTERRS^ONCSAPIE() Q  ; comment out for Patch 19
  ;
  N D0
  D OUTPUT(IEN,EXTRACT,.OUT)

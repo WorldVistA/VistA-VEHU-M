@@ -1,5 +1,5 @@
 DGAUDIT1 ; ISL/DKA - Dataset 1 of VAS VistA Audit Solution ; 03 Aug 2021  1:05 PM
- ;;5.3;Registration;**964,1097,1108**;Aug 13, 1993;Build 17
+ ;;5.3;Registration;**964,1097,1108,1120**;Aug 13, 1993;Build 6
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to ^VA(200 in ICR #1262
@@ -324,7 +324,7 @@ GENERR(DGAUDERR,DGALTSUB) ; General Error, DGAUDERR specific text
  S DGAUDNUM=$G(DGAUDDATA("ENTRIES"))
  S DGAUDER2(DGAUDER2)="",DGAUDER2=DGAUDER2+1
  S DGAUDER2(DGAUDER2)="The ^DGAUDIT global contains "_DGAUDNUM_" entr"_$S(DGAUDNUM=1:"y",1:"ies")_".",DGAUDER2=DGAUDER2+1
- S DGAUDER2(DGAUDER2)="The maximum number of entries before automatic deletion is "_$$GET^XPAR("ALL","DG VAS MAX QUEUE ENTRIES")_".",DGAUDER2=DGAUDER2+1
+ S DGAUDER2(DGAUDER2)="The maximum number of entries in the queue is "_$$GET^XPAR("ALL","DG VAS MAX QUEUE ENTRIES")_".",DGAUDER2=DGAUDER2+1
  S DGAUDER2(DGAUDER2)="",DGAUDER2=DGAUDER2+1
  D SNDMSG^DGAUDIT(.DGAUDER2,,$G(DGALTSUB)) K DGAUDERR,DGAUDER2
  Q
