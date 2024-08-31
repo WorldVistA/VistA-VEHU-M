@@ -1,5 +1,5 @@
 PSORRPA1 ;AITC/BWF - remote partial prescriptions ;12/12/16 3:21pm
- ;;7.0;OUTPATIENT PHARMACY;**454,475,497,643**;DEC 1997;Build 35
+ ;;7.0;OUTPATIENT PHARMACY;**454,475,497,643,740**;DEC 1997;Build 18
  ;
  ;External references L,UL, PSOL, and PSOUL^PSSLOCK supported by DBIA 2789
  ;External reference to ^PSDRUG supported by DBIA 221
@@ -19,7 +19,7 @@ PSORRPA1 ;AITC/BWF - remote partial prescriptions ;12/12/16 3:21pm
  ;
 PAR(VALMSG,RXNUM,PFDATE,MW,QTY,DSUPP,REMARKS,PHARM,PHONE,SITE,RX0,RX2,RXSTA,RPROV,RSIG,RPAR0,ROR1,RX3,RREF0) ;
  N RRXIEN,PSOPAR,ORN,PSOLST,XTMPLOC,PASSLOC,HFSIEN,FULLPTH,HFSDONE,PTHDAT,PTHPIECE,DEL,DELARR,FTGOPEN,FOUND,FTGSTRT,FTGOPEN,STATION,HDRUG
- N PERR,PDIR,PFIL,CSVAL,C,D,E,NEWPFIEN,PFIEN,PFIENS,PSOEXREP,PSOFROM,DINACT,PSOPHDUZ,PSODFDIR,PSOFNAME,PSOZ1,RREFIEN
+ N PERR,PDIR,PFIL,CSVAL,C,D,E,NEWPFIEN,PFIEN,PFIENS,PSOEXREP,PSOFROM,DINACT,PSOPHDUZ,PSODFDIR,PSOFNAME,PSOZ1,RREFIEN,CLOZVAL,NOONEVA
  S $ETRAP="D ^%ZTER Q"
  S (RRXIEN,RXN)=$O(^PSRX("B",RXNUM,0)),PSOSIEN=$$GET1^DIQ(52,RRXIEN,20,"I")
  I '$$GET1^DIQ(59.7,1,101,"I") D  Q
@@ -34,10 +34,7 @@ PAR(VALMSG,RXNUM,PFDATE,MW,QTY,DSUPP,REMARKS,PHARM,PHONE,SITE,RX0,RX2,RXSTA,RPRO
  .S VALMSG(3)="a new prescription."
  ; PSO*7*497 - end trade name block
  S HDRUG=$$GET1^DIQ(52,RRXIEN,6,"I")
- S DINACT=$$GET1^DIQ(50,HDRUG,100,"I")
- I DINACT>0,DINACT<$$NOW^XLFDT S VALMSG(1)="Drug is inactive for Rx# "_RXNUM_". Cannot process partial fill." D PARFAIL(.VALMSG,RRXIEN,PHARM,PHONE,SITE) Q
- S CSVAL=$$GET1^DIQ(50,HDRUG,3,"E"),CSVAL=$E(CSVAL,1)
- I CSVAL,CSVAL>0,CSVAL<6 D PARFAIL(.VALMSG,RRXIEN,PHARM,PHONE,SITE) S VALMSG(1)="Rx #"_RXNUM_" cannot be partially filled. The associated drug is considered a controlled substance at the host facility." Q
+ I '$$VALIDDRUG(HDRUG) D PARFAIL(.VALMSG,RRXIEN,PHARM,PHONE,SITE) Q
  I $D(^PSRX(RRXIEN,"ADP",PFDATE,RRXIEN)) S VALMSG(1)="A partial fill already exists for "_$$FMTE^XLFDT(PFDATE,"5D")_".",VALMSG(2)="Partial cannot be processed" D PARFAIL(.VALMSG,RRXIEN,PHARM,PHONE,SITE) Q
  S PSOPAR=$G(^PS(59,PSOSIEN,1)),PSOSITE=PSOSIEN
  ; set up PSOLST
@@ -159,6 +156,17 @@ ULK ;
 PARFAIL(PSOMSG,PSOIEN,RPHARM,RPHONE,RSITE) ;
  S PSOMSG(0)=0_U_$$GET1^DIQ(52,PSOIEN,.01,"I")_U_PSOIEN,$P(PSOMSG(0),U,15)=RPHARM,$P(PSOMSG(0),U,16)=RPHONE,$P(PSOMSG(0),U,17)=RSITE
  Q
+VALIDDRUG(DRUGIEN) ;
+ S DINACT=$$GET1^DIQ(50,DRUGIEN,100,"I")
+ I DINACT>0,($$DT^XLFDT>DINACT) S VALMSG(1)="Drug is inactive for Rx# "_RXNUM_". Cannot process partial fill." Q 0
+ S CSVAL=$$GET1^DIQ(50,DRUGIEN,3,"E"),CSVAL=$E(CSVAL,1)
+ I CSVAL,CSVAL>0,CSVAL<6 S VALMSG(1)="Rx #"_RXNUM_" cannot be partially filled. The associated drug is considered a controlled substance at the host facility." Q 0
+ S CLOZVAL=$$GET1^DIQ(50,DRUGIEN,17.5)  ; Clozapine Check PSO*7*740
+ I CLOZVAL="PSOCLO1" S VALMSG(1)="This is a Clozapine prescription.",VALMSG(2)="Cannot process a partial fill for Rx # "_RXNUM_"." Q 0
+ ;
+ S NOONEVA=$$GET1^DIQ(50,DRUGIEN,907)
+ I NOONEVA="YES" S VALMSG(1)="Remote Site Drug is restricted from OneVA Pharmacy processing.",VALMSG(2)="Cannot process a partial fill for Rx # "_RXNUM_"." Q 0
+ Q 1
 UPDPAR(PSOMSG,PSOIEN,RPHARM,RPHONE,RSITE,PASSLOC) ;
  N PARIEN,PARIENS,PARDATA,FIL,RXNUM,RFILLDT,QTY,DSUPP,CLERK,LOGDATE,IDIV,EDIV,DISPDT,NDC,FDA,DNAME,DIEN
  S FIL=52.2
@@ -198,3 +206,32 @@ UPDPAR(PSOMSG,PSOIEN,RPHARM,RPHONE,RSITE,PASSLOC) ;
  S PSOMSG(0)=1_U_RXNUM_U_PSOIEN_U_PARIEN_U_RFILLDT_U_DNAME_U_QTY_U_DSUPP_U_CLERK_U_LOGDATE_U_IDIV_U_EDIV_U_DISPDT_U_NDC_U_RPHARM_U_RPHONE_U_RSITE_U_PASSLOC
  I '$L($G(PSOMSG(1))) S PSOMSG(1)="Partial complete for RX #"_RXNUM_"."
  Q
+ ;
+VALDRGINT(DRUGIEN,FILLTYP,RXNUM) ; Interactive check for drug restrictions
+ N DINACT,CSVAL,CLOZVAL,NOONEVA
+ ; Inactive
+ S DINACT=$$GET1^DIQ(50,DRUGIEN,100,"I")
+ I DINACT>0,($$DT^XLFDT>DINACT) D  Q 0
+ .;I FILLTYP="F" W !!,"Matched Drug "_$$GET1^DIQ(50,DRUGIEN,.01,"E")_" is inactive.",!,"Cannot refill."
+ .W !!,"Matched Drug "_$$GET1^DIQ(50,DRUGIEN,.01,"E")_" is inactive.",!,"Cannot "_$S(FILLTYP="R":"refill.",1:"process a partial fill.")
+ .Q
+ ; Controlled substance check
+ S CSVAL=$$GET1^DIQ(50,DRUGIEN,3,"E"),CSVAL=$E(CSVAL,1)
+ I CSVAL,CSVAL>0,CSVAL<6 D  Q 0
+ .;I FILLTYP="R" W !!,"This is a controlled substance. Cannot refill Rx#",RXNUM,"."
+ .W !!,"This is a controlled substance. Cannot "_$S(FILLTYP="R":"refill",1:"process a partial fill for")_" Rx # ",RXNUM,"."
+ .Q
+ ; Clozapine check PSO*7*740
+ S CLOZVAL=$$GET1^DIQ(50,DRUGIEN,17.5)
+ I CLOZVAL="PSOCLO1" D  Q 0
+ .;I FILLTYP="F" W !!,"This is a Clozapine prescription.",!,"Cannot refill Rx # ",RXNUM,"."
+ .W !!,"This is a Clozapine prescription.",!,"Cannot "_$S(FILLTYP="R":"refill",1:"process a partial fill for")_" Rx # ",RXNUM,"."
+ .Q
+ ;
+ ; Restrict for OneVA
+ S NOONEVA=$$GET1^DIQ(50,DRUGIEN,907)
+ I NOONEVA="YES" D  Q 0
+ .I FILLTYP="F" W !!,"Local Drug is restricted from OneVA Pharmacy processing.",!,"Cannot refill Rx # ",RXNUM,"."
+ .E  W !!,"Local Drug is restricted from OneVA Pharmacy processing.",!,"Cannot "_$S(FILLTYP="R":"refill",1:"process a partial fill for")_" Rx # ",RXNUM,"."
+ .Q
+ Q 1

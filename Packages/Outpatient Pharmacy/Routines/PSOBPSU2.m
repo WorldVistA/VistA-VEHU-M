@@ -1,5 +1,5 @@
 PSOBPSU2 ;BIRM/MFR - BPS (ECME) Utilities 2 ;10/15/04
- ;;7.0;OUTPATIENT PHARMACY;**260,287,289,341,290,358,359,385,421,459,482,512,544,562,660,681,703**;DEC 1997;Build 16
+ ;;7.0;OUTPATIENT PHARMACY;**260,287,289,341,290,358,359,385,421,459,482,512,544,562,660,681,703,704**;DEC 1997;Build 16
  ; Reference to ^VA(200 in ICR #10060
  ; Reference to DUR1^BPSNCPD3 in ICR #4560
  ; Reference to $$NCPDPQTY^PSSBPSUT in ICR #4992
@@ -7,9 +7,9 @@ PSOBPSU2 ;BIRM/MFR - BPS (ECME) Utilities 2 ;10/15/04
  ; Reference to $$TRICVANB^PSXRPPL1 in ICR #7351
  ;
 MWC(RX,RFL) ; Returns whether a prescription is (M)ail, (W)indow or (C)MOP
- ;Input: (r) RX   - Rx IEN (#52)
+ ; Input: (r) RX   - Rx IEN (#52)
  ;       (o) RFL  - Refill #  (Default: most recent)
- ;Output: "M": MAIL / "W": WINDOW / "C": CMOP
+ ; Output: "M": MAIL / "W": WINDOW / "C": CMOP
  ;
  N MWC
  ;
@@ -41,7 +41,7 @@ MWC(RX,RFL) ; Returns whether a prescription is (M)ail, (W)indow or (C)MOP
  . ; ...otherwise, this is a Mail fill.
  . S MWC="M"
  ;
- ; - Checking the CMOP EVENT sub-file (#52.01)
+ ; Checking the CMOP EVENT sub-file (#52.01)
  I MWC'="C" D
  . N CMP
  . S CMP=0
@@ -50,7 +50,7 @@ MWC(RX,RFL) ; Returns whether a prescription is (M)ail, (W)indow or (C)MOP
  ;
  Q MWC
  ;
-RXACT(RX,RFL,COMM,TYPE,USR) ; - Add an Activity to the ECME Activity Log (PRESCRIPTION file)
+RXACT(RX,RFL,COMM,TYPE,USR) ; - Add an entry to the ECME Activity Log (PRESCRIPTION file)
  ;Input: (r) RX   - Rx IEN (#52)
  ;       (o) RFL  - Refill #  (Default: most recent)
  ;       (r) COMM - Comments (up to 100 characters)
@@ -85,18 +85,25 @@ RXACT(RX,RFL,COMM,TYPE,USR) ; - Add an Activity to the ECME Activity Log (PRESCR
 ECMENUM(RX,RFL) ; Returns the ECME number for a specific prescription and fill
  I $G(RX)="" Q ""
  N ECMENUM
- ; Check ECME # for Refill passed in
+ ;
+ ; If RFL was passed in, return ECME # based on that.
+ ;
  I $G(RFL)'="" S ECMENUM=$$GETECME(RX,RFL) Q ECMENUM
- ; If Refill is null, check last refill
+ ;
+ ; If RFL was not passed in, determine the last refill, and return
+ ; the ECME # based on that, if possible.
+ ;
  S RFL=$$LSTRFL^PSOBPSU1(RX)
  S ECMENUM=$$GETECME(RX,RFL)
  I ECMENUM'="" Q ECMENUM
- ; If no ECME # for last refill, step back through refills in reverse order
- F  S RFL=RFL-1 Q:(RFL<0)!(ECMENUM'="")  S ECMENUM=$$GETECME(RX,RFL)
+ ;
+ ; If still no ECME #, then go backwards through the fills until
+ ; we are able to determine an ECME #.
+ ;
+ F  S RFL=RFL-1 Q:(RFL<0)  S ECMENUM=$$GETECME(RX,RFL) I ECMENUM'="" Q
  Q ECMENUM
  ;
-GETECME(RX,RFL) ;
- ;Internal function used by ECMENUM to get the ECME # from BPS
+GETECME(RX,RFL) ; Internal function used by ECMENUM to get the ECME # from BPS
  I $G(RX)="" Q ""
  I $G(RFL)="" Q ""
  Q $P($$CLAIM^BPSBUTL(RX,RFL),U,6)
@@ -140,28 +147,27 @@ ELIG(RX,RFL,PSOELIG) ;Stores eligibility flag
  Q
  ;
 ECMESTAT(RX,RFL) ;called from local mail
- ;Input:
- ; RX = Prescription File IEN
- ; RFL = Refill
- ;Output:
- ; 0 for not allowed to print from suspense
- ; 1 for allowed to print from suspense
+ ; Input:
+ ;  RX = Prescription File IEN
+ ;  RFL = Refill
+ ; Output:
+ ;  0 for not allowed to print from suspense
+ ;  1 for allowed to print from suspense
  ;
  N STATUS,PSOTRIC
  S STATUS=$$STATUS^PSOBPSUT(RX,RFL)
- ;IN PROGRESS claims - try again.  If still IN PROGRESS, do not allow to print
+ ; IN PROGRESS claims - try again.  If still IN PROGRESS, do not allow to print
  I STATUS["IN PROGRESS" H 5 S STATUS=$$STATUS^PSOBPSUT(RX,RFL) I STATUS["IN PROGRESS" Q 0
  ;
- ;no ECME status, allow to print.  This will eliminate 90% of the cases
+ ; no ECME status, allow to print.  This will eliminate 90% of the cases
  I STATUS="" Q 1
  ;
- ;check for suspense hold date/host reject errors
+ ; check for suspense hold date/host reject errors
  I $$DUR(RX,RFL)=0 Q 0
  ;
- ;check for any TRICARE/CHAMPVA rejects, not allowed to go to print until resolved.
- ;But allow to print if RX/RFL is in the TRI/CVA Audit Log with no unresolved rejects
+ ; check for any TRICARE/CHAMPVA rejects, not allowed to go to print until resolved.
+ ; But allow to print if RX/RFL is in the TRI/CVA Audit Log with no unresolved rejects
  S PSOTRIC="",PSOTRIC=$$TRIC^PSOREJP1(RX,RFL,.PSOTRIC)
- I PSOTRIC,STATUS'["PAYABLE",$$FIND^PSOREJUT(RX,RFL,,,1) Q 0  ; unresolved TRI/CVA rejects - no print
  I PSOTRIC,STATUS'["PAYABLE",$$TRIAUD^PSOREJU3(RX,RFL) Q 1    ; on TRI/CVA Audit log - allow to print
  ;
  ; Disallow printing from suspense if the prescription has an unresolved
@@ -170,15 +176,14 @@ ECMESTAT(RX,RFL) ;called from local mail
  ;
  Q 1
  ;
- ;Description:
- ;This function checks to see if a RX should be submitted to ECME
- ;Submit when:
+ ; This function checks to see if a RX should be submitted to ECME
+ ; Submit when:
  ;  RX/Fill was not submitted before (STATUS="")
  ;  Previous submission had Host Reject Error Code(s)
- ;Input:
+ ; Input:
  ;  RX = Prescription file #52 IEN
  ;  RFL = Refill number
- ;Returns:
+ ; Returns:
  ;  1 = OK to resubmit
  ;  0 = Don't resubmit
 ECMEST2(RX,RFL) ;
@@ -186,29 +191,31 @@ ECMEST2(RX,RFL) ;
  I $$TRICVANB^PSXRPPL1(RX,RFL) Q 0
  N STATUS
  S STATUS=$$STATUS^PSOBPSUT(RX,RFL)
+ ;
  ; Never submitted before, OK to submit
  I STATUS="" Q 1
+ ;
  ; If status other than E REJECTED, don't resubmit
  I STATUS'="E REJECTED" Q 0
+ ;
  ; Check for host reject codes(s)
  Q $$HOSTREJ(RX,RFL,1)
  ;
- ;Description: ePharmacy
- ;This subroutine checks an RX/FILL for Host Reject Errors returned
- ;from previous ECME submissions. The host reject errors checked are M6, M8, NN, and 99.
- ;Note that host reject errors do not pass to the pharmacy reject worklist so it's necessary
- ;to check ECME for these type errors.
- ;Input:
- ; RX = Prescription File IEN
- ; RFL = Refill
- ; ONE = Either 1 or 0 - Defaults to 1
- ; If 1, At least ONE reject code associated with the RX/FILL must
- ;   match either M6, M8, NN, or 99.
- ; If 0, ALL reject codes must match either M6, M8, NN, or 99
- ; REJ = (o) reject information from called from routine to be passed back. (contains data returned from DUR1^BPSNCPD3)
- ;Return:
- ; 0 = no host rejects exists based on ONE parameter
- ; 1 = host reject exists based on ONE parameter
+ ; This subroutine checks an RX/FILL for Host Reject Errors (M6, M8,
+ ; NN, 99) returned from previous ECME submissions.
+ ; Note that host reject errors do not pass to the pharmacy reject
+ ; worklist so it's necessary to check ECME for these type errors.
+ ; Input:
+ ;   RX = Prescription File IEN
+ ;   RFL = Refill
+ ;   ONE = Either 1 or 0 - Defaults to 1
+ ;     If 1, At least ONE reject code associated with the RX/FILL
+ ;       must match either M6, M8, NN, or 99.
+ ;     If 0, ALL reject codes must match either M6, M8, NN, or 99
+ ; Return:
+ ;   0 = no host rejects exists based on ONE parameter
+ ;   1 = host reject exists based on ONE parameter
+ ;   Note:  The REJ array may be updated by the call to DUR1^BPSNCPD3.
 HOSTREJ(RX,RFL,ONE) ; called from PSXRPPL2 and this routine
  N IDX,TXT,CODE,HRCODE,HRQUIT,RETV,REJ,I
  S IDX="",(RETV,HRQUIT)=0
@@ -216,7 +223,7 @@ HOSTREJ(RX,RFL,ONE) ; called from PSXRPPL2 and this routine
  ;for print from suspense there will only be primary insurance or an index of 1 in REJ array
  D DUR1^BPSNCPD3(RX,RFL,.REJ) ; Get reject list from last submission if not present
  S TXT=$G(REJ(1,"REJ CODE LST"))
- Q:TXT="" 0
+ I TXT="" Q 0
  I ONE=0,TXT'["," S ONE=1
  F I=1:1:$L(TXT,",") S CODE=$P(TXT,",",I) D  Q:HRQUIT
  . F HRCODE=99,"M6","M8","NN" D  Q:HRQUIT
@@ -224,12 +231,11 @@ HOSTREJ(RX,RFL,ONE) ; called from PSXRPPL2 and this routine
  . . I CODE'=HRCODE,RETV=1 S RETV=0,HRQUIT=1 Q
  Q RETV
  ;
- ;Description:
- ;Input: RX = Prescription file #52 IEN
- ; RFL = Refill number
- ;Returns: A value of 0 (zero) will be returned when reject codes M6, M8,
- ;NN, and 99 are present OR if on susp hold which means the prescription should not
- ;be printed from suspense. Otherwise, a value of 1(one) will be returned.
+ ; Input: RX = Prescription file #52 IEN
+ ;       RFL = Refill number
+ ; Returns: A value of 0 (zero) will be returned when reject codes M6, M8,
+ ; NN, and 99 are present OR if on susp hold which means the prescription should not
+ ; be printed from suspense. Otherwise, a value of 1(one) will be returned.
 DUR(RX,RFL) ;
  N REJ,IDX,TXT,CODE,SHOLD,SHCODE,ESTAT,SHDT
  S SHOLD=1,IDX=""
@@ -239,10 +245,10 @@ DUR(RX,RFL) ;
  I $$HOSTREJ^PSOBPSU2(RX,RFL,1) I SHDT="" S SHOLD=0 D SHDTLOG(RX,RFL)
  Q SHOLD
  ;
- ;Description: This subroutine sets the EPHARMACY SUSPENSE HOLD DATE field
- ;for the rx or refill to tomorrow and adds an entry to the SUSPENSE Activity Log.
- ;Input: RX = Prescription File IEN
- ; RFL = Refill
+ ; This subroutine sets the EPHARMACY SUSPENSE HOLD DATE field
+ ; for the rx or refill to tomorrow and adds an entry to the SUSPENSE Activity Log.
+ ; Input: RX = Prescription File IEN
+ ;       RFL = Refill
 SHDTLOG(RX,RFL) ;
  N DA,DIE,DR,COMM,SHDT
  I '$D(RFL) S RFL=$$LSTRFL^PSOBPSU1(RX)
@@ -253,10 +259,10 @@ SHDTLOG(RX,RFL) ;
  D RXACT(RX,RFL,COMM,"S",+$G(DUZ)) ; Create Activity Log entry
  Q
  ;
- ;Description: This function returns the EPHARMACY SUSPENSE HOLD DATE field
- ;for the rx or refill
- ;Input: RX = Prescription File IEN
- ; RFL = Refill
+ ; This function returns the EPHARMACY SUSPENSE HOLD DATE field
+ ; for the original fill or the refill.
+ ; Input: RX = Prescription File IEN
+ ;       RFL = Refill
 SHDT(RX,RFL) ;
  N FILE,IENS
  I '$D(RFL) S RFL=$$LSTRFL^PSOBPSU1(RX)
@@ -273,8 +279,8 @@ ELOG(RESP) ; Logs an ECME Activity Log if Rx Qty is different than Billing Qty
  . . D RXACT(RX,RFL,"QUANTITY SUBMITTED ON CLAIM: "_$J(BLQTY,0,$L($P(BLQTY,".",2)))_" ("_BLDU_")","M",DUZ)
  Q
  ;
-UPDFL(RXREC,SUB,INDT) ;update fill date with release date when NDC changes at CMOP and OPAI auto-release
- ;Input: RXREC = Prescription File IEN
+UPDFL(RXREC,SUB,INDT) ; Update fill date with release date when NDC changes at CMOP and OPAI auto-release
+ ; Input: RXREC = Prescription File IEN
  ;         SUB = Refill
  ;        INDT = Release date
  N COM,DA,DEAD,DIE,DR,DTOUT,DUOUT,EXDAT,EXPDATE,II,OFILLD

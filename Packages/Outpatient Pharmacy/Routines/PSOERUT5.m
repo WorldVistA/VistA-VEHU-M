@@ -1,10 +1,10 @@
 PSOERUT5 ;ALB/MFR - eRx & Pending Order Side-by-Side LM Display; 06/25/2023 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**700,746**;DEC 1997;Build 106
  ;
 HDR(SCREEN) ; Pending Order Header (Invoked from PSO LM PENDING ORDER MENU protocol, HEADER field)
  ;Input: SCREEN - "P" - Main Pending Order | "A" - Accept/Renew Pending Order
  N ERXIEN,ERXSTS,RESP,DFN
- ;PSORXIEN indicates a manual renewal from Backdoor
+ ;PSORXIEN (Glbal variable) indicates a manual renewal from Backdoor
  I $G(PSORXIEN) Q
  S ERXIEN=$$ERXIEN^PSOERXUT($G(ORD)_"P") I 'ERXIEN Q
  ; MbM needs to identify ineligible patients for ChampVA benefits as well as RXN and RXP eRx Responses in the Pending Queue
@@ -19,14 +19,15 @@ HDR(SCREEN) ; Pending Order Header (Invoked from PSO LM PENDING ORDER MENU proto
  S $E(HDR,81)="" D INSTR^VALM1(IORVON_IOUON_HDR_IORVOFF_IOINORM,1,$S(SCREEN="P":7,1:5))
  Q
  ;
-SETPEN(NMSPC,ERXIEN,ORDIEN,PENDATA,DRUGDATA,VASIG,RENEWORD) ; Set ListMan Side-By-Side Section for eRx Vs. Pending Order
+SETPEN(NMSPC,ERXIEN,ORDIEN,PENDATA,DRUGDATA,VASIG,RENEWORD,LASTRX) ; Set ListMan Side-By-Side Section for eRx Vs. Pending Order
  ;Input: NMSPC    - ListMan Temp Global Namespace (e.g., "PSOERXP1", "PSOPO", ...)
  ;       ERXIEN   - Pointer to ERX HOLDING QUEUE file (#52.49)
  ;       ORDIEN   - Pointer to PENDING OUTPATIENT ORDERS file (#52.41)
  ;       PENDATA  - Array containing the Pending Order data
  ;       DRUGDATA - Array containing the Pending Order data
  ;       VASIG    - Array containgin the Current Order SIG
- ;       RENEWORD - Renewal Pending Order? 1: YES | 0/null - NO
+ ;    (o)RENEWORD - Renewal Pending Order? 1: YES | 0/null - NO
+ ;    (o)LASTRX   - Pointer to PRESCRIPTION (#52) - Last Prescription for exact same Drug/SIG
  ;       Input Global Variable: LINE - Current ListMan Line # (Default)
  ;       Output Global Variable: (Some set in $$COMPARE^PSOERUT0)
  ;          REVLN   - Array Indicating Reverse Video for Line, position and size of the string
@@ -54,13 +55,14 @@ SETPEN(NMSPC,ERXIEN,ORDIEN,PENDATA,DRUGDATA,VASIG,RENEWORD) ; Set ListMan Side-B
  ; - Patient
  D SETPAT^PSOERUT0("LM",ERXIEN,$$GET1^DIQ(52.41,ORDIEN,1,"I"),NMSPC,1)
  S PRVIEN=$S($G(PENDATA("PROVIDER")):PENDATA("PROVIDER"),1:$$GET1^DIQ(52.41,ORDIEN,5,"I"))
- S XV="|Pharmacy Narrative: " D ADDLINE^PSOERUT0("LM",NMSPC,,XV)
+ ; - Pharmacy Narrative
  I $G(DFN) D
  . S X=$$GET1^DIQ(55,DFN,1,"E") I X="" Q
+ . S XV="|Pharmacy Narrative: " D ADDLINE^PSOERUT0("LM",NMSPC,,XV)
  . K ^UTILITY($J,"W") S DIWL=1,DIWR=38,DIWF="|" D ^DIWP
  . F I=1:1 Q:'$D(^UTILITY($J,"W",1,I))  D
  . . S XV="| "_$$COMPARE^PSOERUT0("LM",^UTILITY($J,"W",1,I,0),^UTILITY($J,"W",1,I,0),42) D ADDLINE^PSOERUT0("LM",NMSPC,,XV)
- D BLANKLN^PSOERUT0("LM")
+ . D BLANKLN^PSOERUT0("LM")
  ; - Allergy
  D ALLERGY^PSOERUT3("LM",NMSPC,ERXIEN,+$$GET1^DIQ(52.41,ORDIEN,1,"I"))
  ;
@@ -150,7 +152,7 @@ SETPEN(NMSPC,ERXIEN,ORDIEN,PENDATA,DRUGDATA,VASIG,RENEWORD) ; Set ListMan Side-B
  . . I ERXDFORM'="" D
  . . . S XEI=XEI+1,EARR(XEI)="           "_$$COMPARE^PSOERUT0("LM",$E(ERXDFORM,1,28),$E(ERXDFORM,1,28),12,,LMLINE)
  . . . S ERXDFORM=$E(ERXDFORM,29,999)
- . . S XVI=XVI+1,VARR(XVI)=" "_$$COMPARE^PSOERUT0("LM",DMARR(I,0),DMARR(I,0),42,,LMLINE)
+ . . S XVI=XVI+1,VARR(XVI)=" "_$$COMPARE^PSOERUT0("LM",$G(DMARR(I,0)),$G(DMARR(I,0)),42,,LMLINE)
  ;
  F I=1:1 Q:('$D(EARR(I))&'$D(VARR(I)))  D
  . D ADDLINE^PSOERUT0("LM",NMSPC,$G(EARR(I)),"|"_$G(VARR(I)))
@@ -177,30 +179,8 @@ SETPEN(NMSPC,ERXIEN,ORDIEN,PENDATA,DRUGDATA,VASIG,RENEWORD) ; Set ListMan Side-B
  D PODOSAGE^PSOERUT4(NMSPC,ORDIEN,.PENDATA,RENEWORD)
  K LMLINE D BLANKLN^PSOERUT0("LM")
  ;
- ; - Patient Instructions
- S XV="|"_$S('RENEWORD:"4) ",1:"")_"Patient Instruction:"
- I 'RENEWORD S UNDERLN(LINE,41)=2
- D ADDLINE^PSOERUT0("LM",NMSPC,"",XV)
- S VAPATINS="" F I=1:1 Q:'$D(PENDATA("SIG",I))  S VAPATINS=VAPATINS_" "_$$UP^XLFSTR($G(PENDATA("SIG",I)))
- S $E(VAPATINS)=""
- I VAPATINS'="" D
- . K VARR D WRAP^PSOERUT(VAPATINS,39,.VARR)
- . F I=1:1 Q:'$D(VARR(I))  D
- . . S XV="| "_$$COMPARE^PSOERUT0("LM",$G(VARR(I,0)),$G(VARR(I,0)),42)
- . . D ADDLINE^PSOERUT0("LM",NMSPC,"",XV)
- I $O(PENDATA("SINS",0)) D
- . S XV="| Other Lang. Pat. Instruct: :"
- . D ADDLINE^PSOERUT0("LM",NMSPC,"",XV)
- . S VAOTHINS="" F I=1:1 Q:'$D(PENDATA("SINS",I))  S VAOTHINS=VAOTHINS_" "_$$UP^XLFSTR($G(PENDATA("SINS",I)))
- . S $E(VAOTHINS)=""
- . K VARR D WRAP^PSOERUT(VAOTHINS,39,.VARR)
- . F I=1:1 Q:'$D(VARR(I))  D
- . . S XV="| "_$$COMPARE^PSOERUT0("LM",$G(VARR(I,0)),$G(VARR(I,0)),42)
- . . D ADDLINE^PSOERUT0("LM",NMSPC,"",XV)
- D BLANKLN^PSOERUT0("LM")
- ; - Provider Notes/Comments & Patient Instructions
+ ; - Provider Notes/Comments
  K EARR D WRAP^PSOERUT(ERXNOTES,38,.EARR)
- ; - eRx Provider Notes/Comments
  S VAPRCOMM=""
  S I=0 F  S I=$O(^PS(52.41,ORDIEN,3,I)) Q:'I  D
  . S VAPRCOMM=VAPRCOMM_" "_^PS(52.41,ORDIEN,3,I,0)
@@ -246,10 +226,15 @@ SETPEN(NMSPC,ERXIEN,ORDIEN,PENDATA,DRUGDATA,VASIG,RENEWORD) ; Set ListMan Side-B
  I $G(PENDATA("FILL DATE"))'="" D
  . S VAFILLDT=PENDATA("FILL DATE")
  E  D
- . S VAFILLDT=$$GET1^DIQ(52.41,ORDIEN,6,"I") I VAFILLDT>DT S VAFILLDT=DT
+ . S VAFILLDT=$$SUGFLDT^PSOERUT(ORDIEN)
  S XV="|"_$S('RENEWORD:"7) ",1:"2) ")_"Fill Date: "_$$COMPARE^PSOERUT0("LM",$$FMTE^XLFDT(VAFILLDT),$$FMTE^XLFDT(VAFILLDT),55)
  S UNDERLN(LINE,41)=2
  D ADDLINE^PSOERUT0("LM",NMSPC,XE,XV)
+ I $G(LASTRX) D
+ . N PRFLDT S PRFLDT=$$RXRLDT^PSOBPSUT(LASTRX)\1 I $$RXFLDT^PSOBPSUT(LASTRX)>PRFLDT S PRFLDT=$$RXFLDT^PSOBPSUT(LASTRX)
+ . S X=$$GET1^DIQ(52,LASTRX,.01)_"/"_$$LASTRXST^PSOERUT6(LASTRX)_","_$$FMTE^XLFDT(PRFLDT,"2Z")_",Q:"_$$GET1^DIQ(52,LASTRX,7)_",D:"_$$GET1^DIQ(52,LASTRX,8)
+ . S XV="|Prior: "_$$COMPARE^PSOERUT0("LM",X,X,48)
+ . D ADDLINE^PSOERUT0("LM",NMSPC,"",XV)
  D BLANKLN^PSOERUT0("LM")
  ;
  ; - Days Supply
@@ -315,4 +300,5 @@ SETPEN(NMSPC,ERXIEN,ORDIEN,PENDATA,DRUGDATA,VASIG,RENEWORD) ; Set ListMan Side-B
  D ADDLINE^PSOERUT0("LM",NMSPC,"",XV)
  D BLANKLN^PSOERUT0("LM")
  ;
+ ; Continue to  PSOERUT6 due to routine size limit
  G EN^PSOERUT6

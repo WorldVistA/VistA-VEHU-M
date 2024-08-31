@@ -1,5 +1,5 @@
 IBECEA4 ;ALB/CPM - Cancel/Edit/Add... Cancel a Charge ;11-MAR-93
- ;;2.0;INTEGRATED BILLING;**27,52,150,240,663,671,669,678,682,784**;21-MAR-94;Build 8
+ ;;2.0;INTEGRATED BILLING;**27,52,150,240,663,671,669,678,682,784,760**;21-MAR-94;Build 25
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
 ONE ; Cancel a single charge.
@@ -109,8 +109,12 @@ REAS ; - ask for the cancellation reason
  ;IB*2.0*784
  ;If performing a C-D cancellation, Update the tracking DB.
  I IBSTCHCK D
- . S IBCNMH=$$GET1^DIQ(350.3,IBCRES_",",.07,"I")   ; Find out how the Mental Health DB should be updated.
- . D:IBCNMH>0 UPDVST^IBECEAMH(IBSVIEN,IBCNMH)              ; Update If the Mental Health DB is supposed to be updated.
+ .S IBCNMH=$$GET1^DIQ(350.3,IBCRES_",",.07,"I")   ; Find out how the Mental Health DB should be updated.
+ .I IBCNMH D  ; IB*2.0*760
+ ..I $$GETMHFR^IBAMTC(DFN,IBFR) S IBCNMH=2  ; if there's already a free visit on this date, update MH DB to "visit only"
+ ..D UPDVST^IBECEAMH(IBSVIEN,IBCNMH)              ; Update If the Mental Health DB
+ ..Q
+ .Q
  ;End IB*2.0*784
  ;
  ; - handle updating of clock

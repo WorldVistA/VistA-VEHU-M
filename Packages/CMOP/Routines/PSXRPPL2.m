@@ -1,5 +1,5 @@
 PSXRPPL2 ;BIR/WPB - Print From Suspense Utilities ;06/10/08
- ;;2.0;CMOP;**65,69,73,74,79,81,83,87,91,92,93**;11 Apr 97;Build 12
+ ;;2.0;CMOP;**65,69,73,74,79,81,83,87,91,92,93,95**;11 Apr 97;Build 16
  ; Reference to ^PSRX( in ICR #1977
  ; Reference to ^PS(52.5, in ICR #1978
  ; Reference to ^PSSLOCK  in ICR #2789
@@ -66,8 +66,9 @@ CHKDFN(THRDT) ;
  . . . . . . I $$TRICVANB^PSXRPPL1(RX,RFL) D  Q
  . . . . . . . D LOG^BPSOSL($$IEN59^BPSOSRX(RX,RFL),$T(+0)_"-CHKDFN, $$TRICVANB returned 1")  ; ICR #4412,6764
  . . . . . . ;
- . . . . . . I '$$RETRX^PSOBPSUT(RX,RFL),$$ECMESTAT(RX,RFL) Q
- . . . . . . I $$PATCH^XPDUTL("PSO*7.0*289"),'$$DUR(RX,RFL),'$$DSH(REC,1) Q
+ . . . . . . I '$$RETRX^PSOBPSUT(RX,RFL),'$$ECMESTAT(RX,RFL) Q
+ . . . . . . I $$PATCH^XPDUTL("PSO*7.0*289") Q:'$$DUR(RX,RFL)  ; ePharm Host error hold
+ . . . . . . I $$PATCH^XPDUTL("PSO*7.0*289") Q:'$$DSH(REC,1)  ; ePharm 3/4 days supply
  . . . . . . ;
  . . . . . . ; ECMESND^PSOBPSU1 initiates the claim submission process.
  . . . . . . ;
@@ -101,6 +102,7 @@ EPHARM ; - ePharmacy checks for third party billing
  I $$FIND^PSOREJUT(RXN,RFL,,"79,88,943",,1) S EPHQT=1 Q
  ;
  ; If an Open/Unresolved eC/eT reject on claim, don't send to CMOP.
+ ;
  I $$ECETREJ(RXN) D EPH Q
  ;
  ; $$TRISTA performs checks specific to TRICARE/CHAMPVA.  If the claim
@@ -145,10 +147,12 @@ EPH ; - Store Rx not xmitted to CMOP in XTMP file for MailMan message.
  ; to resubmit based on reject codes associated with a previous
  ; submission.  If Rx was rejected with host reject errors, and no other
  ; rejects exist, then it's OK to resubmit to ECME.
- ;Input: RX = Prescription file #52 IEN
- ; RFL = Refill number
- ;Returns: 1 = OK to resubmit
- ;0 = Don't resubmit
+ ; Input:
+ ;   RX = Prescription file #52 IEN
+ ;   RFL = Refill number
+ ; Returns:
+ ;   1 = OK to resubmit
+ ;   0 = Don't resubmit
  ;
 ECMESTAT(RX,RFL) ;
  I '$$PATCH^XPDUTL("PSO*7.0*148") Q 0
@@ -162,10 +166,14 @@ ECMESTAT(RX,RFL) ;
  I STATUS=""!(STATUS["UNSTRANDED") Q 1
  ; If status other than E REJECTED, don't resubmit
  I STATUS'="E REJECTED" Q 0
+ ;
  ; check for a previous host reject:
- ;  1 - if host reject date expired allow to print; 0 - if not expired don't print
- ;    2 - if not defined allow to continue with evaluation for new host reject
- S CHDAT=$$CHHEDT(RX,RFL) Q:CHDAT=1 1 Q:CHDAT=0 0
+ ;   0 - if not expired, don't resubmit
+ ;   1 - if host reject & date expired, allow to resubmit
+ ;   2 - if not defined, allow to continue with evaluation for new host reject
+ S CHDAT=$$CHHEDT(RX,RFL)
+ I CHDAT=0 Q 0  ; The host reject has not expired, so do not resubmit.
+ ;
  ;*****************************************************************************************************
  ;   NOTE: MAKE SURE THAT IGNORED REJECTS WILL PROCESS WHENEVER MODIFICATIONS ARE MADE TO HOST REJECT 
  ;         Ignored rejects are handled by default when this subroutine Q 0 at the end.
@@ -297,8 +305,9 @@ CHHEDT(RX,RFL) ;
  ; 2 = host reject not defined 
  ;
  S SHDT=$$SHDT(RX,RFL) ; Get suspense hold date for rx/refill
- I SHDT'="" Q:DT'<SHDT 1 Q 0
- Q 2
+ I SHDT="" Q 2
+ I DT'<SHDT Q 1
+ Q 0
  ;
  ; HOSTREJ checks an RX/FILL for Host Reject Errors returned from
  ; previous ECME submissions.  The host reject errors checked are M6,

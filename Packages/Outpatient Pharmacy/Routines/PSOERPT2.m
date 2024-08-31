@@ -1,5 +1,5 @@
 PSOERPT2 ;BIRM/MFR - eRx Patient Medication Profile - Cont'd ; 12/10/22 9:50am
- ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**700,746**;DEC 1997;Build 106
  ;
 HOLDELIG(ERXLST) ; Given a list of eRx IENs (array passed in by Reference) it checks if they can all be put on HOLD
  N HOLDELIG,SEQ,ERXIEN
@@ -78,8 +78,9 @@ MATCHSRT(PAT,PRO,DRU) ; Returns the Matching Score for Sorting purpose
 HASACTRX(EPATIEN) ; Checks whether the eRx Patient has any Actionable prescription (other than on Hold)
  ; Input: EPATIEN - Pointer to ERX PATIENT file (#52.46)
  ;Output: 0: No Actionable eRx found | 1: Actionable eRx's found
- N HASACTRX,ERXIEN,RELMSGID,RECDAT
- S (ERXIEN,RELMSGID,HASACTRX)=0,RECDAT=$$FMADD^XLFDT(DT,-$$GET1^DIQ(59,PSOSITE,10.2))
+ N HASACTRX,ERXIEN,RELMSGID,RECDAT,LBDAYS
+ S LBDAYS=$$GET1^DIQ(59,PSOSITE,10.2) S:'LBDAYS LBDAYS=365
+ S (ERXIEN,RELMSGID,HASACTRX)=0,RECDAT=$$FMADD^XLFDT(DT,-LBDAYS)
  F  S RECDAT=$O(^PS(52.49,"PAT2",EPATIEN,RECDAT)) Q:'RECDAT  D
  . F  S ERXIEN=$O(^PS(52.49,"PAT2",EPATIEN,RECDAT,ERXIEN)) Q:'ERXIEN  D  I HASACTRX Q
  . . I ",N,I,W,"[(","_$$GET1^DIQ(52.49,ERXIEN,1)_",") S HASACTRX=1

@@ -1,17 +1,13 @@
 PSOERPC0 ;BIRM/MFR - All Patients (Patient Centric) eRx Queue - ListManager ;09/28/22
- ;;7.0;OUTPATIENT PHARMACY;**700,750**;DEC 1997;Build 6
+ ;;7.0;OUTPATIENT PHARMACY;**700,750,746**;DEC 1997;Build 106
  ;
  ;Menu option entry point
  N MBMSITE,PSOSTFLT,PSOHDSTS,PSOCCRST,PSOSRTBY,PSORDER,PSOCSGRP,PSOLKBKD,PSOCSERX,PSOCSSCH,PSOCSGRP,PSOMAXQS
  N GRPLN,DIC,DFN,GRPLN,HIGHLN,LASTLINE,VALMCNT,PTMTCHLN,PRMTCHLN,DRMTCHLN,PATFLTR,VPATFLTR,DOBFLTR,MATFLTR,PSONEXTP
  N DIR,Y,DIRUT,DIROUT,CODE,DIRUT,DTOUT,PSOVIEW,PSOCSSCH,PSOCSERX,PSOQUIT,REDTFLTR,PRVFLTR,DRGFLTR
  N RESETLBD,PSOCLNC,PSORFRSH,IDX
- ;
- ; MBMSITE indicates whether it's an MbM site or not, RESETLBD indicates whether the Look Back Days should be reset
- S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0),RESETLBD=1
- ;
- ;Review/Clean-up Locks (e.g.,Session crased and ^XTMP global remained)
- D REVLOCKS^PSOERPC2
+ ;Initialization
+ D INIT^PSOERPC2
  ;
  ;Division Selection
  I '$G(PSOSITE) D ^PSOLSET I '$D(PSOPAR) W $C(7),!!,"Pharmacy Division Must be Selected!",! G EXIT
@@ -93,48 +89,8 @@ INIT ; - Populates the Body section for ListMan
  N LOCKPATS,PAT
  K ^TMP("PSOERPC0",$J),^TMP("PSOERPCS",$J),^TMP("PSOERPAT",$J)
  S PAT=0 F  S PAT=$O(^XTMP("PSOERXLOCK",PAT)) Q:'PAT  S LOCKPATS(PAT)=+$G(^XTMP("PSOERXLOCK",PAT))
- D SETSORT^PSOERPC1,SETLINE
+ D SETSORT^PSOERPC1,SETLINE^PSOERPC2
  S:$G(VALMSG)="" VALMSG="Select the entry # to view or ?? for more actions"
- Q
- ;
-SETLINE ; - Setting Listman line
- N ERXPAT,PATIEN,X1,POS,SORTORD,GROUP,CSERX
- K ^TMP("PSOERPC0",$J)
- I '$D(^TMP("PSOERPCS",$J)) D  Q
- . F I=1:1:6 S ^TMP("PSOERPC0",$J,I,0)=""
- . S ^TMP("PSOERPC0",$J,7,0)="               No patients with actionable prescriptions found."
- . S VALMCNT=1
- ;
- ; - Resetting list to NORMAL video attributes
- D RESET^PSOERUT0()
- K GRPLN,PTMTCHLN,PRMTCHLN,DRMTCHLN
- ;
- ; - Building the list (line by line)
- S (GROUP,SEQ)="",LINE=0,SORTORD=$S(PSORDER="A":1,1:-1)
- F  S GROUP=$O(^TMP("PSOERPCS",$J,GROUP)) Q:GROUP=""  D
- . I GROUP'="ALL" D
- . . N LBL,POS,X
- . . S LBL=$S(GROUP="NON-CS":"NON-",1:"")_"CONTROLLED SUBSTANCE Rx's"
- . . S POS=41-($L(LBL)\2) S X="",$P(X," ",81)="",$E(X,POS,POS-1+$L(LBL))=LBL
- . . S LINE=LINE+1,^TMP("PSOERPC0",$J,LINE,0)=X,GRPLN(LINE)=LBL
- . S ERXPAT="" F  S ERXPAT=$O(^TMP("PSOERPCS",$J,GROUP,ERXPAT),SORTORD) Q:ERXPAT=""  D
- . . S PATIEN=$G(^TMP("PSOERPCS",$J,GROUP,ERXPAT,"PATIEN"))
- . . S Z=$G(^TMP("PSOERPCS",$J,GROUP,ERXPAT)),SEQ=SEQ+1
- . . S X1=SEQ_$S($P(Z,"^",11):"]",1:".")
- . . S $E(X1,$S(SEQ>999:6,1:5))=$E($P(Z,"^",1),1,$S(SEQ>999:23,1:24)),$E(X1,30)=$P(Z,"^",2),$E(X1,41)=$$SSN^PSOERUT($P(Z,"^",3))
- . . S $E(X1,54)=$J(+$P(Z,"^",4),3),$E(X1,58)=$J(+$P(Z,"^",5),2),$E(X1,61)=$J(+$P(Z,"^",6),2)
- . . S $E(X1,64)=$J(+$P(Z,"^",7),2),$E(X1,67)=$J(+$P(Z,"^",8),2),$E(X1,70)=$J(+$P(Z,"^",9),3)
- . . S $E(X1,74)=$J(+$P(Z,"^",10),3)
- . . S $E(X1,78)=$J($P(Z,"^",5)+$P(Z,"^",6)+$P(Z,"^",7)+$P(Z,"^",8)+$P(Z,"^",9)+$P(Z,"^",10),3)
- . . S LINE=LINE+1,^TMP("PSOERPC0",$J,LINE,0)=X1,^TMP("PSOERPC0",$J,SEQ,"PATIEN")=PATIEN
- . . I $D(LOCKPATS(PATIEN)) S HIGHLN(LINE)=1
- ;
- ; - Saving NORMAL video attributes to be reset later
- I LINE>$G(LASTLINE) D
- . F I=($G(LASTLINE)+1):1:LINE D SAVE^VALM10(I)
- . S LASTLINE=LINE
- D VIDEO^PSOERPT1()
- S VALMCNT=+$G(LINE)
  Q
  ;
 HELP ; -- help code
@@ -143,7 +99,7 @@ HELP ; -- help code
  ;
 LBD ; - Change Look Back Days Parameter Action
  D FULL^VALM1 S VALMBCK="R"
- W ! K DIR,DIRUT,DIROUT,SAVEX
+ W ! K DIR,DA,DIRUT,DIROUT,SAVEX
  S DIR(0)="52.351,1",DIR("B")=PSOLKBKD
  D ^DIR I $D(DIRUT)!$D(DIROUT) Q
  S PSOLKBKD=Y,RESETLBD=0 D REF S VALMBG=1
@@ -152,7 +108,7 @@ LBD ; - Change Look Back Days Parameter Action
 SQ ; - Search Queue Entry Point
  D FULL^VALM1 S VALMBCK="R"
  N DIR,DUOUT,DIRUT,Y,X,ERXIEN,CHANGE,ERXPTIEN,PSOFPICK
- S CHANGE=0
+ S CHANGE=0,IOINHI=$G(IOINHI),IOINORM=$G(IOINORM)
 REP ; - Repeat Prompt for additional filters
  K DIR S DIR("?",1)="Choose one or multiple filter criteria(s) to sort the current list."
  S DIR("?",2)="To remove an existing filter type ^#, where '#' is filter number below."
@@ -164,7 +120,7 @@ REP ; - Repeat Prompt for additional filters
  S DIR(0)=DIR(0)_";4:VISTA RX #"
  S DIR(0)=DIR(0)_";5:VISTA PATIENT" I $D(VPATFLTR) S DIR(0)=DIR(0)_" "_IOINHI_"("_$$VPATFLST^PSOERUT(44)_")"_IOINORM
  S DIR(0)=DIR(0)_";6:MATCH STATUS" I $G(MATFLTR) S DIR(0)=DIR(0)_" "_IOINHI_"("_$$MATCHLBL^PSOERPC2(MATFLTR)_")"_IOINORM
- W !!,IOINHI,"NOTE: Only patients with actionable records are captured with this search.",IOINORM
+ W !!,$G(IOINHI),"NOTE: Only patients with actionable records are captured with this search.",IOINORM
  W !,IOINHI,"      Non-Actionable records can be searched through the SQ action under Rx",IOINORM
  W !,IOINHI,"      List View.",IOINORM
  D ^DIR
@@ -195,74 +151,56 @@ REP ; - Repeat Prompt for additional filters
  Q 
  ;
 VPATFLTR ; - VistA Patient Filter
- N DIR,PAT,XX,RANGE,COMSEG,I,J,VPAT,EPAT,DIRUT,DIROUT,QUIT
+ N DIC,Y,EPAT,X K VPATFLTR
 REP1 ; - Repeat VistA Patient Prompt
- S DIR(0)="F^3:30",DIR("A")="VISTA PATIENT NAME"
- W ! D ^DIR I $D(DIRUT)!$D(DIROUT) Q
- D FIND^DIC(2,"","@;.01;.03;.114;.115;IX","",X,,"B","","","PATLST")
- I '$D(PATLST("DILIST",2)) W !,"No VistA Patient found",$C(7) K PATLST G REP1
- ;
- D PATLHDR("V")
- S (QUIT,CNT)=0 K DIRUT,DTOUT
- S PAT="" F  S PAT=$O(PATLST("DILIST","ID",PAT)) Q:'PAT  D  I QUIT Q
- . W !,PAT,".",?4,$E(PATLST("DILIST","ID",PAT,.01),1,30),?35,PATLST("DILIST","ID",PAT,.03)
- . I PATLST("DILIST","ID",PAT,.114)'="" D
- . . W ?47,$E(PATLST("DILIST","ID",PAT,.114),1,20),"-",$$STATEABB^PSOERUT(2,PATLST("DILIST",2,PAT))
- . W ?71,$$FMTE^XLFDT($$LASTREDT^PSOERUT("AVPAT",PATLST("DILIST",2,PAT)),"2Z")
- . S CNT=CNT+1
- . I CNT>18,$O(PATLST("DILIST","ID",PAT)),$Y>(IOSL-4) D
- . . K DIR S DIR(0)="E" D ^DIR I $D(DIRUT)!$D(DIROUT) S QUIT=1 Q
- . . W @IOF D PATLHDR("V")
- ;
- K DIR S DIR("A")="SELECT (1-"_+$G(PATLST("DILIST",0))_"): "
- S DIR(0)="LA^1:"_+$G(PATLST("DILIST",0)) W ! D ^DIR I $D(DIRUT)!$D(DIROUT) G REP1
- S RANGE=X
- ;
- K VPATFLTR,PATFLTR
- F I=1:1:$L(RANGE,",") D
- . S COMSEG=$P(RANGE,",",I)
- . F J=+COMSEG:1:$S(COMSEG["-":$P(COMSEG,"-",2),1:+COMSEG) D
- . . S VPAT=+$G(PATLST("DILIST",2,J)) I 'VPAT Q
- . . S VPATFLTR(VPAT)=""
- . . S EPAT=0 F  S EPAT=$O(^PS(52.49,"AVPAT",VPAT,EPAT)) Q:'EPAT  D
- . . . S PATFLTR(EPAT)=""
- ;
- I '$D(PATFLTR) W !!,"There are no eRx Patients associated with the VistA Patient(s) selected.",$C(7) K VPATFLTR G REP1
+ K DIC,DIR W ! S DIC=2,DIC(0)="QEAM",DIC("A")="VISTA PATIENT: ",DIC("S")="I '$$DEAD^PSONVARP(Y)"
+ I $G(MBMSITE) S DIC("W")="D PATIDS^PSOERPT1"
+ D ^DPTLK I $G(Y)'>0 Q
+ S VPATFLTR(+Y)="" K PATFLTR
+ S EPAT=0 F  S EPAT=$O(^PS(52.49,"AVPAT",+Y,EPAT)) Q:'EPAT  D
+ . S PATFLTR(EPAT)=""
+ I '$O(PATFLTR(0)) D  K VPATFLTR G REP1
+ . W !,IOINHI,"There are no eRx Patient(s) matched to this VistA Patient",IOINORM,$C(7)
  Q
  ;
 EPATFLTR ; - eRx Patient Filter
  N DIR,PAT,XX,RANGE,COMSEG,I,J,RECDAT,DIRUT,DIROUT,QUIT
 REP2 ; - Repeat eRx Patient Prompt
+ K ^TMP($J,"PSOPTLST")
  S DIR(0)="F^3:30",DIR("A")="ERX PATIENT NAME"
  W ! D ^DIR I $D(DIRUT)!$D(DIROUT) Q
- D FIND^DIC(52.46,"","@;.01;.08;3.3;3.4;IX","",X,,"B","","","PATLST")
- I '$D(PATLST("DILIST",2)) W !,"No eRx Patient found" K PATLST G REP2
+ K PATLST D FIND^DIC(52.46,"","@;.01;.08;3.3;3.4;IX","",X,,"B","","",$NA(^TMP($J,"PSOPTLST")))
+ I '$D(^TMP($J,"PSOPTLST","DILIST",2)) D  G REP2
+ . W !,IOINHI,"No eRx Patient found",IOINORM,$C(7)
+ I +$G(^TMP($J,"PSOPTLST","DILIST",0))>100 D  K ^TMP($J,"PSOPTLST") G REP2
+ . W !!,IOINHI,"There are too many records to display, please narrow your search.",IOINORM,$C(7)
  ;
  W ! D PATLHDR("E")
  S (QUIT,CNT)=0 K DIRUT,DTOUT
- S PAT="" F  S PAT=$O(PATLST("DILIST","ID",PAT)) Q:'PAT  D  I QUIT Q
- . W !,PAT,".",?4,$E(PATLST("DILIST","ID",PAT,.01),1,30)
- . I PATLST("DILIST","ID",PAT,.08)'="" D
- . . S X=PATLST("DILIST","ID",PAT,.08) D ^%DT W ?35,$$FMTE^XLFDT(Y,"5Z")
- . I PATLST("DILIST","ID",PAT,3.3)'="" D
- . . W ?47,$E(PATLST("DILIST","ID",PAT,3.3),1,20)_"-"_$$STATEABB^PSOERUT(52.46,PATLST("DILIST",2,PAT))
- . S RECDAT=$O(^PS(52.49,"PAT2",PATLST("DILIST",2,PAT),999999999),-1)
+ S PAT="" F  S PAT=$O(^TMP($J,"PSOPTLST","DILIST","ID",PAT)) Q:'PAT  D  I QUIT Q
+ . W !,PAT,".",?4,$E(^TMP($J,"PSOPTLST","DILIST","ID",PAT,.01),1,30)
+ . I ^TMP($J,"PSOPTLST","DILIST","ID",PAT,.08)'="" D
+ . . S X=^TMP($J,"PSOPTLST","DILIST","ID",PAT,.08) D ^%DT W ?35,$$FMTE^XLFDT(Y,"5Z")
+ . I ^TMP($J,"PSOPTLST","DILIST","ID",PAT,3.3)'="" D
+ . . W ?47,$E(^TMP($J,"PSOPTLST","DILIST","ID",PAT,3.3),1,20)_"-"_$$STATEABB^PSOERUT(52.46,^TMP($J,"PSOPTLST","DILIST",2,PAT))
+ . S RECDAT=$O(^PS(52.49,"PAT2",^TMP($J,"PSOPTLST","DILIST",2,PAT),999999999),-1)
  . I RECDAT W ?71,$$FMTE^XLFDT(RECDAT\1,"2Z")
  . S CNT=CNT+1
- . I CNT>18,$O(PATLST("DILIST","ID",PAT)),$Y>(IOSL-4) D
+ . I CNT>18,$O(^TMP($J,"PSOPTLST","DILIST","ID",PAT)),$Y>(IOSL-4) D
  . . K DIR S DIR(0)="E" D ^DIR I $D(DIRUT)!$D(DIROUT) S QUIT=1 Q
  . . W @IOF D PATLHDR("E")
  ;
- K DIR S DIR("A")="SELECT (1-"_+$G(PATLST("DILIST",0))_"): "
- S DIR(0)="LA^1:"_+$G(PATLST("DILIST",0)) W ! D ^DIR I $D(DIRUT)!$D(DIROUT) G REP2
+ K DIR S DIR("A")="SELECT (1-"_+$G(^TMP($J,"PSOPTLST","DILIST",0))_"): "
+ S DIR(0)="LA^1:"_+$G(^TMP($J,"PSOPTLST","DILIST",0)) W ! D ^DIR I $D(DIRUT)!$D(DIROUT) G REP2
  S RANGE=X
  ;
  K PATFLTR
  F I=1:1:$L(RANGE,",") D
  . S COMSEG=$P(RANGE,",",I)
  . F J=+COMSEG:1:$S(COMSEG["-":$P(COMSEG,"-",2),1:+COMSEG) D
- . . I '$D(PATLST("DILIST",2,J)) Q
- . . S PATFLTR(PATLST("DILIST",2,J))=""
+ . . I '$D(^TMP($J,"PSOPTLST","DILIST",2,J)) Q
+ . . S PATFLTR(^TMP($J,"PSOPTLST","DILIST",2,J))=""
+ K ^TMP($J,"PSOPTLST")
  Q
  ;
 PATLHDR(PATTYP) ; - Prints the Patient List Header

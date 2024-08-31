@@ -1,5 +1,5 @@
 PSOREJU2 ;BIRM/MFR - BPS (ECME) - Clinical Rejects Utilities (1) ;10/15/04
- ;;7.0;OUTPATIENT PHARMACY;**148,260,287,341,290,358,359,385,403,421,427,478,562,680,681,702**;DEC 1997;Build 14
+ ;;7.0;OUTPATIENT PHARMACY;**148,260,287,341,290,358,359,385,403,421,427,478,562,680,681,702,704**;DEC 1997;Build 16
  ; Reference to $$TAXID^IBCEF75 in ICR #6768
  ; Reference to $$DIVNCPDP^BPSBUTL in ICR #4719
  ; Reference to File 9002313.23 - BPS NCPDP REASON FOR SERVICE CODE in ICR #4714
@@ -167,12 +167,15 @@ DVINFO(RX,RFL,LM) ; Returns header displayable Division Information
 PTINFO(RX,LM) ; Returns header displayable Patient Information
  ;Input: (r) RX   - Rx IEN (#52)
  ;       (o) LM   - ListManager format? (1 - Yes / 0 - No) - Default: 0
- N DFN,VADM,PTINFO,SSN4
- S DFN=$$GET1^DIQ(52,RX,2,"I") D DEM^VADPT S SSN4=$P($G(VADM(2)),"^",2)
+ N DFN,VADM,PTINFO,SEX,SSN4
+ S DFN=$$GET1^DIQ(52,RX,2,"I")
+ D DEM^VADPT
+ S SSN4=$P($G(VADM(2)),"^",2)
  S PTINFO="Patient  : "_$E($G(VADM(1)),1,$S($G(LM):24,1:20))_"("_$E(SSN4,$L(SSN4)-3,$L(SSN4))_")"
- S PTINFO=PTINFO_"  Sex: "_$P($G(VADM(5)),"^")
  S $E(PTINFO,$S($G(LM):61,1:54))="DOB: "_$P($G(VADM(3)),"^",2)_"("_$P($G(VADM(4)),"^")_")"
- Q PTINFO
+ S SEX="Birth Sex: "_$P($G(VADM(5)),"^")
+ S $E(SEX,28)="Self-Identified Gender: "_$E($P($G(VADM(14,5)),U,1),1,24)
+ Q PTINFO_U_SEX
  ;
 RETRXF(RX,RFL,ONOFF) ; - Set/Reset the Re-transmission flag
  ;Input: (r) RX    - Rx IEN (#52)

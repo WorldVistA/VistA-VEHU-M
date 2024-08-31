@@ -1,5 +1,5 @@
-SDES2EPT ;ALB/LAB,ANU/BLB - SDES2 GET PATIENT'S ExtendedProfile APPT INFO ; DEC 14,2023
- ;;5.3;Scheduling;**861,867,877**;Aug 13, 1993;Build 14
+SDES2EPT ;ALB/LAB,ANU/BLB,MCB - SDES2 GET PATIENT'S ExtendedProfile APPT INFO ; JUN 04,2024
+ ;;5.3;Scheduling;**861,867,877,880**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -61,7 +61,7 @@ GETPTINA(SDRETURN,SDDFN) ;
  ;
  ; radiation exposure
  S RADEXP=$G(PATIENTDATA(2,SDDFN_",",.32103,"I"))
- S RADEXP=$S(RADEXP="Y":"Yes",RADEXP="N":"No",RADEXP="U":"Uknown",1:"")
+ S RADEXP=$S(RADEXP="Y":"Yes",RADEXP="N":"No",RADEXP="U":"Unknown",1:"")
  S SDRETURN("ExtendedProfile",SDCOUNT,"Radiation Exposure")=RADEXP
  ;
  ; proj 112 shad
@@ -72,7 +72,7 @@ GETPTINA(SDRETURN,SDDFN) ;
  ; agent orange
  S AOEXP=$G(PATIENTDATA(2,SDDFN_",",.32102,"I"))
  S AOEXPLOC=$G(PATIENTDATA(2,SDDFN_",",.3213,"E"))
- S AOEXP=$S(AOEXP="Y":"Yes",AOEXP="N":"No",AOEXP="U":"Uknown",1:"")
+ S AOEXP=$S(AOEXP="Y":"Yes",AOEXP="N":"No",AOEXP="U":"Unknown",1:"")
  S SDRETURN("ExtendedProfile",SDCOUNT,"Agent Orange Exposure")=AOEXP
  ;
  I AOEXP'="Yes" S SDRETURN("ExtendedProfile",SDCOUNT,"Agent Orange Exposure Location")=""

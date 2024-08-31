@@ -1,5 +1,5 @@
-SDES2GETPATDEMO ;ALB/BLB - SDES2 GET PATIENT DEMOGRAPHICS ;APR 22,2024
- ;;5.3;Scheduling;**877**;Aug 13, 1993;Build 14
+SDES2GETPATDEMO ;ALB/BLB/JDJ - SDES2 GET PATIENT DEMOGRAPHICS ;JUN 5,2024
+ ;;5.3;Scheduling;**877,880**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;---------------------------------------------------------------
  Q
@@ -16,17 +16,16 @@ GETDEMOGRAPHICS(JSON,SDCONTEXT,PATIENT) ;
  Q
  ;
 BUILDDEMO(DEMOGRAPHICS,DFN) ;
- N RACECOUNT,RACETOTAL
+ N RACECOUNT,RACETOTAL,VADM,VAERR,VA
  ;
  D DEM^VADPT
  S DEMOGRAPHICS("PatientDemographics","Religion")=$P($G(VADM(9)),U,2)
  S DEMOGRAPHICS("PatientDemographics","MaritalStatus")=$P($G(VADM(10)),U,2)
  S DEMOGRAPHICS("PatientDemographics","Ethnicity")=$P($G(VADM(11,1)),U,2)
  ;
- S RACETOTAL=""
- S RACETOTAL=$O(VADM(12,RACETOTAL),-1)
- S RACECOUNT=1
- F RACECOUNT=RACECOUNT:1:RACETOTAL D
+ S RACETOTAL=$G(VADM(12))
+ I RACETOTAL=0 S DEMOGRAPHICS("PatientDemographics","RaceInformation",1,"Race")="" Q
+ S RACECOUNT=0 F  S RACECOUNT=$O(VADM(12,RACECOUNT)) Q:'RACECOUNT  D
  .S DEMOGRAPHICS("PatientDemographics","RaceInformation",RACECOUNT,"Race")=$P($G(VADM(12,RACECOUNT)),U,2)
  Q
  ;

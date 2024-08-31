@@ -1,5 +1,5 @@
-RAORD4 ;HISC/CAH,FPT,GJC AISC/RMO-Print Requests by Date ;2/3/98  06:50
- ;;5.0;Radiology/Nuclear Medicine;;Mar 16, 1998
+RAORD4 ;HISC/CAH,FPT,GJC AISC/RMO - Print Requests by Date ; May 23, 2024@14:14:53
+ ;;5.0;Radiology/Nuclear Medicine;**216**;Mar 16, 1998;Build 2
  ;Call RAPSET1 to establish RAMDV
  D SET^RAPSET1 I $D(XQUIT) K XQUIT Q
  K RALOC I $P(RAMDV,"^",21) D ASKLOC G Q:'$D(RALOC)
@@ -10,7 +10,8 @@ RAORD4 ;HISC/CAH,FPT,GJC AISC/RMO-Print Requests by Date ;2/3/98  06:50
  D SET^RARD K RARD G Q:X["^" S RAOASTS=$S($E(X)="D":"1",$E(X)="C":"2",$E(X)="H":"3",$E(X)="P":"5",$E(X)="R":"6",$E(X)="S":"8",$E(X)="A":"3;5;6;8",1:"") G Q:RAOASTS=""
  ;Based on whether user wants requests included based on Date Entered (fld 16) or Date Desired (fld 21), set RACRIT to correct piece # of Rad Order rec
  W !!!,"Date Criteria Selection",!,"-----------------------"
- K DIR S DIR(0)="S^E:ENTRY DATE OF REQUEST;D:DESIRED DATE FOR EXAM",DIR("A")="Date criteria to use for choosing requests to print",DIR("B")="E" D ^DIR G Q:$D(DTOUT)!($D(DUOUT)) S RACRIT=$S(Y="D":21,1:16) ;ch
+ ;p216/KLM - Update date selection to include Scheduled Date
+ K DIR S DIR(0)="S^E:ENTRY DATE OF REQUEST;D:DESIRED DATE FOR EXAM;S:SCHEDULED DATE OF EXAM",DIR("A")="Date criteria to use for choosing requests to print",DIR("B")="E" D ^DIR G Q:$D(DTOUT)!($D(DUOUT)) S RACRIT=$S(Y="D":21,Y="S":23,1:16) ;ch
  S RASKTIME="" S RADDT=1 D DATE1^RAUTL K RADDT,RASKTIME G Q:RAPOP
  D HS G Q:$D(DIRUT)
  S ZTRTN="START^RAORD4",ZTSAVE("BEGDATE")="",ZTSAVE("ENDDATE")="",ZTSAVE("RAOASTS")="",ZTSAVE("RAHS")="",ZTSAVE("RACRIT")="" S:$D(RALOC) ZTSAVE("RALOC")=""

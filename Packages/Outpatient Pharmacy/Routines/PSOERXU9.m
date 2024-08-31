@@ -1,9 +1,5 @@
 PSOERXU9 ;ALB/ART - eRx Holding Queue Utilities ;02/02/2021
- ;;7.0;OUTPATIENT PHARMACY;**617,700**;DEC 1997;Build 261
- ;
- ;There are no APIs defined for the eRx Holding Queue (52.49) and associated files
- ; in the Pharmacy Reengineering (PRE) Application Program Interface (API) Manual
- Q
+ ;;7.0;OUTPATIENT PHARMACY;**617,700,746**;DEC 1997;Build 106
  ;
 ERXIEN(RXIEN) ;Pass through to $$ERXIEN^PSOERXUT
  ; Input: (r) RXIEN - Pointer to either the PENDING ORDERS file (#52.41) (e.g., "139839P") or PRESCRIPTION file (#52) (e.g., 12930984)
@@ -130,11 +126,6 @@ ALRGDATA(ALRGDATA,ERXIEN,SORTED) ; Get eRx Patient Allergy Data
  N DATA,ALRARRAY
  D GETS^DIQ(52.49,ERXIEN,"303*","IE","DATA") M ALRARRAY=DATA(52.49303)
  ;
- ; We got data, build the output one row per sequence number
- ; fileNum in this case is 52.49
- ; exSeq is the sequence number and the ien as one subscript when building the
- ; final array that will be broken up
- ;
  N EXSEQ,INDEX,TMPDATA,COUNT
  S EXSEQ=""
  F  S EXSEQ=$O(ALRARRAY(EXSEQ)) Q:EXSEQ=""  D
@@ -155,6 +146,40 @@ ALRGDATA(ALRGDATA,ERXIEN,SORTED) ; Get eRx Patient Allergy Data
  S EXSEQ="",COUNT=0
  F  S EXSEQ=$O(TMPDATA(EXSEQ)) Q:EXSEQ=""  D
  . S COUNT=COUNT+1,ALRGDATA(COUNT)=TMPDATA(EXSEQ)
+ Q
+ ;
+PDUEDATA(PDUEDATA,ERXIEN,SORTED) ; Get eRx Prescriber Drug Use Evaluation Data
+ ;Inputs: (r) PDUEDATA - reference to return array
+ ;        (r) ERXIEN   - Pointer to the ERX HOLDING QUEUE file (#52.49)
+ ;        (o) SORTED   - Return the list of DUE in Alphabetical Order
+ ;
+ ;Output: Populated PDUEDATA array.  This is a sub-multiple data so each row of the array is one sequence number
+ ; PDUEDATA(n)=Seguence number^DUE Service Reason Code^DUE Professional Service Code^DUE Coagent Qualifier
+ ;             ^DUE Clinical Significance Code^DUE Co-Agent Description^DUE Acknowledgement Reason
+ ;
+ Q:'$D(^PS(52.49,+$G(ERXIEN),0))
+ K PDUEDATA
+ ;
+ N DATA,ALRARRAY,MEDIEN
+ S MEDIEN=$O(^PS(52.49,ERXIEN,311,0)) I 'MEDIEN Q
+ D GETS^DIQ(52.49311,MEDIEN_","_ERXIEN,"6*","IE","DATA") M ALRARRAY=DATA(52.493116)
+ ;
+ N EXSEQ,INDEX,TMPDATA,COUNT
+ S EXSEQ=""
+ F  S EXSEQ=$O(ALRARRAY(EXSEQ)) Q:EXSEQ=""  D
+ . S INDEX=$S($G(SORTED):ALRARRAY(EXSEQ,1,"E")_" "_EXSEQ,1:EXSEQ)
+ . S $P(TMPDATA(INDEX),U,1)=ALRARRAY(EXSEQ,.01,"E")
+ . S $P(TMPDATA(INDEX),U,2)=ALRARRAY(EXSEQ,.02,"E")
+ . S $P(TMPDATA(INDEX),U,3)=ALRARRAY(EXSEQ,.03,"E")
+ . S $P(TMPDATA(INDEX),U,4)=ALRARRAY(EXSEQ,.04,"E")
+ . S $P(TMPDATA(INDEX),U,5)=ALRARRAY(EXSEQ,.05,"E")
+ . S $P(TMPDATA(INDEX),U,6)=ALRARRAY(EXSEQ,.06,"E")
+ . S $P(TMPDATA(INDEX),U,7)=ALRARRAY(EXSEQ,.07,"E")
+ . S $P(TMPDATA(INDEX),U,8)=ALRARRAY(EXSEQ,1,"E")
+ . S $P(TMPDATA(INDEX),U,9)=ALRARRAY(EXSEQ,2,"E")
+ S EXSEQ="",COUNT=0
+ F  S EXSEQ=$O(TMPDATA(EXSEQ)) Q:EXSEQ=""  D
+ . S COUNT=COUNT+1,PDUEDATA(COUNT)=TMPDATA(EXSEQ)
  Q
  ;
 CHVAELIG(DFN) ; Returns whether the VistA Patient is ChampVA Eligible or not (Used by MbM sites only)

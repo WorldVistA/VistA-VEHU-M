@@ -1,5 +1,5 @@
 PSOERXU4 ;ALB/BLB - eRx utilities ; 12/21/2020
- ;;7.0;OUTPATIENT PHARMACY;**520,508,551,581,635,617,651,700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**520,508,551,581,635,617,651,700,746**;DEC 1997;Build 106
  ;
  Q
 DERX1(PSOIEN,PSOIENS,DFLAG) ;
@@ -53,7 +53,7 @@ DERX1(PSOIEN,PSOIENS,DFLAG) ;
  W !,"Qty: "_QTY,?25,"Days Supply: "_DAYS,?55,"Refills: "_REFILL,!
  Q
 REM ;
- N MBMSITE,DIR,Y,PSSRET,PSOIENS,REMIEN,REMSTA,REMTXT,ERXRMIEN,DIC,X,RXSTAT
+ N MBMSITE,DIR,Y,PSSRET,PSOIENS,REMIEN,REMSTA,REMTXT,ERXRMIEN,DIC,X,RXSTAT,FDA
  S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0)
  D FULL^VALM1
  S PSOIENS=PSOIEN_","
@@ -63,16 +63,23 @@ REM ;
  .S DIR(0)="E" D ^DIR
  W ! S DIC="^PS(52.45,",DIC(0)="AEMQ",DIC("S")="I $D(^PS(52.45,""TYPE"",""REM"",Y))",DIC("A")="Select REMOVAL reason code: "
  D ^DIC K DIC
- I $P(Y,U)<1 W !,"Removal reason code required!" S DIR(0)="E" D ^DIR K DIR Q
+ I $P(Y,U)<1 Q
  S REMIEN=$P(Y,U),REMSTA=$P(Y,U,2)
+ I +$G(REMIEN)<1 W !,"Removal reason code required!" S DIR(0)="E" D ^DIR K DIR Q
  K X,Y S DIR(0)="FO^1:70",DIR("A")="Additional Comments (Optional)" D ^DIR K DIR
  Q:Y="^"
  S REMTXT=$G(Y)
  W ! S DIR(0)="YO",DIR("A")="Would you like to 'Remove' eRx #"_$$GET1^DIQ(52.49,PSOIEN,.01,"E"),DIR("B")="Y" D ^DIR K DIR
  Q:'Y
+ I '$G(MBMSITE) D
+ . K FDA S FDA(52.4919,"+1,"_PSOIENS,.01)=$$NOW^XLFDT,FDA(52.4919,"+1,"_PSOIENS,.02)=REMIEN
+ . S FDA(52.4919,"+1,"_PSOIENS,.03)=DUZ,FDA(52.4919,"+1,"_PSOIENS,1)=REMTXT
+ . D UPDATE^DIE(,"FDA") K FDA
  ; SET THE ERX STATUS TO THE REMOVAL REASON
  D UPDSTAT^PSOERXU1(PSOIEN,$S('$G(MBMSITE):"RM",1:REMSTA),REMTXT)
- K @VALMAR D INIT^PSOERX1
+ ;allow user to perform a batch removal of eRx for a patient with the same provider if it comes in on the same day
+ D BATCHREM^PSOERX1H(PSOIEN,REMIEN,REMTXT,"R") ; "R"-remove
+ K @VALMAR D REF^PSOERSE1
  Q
  ; unremove eRx
 UNREM ;
@@ -86,8 +93,9 @@ UNREM ;
 HLD W !
  S DIC="^PS(52.45,",DIC(0)="AEMQ",DIC("S")="I $E($P(^PS(52.45,+Y,0),U))=""H""",DIC("B")="HUR"
  S DIC("A")="Select HOLD reason code: " D ^DIC K DIC
- I $P(Y,U)<1 W !,"HOLD reason code required!" S DIR(0)="E" D ^DIR K DIR G HLD
+ I $P(Y,U)<1 Q  ;if user ^
  S REMIEN=$P(Y,U)
+ I +$G(REMIEN)<0 W !,"HOLD reason code required!" S DIR(0)="E" D ^DIR K DIR G HLD
  ; Add comment in 52.4919
  S DIR(0)="52.4919,1",DIR("A")="Additional Comments (Optional)" D ^DIR K DIR
  I Y="^" Q
@@ -97,7 +105,8 @@ HLD W !
  Q:'Y
  D UPDSTAT^PSOERXU1(PSOIEN,$$GET1^DIQ(52.45,REMIEN,.01),HCOMM)
  S DR="1///"_REMIEN,DIE="^PS(52.49,",DA=PSOIEN D ^DIE
- K @VALMAR D INIT^PSOERX1
+ D BATCHREM^PSOERX1H(PSOIEN,REMIEN,HCOMM,"U") ; "U" - Un-remove
+ K @VALMAR D REF^PSOERSE1 ;Refresh screen
  Q
 CHKSTA ; check if status is RM or type is "REM"
  S STAIEN=+$G(^PS(52.49,PSOIEN,1)),RXSTAT=$P(^PS(52.45,STAIEN,0),"^",1)
@@ -160,7 +169,7 @@ QTYDSRFL(ERXIEN,EDTYP) ;
  S PSODIR("QTY")=$$GET1^DIQ(52.49,ERXIEN,20.1,"E")
  S PSODIR("DAYS SUPPLY")=$$GET1^DIQ(52.49,ERXIEN,20.2,"E")
  S PSODIR("# OF REFILLS")=$$GET1^DIQ(52.49,ERXIEN,20.5,"E")
- ; PSO*7*635, Decrement # of refills if this is a RxRenewalResponse with a response type of 'Replace'
+ ; Decrement # of refills if this is a RxRenewalResponse with a response type of 'Replace'
  ; only decrement if field 20.5 and 5.6 are the same.
  I PSODIR("# OF REFILLS")>0,$$GET1^DIQ(52.49,ERXIEN,.08,"I")="RE",$$GET1^DIQ(52.49,ERXIEN,52.1,"I")="R" D
  .I PSODIR("# OF REFILLS")=$$GET1^DIQ(52.49,ERXIEN,5.6,"E") D
@@ -171,7 +180,7 @@ QTYDSRFL(ERXIEN,EDTYP) ;
  .S DONE=0
  .F  D  Q:DONE
  ..W !,"This is a required response. Enter '^' to exit"
- ..S DIR(0)="55,3",DIR("A")="PATIENT STATUS" D ^DIR K DIR
+ ..K DA S DIR(0)="55,3",DIR("A")="PATIENT STATUS" D ^DIR K DIR
  ..I +Y S DONE=1 Q
  ..I Y["^" S PQUIT=1,DONE=1 Q
  .S ANS=$P(Y,"^",1)
@@ -181,7 +190,7 @@ QTYDSRFL(ERXIEN,EDTYP) ;
  S X=$G(PSODIR("PATIENT STATUS"))
  I X D
  .S DIC=53,DIC(0)="QXZ" D ^DIC K DIC
- .S:+Y PSODIR("PTST NODE")=Y(0)
+ .S:+Y>0 PSODIR("PTST NODE")=Y(0)
  I $P($G(^PSDRUG(PSODRG,"CLOZ1")),"^")="PSOCLO1" D
  .S CLOZPAT=$O(^YSCL(603.01,"C",PSODFN,0)) Q:'CLOZPAT
  .S CLOZPAT=$P(^YSCL(603.01,CLOZPAT,0),"^",3)

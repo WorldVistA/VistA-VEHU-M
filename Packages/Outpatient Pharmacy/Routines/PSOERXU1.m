@@ -1,5 +1,5 @@
 PSOERXU1 ;ALB/BWF - eRx utilities ; 1/27/2019 11:03am
- ;;7.0;OUTPATIENT PHARMACY;**467,520,508,551,565,581,617,651,700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**467,520,508,551,565,581,617,651,700,746**;DEC 1997;Build 106
  ;
  Q
  ; OR0 - OR0 FROM PENDING OUTPATIENT ORDERS OR BACKDOOR ORDERS
@@ -272,10 +272,12 @@ OPACCESS(OPTION,DUZ,ERXIEN) ;
  Q $$OPACCESS^PSOERXU7(OPTION,DUZ,ERXIEN2)
  ; update the status of an eRx
  ; PSOIEN - ien for file 52.49 (required)
- ; STAT - The status value to change the eRx to (required)
- ; SCOMM - status comments (optional)
- ; UNACC - eRx Un-Accepted at the Pending Queue 1-YES/0-NO (Optional - Default: NO)
-UPDSTAT(PSOIEN,STAT,SCOMM,UNACC) ;
+ ; STAT   - The status value to change the eRx to (required)
+ ; SCOMM  - status comments (optional)
+ ; UNACC  - (o) eRx Un-Accepted at the Pending Queue 1-YES/0-NO (Optional - Default: NO)
+ ; ALTDUZ - (o) Alternative DUZ (Used for Proxy user for automatic un-holds)
+ ; HFFDT  - (o) Hold Future Fill Date
+UPDSTAT(PSOIEN,STAT,SCOMM,UNACC,ALTDUZ,HFFDT) ;
  N MBMSITE,DIE,NSTAT,DA,DR,FDA,TYPE
  S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0)
  Q:'PSOIEN!(STAT="")
@@ -285,14 +287,16 @@ UPDSTAT(PSOIEN,STAT,SCOMM,UNACC) ;
  ; Exception for MbM sites to treat REMOVAL Reasons as Statuses
  I $G(MBMSITE) D
  . S TYPE=$S($E(STAT,1,3)="REM":"REM",1:"ERX")
- . I '$D(^PS(52.45,"C",TYPE,STAT))
+ . I '$D(^PS(52.45,"C",TYPE,STAT)) Q
  . S NSTAT=$O(^PS(52.45,"C",TYPE,STAT,0))
+ I $G(NSTAT)="" Q
  S DIE="^PS(52.49,",DA=PSOIEN,DR="1///"_NSTAT D ^DIE
  S FDA(52.4919,"+1,"_PSOIEN_",",.01)=$$NOW^XLFDT
  S FDA(52.4919,"+1,"_PSOIEN_",",.02)=NSTAT
- S FDA(52.4919,"+1,"_PSOIEN_",",.03)=$G(DUZ)
+ S FDA(52.4919,"+1,"_PSOIEN_",",.03)=$S($G(ALTDUZ):ALTDUZ,1:$G(DUZ))
  S FDA(52.4919,"+1,"_PSOIEN_",",1)=$G(SCOMM)
- S FDA(52.4919,"+1,"_PSOIEN_",",.04)=+$G(UNACC)
+ I $G(UNACC) S FDA(52.4919,"+1,"_PSOIEN_",",.04)=+UNACC
+ I $G(HFFDT) S FDA(52.4919,"+1,"_PSOIEN_",",.05)=HFFDT
  D UPDATE^DIE(,"FDA") K FDA
  ; Force a Refresh of the mail list
  S PSORFRSH=1

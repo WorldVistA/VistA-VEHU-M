@@ -1,8 +1,9 @@
 PSOERPV1 ;BIRM/MFR - eRx Provider Supporting API's ;08/29/22
- ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**700,746**;DEC 1997;Build 106
  ;
-MATCHSUG(ERXIEN) ; Match Suggestion Prompt
+MATCHSUG(ERXIEN,VIEW) ; Match Suggestion Prompt
  ; Input: ERXIEN   - Pointer to ERX HOLDING QUEUE file (#52.49)
+ ;     (o)VIEW     - View Only Mode (1:YES,0/null: NO)
  ;Output: MATCHSUG - VistA Provider (Pointer to #200) or 0 (Not selected or no suggestion on file)
  ;
  N MATCHSUG,ERXPRV,MATCHCNT,LSTMTCH,LSTERXID,CNT,VPRV,QUIT
@@ -14,13 +15,14 @@ MATCHSUG(ERXIEN) ; Match Suggestion Prompt
  F  S VPRV=$O(^PS(52.49,"APRVVPRV",ERXPRV,VPRV)) Q:'VPRV  D  I MATCHSUG!(CNT>2)!QUIT Q
  . S CNT=CNT+1
  . S LSTMTCH=$O(^PS(52.49,"APRVVPRV",ERXPRV,VPRV,9999999),-1) I 'LSTMTCH Q
- . S LSTERXID=$O(^PS(52.49,"APRVVPRV",ERXPRV,VPRV,LSTMTCH,0)) I 'LSTERXID Q
+ . S LSTERXID=$O(^PS(52.49,"APRVVPRV",ERXPRV,VPRV,LSTMTCH,0)) I 'LSTERXID!(LSTERXID=ERXIEN) Q
  . D CMPPRV(ERXIEN,VPRV,LSTERXID,CNT_"^"_MATCHCNT)
- . K DIR S DIR(0)="SOA^A:ACCEPT;"_$S(MATCHCNT>1&(MATCHCNT'=CNT):"N:NEXT;",1:"")_"F:FORGET;E:EXIT"
- . S DIR("A")="ACTION on SUGGESTION: (A)CCEPT  "_$S(MATCHCNT>1&(MATCHCNT'=CNT):"(N)EXT  ",1:"")_"(F)ORGET  (E)XIT: "
+ . K DIR S DIR(0)="SOA^"_$S('$G(VIEW):"A:ACCEPT;",1:"")_$S(MATCHCNT>1&(MATCHCNT'=CNT):"N:NEXT;",1:"")_"F:FORGET;E:EXIT"
+ . S DIR("A")="ACTION on SUGGESTION: "_$S('$G(VIEW):"(A)CCEPT  ",1:"")_$S(MATCHCNT>1&(MATCHCNT'=CNT):"(N)EXT  ",1:"")_"(F)ORGET  (E)XIT: "
  . S DIR("B")=$S(MATCHCNT>1&(MATCHCNT'=CNT):"NEXT",1:"EXIT")
  . S II=0
- . S II=II+1,DIR("?",II)="  ACCEPT - Accepts the suggested VistA Provider and matches it to the eRx"
+ . I '$G(VIEW) D
+ . . S II=II+1,DIR("?",II)="  ACCEPT - Accepts the suggested VistA Provider and matches it to the eRx"
  . I MATCHCNT>1&(MATCHCNT'=CNT) D
  . . S II=II+1,DIR("?",II)="  NEXT   - Ignores this suggested VistA Provider and view the next one"
  . S II=II+1,DIR("?",II)="  FORGET - Forgets this suggested VistA Provider so that it is not presented"

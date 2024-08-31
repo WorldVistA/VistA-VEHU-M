@@ -1,5 +1,5 @@
-SDES2BLDAPPT44 ;ALB/LAB,TJB - VISTA SCHEDULING BUILDING APPT OBJECT FOR CLINIC ;APR 29, 2024
- ;;5.3;Scheduling;**871,877**;Aug 13, 1993;Build 14
+SDES2BLDAPPT44 ;ALB/LAB,TJB,LAB - VISTA SCHEDULING BUILDING APPT OBJECT FOR CLINIC ;MAY 15, 2024
+ ;;5.3;Scheduling;**871,877,880**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -72,5 +72,28 @@ GET44003INFO(APPTOBJ,CLINIEN,SDIEN,RECCNT) ; Build appointment object for HOSPIT
  S APPTOBJ("Appointment",RECCNT,"WardLocation")=$G(ARRAY44003(44.003,SDIEN,4,"I"))
  S APPTOBJ("Appointment",RECCNT,"XRAY")=$G(ARRAY44003(44.003,SDIEN,2,"I"))
  S APPTOBJ("Appointment",RECCNT,"Clinic","IsOverbook")=$S($G(ARRAY44003(44.003,SDIEN,9,"I"))="O":1,1:0)
+ Q
+ ;
+BLANK44003INFO(APPTOBJ,RECCNT) ;
+ ;If Appointment multiple for the hospital location is not pressent, send blanks
+ S APPTOBJ("Appointment",RECCNT,"AppointmentCancelled")=""
+ S APPTOBJ("Appointment",RECCNT,"CheckInUser")=""
+ S APPTOBJ("Appointment",RECCNT,"CheckOutEntered")=""
+ S APPTOBJ("Appointment",RECCNT,"CheckOutUser")=""
+ S APPTOBJ("Appointment",RECCNT,"ConsultLink")=""
+ S APPTOBJ("Appointment",RECCNT,"DuplicateApptSameDay")=""
+ S APPTOBJ("Appointment",RECCNT,"OtherTests")=""
+ S APPTOBJ("Appointment",RECCNT,"OtherTravel")=""
+ S APPTOBJ("Appointment",RECCNT,"OverbookFlag")=""
+ S APPTOBJ("Appointment",RECCNT,"ParentRecordRequest")=""
+ S APPTOBJ("Appointment",RECCNT,"Patient","CurrentEligibilityCode")=""
+ S APPTOBJ("Appointment",RECCNT,"Patient","EligibilityOfVisit")=""
+ S APPTOBJ("Appointment",RECCNT,"Patient","EnrollmentCode")=""
+ S APPTOBJ("Appointment",RECCNT,"Patient","EnrollmentDate")=""
+ S APPTOBJ("Appointment",RECCNT,"PriorXRayResults")=""
+ S APPTOBJ("Appointment",RECCNT,"VeteranVideoCallURL")=""
+ S APPTOBJ("Appointment",RECCNT,"WardLocation")=""
+ S APPTOBJ("Appointment",RECCNT,"XRAY")=""
+ S APPTOBJ("Appointment",RECCNT,"Clinic","IsOverbook")=""
  Q
  ;

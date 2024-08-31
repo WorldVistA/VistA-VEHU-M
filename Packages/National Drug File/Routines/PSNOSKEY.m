@@ -1,10 +1,12 @@
 PSNOSKEY ;BIR/SJA-PPS-N SSH Key Management ;09/16/2016
- ;;4.0;NATIONAL DRUG FILE;**513**; 30 Oct 98;Build 61
+ ;;4.0;NATIONAL DRUG FILE;**513,563,575**; 30 Oct 98;Build 22
+ ;
+ ;SAC EXEMPTION 202402221226-01: Allows the use of the $ZF(-100) function
  ;
  ; taken mostly from: PSOSPMKY - State Prescription Monitoring Program - SSH Key Management
  ;
 EN ; -- Entry point
- N X,Y,PSNOS,LOCALDIR,X1,DIR
+ N X,Y,PSNOS,LOCALDIR,X1,DIR,ENCRBITS,PSNDSA
  ;
 ACTION ; -- SSH Key Action
  K DIR S DIR("A")="Action"
@@ -30,9 +32,18 @@ ACTION ; -- SSH Key Action
  ..W !!,"The ",$S(PSNOS["VMS":"OPEN VMS",1:"UNIX/LINUX")," LOCAL DIRECTORY parameter is missing. Please, update it in"
  ..W !,"the 'PPS-N Site Parameters (Enter/Edit)' option and try again.",$C(7) D PAUSE
  .K DIR S DIR("A")="SSH Key Encryption Type",DIR("?")="^D HELP1^PSNOSKEY"
- .S DIR(0)="S^RSA:Rivest, Shamir & Adleman (RSA);DSA:Digital Signature Algorithm (DSA)"
+ .;PSN*4*575 Add ECDSA
+ .S PSNDSA=$$GET1^DIQ(57.23,1,11,"I")
+ .I 'PSNDSA S DIR(0)="S^RSA:Rivest, Shamir & Adleman (RSA)"
+ .I PSNDSA S DIR(0)="S^RSA:Rivest, Shamir & Adleman (RSA);ECDSA:Elliptic Curve Digital Signature Algorithm (ECDSA)"
  .S DIR("B")="RSA" D ^DIR I $D(DUOUT)!($D(DIRUT)) Q
  .S ENCRTYPE=Y
+ . ;p575 prompt for bit size for ECDSA
+ . I ENCRTYPE="ECDSA" D  I $D(DUOUT)!($D(DIRUT)) Q
+ . . K DIR S DIR("A")="ECDSA encryption key size (bit size)",DIR("?")="Available key sizes are 256 bits, 384 bits, or 521 bits.  Also referred to as key length."
+ . . S DIR(0)="S^256:256 bits;384:384 bits;521:521 bits"
+ . . S DIR("B")="256" D ^DIR
+ . S ENCRBITS=$S(ENCRTYPE="ECDSA":Y,1:"")
  .I $D(^TMP("PSNPUBKY",$J)) D
  ..W !!,$G(IOBON),"WARNING:",$G(IOBOFF)," You may be overwriting SSH Keys that are currently in use.",$C(7)
  .K DIR S DIR("A")="Confirm Creation of SSH Keys",DIR(0)="Y",DIR("B")="NO"
@@ -41,13 +52,14 @@ ACTION ; -- SSH Key Action
  .; -- Deleting Existing SSH Key
  .I $D(^TMP("PSNPUBKY",$J)) D DELETE
  .W !!,"Creating New SSH Keys, please wait..."
- .N ZTRTN,ZTIO,ZTDESC,ZTDTH,ZTSK
- .S ZTRTN="NEWKEY^PSNOSKEY("""_ENCRTYPE_""")",ZTIO="",ZTDESC="SSH Key Generation",ZTDTH=$$NOW^XLFDT()
- .D ^%ZTLOAD K ZTSK,^TMP("PSNPUBKY",$J)
- .F I=1:1:30 D RETRIEVE("PUB") Q:$D(^TMP("PSNPUBKY",$J))  H 1
+ . ;p575 removing the task off logic, unnecessary
+ .;N ZTRTN,ZTIO,ZTDESC,ZTDTH,ZTSK
+ .;S ZTRTN="NEWKEY^PSNOSKEY("""_ENCRTYPE_""")",ZTIO="",ZTDESC="SSH Key Generation",ZTDTH=$$NOW^XLFDT()
+ .;D ^%ZTLOAD K ZTSK,^TMP("PSNPUBKY",$J)
+ .;F I=1:1:30 D RETRIEVE("PUB") Q:$D(^TMP("PSNPUBKY",$J))  H 1
  .; -- If unable to create the key via Taskman after 30 seconds, creates them in the foreground
- .I '$D(^TMP("PSNPUBKY",$J)) D
- ..D NEWKEY(ENCRTYPE),RETRIEVE("PUB")
+ .;I '$D(^TMP("PSNPUBKY",$J)) D
+ .D NEWKEY(ENCRTYPE),RETRIEVE("PUB")
  .I '$D(^TMP("PSNPUBKY",$J)) D
  ..W !!,"There was a problem with the generation of the new SSH Key Pair."
  ..W !,"Please try again and if the problem persists contact IT Support.",$C(7) D PAUSE
@@ -69,14 +81,16 @@ END ;
  Q
  ;
 NEWKEY(ENCRTYPE) ; Generate and store a pair of SSH keys
- ; Input:  (o) ENCRTYPE - SSH Encryption Type (DSA/RSA) (Default: DSA)
+ ; Input:  (o) ENCRTYPE - SSH Encryption Type (DSA/RSA) (Default: RSA)
  ;
  N LOCALDIR,DTE,PSNOS,KEYFILE,PV,FILE2DEL,LN,OVFLN,PSNSPC,KYTXT,SAVEKEY,DIE,DR,DA
  S PSNOS=$$OS^%ZOSV()
  S LOCALDIR=$$GET1^DIQ(57.23,1,$S(PSNOS["VMS":1,1:3)) I LOCALDIR="" Q  ;Error: Missing directory
- I $G(ENCRTYPE)'="RSA" S ENCRTYPE="DSA"
+ ;PSN*4*575 handle ECDSA
+ ;I $G(ENCRTYPE)'="RSA" S ENCRTYPE="DSA"
+ S ENCRTYPE=$S($G(ENCRTYPE)="ECDSA":"ECDSA",1:"RSA")
  ; -- LOCK to avoid OS files overwrite
- F  S DTE=$P($$FMTHL7^XLFDT($$HTFM^XLFDT($H)),"-") S KEYFILE="KY"_DTE L +@KEYFILE:0 Q:$T  H 2
+ F  S DTE=+$$FMTHL7^XLFDT($$HTFM^XLFDT($H)) S KEYFILE="KY"_DTE L +@KEYFILE:0 Q:$T  H 2
  ; -- Deleting existing SSH Keys first
  D DELETE
  ;
@@ -94,7 +108,14 @@ NEWKEY(ENCRTYPE) ; Generate and store a pair of SSH keys
  ; -- Linux/Unix SSH Key Generation
  I PSNOS["UNIX" D
  .I '$$DIREXIST^PSNFTP2(LOCALDIR) D MAKEDIR^PSNFTP2(LOCALDIR)
- .X "S PV=$ZF(-1,""ssh-keygen -q -N '' -C '' -t "_$$LOW^XLFSTR($G(ENCRTYPE))_" -f "_LOCALDIR_KEYFILE_""")"
+ . S ENCRBITS=$S($G(ENCRBITS):ENCRBITS,1:"")
+ . S ENCRTYPE=$$LOW^XLFSTR($G(ENCRTYPE))
+ . I ($P($$VERSION^%ZOSV(1),"/",1)[("Cache")) D
+ . . S:ENCRBITS ENCRBITS=" -b "_ENCRBITS
+ . . X "S PV=$ZF(-1,""ssh-keygen -q -N '' -C '' -t "_$$LOW^XLFSTR($G(ENCRTYPE))_" -f "_LOCALDIR_KEYFILE_ENCRBITS_""")"
+ . I $P($$VERSION^%ZOSV(1),"/",1)'[("Cache") D
+ . . I ENCRBITS S PV=$ZF(-100,"","ssh-keygen","-q","-t",ENCRTYPE,"-b",ENCRBITS,"-f",LOCALDIR_KEYFILE,"-N","","-C","")
+ . . I ENCRBITS="" S PV=$ZF(-100,"","ssh-keygen","-q","-t",ENCRTYPE,"-f",LOCALDIR_KEYFILE,"-N","","-C","")
  .S FILE2DEL(KEYFILE)="",FILE2DEL(KEYFILE_".pub")=""
  ;
  K ^TMP("PSNPRVKY",$J),^TMP("PSNPUBKY",$J)
@@ -114,7 +135,8 @@ NEWKEY(ENCRTYPE) ; Generate and store a pair of SSH keys
  .F LN=1:1 Q:'$D(^TMP(PSNSPC,$J,LN))  D
  ..; Unix/Linux Public SSH Key has no line-feed
  ..I PSNOS["UNIX",PSNSPC="PSNPUBKY" D  Q
- ...S KYTXT(1)=^TMP(PSNSPC,$J,LN) F OVFLN=1:1 Q:'$D(^TMP(PSNSPC,$J,LN,"OVF",OVFLN))  D
+ ...S KYTXT(1)=^TMP(PSNSPC,$J,LN)
+ ...F OVFLN=1:1 Q:'$D(^TMP(PSNSPC,$J,LN,"OVF",OVFLN))  D
  ....S KYTXT(1)=$G(KYTXT(1))_^TMP(PSNSPC,$J,LN,"OVF",OVFLN)
  ..S KYTXT(LN)=$$ENCRYP^XUSRB1(^TMP(PSNSPC,$J,LN))
  .I PSNOS["UNIX",PSNSPC="PSNPUBKY" S KYTXT(1)=$$ENCRYP^XUSRB1(KYTXT(1))
@@ -194,6 +216,7 @@ SETOS(JOB) ; Sets the Operating Systems in ^XTMP("PSNKEY",$J,"OS") (Called via T
  S ^XTMP("PSNKEY",JOB,"OS")=$$OS^%ZOSV()
  Q
  ;
+ ;PSN*4*575 UPDATE HELP TEXT WORDING FOR ECDSA
 HELP ; Encryption Type Help
  W !!,"Secure SHell (SSH) Encryption Keys are used to allow data file download."
  W !,"Follow the steps below to successfully setup data file download from Austin "
@@ -206,7 +229,7 @@ HELP ; Encryption Type Help
  W !,""
  D HELP1,PAUSE
  W !!,"Step 2: Share the Public SSH Key content with the PPS-N SFTP server (Austin)."
- W !,"        Inorder to successfully establish the data download files, the SFTP  "
+ W !,"        In order to successfully establish the data download files, the SFTP  "
  W !,"        server at Austin needs to install/configure the new SSH Key created in"
  W !,"        step 1 for the user id they assigned to your site. Use the 'V' (View "
  W !,"        Public SSH Key) Action to retrieve the content of the Public SSH key."
@@ -216,11 +239,18 @@ HELP ; Encryption Type Help
  Q
  ;
 HELP1 ; Encryption Type Help
- W !,"        Encryption Type: RSA or DSA?"
- W !,"        ----------------------------"
- W !,"        The Rivest, Shamir & Adleman (RSA) and Digital Signature Algorithm"
- W !,"        (DSA) are two of the most common encryption algorithms used in IT "
- W !,"        industry for securely sharing data."
+ W !,"        Encryption Type: RSA or ECDSA?"
+ W !,"        -----------------------------------"
+ W !,"        Rivest, Shamir & Adleman (RSA) has been one of the most common"
+ W !,"        encryption algorithms used by the IT industry for securely sharing data."
+ W !,""
+ W !,"        Elliptic Curve Digital Signature Algorithm (ECDSA) is a more complex"
+ W !,"        public key cryptography encryption algorithm that is now supported by"
+ W !,"        the VA. If ECDSA is selected you will be prompted to enter the Bit size."
+ W !,"        Valid selections are 256, 384 or 521."
+ W !,""
+ W !,"        You will need to contact the Austin SFTP server support to determine"
+ W !,"        which type to select."
  Q
 PAUSE ; Pauses screen until user hits Return
  W ! K DIR S DIR("A")="Press Return to continue",DIR(0)="E" D ^DIR

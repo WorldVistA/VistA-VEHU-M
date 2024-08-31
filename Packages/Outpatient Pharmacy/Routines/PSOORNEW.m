@@ -1,5 +1,5 @@
 PSOORNEW ;BIR/SAB - display orders from oerr ;Dec 13, 2021@08:01:18
- ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,55,46,71,90,94,106,131,133,143,237,222,258,206,225,251,386,390,391,372,416,431,313,408,436,411,444,486,446,505,517,508,457,581,617,441,651,700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,55,46,71,90,94,106,131,133,143,237,222,258,206,225,251,386,390,391,372,416,431,313,408,436,411,444,486,446,505,517,508,457,581,617,441,651,700,746**;DEC 1997;Build 106
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PS(50.606 supported by DBIA 2174
@@ -73,11 +73,16 @@ PT D DOSE2^PSOORFI4
  I $G(PSOSIGFL)!(PSODRUG("OI")'=$P(OR0,"^",8)) S PSONEW("CLERK CODE")=DUZ,PSORX("CLERK CODE")=$P(^VA(200,DUZ,0),"^"),VALMSG="This change will create a new prescription!"
  S $P(RN," ",35)=" ",IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="   Entry By: "_$P(^VA(200,PSONEW("CLERK CODE"),0),"^")_$E(RN,$L($P(^VA(200,PSONEW("CLERK CODE"),0),"^"))+1,35)
  S Y=$P(OR0,"^",12) X ^DD("DD") S ^TMP("PSOPO",$J,IEN,0)=^TMP("PSOPO",$J,IEN,0)_"Entry Date: "_$E($P(OR0,"^",12),4,5)_"/"_$E($P(OR0,"^",12),6,7)_"/"_$E($P(OR0,"^",12),2,3)_" "_$P(Y,"@",2) K RN
- S ERXIEN=$$ERXIEN^PSOERXUT($G(ORD)_"P")
  ; eRx Pending Order (Side-By-Side) Interface (Replaces conventional interface above)
+ S ERXIEN=$$ERXIEN^PSOERXUT($G(ORD)_"P")
  I ERXIEN D
+ . N SUGFLDT,LASTRX,Y
+ . I $D(VALMEVL) F I=1:1:99 D RESTORE^VALM10(I)
+ . S SUGFLDT=$$SUGFLDT^PSOERUT(ORD),LASTRX=0
+ . I $D(^XUSEC("PSO ERX P746 TEMP KEY",DUZ)),SUGFLDT>DT D
+ . . S (PSONEW("FILL DATE"),Y)=$P(SUGFLDT,"^"),LASTRX=+$P(SUGFLDT,"^",2) X ^DD("DD") S PSORX("FILL DATE")=Y
  . S (IEN,LINE)=0 K ^TMP("PSOPO",$J)
- . D SETPEN^PSOERUT5("PSOPO",ERXIEN,+ORD,.PSONEW,.PSODRUG,.SIG,0) S (VALMCNT,IEN)=LINE-1
+ . D SETPEN^PSOERUT5("PSOPO",ERXIEN,+ORD,.PSONEW,.PSODRUG,.SIG,0,LASTRX) S (VALMCNT,IEN)=LINE-1
  . D RV^PSONFI
  I PSOLMC<2 D ^PSOLMPO1 S VALMBCK="Q",PSOLMC=0
  S:PSOLMC>1 VALMBCK="R"
@@ -91,12 +96,12 @@ EDT ; Entry point for ED Action in the OP Pending Queue
  D ^DIR Q:$D(DTOUT)!($D(DUOUT))
  ;
 EDTSEL ; Entry point for individual field editing
- I $$ERXIEN^PSOERXUT(ORD_"P") S PSOVLMBG=VALMBG
+ K PSOVLMBG I $$ERXIEN^PSOERXUT(ORD_"P") S PSOVLMBG=VALMBG
  ; Only 'Routing' Field can be edited for CS eRx Pending Orders
- I +$G(Y)'=11,$$CSERX(ORD) Q  ; Not allowed to edit CS eRx orders
+ I +$G(Y)'=11,$$CSERX^PSOERUT6(ORD) Q  ; Not allowed to edit CS eRx orders
  N LST,FLD,OUT,CHECK,CSDRG D KV S (OUT,CSDRG)=0
  I '$D(PSODRG) S PSODRG=$G(PSODRUG("IEN"))
- I PSODRG,$$NDF(PSODRG)!($$CSDRG(PSODRG)) S CSDRG=1
+ I PSODRG,$$NDF(PSODRG)!($$CSDRG^PSOERUT6(PSODRG)) S CSDRG=1
  I +Y S LST=Y D FULL^VALM1 N PSODOSE M PSODOSE=PSONEW D  G DSPL
  .I CSDRG,(","_LST[",1,")!(","_LST[",3,")!(","_LST[",10,")!(","_LST[",13,") D
  ..W !!,"The selection includes field(s) that are not editable"
@@ -234,14 +239,7 @@ DRGMSG ;
 PZ ;
  N DIR S DIR(0)="E",DIR("A")="Press Return to Continue" D ^DIR W !
  Q
-CSDRG(DRGIEN) ;/BLB/ Patch PSO*7*505/517 Controlled Substance drug?
- ; Input: DRGIEN - DRUG file (#50) pointer
- ;Output: $$CS - 1:YES / 0:NO
- N DEA
- Q:'DRGIEN 0
- S DEA=$$GET1^DIQ(50,DRGIEN,3)
- I (DEA'["0"),(DEA'["M"),(DEA["2")!(DEA["3")!(DEA["4")!(DEA["5") Q 1
- Q 0
+ ;
 NDF(DRGIEN) ;PATCH PSO*7*505/517 - 1:YES 0:NO checks the cs federal schedule field of the va product file
  N DEARES,VPROD
  S VPROD=$$GET1^DIQ(50,DRGIEN,22,"I") Q:'VPROD 0
@@ -251,11 +249,6 @@ NDF(DRGIEN) ;PATCH PSO*7*505/517 - 1:YES 0:NO checks the cs federal schedule fie
 CSBLOCK(DFN,DIEN) ;
  N VAPA
  D ADD^VADPT
- I DIEN,$$CSDRG(DIEN)!($$NDF(DIEN)),($$UP^XLFSTR($P(VAPA(25),U,2))'="UNITED STATES") Q 0
- I DIEN,$$CSDRG(DIEN)!($$NDF(DIEN)),('$L(VAPA(6))),('$L(VAPA(11))) Q 1
- Q 0
- ;
-CSERX(ORD) ; Check whether a Pending Order is for a CS eRx
- I $$ERXIEN^PSOERXUT(ORD_"P"),$$CSDRG(+$$GET1^DIQ(52.41,+ORD,11,"I")) D  Q 1
- . S VALMSG="Only the 'Routing' field can be edited (CS eRx).",VALMBCK="R" W $C(7)
+ I DIEN,$$CSDRG^PSOERUT6(DIEN)!($$NDF(DIEN)),($$UP^XLFSTR($P(VAPA(25),U,2))'="UNITED STATES") Q 0
+ I DIEN,$$CSDRG^PSOERUT6(DIEN)!($$NDF(DIEN)),('$L(VAPA(6))),('$L(VAPA(11))) Q 1
  Q 0

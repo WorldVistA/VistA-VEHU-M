@@ -1,14 +1,13 @@
 BPSVRX ;ALB/ESG - View ECME Prescription ;5/23/2011
- ;;1.0;E CLAIMS MGMT ENGINE;**11,23**;JUN 2004;Build 44
+ ;;1.0;E CLAIMS MGMT ENGINE;**11,23,37**;JUN 2004;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
- ; Reference to $$RXBILL^IBNCPUT3 supported by IA #5355
- ; Reference to RX^PSO52API supported by IA #4820
- ; Reference to $$RXNUM^PSOBPSU2 supported by IA #4970
- ; Reference to DIC^PSODI supported by IA #4858
- ; Reference to DIQ^PSODI supported by IA #4858
- ; Reference to $$CTRL^XMXUTIL1 supported by IA #2735
- ; Reference to $$TRIM^XLFSTR supported by IA #10104
+ ; Reference to $$RXBILL^IBNCPUT3 in ICR #5355
+ ; Reference to RX^PSO52API in ICR #4820
+ ; Reference to $$RXNUM^PSOBPSU2 in ICR #4970
+ ; Reference to DIC^PSODI and DIQ^PSODI in ICR #4858
+ ; Reference to $$CTRL^XMXUTIL1 in ICR #2735
+ ; Reference to $$CJ^XLFSTR, $$LJ^XLFSTR, $$TRIM^XLFSTR, $$UP^XLFSTR in ICR #10104
  ;
  N VALMCNT,VALMQUIT,VALMBG,BPSVRXCLM,DFN,RXIEN,FILL,VIEWTYPE
  D EN^VALM("BPS VIEW ECME RX")
@@ -16,7 +15,7 @@ BPSVRX ;ALB/ESG - View ECME Prescription ;5/23/2011
  Q
  ;
 HDR ; -- header code
- N V1,V2,VADM,DFN,VA,VAERR
+ N DFN,V1,V2,V3,VA,VADM,VAERR
  S RXIEN=$G(RXIEN),FILL=$G(FILL)
  S V1=$$LJ^XLFSTR("Rx#: "_$$RXNUM^BPSSCRU2(RXIEN)_"/"_FILL,19)
  S V1=V1_$$LJ^XLFSTR("ECME#: "_$P($$CLAIM^BPSBUTL(RXIEN,FILL),U,6),21)
@@ -26,9 +25,12 @@ HDR ; -- header code
  S DFN=+$$RXAPI1^BPSUTIL1(RXIEN,2,"I")
  D DEM^VADPT
  S V2=$$LJ^XLFSTR("Patient: "_$E($G(VADM(1)),1,30)_" ("_$G(VA("BID"))_")",48)
- S V2=V2_$$LJ^XLFSTR("Sex: "_$P($G(VADM(5)),U,1),8)
- S V2=V2_$$LJ^XLFSTR("DOB: "_$$FMTE^XLFDT($P($G(VADM(3)),U,1),"2Z")_" ("_$G(VADM(4))_")",22)
+ S $E(V2,57)=$$LJ^XLFSTR("DOB: "_$$FMTE^XLFDT($P($G(VADM(3)),U,1),"2Z")_" ("_$G(VADM(4))_")",22)
  S VALMHDR(2)=V2
+ ;
+ S V3=$$LJ^XLFSTR("Birth Sex: "_$P($G(VADM(5)),U,1),8)
+ S $E(V3,32)="Self-Identified Gender: "_$E($P($G(VADM(14,5)),U,1),1,24)
+ S VALMHDR(3)=V3
  Q
  ;
 HELP ; -- help code

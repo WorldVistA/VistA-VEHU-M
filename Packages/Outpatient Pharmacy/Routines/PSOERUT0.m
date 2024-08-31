@@ -1,12 +1,13 @@
 PSOERUT0 ;ALB/MFR - eRx Patient - ListMan Utilities; 06/03/2023 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**700,750**;DEC 1997;Build 6
+ ;;7.0;OUTPATIENT PHARMACY;**700,750,746**;DEC 1997;Build 106
  ;
-SETPAT(MODE,ERXIEN,DFN,NMSPC,PENFLG) ; Set ListMan Side-By-Side Section for Patient
+SETPAT(MODE,ERXIEN,DFN,NMSPC,PENFLG,SDFLG) ; Set ListMan Side-By-Side Section for Patient
  ;Input: MODE   - Display Mode: "RS": Roll & Scroll | "LM": ListMan
  ;       ERXIEN - Pointer to ERX HOLDING QUEUE file (#52.49)
  ;       DFN    - Matched/Suggested VistA Patient - Pointer to PATIENT file (#2)
  ;    (o)NMSPC  - ListMan Temp Global Namespace (e.g., "PSOERXP1") - Required for LM Mode only
  ;    (o)PENFLG - Pending Order Flag - 1: Pending Order Interface | 0: eRx Holding Queue Interface
+ ;    (o)SDFLG  - Single eRx View/Display Flag - 1: Single eRx View/Display Interface | 0: eRx Holding Queue Interface
  ;       Input Global Variable: LINE - Current ListMan Line # (Default)
  ;       Output Global Variable: (ListMan Mode ONly)
  ;          REVLN - Array Indicating Reverse Video for Line, position and size of the string
@@ -39,7 +40,7 @@ SETPAT(MODE,ERXIEN,DFN,NMSPC,PENFLG) ; Set ListMan Side-By-Side Section for Pati
  . S VACNTRY=$S(VACNTRY="US":"",VACNTRY="CA":"CN",1:VACNTRY)
  ;
  ; - Patient Matching Header Line
- I $G(PENFLG) D
+ I $G(PENFLG)!$G(SDFLG) D
  . N AMATCH,VPATIEN,VALUSER,VALDTTM,MATCH,HDR
  . S AMATCH=$$GET1^DIQ(52.49,ERXIEN,1.6,"I"),VPATIEN=$$GET1^DIQ(52.49,ERXIEN,.05,"I")
  . S VALUSER=$$GET1^DIQ(52.49,ERXIEN,1.13,"E"),VALDTTM=$$GET1^DIQ(52.49,ERXIEN,1.14,"I")
@@ -64,36 +65,44 @@ SETPAT(MODE,ERXIEN,DFN,NMSPC,PENFLG) ; Set ListMan Side-By-Side Section for Pati
  S XE="DOB : "_$$COMPARE(MODE,ERXDOB,VADOB,7,,,'DFN)
  S XV="|DOB : "_$$COMPARE(MODE,VADOB,ERXDOB,47)
  D ADDLINE(MODE,NMSPC,XE,XV)
- S XE="SSN : "_$$COMPARE(MODE,ERXSSN,VASSN,7,,,'DFN)
- S XV="|SSN : "_$$COMPARE(MODE,VASSN,ERXSSN,47)
- D ADDLINE(MODE,NMSPC,XE,XV)
- S XE="Sex : "_$$COMPARE(MODE,ERXSEX,VASEX,7,,,'DFN)
- S XV="|Sex : "_$$COMPARE(MODE,VASEX,ERXSEX,47)
- D ADDLINE(MODE,NMSPC,XE,XV)
+ I '$G(SDFLG) D
+ . S XE="SSN : "_$$COMPARE(MODE,ERXSSN,VASSN,7,,,'DFN)
+ . S XV="|SSN : "_$$COMPARE(MODE,VASSN,ERXSSN,47)
+ . D ADDLINE(MODE,NMSPC,XE,XV)
+ . S XE="Sex : "_$$COMPARE(MODE,ERXSEX,VASEX,7,,,'DFN)
+ . S XV="|Sex : "_$$COMPARE(MODE,VASEX,ERXSEX,47)
+ . D ADDLINE(MODE,NMSPC,XE,XV)
  ;
  ; Pending Order Interface only shows Name,DOB, SSN and Sex
  I $G(PENFLG) D  Q
  . D BLANKLN(MODE)
  ;
- S XE="Address:",XV="|Address:" D ADDLINE(MODE,NMSPC,XE,XV)
- F ADDLN=1:1:5 D
- . I $$ADDRESS(ERXADDR,ADDLN)'=""!($$ADDRESS(VAADDR,ADDLN)'="") D
- . . S XE=" "_$$COMPARE(MODE,$$ADDRESS(ERXADDR,ADDLN),$$ADDRESS(VAADDR,ADDLN),2,,,'DFN)
- . . S XV="| "_$$COMPARE(MODE,$$ADDRESS(VAADDR,ADDLN),$$ADDRESS(ERXADDR,ADDLN),42)
- . . D ADDLINE(MODE,NMSPC,XE,XV)
- S XE=" "_$$COMPARE(MODE,ERXCITY,VACITY,2,,,'DFN)
- S XE=XE_$S(ERXCITY'="":",",1:"")_$$COMPARE(MODE,ERXSTATE,VASTATE,$L(XE)+2,,,'DFN)
- S XE=XE_"  "_$$COMPARE(MODE,ERXZIP,VAZIP,$L(XE)+3,1,,'DFN)
- S XV="| "_$$COMPARE(MODE,VACITY,ERXCITY,42)
- S XV=XV_$S(VACITY'="":",",1:"")_$$COMPARE(MODE,VASTATE,ERXSTATE,$L(XV)+41)
- S XV=XV_"  "_$$COMPARE(MODE,VAZIP,ERXZIP,$L(XV)+42,1)
- D ADDLINE(MODE,NMSPC,XE,XV)
- I $G(ERXCNTRY)'=""!(VACNTRY'="") D
- . S XE=" "_$$COMPARE(MODE,ERXCNTRY,VACNTRY,2),XV="| "_$$COMPARE(MODE,VACNTRY,ERXCNTRY,42)
+ I '$G(SDFLG) D  ;do not include patient address if in Single eRx View/Display mode
+ . S XE="Address:",XV="|Address:" D ADDLINE(MODE,NMSPC,XE,XV)
+ . F ADDLN=1:1:5 D
+ . . I $$ADDRESS(ERXADDR,ADDLN)'=""!($$ADDRESS(VAADDR,ADDLN)'="") D
+ . . . S XE=" "_$$COMPARE(MODE,$$ADDRESS(ERXADDR,ADDLN),$$ADDRESS(VAADDR,ADDLN),2,,,'DFN)
+ . . . S XV="| "_$$COMPARE(MODE,$$ADDRESS(VAADDR,ADDLN),$$ADDRESS(ERXADDR,ADDLN),42)
+ . . . D ADDLINE(MODE,NMSPC,XE,XV)
+ . S XE=" "_$$COMPARE(MODE,ERXCITY,VACITY,2,,,'DFN)
+ . S XE=XE_$S(ERXCITY'="":",",1:"")_$$COMPARE(MODE,ERXSTATE,VASTATE,$L(XE)+2,,,'DFN)
+ . S XE=XE_"  "_$$COMPARE(MODE,ERXZIP,VAZIP,$L(XE)+3,1,,'DFN)
+ . S XV="| "_$$COMPARE(MODE,VACITY,ERXCITY,42)
+ . S XV=XV_$S(VACITY'="":",",1:"")_$$COMPARE(MODE,VASTATE,ERXSTATE,$L(XV)+41)
+ . S XV=XV_"  "_$$COMPARE(MODE,VAZIP,ERXZIP,$L(XV)+42,1)
  . D ADDLINE(MODE,NMSPC,XE,XV)
+ . I $G(ERXCNTRY)'=""!(VACNTRY'="") D
+ . . S XE=" "_$$COMPARE(MODE,ERXCNTRY,VACNTRY,2),XV="| "_$$COMPARE(MODE,VACNTRY,ERXCNTRY,42)
+ . . D ADDLINE(MODE,NMSPC,XE,XV)
  ;
  S ERXPHS=$$CLNSTR(ERXPHON1)_","_$$CLNSTR(ERXPHON2)_","_$$CLNSTR(ERXPHON3)
  S VAPHS=$$CLNSTR(VAPHONE1)_","_$$CLNSTR(VAPHONE2)
+ ;
+ I $G(SDFLG) D  Q  ;only display one phone, cellphone takes the higher precedence.
+ . I $P(ERXPHS,",",2)'=""!(VAPHONE2'="") D CELPHONE Q
+ . I $P(ERXPHS,",",3)'="" D PRIPHONE Q
+ . I $P(ERXPHS,",")'=""!(VAPHONE1'="") D HOMPHONE Q
+ ;
  I ERXPHON3'="" D
  . S XE="Primary Phone: "_$$COMPARE(MODE,ERXPHON3,$S(VAPHS[$$CLNSTR(ERXPHON3):ERXPHON3,1:""),16,,,'DFN),XV="|"
  . D ADDLINE(MODE,NMSPC,XE,XV)
@@ -101,23 +110,25 @@ SETPAT(MODE,ERXIEN,DFN,NMSPC,PENFLG) ; Set ListMan Side-By-Side Section for Pati
  . S XE="Home Phone: "_$$COMPARE(MODE,ERXPHON1,$S(VAPHS[$$CLNSTR(ERXPHON1):ERXPHON1,1:""),13,,,'DFN)
  . S XV="|Home Phone: "_$$COMPARE(MODE,VAPHONE1,$S(ERXPHS[$$CLNSTR(VAPHONE1):VAPHONE1,1:""),53)
  . D ADDLINE(MODE,NMSPC,XE,XV)
- I ERXPHON2'=""!(VAPHONE2'="") D
- . S XE="Cell Phone: "_$$COMPARE(MODE,ERXPHON2,$S(VAPHS[$$CLNSTR(ERXPHON2):ERXPHON2,1:""),13,,,'DFN)
- . S XV="|Cell Phone: "_$$COMPARE(MODE,VAPHONE2,$S(ERXPHS[$$CLNSTR(VAPHONE2):VAPHONE2,1:""),53)
- . D ADDLINE(MODE,NMSPC,XE,XV)
+ I '$G(SDFLG) D
+ . I ERXPHON2'=""!(VAPHONE2'="") D
+ . . S XE="Cell Phone: "_$$COMPARE(MODE,ERXPHON2,$S(VAPHS[$$CLNSTR(ERXPHON2):ERXPHON2,1:""),13,,,'DFN)
+ . . S XV="|Cell Phone: "_$$COMPARE(MODE,VAPHONE2,$S(ERXPHS[$$CLNSTR(VAPHONE2):VAPHONE2,1:""),53)
+ . . D ADDLINE(MODE,NMSPC,XE,XV)
  ;
  I MODE="LM" D
  . D BLANKLN(MODE)
- . S XV="|Pharmacy Narrative: " D ADDLINE(MODE,NMSPC,,XV)
- . I $G(DFN) D
- . . S X=$$GET1^DIQ(55,DFN,1,"E") K ^UTILITY($J,"W") S DIWL=1,DIWR=38,DIWF="|" D ^DIWP
- . . F I=1:1 Q:'$D(^UTILITY($J,"W",1,I))  D
- . . . S XV="| "_$$COMPARE(MODE,^UTILITY($J,"W",1,I,0),^UTILITY($J,"W",1,I,0),42) D ADDLINE(MODE,NMSPC,,XV)
- . D BLANKLN(MODE)
- . D ALLERGY^PSOERUT3(MODE,NMSPC,ERXIEN,$G(DFN))
- . D WTHT(MODE,ERXIEN,DFN)
- . D BLANKLN(MODE)
- . D SETDIAGS^PSOERUT3(MODE,NMSPC,ERXIEN)
+ . I '$G(SDFLG) D
+ . . S XV="|Pharmacy Narrative: " D ADDLINE(MODE,NMSPC,,XV)
+ . . I $G(DFN) D
+ . . . S X=$$GET1^DIQ(55,DFN,1,"E") K ^UTILITY($J,"W") S DIWL=1,DIWR=38,DIWF="|" D ^DIWP
+ . . . F I=1:1 Q:'$D(^UTILITY($J,"W",1,I))  D
+ . . . . S XV="| "_$$COMPARE(MODE,^UTILITY($J,"W",1,I,0),^UTILITY($J,"W",1,I,0),42) D ADDLINE(MODE,NMSPC,,XV)
+ . . D BLANKLN(MODE)
+ . . D ALLERGY^PSOERUT3(MODE,NMSPC,ERXIEN,$G(DFN))
+ . . D WTHT(MODE,ERXIEN,DFN)
+ . . D BLANKLN(MODE)
+ . . D SETDIAGS^PSOERUT3(MODE,NMSPC,ERXIEN)
  E  D BLANKLN(MODE)
  Q
  ;
@@ -191,9 +202,10 @@ ADDLINE(MODE,NMSPC,ETEXT,VTEXT) ;Adds a New Line to the list
  Q
  ;
 PAUSE ; Page break + erases the "Press Return..." 
- N DIR S DIR("A")="Press Return to continue",DIR(0)="E" D ^DIR
- F I=1:1:80 W $C(8)
- S $P(XX," ",80)="" W X
+ N DIR,I,XX S DIR("A")="Press Return to continue",DIR(0)="E" D ^DIR
+ F I=1:1:26 W $C(8)
+ S $P(XX," ",26)="" W XX
+ F I=1:1:26 W $C(8)
  Q
  ;
 EQDATES(DATE1,DATE2) ;Checks if the fields are valid dates and are the same
@@ -299,3 +311,20 @@ VAWTHT(DFN,TYPE) ; VistA Patient Weight/Height
  I TYPE="WT",$P(WT,"^",8) Q $P(WT,"^",9)
  I TYPE="HT",$P(HT,"^",8) Q $P(HT,"^",9)
  Q ""
+ ;
+CELPHONE ;
+ S XE="Cell Phone: "_$$COMPARE(MODE,ERXPHON2,$S(VAPHS[$$CLNSTR(ERXPHON2):ERXPHON2,1:""),13,,,'DFN)
+ S XV="|Cell Phone: "_$$COMPARE(MODE,VAPHONE2,$S(ERXPHS[$$CLNSTR(VAPHONE2):VAPHONE2,1:""),53)
+ D ADDLINE(MODE,NMSPC,XE,XV)
+ Q
+ ;
+PRIPHONE ;
+ S XE="Primary Phone: "_$$COMPARE(MODE,ERXPHON3,$S(VAPHS[$$CLNSTR(ERXPHON3):ERXPHON3,1:""),16,,,'DFN),XV="|"
+ D ADDLINE(MODE,NMSPC,XE,XV)
+ Q
+ ;
+HOMPHONE ;
+ S XE="Home Phone: "_$$COMPARE(MODE,ERXPHON1,$S(VAPHS[$$CLNSTR(ERXPHON1):ERXPHON1,1:""),13,,,'DFN)
+ S XV="|Home Phone: "_$$COMPARE(MODE,VAPHONE1,$S(ERXPHS[$$CLNSTR(VAPHONE1):VAPHONE1,1:""),53)
+ D ADDLINE(MODE,NMSPC,XE,XV)
+ Q

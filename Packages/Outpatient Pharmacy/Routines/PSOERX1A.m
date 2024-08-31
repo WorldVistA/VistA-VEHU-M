@@ -1,5 +1,5 @@
 PSOERX1A ;ALB/BWF - eRx Utilities/RPC's ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**467,527,508,551,581,617,669,700,743**;DEC 1997;Build 24
+ ;;7.0;OUTPATIENT PHARMACY;**467,527,508,551,581,617,669,700,743,746**;DEC 1997;Build 106
  ;
  Q
  ; select an item
@@ -116,6 +116,7 @@ PROV ;
  I STAT="CXE",(RESVAL="A"!(RESVAL="AWC"))!(RESVAL="V"),'$$RXEPRMT^PSOERXU7(PSOIEN) Q
  I '$$GET1^DIQ(52.49,PSOIEN,2.3,"I") S XQORM("B")="Edit"
  D EN^PSOERXR1
+ D INIT^PSOERSE1
  Q
  ; patient information display
 PAT ;
@@ -127,6 +128,7 @@ PAT ;
  I STAT="CXE",(RESVAL="A"!(RESVAL="AWC"))!(RESVAL="V"),'$$RXEPRMT^PSOERXU7(PSOIEN) Q
  I '$$GET1^DIQ(52.49,PSOIEN,.05,"I") S XQORM("B")="Edit"
  D EN^PSOERXP1
+ D INIT^PSOERSE1
  Q
  ; drug information display
 DRUG ;
@@ -138,6 +140,7 @@ DRUG ;
  I STAT="CXE",(RESVAL="A"!(RESVAL="AWC"))!(RESVAL="V"),'$$RXEPRMT^PSOERXU7(PSOIEN) Q
  I '$$GET1^DIQ(52.49,PSOIEN,3.2,"I") S XQORM("B")="Edit"
  D EN^PSOERXD1
+ D INIT^PSOERSE1
  Q
  ; edit validation
  ; EDTYPE - D=drug, P=patient, PR=provider
@@ -212,7 +215,7 @@ VPROV ;
  ;
  W !?64,"Updating..."
  ; Setting the eRx Audit Log
- S NEWVAL(1)=$$GET1^DIQ(200,NEWPIEN,.01)_" (DEA#: "_$P($$VADEA^PSOERXU8(NEWPIEN,PSOIEN),"^",2)_")"     ; PSO*7*743
+ S NEWVAL(1)=$$GET1^DIQ(200,NEWPIEN,.01)_" (DEA#: "_$P($$VADEA^PSOERXU8(NEWPIEN,PSOIEN),"^",2)_")"
  D AUDLOG^PSOERXUT(+PSOIENS,"PROVIDER",DUZ,.NEWVAL)
  ;
  ; change existing entry

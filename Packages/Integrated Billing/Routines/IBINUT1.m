@@ -1,5 +1,5 @@
 IBINUT1 ;YMG/EDE -  MEGABUS Act (Indian Self-Identification) Utilities ;NOV 23 2021
- ;;2.0;INTEGRATED BILLING;**716**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**716,782**;21-MAR-94;Build 9
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -32,9 +32,9 @@ INDGET(DFN) ; get Indian Attestation data
  ;
  ; DFN - patient's DFN
  ;
- ; returns indian self-identification flag (2/.571) ^ indian self-identification start date (2/.572)
+ ; returns indian self-identification flag (2/.571) ^ indian self-identification start date (2/.572) ^ indian self-identification end date (2/.574)
  ;
  N RES,VADEMO
  S RES="^^"
- I +$G(DFN)>0 D DEMUPD^VADPT S $P(RES,U)=$G(VADEMO(15,1)),$P(RES,U,2)=$G(VADEMO(15,2))
+ I +$G(DFN)>0 D DEMUPD^VADPT S $P(RES,U)=$G(VADEMO(15,1)),$P(RES,U,2)=$G(VADEMO(15,2)),$P(RES,U,3)=$G(VADEMO(15,4))  ; IB*2.0*782
  Q RES

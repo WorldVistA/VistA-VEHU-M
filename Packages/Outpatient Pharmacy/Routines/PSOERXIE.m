@@ -1,5 +1,5 @@
 PSOERXIE ;ALB/BWF - eRx Utilities/RPC's ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**581,617**;DEC 1997;Build 110
+ ;;7.0;OUTPATIENT PHARMACY;**581,617,746**;DEC 1997;Build 106
  ;
  Q
 MEDS(ERXIEN,MTYPE,MEDTYPE) ; medication prescribed/dispensed/requested segment
@@ -32,7 +32,7 @@ MEDS(ERXIEN,MTYPE,MEDTYPE) ; medication prescribed/dispensed/requested segment
  .I '$L(LASTFD) S LASTFD=$G(@GL@(I,"LastFillDate",0,"DateTime",0))
  .S LASTFD=$$CONVDTTM^PSOERXA1(LASTFD)
  .S SUBS=$G(@GL@(I,"Substitutions",0))
- .S NUMREF=$G(@GL@(I,"NumberOfRefills",0))
+ .S NUMREF=$G(@GL@(I,"NumberOfRefills",0))-$S(INMTYPE="R":1,1:0)
  .S PAUTH=$G(@GL@(I,"PriorAuthorization",0))
  .S NOTE=$G(@GL@(I,"Note",0))
  .S PASTAT=$G(@GL@(I,"PriorAuthorizationStatus",0))

@@ -1,5 +1,5 @@
 PSOOREDT ;BIR/SAB - Edit orders from backdoor ;Jan 25, 2022@14:31:38
- ;;7.0;OUTPATIENT PHARMACY;**4,20,27,37,57,46,78,102,104,119,143,148,260,281,304,289,298,379,377,391,313,427,411,505,517,574,524,617,441,700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**4,20,27,37,57,46,78,102,104,119,143,148,260,281,304,289,298,379,377,391,313,427,411,505,517,574,524,617,441,700,746**;DEC 1997;Build 106
  ;External reference to ^PSDRUG( supported by DBIA 221
  ;External reference to ^PSSLOCK supported by DBIA 2789
  ;External reference to ^VA(200 supported by DBIA 10060
@@ -51,7 +51,7 @@ EDT ; Rx Edit (Backdoor)
  ;*298 Track PI and Oth Lang PI
  S (RX0,PSORXED("RX0"))=^PSRX($P(PSOLST(ORN),"^",2),0),PSORXED("RX2")=$G(^(2)),PSORXED("RX3")=$G(^(3)),PSOSIG=$P(^("SIG"),"^"),PSOPINS=$G(^("INS")),PSOOINS=$G(^("INSS")),PSOPIND=$P($G(^("IND")),"^"),PSOPINDF=$P($G(^("IND")),"^",2) ;*441-IND
  I '$D(PSODRUG) NEW PSOY S PSOY=$P(RX0,U,6),PSOY(0)=^PSDRUG(PSOY,0) D SET^PSODRG ; *298 moved this line from EDT+2  RX0 was not defined yet
- S CSDRG=0 I $$NDF^PSOORNEW(PSODRUG("IEN"))!$$CSDRG^PSOORNEW(PSODRUG("IEN")) S CSDRG=1
+ S CSDRG=0 I $$NDF^PSOORNEW(PSODRUG("IEN"))!$$CSDRG^PSOERUT6(PSODRUG("IEN")) S CSDRG=1
  I CSDRG,$$CSFLDBLK(FST) D
  .W !!,"The selection includes field(s) that are not editable" W !,"for controlled substances. These field(s) will be skipped.",!
  .S DIR(0)="E" D ^DIR K DIR
@@ -80,7 +80,7 @@ EDT ; Rx Edit (Backdoor)
  .I FLN=20,'$G(REF) S VALMSG="There is no Refill Data to be edited." Q
  .S DR=$P(FDR,"^",FLN) I DR="RF" D REF^PSOORED2 Q
  .I DR="PSOCOU" D PSOCOU^PSOORED6 Q
- .I $$CSDRG^PSOORNEW(DRGIEN)!($$NDF^PSOORNEW(DRGIEN)),",1,3,12,17,"[FLNCHK Q
+ .I $$CSDRG^PSOERUT6(DRGIEN)!($$NDF^PSOORNEW(DRGIEN)),",1,3,12,17,"[FLNCHK Q
  .; Allow edit of the NDC when the EDIT DRUG setting is off
  .; Other checks regarding if the NDC may be edited are found in NDC^PSODRG - PSO*7*427
  .;

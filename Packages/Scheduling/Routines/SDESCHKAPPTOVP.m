@@ -1,5 +1,5 @@
-SDESCHKAPPTOVP ;ALB/ANU - VISTA SCHEDULING RPCS - Routine to check for Appointment Overlaps ; June 27, 2022@10:00
- ;;5.3;Scheduling;**820**;Aug 13, 1993;Build 10
+SDESCHKAPPTOVP ;ALB/ANU,TJB - VISTA SCHEDULING RPCS - Routine to check for Appointment Overlaps ; June 17, 2024
+ ;;5.3;Scheduling;**820,881**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
@@ -53,7 +53,7 @@ VALIDATEPTDFN(ERRORS,SDDFN) ; VALIDATE PATIENT DFN
 VALIDATEDUR(ERRORS,SDDUR) ; Validate Duration
  N ERRORFLAG
  I SDDUR="" S ERRORFLAG=1 D ERRLOG^SDESJSON(.ERRORS,115) Q $D(ERRORFLAG)
- I (+SDDUR<5)!(+SDDUR>120) S ERRORFLAG=1 D ERRLOG^SDESJSON(.ERRORS,116) Q $D(ERRORFLAG)
+ I (+SDDUR<5)!(+SDDUR>240) S ERRORFLAG=1 D ERRLOG^SDESJSON(.ERRORS,116) Q $D(ERRORFLAG)
  Q $D(ERRORFLAG)
  ;
 CHKOVERL(ELGARRAY,SDDFN,SDBEGDATE,SDDUR) ; View Appointment using DFN of the patient

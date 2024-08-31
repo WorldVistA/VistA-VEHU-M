@@ -1,5 +1,5 @@
-TIUPRPN3 ;SLC/MJC-Sort PNs for Prting;;6/26/01
- ;;1.0;TEXT INTEGRATION UTILITIES;**100,121**;Jun 20, 1997
+TIUPRPN3 ;SLC/MJC - Sort PNs for Printing; May 09, 2024@10:32
+ ;;1.0;TEXT INTEGRATION UTILITIES;**100,121,367**;Jun 20, 1997;Build 9
  ;
 SETUP(TITLE) ;displays centered option hdr
  N TIULINE
@@ -19,6 +19,7 @@ PT ;sorts PNs to prt by pt for selected date range
  .S TIUFLAG=$$FLAG() Q:TIUFLAG']""
  .I +$G(TIUFLAG),CTR1>1 S TIUSPG=$$PAGE Q:TIUSPG']""
  .S TIUSPG=$S(+$G(TIUSPG):0,1:1)
+ .K DIC
  .D DEVICE^TIUPRPN(TIUFLAG,TIUSPG)
  Q
  ;
@@ -35,14 +36,16 @@ AUTHOR ;sorts PNs to prt by author for selected date range
  .D FETCH(TIUXREF,TIUDUZ) Q:$D(TIUQT)
  .S TIUFLAG=$$FLAG() Q:TIUFLAG']""
  .S TIUSPG=$S(+$G(TIUFLAG):0,1:1)
+ .K DIC
  .D DEVICE^TIUPRPN(TIUFLAG,TIUSPG)
+ .S DIC=200,DIC(0)="AEQMN",DIC("A")="AUTHOR: "
  Q
  ;
 LOC ;sorts PNs to prt by location for selected date range
  ;they are only chartable if prted on separate pages
  ;[TIU PRINT PN LOC]
  ;
- N TIUDUZ,TIUQT,DIC,Y,TIUXREF
+ N TIULOC,TIUQT,DIC,Y,TIUXREF
  D SETUP("Print Progress Notes for a Selected LOCATION")
  S DIC=44,DIC(0)="AEQMN"
  F  W ! D ^DIC Q:Y<0  D  K TIUQT
@@ -51,7 +54,9 @@ LOC ;sorts PNs to prt by location for selected date range
  .D FETCH(TIUXREF,TIULOC) Q:$D(TIUQT)
  .S TIUFLAG=$$FLAG() Q:TIUFLAG']""
  .S TIUSPG=$S(+$G(TIUFLAG):0,1:1)
+ .K DIC
  .D DEVICE^TIUPRPN(TIUFLAG,TIUSPG)
+ .S DIC=44,DIC(0)="AEQMN"
  Q
  ;
 FETCH(TIUXREF,ENTITY,CTR1) ;get available notes, select date range

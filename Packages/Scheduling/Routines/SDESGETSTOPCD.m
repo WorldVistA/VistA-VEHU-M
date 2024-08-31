@@ -1,5 +1,5 @@
-SDESGETSTOPCD ;ALB/ANU - VISTA SCHEDULING RPCS - SDES GET CLINIC STOPCD ;JAN 24, 2023
- ;;5.3;Scheduling;**836**;Aug 13, 1993;Build 20
+SDESGETSTOPCD ;ALB/ANU,BWF - VISTA SCHEDULING RPCS - SDES GET CLINIC STOPCD ;JAN 24, 2023
+ ;;5.3;Scheduling;**836,880**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
@@ -15,7 +15,9 @@ GETSTOPCD(JSONRETURN,SDP) ;return entries from the SDEC CLINIC STOP FILE (#40.7)
  ;  List of entries from the CLINIC STOP file (#40.7)
  ;  - IEN
  ;  - Code
- ;  - Name 
+ ;  - Name
+ ;  - Restriction Type
+ ;  - Restriction Date
  ;
  N RETURN,ERRORS,HASFIELDS,RETURN,ELGFIELDSARRARY
  ;
@@ -29,7 +31,7 @@ GETSTOPCD(JSONRETURN,SDP) ;return entries from the SDEC CLINIC STOP FILE (#40.7)
  ;
 CLINSTOP(ELGARRAY,SDP) ;SDES GET CLINIC STOPCD remote procedure
  ;return entries from the CLINIC STOP file (#40.7)
- N SDESC,SDESI,SDIEN,SDINACTDT,SDESN,HASDATA
+ N SDESC,SDESI,SDIEN,SDINACTDT,SDESN,HASDATA,RESTRICTIONDT
  ;
  S SDESI=0
  S SDP=$G(SDP)
@@ -42,6 +44,10 @@ CLINSTOP(ELGARRAY,SDP) ;SDES GET CLINIC STOPCD remote procedure
  ..S ELGARRAY("ClinicStopCodes",SDESI,"IEN")=SDESC
  ..S ELGARRAY("ClinicStopCodes",SDESI,"Code")=$$GET1^DIQ(40.7,SDESC_",",1,"E")
  ..S ELGARRAY("ClinicStopCodes",SDESI,"Name")=$$GET1^DIQ(40.7,SDESC_",",.01,"E")
+ ..S ELGARRAY("ClinicStopCodes",SDESI,"RestrictionType")=$$GET1^DIQ(40.7,SDESC,5,"E")
+ ..S RESTRICTIONDT=$$GET1^DIQ(40.7,SDESI,6,"I")
+ ..S RESTRICTIONDT=$$FMTISO^SDAMUTDT(RESTRICTIONDT)
+ ..S ELGARRAY("ClinicStopCodes",SDESI,"RestrictionDate")=RESTRICTIONDT
  S HASDATA=($D(ELGARRAY)>1)
  Q HASDATA
  ;

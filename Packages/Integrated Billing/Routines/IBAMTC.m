@@ -1,15 +1,16 @@
 IBAMTC ;ALB/CPM - MEANS TEST NIGHTLY COMPILATION JOB ; 07 Jun 2021  4:17 PM
- ;;2.0;INTEGRATED BILLING;**34,52,70,93,100,118,115,132,150,153,137,176,215,275,321,312,457,519,549,614,703,706,630,704**;21-MAR-94;Build 49
+ ;;2.0;INTEGRATED BILLING;**34,52,70,93,100,118,115,132,150,153,137,176,215,275,321,312,457,519,549,614,703,706,630,704,760**;21-MAR-94;Build 25
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 INIT ; Entry point - initialize variables and parameters
  ;
- ;***
- ;S XRTL=$ZU(0),XRTN="IBAMTC-1" D T0^%ZOSV ;start rt clock
+ N X1,X2  ; IB*2.0*760
  ;Set Nightly task flag for Billing Clock query
  N IBNGHTSK
  S IBNGHTSK=1
  D CANCEL($$FMADD^XLFDT(DT,-7),$$NOW^XLFDT(),1) ; cancel copays (covid relief)   IB*2.0*706
+ S (IBY,Y)=1 D SITE^IBAUTL I Y<1 S IBY=Y D ERR G CLEAN  ; moved from below  IB*2.0*760
+ D CANCCD ; cancel copays (Cleland-Dole)  IB*2.0*760
  ;
  D UPDT^IBARXEPS($$FMADD^XLFDT(DT,-30),DT,1)
  ;
@@ -30,7 +31,6 @@ INIT ; Entry point - initialize variables and parameters
  ;
  D NOW^%DTC S IBAFY=$$FY^IBOUTL(X),DT=X,U="^"
  S (IBERRN,IBWHER,IBJOB,IBY,Y)=1,IBCNT=0 K ^TMP($J,"IBAMTC")
- D SITE^IBAUTL I Y<1 S IBY=Y D ERR G CLEAN
  D SERV^IBAUTL2 I IBY<1 D ERR G CLEAN
  ;
  ; Compile Means Test copay and per diem charges for all inpatients
@@ -93,9 +93,8 @@ CLEAN S %H=+$H-1 D YMD^%DTC S IBDT=X,(IBN,DFN)=0,IBWHER=23
  D KILL1
  ;
  I $D(ZTQUEUED),$G(ZTSK) D KILL^%ZTLOAD
- ;***
- ;I $D(XRT0) S:'$D(XRTN) XRTN="IBAMTC" D T1^%ZOSV ;stop rt clock
  ;
+ D UPDTS ; update timestamp  IB*2.0*760
  Q
  ;
  ;
@@ -200,4 +199,156 @@ KILL1 ; Kill all IB variables.
 KILL ; Kill all IB variables needed to build charges.
  K IBCLCT,IBCLDA,IBCLDT,IBCLDAY,IBCLDOL,IBCHPDA,IBCHCDA,IBCHG,IBCHFR,IBCHTO,IBCHTOTL,IBBS,IBNH
  K IBEVDA,IBEVDT,IBEVCLD,IBEVCAL,IBEVNEW,IBEVOLD,IBMED,IBTOTL,IBDESC,IBIL,IBTRAN,IBATYP,IBDATE
+ Q
+ ;
+UPDTS ; update completion timestamp (350.9/.17)  IB*2.0*760
+ N FDA
+ S FDA(350.9,"1,",.17)=$$NOW^XLFDT()
+ D FILE^DIE("","FDA")
+ Q
+ ;
+CANCCD ; cancel copays (Cleland-Dole)  IB*2.0*760
+ N DFN,IBCRES,IBDTM,IBERROR,IBEVDT,IBFREE,IBIEN,IBIEN1,IBN0,IBRTN,IBSTAT,IBVSTIEN,IBVSTAT,STATSTR,Z
+ S STATSTR="^BILLED^HOLD - RATE^HOLD - REVIEW^ON HOLD^"  ; bill statuses to include
+ S IBDTM=$$GET1^DIQ(350.9,"1,",.17,"I") I IBDTM'>0 S IBDTM=$$FMADD^XLFDT(DT,-1)
+ F  S IBDTM=$O(^IB("D",IBDTM)) Q:'IBDTM  D
+ .S IBIEN=0 F  S IBIEN=$O(^IB("D",IBDTM,IBIEN)) Q:'IBIEN  D
+ ..S IBN0=^IB(IBIEN,0)  ; file 350, node 0
+ ..S IBIEN1=$P(IBN0,U,9)  ; parent charge ien
+ ..I IBIEN'=IBIEN1 Q  ; not the parent charge
+ ..S IBSTAT=$$GET1^DIQ(350,IBIEN_",",.05)  ; status from 350/.05 (external)
+ ..I STATSTR'[(U_IBSTAT_U) Q  ; only cancel copays with specific status
+ ..S IBACT=$G(^IBE(350.1,+$P(IBN0,U,3),0))  ; node 0 in file 350.1 for the action type of this charge
+ ..I $P(IBACT,U,5)'=1 Q  ; action type is not "New"
+ ..I $$ISCMPCT(IBIEN) Q  ; COMPACT Act related
+ ..I '$$ISCLDL(IBIEN) Q  ; not Cleland-Dole eligible
+ ..S DFN=$P(IBN0,U,2),IBEVDT=$P(IBN0,U,17)
+ ..S IBCRES=$O(^IBE(350.3,"B","CLELAND-DOLE",0))
+ ..S Z=$$FNDMHVST(DFN,IBEVDT),IBVSTIEN=$P(Z,U),IBVSTAT=$P(Z,U,2)  ; find exisiting visit
+ ..S IBFREE=$$GETMHFR(DFN,IBEVDT)  ; 1 if there's a free visit on this date
+ ..I IBFREE D  Q
+ ...S IBRTN=$$CANCEL^IBECEAU6(IBIEN,IBCRES,0,0)  ; cancel this copay with "Cleland-Dole" reason
+ ...I IBVSTIEN,IBVSTAT'=1 S IBRTN=$$UPDATE^IBECEAMH(1,IBVSTIEN,4,"",2,1,.IBERROR)  ; update to visit only
+ ...Q
+ ..; check if there are free visits available
+ ..I $$NUMVSTCK^IBECEAMH(DFN,IBEVDT) D  Q
+ ...S IBRTN=$$CANCEL^IBECEAU6(IBIEN,IBCRES,0,0)  ; cancel this copay with "Cleland-Dole" reason
+ ...I IBVSTIEN,IBVSTAT'=1 S IBRTN=$$UPDATE^IBECEAMH(1,IBVSTIEN,1,"",2,1,.IBERROR) Q  ; update to free visit
+ ...; if there's no visit for this date, add a free visit
+ ...I 'IBVSTIEN D ADDVST^IBECEAMH(DFN,IBEVDT,"",1,2)
+ ...Q
+ ..I $O(^IBMH(351.83,"D",IBIEN,"")) Q  ; corresponding MH visit entry already exists
+ ..D ADDVST^IBECEAMH(DFN,IBEVDT,IBIEN,2)  ; add "billed" MH visit entry
+ ..Q
+ .Q
+ Q
+ ;
+UPDCANC(IBIEN) ; update MH visit tracking for cancelled copay
+ N IBERROR,IBRTN,IBSTAT,IBVSTIEN
+ I 'IBIEN Q
+ S IBSTAT=$$GET1^DIQ(350,IBIEN_",",.05)  ; status from 350/.05 (external)
+ I IBSTAT="CANCELLED" D
+ .; if there's a "billed" visit tracking entry linked to a cancelled copay, change that entry to "visit only" / "duplicate visit" reason
+ .S IBVSTIEN=$O(^IBMH(351.83,"D",IBIEN,"")) I 'IBVSTIEN Q
+ .I $P(^IBMH(351.83,IBVSTIEN,0),U,4)=2 S IBRTN=$$UPDATE^IBECEAMH(1,IBVSTIEN,4,"",4,1,.IBERROR)
+ .Q
+ Q
+ ;
+FNDMHVST(DFN,IBEVDT) ; find existing MH visit on a given date  IB*2.0*760
+ ;
+ ; DFN - patient's DFN
+ ; IBEVDT - date to search for (internal)
+ ;
+ ; returns "file 351.83 ien ^ visit status (351.83/.04)" if visit was found, 0 otherwise
+ ;
+ N IBSTAT,IBVSTIEN,RES
+ I $G(IBEVDT)'>0!$G(DFN)'>0 Q 0
+ S RES=0
+ S IBVSTIEN="" F  S IBVSTIEN=$O(^IBMH(351.83,"VD",IBEVDT,IBVSTIEN),-1) Q:'IBVSTIEN!+RES  D
+ .I '$D(^IBMH(351.83,"B",DFN,IBVSTIEN)) Q  ; different patient
+ .S IBSTAT=$P(^IBMH(351.83,IBVSTIEN,0),U,4) I IBSTAT=3 Q  ; removed visit
+ .S RES=IBVSTIEN_U_IBSTAT
+ .Q
+ Q RES
+ ;
+GETMHFR(DFN,IBEVDT) ; check if there's an existing free MH visit on a given date  IB*2.0*760
+ ;
+ ; DFN - patient's DFN
+ ; IBEVDT - date to search for (internal)
+ ;
+ ; returns 1 if free visit was found, 0 otherwise
+ ;
+ N IBSTAT,IBVSTIEN,RES
+ I $G(IBEVDT)'>0!$G(DFN)'>0 Q 0
+ S RES=0
+ S IBVSTIEN="" F  S IBVSTIEN=$O(^IBMH(351.83,"VD",IBEVDT,IBVSTIEN),-1) Q:'IBVSTIEN!+RES  D
+ .I '$D(^IBMH(351.83,"B",DFN,IBVSTIEN)) Q  ; different patient
+ .S IBSTAT=$P(^IBMH(351.83,IBVSTIEN,0),U,4) I IBSTAT'=1 Q  ; not a free visit
+ .S RES=1
+ .Q
+ Q RES
+ ;
+ISCLDL(IBN) ; check if charge is Cleland-Dole eligible  IB*2.0*760
+ ;
+ ; IBN - file 350 ien
+ ;
+ ; returns 1 if charge is Cleland-Dole eligible, 0 otherwise
+ ;
+ N IBATYP,IBATYPN,IBDATA,RES,Z
+ S RES=0 I $G(IBN)'>0 Q 0  ; invalid ien
+ S IBDATA=$G(^IB(IBN,0))
+ S IBATYP=$P(IBDATA,U,3) I 'IBATYP Q 0
+ S IBATYPN=$P($G(^IBE(350.1,IBATYP,0)),U) I IBATYPN'["OPT" Q 0  ; not an outpatient charge
+ I IBATYPN["CC MH" Q 1
+ I $$ISCDCANC^IBECEAMH(IBN) Q 1
+ S Z=$P($P(IBDATA,U,4),";") I $P(Z,":")'="409.68" Q 0
+ Q $$OECHK^IBECEAMH($P(Z,":",2),$P(IBDATA,U,17))
+ ;
+ISCMPCT(IBN) ; check if charge is COMPACT Act related  IB*2.0*760
+ ;
+ ; IBN - file 350 ien
+ ;
+ ; returns 1 if charge is COMPACT Act related, 0 otherwise
+ ;
+ N DFN,IBCHTYPE,I,IBCPTARY,IBDATA,IBDXARY,IBDXLIST,IBPCE,IBRF,IBRFFL,RES
+ S RES=0 I $G(IBN)'>0 Q RES  ; invalid ien
+ S IBDATA=$G(^IB(IBN,0))
+ S DFN=$P(IBDATA,U,2) I '$$ISELIG^IBOMHC(DFN) Q RES  ; patient is not eligible
+ ; parse "resulting from" field
+ S IBRF=$P(IBDATA,U,4) I IBRF'[":" Q RES
+ S IBRFFL=$P(IBRF,":")
+ ;
+ S IBCHTYPE=$P(IBDATA,U,3) I IBCHTYPE="" Q RES
+ I $$GET1^DIQ(350.1,IBCHTYPE,.05,"E")'="NEW" Q RES
+ ; If RX copay, quit.
+ I $$GET1^DIQ(350.1,IBCHTYPE,.11,"I")=5 Q RES
+ D GETDX(.IBDXLIST)
+ ; If file is 45 (PTF), lookup the primary and Secondary diagnoses
+ I IBRFFL=45 D GETPTFDX^IBOMHC($P(IBRF,":",2),.IBDXARY)
+ ; If file is 409.68, lookup the diagnoses using OPTDX^IBCSC4D
+ I IBRFFL=409.68 S IBPCE=$P(IBRF,":",2) D GETPCEDX^IBOMHC(IBPCE,.IBDXARY),GETPCECP^IBOMHC(IBPCE,.IBCPTARY)
+ ; If file is 405, grab the PTF or Diagnoses Text Strings.
+ I IBRFFL=405 D GETPMDX^IBOMHC($P(IBRF,":",2),.IBDXARY)
+ S I="" F  S I=$O(IBDXARY(I)) Q:I=""  D  Q:RES
+ .I $D(IBCPTARY("T2034")) S RES=1 Q  ; If there's T2034 cpt code, copay is eligible
+ .I I="R45.851",$D(IBCPTARY("80939")) S RES=1 Q  ; If Dx is R45.851 and CPT code is 80939, copay is eligible
+ .I $D(IBDXLIST(I)) S RES=1  ; If Dx is one the list, copay is eligible
+ .Q
+ Q RES
+ ;
+GETDX(IBDXLIST) ; Populate the list of Comact Act eligible DX codes  IB*2.0*760
+ ;
+ ; IBDLIST  - resulting array of Dx codes, passed by reference
+ ;
+ N I,IBDATA,IBDXD
+ ; Retrieve Specific Diagnosis codes
+ F I=1:1 S IBDATA=$T(DXSLIST+I) S IBDXD=$P(IBDATA,";",3) Q:IBDXD="EXIT"  S IBDXLIST(IBDXD)=0
+ ;
+ Q
+ ;
+DXSLIST ; List of Specific Compact Act Related Diagnosis codes  IB*2.0*760
+ ;;T14.91XA
+ ;;T14.91XD
+ ;;T14.91XS
+ ;;EXIT
  Q

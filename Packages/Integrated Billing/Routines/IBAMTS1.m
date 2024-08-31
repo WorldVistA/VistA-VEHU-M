@@ -1,5 +1,5 @@
 IBAMTS1 ;ALB/CPM - PROCESS NEW OUTPATIENT ENCOUNTERS ; 22-JUL-93
- ;;2.0;INTEGRATED BILLING;**20,52,132,153,166,156,167,247,339,614**;21-MAR-94;Build 25
+ ;;2.0;INTEGRATED BILLING;**20,52,132,153,166,156,167,247,339,614,760**;21-MAR-94;Build 25
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
 NEW ; Appointment fully processed - prepare a new charge.
@@ -183,6 +183,7 @@ CHKPRIM ;  check to see if patient has been billed for primary
  I IBS'=3!(IBS'=8)!(IBS'=10) F IBI=1:1:10 H 1 S IBS=$P($G(^IB(+IBBILLED,0)),"^",5) I IBS=3!(IBS=8)!(IBS=10) Q
  ;
  D CANC^IBAMTS2
+ D UPDCANC^IBAMTC(+IBBILLED)  ; update MH visit tracking for cancelled charge  IB*2.0*760
  ;
  ;  set ibbilled = 0 to create the specialty charge
  S IBBILLED=0

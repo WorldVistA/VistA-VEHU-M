@@ -1,5 +1,5 @@
 PSOERXUX ;BIRM/MFR - eRx Un Process action ;07/19/23
- ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**700,746**;DEC 1997;Build 106
  ;
 UNPROC ; Un-Process
  I '$D(PSOIEN) D MSG("No eRx IEN found") Q
@@ -9,7 +9,7 @@ UNPROC ; Un-Process
  ;
  ; #1 - Check if status is "Processed"
  S ERXSTAT=$$GET1^DIQ(52.49,PSOIEN,1,"E")
- I ERXSTAT'="PR"!"RXP"!"CXP" D MSG("eRx status must be 'PR','RXP', or 'CXP' to Un-Process") Q
+ I ",PR,RXP,CXP,"'[(","_ERXSTAT_",") D MSG("eRx status must be 'PR','RXP', or 'CXP' to Un-Process") Q
  ;
  ; #2 - Check if user hold the KEY "PSDRPH"
  S UKEY=$O(^DIC(19.1,"B","PSDRPH",0))
@@ -61,6 +61,7 @@ UNPROC ; Un-Process
  S PSOPLCK=$$L^PSSLOCK(PSODFN,0) I '$G(PSOPLCK) Q
  ;
 CANCEL ; Requirement - DC - discontinue prescription (PSO CANCEL)
+ N DA
  S PSONOOR="S",DA=PSRXNUM,REA="C"
  S PSOCANRC=DUZ,PSOCANRN=$P(^VA(200,DUZ,0),"^"),PSOCANRD=$P(^PSRX(DA,0),"^",4)
  S PSCAN(+^PSRX(DA,0))=DA_"^C"
@@ -76,8 +77,9 @@ CANCEL ; Requirement - DC - discontinue prescription (PSO CANCEL)
  D UL^PSSLOCK(PSODFN)
  ;
 ERX ; Change eRx status to "Wait"
+ N DA
  S RESP=$O(^PS(52.45,"C","ERX","W",0))
- S DIE="52.49",DR="1///"_RESP,DA=PSOIEN D ^DIE K DIE
+ S DIE="52.49",DR="1///"_RESP_";.13///@;25.2///@",DA=PSOIEN D ^DIE K DIE
  ; Add eRx history
  S FDA(52.4919,"+1,"_PSOIEN_",",.01)=$$NOW^XLFDT()
  S FDA(52.4919,"+1,"_PSOIEN_",",.02)=RESP

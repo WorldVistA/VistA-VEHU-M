@@ -1,5 +1,5 @@
-SDCNP0 ;ALB/LDB,ANU - CANCEL APPT. FOR A PATIENT ;MAR 15, 2017
- ;;5.3;Scheduling;**132,167,478,517,572,592,627,658,801,803,804**;Aug 13, 1993;Build 9
+SDCNP0 ;ALB/LDB,ANU,MGD - CANCEL APPT. FOR A PATIENT ;MAY 30, 2024
+ ;;5.3;Scheduling;**132,167,478,517,572,592,627,658,801,803,804,884**;Aug 13, 1993;Build 1
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Reference/ICR
  ; ^VALM1 - 10116
@@ -22,9 +22,15 @@ DEL1 F J=1:1 S SDDH=$P(APP,",",J) Q:SDDH']""  S SDDI=$P(SDDH,"-"),SDDM=$P(SDDH,"
 BEGD S (SD,S)=$P(^UTILITY($J,"SDCNP",A1),"^",1),I=$P(^UTILITY($J,"SDCNP",A1),"^",2)
  S SL=^SC(I,"SL"),X=$P(SL,U,3),STARTDAY=$S($L(X):X,1:8),SB=STARTDAY-1/100,X=$P(SL,U,6),HSI=$S(X:X,1:4),SI=$S(X="":4,X<3:4,X:X,1:4),STR="#@!$* XXWVUTSRQPONMLKJIHGFEDCBA0123456789jklmnopqrstuvwxyz",SDDIF=$S(HSI<3:8/HSI,1:2) K Y
  ; SD*5.3*803 - Check if Check In Date exists and not allow cancel
- I $P($G(^SC(+$P(^UTILITY($J,"SDCNP",A1),U,2),"S",+^UTILITY($J,"SDCNP",A1),1,+$$FIND^SDAM2(.DFN,+^UTILITY($J,"SDCNP",A1),+$P(^(A1),U,2)),"C")),U,1) W !,*7,">>> Appointment #",A1," has a check in date and cannot be cancelled." Q 
+ I $P($G(^SC(+$P(^UTILITY($J,"SDCNP",A1),U,2),"S",+^UTILITY($J,"SDCNP",A1),1,+$$FIND^SDAM2(.DFN,+^UTILITY($J,"SDCNP",A1),+$P(^(A1),U,2)),"C")),U,1) W !,*7,">>> Appointment #",A1," has a check in date and cannot be cancelled." Q
  I $$CODT^SDCOU(DFN,+^UTILITY($J,"SDCNP",A1),+$P(^(A1),U,2)) W !,*7,">>> Appointment #",A1," has a check out date and cannot be cancelled." Q
- D PROT^SDCNP1A Q:SDPRT=1  D CAN S $P(^UTILITY($J,"SDCNP",A1),"^",4)="*** JUST CANCELLED ***" Q
+ D PROT^SDCNP1A Q:SDPRT=1
+ ;
+ N SDCANCELVVS,SDVVSAPPT
+ S (SDCANCELVVS,SDVVSAPPT)=""
+ D CANCELVVS(DFN,A1,SDWH,SDSCR,.SDCANCELVVS,.SDVVSAPPT)
+ ;
+ D CAN S $P(^UTILITY($J,"SDCNP",A1),"^",4)="*** JUST CANCELLED ***" Q
 CAN Q:$P(^UTILITY($J,"SDCNP",A1),"^",4)["JUST CANCELLED"  S CNT=CNT+1,DIV=$S($P(^SC(I,0),"^",15)]"":" "_$P(^(0),"^",15),1:" 1") I $D(^DPT("ASDPSD","C",DIV,I,S,DFN)) K ^(DFN)
  N SDATA,SDCPHDL,SDNOW,SDCLI S SDCPHDL=$$HANDLE^SDAMEVT(1) D BEFORE^SDAMEVT(.SDATA,DFN,S,I,"",SDCPHDL)
  S SDCLI=I ;changed variable name I to SDCLI(Hospital location file IEN) as the value of I is manipulated by ^DIE SD*5.3*592
@@ -102,4 +108,20 @@ STATUS(LF) ;
 EVT ; -- separate tag if need to NEW vars
  N I,STR,SS,SL,SD,SB,SI,HSI,J,APP,S,A1,STARTDAY,CNT,DIV,SDERR,SDDIF
  D CANCEL^SDAMEVT(.SDATA,DFN,SDTTM,SDSC,SDPL,0,SDCPHDL)
+ Q
+ ;
+CANCELVVS(DFN,A1,SDWH,SDSCR,SDCANCELVVS,SDVVSAPPT) ;
+ N SDT,SDIEN,SDSTATUS,QUIT,VVSERR
+ ; Find the appt ien based on DFN and Date/Time
+ S SDT=$P($G(^UTILITY($J,"SDCNP",A1)),U,1)
+ S SDIEN="",QUIT=0,SDCANCELVVS=""
+ F  S SDIEN=$O(^SDEC(409.84,"APTDT",DFN,SDT,SDIEN),-1) Q:'SDIEN  D  Q:QUIT
+ . S SDSTATUS=$$GET1^DIQ(409.84,SDIEN,.17,"I")
+ . I SDSTATUS="" S QUIT=1
+ ; If appt is a VVS appt, Cancel it in VVS
+ I SDIEN>0 D
+ . I $$GET1^DIQ(409.84,SDIEN,2,"E")'="" D
+ . . S SDVVSAPPT=1
+ . . S SDCANCELVVS=$$RESTPOST^SDESCANCELVVS(SDIEN,$S(SDWH="C":"CANCELLED BY CLINIC",1:"CANCELLED BY PATIENT"),$$GET1^DIQ(409.2,SDSCR,.01,"E"))
+ . . I 'SDCANCELVVS H 2 Q
  Q

@@ -1,5 +1,5 @@
 PSOERXOG ;ALB/BWF - eRx parsing Utilities ; 11/14/2019 3:46pm
- ;;7.0;OUTPATIENT PHARMACY;**581**;DEC 1997;Build 126
+ ;;7.0;OUTPATIENT PHARMACY;**581,746**;DEC 1997;Build 106
  ;
  Q
  ; GBL - Global location for XML storage
@@ -132,7 +132,6 @@ MEDS(GBL,CNT,ERXIEN,MTYPE,NOTEOVR) ;
  ..D C S @GBL@(CNT,0)="</LastFillDate>"
  .D BL(GBL,.CNT,"Substitutions",SUBS)
  .D BL(GBL,.CNT,"NumberOfRefills",NUMREF)
- .;talk to Brad about adding the refills field to satisfy med dispensed
  .D ODIAG^PSOERXOH(GBL,.CNT,ERXIEN,MEDIEN) ; outbound diagnosis
  .D BL(GBL,.CNT,"PriorAuthorization",PRAUTH)
  .D BL(GBL,.CNT,"Note",NOTE)

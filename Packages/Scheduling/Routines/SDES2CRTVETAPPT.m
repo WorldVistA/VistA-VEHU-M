@@ -1,9 +1,9 @@
-SDES2CRTVETAPPT ;ALB/BLB,MGD - SDES2 CREATE VET REQ AND APPT ;Apr 01, 2023@09:23
- ;;5.3;Scheduling;**867,869,877**;Aug 13, 1993;Build 14
+SDES2CRTVETAPPT ;ALB/BLB,MGD,TJB - SDES2 CREATE VET REQ AND APPT ;Jun 17, 2024
+ ;;5.3;Scheduling;**867,869,877,881**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;  REQUEST("APPOINTMENT END TIME")          = (Required) APPT END TIME - ISO FORMAT
- ;  REQUEST("APPOINTMENT LENGTH")            = (Required) APPT LENGTH IN MINUTES (5-120)
+ ;  REQUEST("APPOINTMENT LENGTH")            = (Required) APPT LENGTH IN MINUTES (5-240)
  ;  REQUEST("APPOINTMENT START TIME")        = (Required) APPT START TIME - ISO FORMAT
  ;  REQUEST("CLINIC IEN")                    = (Required) CLINIC IEN
  ;  REQUEST("CREATE DATE")                   = (Required) DATE/TIME ENTERED (#409.85,9.5) in ISO8601 date/time format to include offset (e.g. CCYY-MM-DDTHH:MM-NNNN)

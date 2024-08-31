@@ -3480,7 +3480,7 @@ ZWR
 ^DIC(50,"%D",7,0)="This file must be built by Pharmacy Service BEFORE going on-line.  It is"
 ^DIC(50,"%D",8,0)="common to use another centers file and edit it to match your center's"
 ^DIC(50,"%D",9,0)="unique formulary."
-^DIC(50,"%MSC")=3220626.113242
+^DIC(50,"%MSC")=3240831.140347
 ^DIC(50.073,0)="DUE QUESTIONNAIRE^50.073I"
 ^DIC(50.073,0,"GL")="^PS(50.073,"
 ^DIC(50.073,0,"GL")="^PS(50.073,"
@@ -4507,7 +4507,7 @@ ZWR
 ^DIC(52.45,0,"WR")="@"
 ^DIC(52.45,"%D",0)="^1.001^1^1^3170711^^"
 ^DIC(52.45,"%D",1,0)="This file holds various codes needed by eRx package."
-^DIC(52.45,"%MSC")=3220624.193007
+^DIC(52.45,"%MSC")=3240831.141139
 ^DIC(52.46,0)="ERX EXTERNAL PATIENT^52.46"
 ^DIC(52.46,0,"AUDIT")="@"
 ^DIC(52.46,0,"DD")="@"
@@ -4580,7 +4580,7 @@ ZWR
 ^DIC(52.49,0,"WR")="@"
 ^DIC(52.49,"%D",0)="^1.001^1^1^3170711^^"
 ^DIC(52.49,"%D",1,0)="This file holds the eRx prescriptions received from Change Healthcare."
-^DIC(52.49,"%MSC")=3240117.155648
+^DIC(52.49,"%MSC")=3240831.141139
 ^DIC(52.5,0)="RX SUSPENSE^52.5PI"
 ^DIC(52.5,0,"GL")="^PS(52.5,"
 ^DIC(52.5,0,"GL")="^PS(52.5,"
@@ -5312,7 +5312,7 @@ ZWR
 ^DIC(57.23,"%D",1,0)="This file contains configuration and installation information for the "
 ^DIC(57.23,"%D",2,0)="Pharmacy Product System - National (PPS-N) file retrieval and "
 ^DIC(57.23,"%D",3,0)="installation process."
-^DIC(57.23,"%MSC")=3190319.173151
+^DIC(57.23,"%MSC")=3240831.133133
 ^DIC(57.5,0)="WARD GROUP^57.5I"
 ^DIC(57.5,0,"DD")="@"
 ^DIC(57.5,0,"GL")="^PS(57.5,"
@@ -6265,7 +6265,7 @@ ZWR
 ^DIC(60,"%","B","PXRM",3)=""
 ^DIC(60,"%D",0)="^^1^1^2940316^^^^"
 ^DIC(60,"%D",1,0)="This is the file that holds the names and ordering, display of tests."
-^DIC(60,"%MSC")=3200413.234732
+^DIC(60,"%MSC")=3240831.140719
 ^DIC(61,0)="TOPOGRAPHY FIELD^61I"
 ^DIC(61,0,"DD")="@"
 ^DIC(61,0,"DEL")="l"
@@ -8197,7 +8197,7 @@ ZWR
 ^DIC(73.2,"%D",12,0)="PROCEDURE TYPES nationally for performance monitors and performance"
 ^DIC(73.2,"%D",13,0)="measures, because not all sites are assigning the same Type of Imaging to"
 ^DIC(73.2,"%D",14,0)="the same CPT Code via the RAD/NUC MED PROCEDURES file (#71)."
-^DIC(73.2,"%MSC")=3230714.234817
+^DIC(73.2,"%MSC")=3240831.141226
 ^DIC(74,0)="RAD/NUC MED REPORTS^74I"
 ^DIC(74,0,"DD")="#"
 ^DIC(74,0,"DEL")="#"
@@ -21354,7 +21354,7 @@ ZWR
 ^DIC(350.9,"%D",10,0)="This file should always be edited by use of the provided options."
 ^DIC(350.9,"%D",11,0)=" "
 ^DIC(350.9,"%D",12,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(350.9,"%MSC")=3240722.042645
+^DIC(350.9,"%MSC")=3240831.141103
 ^DIC(351,0)="MEANS TEST BILLING CLOCK^351I"
 ^DIC(351,0,"DD")="@"
 ^DIC(351,0,"GL")="^IBE(351,"
@@ -21748,7 +21748,7 @@ ZWR
 ^DIC(351.83,"%D",9,0)="required by the Cleland-Dole Act of 2022."
 ^DIC(351.83,"%D",10,0)=" "
 ^DIC(351.83,"%D",11,0)="Per VHA Directive 6402, this file definition should not be modified. "
-^DIC(351.83,"%MSC")=3240522.033126
+^DIC(351.83,"%MSC")=3240831.141103
 ^DIC(351.9,0)="CLAIMSMANAGER BILLS^351.9"
 ^DIC(351.9,0,"AUDIT")="@"
 ^DIC(351.9,0,"DD")="@"
@@ -29886,7 +29886,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3240722.042802
+^DIC(409.93,"%MSC")=3240831.140335
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
@@ -57590,7 +57590,7 @@ ZWR
 ^DIC(9002313.93,"%D",6,0)="are nationally distributed."
 ^DIC(9002313.93,"%D",7,0)=" "
 ^DIC(9002313.93,"%D",8,0)="Per VHA Directive 2004-038, this file definition should not be modified."
-^DIC(9002313.93,"%MSC")=3240616.080536
+^DIC(9002313.93,"%MSC")=3240831.14042
 ^DIC(9002313.99,0)="BPS SETUP^9002313.99"
 ^DIC(9002313.99,0,"AUDIT")="@"
 ^DIC(9002313.99,0,"DD")="@"

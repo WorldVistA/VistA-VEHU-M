@@ -1,5 +1,5 @@
 PSOERPT1 ;BIRM/MFR - eRx Single Patient Medication Queue Supporting API's ; 12/10/22 10:57am
- ;;7.0;OUTPATIENT PHARMACY;**700,750**;DEC 1997;Build 6
+ ;;7.0;OUTPATIENT PHARMACY;**700,750,746**;DEC 1997;Build 106
  ;
 SETHDR() ; - Displays the Header Line
  N HDR,SRTORD,SRTPOS
@@ -78,8 +78,9 @@ SETITEM(ERXIEN,FIELD) ; Adds an eRx Record to the Sorted List
  I $P(DRUMTCH,"^",2) S ^TMP("PSOERPTS",$J,CSGROUP,SORT,"DRUAM")=1
  Q
  ;
-MATCHSUG(ERXIEN) ; Match Suggestion Prompt
+MATCHSUG(ERXIEN,VIEW) ; Match Suggestion Prompt
  ; Input: ERXIEN   - Pointer to ERX HOLDING QUEUE file (#52.49)
+ ;     (o)VIEW     - View Only Mode (1:YES,0/null: NO)
  ;Output: VISTAPAT - VistA Patient (Pointer to #2) or 0 (Not selected or no suggestion on file)
  ;
  N MATCHSUG,MATCHCNT,LSTMTCH,LSTERXID,CNT,ERXPAT,VPAT,QUIT,DIR,DIRUT,DIROUT,X,Y,II
@@ -91,13 +92,14 @@ MATCHSUG(ERXIEN) ; Match Suggestion Prompt
  . I $$DEAD^PSONVARP(VPAT) Q
  . S CNT=CNT+1
  . S LSTMTCH=$O(^PS(52.49,"APATVPAT",ERXPAT,VPAT,9999999),-1) I 'LSTMTCH Q
- . S LSTERXID=$O(^PS(52.49,"APATVPAT",ERXPAT,VPAT,LSTMTCH,0)) I 'LSTERXID Q
+ . S LSTERXID=$O(^PS(52.49,"APATVPAT",ERXPAT,VPAT,LSTMTCH,0)) I 'LSTERXID!(LSTERXID=ERXIEN) Q
  . D CMPPAT(ERXIEN,VPAT,LSTERXID,CNT_"^"_MATCHCNT)
- . K DIR S DIR(0)="SOA^A:ACCEPT;"_$S(MATCHCNT>1&(MATCHCNT'=CNT):"N:NEXT;",1:"")_"F:FORGET;E:EXIT"
- . S DIR("A")="ACTION on SUGGESTION: (A)CCEPT  "_$S(MATCHCNT>1&(MATCHCNT'=CNT):"(N)EXT  ",1:"")_"(F)ORGET  (E)XIT: "
+ . K DIR S DIR(0)="SOA^"_$S('$G(VIEW):"A:ACCEPT;",1:"")_$S(MATCHCNT>1&(MATCHCNT'=CNT):"N:NEXT;",1:"")_"F:FORGET;E:EXIT"
+ . S DIR("A")="ACTION on SUGGESTION: "_$S('$G(VIEW):"(A)CCEPT  ",1:"")_$S(MATCHCNT>1&(MATCHCNT'=CNT):"(N)EXT  ",1:"")_"(F)ORGET  (E)XIT: "
  . S DIR("B")=$S(MATCHCNT>1&(MATCHCNT'=CNT):"NEXT",1:"EXIT")
  . S II=0
- . S II=II+1,DIR("?",II)="  ACCEPT - Accepts the suggested VistA Patient and matches it to the eRx"
+ . I '$G(VIEW) D
+ . . S II=II+1,DIR("?",II)="  ACCEPT - Accepts the suggested VistA Patient and matches it to the eRx"
  . I MATCHCNT>1&(MATCHCNT'=CNT) D
  . . S II=II+1,DIR("?",II)="  NEXT   - Ignores this suggested VistA Patient and view the next one"
  . S II=II+1,DIR("?",II)="  FORGET - Forgets this suggested VistA Patient so that it is not presented"
@@ -187,7 +189,7 @@ VIDEO() ; Changes the Video Attributes for the list
  F I=0:1:LINE D CNTRL^VALM10(I,1,80,IOINORM,IOINORM)
  ; - Highlighting the PRESCRIPTION line if SIG is displayed
  F I=1:1:LINE D
- . I $D(HIGHLN(I)),$D(UNDLN(I)) D CNTRL^VALM10(I,1,80,IOUON_IOINHI,IOINORM) Q
+ . I $D(HIGHLN(I)),$D(UNDLN(I)) D CNTRL^VALM10(I,1,80,IOUON_IOINHI,IOUOFF_IOINORM) Q
  . I $D(HIGHLN(I)) D CNTRL^VALM10(I,1,80,IOINHI,IOINORM)
  . I $D(UNDLN(I)) D CNTRL^VALM10(I,1,80,IOUON,IOINORM)
  ; - Highlighting the group lines (order type and status)
@@ -231,15 +233,15 @@ LSTERXS(ERXLST,ISSONLY,DISPSEQ) ; Given a list of eRx IENs (array passed in by R
  ;       (o) ISSONLY - List Entries with Issues Only? (1: YES | 0: NO)
  ;       (o) DISPSEQ - Display the Sequence #? (1: YES | 0: NO)
  N SEQ,ERXIEN,HDR,XX,CNT,DIR
- S HDR=$S(DISPSEQ:"#",1:""),$E(HDR,$S(DISPSEQ:5,1:1))="ERX ID",$E(HDR,21)="DRUG NAME",$E(HDR,52)="PROVIDER",$E(HDR,77)="STS"
+ S HDR=$S(DISPSEQ:"#",1:""),$E(HDR,$S(DISPSEQ:5,1:1))="ERX ID",$E(HDR,17)="DRUG NAME",$E(HDR,52)="PROVIDER",$E(HDR,75)="STS"
  S $P(XX,"-",80)="" W !,HDR,!,XX
  S (SEQ,CNT)=0 F  S SEQ=$O(ERXLST(SEQ)) Q:'SEQ  D
  . S ERXIEN=+ERXLST(SEQ)
  . I $G(ISSONLY),$P($G(ERXLST(SEQ)),"^",2)="" Q
  . W !,$S(DISPSEQ:SEQ_$S($$GET1^DIQ(52.49,ERXIEN,95.1,"I"):"]",1:"."),1:""),?$S(DISPSEQ:4,1:0),$$GET1^DIQ(52.49,ERXIEN,.01)
- . W ?20,$E($S($$GETDRUG^PSOERXU5(ERXIEN)'="":$$GETDRUG^PSOERXU5(ERXIEN),1:"N/A"),1,30)
- . W ?51,$E($$GET1^DIQ(52.49,ERXIEN,2.1),1,23)
- . W ?76,$$GET1^DIQ(52.49,ERXIEN,1)
+ . W ?16,$E($S($$GETDRUG^PSOERXU5(ERXIEN)'="":$$GETDRUG^PSOERXU5(ERXIEN),1:"N/A"),1,34)
+ . W ?51,$E($$GET1^DIQ(52.49,ERXIEN,2.1),1,22)
+ . W ?74,$$GET1^DIQ(52.49,ERXIEN,1)
  . I $P($G(ERXLST(SEQ)),"^",2)'="" D
  . . S CNT=CNT+1 W !,"REASON: ",$P($G(ERXLST(SEQ)),"^",2)
  . S CNT=CNT+1 I '(CNT#18) D PAUSE^VALM1 W !,HDR,!,XX

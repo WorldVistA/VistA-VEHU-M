@@ -1,5 +1,5 @@
 PSOSPMU1 ;BIRM/MFR - State Prescription Monitoring Program Utilities ;10/07/12
- ;;7.0;OUTPATIENT PHARMACY;**408,437,451,625,630,662,696**;DEC 1997;Build 4
+ ;;7.0;OUTPATIENT PHARMACY;**408,437,451,625,630,662,696,746**;DEC 1997;Build 106
  ;
 GATHER(STATE,BEGDTTM,ENDDTTM,RECTYPE,RTSONLY,LIST) ; Gathers all CS prescriptions for Data Range
  ;Input: STATE   - Pointer to the STATE file (#5)
@@ -255,7 +255,8 @@ DELFILES(LOCDIR,EXPFILE,INPTFILE,FTPFILE,LOGFILE) ; Delete Files
  Q
  ;
 PAUSE ; Pauses screen until user hits Return
- W ! K DIR S DIR("A")="Press Return to continue",DIR(0)="E" D ^DIR
+ N DIR
+ W ! S DIR("A")="Press Return to continue",DIR(0)="E" D ^DIR
  Q
  ;
 XVMSDIR(VMSDIR) ; Converts a VMS directory

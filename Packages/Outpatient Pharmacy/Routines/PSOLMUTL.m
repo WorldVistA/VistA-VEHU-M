@@ -1,5 +1,5 @@
 PSOLMUTL ;BIR/SAB - listman utilities ;Dec 08, 2021@10:34
- ;;7.0;OUTPATIENT PHARMACY;**19,46,84,99,131,132,148,268,225,305,386,390,622,441**;DEC 1997;Build 209
+ ;;7.0;OUTPATIENT PHARMACY;**19,46,84,99,131,132,148,268,225,305,386,390,622,441,746**;DEC 1997;Build 106
  ;External reference FULL^VALM1 supported by dbia 10116
  ;External reference $$SETSTR^VALM1 supported by dbia 10116
  ;External reference EN2^GMRAPEMO supported by dbia 190
@@ -40,6 +40,8 @@ NEWALL(DFN) ; Enter Allergy info.
  Q
 NEWSEL ;allows order selection by number instead of action
  S Y=$P(XQORNOD(0),"=",2) N VALMCNT D NEWSEL^PSOORNE2
+ ;Resetting eRx side-by-side video formatting variables
+ D RESET^PSOERUT0()
  Q
 EDTSEL ;allows edit selection by number instead of action - active orders
  N VALMCNT S Y=$P(XQORNOD(0),"=",2) D EDTSEL^PSOOREDT

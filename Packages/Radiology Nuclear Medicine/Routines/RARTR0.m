@@ -1,5 +1,5 @@
-RARTR0 ;HISC/GJC - Queue/Print Radiology Rpts utility routine. ; Feb 02, 2024@11:58:29
- ;;5.0;Radiology/Nuclear Medicine;**8,26,74,84,99,210**;Mar 16, 1998;Build 1
+RARTR0 ;HISC/GJC - Queue/Print Radiology Rpts utility routine. ; May 23, 2024@14:02:42
+ ;;5.0;Radiology/Nuclear Medicine;**8,26,74,84,99,210,216**;Mar 16, 1998;Build 2
  ; 06/28/2006 BAY/KAM Remedy Call 146291 - Change Patient Age to DOB
  ;
  ;Integration Agreements
@@ -160,14 +160,15 @@ HEAD ; Set up header info for e-mail message (called from INIT^RARTR)
  S:$D(RAERRFLG) ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))="         "_$$AMENRPT^RARTR2()
  S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))=""
  ;p210/KLM - add to CPRS report if not an outside report or no credit location
- N RADIVDA,RACRM S RADIVDA=$P(^RADPT(RADFN,"DT",RADTI,0),U,3),RACRM=$P(^RA(79.1,$P(^RADPT(RADFN,"DT",RADTI,0),U,4),0),U,21)
- I $G(RAST)'="EF",(RACRM'=2) D HDRFAC(RADIVDA)
+ N RADIVDA,RACRM S RADIVDA=$P(^RADPT(RADFN,"DT",RADTI,0),U,3),RACRM=$P($G(^RA(79.1,$P(^RADPT(RADFN,"DT",RADTI,0),U,4),0)),U,21)
+ I $G(RAST)'="EF",($G(RACRM)'=2) D HDRFAC(RADIVDA) ;p216/KLM - add $G   ^ for i-loc lookup (site deleted i-loc)
  Q
-HDRFAC(RADIVDA) ;p210/KLM - Add Facility Contact Data for FDA mammograpgy requirement
+HDRFAC(RADIVDA) ;p210/KLM - Add Facility Contact Data for FDA mammography requirement
  Q:RADIVDA=""  ;no division passed
  N RAMADDR,RACSZ,RAFACN,RAPHONE,RAIENDIV,RACNTR,RACOL S RACNTR=40
  S RAPHONE=$$GET1^DIQ(79,RADIVDA,200) ;new field - facility phone number
- S RAFACN=$P($$NAME^XUAF4(RADIVDA),U),RAMADDR=$$MADD^XUAF4(RADIVDA)
+ S RAFACN=$P($$NAME^XUAF4(RADIVDA),U),RAMADDR=$$PADD^XUAF4(RADIVDA) ;p216 - get physical address, not mailing address
+ I $P(RAMADDR,U,2)="" S RAMADDR=$$MADD^XUAF4(RADIVDA) ;p216 - check mailing if no physical
  S RACSZ=$P(RAMADDR,U,2)_", "_$P(RAMADDR,U,3)_" "_$P($P(RAMADDR,U,4),"-")
  I $D(RAUTOE) D  Q
  .S RASPACE="",RACNTR=45

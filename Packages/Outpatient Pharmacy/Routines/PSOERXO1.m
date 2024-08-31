@@ -1,5 +1,5 @@
 PSOERXO1 ;ALB/BWF - eRx Outbound Error messages ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**467,520,508,581,617,715**;DEC 1997;Build 1
+ ;;7.0;OUTPATIENT PHARMACY;**467,520,508,581,617,715,746**;DEC 1997;Build 106
  ;
  Q
  ;
@@ -93,7 +93,7 @@ POST(ERXIEN,PSSOUT,ECODE,DESCODE,DESC,RXVERIFY,INST,OVRESP) ;
  .; if the post was unsuccessful, inform the user and quit.
  .I $P(PSSOUT(0),U)<1 S PSSOUT("errorMessage")=$P(PSSOUT(0),U,2)
  .S HUBID=$G(PSSOUT("outboundMsgId")) I 'HUBID S PSSOUT("errorMessage")="The eRx Processing hub did not return a Hub identification number."
- .I $D(PSSOUT("errorMessage")) D  Q
+ .I $$PROD^XUPROD(),$D(PSSOUT("errorMessage")) D  Q
  ..D UPDSTAT^PSOERXU1(ERXIEN,"CAX")
  ..S ERRSEQ=$$ERRSEQ^PSOERXU1(ERXIEN) Q:'ERRSEQ
  ..D FILERR^PSOERXU1(ERXIENS,ERRSEQ,"PX","V",$G(PSSOUT("errorMessage")))
@@ -137,6 +137,12 @@ RESTPOST(PSSOUT,GBL) ;
  ;
  ; execute HTTP Post method
  SET PSS("postResult")=$$POST^XOBWLIB(PSS("restObject"),PSS("path"),.PSSERR)
+ ;
+ ; *** TEST ACCOUNT EXECUTION ONLY *** - Returns success for eRx Simulation Testing when there is no connection
+ I '$$PROD^XUPROD(),$G(^TMP($J,"OUT","EXCEPTION"))["Unable to open TCP/IP socket" D
+ . S PSS("postResult")=1 F  S PSSOUT("outboundMsgId")="999"_$R(1000000) I '$D(^PS(52.49,"B",PSSOUT("outboundMsgId"))) Q
+ . K ^TMP($J,"OUT","EXCEPTION")
+ ;
  IF $DATA(^TMP($JOB,"OUT","EXCEPTION"))>0 S PSSOUT(0)="-1^"_^TMP($JOB,"OUT","EXCEPTION") K ^TMP($JOB,"OUT","EXCEPTION") QUIT PSSOUT
  ;
  ; response coming back

@@ -1,5 +1,5 @@
 PSOPTC0 ;AITC/PD - Patient Billing Comments;9/5/2017
- ;;7.0;OUTPATIENT PHARMACY;**482**;DEC 1997;Build 44
+ ;;7.0;OUTPATIENT PHARMACY;**482,704**;DEC 1997;Build 16
  ;
 EN ; Menu Option Entry Point
  ;
@@ -25,17 +25,19 @@ EN ; Menu Option Entry Point
  ;
 HDR ; Header
  ;
- N DFN,H1,VA,VADM
+ N DFN,H1,H2,VA,VADM
  ;
  S DFN=$G(PSOPTC("DFN"))
  I 'DFN G EXIT
  D DEM^VADPT
  S H1=$$LJ^XLFSTR("Patient: "_$E($G(VADM(1)),1,30)_" ("_$G(VA("BID"))_")",48)
- S H1=H1_$$LJ^XLFSTR("Sex: "_$P($G(VADM(5)),U,1),8)
- S H1=H1_$$LJ^XLFSTR("DOB: "_$$FMTE^XLFDT($P($G(VADM(3)),U,1),"2Z")_" ("_$G(VADM(4))_")",22)
+ S $E(H1,57)=$$LJ^XLFSTR("DOB: "_$$FMTE^XLFDT($P($G(VADM(3)),U,1),"2Z")_" ("_$G(VADM(4))_")",22)
+ S H2=$$LJ^XLFSTR("Birth Sex: "_$P($G(VADM(5)),U,1),8)
+ S $E(H2,32)="Self-Identified Gender: "_$E($P($G(VADM(14,5)),U,1),1,24)
  ;
  S VALMHDR(1)=H1
- S VALMHDR(2)="#   STATUS  DATE/TIME                USER"
+ S VALMHDR(2)=H2
+ S VALMHDR(3)="#   STATUS  DATE/TIME                USER"
  Q
  ;
 INIT ; 

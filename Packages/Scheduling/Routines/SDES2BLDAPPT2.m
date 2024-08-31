@@ -1,5 +1,5 @@
-SDES2BLDAPPT2 ;ALB/LAB,JAS - VISTA SCHEDULING BUILDING APPT OBJECT FROM PATIENT ;APR 22, 2024
- ;;5.3;Scheduling;**871,877**;Aug 13, 1993;Build 14
+SDES2BLDAPPT2 ;ALB/LAB,JAS,LAB - VISTA SCHEDULING BUILDING APPT OBJECT FROM PATIENT ;MAY 15, 2024
+ ;;5.3;Scheduling;**871,877,880**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -9,13 +9,87 @@ GET2INFO(APPTOBJ,APPTIEN,SDDFN,RECCNT,SDDUZ) ;
  S APPTOBJ("Appointment",RECCNT,"Patient","ICN")=$$GETPATICN^SDESINPUTVALUTL(SDDFN)
  S APPTOBJ("Appointment",RECCNT,"Patient","SSN")=$$LAST4SSN^SDESINPUTVALUTL(SDDFN)
  S APPTOBJ("Appointment",RECCNT,"Patient","DateOfBirth")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDDFN_",",.03,"I"))
+ S APPTOBJ("Appointment",RECCNT,"Patient","DateOfBirthInternal")=$$GET1^DIQ(2,SDDFN_",",.03,"I")
  S APPTOBJ("Appointment",RECCNT,"Patient","DateOfDeath")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDDFN_",",.351,"I"))
  S APPTOBJ("Appointment",RECCNT,"Patient","EligibilityIEN")=$$GET1^DIQ(2,SDDFN_",",.361,"I")
+ S APPTOBJ("Appointment",RECCNT,"Patient","Eligibility")=$$GET1^DIQ(2,SDDFN_",",.361,"E")
+ S APPTOBJ("Appointment",RECCNT,"Patient","FugitiveFelonFlag")=$S($$GET1^DIQ(2,SDDFN_",",1100.01,"I"):"YES",1:"NO")
+ S APPTOBJ("Appointment",RECCNT,"Patient","Gender")=$$GET1^DIQ(2,SDDFN_",",.02,"E")
  S APPTOBJ("Appointment",RECCNT,"Patient","Name")=$$GET1^DIQ(2,SDDFN_",",.01,"E")
  S APPTOBJ("Appointment",RECCNT,"Patient","Street")=$$GET1^DIQ(2,SDDFN_",",.111,"E")
- N SENSITIVE
+ N SENSITIVE,NEEDSINS
  D SENSITIVE^SDES2UTIL(.SENSITIVE,SDDFN,SDDUZ)
  S APPTOBJ("Appointment",RECCNT,"Patient","SensitivePatientRestrictedRecord")=$S($G(SENSITIVE(1)):1,1:0)
+ S APPTOBJ("Appointment",RECCNT,"Patient","SensitivePatientType")=$G(SENSITIVE(1))
+ D NEEDVERIFY^SDESPATRPC(.NEEDSINS,SDDFN,180,90)
+ S APPTOBJ("Appointment",RECCNT,"Patient","NeedInsuranceVerification")=NEEDSINS
+ D GETREGDT(.APPTOBJ,RECCNT,SDDFN)
+ D NATIONALFLAG(.APPTOBJ,RECCNT,SDDFN)
+ D LOCALFLAGS(.APPTOBJ,RECCNT,SDDFN)
+ Q
+ ;
+GETREGDT(APPTOBJ,RECCNT,SDDFN) ;
+ N ORIGREGIEN,ORIGREGDT,LASTREGIEN,LASTREGDT,DEMODIFF
+ S DEMODIFF=180
+ I $D(^DGS(41.41,"B",SDDFN)) D
+ .S ORIGREGIEN=$O(^DGS(41.41,"B",SDDFN,0))
+ .S LASTREGIEN=$O(^DGS(41.41,"B",SDDFN,"A"),-1)
+ .S ORIGREGDT=$$FMTISO^SDAMUTDT($$GET1^DIQ(41.41,ORIGREGIEN,1,"I"))
+ .S LASTREGDT=$$FMTISO^SDAMUTDT($$GET1^DIQ(41.41,LASTREGIEN,1,"I"))
+ .S DEMODIFF=$$FMDIFF^XLFDT(DT,$$GET1^DIQ(41.41,LASTREGIEN_",",1,"I"))
+ S APPTOBJ("Appointment",RECCNT,"Patient","OriginalRegistrationDate")=$G(ORIGREGDT)
+ S APPTOBJ("Appointment",RECCNT,"Patient","LastRegistrationDate")=$G(LASTREGDT)
+ S APPTOBJ("Appointment",RECCNT,"Patient","DemographicsNeedUpdate")=$S(DEMODIFF>179:1,DEMODIFF<180:0)
+ Q
+ ;
+NATIONALFLAG(APPTOBJ,RECCNT,SDDFN) ;
+ N PRFDATA,DFNERROR,DFNERRORS,FN,RESNUM,PRFCNT,FIEN,FPTR,PRFARRY,NARR,FDATA
+ S FN=26.15
+ D LIST^DIC(26.15,,,"E",,,,,,,"FDATA","ERR")
+ S (RESNUM,PRFCNT)=0
+ F  S RESNUM=$O(FDATA("DILIST",2,RESNUM)) Q:'RESNUM  D
+ .S FIEN=$G(FDATA("DILIST",2,RESNUM))
+ .S FPTR=FIEN_";"_$P($$ROOT^DILFD(26.15),U,2)
+ .K PRFDATA
+ .D GETINF^DGPFAPIH(SDDFN,FPTR,,,"PRFDATA") Q:'$D(PRFDATA)
+ .S PRFCNT=PRFCNT+1
+ .S APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag",PRFCNT,"Name")=$P($G(PRFDATA("FLAG")),U,2)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag",PRFCNT,"Type")=$P($G(PRFDATA("FLAGTYPE")),U,2)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag",PRFCNT,"Category")=$P($G(PRFDATA("CATEGORY")),U)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag",PRFCNT,"AssignedDate")=$$FMTISO^SDAMUTDT($P($G(PRFDATA("ASSIGNDT")),U,1))
+ .S APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag",PRFCNT,"OwnerSiteID")=$P($G(PRFDATA("OWNER")),U)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag",PRFCNT,"OwnerSiteName")=$P($G(PRFDATA("OWNER")),U,2)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag",PRFCNT,"OriginatingSiteID")=$P($G(PRFDATA("ORIGSITE")),U)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag",PRFCNT,"OriginatingSiteName")=$P($G(PRFDATA("ORIGSITE")),U,2)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag",PRFCNT,"ReviewDate")=$$FMTISO^SDAMUTDT($P($G(PRFDATA("REVIEWDT")),U))
+ .S NARR=0 F  S NARR=$O(PRFDATA("NARR",NARR)) Q:'NARR  D
+ ..S APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag",PRFCNT,"Narrative",NARR)=$G(PRFDATA("NARR",NARR,0))
+ I '$D(APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag")) S APPTOBJ("Appointment",RECCNT,"Patient","NationalFlag",1)=""
+ Q
+ ;
+LOCALFLAGS(APPTOBJ,RECCNT,SDDFN) ;
+ N PRFDATA,DFNERROR,DFNERRORS,FN,RESNUM,PRFCNT,FIEN,FPTR,PRFARRY,NARR,FDATA
+ S FN=26.11
+ D LIST^DIC(26.11,,,"E",,,,,,,"FDATA","ERR")
+ S (RESNUM,PRFCNT)=0
+ F  S RESNUM=$O(FDATA("DILIST",2,RESNUM)) Q:'RESNUM  D
+ .S FIEN=$G(FDATA("DILIST",2,RESNUM))
+ .S FPTR=FIEN_";"_$P($$ROOT^DILFD(26.11),U,2)
+ .K PRFDATA
+ .D GETINF^DGPFAPIH(SDDFN,FPTR,,,"PRFDATA") Q:'$D(PRFDATA)
+ .S PRFCNT=PRFCNT+1
+ .S APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag",PRFCNT,"Name")=$P($G(PRFDATA("FLAG")),U,2)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag",PRFCNT,"Type")=$P($G(PRFDATA("FLAGTYPE")),U,2)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag",PRFCNT,"Category")=$P($G(PRFDATA("CATEGORY")),U)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag",PRFCNT,"AssignedDate")=$$FMTISO^SDAMUTDT($P($G(PRFDATA("ASSIGNDT")),U,1))
+ .S APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag",PRFCNT,"OwnerSiteID")=$P($G(PRFDATA("OWNER")),U)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag",PRFCNT,"OwnerSiteName")=$P($G(PRFDATA("OWNER")),U,2)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag",PRFCNT,"OriginatingSiteID")=$P($G(PRFDATA("ORIGSITE")),U)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag",PRFCNT,"OriginatingSiteName")=$P($G(PRFDATA("ORIGSITE")),U,2)
+ .S APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag",PRFCNT,"ReviewDate")=$$FMTISO^SDAMUTDT($P($G(PRFDATA("REVIEWDT")),U))
+ .S NARR=0 F  S NARR=$O(PRFDATA("NARR",NARR)) Q:'NARR  D
+ ..S APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag",PRFCNT,"Narrative",NARR)=$G(PRFDATA("NARR",NARR,0))
+ I '$D(APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag")) S APPTOBJ("Appointment",RECCNT,"Patient","LocalFlag",1)=""
  Q
  ;
 GET298INFO(APPTOBJ,APPTIEN,SDDFN,RECCNT,CLINIEN) ;
@@ -39,7 +113,7 @@ GET298INFO(APPTOBJ,APPTIEN,SDDFN,RECCNT,CLINIEN) ;
  S APPTOBJ("Appointment",RECCNT,"NoShowCancelDateTime")=$$FMTISO^SDAMUTDT($G(ARRAY298(2.98,PATIENS,15,"I")))
  S APPTOBJ("Appointment",RECCNT,"NoShowCancelledBy")=$G(ARRAY298(2.98,PATIENS,14,"E"))
  S APPTOBJ("Appointment",RECCNT,"NumberOfCollateralSeen")=$G(ARRAY298(2.98,PATIENS,11,"E"))
- S APPTOBJ("Appointment",RECCNT,"OutpatientEncounter")=$$FMTISO^SDAMUTDT($$GET1^DIQ(409.68,$G(ARRAY298(2.98,PATIENS,21,"I")),.01,"I"))
+ S APPTOBJ("Appointment",RECCNT,"OutpatientEncounter")=$$FMTISO^SDAMUTDT($$GET1^DIQ(409.68,$G(ARRAY298(2.98,PATIENS,21,"I")),.01,"I"),CLINIEN)
  S APPTOBJ("Appointment",RECCNT,"PurposeOfVisit")=$G(ARRAY298(2.98,PATIENS,9,"E"))
  S APPTOBJ("Appointment",RECCNT,"RealAppointment")=$G(ARRAY298(2.98,PATIENS,4,"E"))
  S APPTOBJ("Appointment",RECCNT,"RoutingSlipPrintDate")=$$FMTISO^SDAMUTDT($G(ARRAY298(2.98,PATIENS,8.5,"I")))
@@ -55,7 +129,6 @@ GET298INFO(APPTOBJ,APPTIEN,SDDFN,RECCNT,CLINIEN) ;
  ;
 BLANK298(APPTOBJ) ;if overlaid appointment, send empty fields
  S APPTOBJ("Appointment",RECCNT,"InpatientFlag")=""
- S APPTOBJ("Appointment",RECCNT,"AppointmentType")=""
  S APPTOBJ("Appointment",RECCNT,"AppointmentTypeSubCategory")=""
  S APPTOBJ("Appointment",RECCNT,"AutoRebookedApptDateTime")=""
  S APPTOBJ("Appointment",RECCNT,"CancellationRemarks")=""

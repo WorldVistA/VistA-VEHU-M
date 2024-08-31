@@ -1,5 +1,5 @@
 PSORREF ;AITC/BWF - Remote RX retrieval API ;12/12/16 3:21pm
- ;;7.0;OUTPATIENT PHARMACY;**454,475,497,643**;DEC 1997;Build 35
+ ;;7.0;OUTPATIENT PHARMACY;**454,475,497,643,740**;DEC 1997;Build 18
  ;
  Q
  ; RET    - return data
@@ -15,7 +15,7 @@ REMREF(RET,RXNUM,FDATE,MW,RPHARM,RPHONE,RSITE,RX0,RX2,RXSTA,RPROV,RSIG,RREF0,ROR
  N MSG,BACK,PSOPAR,RRXIEN,PSOSIEN,DSUPP,LASTREF,XTMPLOC,PASSLOC,HFSIEN,FULLPTH,HFSDONE,PTHDAT,PTHPIECE,FOUND,STRT,STATION,FTGOPEN,PPL1,PSOSITE
  N PSOX,PTHFILE,SITENUM,X,X1,X2,HDRUG,CSVAL,PSISSDT,TFILLS,OFFSET,CHKDT,DINACT,DEL,FTGSTRT,PDIR,PFIL,PSODTCUT,PSOEXREP,PSOPHDUZ
  N PSODFDIR,PSOFNAME,PAR,DELARR,RREFIEN
- N PSOBBC,PSOBBC1,PSODIR,PSOMVH
+ N PSOBBC,PSOBBC1,PSODIR,PSOMVH,CLOZVAL,NOONEVA
  ; check 3rd party payer rejects. Send message to initiating site if applicable.
  S $ETRAP="D ^%ZTER Q"
  S RET(0)=""
@@ -34,11 +34,7 @@ REMREF(RET,RXNUM,FDATE,MW,RPHARM,RPHONE,RSITE,RX0,RX2,RXSTA,RPROV,RSIG,RREF0,ROR
  ; PSO*7*497 - end trade name/titration block
  S PSOPHDUZ=$$GET1^DIQ(52,RRXIEN,23,"I") I 'PSOPHDUZ S PSOPHDUZ=.5
  S HDRUG=$$GET1^DIQ(52,RRXIEN,6,"I")
- ; quit if drug is inactive
- S DINACT=$$GET1^DIQ(50,HDRUG,100,"I")
- I DINACT>0,DINACT<$$NOW^XLFDT S RET(1)="Drug is inactive for Rx# "_RXNUM_". Cannot refill." D RET0 Q
- S CSVAL=$$GET1^DIQ(50,HDRUG,3,"E"),CSVAL=$E(CSVAL,1)
- I CSVAL,CSVAL>0,CSVAL<6 D RET0 S RET(1)="Rx #"_RXNUM_" cannot be refilled.",RET(2)="The associated drug is considered a controlled substance",RET(3)="at the host facility." Q
+ I '$$VALIDDRUG(HDRUG) D RET0 Q  ;Validate entry in file 50
  S PSOPAR=$G(^PS(59,PSOSIEN,1)),PSOSITE=PSOSIEN
  S RPHONE=$G(RPHONE,"")
  ; check to see if this action will throw the prescription into suspense. If so, quit and return a message
@@ -104,6 +100,17 @@ REMREF(RET,RXNUM,FDATE,MW,RPHARM,RPHONE,RSITE,RX0,RX2,RXSTA,RPROV,RSIG,RREF0,ROR
  .S ROR1=$G(^PSRX(RRXIEN,"OR1"))
  D EOJ
  Q
+VALIDDRUG(DRUGIEN) ;
+ S DINACT=$$GET1^DIQ(50,DRUGIEN,100,"I")
+ I DINACT>0,($$DT^XLFDT>DINACT) S RET(1)="Drug is inactive for Rx# "_RXNUM_". Cannot refill." D RET0 Q 0
+ S CSVAL=$$GET1^DIQ(50,DRUGIEN,3,"E"),CSVAL=$E(CSVAL,1)
+ I CSVAL,CSVAL>0,CSVAL<6 D RET0 S RET(1)="Rx #"_RXNUM_" cannot be refilled.",RET(2)="The associated drug is considered a controlled substance",RET(3)="at the host facility." Q 0
+ S CLOZVAL=$$GET1^DIQ(50,DRUGIEN,17.5)  ; Clozapine Check PSO*7*740
+ I CLOZVAL="PSOCLO1" S RET(1)="This is a Clozapine prescription.",RET(2)="Cannot refill Rx # "_RXNUM_"." Q 0
+ ;
+ S NOONEVA=$$GET1^DIQ(50,DRUGIEN,907)
+ I NOONEVA="YES" S RET(1)="Remote Site Drug is restricted from OneVA Pharmacy processing.",RET(2)="Cannot refill Rx # "_RXNUM_"." Q 0
+ Q 1
 EOJ ;
  D RET0
  K PSOMSG,PSOREF,PSORX("BAR CODE"),PSOLIST,LFD,MAX,MIN,NODE,PS,PSOERR,REF,RF,RXO,RXN,RXP,RXS,SD,VAERR,PSORX("FILL DATE")

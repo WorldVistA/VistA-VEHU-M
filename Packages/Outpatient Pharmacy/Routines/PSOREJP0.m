@@ -1,6 +1,6 @@
 PSOREJP0 ;BIRM/MFR - Third Party Rejects Processing Screen ;04/28/05
- ;;7.0;OUTPATIENT PHARMACY;**148,260,287,289,385,421,427,448,549,562**;DEC 1997;Build 19
- ;Reference to ^BPSVRX supported by IA 5723
+ ;;7.0;OUTPATIENT PHARMACY;**148,260,287,289,385,421,427,448,549,562,704**;DEC 1997;Build 16
+ ; Reference to ^BPSVRX in ICR #5723
  ;
  N PSOREJST,PSORJSRT,PSORJASC,PSOSTFLT,PSODRFLT,PSOPTFLT,PSORXFLT,PSOINFLT,PSOINGRP,PSOTRITG
  N INSLN,HIGHLN,LASTLN,PSOEKEY,PSOCVATG,PSORCFLT
@@ -72,16 +72,16 @@ SETLINE ; - Sets the line to be displayed in ListMan
  S (SORTA,INS,SUB)="",LINE=0 K ^TMP("PSOREJP0",$J)
  F  S SORTA=$O(^TMP("PSOREJSR",$J,SORTA)) Q:SORTA=""  D
  . F  S INS=$O(^TMP("PSOREJSR",$J,SORTA,INS)) Q:INS=""  D
- .. I INS'="<NULL>" D
- ... D GROUP(INS,.LINE)
- .. F  S SUB=$O(^TMP("PSOREJSR",$J,SORTA,INS,SUB),PSORJASC) Q:SUB=""  D
- ... S Z=$G(^TMP("PSOREJSR",$J,SORTA,INS,SUB))
- ... S X1="",SEQ=$G(SEQ)+1,X1=$J(SEQ,3)
- ... S $E(X1,5)=$P(Z,"^",3),$E(X1,18)=$P(Z,"^",4),$E(X1,43)=$P(Z,"^",5),$E(X1,64)=$P(Z,"^",6)
- ... S LINE=LINE+1,^TMP("PSOREJP0",$J,LINE,0)=X1,HIGHLN(LINE)=""
- ... S X2="",$E(X2,5)="Payer Message: "_$P(Z,"^",7)
- ... S LINE=LINE+1,^TMP("PSOREJP0",$J,LINE,0)=X2
- ... S ^TMP("PSOREJP0",$J,SEQ,"RX")=$P(Z,"^",1,2)
+ . . I INS'="<NULL>" D
+ . . . D GROUP(INS,.LINE)
+ . . F  S SUB=$O(^TMP("PSOREJSR",$J,SORTA,INS,SUB),PSORJASC) Q:SUB=""  D
+ . . . S Z=$G(^TMP("PSOREJSR",$J,SORTA,INS,SUB))
+ . . . S X1="",SEQ=$G(SEQ)+1,X1=$J(SEQ,3)
+ . . . S $E(X1,5)=$P(Z,"^",3),$E(X1,18)=$P(Z,"^",4),$E(X1,43)=$P(Z,"^",5),$E(X1,64)=$P(Z,"^",6)
+ . . . S LINE=LINE+1,^TMP("PSOREJP0",$J,LINE,0)=X1,HIGHLN(LINE)=""
+ . . . S X2="",$E(X2,5)="Payer Message: "_$P(Z,"^",7)
+ . . . S LINE=LINE+1,^TMP("PSOREJP0",$J,LINE,0)=X2
+ . . . S ^TMP("PSOREJP0",$J,SEQ,"RX")=$P(Z,"^",1,2)
  ;
  I LINE>$G(LASTLN) D
  . F I=($G(LASTLN)+1):1:LINE D SAVE^VALM10(I)
@@ -136,7 +136,7 @@ SETSORT(FIELD) ; - Sets the data sorted by the FIELD specified
  Q
  ;
 SETTMP(RX,REJ,FIELD) ; - Sets ^TMP global that will be displayed in the body section
- N REJLST,FILL,CODE,RXNUM,PTNAME,DRNAME,MSG,REASON,MSG,X,Z,SORT,I,INS,OREJ,PSOTRIC,SORTA
+ N CODE,DRNAME,FILL,I,INS,MSG,OREJ,PSOCOB,PSOTRIC,PTNAME,REASON,REJLST,RXNUM,SORT,SORTA,X,Z
  I $G(PSORXFLT)="ALL",$$CLOSED^PSOREJP1(RX,REJ),$$REOPN^PSOREJP1(RX,REJ) Q
  S FILL=+$$GET1^DIQ(52.25,REJ_","_RX,5),SORTA=1
  I '$$DIV(RX,FILL) Q
@@ -150,6 +150,9 @@ SETTMP(RX,REJ,FIELD) ; - Sets ^TMP global that will be displayed in the body sec
  S DRNAME=$$GET1^DIQ(52,RX,6)
  S RXNUM=$$GET1^DIQ(52,RX,.01)
  S MSG=$G(REJLST(REJ,"PAYER MESSAGE")) I $L(MSG)>60 S MSG=$E(MSG,1,58)_"..."
+ S PSOCOB=$S(REJLST(REJ,"COB")="SECONDARY":2,1:1)
+ I $$STATUS^PSOBPSUT(RX,FILL,PSOCOB)="E PAYABLE" D
+ . I MSG["Not ECME Billable" S MSG=""
  S REASON=$S(CODE=88!(CODE=943):"DUR:"_$G(REJLST(REJ,"REASON")),CODE=79:"79 :REFILL TOO SOON",1:CODE)
  I CODE'=79&(CODE'=88)&(CODE'=943) S REASON=CODE_" :"_$$EXP^PSOREJP1(CODE)
  S Z="",$P(Z,"^")=RX,$P(Z,"^",2)=REJ,$P(Z,"^",3)=RXNUM,$P(Z,"^",4)=PTNAME
@@ -157,11 +160,11 @@ SETTMP(RX,REJ,FIELD) ; - Sets ^TMP global that will be displayed in the body sec
  S SORT=$S(FIELD="PA":PTNAME,FIELD="DR":DRNAME,FIELD="RX":RXNUM_" ",1:REASON)_RX_REJ
  S INS="<NULL>"
  I $G(PSOINGRP) S INS=REJLST(REJ,"INSURANCE NAME") S:INS="" INS="***UNKNOWN***"
- ;Modified code now separates Veteran RRR - PSO*7*421
+ ; Separate Veteran RRR
  S:$G(PSOTRIC)&(CODE'=79)&(CODE'=88)&(CODE'=943) INS=$$ELIGDISP^PSOREJP1(RX,FILL)_" - Non-DUR/RTS",SORTA=3
  I '$G(PSOTRIC)&(CODE'=79)&(CODE'=88)&(CODE'=943) D
- .I $G(REJLST(REJ,"RRR FLAG"))="YES" S INS="REJECT RESOLUTION REQUIRED",SORTA=2 Q
- .S INS="OTHER REJECTS",SORTA=4
+ . I $G(REJLST(REJ,"RRR FLAG"))="YES" S INS="REJECT RESOLUTION REQUIRED",SORTA=2 Q
+ . S INS="OTHER REJECTS",SORTA=4
  S ^TMP("PSOREJSR",$J,SORTA,INS,SORT)=Z
  Q
  ;
@@ -312,10 +315,10 @@ PRTEXCL ;
  . I POP Q
  . I '$D(IO("Q")) S OK=1 Q
  . I $D(IO("Q")) D
- .. K IO("Q")
- .. D HOME^%ZIS
- .. W !,"Sorry, the output for this action cannot be queued.  Please select a device that"
- .. W !,"does not requiring queuing."
+ . . K IO("Q")
+ . . D HOME^%ZIS
+ . . W !,"Sorry, the output for this action cannot be queued.  Please select a device that"
+ . . W !,"does not requiring queuing."
  I POP G PEXIT
  ;
  ; If not queued, run the process directly
@@ -336,18 +339,18 @@ RUN ;
  ; Loop through temp array and output
  S SORTA="" F  S SORTA=$O(^TMP("PSOREJSR",$J,SORTA)) Q:'SORTA  D
  . S INS="" F  S INS=$O(^TMP("PSOREJSR",$J,SORTA,INS)) Q:INS=""  D
- .. S SORT="" F  S SORT=$O(^TMP("PSOREJSR",$J,SORTA,INS,SORT)) Q:SORT=""  D
- ... W !,$S(INS'="<NULL>":INS,1:"Refill Too Soon/DUR Rejects")_U
- ... S RX=$P(^TMP("PSOREJSR",$J,SORTA,INS,SORT),"^",1),REJ=$P(^TMP("PSOREJSR",$J,SORTA,INS,SORT),"^",2)
- ... S FILL=+$$GET1^DIQ(52.25,REJ_","_RX,5)
- ... S PTNAME=$$PTNAME(RX)
- ... S DRNAME=$$GET1^DIQ(52,RX,6)
- ... S RXNUM=$$GET1^DIQ(52,RX,.01)
- ... K REJLST D GET^PSOREJU2(RX,FILL,.REJLST,,1)
- ... S CODE=$G(REJLST(REJ,"CODE"))
- ... S REASON=$S(CODE=88!(CODE=943):"DUR:"_$G(REJLST(REJ,"REASON")),CODE=79:"79 :REFILL TOO SOON",1:CODE_" :"_$$EXP^PSOREJP1(CODE))
- ... S MSG=$G(REJLST(REJ,"PAYER MESSAGE"))
- ... W RXNUM_U_PTNAME_U_DRNAME_U_REASON_U_MSG
+ . . S SORT="" F  S SORT=$O(^TMP("PSOREJSR",$J,SORTA,INS,SORT)) Q:SORT=""  D
+ . . . W !,$S(INS'="<NULL>":INS,1:"Refill Too Soon/DUR Rejects")_U
+ . . . S RX=$P(^TMP("PSOREJSR",$J,SORTA,INS,SORT),"^",1),REJ=$P(^TMP("PSOREJSR",$J,SORTA,INS,SORT),"^",2)
+ . . . S FILL=+$$GET1^DIQ(52.25,REJ_","_RX,5)
+ . . . S PTNAME=$$PTNAME(RX)
+ . . . S DRNAME=$$GET1^DIQ(52,RX,6)
+ . . . S RXNUM=$$GET1^DIQ(52,RX,.01)
+ . . . K REJLST D GET^PSOREJU2(RX,FILL,.REJLST,,1)
+ . . . S CODE=$G(REJLST(REJ,"CODE"))
+ . . . S REASON=$S(CODE=88!(CODE=943):"DUR:"_$G(REJLST(REJ,"REASON")),CODE=79:"79 :REFILL TOO SOON",1:CODE_" :"_$$EXP^PSOREJP1(CODE))
+ . . . S MSG=$G(REJLST(REJ,"PAYER MESSAGE"))
+ . . . W RXNUM_U_PTNAME_U_DRNAME_U_REASON_U_MSG
  ;
  ; Cleanup
  I $E($G(IOST),1,2)'="C-" W !,@IOF

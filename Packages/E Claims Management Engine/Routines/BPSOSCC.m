@@ -1,5 +1,5 @@
 BPSOSCC ;BHAM ISC/FCS/DRS/DLF - Set up BPS() ;06/01/2004
- ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,8,10,11,19,27,32,33**;JUN 2004;Build 5
+ ;;1.0;E CLAIMS MGMT ENGINE;**1,2,5,8,10,11,19,27,32,33,37**;JUN 2004;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; GETINFO - Create BPS array for non-repeating data
@@ -61,10 +61,7 @@ GETINFO(IEN59,IEN5902) ; EP - BPSOSCB
  S BPS("Patient","Middle Name")=$G(PSONAME("MIDDLE"))
  S BPS("Patient","Prefix")=$G(PSONAME("PREFIX"))
  S BPS("Patient","Suffix")=$G(PSONAME("SUFFIX"))
- S BPSSEX=$P($G(VADM(5)),"^",1)  ; SEX, field# .02
- S BPSSIG=$P($G(VADM(14,5)),"^",2)  ; SELF IDENTIFIED GENDER, field# .024
- I BPSSIG'="" S BPS("Patient","Gender Code")=$S(BPSSIG="M":1,BPSSIG="F":2,BPSSIG="N":0,1:3)
- E  S BPS("Patient","Gender Code")=$S(BPSSEX="M":1,BPSSEX="F":2,1:0)
+ S BPS("Patient","Gender Code")=$$GENDER(IEN59)
  S X=$P($G(VADM(3)),"^")  ; date of birth, FM format
  S BPS("Patient","DOB")=($E(X,1,3)+1700)_$E(X,4,7)
  S BPS("Patient","SSN")=$P($G(VADM(2)),"^",1)
@@ -112,4 +109,33 @@ GETINFO(IEN59,IEN5902) ; EP - BPSOSCB
  S:BPPAYSEQ>1 BPS("Patient","Other Coverage Code")=$P($G(^BPST(IEN59,12)),U,5)  ; NCPDP field 308-C8 Other Coverage Code
  ;
  Q
+ ;
+GENDER(IEN59) ; Determine the value for Patient Gender Code (305-C5).
+ ;
+ N BPSGENDER,BPSPREVCL,BPSPREVTRAN,BPSSEX,BPSSIG
+ ;
+ ; If a previous claim exists, use the Patient Gender Code sent on
+ ; that claim.  At this point in the process, an entry will exist in
+ ; ^BPSTL only if there has been a previous claim.
+ ;
+ S BPSGENDER=""
+ S BPSPREVTRAN=""
+ F  S BPSPREVTRAN=$O(^BPSTL("B",IEN59,BPSPREVTRAN),-1) Q:'BPSPREVTRAN  D  I BPSGENDER'="" Q
+ . I $$GET1^DIQ(9002313.57,BPSPREVTRAN,19,"I")'="C" Q
+ . S BPSPREVCL=$$GET1^DIQ(9002313.57,BPSPREVTRAN,3,"I")
+ . I BPSPREVCL="" Q
+ . S BPSGENDER=$$GET1^DIQ(9002313.02,BPSPREVCL,305,"I")
+ . S BPSGENDER=$E(BPSGENDER,3)
+ . Q
+ I BPSGENDER'="" Q BPSGENDER
+ ;
+ ; If no previous claim, determine the value based on Self Identified
+ ; Gender, and if that field is blank, use the field Sex.
+ ;
+ S BPSSEX=$P($G(VADM(5)),"^",1)  ; SEX, field# .02
+ S BPSSIG=$P($G(VADM(14,5)),"^",2)  ; SELF IDENTIFIED GENDER, field# .024
+ I BPSSIG'="" S BPSGENDER=$S(BPSSIG="M":1,BPSSIG="F":2,BPSSIG="N":0,1:3)
+ E  S BPSGENDER=$S(BPSSEX="M":1,BPSSEX="F":2,1:0)
+ ;
+ Q BPSGENDER
  ;

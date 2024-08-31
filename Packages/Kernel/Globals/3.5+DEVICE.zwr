@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: DEVICE
 ZWR
-^%ZIS(1,0)="DEVICE^3.5Is^727^63"
+^%ZIS(1,0)="DEVICE^3.5Is^729^65"
 ^%ZIS(1,5,0)="TEST^^^^^^^^"
 ^%ZIS(1,5,1)="ORBITTER"
 ^%ZIS(1,242,0)="SPOOL^2^^^^^^^^^1"
@@ -24,7 +24,7 @@ ZWR
 ^%ZIS(1,521,"TYPE")="TRM"
 ^%ZIS(1,524,0)="HFS^/tmp/hfs.dat^^^^^^^^^"
 ^%ZIS(1,524,1)="Host File Device^^^^1^"
-^%ZIS(1,524,5)=123
+^%ZIS(1,524,5)=23
 ^%ZIS(1,524,"IOPAR")="(nowrap:stream:newversion)"
 ^%ZIS(1,524,"SUBTYPE")=16
 ^%ZIS(1,524,"TYPE")="HFS"
@@ -161,7 +161,7 @@ ZWR
 ^%ZIS(1,699,"TYPE")="RES"
 ^%ZIS(1,700,0)="TELNET-VMS^/dev/pts^1^^^^^^^^1"
 ^%ZIS(1,700,1)="VMS"
-^%ZIS(1,700,5)=33929
+^%ZIS(1,700,5)=34429
 ^%ZIS(1,700,"SUBTYPE")=231
 ^%ZIS(1,700,"TYPE")="VTRM"
 ^%ZIS(1,701,0)="CONSOLE-VMS^OPA0:^1^^^^^^^^1"
@@ -288,7 +288,7 @@ ZWR
 ^%ZIS(1,725,1)="Virtual Terminal"
 ^%ZIS(1,725,"SUBTYPE")=230
 ^%ZIS(1,725,"TYPE")="VTRM"
-^%ZIS(1,726,0)="NULL^/dev/null^^^^^^^^^"
+^%ZIS(1,726,0)="ZZNULL^/dev/null^^^^^^^^^"
 ^%ZIS(1,726,1)="BIT BUCKET"
 ^%ZIS(1,726,5)=""
 ^%ZIS(1,726,"SUBTYPE")=16
@@ -297,6 +297,15 @@ ZWR
 ^%ZIS(1,727,1)="Virtual Terminal"
 ^%ZIS(1,727,"SUBTYPE")=230
 ^%ZIS(1,727,"TYPE")="VTRM"
+^%ZIS(1,728,0)="NULL^/dev/null^^^^^^^^^"
+^%ZIS(1,728,1)="BIT BUCKET"
+^%ZIS(1,728,5)=""
+^%ZIS(1,728,"SUBTYPE")=16
+^%ZIS(1,728,"TYPE")="TRM"
+^%ZIS(1,729,0)="VIRTUAL TERMINAL^/dev/pts^1^^^^^^^^1"
+^%ZIS(1,729,1)="Virtual Terminal"
+^%ZIS(1,729,"SUBTYPE")=230
+^%ZIS(1,729,"TYPE")="VTRM"
 ^%ZIS(1,"AH","IDCU",564)=""
 ^%ZIS(1,"AH","IDCU",586)=""
 ^%ZIS(1,"AH","IDCU",587)=""
@@ -327,7 +336,7 @@ ZWR
 ^%ZIS(1,"B","LOCAL MAIL",615)=""
 ^%ZIS(1,"B","LRRESOURCE",692)=""
 ^%ZIS(1,"B","NOIS UPDATES",691)=""
-^%ZIS(1,"B","NULL",726)=""
+^%ZIS(1,"B","NULL",728)=""
 ^%ZIS(1,"B","OR MOVEMENT RESOURCE",670)=""
 ^%ZIS(1,"B","OR WINDOWS HFS",675)=""
 ^%ZIS(1,"B","OR WORKSTATION",667)=""
@@ -360,6 +369,7 @@ ZWR
 ^%ZIS(1,"B","VIRTUAL TERMINAL",723)=""
 ^%ZIS(1,"B","VIRTUAL TERMINAL",725)=""
 ^%ZIS(1,"B","VIRTUAL TERMINAL",727)=""
+^%ZIS(1,"B","VIRTUAL TERMINAL",729)=""
 ^%ZIS(1,"B","ZZNULL",521)=""
 ^%ZIS(1,"B","ZZNULL",706)=""
 ^%ZIS(1,"B","ZZNULL",709)=""
@@ -370,6 +380,7 @@ ZWR
 ^%ZIS(1,"B","ZZNULL",720)=""
 ^%ZIS(1,"B","ZZNULL",722)=""
 ^%ZIS(1,"B","ZZNULL",724)=""
+^%ZIS(1,"B","ZZNULL",726)=""
 ^%ZIS(1,"B","ZZP-MESSAGE-HFS (ONT)",674)=""
 ^%ZIS(1,"B","ZZP-MESSAGE-HFS (VXD)",704)=""
 ^%ZIS(1,"B","ZZP-MESSAGE-HFS-ONT",596)=""
@@ -387,6 +398,7 @@ ZWR
 ^%ZIS(1,"C","/dev/null",722)=""
 ^%ZIS(1,"C","/dev/null",724)=""
 ^%ZIS(1,"C","/dev/null",726)=""
+^%ZIS(1,"C","/dev/null",728)=""
 ^%ZIS(1,"C","/dev/null/",706)=""
 ^%ZIS(1,"C","/dev/pts",700)=""
 ^%ZIS(1,"C","/dev/pts",707)=""
@@ -399,6 +411,7 @@ ZWR
 ^%ZIS(1,"C","/dev/pts",723)=""
 ^%ZIS(1,"C","/dev/pts",725)=""
 ^%ZIS(1,"C","/dev/pts",727)=""
+^%ZIS(1,"C","/dev/pts",729)=""
 ^%ZIS(1,"C","/dev/tty",595)=""
 ^%ZIS(1,"C","/tmp/XMHFS.TEMP",674)=""
 ^%ZIS(1,"C","/tmp/hfs.dat",524)=""
@@ -443,6 +456,7 @@ ZWR
 ^%ZIS(1,"CPU","./dev/null",722)=""
 ^%ZIS(1,"CPU","./dev/null",724)=""
 ^%ZIS(1,"CPU","./dev/null",726)=""
+^%ZIS(1,"CPU","./dev/null",728)=""
 ^%ZIS(1,"CPU","./dev/null/",706)=""
 ^%ZIS(1,"CPU","./dev/pts",700)=""
 ^%ZIS(1,"CPU","./dev/pts",707)=""
@@ -455,6 +469,7 @@ ZWR
 ^%ZIS(1,"CPU","./dev/pts",723)=""
 ^%ZIS(1,"CPU","./dev/pts",725)=""
 ^%ZIS(1,"CPU","./dev/pts",727)=""
+^%ZIS(1,"CPU","./dev/pts",729)=""
 ^%ZIS(1,"CPU","./dev/tty",595)=""
 ^%ZIS(1,"CPU","./tmp/XMHFS.TEMP",674)=""
 ^%ZIS(1,"CPU","./tmp/hfs.dat",524)=""

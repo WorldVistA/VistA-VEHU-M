@@ -1,5 +1,5 @@
 PSOERUT6 ;ALB/MFR - eRx & Pending Order Side-by-Side LM Display - Cont'd; 06/25/2023 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**700,746**;DEC 1997;Build 106
  ;
 EN ; Continuation of PSOERUT5 due to routine size limit
  ;
@@ -71,3 +71,56 @@ VISTAPAT(ERXIEN) ; Returns the VistA Patient For Responses that pass through the
  . S NEWRXIEN=$$RESOLV^PSOERXU2(REQIEN)
  . S VISTAPAT=+$$GET1^DIQ(52.49,NEWRXIEN,.05,"I")
  Q VISTAPAT
+ ;
+CSERX(ORD) ; Check whether a Pending Order is for a CS eRx
+ ; Input: ORD - Pointer to OUTPATIENT PENDING ORDER file (#52.41)
+ I $$ERXIEN^PSOERXUT(ORD_"P"),$$CSDRG(+$$GET1^DIQ(52.41,+ORD,11,"I")) D  Q 1
+ . S VALMSG="Only the 'Routing' field can be edited (CS eRx).",VALMBCK="R" W $C(7)
+ Q 0
+ ;
+CSDRG(DRGIEN) ; Controlled Substance drug?
+ ; Input: DRGIEN - Pointer to DRUG file (#50)
+ ;Output: $$CS - 1:YES / 0:NO
+ N DEA
+ Q:'DRGIEN 0
+ S DEA=$$GET1^DIQ(50,DRGIEN,3)
+ I (DEA'["0"),(DEA'["M"),(DEA["2")!(DEA["3")!(DEA["4")!(DEA["5") Q 1
+ Q 0
+ ;
+VS(ERXIEN,TYPE) ; View Suggestion(s)
+ ;Input: ERXIEN - Pointer to ERX HOLDING QUEUE file (#52.49)
+ ;       TYPE   - Type of Suggestion("PA": Patient;"PR": Provider;"DR": Drug)
+ N ERXPAT,ERXPRV,DRUGHASH
+ S VALMBCK="R"
+ I TYPE="PR" S ERXPRV=$$GET1^DIQ(52.49,ERXIEN,2.1,"I") I 'ERXPRV
+ I TYPE="PR",'$O(^PS(52.49,"APRVVPRV",ERXPRV,0)) D  Q
+ . S VALMSG="There are no suggestions for this Provider" W $C(7) Q
+ I TYPE="PA" S ERXPAT=+$$GET1^DIQ(52.49,+$G(ERXIEN),.04,"I") I 'ERXPAT Q 0
+ I TYPE="PA",'$O(^PS(52.49,"APATVPAT",ERXPAT,0)) D  Q
+ . S VALMSG="There are no suggestions for this Patient" W $C(7) Q
+ I TYPE="DR" S DRUGHASH=$$DRUGHASH^PSOERUT(ERXIEN)
+ I TYPE="DR",'DRUGHASH D  Q
+ . S VALMSG="Unable to calculate the hash value for this eRx" W $C(7) Q
+ I TYPE="DR",'$O(^PS(52.49,"ADRGVRX",DRUGHASH,0)) D  Q
+ . S VALMSG="There are no suggestions for this Drug" W $C(7) Q
+ D FULL^VALM1
+ I TYPE="PA" D MATCHSUG^PSOERPT1(ERXIEN,1)
+ I TYPE="PR" D MATCHSUG^PSOERPV1(ERXIEN,1)
+ I TYPE="DR" D MATCHSUG^PSOERUT4(ERXIEN,1)
+ Q
+ ;
+LASTRXST(RXIEN) ; Returns the Rx Last Fill status (For Future Fill Suggestion only)
+ ; Input: RXIEN  - pointer to PRESCRIPTION file (#52)
+ ;Output: STATUS - Last fill status ("R":Relased;"T":Transmitted;"S":Suspended)
+ N LASTFILL,FILLDATE,RELDATE,RXSTS
+ S LASTFILL=$$LSTRFL^PSOBPSU1(RXIEN)
+ S RELDATE=$$RXRLDT^PSOBPSUT(RXIEN,LASTFILL)\1
+ S RXSTS=+$$GET1^DIQ(52,RXIEN,100,"I")
+ S FILLDATE=$$RXFLDT^PSOBPSUT(RXIEN,LASTFILL)
+ ; Last Fill released, Release Date + Days Supply in the future
+ I RELDATE,$$FMADD^XLFDT(RELDATE,$$GET1^DIQ(52,RXIEN,8))>DT Q "R"
+ ; Last Fill is not released, is Suspended, Not Transmitted/Printed, Future Fill Date
+ I 'RELDATE,(RXSTS=5),FILLDATE>DT Q "S"
+ ; Last Fill is not released, is Transmitted or Re-Transmitted to CMOP
+ I 'RELDATE,$$CMOPSTS^PSOERUT(RXIEN,LASTFILL)=0!($$CMOPSTS^PSOERUT(RXIEN,LASTFILL)=2) Q "T"
+ Q ""

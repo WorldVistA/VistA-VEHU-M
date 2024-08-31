@@ -1,5 +1,5 @@
-SDES2GETVISIT ;ALB/JAS - SDES2 VISTA SCHEDULING API for Visit Retrieval and Checkin functions ;APR 25, 2024
- ;;5.3;Scheduling;**878**;Aug 13, 1993;Build 11
+SDES2GETVISIT ;ALB/JAS,TJB - SDES2 VISTA SCHEDULING API for Visit Retrieval and Checkin functions ;Jun 17, 2024
+ ;;5.3;Scheduling;**878,881**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Based off of SDECAPI4 & SDECAPI with portions of code pulled from SDECU2 & SDECV
@@ -217,7 +217,7 @@ MAKE(SDAPPTIN) ;Call to store appt made
  ; SDAPPTIN("CLN") = ien of clinic in file 44
  ; SDAPPTIN("TYP") = 3 for scheduled appts, 4 for walkins
  ; SDAPPTIN("ADT") = appointment date and time
- ; SDAPPTIN("LEN") = appointment length in minutes (5-120)
+ ; SDAPPTIN("LEN") = appointment length in minutes (5-240)
  ; SDAPPTIN("OI")  = reason for appt - up to 150 characters
  ; SDAPPTIN("USR") = user who made appt
  ;
@@ -335,7 +335,7 @@ CHECKIN(SDAPPTIN) ;Call to add checkin info to appt
  D AFTER^SDAMEVT(.SDATA,DFN,SDT,SDCL,SDDA,SDCIHDL)
  ;
  Q 0
- ; 
+ ;
 SERCAT(CLINIC,PAT) ;Returns service category for visit
  N CLNCAT
  I $$GET1^DIQ(2,PAT_",",.1)]"" Q "I"               ;in hospital if inpt

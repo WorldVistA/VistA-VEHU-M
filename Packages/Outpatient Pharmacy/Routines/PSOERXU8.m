@@ -1,5 +1,5 @@
 PSOERXU8 ;ALB/BLB - eRx Utilities/RPC's ; 08/18/2020 10:02am
- ;;7.0;OUTPATIENT PHARMACY;**581,617,700,743**;DEC 1997;Build 24
+ ;;7.0;OUTPATIENT PHARMACY;**581,617,700,743,746**;DEC 1997;Build 106
  ;
  ;  Reference to ^XTV(8991.9) in ICR #7002
  ;  Reference to ^VA(200 supported by ICR #10060
@@ -21,7 +21,7 @@ BPROC(PSOIEN,BTYPE,MVFLD,VBFLD,VBDTTMF,VDTTM) ;
  . S ERXIEN=0 F  S ERXIEN=$O(^PS(52.49,"PAT2",ERXPAT,ERXDT,ERXIEN)) Q:'ERXIEN  D
  . . I '$G(MBMSITE),$$GET1^DIQ(52.49,ERXIEN,24.1,"I")'=PSNPINST Q
  . . S ERESTAT=$$GET1^DIQ(52.49,ERXIEN,1)
- . . I (",PR,RM,RJ,CAN,CXQ,"[(","_ERESTAT_","))!(",E,H,"[(","_$E(ERESTAT)_",")) Q
+ . . I (",PR,RM,RJ,CAN,CXQ,"[(","_ERESTAT_","))!(",E,"[(","_$E(ERESTAT)_",")) Q
  . . ; do not process any rx's that are not a 'newRx'.
  . . I $$GET1^DIQ(52.49,ERXIEN,.08,"I")'="N" Q
  . . ; eRx Provider already validated
@@ -130,7 +130,8 @@ ERXSIG(ERXIEN) ; Returns the eRx SIG
  . I MSGTYPE="N"!'$G(MEDIEN) S MEDIEN=$O(^PS(52.49,ERXIEN,311,0))
  . I '$G(MEDIEN) Q
  . F I=1:1 Q:'$D(^PS(52.49,ERXIEN,311,MEDIEN,8,I))  D
- . . S ERXSIG=ERXSIG_" "_$G(^PS(52.49,ERXIEN,311,MEDIEN,8,I,0))
+ . . S ERXSIG=ERXSIG_$G(^PS(52.49,ERXIEN,311,MEDIEN,8,I,0))_" "
+ . S $E(ERXSIG,$L(ERXSIG))=""
  I 'S2017 D
  . S ERXSIG=$P($G(^PS(52.49,ERXIEN,7)),"^")
  Q ERXSIG

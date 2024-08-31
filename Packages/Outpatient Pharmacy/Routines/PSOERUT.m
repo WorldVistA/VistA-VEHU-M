@@ -1,5 +1,27 @@
 PSOERUT ;ALB/MFR - eRx Utilities; 06/25/2022 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**692,700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**692,700,746**;DEC 1997;Build 106
+ ;
+DSPERX(ERXIEN) ; Displays eRx Info to the Screen
+ ; Input: ERXIEN - Pointer to the ERX HOLDING QUEUE (#52.49)
+ ;
+ I '$D(^PS(52.49,+$G(ERXIEN),0)) Q
+ N HIGH,NORM,XX,ERXSIG,NOTES,MEDIEN,QTYQUAL
+ S HIGH=$G(IOINHI),NORM=$G(IOINORM)
+ S $P(XX,$S($D(IOUON):" ",1:"-"),81)="",$E(XX,34,45)="ORIGINAL ERX" W !,$G(IOUON),XX,$G(IOUOFF)
+ W !,"eRx Drug : ",HIGH,$$GET1^DIQ(52.49,ERXIEN,3.1),NORM
+ W !,"eRx SIG  :" S ERXSIG=$$ERXSIG^PSOERXUT(ERXIEN)
+ F I=1:1 Q:ERXSIG=""  W ?11,HIGH,$E(ERXSIG,1,69),NORM,! S ERXSIG=$E(ERXSIG,70,9999)
+ S NOTES=$$GET1^DIQ(52.49,ERXIEN,8)
+ I NOTES'="" W "eRx Notes:" F I=1:1 Q:NOTES=""  W ?11,HIGH,$E(NOTES,1,68),NORM,! S NOTES=$E(NOTES,71,9999)
+ W "Drug Form: ",HIGH,$E($$GET1^DIQ(52.49,ERXIEN,41),1,44),NORM,?55,"Strength: ",HIGH,$E($$GET1^DIQ(52.49,ERXIEN,43),1,25),NORM
+ S MEDIEN=$O(^PS(52.49,ERXIEN,311,0)),QTYQUAL=$$GET1^DIQ(52.49311,MEDIEN_","_ERXIEN_",",2.2,"I"),QTYQUAL=$$GET1^DIQ(52.45,+QTYQUAL,.02,"E")
+ W !,"Qty Qualifier: ",HIGH,QTYQUAL,NORM,?40,"Qty Unit of Measure: ",HIGH,$$GET1^DIQ(52.49,ERXIEN,42),NORM
+ W !,"Qty: ",HIGH,$$GET1^DIQ(52.49,ERXIEN,5.1),NORM
+ W ?13,"Days Supply: ",HIGH,$$GET1^DIQ(52.49,ERXIEN,5.5),NORM
+ W ?34,"Refills: ",HIGH,$$GET1^DIQ(52.49,ERXIEN,5.6),NORM
+ W ?51,"Substitutions: ",HIGH,$S($$GET1^DIQ(52.49,ERXIEN,5.8,"I"):"NO",1:"YES"),NORM
+ S XX="",$P(XX,$S($D(IOUON):" ",1:"-"),81)="" W !,$G(IOUON),XX,$G(IOUOFF)
+ Q
  ;
 XML2GBL(XML,OUTARR) ;Transfers XML incoming data into a TMP Gobal
  ; Input: XML   - XML Message to be transferred to a Temp Global or Local Array
@@ -167,7 +189,6 @@ SADRGVRX(ERXIEN,RXIEN) ; Sets the "ADRGVRX" cross-reference on the ERX HOLDING Q
  ;        RXIEN  - Pointer to the PRESCRIPTION file (#52)
  I '$D(^PS(52.49,+$G(ERXIEN),0))!'$D(^PSRX(+$G(RXIEN),0)) Q
  N PSOHASH
- I $$GET1^DIQ(52.49,ERXIEN,.08,"I")'="N" Q
  I $$GET1^DIQ(52.49,ERXIEN,1)'="PR" Q
  S PSOHASH=$$DRUGHASH(ERXIEN) I 'PSOHASH Q
  S ^PS(52.49,"ADRGVRX",PSOHASH,RXIEN,ERXIEN)=""
@@ -183,17 +204,18 @@ KADRGVRX(ERXIEN,RXIEN) ; Kills the "ADRGVRX" cross-reference on the ERX HOLDING 
  K ^PS(52.49,"ADRGVRX",PSOHASH,RXIEN,ERXIEN)
  Q
  ;
-DRUGHASH(ERXIEN) ; Return the Drug Information corresponding Hash Value
+DRUGHASH(ERXIEN,FACTOR) ; Return the Drug Information corresponding Hash Value (Recursivity used)
  ; Input: ERXIEN   - Pointer to the eRx being worked on (Pointer to #52.49)
+ ;        FACTOR   - Counter used to prevent wrong matches
  ;Output: DRUGHASH - Hash value calculated based on the Drug information for the eRx passed in
  ;
  ;NOTICE: Any change that alters the hash value will require the ADRGVRX cross-reference to be rebuild
  ;
- N DRUGHASH,MTYPE,RSPTYPE,DRUG,NDCCODE,QTY,SUBS,DAYS,REFS,X,I,L
+ N DRUGHASH,DRUGSIGH,MTYPE,RSPTYPE,DRUG,NDCCODE,DRUGSIG,QTY,SUBS,DAYS,REFS,X,I
  S DRUGHASH=0 I '$G(ERXIEN) Q 0
  S MTYPE=$$GET1^DIQ(52.49,ERXIEN,.08,"I")
  S RSPTYPE=$$GET1^DIQ(52.49,ERXIEN,52.1,"I")
- S DRUG=$$GET1^DIQ(52.49,ERXIEN,3.1) I DRUG="" Q 0
+ S DRUG=$$GETDRUG^PSOERXU5(ERXIEN) I DRUG="" Q 0
  S NDCCODE=$TR($TR($$GET1^DIQ(52.49,ERXIEN,4.1)," "),"-")
  I NDCCODE="" S NDCCODE=$TR($TR($$GET1^DIQ(52.49311,"1,"_ERXIEN_",",1.1,"I")," "),"-")
  I NDCCODE="" Q 0
@@ -202,9 +224,85 @@ DRUGHASH(ERXIEN) ; Return the Drug Information corresponding Hash Value
  S DAYS=+$$GET1^DIQ(52.49,ERXIEN,5.5,"I")
  S REFS=+$$GET1^DIQ(52.49,ERXIEN,5.6,"I") I MTYPE="RE",RSPTYPE="R",REFS>0 S REFS=$G(REFS)-1
  ; Concatenating Drug Name+SIG for Hash Calculation
- S X=$$UP^XLFSTR(DRUG_$$ERXSIG^PSOERXUT(ERXIEN))
- S L=$L(X)
- F I=1:1:L I $E(X,I)?.AN S DRUGHASH=($A(X,I)*I)+DRUGHASH
- F I=L:-1:1 I $E(X,I)?.AN S DRUGHASH=($A(X,I)*(L-I+1))+DRUGHASH
+ S DRUGSIGH=0,DRUGSIG=$E(DRUG_$$UANSIG(ERXIEN),1,200) I DRUGSIG="" Q 0
+ F I=1:1:$L(DRUGSIG) S DRUGSIGH=($A(DRUGSIG,I)*(5**(I-1)))+DRUGSIGH
+ S DRUGSIGH=DRUGSIGH#1000009+$G(FACTOR)
  ; NDC Code|Drug Name+SIG Hash|Substitution|Qty|Days Supply|# of Refills
- Q (NDCCODE_DRUGHASH_SUBS_$E(1000+QTY,2,4)_$E(1000+DAYS,2,4)_$E(100+REFS,2,3))
+ S DRUGHASH=NDCCODE_DRUGSIGH_SUBS_$E(1000+QTY,2,4)_$E(1000+DAYS,2,4)_$E(100+REFS,2,3)
+ ; Checks if the SIG matches other eRx Sig's, if not increment FACTOR and try again (Recursive call)
+ I '$$SAMESIG(ERXIEN,DRUGHASH) D
+ . S DRUGHASH=$$DRUGHASH(ERXIEN,$G(FACTOR)+1)
+ ;
+ Q DRUGHASH
+ ;
+SAMESIG(ERXIEN,HASH) ; Check if SIG matches other eRx with same Hash code
+ ; Input: ERXIEN   - Pointer to the eRx being worked on (Pointer to #52.49)
+ ;        DRUGHASH - Hash value calculated based on the Drug information for the eRx passed in
+ ;Output: 1: SIG matches previous eRx Sigs (or no previous eRx with same Hash) | 0: SIG is different 
+ N SAMESIG,RX,ERX
+ S SAMESIG=1 I '$G(ERXIEN)!'$G(HASH) Q 1
+ S RX=$O(^PS(52.49,"ADRGVRX",HASH,0)) I RX D
+ . S ERX=$O(^PS(52.49,"ADRGVRX",HASH,RX,0)) I ERX,ERX'=ERXIEN D
+ . . I $$UANSIG(ERX)'=$$UANSIG(ERXIEN) S SAMESIG=0
+ Q SAMESIG
+ ;
+UANSIG(ERXIEN) ; Returns the SIG in upper case with alphanumeric chars only
+ ; Input: ERXIEN - Pointer to the eRx being worked on (Pointer to #52.49)
+ ;Output: UANSIG - eRx SIG in upper case and alphanumeric chars (e.g.: TAKE1TABLETPOONCEADAY)
+ N UANSIG,X,I
+ S UANSIG="",X=$$UP^XLFSTR($$ERXSIG^PSOERXUT(ERXIEN))
+ F I=1:1:$L(X) I $E(X,I)?.AN S UANSIG=UANSIG_$E(X,I)
+ Q UANSIG
+ ;
+SUGFLDT(ORDIEN) ; Returns the Suggested Fill Date for the eRx Pending Order
+ ; Input: ORDIEN - Ponter to the Pending Order (Pointer to #52.41)
+ ;Output: SUGFLDT - p1: Suggested Fill Date for the Pending Order (YYYMMDD)
+ ;                  p2: If p1>TODAY, return the pointer to the Rx from last fill (pointer to #52)
+ N SUGFLDT,ERXIEN,NUMREFS,DAYSSUP,ISSUEDT,DONE,DFN,DRUG,RXIEN,DFN,SEQ,RXSTS,FILLDATE,RELDATE,LASTFILL
+ I '$D(^PS(52.41,+$G(ORDIEN),0)) Q DT
+ S SUGFLDT=DT,ERXIEN=$$ERXIEN^PSOERXUT(ORDIEN_"P")
+ S DFN=$$GET1^DIQ(52.41,ORDIEN,1,"I"),DRUG=$$GET1^DIQ(52.41,ORDIEN,11,"I")
+ S DONE=0,SEQ=99999 F  S SEQ=$O(^PS(55,DFN,"P",SEQ),-1) Q:'SEQ  D  I DONE Q
+ . S RXIEN=+$G(^PS(55,DFN,"P",SEQ,0)) I 'RXIEN Q
+ . S RXSTS=+$$GET1^DIQ(52,RXIEN,100,"I") I ",0,5,11,12,14"'[(","_RXSTS_",") Q
+ . I $$GET1^DIQ(52,RXIEN,6,"I")'=DRUG Q
+ . I '$$SAMEDOSE^PSOERUT7(ERXIEN,RXIEN) Q
+ . S LASTFILL=$$LSTRFL^PSOBPSU1(RXIEN)
+ . S RELDATE=$$RXRLDT^PSOBPSUT(RXIEN,LASTFILL)\1
+ . S FILLDATE=$$RXFLDT^PSOBPSUT(RXIEN,LASTFILL)
+ . ; Last Fill is not released, is Suspended, Not Transmitted/Printed, Future Fill Date
+ . I 'RELDATE,(RXSTS=5),FILLDATE>DT D  S DONE=1 Q
+ . . S SUGFLDT=FILLDATE_"^"_RXIEN
+ . ; Last Fill is released and Last Fill + Days Supply is in the future
+ . I RELDATE,$$FMADD^XLFDT(RELDATE,$$GET1^DIQ(52,RXIEN,8))>DT D  S DONE=1 Q
+ . . S SUGFLDT=$$FMADD^XLFDT(RELDATE,$$GET1^DIQ(52,RXIEN,8))_"^"_RXIEN
+ . ; Last Fill is not released but fill is transmitted to CMOP
+ . I 'RELDATE,$$CMOPSTS(RXIEN,LASTFILL)=0!($$CMOPSTS(RXIEN,LASTFILL)=2) D  S DONE=1 Q
+ . . S SUGFLDT=$$FMADD^XLFDT(DT,$$GET1^DIQ(52,RXIEN,8))_"^"_RXIEN
+ . S DONE=1
+ ; If Pending order has no refills and Suggested Fill Date is after Issue Date+Days Supply, suggest TODAY
+ S NUMREFS=$$GET1^DIQ(52.41,ORDIEN,13,"I"),DAYSSUP=$$GET1^DIQ(52.41,ORDIEN,101,"I")
+ S ISSUEDT=$$GET1^DIQ(52.41,ORDIEN,6,"I") I 'ISSUEDT S ISSUEDT=DT
+ I 'NUMREFS,SUGFLDT>$$FMADD^XLFDT(ISSUEDT,DAYSSUP) S SUGFLDT=DT
+ ;
+ Q SUGFLDT
+ ;
+VARXSIG(RXIEN) ; Returns the VistA Rx SIG (From the PRESCRIPTION file (#52))
+ ; Input: RXIEN    - Pointer to the PRESCRIPTION file (#52)
+ ;Output: .DOSEARR - Return Array Containing Dosage Information
+ N VARXSIG,SIG
+ S VARXSIG="",RXIEN=+$G(RXIEN)
+ S SIG=0 F  S SIG=$O(^PSRX(RXIEN,"SIG1",SIG)) Q:'SIG  D
+ . I $E(VARXSIG,$L(VARXSIG))'=" " S VARXSIG=VARXSIG_" "
+ . S VARXSIG=VARXSIG_$G(^PSRX(RXIEN,"SIG1",SIG,0))
+ Q VARXSIG
+ ;
+CMOPSTS(RXIEN,FILL) ; Returns the CMOP Status for the Rx Fill 
+ ; Input: RXIEN  - Rx IEN (#52)
+ ;        FILL - Fill # (0 for original)
+ ;Output: CMOP Status for the Rx Fill ("":NOT A CMOP FILL;0:TRANSMITTED;1:DISPENSED;2:RETRANSMITTED;3:NOT DISPENSED)
+ N CMOPSTS,CMOP,Z
+ S CMOPSTS="",CMOP=999 F  S CMOP=$O(^PSRX(RXIEN,4,CMOP),-1) Q:'CMOP  D  I CMOPSTS="" Q
+ . S Z=$G(^PSRX(RXIEN,4,CMOP,0))
+ . I +$P(Z,"^",3)=FILL S CMOPSTS=$P(Z,"^",4)
+ Q CMOPSTS

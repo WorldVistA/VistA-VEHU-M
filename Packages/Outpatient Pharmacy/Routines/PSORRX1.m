@@ -1,5 +1,5 @@
 PSORRX1 ;AITC/BWF - Remote RX driver ;8/30/16 12:00am
- ;;7.0;OUTPATIENT PHARMACY;**454,499,509,519,532,594,643,736**;DEC 1997;Build 19
+ ;;7.0;OUTPATIENT PHARMACY;**454,499,509,519,532,594,643,736,740**;DEC 1997;Build 18
  ;
  ;Reference ^PSDRUG( supported by DBIA 221
  ;Reference ^PSNDF supported by DBIA 2195
@@ -70,7 +70,7 @@ RXPRSE(DFN,DATA,HLDAT) ;
  Q
  ; build and send refill request
 REFREQ ;
- N PHARM,PHONE,LOCSITE,DSUPP,MW,FILLDT,MSG,RXNUM,HLSTR,REMSITE,PHARMLN,PHARMFN,PHARMMI,TFSTRING,HLPROT,LOCDRUG,REMDRUG,DINACT
+ N PHARM,PHONE,LOCSITE,DSUPP,MW,FILLDT,MSG,RXNUM,HLSTR,REMSITE,PHARMLN,PHARMFN,PHARMMI,TFSTRING,HLPROT,LOCDRUG,REMDRUG
  N ORFS,ORCS,ORRS,ORES,ORSS,HLQUIT,ORQUIT,RESP,RETDFN,VAPIEN,DONE,PSORRDAT,PSOHCNT,DONE,HL,CSVAL,DIR,REMSIEN,PSOHLNK,PSOLNKDN,DOMOVR,RMSDOM,PSOHLSV
  S HLARR=$NA(^TMP("HLS",$J)) K @HLARR
  S HLDAT=$NA(^XTMP("REFREQ^PSORRX1",$J)) K @HLDAT
@@ -85,17 +85,13 @@ REFREQ ;
  S REMSITE=$P(PSOLST(ORN),U,4)   ;,REMSIEN=$O(^DIC(4,"D",REMSITE,0))
  S REMSIEN=$$FIND1^DIC(4,,"X",REMSITE,"D","I $P(^(0),U,11)=""N"",'$P($G(^(99)),U,4)") Q:'REMSIEN
  S PSOREF("DFLG")=""
- S REMDRUG=$P(REMDATA,U,11),VAPIEN=$P(REMDATA,U,10)
- I '$L(VAPIEN) W !!,"Missing VA Product IEN. Rx# ",RXNUM," cannot be refilled." S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
- S LOCDRUG=$$DRUGMTCH(REMDRUG,VAPIEN)
+ S REMDRUG=$P(REMDATA,U,11),VAPID=$P(REMDATA,U,10)
+ I '$L(VAPID) W !!,"Missing VA Product IEN. Rx# ",RXNUM," cannot be refilled." S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
+ S LOCDRUG=$$DRUGMTCH(REMDRUG,VAPID)
  I $G(LOCDRUG)=-1 Q  ; user entered no so no reason to prompt again
- I '$G(LOCDRUG) W !!,"Could not match remote drug to a local drug. Cannot refill Rx# ",RXNUM,"." S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
- S DINACT=$$GET1^DIQ(50,LOCDRUG,100,"I")
- I DINACT>0,DINACT<$$NOW^XLFDT W !!,"Matched Drug "_$$GET1^DIQ(50,LOCDRUG,.01,"E")_" is inactive.",!,"Cannot refill."  S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
- ; ****** controlled substance check
- S CSVAL=$$GET1^DIQ(50,LOCDRUG,3,"E"),CSVAL=$E(CSVAL,1)
- I CSVAL,CSVAL>0,CSVAL<6 W !!,"This is a controlled substance. Cannot refill Rx#",RXNUM,"." S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
- ;
+ I '$G(LOCDRUG) W !!,"Could not match remote drug to a local drug. Cannot refill Rx # ",RXNUM,"." S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
+ ; PSO 740
+ I '$$VALDRGINT^PSORRPA1(LOCDRUG,"R",RXNUM) S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
  ; if we got this far, fill is most likely happening and remote
  ; worklist needs to be rebuilt when returning, so set flag.
  S PSORRBLD=1
@@ -122,7 +118,7 @@ REFREQ ;
  ; build and send partial fill request
 PARTIAL() ;
  N DIR,DONE,I,PRMPDAT,VAR,PRXNUM,PHARM,PHARMLN,PHARMFN,PHARMMI,PHONE,RXNUM,HLPROT,TFSTRING,HLARR,PHONE,REMSITE,HLDAT,LOCDRUG,EXIT,VAPIEN,HL,ERR
- N PSOHCNT,DONE,PSORRDAT,CSVAL,REMSIEN,PSOHLNK,PSOLNKDN,REMDRUG,Y,DINACT,EXE,DOMOVR,RMSDOM,PSOHLSV
+ N PSOHCNT,DONE,PSORRDAT,CSVAL,REMSIEN,PSOHLNK,PSOLNKDN,REMDRUG,Y,EXE,DOMOVR,RMSDOM,PSOHLSV,VAPID
  S HLPROT="PSO REMOTE RX RDS-O13 EVENT"
  S HLDAT=$NA(^XTMP("PARTIAL^PSORRX1",$J)) K @HLDAT
  S HLARR=$NA(^TMP("HLS",$J)) K @HLARR
@@ -136,16 +132,16 @@ PARTIAL() ;
  S DONE=0,CNT=1
  ; prompt for fields that would normally be prompted for a local partial fill.
  D FULL^VALM1
- S REMDRUG=$P(REMDATA,U,11),VAPIEN=$P(REMDATA,U,10)
- I '$L(VAPIEN) W !!,"Missing VA Product IEN. Rx# ",PRXNUM," cannot be refilled." S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
- S LOCDRUG=$$DRUGMTCH(REMDRUG,VAPIEN)
+ S REMDRUG=$P(REMDATA,U,11),VAPID=$P(REMDATA,U,10)
+ I '$L(VAPID) W !!,"Missing VA Product ID. Rx# ",PRXNUM," cannot process a partial fill." S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
+ S LOCDRUG=$$DRUGMTCH(REMDRUG,VAPID)
  I $G(LOCDRUG)=-1 Q  ; user entered no so no reason to prompt again
- I '$G(LOCDRUG) W !!,"Could not match remote drug to a local drug.",!,"Cannot complete partial fill for Rx# ",PRXNUM,"." S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
- S DINACT=$$GET1^DIQ(50,LOCDRUG,100,"I")
- I DINACT>0,DINACT<$$NOW^XLFDT W !!,"Matched Drug "_$$GET1^DIQ(50,LOCDRUG,.01,"E")_" is inactive.",!,"Cannot create partial fill request."  S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
- ; controlled substance check
- S CSVAL=$$GET1^DIQ(50,LOCDRUG,3,"E"),CSVAL=$E(CSVAL,1)
- I CSVAL,CSVAL>0,CSVAL<6 W !!,"This is a controlled substance. Cannot refill Rx#",PRXNUM,"." S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
+ I '$G(LOCDRUG) W !!,"Could not match remote drug to a local drug. Cannot process a partial fill for Rx # ",PRXNUM,"." S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
+ ; PSO 740
+ I '$$VALDRGINT^PSORRPA1(LOCDRUG,"P",PRXNUM) S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q
+ ; if we got this far, fill is most likely happening and remote
+ ; worklist needs to be rebuilt when returning, so set flag.
+ S PSORRBLD=1
  S EXIT=0
  S PDATE=DT
  S MW="W"
@@ -198,51 +194,90 @@ DRUGMTCH(DRGNM,VAPIN) ;p736 - VAPIEN directly passed into DRUGMTCH
  I $G(DRGNM)']"" Q "" ; p736 - ensures DRGNM is valid
  ;
  N LDIEN,MATCH,EXIT,DRL,VAGENER,FOUND,CHECK,DIC,DRGARY,LDNAME,Y,VAPSTR,MTCHSTR,DRLCNT
- S (CHECK,VAPSTR)=""
+ N DRGNM2,MTCHSTR,DRLCNT,DRSV,CSSCH,VAPIDSTR,VAPIEN,CSPROD,VAPIENCNT,DINACT
+ S (CHECK,VAPSTR)="",(DRLCNT,DRSV)=0,CSPROD=0,DINACT=""
  I +$G(VAPIN) S VAPSTR=$$GET1^DIQ(50.68,+$G(VAPIN),2,"E")
+ S VAPIDSTR=$$GET1^DIQ(50.68,+$G(VAPIN),6,"E")
  W !!,"Remote site drug name: "_$G(DRGNM)
- I $D(^PSDRUG("B",$G(DRGNM))) S LDIEN=$O(^PSDRUG("B",$G(DRGNM),0))
- I $D(LDIEN) D
- .S LDNAME=$$GET1^DIQ(50,LDIEN,.01,"E")
- .W !,"Matching Drug Found for Dispensing: "_LDNAME
- .S CHECK=$$DIR
- I $D(LDIEN),'CHECK Q -1  ; match was found but user said NO
- I $D(LDIEN) Q LDIEN
- S VAGENER=$$GET1^DIQ(50.68,+$G(VAPIN),.05,"I")
- I 'VAGENER Q "" ; p736 - ensures a valid VA GENERIC NAME is associated with VAPIEN
- ; loop through AND index to find drugs associated with this va generic product.
- S FOUND=0
- S (DRL,DRLCNT)=0 F  S DRL=$O(^PSDRUG("AND",VAGENER,DRL)) Q:'DRL!(FOUND)  D
- .S MTCHSTR=$$GET1^DIQ(50,DRL,901,"E")
- .I $G(VAPSTR)]"" Q:MTCHSTR'=VAPSTR
- .S DRGARY(DRL)="",DRLCNT=DRLCNT+1
- ; only one match found.
- I DRLCNT=1 S LDIEN=$O(DRGARY(0))
- I 'DRLCNT W !!,"No local match could be found for "_$G(DRGNM)_".",! K DIR S DIR(0)="FO",DIR("A")="Press RETURN to continue" D ^DIR Q -1
- I $D(LDIEN) D
- .S LDNAME=$$GET1^DIQ(50,LDIEN,.01,"E")
- .W !,"Matching Drug Found for Dispensing: "_LDNAME
- .S CHECK=$$DIR()
- I $D(LDIEN),'CHECK Q -1  ; match was found but user said NO
- I $D(LDIEN) Q LDIEN
- ; list the items that match strength
- S (MATCH,EXIT)=0
- N PSODRGL,PSODRGLI,PSODRGL0,PSODRGID,PSODRGC S DIR(0)=""
- F PSODRGLI=0:0 S PSODRGLI=$O(DRGARY(PSODRGLI)) Q:'PSODRGLI  D
- .S PSODRGL0=$G(^PSDRUG(PSODRGLI,0)),PSODRGID=$G(^PSDRUG(PSODRGLI,"I"))
- .Q:$TR(PSODRGL0,"^")=""  S PSODRGC=$G(PSODRGC)+1
- .S DIR(0)=DIR(0)_$S(DIR(0)]"":";",1:"")
- .; Increased drug name length from 30 to 40 - PSO*7*594
- .S DIR(0)=DIR(0)_$G(PSODRGC)_":"_PSODRGLI_"  "_$E($P(PSODRGL0,"^"),1,40)_"  "_$J($P(PSODRGL0,"^",2),7)_"  "_$S(PSODRGID:$E(PSODRGID,4,5)_"-"_$E(PSODRGID,6,7)_"-"_$E(PSODRGID,2,3)_"  ",1:"")_$P(PSODRGL0,"^",10)
- .S DIR("L",PSODRGC)=PSODRGC_".  "_PSODRGLI_"  "_$E($P(PSODRGL0,"^"),1,40)_"  "_$J($P(PSODRGL0,"^",2),7)_"  "_$S(PSODRGID:$E(PSODRGID,4,5)_"-"_$E(PSODRGID,6,7)_"-"_$E(PSODRGID,2,3)_"  ",1:"")_$P(PSODRGL0,"^",10)
- S DIR(0)="SO^"_DIR(0),DIR("L")=""  ;1:$G(PSODRGC)"
- S DIR("A")="Select matching local drug"
- D ^DIR K DIR
- I +Y<1!($D(DUOUT))!($D(DTOUT)) S Y=-1  ;*519
- I Y=-1 Q Y
- S LDIEN=+Y(0)
- I $G(LDIEN) K DIR S DIR(0)="Y",DIR("A")="Would you like to use this drug" D ^DIR I +Y<1!($D(DUOUT))!($D(DTOUT)) Q -1  ;*509 CHECK FOR Y<1 INSTEAD OF Y<0
- Q $G(LDIEN)
+ I $L(VAPIDSTR) S VAPIEN=0 F  S VAPIEN=$O(^PSNDF(50.68,"C",VAPIDSTR,VAPIEN)) Q:'VAPIEN  D
+ . S CSSCH=$$GET1^DIQ(50.68,VAPIEN,19,"I")
+ . I '$G(CSPROD),(+CSSCH>0),(+CSSCH<6) D  Q
+ . . S CSPROD=1
+ . . W !!,"VA Product ID: ",VAPIDSTR,"    CS FEDERAL SCHEDULE:  ",+CSSCH
+ . . W !!,"Controlled substances are not allowed for ONEVA Pharmacy dispensing.",!
+ . . D PAUSE^VALM1
+ . S VAPIEN(VAPIEN)=VAPSTR
+ ;
+ I CSPROD=1 Q 0
+ I '$D(VAPIEN(VAPIN)) W !!,"Remote site VA PRODUCT IDENTIFIER: "_VAPIDSTR_" *** NOT FOUND ***",!
+ ;
+ ; Look for drug name
+ I $D(^PSDRUG("B",DRGNM)) D
+ . S LDIEN=0 F  S LDIEN=$O(^PSDRUG("B",DRGNM,LDIEN)) Q:'LDIEN  D
+ . . S VAPIEN=""
+ . . ; Filter out inactive, not on outpatient formulary, not Pharmacy orderable, not linked to VAPIDSTR, CS
+ . . I $$GET1^DIQ(50,LDIEN,63,"I")'["O" Q
+ . . I $$GET1^DIQ(50,LDIEN,2.1,"I")="" Q
+ . . S DINACT=$$GET1^DIQ(50,LDIEN,100,"I")
+ . . I (DINACT>0),($$DT^XLFDT>DINACT) Q
+ . . S VAPIEN=$$GET1^DIQ(50,LDIEN,22,"I") I VAPIEN="" Q     ; 740
+ . . I $$GET1^DIQ(50,LDIEN,3) I $$GET1^DIQ(50,LDIEN,3)>0&($$GET1^DIQ(50,LDIEN,3)<6) Q
+ . . I '$D(DRGARY(LDIEN)) S DRGARY(LDIEN)="",DRLCNT=DRLCNT+1
+ ;
+ ; Quit if drug matched name and user accepted
+ I DRLCNT=1 D  I CHECK Q LDIEN
+ . S LDIEN=$O(DRGARY(0))
+ . S DRSV=LDIEN ;Save single match to filter from displaying from local drug
+ . S LDNAME=$$GET1^DIQ(50,LDIEN,.01,"E")
+ . W !,"Matching Drug Found for Dispensing: "_LDNAME
+ . S CHECK=$$DIR
+ ;
+ I DRLCNT=0 W !,"No active drug name match found for "_DRGNM_"."
+ ;
+ S CHECK="",DRLCNT=0 K DRGARY
+ S VAPIEN=0 F  S VAPIEN=$O(VAPIEN(VAPIEN)) Q:'VAPIEN  D
+ . S VAPSTR=$$GET1^DIQ(50.68,VAPIEN,2,"E")
+ . ;Loop thru the APR index in 50
+ . S LDIEN=0 F  S LDIEN=$O(^PSDRUG("APR",VAPIEN,LDIEN)) Q:'LDIEN  D
+ . . ;filter out inactive, drugs not on outpatient formulary, not linked to Pharmacy orderable, 'CS
+ . . I $$GET1^DIQ(50,LDIEN,100,"I"),(DT'<$$GET1^DIQ(50,LDIEN,100,"I")) Q
+ . . I $$GET1^DIQ(50,LDIEN,63,"I")'["O" Q
+ . . I $$GET1^DIQ(50,LDIEN,2.1,"I")="" Q
+ . . I $$GET1^DIQ(50,LDIEN,3),$$GET1^DIQ(50,LDIEN,3)>0&($$GET1^DIQ(50,LDIEN,3)<6)
+ . . I '$D(DRGARY(LDIEN)) S DRGARY(LDIEN)=VAPSTR,DRLCNT=DRLCNT+1
+ ;
+ ;Filter out drug already presented
+ I DRSV,$D(DRGARY(DRSV)) K DRGARY(DRSV) S DRLCNT=DRLCNT-1
+ ;
+ I DRLCNT D
+ . W !!,"Drugs matching the VA PRODUCT IDENTIFIER:"
+ . S (MATCH,EXIT)=0
+ . N PSODRGL,PSODRGLI,PSODRGL0,PSODRGID,PSODRGC S DIR(0)=""
+ . F PSODRGLI=0:0 S PSODRGLI=$O(DRGARY(PSODRGLI)) Q:'PSODRGLI  D
+ . . S PSODRGL0=$G(^PSDRUG(PSODRGLI,0)),PSODRGID=$G(^PSDRUG(PSODRGLI,"I"))
+ . . Q:$TR(PSODRGL0,"^")=""  S PSODRGC=$G(PSODRGC)+1
+ . .S DIR(0)=DIR(0)_$S(DIR(0)]"":";",1:"")
+ . .; Increased drug name length from 30 to 40 - PSO*7*594
+ . .S DIR(0)=DIR(0)_$G(PSODRGC)_":"_PSODRGLI_" "_$E($P(PSODRGL0,"^"),1,40)_" "_$J($P(PSODRGL0,"^",2),7)_" "_$S(PSODRGID:$E(PSODRGID,4,5)_"-"_$E(PSODRGID,6,7)_"-"_$E(PSODRGID,2,3)_" ",1:"")_$P(PSODRGL0,"^",10)
+ . .S DIR("L",PSODRGC)=PSODRGC_". "_PSODRGLI_" "_$E($P(PSODRGL0,"^"),1,40)_" "_$J($P(PSODRGL0,"^",2),7)_" "_$S(PSODRGID:$E(PSODRGID,4,5)_"-"_$E(PSODRGID,6,7)_"-"_$E(PSODRGID,2,3)_" ",1:"")_$P(PSODRGL0,"^",10)
+ . S DIR(0)="SO^"_DIR(0),DIR("L")=""  ;1:$G(PSODRGC)"
+ . S DIR("A")="Select Drug from list ("_1_"-"_DRLCNT_") "_"or <enter> to quit processing."
+ . D ^DIR K DIR
+ . I +Y<1!($D(DUOUT))!($D(DTOUT)) S Y="",DRLCNT=0
+ . I Y>0 S LDIEN=+Y(0)
+ . I $G(LDIEN) K DIR S DIR(0)="Y",DIR("A")="Would you like to use this drug" D ^DIR
+ . I +Y<1!($D(DUOUT))!($D(DTOUT)) S DRLCNT=0 ;DRLCNT=0 causes Drug: to be prompted for
+ ;
+ I DRLCNT,$G(Y) Q LDIEN ;a drug was accepted
+ ;
+ ;No VAPIEN, or no drug was selected or no drugs were found
+ K DIR
+ W !
+ W !,"No other local match could be found for "_DRGNM_"."
+ W !,"You may need to update your Drug file to process this order"
+ D PAUSE^VALM1
+ Q 0
+ ;
  ; TEXT to build prompts
  ;;DIR(0)|DIR(A)|DIR(B)|VARIABLE
 PRMPTXT ;

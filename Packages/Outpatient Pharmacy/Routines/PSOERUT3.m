@@ -1,5 +1,5 @@
 PSOERUT3 ;ALB/MFR - eRx Listman Allergy Utilities; 06/25/2022 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**700,746**;DEC 1997;Build 106
  ;
 ALLERGY(MODE,NPSPC,ERXIEN,DFN) ; Sets Allergy and Adverse Reaction information
  ; Input: MODE   - Display Mode: "RS": Roll & Scroll | "LM": ListMan
@@ -102,7 +102,7 @@ ALLERGY(MODE,NPSPC,ERXIEN,DFN) ; Sets Allergy and Adverse Reaction information
  ;
  ; - Setting eRx Allergies & Local VistA Allergies (Sets reverse video for non-matching
  ;   Allergies between eRx and VistA)
- S XE="Allergy:",XV="|Allergy:" ;S HIGUNDLN(LINE,1)=8,HIGUNDLN(LINE,41)=8
+ S XE="Allergy:",XV="|Allergy:"
  D ADDLINE^PSOERUT0(MODE,NMSPC,XE,XV)
  F ALLLN=1:1 Q:('$D(ERXLINES(ALLLN))&'$D(VALINES(ALLLN)))  D
  . S ERXALLS=$G(ERXLINES(ALLLN,0)),VAALLS=$G(VALINES(ALLLN,0))
@@ -207,4 +207,38 @@ GETDIAGS(ERXIEN,ICDARR) ; Returns the diagnosis codes for the eRx order
  . . . . S SDRESDAT=$G(SDRES(SDRESL)) Q:SDRESDAT=""
  . . . . S COUNT=COUNT+1
  . . . . S ICDARR(COUNT)="S^"_SDIAGQ_" "_SDIAGV_"^"_$$UP^XLFSTR(SDRESDAT)_"^"_SDESC
- Q 
+ Q
+  ;
+SUGSIG(RXIEN,ERXIEN) ; Returns the Suggested SIG retrieved from the VA Rx
+ ; Input:ERXIEN - Pointer to ERX HOLDING QUEUE file (#52.49)
+ ;       RXIEN  - Prescription IEN - Pointer to PRESCRIPTION file (#52)
+ ;Output:SUGSIG - Suggested SIG
+ ;
+ K SUGSIG,VADOSE,SIG,I,VAPATIEN,PSODRUG,VAPATINS
+ I '$D(^PSRX(+$G(RXIEN),0))!'$D(^PS(52.49,+$G(ERXIEN),0)) Q ""
+ S PSODRUG("IEN")=+$$GET1^DIQ(52,RXIEN,6,"I"),PSODRUG("OI")=+$$GET1^DIQ(50,PSODRUG("IEN"),2.1,"I")
+ S SUGSIG=""
+ D VARXDOSE^PSOERUT4(RXIEN,.VADOSE)
+ K SIG D EN^PSOFSIG(.VADOSE)
+ F I=1:1 Q:'$D(SIG(I))  S SUGSIG=SUGSIG_SIG(I)
+ ; - Appending Patient Instrutions
+ S VADRGIEN=+$$GET1^DIQ(52,RXIEN,6,"I")
+ S VAOIIEN=+$$GET1^DIQ(50,VADRGIEN,2.1,"I")
+ S VAPATIEN=+$$GET1^DIQ(52.49,ERXIEN,.05,"I")
+ S VAPATINS=$$VAPATINS(VAOIIEN,VAPATIEN)
+ I VAPATINS'="" S SUGSIG=SUGSIG_" "_VAPATINS
+ Q SUGSIG
+ ;
+VAPATINS(OI,DFN) ; Returns the Pharmacy Orderable Patient Instructions, if any
+ ; Input: OI  - Pointer to the PHARMACY ORDERABLE ITEM file (#50.7)
+ ;     (o)DFN - Pointer to the PATIEN file (#2)
+ ;Output: VAPTINS - Expanded (if needed) OI Patient Instructions
+ ;
+ N VAPATINS,FLD,X,PSODIR,INS1
+ S FLD=7
+ I $G(DFN),$$GET1^DIQ(55,DFN,106,"I") S FLD=7.1
+ S VAPATINS=$$GET1^DIQ(50.7,+$G(OI),FLD)
+ ;
+ I $G(VAPATINS)'="" D
+ . S (X,PSODIR("INS"))=VAPATINS D SIG^PSOHELP S $E(INS1)="",VAPATINS=INS1
+ Q VAPATINS

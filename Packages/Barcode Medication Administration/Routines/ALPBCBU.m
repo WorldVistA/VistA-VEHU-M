@@ -1,8 +1,8 @@
-ALPBCBU ;OIFO-DALLAS/SED/KC/MW  BCMA-BCBU INPT TO HL7 ;5/2/2002
- ;;3.0;BAR CODE MED ADMIN;**8,102,105,110**;Mar 2004;Build 3
+ALPBCBU ;OIFO-DALLAS/SED/KC/MW  BCMA-BCBU INPT TO HL7 ;Jan 10, 2024@11:10
+ ;;3.0;BAR CODE MED ADMIN;**8,102,105,110,146**;Mar 2004;Build 2
  ;
- ; Reference/IA
- ; EN^PSJBCBU/3876
+ ; Reference to ^DPT(DFN.,1) in ICR #10035
+ ; Reference to EN^PSJBCBU in ICR #3876
  ;
  ;This is the main routine for the BCBU software.
  ;It handles all the entries points for the BCBU software. 
@@ -52,6 +52,8 @@ PMOV ;Entry Point to send patient movement
  Q:'$D(DFN)!'$D(DGPMTYP)!'$D(DGPMUC)
  ;Screen out Lodgers
  Q:DGPMUC["LODGER"
+ ; PSB*3.0*146: Added line below
+ I DGPMUC="DISCHARGE",$G(^DPT(DFN,.1))]"" Q
  S ALPRSLT=$$PMOV^ALPBINP(DFN,DGPMTYP,DGPMUC,$P($G(DGPMA),U))
  I $P(ALPRSLT,U,2)'="" D ERRLG
  Q

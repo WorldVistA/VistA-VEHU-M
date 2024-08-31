@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: SDES ERROR CODES
 ZWR
-^SDEC(409.93,0)="SDES ERROR CODES^409.93I^569^569"
+^SDEC(409.93,0)="SDES ERROR CODES^409.93I^570^570"
 ^SDEC(409.93,1,0)="0^O"
 ^SDEC(409.93,1,1)="No Error Number Provided"
 ^SDEC(409.93,2,0)="1^PT"
@@ -1139,6 +1139,8 @@ ZWR
 ^SDEC(409.93,568,1)="No clinic was found."
 ^SDEC(409.93,569,0)="569^AR"
 ^SDEC(409.93,569,1)="No resource was found."
+^SDEC(409.93,570,0)="570^CR"
+^SDEC(409.93,570,1)="Patient already has appointment at equivalent time in a different timezone."
 ^SDEC(409.93,"B",0,1)=""
 ^SDEC(409.93,"B",1,2)=""
 ^SDEC(409.93,"B",2,3)=""
@@ -1708,6 +1710,7 @@ ZWR
 ^SDEC(409.93,"B",567,567)=""
 ^SDEC(409.93,"B",568,568)=""
 ^SDEC(409.93,"B",569,569)=""
+^SDEC(409.93,"B",570,570)=""
 ^SDEC(409.93,"C","AP",15)=""
 ^SDEC(409.93,"C","AP",16)=""
 ^SDEC(409.93,"C","AP",22)=""
@@ -2149,6 +2152,7 @@ ZWR
 ^SDEC(409.93,"C","CR",556)=""
 ^SDEC(409.93,"C","CR",557)=""
 ^SDEC(409.93,"C","CR",558)=""
+^SDEC(409.93,"C","CR",570)=""
 ^SDEC(409.93,"C","DT",10)=""
 ^SDEC(409.93,"C","DT",11)=""
 ^SDEC(409.93,"C","DT",12)=""

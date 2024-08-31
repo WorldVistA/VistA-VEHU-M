@@ -1,0 +1,148 @@
+SDESCANCELVVS ;ALB/BWF,MGD - CANCEL VVS WEB SERVICE ; 5/30/24 13:38pm
+ ;;5.3;SCHEDULING;**884**;AUG 13, 1993;Build 1
+ ;;Per VHA Directive 6402, this routine should not be modified
+ ;SAC EXEMPTION 202405201404-02 : Use of Cache methods
+ Q
+ ;
+RESTPOST(APPTIEN,SDSTATUS,SDCANREASON) ; Generate web service call to cancel VVS appointment
+ ; Input:
+ ;       APPTIEN = Appointment IEN in #409.84
+ ;      SDSTATUS = Cancellation Status for Appointment (passed in if VVS Appointment Cancelled prior to VistA Appointment)
+ ;   SDCANREASON = Cancellation Reason for Appointment (passed in if VVS Appointment Cancelled prior to VistA Appointment)
+ ; Output:
+ ;   0^Error Information
+ ;   1^Success Information
+ ;
+ ; NOTE: RESTPOST^SDESCANCELVVS contains vendor specific code that is restricted and will be reported by XINDEX.
+ ;       Exemption (202405201404-02) was granted by the Standards and Conventions (SAC) committee on 5/20/24
+ ;       allowing the vendor specific code.
+ ;
+ N SDSERVER,SDSERVICE,SDRESTOBJ,DFN,VVSID,ICN,VVSCAN,VVSJSONOUT,SDRESPONSE,SDRESPERR,SDOUT
+ N SDERRCODE,SDERRARR,SDHEADER,SDHTTPRSP,SDKEY,SDOUTJSON,SDPROD,VVSIDUPPER,VVSERR
+ N $ETRAP,$ESTACK
+ ;
+ ; Determine Production or Test and set Server and Service accordingly
+ S SDPROD=$$PROD^XUPROD
+ I SDPROD D
+ . S SDSERVICE="SD VVS WEB SERVICE"
+ . S SDSERVER="SD VVS WEB SERVER"
+ ;
+ I 'SDPROD D
+ . S SDSERVICE="SD VVS WEB SERVICE TEST"
+ . S SDSERVER="SD VVS WEB SERVER TEST"
+ ;
+ ; get instance of client REST request object
+ S SDRESTOBJ=$$GETREST^XOBWLIB(SDSERVICE,SDSERVER)
+ S SDRESTOBJ.SSLCheckServerIdentity=0
+ ;
+ ; Retrieve fields for VVS cancellation
+ S DFN=$$GET1^DIQ(409.84,APPTIEN,.05,"I")
+ S ICN=$$GETICN^MPIF001(DFN)
+ S DFN=DFN_"-"_DUZ(2)
+ S (VVSID,VVSIDUPPER)=$$GET1^DIQ(409.84,APPTIEN,2,"E")
+ ; The VS GUI stores the ID in all uppercase, VSS stores it in lowercase so convert back to lowercase
+ S VVSID=$TR(VVSID,"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz")
+ I $G(SDSTATUS)="" S SDSTATUS=$$GET1^DIQ(409.84,APPTIEN,.17,"E")
+ D STATUS(.SDSTATUS)
+ I $G(SDCANREASON)="" S SDCANREASON=$$GET1^DIQ(409.84,APPTIEN,.122,"E")
+ D REASON(.SDCANREASON)
+ ;
+ ; Build JSON for VVS video Visit cancellation
+ S VVSCAN("id")=VVSID
+ S VVSCAN("sourceSystem")="VSE"
+ I +ICN>1 D
+ . S VVSCAN("patientBookingStatuses","personBookingStatus",1,"id","assigningAuthority")="ICN"
+ . S VVSCAN("patientBookingStatuses","personBookingStatus",1,"id","uniqueId")=ICN
+ I +ICN<0 D
+ . S VVSCAN("patientBookingStatuses","personBookingStatus",1,"id","assigningAuthority")="DFN"
+ . S VVSCAN("patientBookingStatuses","personBookingStatus",1,"id","uniqueId")=DFN
+ S VVSCAN("patientBookingStatuses","personBookingStatus",1,"status","description")=""
+ S VVSCAN("patientBookingStatuses","personBookingStatus",1,"status","code")=SDSTATUS
+ S VVSCAN("patientBookingStatuses","personBookingStatus",1,"status","reason")=SDCANREASON
+ ;
+ D BUILDJSON^SDES2JSON(.VVSJSONOUT,.VVSCAN)
+ D SDRESTOBJ.EntityBody.Write(VVSJSONOUT(1))
+ ;
+ ; Update Headers prior to calling VVS
+ F SDHEADER="Accept","ContentType" D SDRESTOBJ.SetHeader(SDHEADER,"application/json")
+ ;
+ I SDPROD D
+ . S SDKEY=$$GET^XPAR("PKG","SD-VVS-CANCEL-KEY",1)
+ . S SDKEY=$$AESDECR^XUSHSH($$B64DECD^XUSHSH(SDKEY),"3ncr4pt55SK3y")
+ . D SDRESTOBJ.SetHeader("Authorization","Bearer SD-VVS-CANCEL-KEY"_";"_SDKEY)
+ I 'SDPROD D
+ . S SDKEY=$$GET^XPAR("PKG","SD-VVS-CANCEL-KEY-TEST",1)
+ . S SDKEY=$$AESDECR^XUSHSH($$B64DECD^XUSHSH(SDKEY),"3ncr4pt55SK3y")
+ . D SDRESTOBJ.SetHeader("Authorization","Bearer SD-VVS-CANCEL-KEY-TEST"_";"_SDKEY)
+ D SDRESTOBJ.SetHeader("Origin","https://vista.domain.ext")
+ ;
+ ; Execute HTTP Post method
+ S SDRESPONSE=$$POST^XOBWLIB(SDRESTOBJ,"",.SDRESPERR,0)
+ ; Get HTTP response
+ I 'SDRESPONSE D  Q SDRESPONSE
+ . S SDERRCODE=$$ERRSPMSG(SDRESPERR,.SDERRARR)
+ . S VVSERR=+SDERRCODE
+ . W !!,"This Video Visit appointment ",VVSIDUPPER
+ . W !,"couldn't be cancelled in the VVS system."
+ . W !,"VVS ERROR: "
+ . I VVSERR=400 W VVSERR," - A validation error occurred for the cancellation request."
+ . I VVSERR=401 W VVSERR," - The API Key or client ID was not recognized."
+ . I VVSERR=404 W VVSERR," - The appointment to be cancelled was not found."
+ . I VVSERR=500 W VVSERR," - Internal server error."
+ . I VVSERR="" W "504 - VVS Gateway Time-out."
+ ;
+ W !!,"This Video Visit appointment successfully cancelled in the VVS system."
+ Q SDRESPONSE
+ ;
+ERRSPMSG(SDRESPERR,SDRESPETXT) ;
+ ; Input : DGRESPERR (Required) - response error from Post call
+ ; Return: response code/txt (ex: DGERR(400) from Init)_response code/msg (ex: ADDRVAL###)
+ N SDERRCODE,SDEMSG,SDERR
+ S SDERRCODE=SDRESPERR.code
+ DO ERR2ARR^XOBWLIB(.SDRESPERR,.SDRESPETXT)
+ ; Example:
+ ;  S DGRESPETXT("errorType")="HTTP"
+ ;  S DGRESPETXT("statusLine")="HTTP/1.1 504 Gateway Timeout"
+ ;  S DGRESPETXT("text")=1
+ ;  S DGRESPETXT("text",1)={"message":"Unable to parse data. Not JSON format"}
+ S SDEMSG=$G(SDRESPETXT("text",1))
+ I SDEMSG="" S SDEMSG=SDRESPETXT("statusLine")
+ S SDERR(SDERRCODE)=SDERRCODE_$S($L(SDEMSG)>1:SDEMSG,1:" VVS Service Error.")
+ Q SDERR(SDERRCODE)
+ ;
+ ;
+STATUS(SDSTATUS) ;
+ I SDSTATUS="NO-SHOW" S SDSTATUS="NO_SHOW" Q
+ I SDSTATUS="CANCELLED BY CLINIC" S SDSTATUS="CANCELLED_BY_CLINIC" Q
+ I SDSTATUS="NO-SHOW & AUTO RE-BOOK" S SDSTATUS="NO_SHOW_AND_AUTO_RE_BOOK" Q
+ I SDSTATUS="CANCELLED BY CLINIC & AUTO RE-BOOK" S SDSTATUS="CANCELLED_BY_CLINIC_AND_AUTO_RE_BOOK" Q
+ I SDSTATUS="INPATIENT APPOINTMENT" S SDSTATUS="CANCELLED_BY_CLINIC" Q
+ I SDSTATUS="CANCELLED BY PATIENT" S SDSTATUS="CANCELLED_BY_PATIENT" Q
+ I SDSTATUS="CANCELLED BY PATIENT & AUTO-REBOOK" S SDSTATUS="CANCELLED_BY_PATIENT_AND_AUTO_REBOOK" Q
+ I SDSTATUS="NO ACTION TAKEN" S SDSTATUS="CANCELLED_BY_CLINIC" Q
+ Q
+ ;
+ ;
+REASON(SDCNREASON) ;
+ I SDCNREASON="APPOINTMENT NO LONGER REQUIRED" S SDCNREASON="APPOINTMENT_NO_LONGER_REQUIRED" Q
+ I SDCNREASON="AUTOMATED CANCELLATION" S SDCNREASON="CLINIC_CANCELLED" Q
+ I SDCNREASON="BLOCK AND MOVE" S SDCNREASON="CLINIC_CANCELLED" Q
+ I SDCNREASON="CLINIC CANCELLED" S SDCNREASON="CLINIC_CANCELLED" Q
+ I SDCNREASON="CLINIC STAFFING" S SDCNREASON="CLINIC_STAFFING" Q
+ I SDCNREASON="DEATH IN FAMILY" S SDCNREASON="DEATH_IN_FAMILY" Q
+ I SDCNREASON="DO NOT RESCHEDULE" S SDCNREASON="CLINIC_CANCELLED" Q
+ I SDCNREASON="INPATIENT STATUS" S SDCNREASON="INPATIENT_STATUS" Q
+ I SDCNREASON="OTHER" Q
+ I SDCNREASON="PANDEMIC" S SDCNREASON="CLINIC_CANCELLED" Q
+ I SDCNREASON="PATIENT DEATH" S SDCNREASON="PATIENT_DEATH" Q
+ I SDCNREASON="PATIENT NOT ELIGIBLE" S SDCNREASON="PATIENT_NOT_ELIGIBLE" Q
+ I SDCNREASON="RESCHEDULE - CALL BACK" S SDCNREASON="CLINIC_CANCELLED" Q
+ I SDCNREASON="RESCHEDULE - VET WILL CALL" S SDCNREASON="CLINIC_CANCELLED" Q
+ I SDCNREASON="SCHEDULING CONFLICT/ERROR" S SDCNREASON="SCHEDULING_CONFLICT_OR_ERROR" Q
+ I SDCNREASON="TRANSFER OPT CARE TO OTHER VA" S SDCNREASON="TRANSFER_OPT_CARE_TO_OTHER_VA" Q
+ I SDCNREASON="TRAVEL DIFFICULTY" S SDCNREASON="TRAVEL_DIFFICULTY" Q
+ I SDCNREASON="UNABLE TO KEEP APPOINTMENT" S SDCNREASON="UNABLE_TO_KEEP_APPOINTMENT" Q
+ I SDCNREASON="WALKIN ENTERED IN ERROR" S SDCNREASON="CLINIC_CANCELLED" Q
+ I SDCNREASON="WALKIN NO LONGER NECESSARY" S SDCNREASON="CLINIC_CANCELLED" Q
+ I SDCNREASON="WEATHER" Q
+ Q

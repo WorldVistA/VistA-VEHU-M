@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: APPOINTMENT TYPE
 ZWR
-^SD(409.1,0)="APPOINTMENT TYPE^409.1^11^11"
+^SD(409.1,0)="APPOINTMENT TYPE^409.1^12^12"
 ^SD(409.1,1,0)="COMPENSATION & PENSION^1^^CP^1"
 ^SD(409.1,1,1,0)="^^4^4^2920211^"
 ^SD(409.1,1,1,1,0)="An exam requested by the local VA Regional Office to determine"
@@ -47,6 +47,9 @@ ZWR
 ^SD(409.1,11,0)="SERVICE CONNECTED^^^SC"
 ^SD(409.1,11,1,0)="^409.11^1^1^3050926^^^^"
 ^SD(409.1,11,1,1,0)="Used for veterans with a service connected % of 50% and greater, or veterans being seen for a service connected condition."
+^SD(409.1,12,0)="WORLD WAR II^1^^WWII^1^31"
+^SD(409.1,12,1,0)="^^1^1^3240831"
+^SD(409.1,12,1,1,0)="Used for veterans who have served in World War II."
 ^SD(409.1,"B","CLASS II DENTAL",2)=""
 ^SD(409.1,"B","COLLATERAL OF VET.",7)=""
 ^SD(409.1,"B","COMPENSATION & PENSION",1)=""
@@ -58,3 +61,4 @@ ZWR
 ^SD(409.1,"B","RESEARCH",6)=""
 ^SD(409.1,"B","SERVICE CONNECTED",11)=""
 ^SD(409.1,"B","SHARING AGREEMENT",8)=""
+^SD(409.1,"B","WORLD WAR II",12)=""

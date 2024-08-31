@@ -1,13 +1,13 @@
 BPSSCRRJ ;ALB/ESG - ECME OPECC Reject Information ;02-SEP-2015
- ;;1.0;E CLAIMS MGMT ENGINE;**20,22,33**;JUN 2004;Build 5
+ ;;1.0;E CLAIMS MGMT ENGINE;**20,22,33,37**;JUN 2004;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
- ; Reference to $$RXSITE^PSOBPSUT supported by IA #4701 
- ; Reference to $$GETNDC^PSONDCUT supported by IA #4705 
- ; Reference to DP^PSORXVW supported by IA #4711 
- ; Reference to REJCOM^PSOREJU4 supported by IA #6227 
- ; Reference to MP^PSOREJU4 and PI^PSOREJU4 supported by IA #6228 
- ; Reference to $$TAXID^IBCEF75 supported by IA #6768 
+ ; Reference to $$RXSITE^PSOBPSUT in ICR #4701 
+ ; Reference to $$GETNDC^PSONDCUT in ICR #4705 
+ ; Reference to DP^PSORXVW in ICR #4711 
+ ; Reference to REJCOM^PSOREJU4 in ICR #6227 
+ ; Reference to MP^PSOREJU4 and PI^PSOREJU4 in ICR #6228 
+ ; Reference to $$TAXID^IBCEF75 in ICR #6768 
  ;
  Q
  ;
@@ -252,10 +252,13 @@ SETLNX ;
  Q
  ;
 HDR ; -- header code
+ N PTINFO
  S VALMHDR(1)=$$DVINFO(RXIEN,RXFIL)          ; division, npi, ncpdp data
- S VALMHDR(2)=$$PTINFO(RXIEN)                ; Patient data
- S VALMHDR(3)=$$RXINFO1(RXIEN,RXFIL)         ; Rx data part 1
- S VALMHDR(4)=$$RXINFO2(RXIEN,RXFIL)         ; Rx data part 2
+ S PTINFO=$$PTINFO(RXIEN)
+ S VALMHDR(2)=$P(PTINFO,U,1)                 ; Patient data
+ S VALMHDR(3)=$P(PTINFO,U,2)                 ; Patient sex
+ S VALMHDR(4)=$$RXINFO1(RXIEN,RXFIL)         ; Rx data part 1
+ S VALMHDR(5)=$$RXINFO2(RXIEN,RXFIL)         ; Rx data part 2
  Q
  ;
 DVINFO(RX,RFL) ; header division data
@@ -280,13 +283,14 @@ DVINFO(RX,RFL) ; header division data
  ;
 PTINFO(RX) ; header patient data
  ;Input: (r) RX   - Rx IEN (#52)
- N DFN,VADM,PTINFO,SSN4
+ N DFN,PTINFO,SEX,SSN4,VADM
  S DFN=+$P($G(^BPST(BPORI59,0)),U,6)
  D DEM^VADPT S SSN4=$P($G(VADM(2)),U,2)
  S PTINFO="Patient  : "_$E($G(VADM(1)),1,24)_"("_$E(SSN4,$L(SSN4)-3,$L(SSN4))_")"
- S PTINFO=PTINFO_"  Sex: "_$P($G(VADM(5)),U,1)
  S $E(PTINFO,61)="DOB: "_$P($G(VADM(3)),U,2)_"("_$P($G(VADM(4)),U,1)_")"
- Q PTINFO
+ S SEX="Birth Sex: "_$P($G(VADM(5)),U,1)
+ S $E(SEX,32)="Self-Identified Gender: "_$E($P($G(VADM(14,5)),U,1),1,24)
+ Q PTINFO_U_SEX
  ;
 RXINFO1(RX,FILL) ; header Rx data part 1
  N RXINFO,RXDOS,PSOET

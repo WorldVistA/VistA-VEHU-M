@@ -1,5 +1,5 @@
 PSOERX1F ;ALB/MR - Accept/Un-Accept eRx function ; 8/18/2020 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**617,651,700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**617,651,700,746**;DEC 1997;Build 106
  ;
  Q
  ;PSOHY("LOC")=IEN of hospital location file (#44) - NOT USED, 
@@ -129,7 +129,7 @@ SETUP ;
  K DFN
  Q
 ADD(QUIET) ;Add CHCS message to Outpatient Pending Orders file
- N MBMSITE,PSOHQ,PSOHQT,PSOCPEND,PSOHINI,PSOHINLO,ERXSTA,ORDNUM,ILOOP,IARY,PSSRET
+ N MBMSITE,PSOHQ,PSOHQT,PSOCPEND,PSOHINI,PSOHINLO,ERXSTA,ORDNUM,ILOOP,IARY,PSSRET,DA
  S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0)
  I '$G(PSOHY("DRUG")) D  Q
  . S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Invalid Dispense Drug" Q
@@ -171,6 +171,11 @@ ADD(QUIET) ;Add CHCS message to Outpatient Pending Orders file
  ;Cross references not set yet preventing Pharmacy from finishing order
  D EN^PSOHLSNC(PSOCPEND,"SN","IP")
  D FULL^VALM1
+ S PSORDNUM=$P($G(^PS(52.41,PSOCPEND,0)),U)
+ S PSORDEA=$$FIND1^DIC(101.52,"","B",PSORDNUM)
+ I $E($$GET1^DIQ(101.52,PSORDEA,1,"I"),*)'="S" S PSORDEA=""
+ I PSORDEA S PSORDFDA(101.52,PSORDEA_",",1)="@" D FILE^DIE("K","PSORDFDA")
+ ;
  ;Just set to DC, don't delete because 52.41 entry would be re-used
  I '$P($G(^PS(52.41,PSOCPEND,"EXT")),"^",2) D  S $P(^PS(52.41,PSOCPEND,0),"^",3)="DC" S PSOEXCNT=PSOEXCNT+1,PSOEXMS(PSOEXCNT)="Unable to send CHCS order to CPRS." Q
  .;x-ref shouldn't be set, but we'll kill them just in case
@@ -221,7 +226,7 @@ UNACC ; Un-Accept eRx from Pending Queue back into the Holding Queue
  N ORDNUM,ERXIEN,PSOIEN,DIE,DA,DR,DIC,PSOHOLD,PSOQUIT,DIR,X,Y,DTOUT,DUOUT,HOLDCOMM,POERR
  S VALMBCK="R"
  I '$G(ORD)!'$D(^PS(52.41,+$G(ORD),0)) S VALMSG="Invalid Pending Order" W $C(7) Q
- I $$GET1^DIQ(52.41,ORD,2,"I")'="NW" S VALMSG="eRx has already been finished or un-accepted." W $C(7) Q
+ I " NW RNW "'[$$GET1^DIQ(52.41,ORD,2,"I") S VALMSG="eRx has already been finished or un-accepted." W $C(7) Q
  S ORDNUM=$$GET1^DIQ(52.41,+ORD,.01) I 'ORDNUM S VALMSG="Invalid Pending Order" W $C(7) Q
  S (ERXIEN,PSOIEN)=$$CHKERX^PSOERXU1(ORDNUM) I 'PSOIEN S VALMSG="This Pending Order is not related to an eRx" W $C(7) Q
  I '$G(ERXIEN) S VALMSG="This is not an eRx Prescription" W $C(7) Q
@@ -237,7 +242,7 @@ UNACC ; Un-Accept eRx from Pending Queue back into the Holding Queue
  . S PSOHOLD=Y
  I PSOQUIT Q
  ;
- K DIR S DIR(0)="52.4919,1",DIR("A")="Comments (Optional)"
+ K DIR,DA S DIR(0)="52.4919,1",DIR("A")="Comments (Optional)"
  D ^DIR K DIR I Y="^" Q
  S HOLDCOMM=$G(Y)
  ;
@@ -246,7 +251,7 @@ UNACC ; Un-Accept eRx from Pending Queue back into the Holding Queue
  D ^DIR I $G(DIRUT)!$G(DUOUT)!'Y Q
  W ?40,"Please wait..."
  ;
- ; Chaning eRx Order Status to Hold
+ ; Changing eRx Order Status to Hold
  D UPDSTAT^PSOERXU1(ERXIEN,$P(PSOHOLD,"^",2),HOLDCOMM,1)
  ; Removing pointer to the Pending Order entry
  I $P($G(^PS(52.49,ERXIEN,25)),"^",2) S $P(^PS(52.49,ERXIEN,25),"^",2)=""
@@ -275,7 +280,7 @@ JUMP2ERX ; Jump to the eRx Holding Queue for the specific order after Un-Accepti
  X "N (DUZ,IO,U,DT,DILOCKTM,DTIME,PSOIEN,ERXIEN,PSOSITE,PSOJUMP,PSNPINST)"
  K ^TMP("PSOERXPO",$J) M ^TMP("PSOERXPO",$J)=^TMP("XQORS",$J)
  S PSOJUMP=1
- D EN^VALM("PSO ERX HQ DISPLAY")
+ D EN^VALM("PSO ERX SINGLE ERX DISPLAY")
  K ^TMP("XQORS",$J) M ^TMP("XQORS",$J)=^TMP("PSOERXPO",$J)
  S PSOJUMP=0
  Q

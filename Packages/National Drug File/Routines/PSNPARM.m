@@ -1,8 +1,9 @@
-PSNPARM ;BIR/SJA-PPS-N Site Parameters ; 6/6/18 7:35am
- ;;4.0;NATIONAL DRUG FILE;**513,573,10001,10003**; 30 Oct 98;Build 60
+PSNPARM ;BIR/SJA-PPS-N Site Parameters ; 11/16/2016
+ ;;4.0;NATIONAL DRUG FILE;**513,573,575,10001,10003,10004**; 30 Oct 98;Build 22
  ; Original Code authored by Department of Veterans Affairs
  ; *10001* changes by OSEHRA/Sam Habiel (c) 2018.
- ; *10003* Incorporation of *573* (c) Sam Habiel 2018.
+ ; *10003* Incorporation of *573* (c) Sam Habiel 2022.
+ ; *10004* Incorporation of *575* (c) Sam Habiel 2024.
  ;
  ;Reference to ^PS(59.7 supported by DBIA #2613
  ;Reference to ^VA(200 supported by DBIA #10060
@@ -14,15 +15,15 @@ PSNPARM ;BIR/SJA-PPS-N Site Parameters ; 6/6/18 7:35am
 EN ; -- option entry point
  N CURLEY,FLDS,LN,PSNAR,PSNLCK,PSNNOW,PSNNOW1,PSNOUT,PSNTAG,PSNUSER,PSNX,SHEMP,TYPE,X,XX,Y,Z
  N NODE0,NODE1,NODE2,NOD597,PSNFLD,PSNJ,PSNZ,REQFLDS,IORVON,IORVOFF
- S PSNOUT=0,REQFLDS="^3^4^5^6^7^10^11^12^13^"
+ S PSNOUT=0,REQFLDS="^3^4^5^6^7^10^11^12^13^15^"
  S X="IORVON;IORVOFF" D ENDR^%ZISS
  ;
 ASK ; -- screen display
  G:PSNOUT END D DISP
  W !!,"Select field number to Edit: " R X:DTIME I '$T!("^"[X) S PSNOUT=1 G END
  S X=$S(X="a":"A",1:X) I '$D(PSNAR(X)),(X'?.N1":".N),(X'="A") D HELP G:PSNOUT END G ASK
- I X="A" S X="1:14"
- I X?.N1":".N S Y=$E(X),Z=$P(X,":",2) I Y<1!(Z>14)!(Y>Z) D HELP G:PSNOUT END G ASK
+ I X="A" S X="1:15"
+ I X?.N1":".N S Y=$E(X),Z=$P(X,":",2) I Y<1!(Z>15)!(Y>Z) D HELP G:PSNOUT END G ASK
  D HDR
  I X?.N1":".N D RANGE G ASK
  I $D(PSNAR(X)) S FLDS=X W ! D  G ASK
@@ -83,6 +84,7 @@ DISP ; -- displays parameters
  S PSNAR(12)=$S($P(NODE0,"^",8)="Y":"IN PROGRESS",1:"NOT IN PROGRESS")_"^57.23^9"
  S PSNAR(13)=$S($P(NODE0,"^",9)="Y":"IN PROGRESS",1:"NOT IN PROGRESS")_"^57.23^10"
  S PSNAR(14)=IORVON_$S($$DISBL():"<DATA>",1:"")_IORVOFF
+ S PSNAR(15)=$S($P(NODE0,"^",11)=1:"ALLOWED",1:"NOT ALLOWED")_"^57.23^11"
  F PSNJ=1:1 Q:'$D(PSNZ(PSNJ))  W !,$$RJ^XLFSTR((PSNJ_"."),3," ")," ",$S(REQFLDS[("^"_PSNJ_"^"):"*",1:" "),PSNZ(PSNJ),?33,": ",$P(PSNAR(PSNJ),"^")
  W !,LN
  Q
@@ -172,4 +174,5 @@ FIELD ; -- field name ; *10001* #4 chaged from Unix/Linux to Unix/NT
  ;;12^Download Status
  ;;13^Install Status
  ;;14^Disable Menus, Options, etc
+ ;;15^ECDSA keys
  ;;END

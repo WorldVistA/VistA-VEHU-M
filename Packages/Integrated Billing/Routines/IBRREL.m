@@ -1,5 +1,5 @@
 IBRREL ;ALB/CPM - RELEASE MEANS TEST CHARGES 'ON HOLD'; Sep 30, 2020@15:16:44
- ;;2.0;INTEGRATED BILLING;**95,153,199,347,452,651,663,675,677,630**;21-MAR-94;Build 39
+ ;;2.0;INTEGRATED BILLING;**95,153,199,347,452,651,663,675,677,630,760**;21-MAR-94;Build 25
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; Entry point for stand-alone 'release' option
@@ -67,7 +67,7 @@ RESUME ; - display header and list charges
  ;
  ; - pass charges to Accounts Receivable
  W !!,"Passing charges to Accounts Receivable...",! D HDR
- F IBCTR=1:1 S IBNUM=$P(IBRANGE,",",IBCTR) Q:'IBNUM  I $D(IBA(IBNUM)) S IBNOS=IBA(IBNUM) D ^IBR,ERR:Y<1 I Y>0 S IBN=IBA(IBNUM) D UPDUCDB(IBN) D LST
+ F IBCTR=1:1 S IBNUM=$P(IBRANGE,",",IBCTR) Q:'IBNUM  I $D(IBA(IBNUM)) S IBNOS=IBA(IBNUM) D ^IBR,ERR:Y<1 I Y>0 S IBN=IBA(IBNUM) D UPDUCDB(IBN),UPDMH(IBN),LST  ; IB*2.0*760
  W !!,"The charge"_$E("s",$P(IBRANGE,",",2)>0)_" listed above "_$S($P(IBRANGE,",",2):"have",1:"has")_" been passed to Accounts Receivable.",!
  ;
  I $G(IBNCPDPR) W !! S DIR(0)="E" D ^DIR K DIR G END   ; exit for ECME
@@ -146,3 +146,15 @@ UPDUCDB(IBN) ;Update the Visit Tracking DB with the bill Number
  . D:+IBVSTIEN UPDATE^IBECEA38(IBVSTIEN,2,$P(IBND,U,11),"",1,.IBERROR)
  Q
  ;End IB*2.0*663
+UPDMH(IBN) ; update MH Visit tracking DB  IB*2.0*760
+ N IBATYPE,IBBLNO,IBCDCHK,IBERROR,IBFR,IBMHVST,IBND,IBSTOPDA,Z
+ I +$G(IBN)'>0 Q
+ S IBND=^IB(IBN,0)
+ S IBSTOPDA=$P(IBND,U,20),IBCDCHK=0,IBATYPE=+$P(IBND,U,3),IBFR=+$P(IBND,U,14),IBBLNO=$P(IBND,U,11)
+ I $P($G(^IBE(350.1,IBATYPE,0)),U)["CC MH" S IBCDCHK=1
+ I 'IBCDCHK,$$CDCHK^IBECEAMH($$GET1^DIQ(352.5,IBSTOPDA_",",.01,"E"),IBFR) S IBCDCHK=1
+ I IBBLNO'="",IBCDCHK D
+ .S IBMHVST=$O(^IBMH(351.83,"D",IBN,"")) Q:'IBMHVST
+ .D MESS2B^IBECEAMH S Z=$$UPDATE^IBECEAMH(0,IBMHVST,2,IBBLNO,"",1,.IBERROR)
+ .Q
+ Q

@@ -1,5 +1,5 @@
 PSOORUT2 ;BIR/SAB - Build Listman Screen ;Jan 05, 2021@12:08
- ;;7.0;OUTPATIENT PHARMACY;**11,146,132,182,233,243,261,268,264,305,390,411,402,500,556,622**;DEC 1997;Build 44
+ ;;7.0;OUTPATIENT PHARMACY;**11,146,132,182,233,243,261,268,264,305,390,411,402,500,556,622,746**;DEC 1997;Build 106
  ;External reference to $$PRIAPT^SDPHARM1 supported by DBIA 4196
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^DIC(31 supported by DBIA 658
@@ -17,7 +17,6 @@ PSOORUT2 ;BIR/SAB - Build Listman Screen ;Jan 05, 2021@12:08
  N I1,PSCNT,PSDIS,PSON,PSOTEL,PSOTMP
  S ^TMP("PSOHDR",$J,1,0)=VADM(1),^TMP("PSOHDR",$J,2,0)=$P(VADM(2),"^",2)
  S ^TMP("PSOHDR",$J,3,0)=$P(VADM(3),"^",2),^TMP("PSOHDR",$J,4,0)=VADM(4),^TMP("PSOHDR",$J,5,0)=$P(VADM(5),"^",2)
- D NVA
  S POERR=1 D RE^PSODEM K POERR
  S ^TMP("PSOHDR",$J,6,0)=$S($P(WT,"^",8):$P(WT,"^",9)_" ("_$P(WT,"^")_")",1:"_______ (______)")
  S ^TMP("PSOHDR",$J,7,0)=$S($P(HT,"^",8):$P(HT,"^",9)_" ("_$P(HT,"^")_")",1:"_______ (______)") K VM,WT,HT S PSOHD=7
@@ -84,16 +83,22 @@ PSOORUT2 ;BIR/SAB - Build Listman Screen ;Jan 05, 2021@12:08
  K ^UTILITY("VASD",$J),X,PSOAPPI,PSOAPPE,PSOAPP,N,PSOBSA,ZDSPL,RSLT
  S PSOPI=IEN K IEN
  Q
-NVA ;
- Q:'$O(^PS(55,PSODFN,"NVA",0))
- K LSTDT F I=0:0 S I=$O(^PS(55,PSODFN,"NVA",I)) Q:'I  D
+NVAERX ; Display eRx/Non-VA Meds on file on the Header
+ N EPATIEN,HASACTRX,NOTE,LSTDT,I,PATSTAT
+ S (EPATIEN,HASACTRX)=0
+ F  S EPATIEN=+$O(^PS(52.49,"AVPAT",+$G(PSODFN),EPATIEN)) Q:'EPATIEN  D  I HASACTRX Q
+ . S PATSTAT=$$PATSTATS^PSOERPC1(EPATIEN) F I=2:1:6 I $P(PATSTAT,"^",I) S HASACTRX=1 Q
+ S LSTDT=0 F I=0:0 S I=$O(^PS(55,PSODFN,"NVA",I)) Q:'I  D
  .Q:$P(^PS(55,PSODFN,"NVA",I,0),"^",7)  Q:'$P(^PS(55,PSODFN,"NVA",I,0),"^")
  .I $P(^PS(55,PSODFN,"NVA",I,0),"^",10)>+$G(LSTDT) S LSTDT=$P(^(0),"^",10)
- I $G(LSTDT)]"" D
- .S LSTDT="Non-VA Meds on File - Last entry on "_$E(LSTDT,4,5)_"/"_$E(LSTDT,6,7)_"/"_$E(LSTDT,2,3)
- .I $G(^TMP("PSOHDR",$J,5,0))="MALE" S $P(^TMP("PSOHDR",$J,5,0)," ",22)=LSTDT K LSTDT Q
- .S $P(^TMP("PSOHDR",$J,5,0)," ",20)=LSTDT K LSTDT
- K I
+ I 'LSTDT,'HASACTRX Q
+ S NOTE=""
+ I HASACTRX S NOTE="eRx"_$S(LSTDT:" & ",1:"")
+ I LSTDT S NOTE=NOTE_"Non-VA"
+ S NOTE=NOTE_" Meds on File"
+ I LSTDT S NOTE=NOTE_" - Last Non-VA Entry on "_$$FMTE^XLFDT(LSTDT\1,"2Z")
+ ;
+ D INSTR^VALM1(IORVON_IOUON_NOTE_IORVOFF_IOINORM,(65-$L(NOTE))\2+$S(LSTDT:14,1:9),5)
  Q
 REMOTE ;
  I $T(HAVEHDR^ORRDI1)']"" Q

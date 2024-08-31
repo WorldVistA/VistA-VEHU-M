@@ -1,6 +1,8 @@
 PSOERXI1 ;ALB/BWF - eRx Utilities/RPC's ; 12/10/22 11:24am
- ;;7.0;OUTPATIENT PHARMACY;**581,617,692,706,700,743**;DEC 1997;Build 24
+ ;;7.0;OUTPATIENT PHARMACY;**581,617,692,706,700,743,746**;DEC 1997;Build 106
  ;
+ ;
+ ;Reference to MAKEADD^TIUSRVP2 in ICR #4795
  Q
  ; File incoming XML into appropriate file
  ; XML - xml text
@@ -60,7 +62,9 @@ INCERX(RES,XML,PRCHK,PACHK,DACHK,STATION,DIV,ERXHID,ERXVALS,XML2,VADAT,XML3) ;
  . . S FDA(52.49,CURREC,44)=1
  . . S VAOI=$$GET1^DIQ(50,DACHK("IEN"),2.1,"I")
  . . S VPATINST=$$GET1^DIQ(50.7,VAOI,7,"E")
- . . I $L(VPATINST) S FDA(52.49,CURREC,27)=VPATINST
+ . . I $L(VPATINST) D
+ . . . S (NEWVAL(1),FDA(52.49,CURREC,27))=VPATINST
+ . . . D AUDLOG^PSOERXUT(+CURREC,"PATIENT INSTRUCTIONS",$$PROXYDUZ^PSOERXUT(),.NEWVAL)
  ;
  I $G(DACHK("success"))="false" D
  . S ERRTXT=$G(DACHK("error"))
@@ -82,12 +86,12 @@ INCERX(RES,XML,PRCHK,PACHK,DACHK,STATION,DIV,ERXHID,ERXVALS,XML2,VADAT,XML3) ;
  I $G(PRCHK("success"))="true",PRCHK("IEN") D
  . S FDA(52.49,CURREC,1.2)=1
  . S FDA(52.49,CURREC,2.3)=PRCHK("IEN")
- . ;Auto-Validating Provider if auto-match was successful (MbM sites only)
+ . ;Auto-Validating Provider if auto-match was successful
  . ;Condition: Non-CS eRx only & Last name, first letter of first name and zip code 5 digits must match
  . S PRVAUTOV=0
- . I $$GET1^DIQ(59.7,1,102,"I")="MBM",'$$GET1^DIQ(52.49,CURREC,95.1,"I") D
+ . I '$$GET1^DIQ(52.49,+CURREC,95.1,"I") D
  . . N EPRVIEN,EPRVNAM,EPRVZC,VPRVIEN,VPRVNAM,VPRVZC
- . . S EPRVIEN=$$GET1^DIQ(52.49,CURREC,2.1,"I")
+ . . S EPRVIEN=$$GET1^DIQ(52.49,+CURREC,2.1,"I")
  . . S EPRVNAM=$$UP^XLFSTR($TR($$GET1^DIQ(52.48,EPRVIEN,.01)," "))
  . . S EPRVZC=$P($$GET1^DIQ(52.48,EPRVIEN,4.5),"-")
  . . S VPRVIEN=PRCHK("IEN") I '$$CHKPRV2^PSOERX1A(VPRVIEN) Q
@@ -101,7 +105,7 @@ INCERX(RES,XML,PRCHK,PACHK,DACHK,STATION,DIV,ERXHID,ERXVALS,XML2,VADAT,XML3) ;
  . . S FDA(52.49,CURREC,2.7)=1
  . . S PRVAUTOV=1
  . ;Saving the eRx Audit Log for the Auto-Matched Provider
- . S NEWVAL(1)=$$GET1^DIQ(200,PRCHK("IEN"),.01)_" (DEA#: "_$P($$VADEA^PSOERXU8(PRCHK("IEN"),CURREC),"^",2)_")"_$S(PRVAUTOV:" - AUTO-VALIDATED",1:"")  ; PSO*7*743
+ . S NEWVAL(1)=$$GET1^DIQ(200,PRCHK("IEN"),.01)_" (DEA#: "_$P($$VADEA^PSOERXU8(PRCHK("IEN"),+CURREC),"^",2)_")"_$S(PRVAUTOV:" - AUTO-VALIDATED",1:"")
  . D AUDLOG^PSOERXUT(+CURREC,"PROVIDER",$$PROXYDUZ^PSOERXUT(),.NEWVAL)
  ;
  I $G(PRCHK("success"))="false" D
@@ -144,8 +148,52 @@ INCERX(RES,XML,PRCHK,PACHK,DACHK,STATION,DIV,ERXHID,ERXVALS,XML2,VADAT,XML3) ;
  . . D FILERR^PSOERXU1(CURREC,ERRSEQ,"PA","E",ERRTXT)
  ;
  S RES="1^Erx Received."
+ ;
+ ;Create an Addendum for eRx Change Response Progress Note
+ I $G(EIEN)'="",$$GET1^DIQ(52.49,EIEN,.08,"I")="CX" D CREATEADD(ERXHID,EIEN)
  Q
  ;
+CREATEADD(ERXHID,EIEN) ;Create CPRS Progress Notes Addendum for this eRx Change Response
+ ;Input: ERXHID - eRx processing hub id^CANCEL/CHANGE REQUEST DENIED BY HUB (1=YES)^relates to hub ID
+ ;       EIEN   - The eRx Change Response IEN, Pointer to ERX HOLDING QUEUE file (#52.49)
+ ;Output: Create an Addendum and attach it to the parent eRx Change Request
+ ;
+ I ($G(ERXHID)="")!($G(EIEN)="") Q
+ N CNT,CRERXIEN,ORGERXIEN,ERXDRUG,CRMEDS,CNT,CXTARGET,ERXDRUG,PSOTIUIEN,TIUDADD,ERXTIUX
+ ;
+ S CRERXIEN=$O(^PS(52.49,"B",$P(ERXHID,"^",3),0))
+ S ORGERXIEN=$P($G(^PS(52.49,CRERXIEN,0)),"^",14)
+ S ORGERXIEN=$O(^PS(52.49,"B",ORGERXIEN,0))
+ ;
+ ;get the parent reference IEN TIU Document
+ S PSOTIUIEN=$$GET1^DIQ(52.49,CRERXIEN,320.1)
+ I '$G(PSOTIUIEN) D  Q
+ . D BLDCRMEDS(ERXHID,.DACHK,"ERX RX CHANGE REQUEST NOTE")
+ ;
+ S CXTARGET=$NA(^TMP("TIUP",$J)) K @CXTARGET
+ D BUILDLST^PSOERSE4(CXTARGET,EIEN)
+ Q:'$D(@CXTARGET)
+ K ERXTIUX M ERXTIUX("TEXT")=@CXTARGET
+ D MAKEADD^TIUSRVP2(.TIUDADD,PSOTIUIEN,.ERXTIUX) ;PSOTIUIEN is the parent IEN from The TIU Document Definition name in File #8925.1
+ D UPDATEPN^PSOERX1H(.TIUDADD,$G(ORGERXIEN)) ;TIUDADD is the Addendum IEN
+ Q
+ ;
+BLDCRMEDS(ERXHID,DACHK,TIUTITLE) ;Build eRx Change Response Medication array
+ ;get the original eRx
+ Q:$G(ERXHID)=""
+ N CRERXIEN,ORGERXIEN,ERXDRUG,CRMEDS
+ ;
+ S CRERXIEN=$O(^PS(52.49,"B",$P(ERXHID,"^",3),0))
+ S ORGERXIEN=$P($G(^PS(52.49,CRERXIEN,0)),"^",14)
+ S ORGERXIEN=$O(^PS(52.49,"B",ORGERXIEN,0))
+ S CNT=0
+ I $D(DACHK("IEN")) D
+ . S ERXDRUG=$$GET1^DIQ(50,DACHK("IEN"),.01)
+ . S CNT=CNT+1,CRMEDS(CNT)="^"_ERXDRUG
+ ;
+ D CREATEPN^PSOERX1H(ORGERXIEN,EIEN,,.CRMEDS,TIUTITLE) ;create eRx Change Response PN
+ ;
+ Q
  ; VAL - value to resolve
  ; TYPE - This is the code type, which will tell which 'C' index type to get the code from
 PRESOLV(VAL,TYPE) ;

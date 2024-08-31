@@ -1,17 +1,18 @@
-ORWDX ; SLC/KCM/REV/JLI - Order dialog utilities ;Oct 18, 2022@15:47
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,125,131,132,141,164,178,187,190,195,215,246,243,283,296,280,306,350,424,421,461,490,397,377,539,405,588**;Dec 17, 1997;Build 29
+ORWDX ;SLC/KCM,REV,JLI - Order dialog utilities ;Feb 16, 2024@13:21
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,125,131,132,141,164,178,187,190,195,215,246,243,283,296,280,306,350,424,421,461,490,397,377,539,405,588,601**;Dec 17, 1997;Build 1
  ;Per VA Directive 6402, this routine should not be modified.
  ;
- ;Reference to DIC(9.4 supported by IA #2058
- ;Reference to ^SC( supported by IA #10040
- ;
- ;Sep 18, 2015 - PB - modified to trigger an unsolicited sync action
+ ;Reference to ^DIC(9.4 in ICR #2058
+ ;Reference to ^SC( in ICR #10040
+ ;Reference to ^LAB(60,D0,8,0 in ICR #2387
  ;
 ORDITM(Y,FROM,DIR,XREF,QOCALL,ACCESS) ; Subset of orderable items
  ; Y(n)=IEN^.01 Name^.01 Name  -or-  IEN^Synonym <.01 Name>^.01 Name
- N I,IEN,CNT,X,DTXT,CURTM,DEFROUTE,ORDSTART,CHKLAB,CODE
+ N I,IEN,CNT,X,DTXT,CURTM,DEFROUTE,ORDSTART,CHKLAB,CODE,ORTESTIEN,ORLABOK
+ N ORLRFILTER
  S ORDSTART=$O(^ORD(101.43,XREF,FROM))
  S DEFROUTE="",CHKLAB=(XREF="S.LAB")&($L($G(ACCESS))>1)
+ S ORLRFILTER=$S(XREF="S.LAB":+$$GET^XPAR("SYS","OR LR ORDERABLE ITEM FILTERING",1,"I"),1:0)
  S QOCALL=+$G(QOCALL)
  S I=0,CNT=44,CURTM=$$NOW^XLFDT
  F  Q:I'<CNT  S FROM=$O(^ORD(101.43,XREF,FROM),DIR) Q:FROM=""  D
@@ -23,6 +24,7 @@ ORDITM(Y,FROM,DIR,XREF,QOCALL,ACCESS) ; Subset of orderable items
  . . I CHKLAB D  I ACCESS'[(U_CODE_U) Q
  . . . S CODE=$P($G(^ORD(101.43,IEN,"LR")),U,6)
  . . . I CODE="" S CODE="CH"
+ . . I ORLRFILTER,'$$CHKLABDIV^ORWDX2(IEN,XREF) Q
  . . S I=I+1
  . . I 'X S Y(I)=IEN_U_$P(X,U,2)_U_$P(X,U,2)
  . . E  S Y(I)=IEN_U_$P(X,U,2)_$C(9)_"<"_$P(X,U,4)_">"_U_$P(X,U,4)
