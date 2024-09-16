@@ -1,5 +1,5 @@
 PSOORED3 ;BIR/SAB-edit finished orders through backdoor ;Apr 08, 2020@09:09:53
- ;;7.0;OUTPATIENT PHARMACY;**46,78,99,117,133,148,249,251,379,378,372,416,313,444,402,515,574,441,725**;DEC 1997;Build 1
+ ;;7.0;OUTPATIENT PHARMACY;**46,78,99,117,133,148,249,251,379,378,372,416,313,444,402,515,574,441,725,744**;DEC 1997;Build 3
  ;External reference to PS(51.1 supported by DBIA 2225
  ;External reference to PS(51.2 supported by DBIA 2226
  ;called from psoored2
@@ -105,6 +105,11 @@ UDSIG I $O(SIG(0)) D
  ..F I=0:0 S I=$O(^PSRX(PSORXED("IRXN"),"SIG1",I)) Q:'I  S ^PSRX(PSORXED("IRXN"),"A",A,2,I,0)=^PSRX(PSORXED("IRXN"),"SIG1",I,0),^PSRX(PSORXED("IRXN"),"A",A,2,0)="^52.34A^"_I_"^"_I
  .S ^PSRX(PSORXED("IRXN"),"SIG")="^1"
  .K SIG,A,I
+ ;P744 Check if header exists, and check if header count matches entries
+ S:'$D(^PSRX(PSORXED("IRXN"),"A",0)) ^PSRX(PSORXED("IRXN"),"A",0)="^52.3DA^"
+ S COUNT="" S COUNT=$O(^PSRX(PSORXED("IRXN"),"A","Z"),-1)
+ I $P(^PSRX(PSORXED("IRXN"),"A",0),"^",3)'=COUNT S ^PSRX(PSORXED("IRXN"),"A",0)="^52.3DA^"_COUNT_"^"_COUNT
+ ;
  S ^PSRX(PSORXED("IRXN"),6,0)="^52.0113^"_ENT_"^"_ENT
  F I=1:1:ENT S ^PSRX(PSORXED("IRXN"),6,I,0)=PSORXED("DOSE",I)_"^"_$G(PSORXED("DOSE ORDERED",I))_"^"_$G(PSORXED("UNITS",I))_"^"_$G(PSORXED("NOUN",I))_"^" D
  .S ^PSRX(PSORXED("IRXN"),6,I,0)=^PSRX(PSORXED("IRXN"),6,I,0)_$G(PSORXED("DURATION",I))_"^"_$G(PSORXED("CONJUNCTION",I))_"^"_$G(PSORXED("ROUTE",I))_"^"_$G(PSORXED("SCHEDULE",I))_"^"_$G(PSORXED("VERB",I))

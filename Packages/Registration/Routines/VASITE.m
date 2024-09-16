@@ -1,5 +1,10 @@
-VASITE ;ALB/AAS - TIME SENSETIVE VA STATION NUMBER UTILITY ; 4/22/92
- ;;5.3;Registration;**134**;Aug 13, 1993
+VASITE ;ALB/AAS - TIME SENSITIVE VA STATION NUMBER UTILITY ; 4/22/92
+ ;;5.3;Registration;**134,1124**;Aug 13, 1993;Build 3
+ ;;Per VA Directive 6402, this routine should not be modified.
+ ;
+ ;ICR:
+ ;Reference to $$SITE,$$NAME,$$ALL,$$PRIM^VASITE in ICR #10112
+ ;
  ;
 SITE(DATE,DIV) ;
  ;       -Output= Institution file pointer^Institution name^station number with suffix
@@ -42,6 +47,8 @@ CHKQ I 0 Q
 YN ;  -input transform for is primary facility
  I '$P(^VA(389.9,DA,0),"^",2) W !,"Effective date must be entered first!" K X Q
  I '$P(^VA(389.9,DA,0),"^",3) W !,"Medical Center Division must be entered first!" K X Q
+ ;DG PATCH DG*5.3*1124 To only have one Primary with 3 numerics
+ I $P(^VA(389.9,DA,0),"^",4)'?3N W !,"Primary Station can only be 3 numerics!" K X Q  ;DG1124
  I $D(^VA(389.9,"AIVDT1",1,-$P(^VA(389.9,DA,0),"^",2))) W !,"Only one division can be primary division for an effective date!" K X Q
  S X=$E(X),X=$S(X=1:X,X=0:X,X="Y":1,X="y":1,X="n":0,X="N":0,1:2) I X'=2 W "  (",$S(X:"YES",1:"NO"),")" Q
  W !?4,"NOT A VALID CHOICE!",*7 K X Q

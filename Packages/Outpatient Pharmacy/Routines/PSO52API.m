@@ -1,5 +1,5 @@
 PSO52API ;BHAM ISC/SAB - Encap II API to return Rx data ; Feb 17, 2023@08:16:38
- ;;7.0;OUTPATIENT PHARMACY;**213,229,252,387,386,566,441,712**;DEC 1997;Build 20
+ ;;7.0;OUTPATIENT PHARMACY;**213,229,252,387,386,566,441,712,744**;DEC 1997;Build 3
  ; Reference to ^PS(55 in ICR #2228
  ;
 RX(DFN,LIST,IEN,RX,NODE,SDATE,EDATE) ;
@@ -150,6 +150,10 @@ CMP S ^TMP($J,LIST,DFN,IEN,"C",0)=$G(^TMP($J,LIST,DFN,IEN,"C",0))+1
  Q
 AT ;activity log
  I '$O(^PSRX(IEN,"A",0)) S ^TMP($J,LIST,DFN,IEN,"A",0)="-1^NO DATA FOUND" Q
+ ;P744 Check for missing Activity Log Header node and fix
+ I '$D(^PSRX(IEN,"A",0)) D
+ . S COUNT="" S COUNT=$O(^PSRX(IEN,"A","Z"),-1)
+ . S ^PSRX(IEN,"A",0)="^52.3DA^"_COUNT_"^"_COUNT
  N AT F AT=0:0 S AT=$O(^PSRX(IEN,"A",AT)) Q:'AT  S DA(52.3)=AT D ATP
  K DA,DR,PST,DIC,DIQ,AT
  Q

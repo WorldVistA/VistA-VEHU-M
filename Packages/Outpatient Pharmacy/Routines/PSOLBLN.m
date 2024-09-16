@@ -1,5 +1,5 @@
 PSOLBLN ;BIR/RTR - NEW PRINTS LABEL ;11/18/92
- ;;7.0;OUTPATIENT PHARMACY;**16,36,71,107,110,117,135,233,251,387,379,367,383,318,482,643**;DEC 1997;Build 35
+ ;;7.0;OUTPATIENT PHARMACY;**16,36,71,107,110,117,135,233,251,387,379,367,383,318,482,643,753**;DEC 1997;Build 53
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^VA(200 supported by DBIA 224
@@ -44,6 +44,7 @@ ST I $P($G(^PSRX(RX,3)),"^",3) S PSOPROV=+$P(^(0),"^",4) S PSOPROV=$S($G(RXP):+$
  .K PSMP(PSI)
  S X=$S($D(^PS(55,DFN,0)):^(0),1:""),PSCAP=$P(X,"^",2),PS55=$P($G(X),"^",3),PS55X=$P($G(X),"^",5)
  I (($G(PS55X)]"")&(PS55>1)&(PS55X<DT)) S PS55=0
+ I $$GET1^DIQ(52,RX,100.2,"I")]"" S PS55=$$GET1^DIQ(52,RX,100.2,"I"),PS55X="" ;p753
  S:MW="M" MW=$S((PS55=1!(PS55=4)):"R",1:MW)
  S MW=$S(MW="M":"REGULAR",MW="R":"CERTIFIED",1:"WINDOW")
  I ($G(PSMP(1))']""&($G(PS55)=2)) S PSMP(1)=$G(SSNPN)

@@ -1,17 +1,20 @@
-ORDV02C ;SLC/DCM - OE/RR REPORT EXTRACTS ;FEB 07, 2024@11:20
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**350,423,377,534,603**;Dec 17, 1997;Build 14
+ORDV02C ;SLC/DCM - OE/RR REPORT EXTRACTS ;MAY 17, 2024@15:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**350,423,377,534,603,610**;Dec 17, 1997;Build 11
  ;
- ; Reference to GCPR^OMGCOAS1 in ICR#3486
+ ; Reference to GCPR^OMGCOAS1 in ICR #3486
+ ; Reference to ^TMP("60"     in ICR #3486
+ ; Reference to ^LAB(60       in ICR #2387
  ;
 OV(ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT) ;Lab Overview
- S (ORDEND,OROMEGA)=9999999 ; Get all future orders
+ I '$D(ORDEND) S ORDEND=9999999 ;Acknowledging parameter input value in ORDEND DM-610
+ S OROMEGA=ORDEND
  I $L($T(GCPR^OMGCOAS1)) D  ; Call if FHIE station 200
  . N BEG,END,MAX
  . Q:'$G(ORALPHA)  Q:'$G(OROMEGA)
  . S MAX=$S(+$G(ORMAX)>0:ORMAX,1:999)
  . S BEG=9999999-OROMEGA,END=9999999-ORALPHA
  . D GCPR^OMGCOAS1(DFN,"LRO",BEG,END,MAX)
- N D,SN,ORX0,MAX,GMTS1,GMTS2,GMTSBEG,GMTSEND,GMTSMERG,ORSITE,SITE,GO,SORT,STATUS,S,LST,RSLT,Y,IVSDT,IVEDT,I,X
+ N D,SN,ORX0,MAX,GMTS1,GMTS2,GMTSBEG,GMTSEND,GMTSMERG,ORSITE,SITE,GO,SORT,STATUS,S,LST,RSLT,Y,IVSDT,IVEDT,I,X,ORCTR,ORSTOP
  Q:'$L(OREXT)
  S GO=$P(OREXT,";")_"^"_$P(OREXT,";",2)
  Q:'$L($T(@GO))
@@ -21,9 +24,9 @@ OV(ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT) ;Lab Overview
  I '$L($T(GCPR^OMGCOAS1)) D
  . K ^TMP("LRO",$J),^TMP("ORTXT",$J),^TMP("ORSORT",$J),^TMP("ORXPND",$J)
  . D @GO
- S D=ORDBEG,IVSDT=ORDBEG,IVEDT=(9999999-ORDEND) ;IVEDT change to reverse date order DM-603
- F  S D=$O(^TMP("ORSORT",$J,D)) Q:'D!(D<IVEDT)  D
- . S S=0 F  S S=$O(^TMP("ORSORT",$J,D,S)) Q:'S  S SN=0 F  S SN=$O(^TMP("ORSORT",$J,D,S,SN)) Q:'SN  S ORX0=^(SN) D
+ S D=ORDBEG,IVSDT=ORDBEG,IVEDT=(9999999-ORDEND),ORCTR=1,ORSTOP=0 ;IVEDT change to reverse date order DM-603
+ F  S D=$O(^TMP("ORSORT",$J,D)) Q:'D!(D<IVEDT)!ORSTOP  D
+ . S S=0 F  S S=$O(^TMP("ORSORT",$J,D,S)) Q:'S!ORSTOP  S SN=0 F  S SN=$O(^TMP("ORSORT",$J,D,S,SN)) S:ORCTR>ORMAX ORSTOP=1 Q:'SN!ORSTOP  S ORX0=^(SN),ORCTR=ORCTR+1 D
  .. S SITE=$S($L($G(^TMP("LRO",$J,D,SN,"facility"))):^("facility"),1:ORSITE)
  .. S ^TMP("ORDATA",$J,D,S,SN,"WP",1)="1^"_SITE ;Station ID*1*1
  .. S ^TMP("ORDATA",$J,D,S,SN,"WP",2)="2^"_$P(ORX0,U) ;collection date*2*2
@@ -65,7 +68,7 @@ OV(ROOT,ORALPHA,OROMEGA,ORMAX,ORDBEG,ORDEND,OREXT) ;Lab Overview
  ;The following set of comments is for the Overview report
  ;Critical Value Flag **5
  ;Flags for Partial Results **11
- ;Details is test results **YES in same format as "All Tests By Date" with Relase Date/Time, Reporting site, Site Code (facility) added
+ ;Details is test results **YES in same format as "All Tests By Date" with Release Date/Time, Reporting site, Site Code (facility) added
  K ^TMP("LRO",$J),^TMP("ORTXT",$J),^TMP("ORSORT",$J),^TMP("ORXPND",$J)
  S ROOT=$NA(^TMP("ORDATA",$J))
  Q

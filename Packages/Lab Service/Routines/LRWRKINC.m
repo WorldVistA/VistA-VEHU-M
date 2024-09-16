@@ -1,5 +1,5 @@
 LRWRKINC ;SLC/DCM/CJS - INCOMPLETE STATUS REPORT ;Mar 22, 2021@17:48
- ;;5.2;LAB SERVICE;**153,201,221,453,536,543,562**;Sep 27, 1994;Build 5
+ ;;5.2;LAB SERVICE;**153,201,221,453,536,543,562,566**;Sep 27, 1994;Build 12
  ;
 EN ;
  K ^TMP($J),^TMP("LR",$J),^TMP("LRWRKINC",$J)
@@ -8,7 +8,7 @@ EN ;
  S (LRCNT,LRCUTOFF,LREND,LREXD,LREXTST,LRNOCNTL,LREXNREQ)=0,LRSORTBY=1
  S DIC="^LRO(68,",DIC(0)="AEMOQZ"
  F  D  Q:$G(LRAA)<1!(LREND)
- . N LAST,LRAD,LRAN,LRFAN,LRLAN,LRWDTL,LRSTAR,LRUSEAA,X,Y
+ . N LAST,LRAD,LRAN,LRFAN,LRLAN,LRWDTL,LRSTAR,LRUSEAA,X,Y,LRDIP
  . D ^DIC
  . I $D(DUOUT) S LREND=1 Q
  . S LRAA=+Y,LRAA(0)=$G(Y(0))
@@ -17,6 +17,7 @@ EN ;
  . I LREND Q
  . I '$L(LRUSEAA) D PHD Q:LREND
  . S LRCNT=LRCNT+1,^TMP("LRWRKINC",$J,$P(LRAA(0),"^")_"^"_LRAA,LRCNT,0)=LRAA(0)
+ . I $G(LRDIP) S LAST=LRDIP
  . I $L(LRUSEAA) D
  . . N X
  . . S X=$P($G(^LRO(68,LRUSEAA,0)),"^")_"^"_LRUSEAA
@@ -121,6 +122,7 @@ DQ ;
  . . N LRFAN,LRLAN,LRSTAR,LRLAST,LRY
  . . F I=0,1 S LRZ(I)=$G(^TMP("LRWRKINC",$J,LRX,LRZ,I))
  . . S LRFAN=$P(LRZ(1),"^",2),LRLAN=$P(LRZ(1),"^",3),LRSTAR=$P(LRZ(1),"^",4),LRLAST=$P(LRZ(1),"^",5)
+ . . I $P(LRZ(1),"^",7)'="" S LRLAST=$P(LRZ(1),"^",7)
  . . I LRSTAR,LRLAST S LRY="From Date: "_$$FMTE^XLFDT(LRSTAR,"5DZ")_"    To: "_$$FMTE^XLFDT(LRLAST,"5DZ")
  . . E  S LRY=" For Date: "_$$FMTE^XLFDT(LRLAST,"5DZ")_"  From: "_LRFAN_"  To: "_LRLAN
  . . S LRINDEX=LRINDEX+1,LRNAME(LRINDEX)=$$LJ^XLFSTR($E($P(LRZ(0),"^"),1,20),22)_LRY
@@ -135,6 +137,7 @@ DQ ;
  . . I LRSORTBY=1 S LRAA("NAME")=$P(LRX,"^")
  . . S X=^TMP("LRWRKINC",$J,LRX,LRZ,1)
  . . S LRAA=$P(LRX,"^",2),LRAD=$P(X,"^"),LRFAN=$P(X,"^",2),LRLAN=$P(X,"^",3),LRSTAR=$P(X,"^",4),LAST=$P(X,"^",5),LRWDTL=$P(X,"^",6)
+ . . S:LAST'>LRAD LRAD=LAST-1
  . . N LRX,LRZ
  . . F  S LRAD=$O(^LRO(68,LRAA,1,LRAD)) Q:LRAD<1!(LRAD>LAST)  D
  . . . I $G(LRSTAR) D AC Q
@@ -146,7 +149,7 @@ DQ ;
  D X^LRWRKIN1
  I LREND D LREND^LRWRKIN1 Q
  D EQUALS^LRX D WAIT^LRWRKIN1:$E(IOST,1,2)="C-"
- D LREND^LRWRKIN1
+ K LRDIP D LREND^LRWRKIN1
  Q
  ;
 TD ;
@@ -369,6 +372,22 @@ PHD ;
  I $P(LRAA(0),"^",3)="Y" D STAR^LRWU3
  I $G(LRSTAR) Q
  D ADATE^LRWU Q:LREND
+ ;LR*5.2*566: Reset LRAD if accession area has rolled over.
+ ;            Only Daily accession areas roll over - not Yearly, Monthly,
+ ;            or Quarterly.
+ ;            10th piece indicates if Bypass Rollover is set to yes.
+ ;            Adding $G because 1 subscript might not be set yet
+ ;            for new accession areas.
+ I LRAD<DT,$P(LRAA(0),"^",3)="D",'$P(LRAA(0),"^",10) D  Q:LREND
+ . K DIR
+ . S DIR(0)="YO",DIR("A")="Are you sure you want to proceed?",DIR("B")="NO"
+ . S DIR("A",1)="Rollover completed on "_$$DDDATE^LRAFUNC1($$CDHTFM^LRAFUNC1(^LAB(69.9,1,"RO")),1)
+ . S DIR("A",2)="You are selecting a date in the past."
+ . S DIR("?")="Answer 'YES' if you want to continue."
+ . D ^DIR
+ . I $D(DIRUT)!'Y S LREND=1 Q
+ . S LRDIP=LRAD
+ I $P(LRAA(0),"^",3)="D",'$P(LRAA(0),"^",10),$P($G(^LRO(68,LRAA,1,0)),"^",3)>LRAD S LRAD=$P(^LRO(68,LRAA,1,0),"^",3)
  S LAST=LRAD,LRAD=LRAD-1
  D LRAN^LRWU3
  Q

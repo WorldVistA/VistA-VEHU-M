@@ -1,9 +1,10 @@
 PSXMISC1 ;BIR/WPB,BAB-Transmission Data Validation ;MAR 1,2002@13:13:34
- ;;2.0;CMOP;**3,18,23,28,30,42,41,52,54,58,64,76,78**;11 Apr 97;Build 6
+ ;;2.0;CMOP;**3,18,23,28,30,42,41,52,54,58,64,76,78,98**;11 Apr 97;Build 5
  ;Reference to ^PSDRUG(  supported by DBIA #1983
  ;Reference to ^PS(52.5, supported by DBIA #1978
  ;Reference to ^PSRX(    supported by DBIA #1977
  ;Reference to ^PS(55,   supported by DBIA #2228
+ ;Reference to ^PSRX(    supported by DBIA #1977
  ;Reference to PROD2^PSNAPIS supported by DBIA #2531
  ;Reference to ^PSSLOCK supported by DBIA #2789
  ;Reference to CHKRX^PSOBAI supported by DBIA #4910
@@ -118,6 +119,7 @@ TSTCHAR ; test each character of SIG for certain characters
 MAILOK(TRX) ; return 1 if patient still in mail status & ok to CMOP
  N PSOMDT,PSOMC,DFN
  S DFN=$P(^PSRX(TRX,0),"^",2),PSOMDT=$P($G(^PS(55,DFN,0)),"^",5),PSOMC=$P($G(^PS(55,DFN,0)),"^",3)
+ I $$GET1^DIQ(52,TRX,100.2,"I")]"" S PSOMC=$$GET1^DIQ(52,TRX,100.2,"I"),PSOMDT="" ;p98
  I (PSOMC>1&(PSOMDT>DT))!(PSOMC>1&(PSOMDT<1)) Q 0
  Q 1
 ADDROK(TRX) ; return 1 if not foreign and not bad address indicator 

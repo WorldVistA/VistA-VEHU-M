@@ -1,5 +1,5 @@
 PSOORED1 ;ISC-BHAM/SAB - edit orders from backdoor ;Oct 20, 2022@15:19
- ;;7.0;OUTPATIENT PHARMACY;**5,23,46,78,114,117,131,146,223,148,244,249,268,206,313,444,422,457,649,441,545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**5,23,46,78,114,117,131,146,223,148,244,249,268,206,313,444,422,457,649,441,545,753**;DEC 1997;Build 53
  ;External reference ^PS(55 supported by DBIA 2228
  ;External reference ^PS(50.7 supported by DBIA 2223
  ;
@@ -97,6 +97,7 @@ INSQX ;
  Q
 INIT ;setup psorenw array
  S PSORENW("RX0")=^PSRX(PSORENW("IRXN"),0),PSORENW("RX2")=^(2),PSORENW("RX3")=^(3),PSORENW("STA")=^("STA"),PSORENW("TN")=$G(^("TN"))
+ S PSORENW("RX7")=$G(^PSRX(PSORENW("IRXN"),7)) ;p753
  I $G(PSOSIGFL),$G(PSORX("SIG"))]"" S PSORENW("SIG")=PSORX("SIG"),SIGOK=0
  E  D
  .S PSORENW("IND")=$P($G(^("IND")),"^"),PSORENW("INDF")=$P($G(^("IND")),"^",2) ;*441-IND
@@ -113,6 +114,7 @@ INIT ;setup psorenw array
  I $P($G(^VA(200,PSORENW("PROVIDER"),"PS")),"^",7),$P($G(^("PS")),"^",8) S PSORENW("COSIGNING PROVIDER")=$P($G(^("PS")),"^",8)
  S PSORENW("CLINIC")=$S($G(PSORENW("CLINIC")):PSORENW("CLINIC"),1:$P(PSORENW("RX0"),"^",5))
  S PSORENW("REMARKS")="New Order Created by "_$S($G(COPY)&('$G(PSOEDIT)):"copying",1:"editing")_" Rx # "_$P(PSORENW("RX0"),"^")_"."
+ S PSORENW("MAIL EXEMPTION")=$P(PSORENW("RX7"),"^",2) ;p753
  ;
  ; - Maintenance Dose Rx Remarks field
  I $G(PSOMTFLG) S PSORENW("REMARKS")="Maintenance Rx created from Titration Rx# "_$P(PSORENW("RX0"),"^")_"."

@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MH INTRODUCTIONS
 ZWR
-^YTT(601.73,0)="MH INTRODUCTIONS^601.73^2580^2468"
+^YTT(601.73,0)="MH INTRODUCTIONS^601.73^2581^2469"
 ^YTT(601.73,1,0)=1
 ^YTT(601.73,1,1,0)="^^5^5^3110104^"
 ^YTT(601.73,1,1,1,0)=" "
@@ -9313,6 +9313,9 @@ ZWR
 ^YTT(601.73,2580,0)=2580
 ^YTT(601.73,2580,1,0)="^^1^1^3240722"
 ^YTT(601.73,2580,1,1,0)="I have spent too much or lost a lot of money because of my drinking or drug use."
+^YTT(601.73,2581,0)=2581
+^YTT(601.73,2581,1,0)="^^1^1^3240915"
+^YTT(601.73,2581,1,1,0)="The purpose of each item is to rate the severity of that abnormality in the patient. When several keys are given for a particular grade of severity, the presence of only one is required to qualify for that rating. The keys provided are guides. One can ignore the keys if that is necessary to indicate severity, although this  should be the exception rather than the rule."
 ^YTT(601.73,"B",1,1)=""
 ^YTT(601.73,"B",2,2)=""
 ^YTT(601.73,"B",3,3)=""
@@ -11781,3 +11784,4 @@ ZWR
 ^YTT(601.73,"B",2578,2578)=""
 ^YTT(601.73,"B",2579,2579)=""
 ^YTT(601.73,"B",2580,2580)=""
+^YTT(601.73,"B",2581,2581)=""

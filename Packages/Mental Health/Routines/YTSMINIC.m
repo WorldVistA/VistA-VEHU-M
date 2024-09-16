@@ -1,5 +1,5 @@
 YTSMINIC ;SLC/PIJ - Score MINI COG ; 01/08/2016
- ;;5.01;MENTAL HEALTH;**123,234**;DEC 30,1994;Build 38
+ ;;5.01;MENTAL HEALTH;**123,234,249**;DEC 30,1994;Build 30
  ;
  ;Public, Supported ICRs
  ; #2056 - Fileman API - $$GET1^DIQ
@@ -42,8 +42,8 @@ SCORESV ; Used for Graph and Table
 REPORT(TOTAL,QSTN,STXT,BODY) ; build report body
  S STXT=TOTAL
  I TOTAL="" S STXT="Too many items were skipped to score this administration."
- I (TOTAL>3) S STXT=STXT_"  Negative screen for dementia."
- I (+TOTAL=TOTAL),(TOTAL<4) S STXT=STXT_"  Positive for cognitive impairment"
+ I (TOTAL>2) S STXT=STXT_"  Negative screen for dementia."
+ I (+TOTAL=TOTAL),(TOTAL<3) S STXT=STXT_"  Positive for cognitive impairment"
  S STXT="|Mini-Cog Results: "_STXT
  S BODY=""
  S BODY=BODY_"|Clock Drawing:         "_$$ATXT($G(QSTN(5536)))

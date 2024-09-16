@@ -1,5 +1,5 @@
 RCRPADD ;EDE/YMG - REPAYMENT PLAN FORBEARBANCE;03/31/2021  8:40 AM
- ;;4.5;Accounts Receivable;**381,388,378,389**;Mar 20, 1995;Build 36
+ ;;4.5;Accounts Receivable;**381,388,378,389,422**;Mar 20, 1995;Build 13
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -182,6 +182,10 @@ ADDNEW(RPIEN) ; Ask the user for the bills to add.
  ..W !,"plan > 36 months. 36 months supervisor approval was denied for this"
  ..W !,"plan - no bills may be added to it."
  ..S RCSPFLG=-1
+ ..Q
+ .I RCFLG36=0 D  ; 36 month approval needed  PRCA*4.5*422
+ ..W !,"The number of payments exceeds 36 payments.",!
+ ..I $$SUPAPPR^RCRPU(2)=1 S RCSPFLG=1 D UPDFLG36^RCRPU1(RPIEN,1),UPDAUDIT^RCRPU2(RPIEN,DT,"E","SM","")
  ..Q
  .I RCFLG36=1 S RCSPFLG=1  ; already have 36 months approval
  .Q

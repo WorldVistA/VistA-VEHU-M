@@ -1,5 +1,5 @@
-RAMAIN2 ;HISC/GJC - Radiology Utility File Maintenance (Part Two) ; Jan 24, 2024@13:27:08
- ;;5.0;Radiology/Nuclear Medicine;**45,62,71,65,127,138,158,208**;Mar 16, 1998;Build 4
+RAMAIN2 ;HISC/GJC - Radiology Utility File Maintenance (Part Two) ; May 31, 2024@14:28:03
+ ;;5.0;Radiology/Nuclear Medicine;**45,62,71,65,127,138,158,208,214**;Mar 16, 1998;Build 1
  ; 08/12/2005 bay/kam Remedy Call 104630 Patch 62
  ; 03/02/2006 BAY/KAM Remedy Call 131482 Patch RA*5*71
  ; 
@@ -8,16 +8,34 @@ RAMAIN2 ;HISC/GJC - Radiology Utility File Maintenance (Part Two) ; Jan 24, 2024
  ;Supported IA #10103 reference to DT^XLFDT
  ;
  ;*** start of RA5p208 updates ***
+ ;*** start of RA5p214 updates *** 05/06/2024
 2 ;;Procedure Enter/Edit
  ; *** This subroutine once resided in RAMAIN i.e, '2^RAMAIN'. ***
- ; RA PROCEDURE option
- N RADA,RACTIVE,RAENALL,RAY,RAFILE,RASTAT,RAXIT,RAIEN,RANEW,RANEW71
+ ; RA PROCEDURE option.
+ F  S RAY214=0 DO PRCEE Q:+$G(RAY214)=-1
+ ; kill and quit... Note: leave all the package
+ ;wide variables setup at sign-on
+ ;-------------------------------
+ ; RACCESS array, RAIMGTY
+ ; RAMDIV, RAMDV & RAMLC
+ ;kill option variables on way out...
+ D KILLPRCEE K %DT,DILN,DIWT,DN,DUOUT,DTOUT,DIRUT,DIROUT
+ D VALIDITY ;run once for ALL procedures entered/edited
+ Q  ;'Procedure Enter/Edit' option exit
+ ;*** end of RA5p214 updates *** 05/06/2024
+ ;
+PRCEE ;PROCEDURE ENTER/EDIT subroutine
+ ;kill key option variables inside loop
+ D KILLPRCEE
+ ;K RADA,RACTIVE,RAENALL,RAEXC,RAF71,RAY,RAFILE,RASTAT,RAXIT,RAIEN,RANEW,RANEW71
+ ;K DA,J,RACMDIFF,RAOPTYP,RARMPF,RATRKCMA,RATRKCMB,RAY214,X,Y
  S (RAENALL,RANEW71,RAXIT,RANEW)=0 K ^XTMP("RAMAIN4",$J)
  N RADIO,RAPNM,RAPTY,RAASK,RAROUTE ;used by the edit template
  ;F  D  Q:$G(RAXIT)=0!($G(RAXIT)="")!($G(^XTMP("RAMAIN4",$J,"RAEND"))=1)  G:$G(^XTMP("RAMAIN4",$J,"RAEND"))=1 END
- K DA,DD,DIC,DINUM,DLAYGO,DO,RACMDIFF,RATRKCMA,RATRKCMB
+ ;K DA,DD,DIC,DINUM,DLAYGO,DO,RACMDIFF,RATRKCMA,RATRKCMB
  S DIC="^RAMIS(71,",DIC(0)="QEAMLZ",DLAYGO=71,DIC("DR")=6
- W ! D ^DIC K D,DD,DIC,DINUM,DLAYGO,DO Q:+Y=-1  ;-1 no selection - exit
+ W ! D ^DIC K D,DD,DIC,DINUM,DLAYGO,DO S RAY214=$G(Y) ;RA5p214 namespace!
+ Q:+Y=-1  ;-1 no selection - exit
  ;I $G(Y)<0!($G(Y)="") S ^XTMP("RAMAIN4",$J,"RAEND")=1 Q
  S (DA,RADA)=+Y,RAY=Y,RAFILE=71
  S RAPNM=$G(Y(0,0)) ;proc. name for display purposes in template
@@ -89,8 +107,9 @@ RAMAIN2 ;HISC/GJC - Radiology Utility File Maintenance (Part Two) ; Jan 24, 2024
  ;I $G(^XTMP("RAMAIN4",$J,"RAEND"))=1 G END
  ;D EXIT G END
  ;Q
- ;commented out w/RA5p208 END
- ;Running validity check on CPT and stop codes.
+ QUIT  ;create VALIDITY subroutine RA5P214.
+ ;
+VALIDITY ;Running validity check on CPT and stop codes.
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,Y
  S DIR(0)="YAO",DIR("B")="NO"
  S DIR("A")="Want to run a validity check on CPT and stop codes? "
@@ -221,4 +240,12 @@ DICW713(RAX) ;display the sequence number or a message is the sequence
  ;'RAX' the sequence number or null statement
  N RASEQTXT S RASEQTXT="   "_$S(RAX>0:"("_RAX_")",1:"(no sequence number)")
  Q RASEQTXT
+ ;
+KILLPRCEE ;kill procedure enter/edit variables... RA5P214
+ ;note: vars RAF71,RARMPF,RAOPTYP,RAEXC & RABINARY are also killed at the end of the
+ ;RA PROCEDURE EDIT input template. Killing them here b/c exiting RA PROCEDURE EDIT
+ ;before stepping through to the end leaves some/all of those vars defined.
+ K DA,RADA,RACTIVE,RAENALL,RAEXC,RARMPF,RAF71,RAY,RAFILE,RASTAT,RAXIT,RAIEN,RANEW,RANEW71
+ K %DT,DILN,DIWT,DN,DUOUT,J,RABINARY,RACMDIFF,RAOPTYP,RATRKCMA,RATRKCMB,RAY214,X,Y
+ Q
  ;

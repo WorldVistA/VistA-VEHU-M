@@ -1,5 +1,10 @@
-TIUSRVLV ; SLC/JER - Server fns for lists by Visit ;28-FEB-2001 09:25:40
- ;;1.0;TEXT INTEGRATION UTILITIES;**7,47,100**;Jun 20, 1997
+TIUSRVLV ; SLC/JER - Server fns for lists by Visit ;Jan 26, 2024@07:19
+ ;;1.0;TEXT INTEGRATION UTILITIES;**7,47,100,362**;Jun 20, 1997;Build 3
+ ;
+ ; Reference to ^AUPNVSIT( in ICR #2028
+ ; Reference to FINDVISIT^PXUTLVST in ICR #7435
+ ;
+ Q
 NOTES(TIUY,VISIT,STATUS) ; Gets list of Notes
  I $S(+$G(VISIT)'>0:1,'$D(^AUPNVSIT(+$G(VISIT),0)):1,1:0) Q
  D LIST(.TIUY,VISIT,3,$G(STATUS))
@@ -48,15 +53,46 @@ ADDELMNT(DA,TIUCNT) ; Add each element to the list
  S ^TMP("TIULIST",$J,9999999-EDT,EDTCNT)=TIUREC
  S ^TMP("TIULIST",$J,"INDX",DA,EDTCNT)=""
  Q
-DOCCNT(TIUY,DFN,VSTR,VSIT) ; Get # of Documents for a given visit
- N TIUI,CNT S (TIUY,TIUI)=0
- I +$G(VSIT) D  Q
- . F  S TIUI=$O(^TIU(8925,"V",+VSIT,TIUI)) Q:+TIUI'>0  D
+DOCCNT(TIUY,DFN,VSTR,VSIT,CNTSCND) ; Get # of Documents for a given visit
+ ;
+ ;     DFN = Patient IEN (#2)
+ ;    VSTR = Visit String
+ ;    VSIT = Visit IEN (#9000010)
+ ; CNTSCND = Count also documents that reference the Visit via the SECONDARY VISIT field.
+ ;           (Possible values: 1/0; Optional; Defaults to 0)
+ ;
+ ; Must either pass in VSIT, or must pass in the DFN and VSTR.
+ ; It is best to pass in VSIT. DFN and VSTR are only included for backward compatability.
+ ;
+ N VISITLIST,NOTEINDEX,TIUNOTE,TIUVST
+ ;
+ S TIUY=0
+ I '$G(VSIT),('$G(DFN)!($G(VSTR)="")) Q
+ ;
+ I '$G(VSIT) D
+ . D FINDVISIT^PXUTLVST(DFN,$P(VSTR,";",2),$P(VSTR,";"),"","","",$P(VSTR,";",3),"",1,.VISITLIST)
+ . I $G(VISITLIST(0))=1 S VSIT=$G(VISITLIST(1))
+ ;
+ I +$G(VSIT) D
+ . S TIUNOTE=0
+ . F  S TIUNOTE=$O(^TIU(8925,"V",+VSIT,TIUNOTE)) Q:TIUNOTE'>0  D
  . . S TIUY=TIUY+1
- I +$G(DFN),+$G(VSTR) D
- . N TIUJ
- . F  S TIUI=$O(^TIU(8925,"AVSTRV",DFN,VSTR,TIUI)) Q:+TIUI'>0  D
- . . S TIUJ=0
- . . F  S TIUJ=$O(^TIU(8925,"AVSTRV",DFN,VSTR,TIUI,TIUJ)) Q:+TIUJ'>0  D
+ . . S NOTEINDEX(TIUNOTE)=""
+ ;
+ I '$G(VSIT) D
+ . S TIUVST=0
+ . F  S TIUVST=$O(^TIU(8925,"AVSTRV",DFN,VSTR,TIUVST)) Q:TIUVST'>0  D
+ . . S TIUNOTE=0
+ . . F  S TIUNOTE=$O(^TIU(8925,"AVSTRV",DFN,VSTR,TIUVST,TIUNOTE)) Q:TIUNOTE'>0  D
  . . . S TIUY=TIUY+1
+ . . . S NOTEINDEX(TIUNOTE)=""
+ ;
+ I $G(CNTSCND)'=1 Q
+ I '$G(VSIT) Q
+ ;
+ S TIUNOTE=0
+ F  S TIUNOTE=$O(^TIU(8925,"VS",VSIT,TIUNOTE)) Q:TIUNOTE'>0  D
+ . I $D(NOTEINDEX(TIUNOTE)) Q
+ . S TIUY=TIUY+1
+ ;
  Q

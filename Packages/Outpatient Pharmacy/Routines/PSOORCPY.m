@@ -1,5 +1,5 @@
 PSOORCPY ;BIR/SAB-copy orders from backdoor ;Oct 20, 2022@15:12
- ;;7.0;OUTPATIENT PHARMACY;**10,21,27,32,46,100,117,148,313,411,444,468,504,477,441,545,700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**10,21,27,32,46,100,117,148,313,411,444,468,504,477,441,545,700,753**;DEC 1997;Build 53
  ;External reference to LK^ORX2 supported by DBIA 867
  ;External reference to ULK^ORX2 supported by DBIA 867
  ;External reference to ^PSDRUG( supported by DBIA 221
@@ -35,6 +35,7 @@ COPY ; Rx Copy Functionality
  D PSOL^PSSLOCK(PSORXIEN) I '$G(PSOMSG) S VALMSG=$S($P($G(PSOMSG),"^",2)'="":$P($G(PSOMSG),"^",2),1:"Another person is editing this order."),VALMBCK="" K PSOMSG G EX
  N VALMCNT K PSOEDIT S (PSOCOPY,COPY,PSORXED,ZZCOPY)=1 D FULL^VALM1
  S PSORXED("DFLG")=0,(RXN,DA,PSORXED("IRXN"))=PSORXIEN,PSORXED("RX0")=^PSRX(PSORXED("IRXN"),0),PSORXED("RX2")=$G(^(2)),PSORXED("RX3")=$G(^(3)),PSOI=$P($G(^("OR1")),"^"),PSOSIG=$P($G(^("SIG")),"^"),STAT=+^("STA")
+ S PSORXED("RX7")=$G(^PSRX(PSORXED("IRXN"),7)) ;p753
  S PSORXED("INS")=$G(^PSRX(PSORXED("IRXN"),"INS"))
  S:$G(^PSRX(PSORXED("IRXN"),"INSS"))]"" PSORXED("SINS")=^PSRX(PSORXED("IRXN"),"INSS")
  S D=0 F  S D=$O(^PSRX(PSORXED("IRXN"),"INS1",D)) Q:'D  S PSORXED("SIG",D)=^PSRX(PSORXED("IRXN"),"INS1",D,0)
@@ -55,6 +56,9 @@ COPY ; Rx Copy Functionality
  .S VALMSG=$S('$G(PSOMTFLG):"Cannot COPY. ",1:"")_"Invalid Dosage of "_$G(PSOOLPD)
  I PSONOSIG D  S VALMBCK="R" G OUT
  .S VALMSG=$S('$G(PSOMTFLG):"Cannot COPY. ",1:"")_"Missing Sig"
+ ; 
+ S PSORXED("MAIL EXEMPTION")=$P($G(PSORXED("RX7")),"^",2) ;p753
+ ;
  I '$P($G(^PSDRUG($P(PSORXED("RX0"),"^",6),2)),"^") S VALMBCK="R" G OUT
  S DREN=$P(PSORXED("RX0"),"^",6),PSODAYS=$P(PSORXED("RX0"),"^",8)
  ; Checks if the current Days Supply value is greater than the Maximum Days Supply for the Drug

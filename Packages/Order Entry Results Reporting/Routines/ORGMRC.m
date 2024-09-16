@@ -1,8 +1,17 @@
-ORDSTCTB ;SP/WAT - Decision Support Tool & Consult Toolbox Code ;Dec 08, 2020@13:21:31
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**519,539**;Dec 17, 1997;Build 41
- ;;ICR 2263 $$GET^XPAR
+ORGMRC ;SP/WAT - GMRC Parameter Values for CPRS GUI ;Oct 27, 2023@13:04:24
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**608**;Dec 17, 1997;Build 15
  Q
-GETPAR(ORRESULTS,ORUSER) ;return DST/CTB system params for use in CPRS GUI
+ ; Reference to ^XPAR supported by ICR #2263
+ ;;Load any parameter values for CPRS GUI
+ ;;This routine replaces ORDSTCTB that was exported in OR*3.0*519, and 539.
+ ;;Called from JSYSPARM^ORWU
+GETPAR(ORRESULTS,ORUSER) ;get parameters
+ D CONSPARM,GETCTB
+ Q
+CONSPARM ;get consult order params
+ S ORRESULTS("consultFutureDateLimit")=$$GET^XPAR("ALL","ORCDGMRC FUTURE DATE LIMIT",1,"I")
+ Q
+GETCTB ;load values into array
  S ORRESULTS("ctbOrderConsult")=+$$GET^XPAR("SYS^PKG","ORQQCN CTB ORDER CNSLT",1,"I")
  S ORRESULTS("ctbReceive")=+$$GET^XPAR("SYS^PKG","ORQQCN CTB RECEIVE",1,"I")
  S ORRESULTS("ctbSchedule")=+$$GET^XPAR("SYS^PKG","ORQQCN CTB SCHEDULE",1,"I")

@@ -1,8 +1,7 @@
-ORWPCE3 ; SLC/KCM/REV/JM/TC - Get a PCE encounter for a TIU document ;Mar 03, 2023@13:09:31
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,190,280,306,371,361,385,377,498,405,598,588**;Dec 17, 1997;Build 29
+ORWPCE3 ; SLC/KCM/REV/JM/TC - Get a PCE encounter for a TIU document ;Aug 22, 2023@08:55
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,190,280,306,371,361,385,377,498,405,598,588,606**;Dec 17, 1997;Build 3
  ;
- ; Reference to $$GETENC^PXAPI in ICR #1894
- ; Reference to ENCEVENT^PXAPI in ICR #6488
+ ; Reference to ENCEVENT^PXAPI in ICR #1894
  ; Reference to $$ICDDATA^ICDXCODE in ICR #5747
  ; Reference to VSKIN^PXPXRM in ICR #4250
  ; Reference to VIMM^PXPXRM in ICR #4250
@@ -29,16 +28,10 @@ PCE4NOTE(LST,IEN,DFN,VSITSTR) ; Return encounter for an associated note   IA#421
  N ORPARR,ORPVAL,ORSUB,TOPLST,IST,X220,MAG,UCUM,PRIMARY,SUB,TEMP,SYSTEM,SYSIEN
  S PRIMARY=0
  I +$G(IEN)<1 D  I 1 ; Get PCE Data on a new note not yet saved
- . N VISIT2,CAT,VCAT
  . S (X0,X12)=""
- . S VISIT=$$GETENC^PXAPI(DFN,$P(VSITSTR,";",2),$P(VSITSTR,";"))
- . S VSTR=VSITSTR
- . S VISIT2=+$P(VISIT,U,2),VISIT=+VISIT
- . I VISIT'>0 Q
- . S CAT=$P(VSITSTR,";",3),VCAT=$P($G(^AUPNVSIT(VISIT,0)),U,7)
- . I VISIT2>0 D  Q
- . . I CAT'=VCAT S VISIT=VISIT2
- . I VISIT>0,CAT'="E",VCAT="E" S VISIT=-1
+ . S VSTR=$G(VSITSTR)
+ . S VISIT=$$GETVSIT^ORWPCE1(VSTR,$G(DFN))
+ . I 'VISIT S VISIT=-1
  E  D
  . S X0=$G(^TIU(8925,IEN,0)),X12=$G(^(12))
  . ;make sure DFN is defined for Reminder call at the end of the routine.

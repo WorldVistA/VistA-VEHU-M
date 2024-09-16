@@ -1,0 +1,13 @@
+YS237PST ;SLC/JLC - Patch 237 post-init ; Jul 23,2024@10:28
+ ;;5.01;MENTAL HEALTH;**237**;Dec 30, 1994;Build 8
+ ;
+ ;
+ Q
+ ;
+POST ;
+ N YS,YSCURR
+ D EN^XPAR("SYS","YSCPRS DLL SAVE",2,"1.0.5.16")
+ S YSCURR=$$GET^XPAR("SYS","YS MHA_A DLL NAME")
+ I YSCURR="YS_MHA_A_WEB.dll" Q
+ D UPDVER^YTQAPI7(2,"1.0.5.16") ; set MHA DLL version
+ Q

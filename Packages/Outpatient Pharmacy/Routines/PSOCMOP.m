@@ -1,5 +1,5 @@
 PSOCMOP ;BIR/HTW-Rx Order Entry Screen for CMOP ;6/28/07 7:35am
- ;;7.0;OUTPATIENT PHARMACY;**2,16,21,27,43,61,126,148,274,347,251,405,440**;DEC 1997;Build 29
+ ;;7.0;OUTPATIENT PHARMACY;**2,16,21,27,43,61,126,148,274,347,251,405,440,753**;DEC 1997;Build 53
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PSDRUG supported by DBIA 3165
@@ -18,6 +18,7 @@ LOOP F CNT=1:1 S RX=$P($G(PPL),",",CNT) Q:RX']""  D  S:'FLAG $P(RX("PSO"),",",P1
  .;   PSOMC=Mail Code, PSOMDT=Mail Code Expiration Date
  .N DFN  ;*347
  .S DFN=$P(^PSRX(RX,0),"^",2),PSOMDT=$P($G(^PS(55,DFN,0)),"^",5),PSOMC=$P($G(^PS(55,DFN,0)),"^",3) K DFN  ;*347
+ .I $$GET1^DIQ(52,RX,100.2,"I")]"" S PSOMC=$$GET1^DIQ(52,RX,100.2,"I"),PSOMDT="" ;p753
  .I (PSOMC>1&(PSOMDT>DT))!(PSOMC>1&(PSOMDT<1)) K PSOMC,PSOMDT Q  ;*347
  .;          Get drug IEN and check if CMOP
  .S CK=$P($G(^PSRX(RX,0)),"^",6) Q:'$D(^PSDRUG("AQ",CK))

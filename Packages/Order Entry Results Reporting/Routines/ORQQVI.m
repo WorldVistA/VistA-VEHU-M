@@ -1,13 +1,12 @@
-ORQQVI ; slc/STAFF - Functions which return patient vital and I/O data ;Jun 29, 2021@11:08
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,198,215,250,260,285,286,414,524,557,560**;Dec 17, 1997;Build 1
+ORQQVI ;SLC/STAFF - Functions which return patient vital and I/O data ; Jan 5, 2024@1:35
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,198,215,250,260,285,286,414,524,557,560,608**;Dec 17, 1997;Build 15
  ;Per VA Directive 6402, this routine should not be modified.
  ;
- ;DBIA reference section
- ;  1446   ^GMRVUT0
- ;  3647   ^GMVPXRM
- ; 10061   ^UTILITY
- ;  2051   FIND1^DIC
- ;  4114   ^PXRMINDX
+ ; Reference to EN1^GMRVUT0 in ICR #1446 (^UTILITY is the return from this call)
+ ; Reference to EN^GMVPXRM in ICR #3647
+ ; Reference to FIND1^DIC in ICR #2051
+ ; Reference to ^PXRMINDX in ICR #4290
+ ; Reference to ^XPAR in ICR #2263
  ;
 VITALS(ORY,DFN,ORSDT,OREDT) ; return patient's vital measurements taken between start date/time and end date/time
  ;ORY: return variable, results are returned in the format:
@@ -15,9 +14,6 @@ VITALS(ORY,DFN,ORSDT,OREDT) ; return patient's vital measurements taken between 
  ;DFN: patient identifier from Patient File [#2]
  ;ORSDT: start date/time in Fileman format
  ;OREDT: end date/time in Fileman format
- ;DBIA for PXRMINDX(120.5 is 4290
- ;DBIA for ^GMVPXRM is 3647
- ;DBIA for ^GMRVUT0 is 1446
  K ^UTILITY($J,"GMRVD")
  S GMRVSTR="BP;HT;WT;T;R;P;PN" ;dee 2/12/99 added PN
  S GMRVSTR(0)=ORSDT_"^"_OREDT_"^"_"^"
@@ -62,14 +58,14 @@ XVITAL(VITAL,ABBREV,DFN,ORY,CNT) ; get vital measurement
  ..S ORY(CNT)=IEN_U_ABBREV_U_$P(DATA(7),U)_U_$P(DATA(1),U)
  Q
  ;
-NOTEVIT(ORY,DFN,NOTEIEN) ;
+NOTEVIT(ORY,DFN,NOTEIEN,PARAM1) ;
  N VSTR,NOTEDATE
  D NOTEVSTR^ORWPCE(.VSTR,NOTEIEN)
  Q:$P(VSTR,";",2)=""
- D FASTVIT(.ORY,DFN,$P(VSTR,";",2))
+ D FASTVIT(.ORY,DFN,$P(VSTR,";",2),,$G(PARAM1))
  Q
  ;
-FASTVIT(ORY,DFN,F1,F2) ; return patient's most recent vital measurements
+FASTVIT(ORY,DFN,F1,F2,PARAM1) ; return patient's most recent vital measurements
  ; in date range
  ;ORY: return variable, results are returned in the format:
  ;     vital measurement ien^vital type^rate^date/time taken
@@ -96,8 +92,7 @@ FASTVIT(ORY,DFN,F1,F2) ; return patient's most recent vital measurements
  D LSTVITAL("CENTRAL VENOUS PRESSURE","CVP",DFN,.ORY,.CNT,DT1,DT2)
  D LSTVITAL("CIRCUMFERENCE/GIRTH","CG",DFN,.ORY,.CNT,DT1,DT2)
  D LSTVITAL("BODY MASS INDEX","BMI",DFN,.ORY,.CNT,DT1,DT2)
- ;I $$GET^XPAR("ALL","ORQQVI METRIC FIRST",1,"I") D SWAP(.ORY)
- ;leaving in the commented code since this feature is coming back in EP1
+ I $G(PARAM1),$$GET^XPAR("ALL","ORQQVI METRIC FIRST",1,"I") D SWAP(.ORY)
  Q
  ;
 VITAL(VITAL,ABBREV,DFN,ORY,CNT,F1,F2) ;
@@ -186,4 +181,7 @@ SWAP(ORREC) ;
  . I $P(ORREC(S1),"^",6)="" Q
  . S A="("_$P(ORREC(S1),"^",5)_")",B=$P(ORREC(S1),"^",6),B=$E(B,2,$L(B)-1)
  . S $P(ORREC(S1),"^",3)=+B,$P(ORREC(S1),"^",5)=B,$P(ORREC(S1),"^",6)=A
+ Q
+SWPVIT(ORY,DFN,PARAM1,F1,F2) ;
+ D FASTVIT(.ORY,DFN,$G(F1),$G(F2),PARAM1)
  Q

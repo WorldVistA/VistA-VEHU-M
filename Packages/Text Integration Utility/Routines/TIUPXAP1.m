@@ -1,6 +1,17 @@
-TIUPXAP1 ;SLC/JER - Interface w/PCE/Visit Tracking ;Nov 09, 2018@09:27
- ;;1.0;TEXT INTEGRATION UTILITIES;**15,29,20,89,82,107,117,126,124,149,179,205,295,314,289**;Jun 20, 1997;Build 201
+TIUPXAP1 ;SLC/JER - Interface w/PCE/Visit Tracking ;Dec 29, 2023@07:48:22
+ ;;1.0;TEXT INTEGRATION UTILITIES;**15,29,20,89,82,107,117,126,124,149,179,205,295,314,289,318**;Jun 20, 1997;Build 120
  ;Per VHA Directive 2004-038, this routine should not be modified
+ ;
+ ; Reference to File ^SC( in ICR #93
+ ; Reference to *^XLFDT in ICR #10103
+ ; Reference to ^DIE in ICR #10018
+ ; Reference to $$DATA2PCE^PXAPI in ICR #1889
+ ; Reference to $$PRVCLASS^PXAPI in ICR #2349
+ ; Reference to GETENC^PXAPI in ICR #1894
+ ; Reference to $$ISA^USRLM in ICR #1544
+ ; Reference to $$BROKER^XWBLIB in ICR #2198
+ ;
+ Q
 QUE ; Post visit tracking information
  ; if there is already a visit, and no workload data quit
  ; *295 Skip defer logic if from reassign (TIURD3)
@@ -62,7 +73,7 @@ PXAPI(TIUVSIT,DFN,VLOC,VDT,VCAT,VSTOP,ICD,CPT,SC,TIUDA) ; Build input root
  . I +TIUPROV>0,'$D(XWBOS) D
  . . I +TIUDDOC'=+TIUPROV,(+$P(TIUPRM0,U,8)=1),+TIUDDOC>0 D
  . . . ; Get Provider information from Encounter.
- . . . ; If ENC has no provicders then add default provider as primary. 
+ . . . ; If ENC has no provicders then add default provider as primary.
  . . . ; Add TIUPROV unless already primary provider for encounter.
  . . . N TIUPRIME,TIUPVCNT,TIUTVST,TIUTPRV,TIUPDATA
  . . . S TIUPRIME="",TIUPVCNT=1

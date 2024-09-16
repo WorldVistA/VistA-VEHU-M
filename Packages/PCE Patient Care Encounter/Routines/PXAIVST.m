@@ -1,5 +1,9 @@
-PXAIVST ;ISL/JVS,KWP,ESW - GET A VISIT FROM ENCOUNTER NODE ;12/28/2020
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**5,9,15,74,111,96,130,124,164,168,211**;Aug 12, 1996;Build 454
+PXAIVST ;ISL/JVS,KWP,ESW - GET A VISIT FROM ENCOUNTER NODE ;04/11/2024
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**5,9,15,74,111,96,130,124,164,168,211,238**;Aug 12, 1996;Build 3
+ ;
+ ; Reference to ^DPT( in ICR #10035
+ ; Reference to ^VA(200, in ICR #10060
+ ;
  Q
  ;
 VST ;--CREATE A VISIT
@@ -37,7 +41,7 @@ SETVARA ;--SET VISIT VARIABLES
  ; 2. If no OUTSIDE LOCATION but INSTITUTION then TYPE is "V"
  ; 3. If DUZ("AG") is defined set TYPE to it.
  ; 4. If still not defined and DUZ(2) is defined try to use the
- ; Institutioon's Agency Code, ICR #10090.
+ ; Institution's Agency Code, ICR #10090.
  ; 5. If still not defined set TYPE to "O"
  S TEMP=$S($G(PXAA("OUTSIDE LOCATION"))'="":"O",$G(PXAA("INSTITUTION"))'="":"V",1:$G(DUZ("AG")))
  I TEMP="",$G(DUZ(2))'="" S TEMP=$$GET1^DIQ(4,DUZ(2)_",",95,"I")
@@ -82,28 +86,88 @@ SETPXKA ;--SET PXK ARRAY AFTER
  S ^TMP("PXK",$J,"VST",1,800,"AFTER")=AFTER800
  S ^TMP("PXK",$J,"VST",1,811,"AFTER")=AFTER811
  S ^TMP("PXK",$J,"VST",1,812,"AFTER")=AFTER812
-SETVARB ;--SET VARIABLES BEFORE
+ ;
+CALL ;--CALL
+ N DFN,DSS,HLOC,INS,SVC,TYPE,VDT,VISITLIST
+ S DFN=$P(AFTER0,U,5),DSS=$P(AFTER0,U,8),HLOC=$P(AFTER0,U,22),INS=$P(AFTER0,U,6)
+ S TYPE=$P(AFTER0,U,3),SVC=$P(AFTER0,U,7),VDT=$P(AFTER0,U,1)
+ S VISITLIST(0)=0
+ I +$G(PXAVISIT)=0 D FINDVISIT^PXUTLVST(DFN,VDT,HLOC,SVC,DSS,INS,TYPE,"",1,.VISITLIST)
+ I (+$G(PXAVISIT)=0),(VISITLIST(0)=0) S ^TMP("PXK",$J,"VISITCREATE")="F"
+ I VISITLIST(0)=1 S PXAVISIT=VISITLIST(1)
+ I VISITLIST(0)=-1 D  Q
+ .;This should not happen, the initial input checking should catch bad input.
+ . S PXAERR(7)="VDT= "_VDT
+ . S PXAERR(8)="SVC= "_SVC_" TYPE="_TYPE
+ . S PXAERR(9)="HLOC= "_HLOC_" INS="_INS
+ . S PXAERR(10)="DFN= "_DFN
+ . S PXAERR(12)="The input parameters to FINDVISIT are bad, cannot continue."
+ . D ERRSET^PXAIVSTV
+ ;If there are multiple matches use the first one and send a MailMan message.
+ I VISITLIST(0)>1 D
+ . S PXAVISIT=VISITLIST(1)
+ . D MULTMATCHMSG(DFN,VDT,HLOC,SVC,DSS,INS,TYPE,DUZ,.VISITLIST)
+ ;
+ ;--SET VARIABLES BEFORE
  I $G(PXAVISIT) D
  .F PIECE=0,21,150,800,811,812 S ^TMP("PXK",$J,"VST",1,PIECE,"BEFORE")=$G(^AUPNVSIT(PXAVISIT,PIECE))
  .I '$D(@PXADATA@("ENCOUNTER")) D
  ..F PIECE=0,21,150,800,811,812 S ^TMP("PXK",$J,"VST",1,PIECE,"AFTER")=$G(^AUPNVSIT(PXAVISIT,PIECE))
  E  D
  .S (BEFOR0,BEFOR21,BEFOR150,BEFOR800,BEFOR811)=""
- .;
-SETPXKB .;--SET PXK ARRAY BEFORE
+ .;--SET PXK ARRAY BEFORE
  .S ^TMP("PXK",$J,"VST",1,0,"BEFORE")=BEFOR0
  .S ^TMP("PXK",$J,"VST",1,21,"BEFORE")=BEFOR21
  .S ^TMP("PXK",$J,"VST",1,150,"BEFORE")=BEFOR150
  .S ^TMP("PXK",$J,"VST",1,800,"BEFORE")=BEFOR800
  .S ^TMP("PXK",$J,"VST",1,811,"BEFORE")=BEFOR811
  .S ^TMP("PXK",$J,"VST",1,812,"BEFORE")=BEFOR812
-MISC ;--MISCELLANEOUS NODE
+ ;
  S ^TMP("PXK",$J,"VST",1,"IEN")=$G(PXAVISIT)
  ;
-CALL ;--CALL
- S PXALOOK=$$LOOKVSIT^PXUTLVST($P(AFTER0,U,5),$P(AFTER0,U),$P(AFTER0,U,22),$P(AFTER0,U,8),$P(AFTER0,U,6)) I $G(PXALOOK)>0 S PXAVISIT=PXALOOK ;PX/96 - included INSTITUTION - $P(AFTER0,U,6)
  D EN1^PXKMAIN
  I '$G(PXAVISIT) S PXAVISIT=$G(^TMP("PXK",$J,"VST",1,"IEN"))
+ Q
+ ;
+MULTMATCHMSG(DFN,VDT,HLOC,SVC,DSS,INS,TYPE,DUZ,VISITLIST) ;Send a MailMan message to the
+ ;PCE Management mail group when multiple vists are matched.
+ ;Reference        ICR#
+ ;Read ^DPT       10035
+ ;Read ^VA(200    10060
+ ;
+ N IND,PATIENT,PROVIDER,SUBJECT,VLIST
+ S PATIENT=$P(^DPT(DFN,0),U,1)
+ S PROVIDER=$$GET1^DIQ(200,DUZ,.01)
+ S SUBJECT="DATA2PCE - MULTIPLE VISITS WERE MATCHED"
+ S VLIST=VISITLIST(1)
+ F IND=2:1:VISITLIST(0) S VLIST=VLIST_", "_VISITLIST(IND)
+ K ^TMP("PXMULTMSG",$J)
+ S ^TMP("PXMULTMSG",$J,1,0)=PROVIDER_" (DUZ="_DUZ_") was editing an encounter for patient"
+ S ^TMP("PXMULTMSG",$J,2,0)=PATIENT_" (DFN="_DFN_") and multiple Visit file entries"
+ S ^TMP("PXMULTMSG",$J,3,0)="matched the visit string."
+ S ^TMP("PXMULTMSG",$J,4,0)="The matching Visit file IENs are: "_VLIST_"."
+ S ^TMP("PXMULTMSG",$J,5,0)=""
+ S ^TMP("PXMULTMSG",$J,6,0)="The visit match parameters are:"
+ S ^TMP("PXMULTMSG",$J,7,0)="DFN="_DFN
+ S ^TMP("PXMULTMSG",$J,8,0)="VISIT DATE/TIME="_VDT
+ S ^TMP("PXMULTMSG",$J,9,0)="HOSPITAL LOCATION="_HLOC
+ S ^TMP("PXMULTMSG",$J,10,0)="SERVICE CATEGORY="_SVC
+ S ^TMP("PXMULTMSG",$J,11,0)="STOP CODE="_DSS
+ S ^TMP("PXMULTMSG",$J,12,0)="INSTITUTION="_INS
+ S ^TMP("PXMULTMSG",$J,13,0)="TYPE="_TYPE
+ S ^TMP("PXMULTMSG",$J,14,0)=""
+ S ^TMP("PXMULTMSG",$J,15,0)="Only one encounter can be edited at a time, therefore the encounter"
+ S ^TMP("PXMULTMSG",$J,16,0)="corresponding to the first Visit IEN on the list was edited."
+ S ^TMP("PXMULTMSG",$J,17,0)=""
+ S ^TMP("PXMULTMSG",$J,18,0)="To lessen the chance of future multiple matches you can use the option"
+ S ^TMP("PXMULTMSG",$J,19,0)="PXQ USER REVIEW (User's Visit Review) to determine what data is contained in"
+ S ^TMP("PXMULTMSG",$J,20,0)="each of the encounters and move as much of it as possible to a single"
+ S ^TMP("PXMULTMSG",$J,21,0)="encounter."
+ S ^TMP("PXMULTMSG",$J,22,0)=""
+ S ^TMP("PXMULTMSG",$J,23,0)="If assistance is needed, please save this message and enter a ticket for help"
+ S ^TMP("PXMULTMSG",$J,24,0)="from PCE Support."
+ D SEND^PXMSG("PXMULTMSG",SUBJECT)
+ K ^TMP("PXMULTMSG",$J)
  Q
  ;
 SPKGSRC(PXAVISIT,EPKG,PXAPKG,ESOURCE,PXASOURC,PXAERRF,PXAERR) ;Save Package and

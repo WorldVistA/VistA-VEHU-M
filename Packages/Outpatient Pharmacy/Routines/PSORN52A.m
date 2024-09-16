@@ -1,5 +1,5 @@
 PSORN52A ;IHS/DSD/JCM/SAB/FLS-Break up of PSORN52 ;Mar 30, 2022@14:37:48
- ;;7.0;OUTPATIENT PHARMACY;**157,148,268,225,306,408,595,661,441**;DEC 1997;Build 209
+ ;;7.0;OUTPATIENT PHARMACY;**157,148,268,225,306,408,595,661,441,753**;DEC 1997;Build 53
  Q  ; Call from tag
  ;
 IBHLD ;
@@ -52,6 +52,9 @@ FILE ; - Filling ^PSRX and ^PS(55 entries
  ;
  ; - File Patient Couseling questions after PSOX("IRXN") is set P661
  I $D(^XUSEC("PSORPH",DUZ)) S DA=PSOX("IRXN"),DIE=52,DR="41////"_PSOCOU_";S:'X Y=""@1"";42////"_PSOCOUU_";@1" D ^DIE K DIE,DR
+ ;
+ ; - File Patient Mail Exemption set in p743
+ I $D(^XUSEC("PSORPH",DUZ)) S DA=PSOX("IRXN"),DIE=52,DR="100.2////"_PSOMAILX D ^DIE K DIE,DR
  ;
  ; - File data into ^PS(55)
 F55 ;

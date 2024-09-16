@@ -1,38 +1,41 @@
-ORWPT ;SLC/KCM/REV - Patient Lookup Functions ;Apr 15, 2022@11:15:28
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,149,206,187,190,215,243,280,306,311,441,528,519,544,405**;Dec 17, 1997;Build 212
+ORWPT ;SLC/KCM/REV - Patient Lookup Functions ; Apr 2, 2024@08:12:00
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,149,206,187,190,215,243,280,306,311,441,528,519,544,405,608**;Dec 17, 1997;Build 15
  ;
- ; Ref. to ^UTILITY via IA 10061
- ; DBIA 10096  ^%ZOSF()
- ; DBIA  2966  ^DG(391
- ; DBIA  2965  ^DG(405.1
- ; DBIA  1865  ^DGPM
- ; DBIA  2248  ^DGACT
- ; DBIA 10006  ^DIC
- ; DBIA  2967  ^DIC(31
- ; DBIA   723  ^DIC(42
- ; DBIA   510  ^DISV(
- ; DBIA   964  ^DPT(
- ; DBIA   964  ^SC(
- ; DBIA  3266  DOB^DPTLK1
- ; DBIA  3267  SSN^DPTLK1
- ; DBIA  2701  ^MPIF001
- ; DBIA  2960  ^TIULX
- ; DBIA 10061  ^VADPT
- ; DBIA 10061  ^UTILITY(
- ; DBIA  3132  ^A7RDPAGU
- ; DBIA  2701  ^MPIF001
- ; DBIA 10103  ^XLFDT
- ; DBIA  2263  ^XPAR
- ; DBIA 10006  ^VA(200
- ; DBIA 10035  ^DPT(
- ; DBIA  2762  ^DPT(
- ; DBIA  7109  DEMUPD^VADPT
+ ; Reference to ^UTILITY( in ICR #10061
+ ; Reference to ^%ZOSF() in ICR #10096
+ ; Reference to ^DG(391 in ICR #2966
+ ; Reference to ^DG(405.1 in ICR #2965
+ ; Reference to ^DGPM( in ICR #1865
+ ; Reference to ^DGACT in ICR #2248
+ ; Reference to ^DIC in ICR #10006
+ ; Reference to ^DIC(31 in ICR #2967
+ ; Reference to ^DIC(42 in ICR #10039 and ICR #3790
+ ; Reference to ^DISV( in ICR #510
+ ; Reference to ^SC( in ICR #10040
+ ; Reference to DOB^DPTLK1 in ICR #3266
+ ; Reference to SSN^DPTLK1 in ICR #3267
+ ; Reference to ^MPIF001 in ICR #2701
+ ; Reference to ^TIULX in ICR #2960
+ ; Reference to ^A7RDPAGU in ICR #3132
+ ; Reference to ^XLFDT in ICR #10103
+ ; Reference to ^XPAR in ICR #2263
+ ; Reference to ^VA(200 in ICR #10060
+ ; Reference to ^DPT( in ICR #10035
+ ; Reference to ^DPT(IEN,-9 in ICR #2762
+ ; Reference to ELIG^VADPT in ICR #10061
+ ; Reference to DEM^VADPT in ICR #10061
+ ; Reference to DEMUPD^VADPT in ICR #7109
+ ; Reference to GET1^DIQ in ICR #2056
+ ; Reference to ^DPT(DFN,.372 in 1476
  ;
 IDINFO(REC,DFN) ; Return identifying information for a patient
  ; PID^DOB^SEX^VET^SC%^WARD^RM-BED^NAME
- N X0,X1,X101,X3,XV  ; name/dob/sex/ssn, ward, room-bed, sc%, vet
- S X0=$G(^DPT(DFN,0)),X1=$G(^(.1)),X101=$G(^(.101)),X3=$G(^(.3)),XV=$G(^("VET"))
- S REC=$$SSN^DPTLK1(DFN)_U_$$DOB^DPTLK1(DFN,2)_U_$P(X0,U,2)_U_$P(XV,U)_U_$P(X3,U,2)_U_$P(X1,U)_U_$P(X101,U)_U_$P(X0,U) ;DG249
+ N X0,X1,X101,X3,XV,X24,VAEL,ATT  ; name/dob/sex/ssn, ward, room-bed, sc%, vet, SIGI, Attending Physician
+ D ELIG^VADPT S XV=$S(VAEL(4):"Y",1:"N"),X3=$P(VAEL(3),"^",2)
+ D DEM^VADPT S X24=$P($G(VADM(14,5)),"^")
+ S ATT=$P($G(^DPT(DFN,.1041)),"^") I ATT]"" S ATT=$$GET1^DIQ(200,ATT,.01)
+ S X0=$G(^DPT(DFN,0)),X1=$G(^(.1)),X101=$G(^(.101))
+ S REC=$$SSN^DPTLK1(DFN)_U_$$DOB^DPTLK1(DFN,2)_U_$P(X0,U,2)_U_XV_U_X3_U_$P(X1,U)_U_$P(X101,U)_U_$P(X0,U)_U_X24_U_ATT ;DG249
  Q
 PTINQ(REF,DFN) ; Return formatted pt inquiry report
  K ^TMP("ORDATA",$J,1)
@@ -67,13 +70,13 @@ DIEDON(VAL,DFN) ; Check for a date of death
 SELECT(REC,DFN) ; Selects patient & returns key information
  ;  1    2   3   4    5      6    7    8       9       10      11  12
  ; NAME^SEX^DOB^SSN^LOCIEN^LOCNM^RMBD^CWAD^SENSITIVE^ADMITTED^CONV^SC^
- ; 13  14  15  16  17
- ; SC%^ICN^AGE^TS^TSSVC
+ ; 13  14  15  16  17    18     19
+ ; SC%^ICN^AGE^TS^TSSVC^SIGI^PRONOUN(S)
  ;
  ; for CCOW (RV - 2/27/03)  name="-1", location=error message
  I '$D(^DPT(+DFN,0)) S REC="-1^^^^^Patient is unknown to CPRS." Q
  ;
- N X,ORPREF,VADEMO
+ N X,ORPREF,VADEMO,X24,ORPRON
  I $G(XWB("2","RPC"))="ORWPT SELECT" K ^TMP($J,"OC-OPOS") ; delete once per order session order checks
  K ^TMP("ORWPCE",$J) ; delete PCE 'cache' when switching patients
  K ^TMP("ORALLERGYCHK",$J) ; delete all temp allergy data for current session
@@ -95,6 +98,16 @@ SELECT(REC,DFN) ; Selects patient & returns key information
  . S X=$$TSDATA^DGACT(45.7,+$P(REC,U,16),.Y,"")
  . I +X,+$P($G(Y(2)),U,1)>0 S (X,Z)="" S X=$$TSDATA^DGACT(42.4,+$P($G(Y(2)),U,1),.Z,"")
  . I +X S $P(REC,U,17)=$P($G(Z(3)),U,1) ; treating  specialty service
+ ;SIGI
+ S X24=$$GET1^DIQ(2,DFN,.024,"E") I X24'="" S $P(REC,U,18)=X24
+ ;PRONOUN(S)
+ S ORPRON=""
+ I $G(VADEMO(14,3))>0 D
+ . N S1
+ . S S1=0,ORPRON="("
+ . F  S S1=$O(VADEMO(14,3,S1)) Q:'S1  S ORPRON=ORPRON_$P($P(VADEMO(14,3,S1),"^"),"/",1,2)_", "
+ . S ORPRON=$E(ORPRON,1,$L(ORPRON)-2)_")"
+ S $P(REC,U,19)=ORPRON
  K VAEL,VAERR ;VADPT call to kill?
  S ^DISV(DUZ,"^DPT(")=DFN
  Q
@@ -107,7 +120,7 @@ BYWARD(LST,WARD) ; Return a list of patients in a ward
  N ILST,DFN
  I +$G(WARD)<1 S LST(1)="^No ward identified" Q
  S (ILST,DFN)=0
- S WARD=$P(^DIC(42,WARD,0),"^")   ;DBIA #36
+ S WARD=$P(^DIC(42,WARD,0),"^")
  F  S DFN=$O(^DPT("CN",WARD,DFN)) Q:DFN'>0  D
  . S ILST=ILST+1,LST(ILST)=+DFN_U_$P(^DPT(+DFN,0),U)_U_$G(^DPT(+DFN,.101))
  I ILST<1 S LST(1)="^No patients found."
@@ -122,7 +135,6 @@ LAST5(LST,ID) ; Return a list of patients matching A9999 identifiers
  ;
 LAST5RPL(LST,ID) ; ; Return list matching A9999 id's, but from RPL only.
  N ORRPL,ORCNT,ORPT,ORPIEN
- ; IA ____ allows read access to NEW PERSON file node 101:
  S ORRPL=$G(^VA(200,DUZ,101))
  S ORRPL=$P(ORRPL,U,2)
  I (('ORRPL)!(ORRPL="")) S LST(0)="" Q
@@ -145,7 +157,6 @@ FULLSSN(LST,ID) ; Return a list of patients matching full SSN entered
  ;
 FSSNRPL(LST,ID) ; Return list matching Full SSN, but from RPL only.
  N ORRPL,ORCNT,ORPT,ORLPT,ORPIEN
- ; IA ____ allows read access to NEW PERSON file node 101:
  S ORRPL=$G(^VA(200,DUZ,101))
  S ORRPL=$P(ORRPL,U,2)
  I (('ORRPL)!(ORRPL="")) S LST(0)="" Q
@@ -172,7 +183,7 @@ ENCTITL(REC,DFN,LOC,PROV) ; Return external values for encounter
  K ^TMP("OR QUICK ORDER AUDIT",$J,"REC") ;RTW
  S $P(REC,U,1)=$P($G(^SC(+LOC,0)),U,1,2)
  S $P(REC,U,3)=$P($G(^DPT(DFN,.101)),U)
- S $P(REC,U,4)=$P($G(^VA(200,+PROV,0)),U)
+ S $P(REC,U,4)=$$GET1^DIQ(200,+PROV,.01)
  S ^TMP("OR QUICK ORDER AUDIT",$J,"REC")=REC
  Q
 LISTALL(Y,FROM,DIR) ; Return a bolus of patient names.  From is either Name or IEN^Name.
@@ -188,7 +199,7 @@ LISTALL(Y,FROM,DIR) ; Return a bolus of patient names.  From is either Name or I
  Q
 APPTLST(LST,DFN) ; return a list of appointments
  ; APPTTIME^LOCIEN^LOCNAME^EXTSTATUS
- N ERR,ERRMSG,VASD,VAERR K ^UTILITY("VASD",$J)  ;IA 10061
+ N ERR,ERRMSG,VASD,VAERR K ^UTILITY("VASD",$J)
  S VASD("F")=$$HTFM^XLFDT($H-30,1)
  S VASD("T")=$$HTFM^XLFDT($H+1,1)_".2359"
  S VASD("W")="123456789"
@@ -232,7 +243,7 @@ CLINRNG(LST) ; return date ranges for clinic appointments
  S LST(7)="^Specify Dates"
  Q
 DFLTSRC(VAL) ; return default patient list source (T, W, C, P, S)
- N SRV S SRV=+$G(^VA(200,DUZ,5))
+ N SRV S SRV=$$GET1^DIQ(200,DUZ,29,"I")
  S VAL=$$GET^XPAR("ALL^SRV.`"_SRV,"ORLP DEFAULT LIST SOURCE")
  Q
 SAVDFLT(OK,X) ; save new default patient list settings (X=type^ien^sdt;edt)

@@ -1,5 +1,5 @@
-PSORESUS ;BIR/EJW Queue/Requeue an Rx to CMOP ;Jan 04, 2022@07:41:19
- ;;7.0;OUTPATIENT PHARMACY;**264,462,441**;DEC 1997;Build 209
+PSORESUS ;BIR/EJW - Queue/Requeue an Rx to CMOP ;Jan 04, 2022@07:41:19
+ ;;7.0;OUTPATIENT PHARMACY;**264,462,441,753**;DEC 1997;Build 53
  ;
  ;This routine will allow the last unreleased fill of an Rx to be suspended or resuspended to CMOP.
  ;Examples of when this may be used are if the patient was previously marked as "DO NOT MAIL",
@@ -61,6 +61,7 @@ SENDRX ; SET RX INTO SUSPENSE FILE FOR CMOP
  S PPL=PSOIEN
  S TRX=$P($G(PPL),",",1)
  S DFN=$P(^PSRX(TRX,0),"^",2),PSOMDT=$P($G(^PS(55,DFN,0)),"^",5),PSOMC=$P($G(^PS(55,DFN,0)),"^",3) K DFN,TRX
+ I $$GET1^DIQ(52,PSOIEN,100.2,"I")]"" S PSOMC=$$GET1^DIQ(52,PSOIEN,100.2,"I"),PSOMDT="" ;p753
  I (PSOMC>1&(PSOMDT>DT))!(PSOMC>1&(PSOMDT<1)) W !,"Cannot suspend for CMOP. Patient's mail status not a CMOP mail status" H 2 K PPL Q
  S ZD(PSOIEN)=% D TEST^PSOCMOP H 2
  I $G(PSXSITEA)]"" S PSOSITE=PSXSITEA

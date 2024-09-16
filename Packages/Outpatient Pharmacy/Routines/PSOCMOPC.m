@@ -1,5 +1,5 @@
 PSOCMOPC ;BIR/HTW-Utility for CMOP/OP Edit ;8/30/96
- ;;7.0;OUTPATIENT PHARMACY;**2,30,43,547**;DEC 1997;Build 1
+ ;;7.0;OUTPATIENT PHARMACY;**2,30,43,547,753**;DEC 1997;Build 53
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^PSDRUG supported by DBIA 221
 EN(XDA) N A,A1,CMOP,PSOA,PSOB,PSOCK,T,T1,DA
@@ -45,6 +45,7 @@ CHECK S CMOP=0 Q:'$G(PSXSYS)
  K PSOCMSUS
  ;           Q:Do not Mail
  S PSOCMPAT=+$P($G(^PSRX(XDA,0)),"^",2),PSOCMDT=$P($G(^PS(55,PSOCMPAT,0)),"^",5),PSOCMMAI=$P($G(^PS(55,PSOCMPAT,0)),"^",3)
+ I $$GET1^DIQ(52,XDA,100.2,"I")]"" S PSOCMMAI=$$GET1^DIQ(52,XDA,100.2,"I"),PSOCMDT="" ;p753
  I $G(PSOCMMAI)>1,$S($G(PSOCMDT)=""!($G(PSOCMDT)>DT):1,1:0) D KMAIL Q
  D KMAIL
  ;          Get drug IEN and check if CMOP

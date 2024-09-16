@@ -1,5 +1,5 @@
 RCRPU  ;EDE/SAB - REPAYMENT PLAN UTILITIES;11/16/2020  8:40 AM
- ;;4.5;Accounts Receivable;**377,381,388,378,389**;Mar 20, 1995;Build 36
+ ;;4.5;Accounts Receivable;**377,381,388,378,389,422**;Mar 20, 1995;Build 13
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -83,8 +83,7 @@ GETACTS(RCDBTR) ;Find all active accounts for a debtor
  . S RCCS=0
  . S:$D(^PRCA(430,"TCSP",RCBILL)) RCCS=1 ;Bill is in cross-servicing
  . S:+$G(^PRCA(430,RCBILL,12)) RCCS=2    ;Bill is in DMC
- . ;Disable TOP exclusion for now.
- . ;S:+$G(^PRCA(430,RCBILL,14)) RCCS=3    ;Bill is in TOP
+ . I +$G(^PRCA(430,RCBILL,14)),'$P($G(^RCD(340,RCDBTR,6)),U,2) S RCCS=3  ; Bill at TOP  PRCA*4.5*422
  . ; If bill not in CS, add to Active Queue
  . I 'RCCS D  Q
  . . S RCACT=RCACT+1
@@ -185,22 +184,24 @@ CORRECT(RCTYPE) ;Are you sure this is correct?
  W !
  Q Y
  ;
-GETDET(RCBLCH,RCTOT,RCDBTR,RCAUTO) ;Finish Gathering the details and File
+GETDET(RCBLCH,RCTOT,RCDBTR,RCAUTO,RCAUCMT,RCPLN) ;Finish Gathering the details and File
  ;
  ; RCBLCH - list of bills in plan.
  ; RCTOT - Amount due from selected bills
  ; RCDBTR - Debtor IEN^Debtor Name
  ; RCAUTO - auto-add flag
+ ; RCAUCMT - audit log comment ("N" or "T")
+ ; RCPLN - new plan monthly amount ^ new plan # of payments, or 0
  ; Returns: 1 if completed
  ;
- N RCPLN,RCSTDT,RCDAY,RCCRDT,RCSVFLG
+ N RCSTDT,RCDAY,RCCRDT,RCSVFLG
  ;
  ;Get site and # of RPP for the Debtor
  S RCRPID=$$GETID(+RCDBTR)
  Q:RCRPID=0 0
  ;
  ;Get Amount^# Payments
- S RCPLN=$$GETPLN(RCDBTR,RCTOT)
+ I '+RCPLN S RCPLN=$$GETPLN(RCDBTR,RCTOT)  ; PRCA*4.5*422
  Q:+RCPLN=0 0
  ;
  ;Set the Creation date and Start date. Build the plan schedule
@@ -210,13 +211,10 @@ GETDET(RCBLCH,RCTOT,RCDBTR,RCAUTO) ;Finish Gathering the details and File
  ;
  ;Set the day of the month a payment is due to the 28th
  S RCDAY=28
- S RCSVFLG=$$RPDIS($P(RCDBTR,U,2),RCPLN,RCSTDT,RCCRDT,RCTOT,RCAUTO)  ; PRCA*4.5*389
- I 'RCSVFLG D  Q 0
- . W !,"Repayment Plan not Saved.",!
- . D PAUSE
+ I RCAUCMT'="T",'$$RPDIS($P(RCDBTR,U,2),RCPLN,RCSTDT,RCCRDT,RCTOT,RCAUTO) W !,"Repayment Plan not Saved.",! D PAUSE Q 0  ; PRCA*4.5*422
  ;
  ;Save the plan
- S RCSVFLG=$$SAVEPLAN(+RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT,RCAUTO)
+ S RCSVFLG=$$SAVEPLAN(+RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT,RCAUTO,RCAUCMT)  ; PRCA*4.5*422
  ;
  Q RCSVFLG
  ;
@@ -266,7 +264,7 @@ GETPLN(RCDBTR,RCTOT,RCEDIT) ; Get the amount due and length of plan
  . S RCAMT=+Y
  . ;If amount < 25, Supervisor approval needed, re-ask otherwise
  . I RCAMT<25 D  Q:RCSPFLG'=1
- . . S RCSPFLG=$$SUPAPPR(RCDBTR,1)
+ . . S RCSPFLG=$$SUPAPPR(1)  ; PRCA*4.5*422
  . . Q:RCSPFLG'=1
  . . S ^TMP("RCRPP",$J,"SUP25")=1   ;Store the approval for an audit log later
  . ;continue
@@ -276,7 +274,7 @@ GETPLN(RCDBTR,RCTOT,RCEDIT) ; Get the amount due and length of plan
  . . W !,"The number of payments cannot exceed 60. Please re-enter the payment amount.",!
  . I RCPAY>36 D  Q:RCSPFLG'=1
  . . W !,"The number of payments exceeds 36 payments.",!
- . . S RCSPFLG=$$SUPAPPR(RCDBTR,2)
+ . . S RCSPFLG=$$SUPAPPR(2)  ; PRCA*4.5*422
  . . Q:RCSPFLG'=1
  . . S ^TMP("RCRPP",$J,"SUP36")=1   ;Store the approval for an audit log later
  . . D PAUSE
@@ -319,10 +317,9 @@ GETSTART(RCCRDT) ; Calculate the start date .
  I RES<3211028 S RES=3211028  ; if calculated date is prior to 10/28/21, set it to 10/28/21
  Q RES
  ;
-SUPAPPR(RCDBTR,RCTXTFLG) ;  Confirm Supervisor approval, file Debtor Comment for Supervisor Approval
+SUPAPPR(RCTXTFLG) ;  Confirm Supervisor approval, file Debtor Comment for Supervisor Approval  PRCA*4.5*422
  ;
- N DIR,X,Y,RCPROMPT
- S RCTYPE=$G(RCTYPE)
+ N DIR,X,Y
  S DIR(0)="Y"
  I RCTXTFLG=1 S DIR("A")="Has your Supervisor approved this amount? (Y/N) "
  I RCTXTFLG=2 S DIR("A")="Has your Supervisor approved the number of payments? (Y/N) "
@@ -331,7 +328,7 @@ SUPAPPR(RCDBTR,RCTXTFLG) ;  Confirm Supervisor approval, file Debtor Comment for
  ;
  Q 1
  ;
-SAVEPLAN(RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT,RCAUTO) ; Save the repayment plan details
+SAVEPLAN(RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT,RCAUTO,RCAUCMT) ; Save the repayment plan details
  ;
  N FDA,FDAIEN,IENS,LIEN,RCRPIEN,RCSUB,RCRPIEN,RCIEN
  ;
@@ -362,7 +359,7 @@ SAVEPLAN(RCDBTR,RCRPID,RCPLN,RCCRDT,RCDAY,RCSTDT,RCTOT,RCAUTO) ; Save the repaym
  S RCRPIEN=FDAIEN(1)
  ;
  ;Update the Audit Log
- D UPDAUDIT^RCRPU2(RCRPIEN,RCCRDT,"N","N")
+ D UPDAUDIT^RCRPU2(RCRPIEN,RCCRDT,"N",RCAUCMT) ; PRCA*4.5*422
  ;
  ;Update Audit Log with Supervisor Approvals, if any.
  D:$G(^TMP("RCRPP",$J,"SUP25")) UPDAUDIT^RCRPU2(RCRPIEN,RCCRDT,"N","SA")

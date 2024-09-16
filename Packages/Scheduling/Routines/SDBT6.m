@@ -1,4 +1,4 @@
-SDBT6 ; ;11/27/23
+SDBT6 ; ;09/15/24
  D DE G BEGIN
 DE S DIE="^SC(D0,""SDPRIV"",",DIC=DIE,DP=44.04,DL=2,DIEL=1,DU="" K DG,DE,DB Q:$O(^SC(D0,"SDPRIV",DA,""))=""
  I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,1) S:%]"" DE(1)=%

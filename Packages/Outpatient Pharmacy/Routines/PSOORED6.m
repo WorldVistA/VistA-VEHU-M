@@ -1,9 +1,8 @@
 PSOORED6 ;BIR/SAB - edit orders from backdoor ;Mar 28, 2022@14:32:09
- ;;7.0;OUTPATIENT PHARMACY;**78,104,117,133,143,219,148,247,268,260,269,251,372,422,574,441,703**;DEC 1997;Build 16
- ; Reference to ^PSDRUG in ICR #221
- ; Reference to ^PS(50.7 in ICR #2223
- ; Reference to ^PS(50.606 in ICR #2174
- ;
+ ;;7.0;OUTPATIENT PHARMACY;**78,104,117,133,143,219,148,247,268,260,269,251,372,422,574,441,703,753**;DEC 1997;Build 53
+ ;Reference to ^PSDRUG supported by DBIA 221
+ ;Reference to ^PS(50.7 supported by DBIA 2223
+ ;Reference ^PS(50.606 supported by DBIA 2174
 DRG ;select drug
  S PSORX("EDIT")=1,RX0HLD=RX0
  S PSODRUG("IEN")=$S($G(PSODRUG("IEN"))]"":PSODRUG("IEN"),1:$P(RX0,"^",6)),PSODRUG("NAME")=$S($G(PSODRUG("NAME"))]"":PSODRUG("NAME"),1:$P(^PSDRUG($P(RX0,"^",6),0),"^"))
@@ -33,7 +32,6 @@ DRG ;select drug
  .S:$G(PSODRUG("DAW"))]"" PSORXED("FLD",81)=PSODRUG("DAW")
  W !!,"New Orderable Item selected. This edit will create a new prescription!",! D PAUSE^VALM1 S VALMSG="New Orderable Item selected. This edit will create a new prescription!" S (PSOOIFLG,PSOSIGFL)=1
  Q
- ;
 PSOCOU ;patient counseling
  K DIC,DIQ S DIC=52,DA=PSORXED("IRXN"),DIQ="PSORXED",DR=41 D EN^DIQ1 K DIC,DIQ
  D KV S DIR(0)="52,41" S:$G(PSORXED(52,DA,DR))]"" DIR("B")=PSORXED(52,DA,DR) D ^DIR K DIR,PSORXED(52,DA,DR)
@@ -46,7 +44,6 @@ PSOCOU ;patient counseling
  ..S PSORXED("FLD",42)=Y
  .S PSORXED("FLD",41)=0,PSORXED("FLD",42)="@"
  Q
- ;
 PSOI ;select orderable item
  W !!,"Current Orderable Item: "_$P(^PS(50.7,PSOI,0),"^")_" "_$P(^PS(50.606,$P(^(0),"^",2),0),"^")
  S DIC("B")=$P(^PS(50.7,PSOI,0),"^"),DIC="^PS(50.7,",DIC(0)="AEMQZ"
@@ -75,7 +72,6 @@ PSOI ;select orderable item
  .D:$G(PSOSIGFL) M2
  S PSORXED("FLD",39.2)=PSOI
  Q
- ;
 NCPDP ;Reverse previously billed Rx on an edited orderable item or drug.
  N RX,NPSOY
  S RX=$G(PSORXED("IRXN")) I RX="" D
@@ -83,7 +79,6 @@ NCPDP ;Reverse previously billed Rx on an edited orderable item or drug.
  I 'RX Q
  D REVERSE^PSOBPSU1(RX,,"DC",7) S NCPDPFLG=0
  Q
- ;
 UPDATE ;add new data to file
  N RXREF,UPDATE,FLDS,CHGNDC,FLDTPRE
  Q:'$G(PSORXED("IRXN"))
@@ -125,6 +120,14 @@ UPDATE ;add new data to file
  ...D RXACT^PSOBPSU2(DA,0,"NDC changed from "_$$GETNDC^PSONDCUT(DA,0)_" to "_PSORXED("FLD",27)_".","E")
  ..D SAVNDC^PSONDCUT(DA,0,PSORXED("FLD",27),0,1)
  .I FLD=81 D SAVDAW^PSODAWUT(DA,0,PSORXED("FLD",81)) Q
+ .I FLD=100.2 D  Q  ;p753
+ ..N PSOMAIL,PSOMAILF
+ ..S PSOMAILF=$$GET1^DIQ(52,DA,100.2)
+ ..S DR=FLD_"////"_PSORXED("FLD",FLD) D ^DIE
+ ..S PSOMAIL=$$GET1^DIQ(52,DA,100.2)
+ ..I PSOMAILF']"" D RXACT^PSOBPSU2(DA,,"Mail Exemption changed to "_PSOMAIL_".","E") Q
+ ..I PSOMAIL]"" D RXACT^PSOBPSU2(DA,,"Mail Exemption changed from "_PSOMAILF_" to "_PSOMAIL_".","E") Q
+ ..I PSOMAIL']"" D RXACT^PSOBPSU2(DA,,"Mail Exemption "_PSOMAILF_" deleted.","E") Q
  .;
  .; Get FILL DATE before user prompt.
  .S FLDTPRE=$$GET1^DIQ(52,PSORXED("IRXN"),22,"I")
@@ -155,7 +158,6 @@ UPDX ;
  K DIE,DA,DR,FLD,X,Y,PSORXED("FLD"),DD,^TMP($J,"INS1")
 KV K DIR,DIRUT,DTOUT,DUOUT
  Q
- ;
 UPD ;updates dosing array
  S HENT=ENT
 UPD1 ;
@@ -180,6 +182,5 @@ UPD1 ;
  ;
 M1 D M1^PSOOREDX
  Q
- ;
 M2 D M2^PSOOREDX
  Q

@@ -1,5 +1,5 @@
 RTSM7 ;PKE/ISC-ALBANY ;revoke user borrowing priv on termination
- ;;v 2.0;Record Tracking;;10/22/91 
+ ;;2.0;Record Tracking;**49**;10/22/91 ;Build 2
  Q
 XU Q:'$D(XUDA)  S RTDUZ=XUDA D REVOK,KIL Q
  ;
@@ -21,7 +21,11 @@ YYY S L0=L0+1,L=L+1,X(L0)=" `"_$E(RTDUZ0_"'          ",1,20)_" borrowing privili
  D UTL Q
 TERM ;
  S X1=DT,X2=-3 D C^%DTC S RTDTW=X
- F RTDUZ=0:0 S RTDUZ=$O(^VA(200,RTDUZ)) Q:'RTDUZ  I $D(^(RTDUZ,0)) S RTERM=$P(^(0),"^",11) I RTERM,+RTERM'>DT,RTERM'<RTDTW S RTDUZ0=$P(^(0),"^") D REVOK
+ ; RTW change for RT*2*49 to fix the the run away issue in this subroutine.
+ S RTDUZB=""
+ S RTDUZ=0
+ F  S RTDUZB=$O(^VA(200,"B",RTDUZB)) Q:RTDUZB=""  D
+ . F  S RTDUZ=$O(^VA(200,"B",RTDUZB,RTDUZ)) Q:'RTDUZ  I $D(^(RTDUZ,0)) S RTERM=$P(^(0),"^",11) I RTERM,+RTERM'>DT,RTERM'<RTDTW S RTDUZ0=$P(^(0),"^") D REVOK
  Q
 KIL K SAVDUZ,RTDUZ,POINT,BPOINT,RTBOR,Z,DIC,DA,DR Q
  ;

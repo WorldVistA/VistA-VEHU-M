@@ -1,6 +1,12 @@
-ORCDRA ; SLC/MKB - Utility functions for RA dialogs ;7/23/01  11:47
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**8,53,95,141**;Dec 17, 1997
+ORCDRA ; SLC/MKB - Utility functions for RA dialogs ;Nov 28, 2023@11:02:32
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**8,53,95,141,608**;Dec 17, 1997;Build 15
  ;
+ ; Reference to EN2^RAO7PC1 supported by ICR #2012
+ ; Reference to ^RA(79.2 supported by ICR #2683
+ ; Reference to ^RAMIS(71.2 supported by ICR #2419
+ ; Reference to EN4^RAO7PC1 supported by ICR #2267
+ ; Reference to RA REQUIRE DETAILED supported by ICR# 2725
+ ; Reference to RA SUBMIT PROMPT supported by ICR# 2725
 EN ; -- Entry action for RA OERR EXAM order dialog
  D LAST7:$G(ORTAB)="ORDERS"
 ENA N ENT D ITYPE ;enter here for Quick Setup (editor) instead
@@ -109,4 +115,15 @@ NEXTPROC ; -- Gets next procedure in ORMORE()
  W !!,"For "_$P(ORDIALOG(PROMPT,"A"),":")_" "_$P(X,U,2)_":"
  S:X Y=X,ORDIALOG(PROMPT,INST)=+X,EDITONLY=1
  I 'X S X=$P(X,U,2) D DIC^ORCDLG2 S:Y'>0 ORQUIT=1 S:Y>0 ORDIALOG(PROMPT,INST)=+Y,EDITONLY=1
+ Q
+GETPAR(ORRESULTS,ORUSER) ;called from JSYSPARM^ORWU, get parameter for use in CPRS GUI
+ S ORRESULTS("radiologyFutureDateLimit")=$$GET^XPAR("ALL","ORCDRA FUTURE DATE LIMIT",1,"I")
+ Q
+ ;
+DATEDSRD ;--validates date and enforces any associated parameters
+ ;called from RA OERR EXAM, Date Desired POST-SELECTION ACTION
+ Q:$G(ORTYPE)'="Z"
+ N X,Y,%DT,FUTDAYS,FUTDATE S X=$G(ORDIALOG(PROMPT,INST)),%DT="X" I $L(X) D ^%DT S:Y>0 ORDATE=$P(Y,".")
+ S FUTDAYS=$$GET^XPAR("PKG","ORCDRA FUTURE DATE LIMIT",1,"I") S:$G(FUTDAYS)>0 FUTDATE=$$FMADD^XLFDT(DT,FUTDAYS)
+ I ORDATE>FUTDATE K DONE W $C(7),!,"Response cannot be more than "_FUTDAYS_" days in the future."
  Q

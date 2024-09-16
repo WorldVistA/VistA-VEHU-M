@@ -1,5 +1,5 @@
 SRONRPT4 ;BIR/SJA - NURSE INTRAOP REPORT ;04/27/2015
- ;;3.0;Surgery;**184,200**;24 Jun 93;Build 9
+ ;;3.0;Surgery;**184,200,205**;24 Jun 93;Build 12
  ;** NOTICE: This routine is part of an implementation of a nationally
  ;**         controlled procedure.  Local modifications to this routine
  ;**         are prohibited.
@@ -45,7 +45,7 @@ LAS135 ; laser Performed
  .D LINE(1) S @SRG@(SRI)="    Laser On Standby: "_$S(LAON'="":LAON,1:"N/A"),@SRG@(SRI)=@SRG@(SRI)_$$SPACE(40)_"Laser Off and Key Secured : "_$S(LASOFF'="":LASOFF,1:"N/A")
  .I '$O(^SRF(SRTN,56,LAS,1,0)) D LINE(1) S @SRG@(SRI)="    Patient Precautions: N/A",@SRG@(SRI)=@SRG@(SRI)
  .S (II,III)=0
- .F  S II=$O(^SRF(SRTN,56,LAS,1,II)) Q:'II  S XX=$G(^SRF(SRTN,56,LAS,1,II,0)),PATPREC=$S(XX=1:"EYE PADS",XX=2:"TAPE",XX=3:"SAFETY GLASSES/GOOGLES",XX=4:"LASER ET TUBE",XX=5:"MOIST DRAPES",XX=6:"WATER AVAILABLE",XX=7:"RECTAL PACK",1:"") D
+ .F  S II=$O(^SRF(SRTN,56,LAS,1,II)) Q:'II  S XX=$G(^SRF(SRTN,56,LAS,1,II,0)),PATPREC=$S(XX=1:"EYE PADS",XX=2:"TAPE",XX=3:"SAFETY GLASSES/GOGGLES",XX=4:"LASER ET TUBE",XX=5:"MOIST DRAPES",XX=6:"WATER AVAILABLE",XX=7:"RECTAL PACK",1:"") D
  ..S III=III+1 D LINE(1) S @SRG@(SRI)=$S(III=1:"    Patient Precautions: ",1:"                         ")_$S(PATPREC'="":PATPREC,1:"N/A"),@SRG@(SRI)=@SRG@(SRI)
  .I '$O(^SRF(SRTN,56,LAS,2,0)) D LINE(1) S @SRG@(SRI)="    Personnel Precautions: N/A",@SRG@(SRI)=@SRG@(SRI)
  .S (II,III)=0
@@ -83,7 +83,7 @@ ORGDNR N II,ORG,SRDONR1,SRDONR2,VER1 S ORG="",VER1=$G(^SRF(SRTN,"VER1"))
  D LINE(1) S @SRG@(SRI)="      Organ Verification Prior to Transplant: "_$$OUT($P(VER1,U,14))
  D LINE(1) S @SRG@(SRI)="      Surgeon Verifying the Organ Prior to Transplant: "_$$VA($P(VER1,U,25))
  D LINE(1) S @SRG@(SRI)="      Donor Vessel Usage: "_$$OUT($P(VER1,U,15))
- S Y=$P(VER1,U,16) D LINE(1) S @SRG@(SRI)="      Donor Vessel Disposition if not used: "_$S(Y="N":"NO DONOR VESSELS RECEIVED",Y="D":"DISCARDED",Y="R":"RETURNED TO OPO",Y="S":"STORED",1:"")
+ S Y=$P(VER1,U,16) D LINE(1) S @SRG@(SRI)="      Donor Vessel Disposition if not used: "_$S(Y="N":"NO DONOR VESSELS RECEIVED",Y="D":"DISCARDED",Y="R":"RETURNED TO OPO",Y="S":"STORED",Y="NA":"NOT APPLICABLE",1:"")
  S ORG="",II="" F  S II=$O(^SRF(SRTN,57,"B",II)) Q:II=""  S ORG=ORG_"-  "_II
  D LINE(1) S @SRG@(SRI)="      Donor Vessel UNOS ID: "_ORG
  Q

@@ -1,5 +1,5 @@
 PSOPRVW ;BIR/SAB,MHA-enter/edit/view provider ;3/10/22  16:20
- ;;7.0;OUTPATIENT PHARMACY;**11,146,153,263,268,264,398,391,450,630,545,731,743**;DEC 1997;Build 24
+ ;;7.0;OUTPATIENT PHARMACY;**11,146,153,263,268,264,398,391,450,630,545,731,743,762**;DEC 1997;Build 3
  ;
  ;Ref. to ^VA(200 supp. by IA 224
  ;Ref. to ^DIC(7 supp. by IA 491
@@ -180,13 +180,15 @@ DISPLAY(PRNO)  ; Display Provider Info from NEW PERSON file (#200)
  .. S LINE=LINE+1,SETARRAY(SET,LINE)="                SCHEDULE V: "_$S($P(SCHNODE,U,6):"YES",1:"NO")
  .  S:'$D(SETARRAY(SET,10)) SETARRAY(SET,10)=""
  ;
+ ;Print DEA data
+ ;PSO*7*762 change to CHKP(12)
  S EXIT=0
  F SET=1:2:$O(SETARRAY(100),-1) Q:($G(EXIT)=1)  D
- . W ! I $$CHKP(6) S EXIT=1 Q
+ . W ! I $$CHKP(12) S EXIT=1 Q
  . F LINE=1:1:10 Q:EXIT  D
  .. Q:'$D(SETARRAY(SET))  ; Should never happen - IEN in 200.5321 doesn't exist in 8991.9
  .. W SETARRAY(SET,LINE),?40,$G(SETARRAY(SET+1,LINE)),!
- .. I SETARRAY(SET,LINE)="" I $$CHKP(6) S EXIT=1 Q
+ .. I SETARRAY(SET,LINE)="" I $$CHKP(12) S EXIT=1 Q
  K SETARRAY,SET,LINE
  Q:EXIT=1  W ! I $$CHKP(20) S EXIT=1 Q
  ;

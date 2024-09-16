@@ -1,6 +1,10 @@
-RAREG1 ;HISC/CAH,FPT,DAD AISC/MJK,RMO-Register Patient ; Apr 23, 2020@12:44
- ;;5.0;Radiology/Nuclear Medicine;**7,21,93,137,144,124,153,169**;Mar 16, 1998;Build 2
+RAREG1 ;HISC/CAH,FPT,DAD AISC/MJK,RMO - Register Patient ; May 31, 2024@16:27:41
+ ;;5.0;Radiology/Nuclear Medicine;**7,21,93,137,144,124,153,169,214**;Mar 16, 1998;Build 1
  ; 07/15/2008 BAY/KAM rem call 249750 RA*5*93 Correct DIK Calls
+ ;
+ ;Tag^Routine   IA#      Usage          Custodian       Subscriber
+ ;----------------------------------------------------------------
+ ;$$STA^XUAF4   2171     Supported      Kernel
  ;
 ASKORD I $D(RAVSTFLG),$G(YY)]"",$P(YY,U,5) D ASET G PACS
  ; radparfl = 1 if user chose detail-to-parent conversion
@@ -70,12 +74,21 @@ CNQ L -^RA(79.2,RATYPE,"CN")
 DUP ;Check to prevent use of same case number/date pair ;ch
  ; both short and long case numbers will be checked for duplicates 091500
  S RADTE99=$S('$D(RADTE):"",1:$E(RADTE,4,5)_$E(RADTE,6,7)_$E(RADTE,2,3))
- I '$D(^RADPT("AE",RAX)),'$D(^RADPT("ADC",RADTE99_"-"_RAX)) G DUPQ
+ ;// begin RA5p214 //
+ ;I '$D(^RADPT("AE",RAX)),'$D(^RADPT("ADC",RADTE99_"-"_RAX)) G DUPQ
+ I '$$DUPCNACC(RADTE99,RAX) G DUPQ
+ ;// end RA5p214 //
  ; also check ADC xref while searching for next available number 08/15/00
  ; note2: even though the current available case number is being
  ;        stored, the next free case number for future use will be
  ;        found and stored later, see note1 above     091300
- F RAJ=(^RA(79.2,RATYPE,"CN")+1):1 I '$D(^RADPT("AE",RAJ)),'$D(^RADPT("ADC",RADTE99_"-"_RAJ)) S ^("CN")=RAJ_"^"_$P(^RA(79.2,RATYPE,"CN"),"^",2) S RAX=+^RA(79.2,RATYPE,"CN") Q
+ ;// begin RA5p214 //
+ ;F RAJ=(^RA(79.2,RATYPE,"CN")+1):1 I '$D(^RADPT("AE",RAJ)),'$D(^RADPT("ADC",RADTE99_"-"_RAJ)) S ^("CN")=RAJ_"^"_$P(^RA(79.2,RATYPE,"CN"),"^",2) S RAX=+^RA(79.2,RATYPE,"CN") Q
+ F RAJ=(^RA(79.2,RATYPE,"CN")+1):1 I '$$DUPCNACC(RADTE99,RAJ) D  Q
+ .S ^RA(79.2,RATYPE,"CN")=RAJ_"^"_$P(^RA(79.2,RATYPE,"CN"),"^",2)
+ .S RAX=+$G(^RA(79.2,RATYPE,"CN")) ;Note: RAX assumes the value of the valid case #
+ .Q
+ ;// begin RA5p214 //
 DUPQ K RADTE99 Q
  ;
  ; the CAL section is called if :
@@ -157,4 +170,23 @@ CHKORDS(RARY) ;check all the RIS orders on file.
  .I $P(RAOIFN(0),U,5)'=5!($P(RAOIFN(0),U,7)="") K RARY(N)
  .Q
  Q
+ ;
+DUPCNACC(RADDMMYY,RAPCN) ;checks for duplicate case/exam accession/report accession numbers. Ski RA5P214
+ ;input parameters
+ ;RADDMMYY: dd/mm/yy date format. ex: 110320 (November 3rd 2020)
+ ;   RAPCN: the potential case number. between 1 - 99999 ex: 6743 (case: 6743)
+ ;
+ ;returns 0 if no duplicates are found, else 1
+ ;define RALACC: temporary legacy accession number (the legacy form of the accession number will always be in "ADC")
+ ;define RASSAN: site specific accession number (the report's "B" xref can be a legacy or a SSAN)
+ ;RAMDIV is a package wide variable global in scope; used to get station # (RASTATION)
+ ;*** station # does not always match file 4 IEN! ***
+ N RALACC,RASSAN,RASTATION S RALACC=RADDMMYY_"-"_RAPCN
+ S RASTATION=+$$STA^XUAF4($G(RAMDIV,0)),RASSAN=RASTATION_"-"_RALACC
+ Q:$D(^RADPT("AE",RAPCN))\10 1
+ Q:$D(^RADPT("ADC",RALACC))\10 1
+ ;dual check on the report
+ Q:$D(^RARPT("B",RALACC))\10 1
+ Q:$D(^RARPT("B",RASSAN))\10 1
+ Q 0
  ;

@@ -1,5 +1,5 @@
-LR7OMERG ;DALOI/STAFF-MERGE ACCESSION ;07/27/09  17:14
- ;;5.2;LAB SERVICE;**121,221,386,350,445**;Sep 27, 1994;Build 6
+LR7OMERG ;DALOI/STAFF-MERGE ACCESSION ;Jul 04, 2023@16:45
+ ;;5.2;LAB SERVICE;**121,221,386,350,445,566**;Sep 27, 1994;Build 12
  ;
  ; ZEXCEPT is used to identify variables which are external to a specific TAG
  ;         used in conjunction with Eclipse M-editor.
@@ -51,7 +51,8 @@ OK ;
  I %=0 W !!,"Enter 'Yes' to merge these accessions, 'No' to abort." G OK
  I %'=1 W !!,"NOTHING MERGED!",! D UL1,UL2 Q
  ;
- N LRLFTOVR,LRORDTYP,LRTSORU,LRNLT,LRII,URG
+ ;LR*5.2*566 new LRSOF
+ N LRLFTOVR,LRORDTYP,LRTSORU,LRNLT,LRII,URG,LRSOF
  ; Set order type to (R)evised
  S $P(LRORDTYP,"^",2)=$$FIND1^DIC(64.061,"","OX","R","D","I $P(^(0),U,5)=""0065""")
  ;
@@ -75,8 +76,11 @@ OK ;
  . . . D CHK(.ARAT,.LRTSAD,.SUB)
  . . . S SAME=1,J=0 F  S J=$O(^LAB(60,LRII,2,J)) Q:J<1  I '$D(SUB(+^(J,0))) S SAME=0 Q
  . . . I SAME D SET68(LRII,URG,LRTSORU),SET69(LRODT,LRSN,LRII,URG,LRAA,LRAODT,LRAN) Q
- . . . S J=0
- . . . F  S J=$O(SUB(J)) Q:J<1  D SET68(J,URG,LRTSORU),SET69(LRODT,LRSN,J,URG,LRAA,LRAD,LRAN)
+ . . . ;LR*5.2*566: Replace variable J with LRSUBJ to prevent errors when downstream
+ . . . ;            logic kills J.
+ . . . N LRSUBJ
+ . . . S LRSUBJ=0
+ . . . F  S LRSUBJ=$O(SUB(LRSUBJ)) Q:LRSUBJ<1  D SET68(LRSUBJ,URG,LRTSORU),SET69(LRODT,LRSN,LRSUBJ,URG,LRAA,LRAD,LRAN)
  . . D SET68(LRII,URG,LRTSORU),SET69(LRODT,LRSN,LRII,URG,LRAA,LRAD,LRAN)
  S X=^LRO(68,LR1AA,1,LR1AD,1,LR1AN,0),LROSN=$P(X,U,5),LROID=$P(X,U,6),LROCN=$S($D(^(.1)):$P(^(.1),U),1:"")
  S LRCWDT=$S($D(^LRO(68,LR1AA,1,LR1AD,1,LR1AN,9)):^(9),1:LR1AD),LROWDT=$P(^(0),U,3),LROWDT=$S($D(^LRO(68,LR1AA,1,LROWDT,1,LR1AN,0)):LROWDT,1:LR1AD)
@@ -102,7 +106,8 @@ OK ;
  ;
 ZAP(LRODT,LRSN,LRAA,LRAD,LRAN,LRIDT,LRMERG) ;
  ;
- N LRNOW,LRTNM,LRTSTS
+ ;LR*5.2*566: initialize LRCOMX and LRORDTST
+ N LRNOW,LRTNM,LRTSTS,LRCOMX,LRORDTST
  ;
  Q:'$D(^LRO(69,LRODT,1,LRSN,0))#2
  S LRNOW=$$NOW^XLFDT

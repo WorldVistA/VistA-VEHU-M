@@ -1,5 +1,5 @@
 PSXBLD ;BIR/BAB-Build HL7 Data for CMOP Rx Queue ;24 Jun 2002  5:19 PM
- ;;2.0;CMOP;**3,23,29,28,43,41,50,54**;11 Apr 97;Build 6
+ ;;2.0;CMOP;**3,23,29,28,43,41,50,54,98**;11 Apr 97;Build 5
  ;
  ;Reference to  ^PSRX(       supported by DBIA #1977
  ;Reference to  ^PSDRUG(     supported by DBIA #1983
@@ -10,6 +10,7 @@ PSXBLD ;BIR/BAB-Build HL7 Data for CMOP Rx Queue ;24 Jun 2002  5:19 PM
  ;Reference to  ^PS(59,      supported by DBIA #1976
  ;Reference to  ^PS(59.7,    supported by DBIA #694
  ;Reference to  ^DPT(        supported by DBIA #3097
+ ;Reference to  ^PSRX(       supported by DBIA #1977
  ;Reference to IBCP^PSOLBL   supported by DBIA #2477
  ;Reference to OTHL1^PSOLBL3 supported by DBIA #4071
  ;Reference to EN^PSOHLSN1   supported by DBIA #2385
@@ -33,10 +34,13 @@ EN ; build entries into 550.1 by alpha patient
  Q
 ORD ; PSXMSG was returned by call to NEWMSG^PSXRXQU
  ; Loop RXs, RXFs in Transmission PSXBAT
- S REG=$S($P($G(^PS(55,DFN,0)),"^",3)=1:1,1:""),PSCAP=+$P($G(^PS(55,DFN,0)),"^",2),RX=0 K RXY,RXY1
+ ;S REG=$S($P($G(^PS(55,DFN,0)),"^",3)=1:1,1:""),PSCAP=+$P($G(^PS(55,DFN,0)),"^",2)
+ S RX=0 K RXY,RXY1
  S RX=0 F  S RX=$O(^PSX(550.2,PSXBAT,15,"C",PSXNM,DFN,RX)) Q:RX'>0  D
+ . S REG=$S($P($G(^PS(55,DFN,0)),"^",3)=1:1,1:""),PSCAP=+$P($G(^PS(55,DFN,0)),"^",2) ;moved down p98
  . S REC=$O(^PS(52.5,"B",RX,0))
  . I 'REC D DEL5502 Q  ;RX was removed from 52.5 during transmission
+ . I $$GET1^DIQ(52,RX,100.2,"I")]"" S REG=$S($$GET1^DIQ(52,RX,100.2,"I")=1:1,1:"") ;p98
  . S RXY=^PSRX(RX,0),RXF=$O(^PSX(550.2,PSXBAT,15,"C",PSXNM,DFN,RX,0))
  . S PTR=RX S:RXF>0 RXY1=$G(^PSRX(RX,1,RXF,0)) D ORC ;builds RX HL7 segments into PSXORD(
  . I PSXFLAG=1 S ^PS(52.5,REC,"P")=1,^PS(52.5,"ADL",DT,REC)="" ;update print node

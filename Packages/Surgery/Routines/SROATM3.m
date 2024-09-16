@@ -1,5 +1,5 @@
 SROATM3 ;BIR/MAM - NON CARDIAC TRANSMISSION (CONT) ;05/03/11
- ;;3.0;Surgery;**27,38,62,88,97,111,142,153,174,175,184,200**;24 Jun 93;Build 9
+ ;;3.0;Surgery;**27,38,62,88,97,111,142,153,174,175,184,200,205**;24 Jun 93;Build 12
  ;** NOTICE: This routine is part of an implementation of a nationally
  ;**         controlled procedure. Local modifications to this routine
  ;**         are prohibited.
@@ -57,7 +57,7 @@ SROATM3 ;BIR/MAM - NON CARDIAC TRANSMISSION (CONT) ;05/03/11
  S SHEMP=$E(SHEMP,1,11)_" 14"_$J(OT,7)_$J($P(SRA("VER1"),"^",2),10)_$J($P(SRA("VER1"),"^",3),2)_$J($P(SRA("VER1"),"^",4),2)_$J($P(SRA("VER1"),"^",5),2)
  S SHEMP=SHEMP_$J($P(SRA("VER1"),"^",6),2)_$J($P(SRA("VER1"),"^",7),1)_$J($P(SRA("VER1"),"^",8),1)_$J($P(SRA("VER1"),"^",9),1)_$J($E($P(SRA("VER1"),"^",19),1,12),12)
  S SHEMP=SHEMP_$J($P(SRA("VER1"),"^",10),1)_$J($E($P(SRA("VER1"),"^",21),1,12),12)_$J($P(SRA("VER1"),"^",22),1)_$J($P(SRA("VER1"),"^",12),1)_$J($P(SRA("VER1"),"^",24),2)
- S SHEMP=SHEMP_$J($P(SRA("VER1"),"^",14),2)_$J($P(SRA("VER1"),"^",15),1)_$J($P(SRA("VER1"),"^",16),1)
+ S SHEMP=SHEMP_$J($P(SRA("VER1"),"^",14),2)_$J($P(SRA("VER1"),"^",15),1)_$J($P(SRA("VER1"),"^",16),2)
  S (SRNM11,SRNM13,SRNM23,SRNM25)=""
  F II=11,23,13,25 I $P(SRA("VER1"),"^",II) S @("SRNM"_II)=$P($G(^VA(200,$P(SRA("VER1"),"^",II),0)),"^")
  S SHEMP=SHEMP_$J($E(SRNM11,1,30),30)_$J($E(SRNM23,1,30),30)

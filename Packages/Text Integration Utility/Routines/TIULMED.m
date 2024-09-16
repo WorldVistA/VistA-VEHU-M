@@ -1,5 +1,17 @@
-TIULMED ; SLC/JM,JH,AJB - Active/Recent Med Objects Routine ;Apr 17, 2018@13:29
- ;;1.0;TEXT INTEGRATION UTILITIES;**38,73,92,94,183,193,197,198,202,213,238,290,289**;Jun 20, 1997;Build 201
+TIULMED ; SLC/JM,JH,AJB - Active/Recent Med Objects Routine ;Apr 11, 2024@10:22:13
+ ;;1.0;TEXT INTEGRATION UTILITIES;**38,73,92,94,183,193,197,198,202,213,238,290,289,318**;Jun 20, 1997;Build 120
+ ;
+ ; Reference to *^XLFDT in ICR #10103
+ ; Reference to ISCLORD^ORUTL in ICR #7357
+ ; Reference to *^XPDUTL in ICR #10141
+ ; Reference to PEN^PSO5241 in ICR #4821
+ ; Reference to RX^PSO52API in ICR #4820
+ ; Reference to OCL^PSOORRL in ICR #2400
+ ; Reference to OCL^PSOQ0496 in ICR #5197
+ ; Reference to DRGIEN^PSS50P7 in ICR #4662
+ ; Reference to *^PSS55 in ICR #4826
+ ; Reference to ^PS(53.1 in ICR #2907
+ ;
  Q
 LIST(DFN,TARGET,ACTVONLY,DETAILED,ALLMEDS,ONELIST,CLASSORT,SUPPLIES) ;
  ; This is the TIU Medication objects API.  Optional parameters not

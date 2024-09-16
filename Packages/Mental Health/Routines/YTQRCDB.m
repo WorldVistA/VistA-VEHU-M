@@ -1,7 +1,8 @@
 YTQRCDB ;BAL/KTL - MHA CLOUD DATABASE ADMIN RPC CALLS; 1/25/2017
- ;;5.01;MENTAL HEALTH;**239,224**;Dec 30, 1994;Build 17
+ ;;5.01;MENTAL HEALTH;**239,224,249**;Dec 30, 1994;Build 30
  ;
  ;
+ ; Reference to FILE^DIE in ICR #2053
  Q
 SAVEADM(ARGS,DATA) ; Save instrument administration and answers
  N YSARR,ADMM,ANSRES,SCRRES
@@ -89,6 +90,24 @@ FILADMIN(DATA)  ;Get YSARR and file mh administration
  S DATA("numAns")=ACNT
  S ADMIN=$$SETADM(.DATA)
  Q ADMIN
+ ;
+RVW(ARGS,DATA) ; update admin REVIEWED status
+ ; Requires input
+ ; DATA("adminId")
+ ;
+ N YS,ADMIN,YTERR,YSORD,YSCMPLT,YSOK,YSMESS,N0
+ S YSMESS="",YSOK=""
+ S ADMIN=+$G(DATA("adminId"))
+ I DATA("adminId")="" S YSMESS="Administration not sent."
+ I '$D(^YTT(601.84,ADMIN))="" S YSMESS="Administration not found."
+ S N0=$G(^YTT(601.84,ADMIN,0)),YSORD=$P(N0,U,6),YSCMPLT=$P(N0,U,9)
+ I $G(DUZ)=YSORD,($$REQCSGN^YTQRQAD3(ADMIN)="false") S YSOK=1
+ S YS(601.84,ADMIN_",",19)=YSOK
+ D FILE^DIE("","YS","YTERR")
+ S YSOK=$S(YSOK=1:"SUCCESS",1:"FAIL")
+ I $D(YTERR) S YSMESS="Unable to update admin",YSOK="FAIL"
+ ;I YSDATA(1)'="[DATA]" D SETERROR^YTQRUTL(500,"Unable to update admin") Q 0
+ Q "/api/mha/cdb/instrument/admin/reviewed/"_YSOK_U_YSMESS  ; otherwise we're updating existing admin
  ;
 SETADM(DATA) ; return the id for new/updated admin
  ; Requires input

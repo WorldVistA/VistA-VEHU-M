@@ -1,13 +1,13 @@
 SDUPDATECONSPID ;ALB/BLB -  Feb 29, 2024 - Entry point for SD PID/CID UPDATE OR protocol - attached to GMRC EVSEND OR
- ;;5.3;Scheduling;**877**;Aug 13, 1993;Build 14
+ ;;5.3;Scheduling;**877,885**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
  ;
-UPDATECONSULTPID(CONSULT) ;6208
+UPDATECONSULTPID(CONSULT) ;
  N CONSULTIEN,PID,DFN,COUNT
  ;
- I $G(NEWPID) Q
+ I $D(SDCONTEXT)!($L($G(CANBYCLINORPAT)))!($L($G(SDECTYP))) Q
  I $D(APPOINTMENT) Q
  I $G(SDDDT)!($D(APPTARRAY)) Q
  I $L($G(NOSHOW))!($L($G(SDECNS))) Q

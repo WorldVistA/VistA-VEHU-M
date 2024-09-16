@@ -1,5 +1,5 @@
 PSOORUT2 ;BIR/SAB - Build Listman Screen ;Jan 05, 2021@12:08
- ;;7.0;OUTPATIENT PHARMACY;**11,146,132,182,233,243,261,268,264,305,390,411,402,500,556,622,746**;DEC 1997;Build 106
+ ;;7.0;OUTPATIENT PHARMACY;**11,146,132,182,233,243,261,268,264,305,390,411,402,500,556,622,746,753**;DEC 1997;Build 53
  ;External reference to $$PRIAPT^SDPHARM1 supported by DBIA 4196
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^DIC(31 supported by DBIA 658
@@ -60,6 +60,12 @@ PSOORUT2 ;BIR/SAB - Build Listman Screen ;Jan 05, 2021@12:08
  .I Y,Y'>DT D
  ..D DD^%DT S PSOMDEXP=Y
  ..S ^TMP("PSOPI",$J,IEN,0)=^TMP("PSOPI",$J,IEN,0)_" Expire Date: "_PSOMDEXP
+ I $$MAILECNT(DFN)>0 D  ;p753
+ .N CNT
+ .S CNT=$$MAILECNT(DFN)
+ .I CNT=1 S IEN=IEN+1,^TMP("PSOPI",$J,IEN,0)="                            "_CNT_" Prescription Has A Mail Exemption" Q
+ .I CNT>1 S IEN=IEN+1,^TMP("PSOPI",$J,IEN,0)="                            "_CNT_" Prescriptions Have Mail Exemptions" Q
+ ;
  S IEN=IEN+1,^TMP("PSOPI",$J,IEN,0)=$S($P($G(^PS(55,DFN,0)),"^",2):"Cannot use safety caps.",1:"") S $P(^TMP("PSOPI",$J,IEN,0)," ",40)=$S($P($G(^PS(55,DFN,0)),"^",4):"Dialysis Patient.",1:"")
  I $G(^PS(55,DFN,1))]"" S PSON=^(1),IEN=IEN+1 D
  .S ^TMP("PSOPI",$J,IEN,0)=" ",IEN=IEN+1,^TMP("PSOPI",$J,IEN,0)="     Outpatient Narrative: "
@@ -208,3 +214,17 @@ CRCL(DFN) ;
  S $P(RSLT,"^",3)=$P($G(SCR),"^",3)
  K HTGT60,ABW,IBW,BWRATIO,BWDIFF,LOWBW,ADJBW,X1,X2,PSCR,PSRW,ABW,ZHT,PSRH,ZAGE,PSCXTL,PSCXTLS,SCR,OCXT,OCXTS,SCRV,CRCL,ZSERUM
  Q RSLT
+ ;
+MAILECNT(PSODFN) ;entry for mail exemption count p753
+ ;called from PSOORUT2 above to count the number of mail exemptions for display on patient information
+ ;PSODFN - Patient IEN
+ N RXIEN,STA,DRUG,X1,X2,PSOSD,PSODTCUT,X,Y,CNT
+ S CNT=0
+ S X2=-120,X1=DT D C^%DTC S PSODTCUT=X ;date cutoff for prescriptions
+ D ^PSOBUILD ;build psosd array
+ S STA="" F  S STA=$O(PSOSD(STA)) Q:STA=""  I "^ACTIVE^NON-VERIFIED^REFILL^HOLD^DRUG INTERACTIONS^SUSPENDED^"[STA  D
+ .S DRUG="" F  S DRUG=$O(PSOSD(STA,DRUG)) Q:DRUG=""  D
+ ..S RXIEN=+PSOSD(STA,DRUG)
+ ..I $$GET1^DIQ(52,RXIEN,100.2,"I")']"" Q
+ ..S CNT=CNT+1
+ Q CNT

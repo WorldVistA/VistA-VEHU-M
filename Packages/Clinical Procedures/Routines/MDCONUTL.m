@@ -1,19 +1,28 @@
 MDCONUTL ; WOIFO/KLM - CP Conversion Utility ;31 Oct 2018 2:31 PM
- ;;1.0;CLINICAL PROCEDURES;**65**;Apr 01, 2004;Build 2
+ ;;1.0;CLINICAL PROCEDURES;**65,89**;May 07, 2024;Build 2
  ; This utility is based on Shirley Ackerman's ZZNACVT and ZZNACVT1 
  ; class III conversion routines.
  ;
- ; Integration Agreements:
- ; IA# 2638 [Controlled] File 100.01,
- ; IA# 3067 [Private] FM R/W File 123
- ; IA# 5062 [Private] ^GMR(123,"AE"
- ; IA# 6926 [Private] File 123.3
- ; IA# 6927 [Private] File 123.5
- ; IA# 6959 [Private] ^MAG(2006.5831,
+ ; Integration Control Registration (ICR's):
+ ; Reference to File 100.01 in ICR #2638
+ ; Reference to File 123 in ICR #3067
+ ; Reference to ^GMR(123,"AE" in ICR #5062
+ ; Reference to File 123.3 in ICR #6926
+ ; Reference to File 123.5 in ICR #6927
+ ; Reference to ^MAG(2006.5831 in ICR #6959
  ;
+ ; MD*89/RJH - For the MD PROCONVERT option, divert the logic to the new
+ ;             MDCONUT2 routine where another prompt for REQUEST SERVICE has
+ ;             been added. New routine and logic implemented in order not to
+ ;             adversely affect the MD CONCONVERT option. MDOPT("PROCONVERT")
+ ;             array is set upon entry to the MD PROCONVERT option and should
+ ;             be available to check in the CONVERT tag below. Also updated
+ ;             the ICR notes above to meet new SAC standard.
+ ;             
 CONVERT ; Convert consults to procedures.
  ;;MDOPT defined from the entry action of the option used.
  Q:'$D(MDOPT)#2
+ I $D(MDOPT("PROCONVERT")) D EN^MDCONUT2 Q  ; *89
  N MDCOUNT,MDCP,MDCPR,MDCPRST,MDCPST,MDFDA,MDFILE,MDL,MDLP,MDSERV,MDIEN,MDTE,MDTOS,MDFR
  N MDFRE,MDTOSE,MDCPRE,MDX
  S MDFILE=123

@@ -1,5 +1,5 @@
 RCAM ;WASH-ISC@ALTOONA,PA/RGY-Manager Debtor Information ;12/19/96  12:48 PM
-V ;;4.5;Accounts Receivable;**34,190,198,223,359**;Mar 20, 1995;Build 13
+V ;;4.5;Accounts Receivable;**34,190,198,223,359,438**;Mar 20, 1995;Build 4
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;PRCA*4.5*359 Ensure displayed phone is correct format: 111-222-3333
@@ -37,6 +37,11 @@ PAT(RCDB) ;Edit Patient Address
  W ! D DIS2(ADR1,ADR2)
  W !,"Address from AR Debtor file: "
  W ! D DIS2(ADR3,"")
+ I '$D(^XUSEC("PRCA MED DEBTOR EDIT",DUZ)) D  Q  ; PRCA*4.5*438
+ .W !,"Unable to edit this debtor's AR Debtor Address."
+ .W !,"A Medical Debtor's address is locked by the PRCA MED DEBTOR EDIT security key."
+ .W !,"Please contact Enrollment to have the Debtor's Confidential Address updated.",!
+ .Q
 PAT1 S DA=RCDB0
  S DIR("B")=$S($P($G(^RCD(340,+RCDB0,1)),U,9):"YES",1:"NO")
  S DIR(0)="340,1.09^AO" D ^DIR

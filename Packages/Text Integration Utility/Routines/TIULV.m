@@ -1,5 +1,22 @@
-TIULV ; SLC/JER - Visit/Movement related library ; 4/18/03
- ;;1.0;TEXT INTEGRATION UTILITIES;**7,30,55,45,52,148,156,152,113,200**;Jun 20, 1997
+TIULV ; SLC/JER - Visit/Movement related library ;Jan 26, 2024@07:17
+ ;;1.0;TEXT INTEGRATION UTILITIES;**7,30,55,45,52,148,156,152,113,200,362**;Jun 20, 1997;Build 3
+ ;
+ ; Reference to File ^AUPNVSIT supported by ICR #3580
+ ; Reference to File ^VA supported by ICR #10060
+ ; Reference to File ^DG(40.8 supported by ICR #1576
+ ; Reference to File ^DGPM supported by ICR #4076
+ ; Reference to File ^DIC(42 supported by ICR #10039
+ ; Reference to File ^DIC(49 supported by ICR #432
+ ; Reference to File ^DPT supported by ICR #10035
+ ; Reference to File ^SC( supported by ICR #93
+ ; Reference to File ^VA supported by ICR #10060
+ ; Reference to ^DIC supported by ICR #10006
+ ; Reference to $$GET1^DIQ supported by ICR #2056
+ ; Reference to *^DIQ1 supported by ICR #10015
+ ; Reference to *^VADPT supported by ICR #10061
+ ; Reference to *^VASITE supported by ICR #10112
+ ;
+ Q
 PATPN(TIUY,DFN) ; Get minimum demographics for PN Print
  N VADM,VAIP,VAIN,VA,VAPA
  D OERR^VADPT
@@ -25,21 +42,21 @@ PATVADPT(TIUY,DFN,TIUMVN,TIUVSTR,TIUSDC) ; Extract MAS data
  I $G(VAPA(8))="" S TIUY("PH#")="**UNKNOWN**"
  S TIUY("SEX")=$G(VADM(5))
  ; Below TIU*148
- I +$G(VADM(12))>0 D 
+ I +$G(VADM(12))>0 D
  . F TIUY("NUMRACE")=1:1:VADM(12) S TIUY("RACE",TIUY("NUMRACE"))=$G(VADM(12,TIUY("NUMRACE")))
  S TIUY("RACENO")=+$G(VADM(12))
  I +$G(VADM(12))=0 S TIUY("RACE")=$G(VADM(8))
  I +$G(TIUSDC) S TIUY("STOP")=$G(TIUSDC)
  I +$G(TIUD13(0)) S TIUY("REFDT")=+$G(TIUD13(0))
  I +$G(TIUMVN),$D(^DGPM(+TIUMVN)) D
- . ; N VLOC,VDT,TIUDIV
  . N VLOC,VDT,TIUDIV
  . S VAIP("E")=TIUMVN D 52^VADPT
  . S TIUI=$S(+$G(VAIP(17,1)):17,1:14)
  . S TIUY("CLAIM")=$G(VAEL(7)),TIUY("PMD")=$G(VAIP(TIUI,5))
  . S TIUY("AMD")=$G(VAIP(18)),TIUY("TS")=$G(VAIP(TIUI,6))
- . S TIUY("SVC")=+$$GET1^DIQ(45.7,+TIUY("TS"),2,"I",,"ERROR")
- . S TIUY("SVC")=TIUY("SVC")_U_$$GET1^DIQ(49,+TIUY("SVC"),.01,"I",,"ERROR")
+ . ; verify FACILITY TREATING SPECIALTY NAME, Field #2 SERVICE when setting "SVC" node *362 ajb
+ . N TMPSVC S TMPSVC=+$$GET1^DIQ(45.7,+TIUY("TS"),2,"I",,"ERROR") S:+TMPSVC TIUY("SVC")=TMPSVC ; *362 ajb
+ . S:+TMPSVC TIUY("SVC")=TIUY("SVC")_U_$$GET1^DIQ(49,+TIUY("SVC"),.01,"I",,"ERROR") ; *362 ajb
  . S TIUY("WARD")=$$WARD($G(VAIP(17)))
  . S (TIUY("ADDT"),TIUY("EDT"))=$G(VAIP(3))
  . I +TIUY("WARD") S TIUY("LOC")=$G(^DIC(42,+TIUY("WARD"),44))

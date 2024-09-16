@@ -1,5 +1,5 @@
-ORWDXQ ; SLC/KCM - Utilities for Quick Orders;06:18 PM  27 Apr 1998
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,245**;Dec 17, 1997;Build 2
+ORWDXQ ; SLC/KCM - Utilities for Quick Orders ; JUN 18, 2024@14:35
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,245,610**;Dec 17, 1997;Build 11
  ;
 DLGNAME(VAL,INAME)      ; Return display name for a dialog (DELETE??)
  N IEN S IEN=$O(^ORD(101.41,"B",INAME,0))
@@ -72,6 +72,7 @@ GETQLST(LST,DGRP,PRE)        ; Return quick list for a display group
  S I=0 F  S I=$O(^ORD(101.44,LVW,10,I)) Q:'I  D
  . S X0=$G(^ORD(101.44,LVW,10,I,0))
  . I $P($G(^ORD(101.41,+X0,0)),U,3)]"" Q  ; quick order is disabled
+ . I DGRP="IV RX",$$ORDINFCHK^ORWUL(+X0) Q  ;Orderable item check for Infusion & Clinic Infusion in Pharmacy.
  . S ILST=ILST+1,LST(ILST)=PRE_X0
  Q
  ;N DNAM,DLG,I,ILST,X

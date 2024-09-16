@@ -1,7 +1,8 @@
-SDBT5 ; ;11/27/23
+SDBT5 ; ;09/15/24
  D DE G BEGIN
 DE S DIE="^SC(",DIC=DIE,DP=44,DL=1,DIEL=0,DU="" K DG,DE,DB Q:$O(^SC(DA,""))=""
  I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,11) S:%]"" DE(5)=% S %=$P(%Z,U,26) S:%]"" DE(9)=% S %=$P(%Z,U,27) S:%]"" DE(10)=%
+ I $D(^("PA")) S %Z=^("PA") S %=$P(%Z,U,4) S:%]"" DE(16)=%
  I $D(^("SDPROT")) S %Z=^("SDPROT") S %=$P(%Z,U,1) S:%]"" DE(1)=%
  I $D(^("SL")) S %Z=^("SL") S %=$P(%Z,U,1) S:%]"" DE(11)=% S %=$P(%Z,U,2) S:%]"" DE(12)=% S %=$P(%Z,U,5) S:%]"" DE(6)=% S %=$P(%Z,U,6) S:%]"" DE(14)=% S %=$P(%Z,U,7) S:%]"" DE(7)=%
  K %Z Q
@@ -131,4 +132,10 @@ X14 S ZSI=$S(X=1!(X=2)!(X=3)!(X=4)!(X=6):60/X,1:0),SDLA=$S('$D(^SC(DA,"SL")):0,1
  Q
  ;
 15 S DQ=16 ;@99
-16 G 0^DIE17
+16 S DW="PA;4",DV="St11",DU="",DIFLD=63,DLB=$$LABEL^DIALOGZ(DP,DIFLD)
+ G RE
+X16 D READSET^DIED(.X,"1:YES;0:NO")
+ I $D(X),X'?.ANP K X
+ Q
+ ;
+17 G 0^DIE17

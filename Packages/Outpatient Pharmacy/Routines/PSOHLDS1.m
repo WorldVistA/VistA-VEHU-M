@@ -1,5 +1,5 @@
 PSOHLDS1 ;BIR/LC,PWC-Build HL7 Segments for Automated Interface ; 2/5/10 10:01am
- ;;7.0;OUTPATIENT PHARMACY;**156,232,255,200,305,336,351,434,609,524,545**;DEC 1997;Build 270
+ ;;7.0;OUTPATIENT PHARMACY;**156,232,255,200,305,336,351,434,609,524,545,753**;DEC 1997;Build 53
  ;HLFNC       supp. by DBIA 10106
  ;PSNAPIS     supp. by DBIA 2531
  ;VASITE      supp. by DBIA 10112
@@ -158,6 +158,7 @@ MW(PS55,MW,MP) ;Return Mail/Window and MP expanded text               ;PSO*232
  I MW="M" D
  . S MP=""""""
  . S PS55=$P(PS55,"^",3)
+ . I $$GET1^DIQ(52,IRXN,100.2,"I")]"" S PS55=$$GET1^DIQ(52,IRXN,100.2,"I") ;p753
  . ;PSO*7*609 Added evalution of option 4 to return "CERTIFIED MAIL" in the $S clause
  . S MW=$S(PS55=1:"CERTIFIED MAIL",PS55=4:"CERTIFIED MAIL",PS55=2:"DO NOT MAIL",1:"REGULAR MAIL")
  Q

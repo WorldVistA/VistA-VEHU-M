@@ -1,16 +1,24 @@
-ORCDGMRC ;SLC/MKB-Utility functions for GMRC dialogs ; 5/15/13 11:32am
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**4,26,68,100,181,361**;Dec 17, 1997;Build 39
+ORCDGMRC ;SLC/MKB-Utility functions for GMRC dialogs ;Nov 20, 2023@08:56:08
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**4,26,68,100,181,361,608**;Dec 17, 1997;Build 15
  ; External References
- ;    DBIA 10006 Call to ^DIC
- ;    DBIA 10026 Call to ^DIR
- ;    DBIA  2426 Call to SERV1^GMRCASV
- ;    DBIA  3119 Call to GETDEF^GMRCDRFR
- ;    DBIA  2982 Call to GETSVC^GMRCPR0
- ;    DBIA  3121 Call to APIs $$PROVDX and PREREQ in routine ^GMRCUTL1
- ;    DBIA  1609 Call to CONFIG^LEXSET
- ;    DBIA 10104 Call to APIs $$RJ and $$UP in routine ^XLFSTR
- ;    DBIA 10102 Call to DISP^XQORM1
- ;    DBIA  3991 Call to $$STATCHK^ICDAPIU
+ ;    Reference to ^DIC supported by ICR 10006
+ ;    Reference to ^DIR supported by ICR 10026
+ ;    Reference to SERV1^GMRCASV supported by ICR 2426
+ ;    Reference to GETDEF^GMRCDRFR supported by ICR 3119
+ ;    Reference to GETSVC^GMRCPR0 supported by ICR 2982
+ ;    Reference to $$PROVDX and PREREQ^GMRCUTL1 supported by ICR 3121
+ ;    Reference to CONFIG^LEXSET supported by ICR 1609
+ ;    Reference to $$RJ and $$UP^XLFSTR supported by ICR 10104
+ ;    Reference to DISP^XQORM1 supported by ICR 10102
+ ;    Reference to $$STATCHK^ICDAPIU supported by ICR 3991
+CID ;--validates date and enforces any associated parameters
+ ;called from GMRCOR CONSULT, Clinically Indicated Date POST-SELECTION ACTION
+ Q:$G(ORTYPE)'="Z"
+ I $G(ORDIALOG(PROMPT,INST))'["T" K DONE W $C(7),!,"Response must be relative date (e.g. TODAY, T+7D, T+3M)"
+ N X,Y,%DT,FUTDAYS,FUTDATE S X=$G(ORDIALOG(PROMPT,INST)),%DT="X" I $L(X) D ^%DT S:Y>0 ORDATE=$P(Y,".")
+ S FUTDAYS=$$GET^XPAR("PKG","ORCDGMRC FUTURE DATE LIMIT",1,"I") S:$G(FUTDAYS)>0 FUTDATE=$$FMADD^XLFDT(DT,FUTDAYS)
+ I ORDATE>FUTDATE K DONE W $C(7),!,"Response cannot be more than "_FUTDAYS_" days in the future."
+ Q
 URGENCY(TYPE) ; -- Returns index of allowable urgencies from file #101.42
  N X S X=$S($$VAL^ORCD("CATEGORY")'="I":"O",TYPE="C":"T",1:"R")
  S ORDIALOG(PROMPT,"D")="S.GMRC"_X

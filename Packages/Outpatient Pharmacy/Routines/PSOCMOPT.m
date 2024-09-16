@@ -1,5 +1,5 @@
 PSOCMOPT ;BIR/RTR-Test for CMOP prescription ;Mar 29, 2019@08:56:25
- ;;7.0;OUTPATIENT PHARMACY;**36,441**;DEC 1997;Build 209
+ ;;7.0;OUTPATIENT PHARMACY;**36,441,753**;DEC 1997;Build 53
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^PSDRUG supported by DBIA 221
  ;PTRX = INTERNAL NUMBER FROM 52
@@ -8,6 +8,7 @@ PSOCMOPT ;BIR/RTR-Test for CMOP prescription ;Mar 29, 2019@08:56:25
  S PSOXFLAG=0
  I '$G(PSXSYS) G END
  S PXDFN=+$P($G(^PSRX(PTRX,0)),"^",2),PSOXMDT=$P($G(^PS(55,PXDFN,0)),"^",5),PSOXMC=$P($G(^PS(55,PXDFN,0)),"^",3)
+ I $$GET1^DIQ(52,PTRX,100.2,"I")]"" S PSOXMDT="",PSOXMC=$$GET1^DIQ(52,PTRX,100.2,"I") ;p753
  I (PSOXMC>1&(PSOXMDT>DT))!(PSOXMC>1&(PSOXMDT<1)) G END
  S PXCK=+$P($G(^PSRX(PTRX,0)),"^",6) I '$D(^PSDRUG("AQ",PXCK)) G END
  I $P($G(^PSDRUG(PXCK,2)),"^",3)'["O" G END

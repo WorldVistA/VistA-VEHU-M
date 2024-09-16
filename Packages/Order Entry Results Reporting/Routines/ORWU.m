@@ -1,5 +1,5 @@
-ORWU ;SLC/KCM - GENERAL UTILITIES FOR WINDOWS CALLS ;Jul 10, 2023@09:32:14
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,148,149,187,195,215,243,350,424,377,519,539,405,596,588**;Dec 17, 1997;Build 29
+ORWU ;SLC/KCM - GENERAL UTILITIES FOR WINDOWS CALLS ;Dec 4, 2023@14:09
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,148,149,187,195,215,243,350,424,377,519,539,405,596,588,608**;Dec 17, 1997;Build 15
  ;
  ; Reference to ^%ZIS(1 supported by IA #2963
  ; Reference to ^%ZIS(2 supported by IA #2964
@@ -20,7 +20,7 @@ ORWU ;SLC/KCM - GENERAL UTILITIES FOR WINDOWS CALLS ;Jul 10, 2023@09:32:14
  ; Reference to ^XQCHK supported by IA #10078
  ; Reference to $$KSP^XUPARAM supported by IA #2541
  ; Reference to $$PROD^XUPROD supported by IA #4440
- ; Reference to ^XUSHSHP supported by IA #10045
+ ; Reference to ^ROUTINE supported by IA #10045
  ; Reference to $$DECRYP^XUSRB supported by IA #12241
  ;
  Q
@@ -127,8 +127,8 @@ ORDROLE() ; returns the role a person takes in ordering
  I $D(^XUSEC("PROVIDER",DUZ)) Q 4                         ; student
  Q 0
 VALIDSIG(ESOK,X) ; returns TRUE if valid electronic signature
- S X=$$DECRYP^XUSRB1(X),ESOK=0                   ; network encrypted
- D HASH^XUSHSHP
+ S X=$$DECRYP^ROUTINE(X),ESOK=0                   ; network encrypted
+ D HASH^ROUTINE
  I X=$P($G(^VA(200,+DUZ,20)),U,4) S ESOK=1
  Q
 TOOLMENU(ORLST) ; returns a list of items for the Tools menu
@@ -301,25 +301,31 @@ JSYSPARM(RESULTS,USER) ;
  . F  S CNT2=$O(ORLIST(CNT2)) Q:CNT2=""  D
  . . S TEMP("cpExcludeNotes",CNT2,"Note")=$P($G(ORLIST(CNT2)),U,1)
  S TEMP("cpCopyBufferDisable")=+$$GET^XPAR("PKG","ORQQTIU COPY BUFFER DISABLE",1,"I")
- S TEMP("orCPRSExceptionPurge")=+$$GET^XPAR("ALL","OR CPRS EXCEPTION PURGE",1,"I")
- S TEMP("orCPRSExceptionLogger")=+$$GET^XPAR("ALL","OR CPRS EXCEPTION LOGGER",1,"I")
- ;
+ S TEMP("orCPRSExceptionLog","daysToPurge")=+$$GET^XPAR("ALL","OR CPRS EXCEPTION PURGE",1,"I")
+ S TEMP("orCPRSExceptionLog","enabled")=+$$GET^XPAR("ALL","OR CPRS EXCEPTION LOGGER",1,"I")
+ S TEMP("orCPRSExceptionLog","activityLogSize")=+$$GET^XPAR("ALL","OR CPRS ACTIVITY LOG SIZE",1,"I")
+ S TEMP("orCPRSExceptionLog","winMessageLogSize")=+$$GET^XPAR("ALL","OR CPRS WIN MESSAGE LOG SIZE",1,"I")
+ S TEMP("orCPRSExceptionLog","RPCLogSize")=+$$GET^XPAR("ALL","OR CPRS RPC EXCEPTION LOG SIZE",1,"I")
+ S TEMP("orCPRSExceptionLog","includeModuleInfo")=+$$GET^XPAR("ALL","OR CPRS EXCEPTION MODULE INFO",1,"I")
  D  ;CPRS Exception Email
  . N CNT2,ORLIST
  . D GETLST^XPAR(.ORLIST,"ALL","OR CPRS EXCEPTION EMAIL","Q")
  . S CNT2=""
  . F  S CNT2=$O(ORLIST(CNT2)) Q:CNT2=""  D
- . . S TEMP("orCPRSExceptionEmail",CNT2,"Email")=$P($G(ORLIST(CNT2)),U,2)
+ . . S TEMP("orCPRSExceptionLog","email",CNT2,"Email")=$P($G(ORLIST(CNT2)),U,2)
  S TEMP("psoParkOn")=$S($$GET^XPAR("DIV^SYS^PKG","PSO PARK ON",,"E")="YES":"YES",1:"NO") ;Park-a-Prescription Enabled
  D SHWOTHER^ORWOTHER(.TEMP,USER)
  D GETPAR^ORPDMP(.TEMP,USER)
- D GETPAR^ORDSTCTB(.TEMP,USER)
+ D GETPAR^ORGMRC(.TEMP,USER)
+ D GETPAR^ORCDRA(.TEMP,USER)
  ;Template Required Fields Identification Disabled
  S TEMP("tmRequiredFldsOff")=+$$GET^XPAR("ALL","TIU REQUIRED FIELDS DISABLE",1,"I")
  S TEMP("ResponsiveGUI")=$$GET^XPAR("ALL","ORWCH PAUSE INPUT")
  D GETSERIES^ORFEDT(.TEMP)
  D ACCESS^ORACCESS(.TEMP,USER)
+ D SIGI^ORWPAR1(.TEMP)
  ;D ENCODE^VPRJSON("TEMP","RESULTS","ERROR")
+ S TEMP("vitals","gmvMetricFirst")=+$$GET^XPAR("ALL","ORQQVI METRIC FIRST",1,"I")
  D ENCODE^XLFJSON("TEMP",$NA(^TMP($J,"ORWU SYSPARAM")),"ERROR")
  Q
  ;

@@ -1,11 +1,27 @@
-ORWPCE ; SLC/JM/REV - wrap calls to PCE and AICS ;Jul 06, 2023@10:55:49
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,173,190,195,215,243,295,280,306,361,385,398,377,476,539,405,588**;Dec 17, 1997;Build 29
+ORWPCE ; SLC/JM/REV - wrap calls to PCE and AICS ;Aug 28, 2023@15:52
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,173,190,195,215,243,295,280,306,361,385,398,377,476,539,405,588,606**;Dec 17, 1997;Build 3
  ;
- ; DBIA 2950   LOOK^LEXA          ^TMP("LEXFND",$J)
- ; DBIA 1609   CONFIG^LEXSET      ^TMP("LEXSCH",$J)
- ; DBIA 1365   DSELECT^GMPLENFM   ^TMP("IB",$J)
- ; DBIA 1296   GETLST^IBDF18A
- ; DBIA 5699   $$ICDDESC^ICDXCODE
+ ; Reference to LOOK^LEXA, ^TMP("LEXFND",$J) in ICR #2950
+ ; Reference to CONFIG^LEXSET, ^TMP("LEXSCH",$J) in ICR #1609
+ ; Reference to DSELECT^GMPLENFM, ^TMP("IB",$J) in ICR #1365
+ ; Reference to VLTD^ICDEX in ICR #5747
+ ; Reference to CODEBA^ICDEX in ICR #5747
+ ; Reference to GETLST^IBDF18A in ICR #1296
+ ; Reference to $$ICDDESC^ICDXCODE in ICR #5699
+ ; Reference to GETFIELD^PXAAVSIT in ICR #3048
+ ; Reference to VSTRBLD^TIUSRVP in ICR #4075
+ ; Reference to DOCCNT^TIUSRVLV in ICR #2812
+ ; Reference to $$ISADDNDM^TIULC1 in ICR #2323
+ ; Reference to SCCOND^PXUTLSCC in ICR #2348
+ ; Reference to PRENDIAG^PXRMPDX in ICR #6991
+ ; Reference to SVC^PXKCO in ICR #3225
+ ; Reference to ENCEVENT^PXAPI in ICR #1894
+ ; Reference to VST2APPT^PXAPI in ICR #1895
+ ; Reference to $$GETENC^PXAPI in ICR #1894
+ ; Reference to DELVFILE^PXAPI in ICR #1890
+ ; Reference to ^TIU(8925, in ICR #2937
+ ; Reference to ^DIC(31, in ICR #2967
+ ; Reference to ^DG(391, in ICR #2966
  ;
  Q
 VISIT(LST,CLINIC,ORDATE) ; get list of visit types for clinic
@@ -137,19 +153,30 @@ HASVISIT(ORY,IEN,DFN,ORLOC,ORDTE) ;Has visit or is stand alone
  I +$G(ORVISIT)>0 S ORY=$$VST2APPT^PXAPI(ORVISIT)
  Q
 DELETE(VAL,VSTR,DFN,VISIT) ; delete PCE info when deleting a note
- N VISIT,ORCOUNT,ORDTE,ORLOC
- N ZTIO,ZTRTN,ZTDTH,ZTSAVE,ZTDESC,ZTSYNC,ZTSK
- S ORLOC=$P(VSTR,";"),ORDTE=$P(VSTR,";",2)
- I '$D(^TMP("ORWPCE",$J,VSTR))&('$$GETENC^PXAPI(DFN,ORDTE,ORLOC)) S VAL=0 Q  ; no PCE data saved yet
- I $P(VSTR,";",3)="H" S VAL=0 Q           ; leave inpatient alone
- I $L($T(DOCCNT^TIUSRVLV))=0 S VAL=0 Q    ; leave if no tiu entry point
- D DOCCNT^TIUSRVLV(.ORCOUNT,DFN,VSTR)     ; Do not delete if another
- I ORCOUNT>0 S VAL=0 Q                    ; title points to visit
- ;S ZTIO="ORW/PXAPI RESOURCE",ZTRTN="DQDEL^ORWPCE1",ZTDTH=$H
- ;S (ZTSAVE("VSTR"),ZTSAVE("DFN"))="",ZTDESC="CPRS Delete Note/PCE"
- ;S ZTSYNC="ORW"_VSTR
- ;D ^%ZTLOAD I '$D(ZTSK)
- D DQDEL^ORWPCE1(.VAL,VSTR,DFN)
+ ;    VSTR = Visit String
+ ;     DFN = Patient IEN (#2)
+ ;   VISIT = Visit IEN (#9000010)
+ ;
+ ; Must either pass in VISIT, or must pass in VSTR and DFN.
+ ; It is best to pass in VISIT. VSTR and DFN are only included for backward compatability.
+ ;
+ N ORCOUNT,ORVISITLIST
+ S VAL=0
+ I '$G(VISIT),('$G(DFN)!($G(VSTR)="")) Q
+ ;
+ ; CPRS can pass VISIT=-1 if the note being deleted did not reference a Visit
+ I $G(VISIT)<0 Q
+ ;
+ I +$G(VISIT)=0 S VISIT=$$GETVSIT^ORWPCE1($G(VSTR),$G(DFN))
+ I VISIT'>0 Q
+ ;
+ I $$GETFIELD^PXAAVSIT(VISIT,.07)="H" Q   ; leave inpatient alone
+ ;
+ ; Do not delete if another title points to visit
+ D DOCCNT^TIUSRVLV(.ORCOUNT,"","",VISIT,1)
+ I ORCOUNT>0 Q
+ ;
+ S VAL=$$DELVFILE^PXAPI("ALL",VISIT,"","TEXT INTEGRATION UTILITIES")
  Q
 SAVE(RESULT,PCELIST,NOTEIEN,ORLOC) ; save PCE information
  N VSTR,GMPLUSER,HEADER

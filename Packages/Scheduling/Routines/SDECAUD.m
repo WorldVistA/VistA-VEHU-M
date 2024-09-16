@@ -1,6 +1,6 @@
-SDECAUD ; ALB/WTC - VISTA SCHEDULING - Audit Statistics Compiler ;
- ;;5.3;Scheduling;**686**;Aug 13, 1993;Build 53
- ;;Per VHA Directive 2004-038, this routine should not be modified
+SDECAUD  ;ALB/WTC,JDJ - VISTA SCHEDULING - Audit Statistics Compiler ; JULY 1, 2024
+ ;;5.3;Scheduling;**686,885**;Aug 13, 1993;Build 5
+ ;;Per VHA Directive 6402, this routine should not be modified
     ;
     Q  ;
     ;
@@ -40,7 +40,7 @@ COMPILE(DATE)   ;
     ;  Compile audit statistics for a date.  If date not specified, use yesterday.
     ;
     K ^TMP($J) ;
-    N D1,CLERK,DA,X,TYPE,MRTC,APPTDATE,STATUS,PIECE,GLOBAL,DIC,DA1,DLAYGO,FLD ;
+    N D1,CLERK,DA,X,TYPE,MRTC,APPTDATE,STATUS,PIECE,GLOBAL,DIC,DA1,DLAYGO,FLD,D2,PTR ;
     ;
     I $G(DATE)="" S DATE=$$HTFM^XLFDT($H-1,1) ;
     ;
@@ -93,30 +93,29 @@ COMPILE(DATE)   ;
     ;
     ;   Loop thru date appointment made cross-reference in the SDEC APPOINTMENT file (#409.84) and count appointments
     ;   made by type (EWL, Consult, PtCSch, APPT).  Increment request closed for each appointment made.
-    ;
-    S DA=0 F  S DA=$O(^SDEC(409.84,"AC",DATE,DA)) Q:'DA  S CLERK=$P(^SDEC(409.84,DA,0),"^",8),TYPE=$P($G(^SDEC(409.84,DA,2)),"^",1) D  ;
-    .   ;
-    .   Q:CLERK=""  ;  Skip if data missing
-    .   ;
-    .   S PIECE=$S($P(TYPE,";",2)="SDWL(409.3,":8,$P(TYPE,";",2)="GMR(123,":12,$P(TYPE,";",2)="SD(403.5,":11,$P(TYPE,";",2)="SDEC(409.85,":3,1:0) ;
-    .   Q:'PIECE  ;
-    .   I '$D(^TMP($J,CLERK,DATE)) S ^TMP($J,CLERK,DATE)="0^0^0^0^0^0^0^0^0^0^0^0^0" ;
-    .   ;
-    .   ;  Update appointment made.
-    .   ;
-    .   S $P(^(DATE),"^",PIECE)=$P(^TMP($J,CLERK,DATE),"^",PIECE)+1 ;
-    .   ;
-    .   ;  Update APPT or EWL request closed.
-    .   ;
-    .   S PIECE=$S($P(TYPE,";",2)="SDWL(409.3,":9,$P(TYPE,";",2)="SDEC(409.85,":4,1:0) Q:'PIECE  ;
-    .   ;
-    .   ;  Determine if APPT request is MRTC
-    .   ;
-    .   I $P(TYPE,";",2)="SDEC(409.85," S PTR=$P(TYPE,";",1),MRTC=+$P($G(^SDEC(409.85,PTR,3)),"^",1) I MRTC S PIECE=6 ;
-    .   ;
-    .   ;  Update request closed
-    .   ;
-    .   S $P(^(DATE),"^",PIECE)=$P(^TMP($J,CLERK,DATE),"^",PIECE)+1 ;
+    S D1=DATE-.001 F  S D1=$O(^SDEC(409.84,"AC",D1)) Q:'D1  Q:D1\1'=DATE  D
+    .S DA=0 F  S DA=$O(^SDEC(409.84,"AC",D1,DA)) Q:'DA  S CLERK=$P(^SDEC(409.84,DA,0),"^",8),TYPE=$P($G(^SDEC(409.84,DA,2)),"^",1) D  ;
+    ..   Q:CLERK=""  ;  Skip if data missing
+    ..   S PIECE=$S($P(TYPE,";",2)="SDWL(409.3,":8,$P(TYPE,";",2)="GMR(123,":12,$P(TYPE,";",2)="SD(403.5,":11,$P(TYPE,";",2)="SDEC(409.85,":3,1:0) ;
+    ..   Q:'PIECE  ;
+ ..   S D2=$P(D1,".",1) ;GRAB THE DATE PORTION
+    ..   I '$D(^TMP($J,CLERK,D2)) S ^TMP($J,CLERK,D2)="0^0^0^0^0^0^0^0^0^0^0^0^0" ;
+    ..   ;
+    ..   ;  Update appointment made.
+    ..   ;
+    ..   S $P(^TMP($J,CLERK,D2),"^",PIECE)=$P(^TMP($J,CLERK,D2),"^",PIECE)+1 ;
+    ..  ;
+    ..  ;  Update APPT or EWL request closed.
+    ..   ;
+    ..  S PIECE=$S($P(TYPE,";",2)="SDWL(409.3,":9,$P(TYPE,";",2)="SDEC(409.85,":4,1:0) Q:'PIECE  ;
+    ..   ;
+    ..   ;  Determine if APPT request is MRTC
+    ..   ;
+    ..   I $P(TYPE,";",2)="SDEC(409.85," S PTR=$P(TYPE,";",1),MRTC=+$P($G(^SDEC(409.85,PTR,3)),"^",1) I MRTC S PIECE=6 ;
+    ..   ;
+    ..   ;  Update request closed
+    ..   ;
+    ..   S $P(^TMP($J,CLERK,D2),"^",PIECE)=$P(^TMP($J,CLERK,D2),"^",PIECE)+1 ;
     ;
     ;    Loop thru date appointment cancelled cross-reference in the SDEC APPOINTMENT file (#409.84) and count cancellations.
     ;

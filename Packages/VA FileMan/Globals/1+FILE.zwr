@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: FILE
 ZWR
-^DIC(0)="FILE^1^19200.112^2899"
+^DIC(0)="FILE^1^19200.112^2900"
 ^DIC(.11,0)="INDEX^.11"
 ^DIC(.11,0,"DD")="^"
 ^DIC(.11,0,"DEL")="^"
@@ -2887,7 +2887,7 @@ ZWR
 ^DIC(44,"%D",0)=1
 ^DIC(44,"%D",1,0)="Contains locations found in the hospital (ie. Wards, Clinics)"
 ^DIC(44,"%D",2,0)=" *********DO NOT RE-INDEX THIS FILE**********"
-^DIC(44,"%MSC")=3240522.033724
+^DIC(44,"%MSC")=3240915.144432
 ^DIC(44.3,0)="SDAM DATA MAP^44.3"
 ^DIC(44.3,0,"AUDIT")="@"
 ^DIC(44.3,0,"DD")="@"
@@ -4370,7 +4370,7 @@ ZWR
 ^DIC(52,"%D",6,0)=" "
 ^DIC(52,"%D",7,0)="Of particular interest is that essentially all the history pertaining to a"
 ^DIC(52,"%D",8,0)="particular Rx is contained in each Rx entry."
-^DIC(52,"%MSC")=3230514.004806
+^DIC(52,"%MSC")=3240915.144418
 ^DIC(52.09,0)="REMOTE PRESCRIPTION LOG^52.09"
 ^DIC(52.09,0,"DD")="#"
 ^DIC(52.09,0,"DEL")="p"
@@ -6816,7 +6816,7 @@ ZWR
 ^DIC(64,"%D",11,0)="FILE WITH SPECIFIC INFORMATION AT SPECIFIC INTERNAL FILE NUMBERS. NO"
 ^DIC(64,"%D",12,0)="ENTRIES SHOULD EVER BE DELETED. ADDITIONAL ENTRIES WILL BE DISTRIBUTED"
 ^DIC(64,"%D",13,0)="VIA GLOBAL TAPE WHEN NECESSARY."
-^DIC(64,"%MSC")=3240317.082524
+^DIC(64,"%MSC")=3240915.142915
 ^DIC(64.03,0)="WKLD LOG FILE^64.03"
 ^DIC(64.03,0,"GL")="^LRO(64.03,"
 ^DIC(64.03,0,"GL")="^LRO(64.03,"
@@ -6880,7 +6880,7 @@ ZWR
 ^DIC(64.061,"%D",5,0)=" "
 ^DIC(64.061,"%D",6,0)="This file is a standard file for many types of terms used in electronic"
 ^DIC(64.061,"%D",7,0)="messaging."
-^DIC(64.061,"%MSC")=3240317.082524
+^DIC(64.061,"%MSC")=3240915.142915
 ^DIC(64.062,0)="LAB ELECTRONIC SUBTYPES^64.062"
 ^DIC(64.062,0,"GL")="^LAB(64.062,"
 ^DIC(64.062,0,"GL")="^LAB(64.062,"
@@ -6912,7 +6912,7 @@ ZWR
 ^DIC(64.2,"%D",6,0)="will be distributed to all VAMC sites."
 ^DIC(64.2,"%D",7,0)="  Forward all request for additional codes not found in this file, contact"
 ^DIC(64.2,"%D",8,0)="Pathology Central Office, Attention Asst. Director for DHCP affairs. "
-^DIC(64.2,"%MSC")=3240317.082524
+^DIC(64.2,"%MSC")=3240915.142915
 ^DIC(64.21,0)="WKLD CODE LAB SECT^64.21"
 ^DIC(64.21,0,"GL")="^LAB(64.21,"
 ^DIC(64.21,0,"GL")="^LAB(64.21,"
@@ -7023,7 +7023,7 @@ ZWR
 ^DIC(64.81,"%D",9,0)="UPGRADE."
 ^DIC(64.81,"%D",10,0)=" "
 ^DIC(64.81,"%D",11,0)="The end user never uses this file for day to day laboratory activities. "
-^DIC(64.81,"%MSC")=3240317.082525
+^DIC(64.81,"%MSC")=3240915.142915
 ^DIC(64.9178,0)="LSRP AUDIT CONFIG^64.9178"
 ^DIC(64.9178,0,"GL")="^LABAUD(64.9178,"
 ^DIC(64.9178,0,"GL")="^LABAUD(64.9178,"
@@ -13106,7 +13106,7 @@ ZWR
 ^DIC(95.3,"%D",62,0)="liability for any omissions or errors in the LOINC database, and all "
 ^DIC(95.3,"%D",63,0)="EXPRESS AND IMPLIED WARRANTIES, INCLUDING THOSE RELATED TO MERCHANTABILITY"
 ^DIC(95.3,"%D",64,0)="OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED."
-^DIC(95.3,"%MSC")=3240317.082525
+^DIC(95.3,"%MSC")=3240915.142916
 ^DIC(95.31,0)="LAB LOINC COMPONENT^95.31"
 ^DIC(95.31,0,"AUDIT")="@"
 ^DIC(95.31,0,"DD")="@"
@@ -13125,7 +13125,7 @@ ZWR
 ^DIC(95.31,"%D",1,0)="This file contains the name of the component or analyte measured for the "
 ^DIC(95.31,"%D",2,0)="LAB LOINC file (#95.3).  This file is a standard file distributed"
 ^DIC(95.31,"%D",3,0)="by Dallas CIOFO and should not be edited locally."
-^DIC(95.31,"%MSC")=3240317.082525
+^DIC(95.31,"%MSC")=3240915.142916
 ^DIC(95.4,0)="LAB MAPPING TRANSPORT^95.4"
 ^DIC(95.4,0,"AUDIT")=""
 ^DIC(95.4,0,"DD")=""
@@ -16067,7 +16067,7 @@ ZWR
 ^DIC(130,"%D",2,0)="case made up of an operative procedure, or multiple operative procedures"
 ^DIC(130,"%D",3,0)="for a patient.  The file includes the information necessary for creating"
 ^DIC(130,"%D",4,0)="the Nurses' Intraoperative Report, Operation Report, and Anesthesia Report"
-^DIC(130,"%MSC")=3230617.120609
+^DIC(130,"%MSC")=3240915.144531
 ^DIC(131,0)="PERSON FIELD RESTRICTION^131I"
 ^DIC(131,0,"GL")="^SRP("
 ^DIC(131,0,"GL")="^SRP("
@@ -20262,7 +20262,7 @@ ZWR
 ^DIC(340,"%D",5,0)="can be an insurance company, patient, person, institution, or vendor."
 ^DIC(340,"%D",6,0)=" "
 ^DIC(340,"%D",7,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(340,"%MSC")=3230819.185508
+^DIC(340,"%MSC")=3240915.144457
 ^DIC(340.5,0)="AR REPAYMENT PLAN^340.5"
 ^DIC(340.5,0,"AUDIT")="@"
 ^DIC(340.5,0,"DD")="@"
@@ -29730,7 +29730,7 @@ ZWR
 ^DIC(409.85,"%D",1,0)="This file contains the SDEC Appt Request entries for the Appointment "
 ^DIC(409.85,"%D",2,0)="Scheduling application."
 ^DIC(409.85,"%D",3,0)="Each entry represents a unique appointment request."
-^DIC(409.85,"%MSC")=3230311.162234
+^DIC(409.85,"%MSC")=3240915.144432
 ^DIC(409.853,0)="SDEC DISPOSITION REASON^409.853"
 ^DIC(409.853,0,"AUDIT")="@"
 ^DIC(409.853,0,"DD")="@"
@@ -29886,7 +29886,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3240831.140335
+^DIC(409.93,"%MSC")=3240915.144432
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"
@@ -33772,7 +33772,7 @@ ZWR
 ^DIC(601.84,"%D",9,0)="indicates whether the instrument has been completed, who ordered the "
 ^DIC(601.84,"%D",10,0)="instrument, how many questions were answered and if the test has been "
 ^DIC(601.84,"%D",11,0)="electronically signed."
-^DIC(601.84,"%MSC")=3230311.162245
+^DIC(601.84,"%MSC")=3240915.144353
 ^DIC(601.844,0)="MH ADMINISTRATION SOURCE^601.844"
 ^DIC(601.844,0,"DD")="@"
 ^DIC(601.844,0,"DEL")="@"

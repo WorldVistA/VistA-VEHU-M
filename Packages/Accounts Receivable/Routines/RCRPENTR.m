@@ -1,5 +1,5 @@
 RCRPENTR ;EDE/SAB - CREATE NEW REPAYMENT PLAN;11/16/2020  7:40 AM
- ;;4.5;Accounts Receivable;**377,381,378,389**;Mar 20, 1995;Build 36
+ ;;4.5;Accounts Receivable;**377,381,378,389,422**;Mar 20, 1995;Build 13
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -49,7 +49,7 @@ ENTER ; Main Entry Point
  . ;Strip confirm flag to get total.
  . S RCTOT=$P(RCTOT,U,2)
  . ;Get the repayment plan details and save
- . S RCSVFLG=$$GETDET^RCRPU(RCBLCH,RCTOT,RCDBTR,RCAUTO)
+ . S RCSVFLG=$$GETDET^RCRPU(RCBLCH,RCTOT,RCDBTR,RCAUTO,"N",0)  ; PRCA*4.5*422
  . Q:RCSVFLG<1
  . ;Display bills at CS and recall them if necessary
  . D ASKRCL^RCRPU2  ; PRCA*4.5*389
@@ -131,7 +131,7 @@ EDITPLAN(RCIEN) ; edit selected plan, entry point from repayment plan worklist  
  .; PRCA*4.5*378 - Added 2 new user prompts
  .I RCEDTYPE="Q" S RCEXIT1=0 Q     ;User requested Exit pla using prompt
  .I RCEDTYPE="C" D CLOSE(RCIEN) K ^TMP($J,"RPPFLDNO") S RCEXIT1=0 Q
- .I RCEDTYPE="E" D EDMN(RCDBTR,RCIEN,RCMSCT) S RCEXIT1=1 Q
+ .I RCEDTYPE="E" D EDMN(RCDBTR,RCIEN,RCMSCT,.RCEXIT) Q  ; PRCA*4.5*422
  .I RCEDTYPE="A" S RCAUTO=$$AUTOADD^RCRPU1 D:RCAUTO'<0 UPDAUTO^RCRPU1(RCIEN,RCAUTO) S RCEXIT1=1
  .Q
  Q 
@@ -153,84 +153,47 @@ GETTYPE() ;Get the user requested type of editing.
  ;
  Q Y
  ;
-EDMN(RCDBTR,RCIEN,RCORLN) ;Edit the monthly payment
+EDMN(RCDBTR,RCIEN,RCORLN,RCEXIT) ;Edit the monthly payment
  ;INPUT - RCIEN - IEN of the Repayment Plan being edited.
  ;        RCORLN - Original # remaining Payments.
+ ;        RCEXIT - exit flag for EDITPLAN tag (1/0)
  ;
- N RCTOT,RCPLN,RCCRDT
+ N N0,RCTOT,RCPLN
  ;
- S RCCRDT=$$DT^XLFDT
+ S RCEXIT=1  ; PRCA*4.5*422
  ;Determine actual amount remaining
  S RCTOT=$$CALCTOT^RCRPU2(RCIEN)
  ;
  ;Ask for the new amount and plan length
  S RCPLN=$$GETPLN^RCRPU(RCDBTR,RCTOT,1)
  Q:'RCPLN
+ S N0=^RCRP(340.5,RCIEN,0)  ; PRCA*4.5*422
+ W !!,"You are changing the monthly payment for this repayment plan ",$P(N0,U),", this plan will be administratively closed. A new plan will be generated.",!  ; PRCA*4.5*422
  ;
  ;Confirm that this is correct
  Q:'$$CORRECT^RCRPU
- ;
- ;Update the amount per Month, # payments in the plan, Update the REVIEW field
- D UPDTERMS^RCRPU1(RCIEN,RCPLN)
- ;
- ;Determine if the Review flag should be set or cleared.
- S RCFLG=0
- I $P(RCPLN,U,2)>57 S RCFLG=1
- D UPDRVW^RCRPU2(RCIEN,RCFLG)
- ;
- ;Update the audit log.
- D UPDAUDIT^RCRPU2(RCIEN,RCCRDT,"E","T")  ;Post a Edit/Terms Adjusted entry in Audit log.
- ;
- ;Update Audit Log with Supervisor Approvals, if any.
- D:$G(^TMP("RCRPP",$J,"SUP25")) UPDAUDIT^RCRPU2(RCIEN,RCCRDT,"E","SA")
- D:$G(^TMP("RCRPP",$J,"SUP36")) UPDFLG36^RCRPU1(RCIEN,1),UPDAUDIT^RCRPU2(RCIEN,RCCRDT,"E","SM")  ; PRCA*4.5*389
- ;
- ;Update the schedule, removing any extra payments not needed.
- I RCORLN'=$P(RCPLN,U,2) D ADJSCHED(RCIEN,RCORLN,$P(RCPLN,U,2))
- ;
- ;File a transaction to signal the plan was edited.
- D UPDTRAN^RCRPU1(RCIEN)
- ;
- W !,"Plan Updated.  " D PAUSE^RCRPU
+ ; close the plan and create a new one  PRCA*4.5*422
+ D CLSPLAN^RCRPU3(RCIEN,"T")
+ W !,"Repayment plan ",$P(N0,U)," has been closed.",!
+ I '$$CPYPLAN^RCRPU3(RCIEN,RCPLN) Q
+ S RCEXIT=0
+ D PAUSE^RCRPU
  ;
  Q
  ;
-CLOSE(RCIEN) ;Close the Plan
+CLOSE(RCIEN) ; Close the plan  PRCA*4.5*422
  ;
- N RCREASON,RCCURST,RCFIELD
+ N RCREASON
  ;
- ;Extract the Current sTatus
- S RCCURST=$$GET1^DIQ(340.5,RCIEN_",",.07,"I")
- ; Set up the field # array for the metrics file
- D BLDSTARY^RCRPNP
- ;
- ;Confirm that the user wishes to close the plan 
+ ; Confirm that the user wishes to close the plan 
  Q:'$$CORRECT^RCRPU(3) -1
- ;
  ; Enter the reason for closing the plan (defaulting for non-payment or administrative)
  S RCREASON=$$GETRSN^RCRPU1
  Q:RCREASON=-1 -1
- ;
- ;Confirm that the reason and closure is correct
+ ; Confirm that the reason and closure is correct
  Q:'$$CORRECT^RCRPU -1
- ;
- ;Update the Plan status to CLOSED
- D UPDSTAT^RCRPU1(RCIEN,7)
- ;
- ;Update the correct Status Movement Metric
- S RCFIELD=$G(^TMP($J,"RPPFLDNO",RCCURST,7))
- D UPDMET^RCSTATU(RCFIELD,1)
- ;
- ;Update the Close Reason Metric (Default reason updates field 1.28, otherwise, update 1.27 in the AR Metrics file (340.7)
- S RCFIELD=$S(RCREASON="D":1.28,1:1.27)
- D UPDMET^RCSTATU(RCFIELD,1)
- ;
- ;Update the audit log with the reason
- D UPDAUDIT^RCRPU2(RCIEN,$$DT^XLFDT,"C",RCREASON)
- ;
- ;Update the Bills on the plan to remove the REPAYMENT PLAN DATE and AR REPAYMENT PLAN ID
- ;Also, file a transaction indicating that the Plan was closed.
- D RMBILL^RCRPU1(RCIEN)
+ ; Close the plan
+ D CLSPLAN^RCRPU3(RCIEN,RCREASON)
  ;
  W !,"Plan Closed.  " D PAUSE^RCRPU
  ;

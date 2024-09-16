@@ -1,5 +1,9 @@
-ORWUL ; SLC/KCM/JLI - Listview Selection ;1/25/02  14:09 [2/4/02 12:23pm] 2/27/06
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,117,131,132,164,215,245**;Dec 17, 1997;Build 2
+ORWUL ; SLC/KCM/JLI - Listview Selection ; JUN 18, 2024@15:40
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,117,131,132,164,215,245,610**;Dec 17, 1997;Build 11
+ ;
+ ; Reference to ^XTV(8989.5,"AC" in ICR #2686
+ ; Reference to ^XTV(8989.51,"B" in ICR #2685
+ ; Reference to ^XTV(8989.518    in ICR #3408
  ;
 QV4DG(VAL,DGRP) ; return the quick order list, given a display group name
  N NM
@@ -27,8 +31,38 @@ QVSUB(LST,IEN,FIRST,LAST)       ; return subset of orders in view
  Q
 QODIS(IEN,SUB) ;Determines if personal quick order is disabled
  ;returns 1 if it is else 0.  This section added with patch 117
+ N PKGPOS
  I $P($G(^ORD(101.41,+$P($G(^ORD(101.44,IEN,10,SUB,0)),"^"),0)),"^",3)'="" Q 1
+ S PKGPOS=$$QOPOS(IEN) ; Obtaining package position for Pharmacy. If 0, package is outside of Pharmacy
+ I PKGPOS,$$ORDITMCHK(IEN,PKGPOS,SUB) Q 1 ; If not marked for current package display, then quit/don't add QO to the list
  Q 0
+QOPOS(QOIEN) ; Matching given IEN to Quick Order Shortname to determine piece position for file 101.43.
+ N NME,PIECE
+ S NME=$P($G(^ORD(101.44,QOIEN,0))," ",3,4) D 
+ .S PIECE=$S(NME="UD RX":1,NME="O RX":2,1:0)
+ Q PIECE ; IF 0, item is outside of Pharmacy package
+ORDITMCHK(IEN,ISMRK,SUB) ; Flag to determine if orderable item is marked for current pharmacy package.
+ ; Returns 1 if ord. item not marked for pharmacy package. 0 if ord. item marked for current package.
+ ; IEN - Quick View Display IEN
+ N OEN,OIF,ISVAL,RET
+ S RET=0
+ I $P($G(^ORD(101.44,IEN,10,SUB,0)),U) D
+ . S OEN=$P($G(^ORD(101.44,IEN,10,SUB,0)),U)
+ . I $G(^ORD(101.41,OEN,6,1,1))'="" S OIF=^ORD(101.41,OEN,6,1,1) D
+ .. I $P($G(^ORD(101.43,OIF,"PS")),U,ISMRK) S ISVAL=$P($G(^ORD(101.43,OIF,"PS")),U,ISMRK)
+ I '$D(ISVAL) S RET=1
+ Q RET
+ORDINFCHK(IEN) ;Infusion/Clinic Infusion Orderable Item Check. Returns 1 if ord. item not marked for pharmacy package.
+ N I,ORDLG,ORFLD,ORID,ORDGNME,ORVALID,ORRTRN
+ S (I,ORRTRN)=0
+ F  S I=$O(^ORD(101.41,IEN,6,I)) Q:ORRTRN  Q:'I  D
+ . S ORDLG=$P(^ORD(101.41,IEN,6,I,0),U,2)
+ . S ORDGNME=$P(^ORD(101.41,ORDLG,0),U)
+ . S ORFLD=$S(ORDGNME="OR GTX ORDERABLE ITEM":3,ORDGNME="OR GTX ADDITIVE":4,1:"")
+ . I ORFLD="" Q
+ . I $G(^ORD(101.41,IEN,6,I,1))'="" S ORID=^ORD(101.41,IEN,6,I,1) D
+ .. I $P($G(^ORD(101.43,ORID,"PS")),U,ORFLD)=0 S ORRTRN=1
+ Q ORRTRN
 QVIDX(VAL,IEN,FROM)     ; return index of item beginning with FROM
  N I,X
  S VAL=0
@@ -61,7 +95,7 @@ FVSUB(LST,IEN,FIRST,LAST)       ; return subset of orders in view
  N I
  F I=FIRST:1:LAST D
  .;AGP change returned valued to returned data or @ if record does not
- .;exist. The @ sign is used by the delphi code to identified a
+ .;exist. The @ sign is used by the delphi code to identify a
  .;non-existence record
  .S LST(I)=$S($D(^ORD(101.44,IEN,20,$G(I)))>0:^ORD(101.44,IEN,20,I,0),1:"@")
  Q
@@ -89,7 +123,7 @@ FVBLDQ(DGNM,ATTEMPT)    ; queue rebuild of set
 FVBLD ; rebuild an ORWSET entry
  ; ATTEMPT, UPDTIME, DGNM expected in environment
  I $D(ZTQUEUED) S ZTREQ="@"
- I $D(ZTQUEUED),(ATTEMPT<20),(UPDTIME'=$G(^ORD(101.43,"AH","S."_DGNM))) D FVBLDQ(DGNM,ATTEMPT) Q 
+ I $D(ZTQUEUED),(ATTEMPT<20),(UPDTIME'=$G(^ORD(101.43,"AH","S."_DGNM))) D FVBLDQ(DGNM,ATTEMPT) Q
  ; -- create new entry in 101.44 for the set
  N FDA,FDAIEN,LVW,ADDL
  S FDA(101.44,"+1,",.01)="ORWDNEW "_DGNM

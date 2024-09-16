@@ -1,5 +1,5 @@
 RCRPU1 ;EDE/SAB - REPAYMENT PLAN UTILITIES;12/11/2020  8:40 AM
- ;;4.5;Accounts Receivable;**377,381,378,389,423**;Mar 20, 1995;Build 8
+ ;;4.5;Accounts Receivable;**377,381,378,389,423,422**;Mar 20, 1995;Build 13
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -16,7 +16,7 @@ UPDTERMS(RCRPIEN,RCPLNS,RCRVW) ; Update the terms of the plan.  PRCA*4.5*389
  S:$G(RCRVW) DR=DR_";1.01////1"
  S DIE="^RCRP(340.5,",DA=RCRPIEN
  D ^DIE
- S RPMNTS=$$REMPMNTS^RCRPU3(RCRPIEN,+RCPLNS) D CHKFLGS(RCRPIEN,RPMNTS,FLG36,FLG60)  ; PRCA*4.5*423
+ I $P($G(^RCRP(340.5,RCRPIEN,0)),U,7)'=1 S RPMNTS=$$REMPMNTS^RCRPU3(RCRPIEN,+RCPLNS) D CHKFLGS(RCRPIEN,RPMNTS,FLG36,FLG60)  ; PRCA*4.5*422
  Q
  ;
 CHKFLGS(RCRPIEN,RPMNTS,FLG36,FLG60) ; check if we need to update 36 months and 60 months review flags  PRCA*4.5*423
@@ -60,13 +60,12 @@ UPDSTAT(RCRPIEN,RCNWSTAT) ; Update the status of the plan
  ;INPUT - RCRPIEN:  IEN of the Repayment Plan
  ;        RCSTATUS: The Status to update to.
  ;
- N DA,DR,DIE,X,Y,RCSTTXT,RCCRDT,RCCURST,RCFIELD
+ N DA,DR,DIE,X,Y,RCSTTXT,RCCURST,RCFIELD,RCBILLDA,Z
  ;
  S RCCURST=$$GET1^DIQ(340.5,RCRPIEN_",",.07,"I")  ;retrieve the current status
  ; 
  S DA=RCRPIEN,DIE="^RCRP(340.5,"
- S RCCRDT=$$DT^XLFDT
- S DR=".07///"_RCNWSTAT_";.08///"_RCCRDT
+ S DR=".07///"_RCNWSTAT_";.08///"_DT
  D ^DIE
  ;
  ;Update the Metrics File if the new status is not NEW
@@ -82,7 +81,7 @@ UPDSTAT(RCRPIEN,RCNWSTAT) ; Update the status of the plan
  ;
  ;Update the Audit Log with a Status comment
  S RCSTTXT=$$GET1^DIQ(340.5,RCRPIEN_",",.07,"E")
- D UPDAUDIT^RCRPU2(RCRPIEN,RCCRDT,"S","",RCSTTXT)
+ D UPDAUDIT^RCRPU2(RCRPIEN,DT,"S","",RCSTTXT)
  ;
  ;Clear the Term Length Exceeded Flag if the Plan is Closed, Terminated, or Paid In Full
  I RCNWSTAT>5 D UPDRVW^RCRPU2(RCRPIEN,0)
@@ -91,7 +90,16 @@ UPDSTAT(RCRPIEN,RCNWSTAT) ; Update the status of the plan
  I RCNWSTAT>6 D
  . D UPDPRDL^RCRPNP(RCRPIEN,0)
  . D UPDPRDF^RCRPNP(RCRPIEN,0)
- ;
+ ; PRCA*4.5*422
+ I RCNWSTAT=6 D
+ .S Z=0 F  S Z=$O(^RCRP(340.5,RCRPIEN,6,Z)) Q:'Z  D
+ ..S RCBILLDA=$G(^RCRP(340.5,RCRPIEN,6,Z,0)) Q:'RCBILLDA
+ ..; remove fields 41 and 45 from the bill
+ ..D RMVPLN^RCRPU1(RCBILLDA)
+ ..D TRAN^RCRPU(RCBILLDA,0,69)  ; file "RPP Terminated" transaction
+ .D UPDAUDIT^RCRPU2(RCRPIEN,DT,"C","S") ; update Audit Log with System Termination Comment
+ .Q
+ ; end PRCA*4.5*422
  Q
  ;
 RMBILL(RCIEN) ; Remove the Repayment Plan info from the bills in the plan
@@ -141,9 +149,11 @@ SELRPP() ; select RPP to display
  ; returns selected ien in file 340.5 or -1 for user exit / timeout
  ;
  N DIC,DTOUT,DUOUT,X,Y
+ S X=$G(X)
  S DIC=340.5,DIC(0)="AEQM"
  S DIC("W")="W $$CJ^XLFSTR($$EXTERNAL^DILFD(340.5,.07,,$P(^RCRP(340.5,Y,0),U,7)),15),$$CJ^XLFSTR($$FMTE^XLFDT($P(^RCRP(340.5,Y,0),U,3),""5DZ""),12)"
- S DIC("A")="Select Repayment Plan: " D ^DIC
+ S DIC("A")="Select Repayment Plan: "
+ D ^DIC
  Q $S(+Y>0:+Y,1:-1)
  ;
 UPDPAY(RCIEN,RCTRAN,RCAMT) ; Update the payment information, schedule, and status.

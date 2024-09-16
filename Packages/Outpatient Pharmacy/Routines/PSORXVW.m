@@ -1,5 +1,5 @@
 PSORXVW ;BIR/SAB - ListMan View of a Prescription ;Dec 13, 2021@09:48
- ;;7.0;OUTPATIENT PHARMACY;**14,35,46,96,103,88,117,131,146,156,185,210,148,233,260,264,281,359,385,400,391,313,427,504,622,441,651,697**;DEC 1997;Build 1
+ ;;7.0;OUTPATIENT PHARMACY;**14,35,46,96,103,88,117,131,146,156,185,210,148,233,260,264,281,359,385,400,391,313,427,504,622,441,651,697,753**;DEC 1997;Build 53
  ; Reference to ^PS(55 in ICR #2228
  ; Reference to ^PS(50.7 in ICR #2223
  ; Reference to ^PSDRUG( in ICR #221
@@ -117,6 +117,7 @@ PTST S $P(RN," ",25)=" ",PTST=$S($G(^PS(53,+$P(RX0,"^",3),0))]"":$P($G(^PS(53,+$
  S:$P(RX2,"^",10)&('$G(PSOCOPY)) IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="         Verified By: "_$P(^VA(200,$P(RX2,"^",10),0),"^")
  S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="  Patient Counseling: "_$S($P($G(^PSRX(RXN,"PC")),"^"):"YES",1:"NO")_"                      "_$S($P($G(^PSRX(RXN,"PC")),"^"):"Was Counseling Understood: "_$S($P($G(^PSRX(RXN,"PC")),"^",2):"YES",1:"NO"),1:"")
  S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="             Remarks: "_$P(RX3,"^",7)
+ S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="      Mail Exemption: "_$$GET1^DIQ(52,RXN,100.2) ;p753
  D PC^PSORXVW1
  I $P($G(^PSRX(DA,"OR1")),"^",5) S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="         Finished By: "_$P(^VA(200,$P(^PSRX(DA,"OR1"),"^",5),0),"^")
  D ^PSORXVW1 S PSOAL=IEN K IEN,ACT,LBL,LOG

@@ -1,5 +1,5 @@
 PSOUTLA2 ;BHAM ISC/GSN-Pharmacy utility program cont. ;6/6/05 12:19pm
- ;;7.0;OUTPATIENT PHARMACY;**210,410,507,694**;DEC 1997;Build 12
+ ;;7.0;OUTPATIENT PHARMACY;**210,410,507,694,753**;DEC 1997;Build 53
  Q
  ;
 WORDWRAP(STR,IEN,GL,LM) ;Wraps words at spaces normally and will breakup long
@@ -176,9 +176,13 @@ SHOWVP  ;Entry point to Display Provider hidden action info (via defaulted IFN)
  ;
 SUSPDAYS(IEN) ; Return correct suspense days parameter value per Rx IEN in Suspense file  *694
  ; IEN = Internal entry number for the RX SUSPENSE file
- N RTN,PIEN,MAIL,LOCTST,CS,LCSV,LNCSV,CCSV,CNCSV
+ N RTN,PIEN,MAIL,LOCTST,CS,LCSV,LNCSV,CCSV,CNCSV,RXIENSD
  S RTN=""
  S PIEN=$$GET1^DIQ(52.5,IEN,.03,"I"),MAIL=$$GET1^DIQ(55,PIEN,.03,"I")
+ ;
+ S RXIENSD=$$GET1^DIQ(52.5,IEN,.01,"I") ;p753
+ I $$GET1^DIQ(52,RXIENSD,100.2,"I")]"" S MAIL=$$GET1^DIQ(52,RXIENSD,100.2,"I") ;p753
+ ;
  S LOCTST=$S(MAIL<2&'$$CKCMOP(IEN):"LOCAL",MAIL>2:"LOCAL",1:"")
  S CS=$$CHKCS(IEN)
  ;pull ahead Days params for - Local CS, Local Non=CS, CMOP CS, CMOP Non-CS
@@ -237,3 +241,72 @@ HLPTXT34 ;HELP TEXT FOR FIELD 3.4 FILE #59
  D EN^DDIOL(.PSOHLP)
  Q
  ;
+MAILEX ;entry for speed mail exemption selection
+ ;called from the protocol Mail Exemption for Prescription [PSO LM MAIL EXEMPTION]
+ ;
+ D FULL^VALM1
+ D MAILDISP ;display prescriptions with indicator
+ ;
+ K PSOIEN,VALMCNT,ORD,ORN,LST
+ I '$G(PSOCNT) S VALMSG="This patient has no Prescriptions!" S VALMBCK="R" Q
+ W !
+ K DIR,DUOUT,DIRUT S DIR("A")="Select Orders by number",DIR(0)="LO^1:"_PSOCNT D ^DIR S LST=Y
+ I $D(DTOUT)!($D(DUOUT)) D ^PSOBUILD,BLD^PSOORUT1 K DIR,DIRUT,DTOUT,DUOUT S VALMBCK="R" Q
+ K DIR,DIRUT,DTOUT I '+LST D ^PSOBUILD,BLD^PSOORUT1 S VALMBCK="" Q
+ K Y,MAILEX,FDA,MSG,PSOMAIL
+ D FULL^VALM1
+ K DIR S DIR(0)="SO^0:REGULAR MAIL;1:CERTIFIED MAIL;2:DO NOT MAIL;3:LOCAL - REGULAR MAIL;4:LOCAL - CERTIFIED MAIL;@:DELETE"
+ S DIR("A")="Select Mail Exemption"
+ S DIR("L",1)="For Pharmacy Order Mail Exemptions enter: "
+ S DIR("L",2)="0          for  REGULAR MAIL"
+ S DIR("L",3)="1          for  CERTIFIED MAIL"
+ S DIR("L",4)="2          for  DO NOT MAIL"
+ S DIR("L",5)="3          for  LOCAL - REGULAR"
+ S DIR("L",6)="4          for  LOCAL - CERTIFIED"
+ S DIR("L",7)="@          for  DELETE EXEMPTION VALUE"
+ S DIR("L")="^ or Enter for  Exit"
+ D ^DIR K DIR
+ I (Y="")!("01234"'[Y)&(X'="@") S VALMBCK="R" Q
+ I X="@" S MAILEX="@"
+ I X'="@" S MAILEX=Y
+ ; order selection
+ D FULL^VALM1
+ F ORD=1:1:$L(LST,",") Q:$P(LST,",",ORD)']""  D
+ .S ORN=$P(LST,",",ORD),PSOIEN=$P(PSOLST(ORN),"^",2)
+ .S PSOMAILF=$$GET1^DIQ(52,PSOIEN,100.2)
+ .S FDA(52,PSOIEN_",",100.2)=MAILEX D FILE^DIE(,"FDA","MSG")
+ .S PSOMAIL=$$GET1^DIQ(52,PSOIEN,100.2)
+ .I PSOMAILF']"" D RXACT^PSOBPSU2(PSOIEN,,"Mail Exemption changed to "_PSOMAIL_".","E") Q
+ .I PSOMAIL]"" D RXACT^PSOBPSU2(PSOIEN,,"Mail Exemption changed from "_PSOMAILF_" to "_PSOMAIL_".","E") Q
+ .I PSOMAIL']"" D RXACT^PSOBPSU2(PSOIEN,,"Mail Exemption "_PSOMAILF_" deleted.","E") Q
+ .S VALMBCK="R"
+ K PSOIEN,VALMCNT,PSOIEN,ORD,ORN,LST
+ K Y,MAILEX,FDA,MSG,PSOMAIL,PSOMAILF
+ G MAILEX
+ Q
+ ;
+MAILDISP ;display prescriptions with indicators
+ N RXIEN,STA,DRUG,X1,X2,PSODTCUT,X,Y,LINE,POS,ORNUM,ECME,TITRX,DRUGIEN,MAILD
+ S X2=-120,X1=DT D C^%DTC S PSODTCUT=X ;date cutoff for prescriptions
+ D ^PSOBUILD ;build psosd array
+ I $G(PSOSD)=0 W !,"<No local prescriptions found.>" Q
+ S MAILD=+$P($G(^PS(55,PSODFN,0)),"^",3) D
+ .W !!,"Prescription Mail Delivery (patient level): "_$S(MAILD=1:"Certified Mail",MAILD=2:"DO NOT MAIL",MAILD=3:"Local - Regular Mail",MAILD=4:"Local - Certified Mail",1:"Regular Mail"),!
+ W !," #  RX #         DRUG                                      MAIL EXEMPTION"
+ S PSOCNT=0
+ S STA="" F  S STA=$O(PSOSD(STA)) Q:STA=""  I "^PENDING^ZNONVA^"'[STA D
+ .S POS=80-$L(STA)/2,LINE="",$P(LINE,"-",81)="",$E(LINE,POS+1,POS+$L(STA))=STA W !,$E(LINE,1,80)
+ .S DRUG="" F  S DRUG=$O(PSOSD(STA,DRUG)) Q:DRUG=""  D
+ ..S PSOCNT=PSOCNT+1
+ ..S RXIEN=+PSOSD(STA,DRUG)
+ ..I RXIEN=0 Q  ;no prescription
+ ..S MAILEX=$$GET1^DIQ(52,RXIEN,100.2,"E")
+ ..S MAILEXI=$$GET1^DIQ(52,RXIEN,100.2,"I")
+ ..S ECME=$$ECME^PSOBPSUT(+RXIEN)
+ ..S TITRX=$$TITRX^PSOUTL(+RXIEN)
+ ..S ORNUM=$$GET1^DIQ(52,+RXIEN,39.3,"I")
+ ..I ORNUM S ERXIEN=$$CHKERX^PSOERXU1(ORNUM)
+ ..W !,$J(PSOCNT,2)_$S($L(PSOCNT)<3:" ",1:"")_$S($G(ERXIEN):"& ",1:"")_$P(^PSRX(+RXIEN,0),"^")
+ ..W $S($G(^PSRX(+RXIEN,"IB")):"$",1:"")_ECME_TITRX_$S(MAILEX]"":"x",1:""),?17,DRUG
+ ..I MAILEXI]"" W ?59,MAILEXI,"-",MAILEX
+ Q

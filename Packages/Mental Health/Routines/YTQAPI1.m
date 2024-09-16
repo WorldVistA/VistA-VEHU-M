@@ -1,5 +1,5 @@
 YTQAPI1 ;ASF/ALB- MHAX REMOTE PROCEDURES ; 4/3/07 10:50am
- ;;5.01;MENTAL HEALTH;**85,119,121,141,217**;Dec 30, 1994;Build 12
+ ;;5.01;MENTAL HEALTH;**85,119,121,141,217,249**;Dec 30, 1994;Build 30
  ;
  ;
  ;
@@ -53,6 +53,7 @@ EDAD(YSDATA,YS) ;Edit and Save Data
  D UPDATE^DIE("E","^TMP(""YSMHI"",$J)","YSNN","YSERR")
  I $D(YSERR) S YSDATA(1)="[ERROR]",YSDATA(2)="Update Error" Q  ;-->out
  S YSDATA(1)="[DATA]",YSDATA(2)="Update ok^"_$G(YSNN(1))_U_$G(YSNN(1,0))
+ I YSFILEN=601.84 L -^YTT(YSFILEN,$S(+$G(YSNN(1)):+YSNN(1),1:+$G(YS("IEN"))))
  ;
  Q
 WPED(YSDATA,YS) ;Replace WP field

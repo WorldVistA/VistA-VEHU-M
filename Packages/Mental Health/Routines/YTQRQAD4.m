@@ -1,12 +1,13 @@
 YTQRQAD4 ;ISP/MJB - RESTful Calls to handle MHA lists ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,221**;Dec 30, 1994;Build 11
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,221,249**;Dec 30, 1994;Build 30
  ;
  ; Reference to PXRMINDX in ICR #4290
+ ; Reference to ^SC in ICR 10040
  ;
 GETLIST(ARGS,RESULTS) ; GET Insts for Pat
  N LST,TST,I,NM,TEST,DFN,SRISK
  N ADMINDT,ADMINID,CMPL,CNT,HIT,PAT,G,YSIENS,YSDATA,N,STR,ERRLST,ERRSTR
- N ADMINAR,XDT,SAVEDT
+ N ADMINAR,XDT,SAVEDT,SRC,ORD,RVW
  S NM="",N=0
  K ^TMP("YTQ-JSON",$J) S CNT=0
  D SETRES("{""instruments"":[")
@@ -25,21 +26,24 @@ GETLIST(ARGS,RESULTS) ; GET Insts for Pat
  .S NM="" F  S NM=$O(ADMINAR(XDT,NM)) Q:NM=""  D
  ..S STR=""
  ..S G=$G(^YTT(601.84,NM,0))
- ..S TST=$P(G,U,3)
+ ..S TST=$P(G,U,3),ORD=$P(G,U,6),RVW=$P(G,U,17)
+ ..S SRC=$P(G,U,13) S:SRC'="" SRC=$P($G(^YTT(601.844,SRC,0)),U)
  ..I $P($G(^YTT(601.71,TST,2)),U,2)="C" QUIT
  ..S CMPL=$P(G,U,9) I CMPL="Y" D 
  ...S NAME=$P($G(^YTT(601.71,TST,0)),U,1)
- ...S ADMINID=$P(G,U,1),ADMINDT=$P(G,U,4),PAT=$P(G,U,2)
- ...S SAVEDT=$P(G,U,5)
+ ...S ADMINID=$P(G,U,1),ADMINDT=$P($P(G,U,4),":",1,2),PAT=$P(G,U,2)
+ ...S SAVEDT=$P($P(G,U,5),":",1,2)
  ...S SRISK=$P(G,U,14) I SRISK="" S SRISK=0
- ...S STR="{""adminId"":"""_ADMINID_""", ""instrumentName"":"""_NAME_""" , ""instrumentIen"":"""_TST_""" , ""administrationDate"":"""_$$FMTE^XLFDT(ADMINDT)_""" , ""saveDate"":"""_$$FMTE^XLFDT(SAVEDT)_""" , ""suicideRisk"":"""_SRISK_""" },"
+ ...S STR="{""adminId"":"""_ADMINID_""", ""instrumentName"":"""_NAME_""" , ""instrumentIen"":"""_TST_""" , ""administrationDate"":"""_$P($$FMTE^XLFDT(ADMINDT),":",1,2)
+ ...S STR=STR_""" , ""saveDate"":"""_$P($$FMTE^XLFDT(SAVEDT),":",1,2)_""" , ""suicideRisk"":"""_SRISK_""", ""entrySource"":"""_SRC
+ ...S STR=STR_""" , ""orderedBy"":"""_ORD_""" , ""reviewed"":"""_RVW_""" },"
  ..I STR]"" S HIT=1 D SETRES(STR)
  I $D(ERRLST) D  Q
  . S (ERRSTR,NM)="" F  S NM=$O(ERRLST(NM)) Q:NM=""  D
  .. S ERRSTR=ERRSTR_NM_", "
  . S ERRSTR=$E(ERRSTR,1,$L(ERRSTR)-2)
  . D SETERROR^YTQRUTL(404,"Instrument not found: "_ERRSTR)
- I HIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR  ;Remove last trailing ","
+ I HIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR
  D SETRES("]}")
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
@@ -49,8 +53,8 @@ SETRES(STR) ;
  Q
  ;
 GETLOCS(ARGS,RESULTS) ; get list of hosp loc
- ; C=Clinics, Z=Other, screened by $$ACTLOC
- ; .Y=returned list, ORFROM=text to $O from, DIR=$O direction.
+ ; C=Clinics, Z=Other, $$ACTLOC
+ ; .Y=return, ORFROM=text to $O from, DIR=$O dir.
  N I,IEN,CNT,LCNT,STR,LOC,HIT,DIR,ORFROM
  N ROOT,LROOT
  N STRT,EXCT
@@ -76,7 +80,7 @@ GETLOCS(ARGS,RESULTS) ; get list of hosp loc
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
  ;
-GETLNAM(ARGS,RESULTS) ; get Hosp Loc name given ID
+GETLNAM(ARGS,RESULTS) ;Hosp Loc name
  ;
  N I,IEN,LNAM,LOCNAM
  S IEN=$G(ARGS("locId"))
@@ -85,15 +89,14 @@ GETLNAM(ARGS,RESULTS) ; get Hosp Loc name given ID
  S RESULTS("locId")=IEN
  S RESULTS("locationName")=LOCNAM
  Q
-ACTLOC(LOC) ; TRUE if active hospital location
- ; IA# 10040.
- N D0,X I +$G(^SC(LOC,"OOS")) Q 0                ; OOS entry
- S D0=+$G(^SC(LOC,42)) I D0 D WIN^DGPMDDCF Q 'X  ; OOS wards
- S X=$G(^SC(LOC,"I")) I +X=0 Q 1                 ; no inact date
- I DT>$P(X,U)&($P(X,U,2)=""!(DT<$P(X,U,2))) Q 0  ; chk reactivate date
+ACTLOC(LOC) ; TRUE if active
+ N D0,X I +$G(^SC(LOC,"OOS")) Q 0                ; OOS
+ S D0=+$G(^SC(LOC,42)) I D0 D WIN^DGPMDDCF Q 'X  ; OOS
+ S X=$G(^SC(LOC,"I")) I +X=0 Q 1                 ; no inact dte
+ I DT>$P(X,U)&($P(X,U,2)=""!(DT<$P(X,U,2))) Q 0  ; chk react dte
  Q 1                                             ; active
  ;
-GETCATA(DOCNAME,RESULTS) ; set ^TMP with document named and categories
+GETCATA(DOCNAME,RESULTS) ; set ^TMP with doc named and cat
  N CNT,HIT,NMB,NAME,IENI,IENC,CATN,XSTR,STAFF,OP,ALWN,DARR
  K ^TMP("YTQ-JSON",$J)
  S CNT=0,NMB="",NAME="",HIT=""
@@ -130,7 +133,7 @@ GETCATA(DOCNAME,RESULTS) ; set ^TMP with document named and categories
  .. S STR=$E(STR,1,$L(STR)-1)
  .. D SETRES(STR)
  . D SETRES("]},")  ;Close
- I HIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR  ;Remove trailing ","
+ I HIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR
  D SETRES("]}")
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
@@ -143,7 +146,7 @@ GETDES(NAME,DARR) ;Get Inst Desc
  I $D(YSER) K YSDARR Q
  M DARR=YSDARR
  S NDX=$O(DARR("")) S DARR(NDX)=$E(DARR(NDX),2,$L(DARR(NDX)))  ;Strip leading {
- S NDX=$O(DARR(""),-1) S DARR(NDX)=$E(DARR(NDX),1,$L(DARR(NDX))-1)_", "  ;Strip trailing } + , for next property
+ S NDX=$O(DARR(""),-1) S DARR(NDX)=$E(DARR(NDX),1,$L(DARR(NDX))-1)_", "
  Q
  ;
 GETINTRP(ARGS,RESULTS) ;Get Interp Desc
@@ -167,7 +170,7 @@ GETINTRP(ARGS,RESULTS) ;Get Interp Desc
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
  ;
-ASMTLST(ARGS,RESULTS) ; get assignments by patid with list of insts and last complete date
+ASMTLST(ARGS,RESULTS) ; get assgn by patid
  N ASMT,ORDBY,I,DATA,ENTRY,PROG,ASGNDT,IN
  N ADMINID,YSIENS,YSDATA,N,ASMTID,NOD,LSTDG
  N ASTR,PROG,NWA,IADM
@@ -178,8 +181,9 @@ ASMTLST(ARGS,RESULTS) ; get assignments by patid with list of insts and last com
  S ASMT="",ORDBY=""
  K ^TMP("YTQ-JSON",$J) S CNT=0
  S DFN=+$G(ARGS("dfn"))
- D ASMTIDA(DFN,.LSTINST)  ;Get Last MH ADMIN
- D INCMPLT(DFN,DUZ,.INCMPL)  ;Get list of partially complete ADMINS
+ D UPDTSRFL  ; update Suicide Risk Flg
+ D ASMTIDA(DFN,.LSTINST)  ;Lst MH ADMIN
+ D INCMPLT(DFN,DUZ,.INCMPL)  ;Get list partially complete
  D SETRES("{""patientAssignments"":[")
  S ORDBY=0 F  S ORDBY=$O(^XTMP("YTQASMT-INDEX","AD",DFN,ORDBY)) Q:'ORDBY  D
  .S ASMT=0 F  S ASMT=$O(^XTMP("YTQASMT-INDEX","AD",DFN,ORDBY,ASMT)) Q:'ASMT  D
@@ -212,13 +216,13 @@ ASMTLST(ARGS,RESULTS) ; get assignments by patid with list of insts and last com
  ..S (I,IHIT)=0 F  S I=$O(^XTMP(NOD,1,"instruments",I)) Q:+I=0  D
  ...S ADMINID=+$G(^XTMP(NOD,1,"instruments",I,"adminId"))
  ...I ADMINID'=0 D
- ....Q:$D(MHADLST("patient",ADMINID))  ;If ADMINID part of a PE Assignment, PE trumps SE because of Legacy MHA flow.
+ ....Q:$D(MHADLST("patient",ADMINID))  ;If part of PE Assignment, PE trumps SE - Legacy MHA flow.
  ....I $G(MHCMPLT(ADMINID))="Y" D  Q
  .....;S MHTST=^XTMP(NOD,1,"instruments",I,"name")
  .....;D RMVTEST^YTQRQAD1(ASMT,MHTST,"","Y")
- ....I $G(ADMLST(ADMINID))=ASMT S IHIT=1 K INCMPL(ADMINID)  ;Assignment has a MH ADMIN
- ..I (HASINST=0),(HASPROG>0) S PNOT=$$FILPNOT^YTQRQAD8(ASMT) Q  ;No insts but Aggreg Prog note remains
- ..I APPSRC="mhaweb",(IHIT=0),(HASINST>0) D SETASGN(ASMT) Q  ;If an MHAWeb Assignment, always show
+ ....I $G(ADMLST(ADMINID))=ASMT S IHIT=1 K INCMPL(ADMINID)  ;Assign has a MH ADMIN
+ ..I (HASINST=0),(HASPROG>0) S PNOT=$$FILPNOT^YTQRQAD8(ASMT) Q  ;No insts but Aggreg Prog note
+ ..I APPSRC="mhaweb",(IHIT=0),(HASINST>0) D SETASGN(ASMT) Q  ;If an MHA Assignment, always show
  ..I IHIT=1 S HIT=1 D SETASGN(ASMT)
  ; Handle any remaining incomplete MH ADMINISTRATIONS
  I $D(INCMPL) S IADM="" F  S IADM=$O(INCMPL(IADM)) Q:IADM=""  D
@@ -246,12 +250,12 @@ ASMTLST(ARGS,RESULTS) ; get assignments by patid with list of insts and last com
  D SETRES("]}")
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
-SETASGN(ASMT) ;Set up the Assignment JSON
+SETASGN(ASMT) ;Set up the Assign JSON
  N DATA,ENTRY,ASSGNDT,CATHIT,STR,NAME,TSTIEN,CMPL,PROG,EXPDT,XSTR,XADMIN
  N LSTADMIN,LSTDT,STAFF
  S ASSGNDT=$P(^XTMP("YTQASMT-SET-"_ASMT,0),U,2)  ;Add Assign dt
  S ENTRY=$G(^XTMP("YTQASMT-SET-"_ASMT,1,"entryMode"))
- S STR="{""assignmentId"":"""_ASMT_""" , ""entryMode"":"""_ENTRY_""",""assignDt"":"""_$$FMTE^XLFDT($P(ASSGNDT,"."))_""", ""instruments"": ["
+ S STR="{""assignmentId"":"""_ASMT_""" , ""entryMode"":"""_ENTRY_""",""assignDt"":"""_$P($$FMTE^XLFDT($P(ASSGNDT,".")),":",1,2)_""", ""instruments"": ["
  S I="",CATHIT=0 F  S I=$O(^XTMP("YTQASMT-SET-"_ASMT,1,"instruments",I)) Q:'I  D
  .K DATA
  .M DATA=^XTMP("YTQASMT-SET-"_ASMT,1,"instruments",I)
@@ -266,16 +270,16 @@ SETASGN(ASMT) ;Set up the Assignment JSON
  .S EXPDT=$P(^XTMP("YTQASMT-SET-"_ASMT,0),U) ; Add Expiration dt
  .S (LSTADMIN,LSTDT)="",STAFF="false"  ;LSTINST set up from call to ASMTIDA2
  .S LSTDT=$O(LSTINST(TSTIEN,""),-1) I LSTDT'="" S LSTADMIN=$O(LSTINST(TSTIEN,LSTDT,""),-1),STAFF=LSTINST(TSTIEN,LSTDT,LSTADMIN)
- .S XSTR="{""instrumentName"":"""_NAME_""",""lastDone"":"""_$$FMTE^XLFDT($P(LSTDT,"."))_""",""adminId"":"""_XADMIN_""",""instrumentComplete"":"""_CMPL_""",""staffOnly"":"_STAFF
- .S XSTR=XSTR_", ""progress"": """_PROG_""",""expDt"":"""_$$FMTE^XLFDT($P(EXPDT,"."))_"""},"
+ .S XSTR="{""instrumentName"":"""_NAME_""",""lastDone"":"""_$P($$FMTE^XLFDT($P(LSTDT,".")),":",1,2)_""",""adminId"":"""_XADMIN_""",""instrumentComplete"":"""_CMPL_""",""staffOnly"":"_STAFF
+ .S XSTR=XSTR_", ""progress"": """_PROG_""",""expDt"":"""_$P($$FMTE^XLFDT($P(EXPDT,".")),":",1,2)_"""},"
  .S STR=STR_XSTR,CATHIT=1
- I '$D(^XTMP("YTQASMT-SET-"_ASMT)) Q  ;Assignment could have been deleted if RMVTEST was last/only test in assignment
+ I '$D(^XTMP("YTQASMT-SET-"_ASMT)) Q  ;Assign deleted if RMVTEST
  I $D(^XTMP("YTQASMT-SET-"_ASMT,1,"instruments")) S HIT=1
  D SETRES(STR)
- I CATHIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR  ;Remove last trailing ","
+ I CATHIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR
  D SETRES("]},")
  Q
-INCMPLT(DFN,ORDBY,INCMPL) ; add list of incomplete insts for DFN/ORDBY
+INCMPLT(DFN,ORDBY,INCMPL) ; add list of incompl insts for DFN/ORDBY
  ; expects RSP,YSIDX,PTADMIN
  Q:'ORDBY  Q:'DFN
  N I,X,YS,YSDATA,YSNOW,YSDOW,OFFSET,YSDTSAV,YSRSTRT,YSDG,YSINAM,YSADMIN,YSORD,YSCONS,PID,PTNAM,YSARR
@@ -289,8 +293,6 @@ INCMPLT(DFN,ORDBY,INCMPL) ; add list of incomplete insts for DFN/ORDBY
  S YS("DFN")=DFN,YS("COMPLETE")="N"
  D ADMINS^YTQAPI5(.YSDATA,.YS)
  S I=2 F  S I=$O(YSDATA(I)) Q:'I  D
- . ;I $E($P(YSDATA(I),U,2),1,7)="CAT-CAD" QUIT         ; web only
- . ;I $D(PTADMIN(+YSDATA(I))) QUIT                     ; skip pt assigned
  . I $P(YSDATA(I),U,5)'=ORDBY QUIT                    ; not same orderedBy
  . S YSDTSAV=$P(YSDATA(I),U,4) I 'YSDTSAV QUIT        ; no date, bad entry
  . S YSRSTRT=$P(YSDATA(I),U,15) S:'YSRSTRT YSRSTRT=2  ; account for weekends
@@ -300,15 +302,15 @@ INCMPLT(DFN,ORDBY,INCMPL) ; add list of incomplete insts for DFN/ORDBY
  . S YSINAM=$P(YSDATA(I),U,2)                         ; instrument name
  . S YSINIEN=$P(YSDATA(I),U,11)                       ; instrument ien
  . S YSDG=$P(YSDATA(I),U,3)                           ; date given
- . S YSDG=$P($$FMTE^XLFDT(YSDG,5),".")                        ; mm/dd/yyyy
+ . S YSDG=$P($P($$FMTE^XLFDT(YSDG,5),":",1,2),".")
  . S YSLOC=$P(YSDATA(I),U,14)
  . S YSINTRV=$P(YSDATA(I),U,6)
  . D GETS^DIQ(601.84,YSADMIN_",","2;15;17","IE","YSARR")
  . S YSCONS=$G(YSARR(601.84,YSADMIN_",",17,"I"))
- . S YSSRC=$G(YSARR(601.84,YSADMIN_",",15,"E")) Q:YSSRC="web"  ;Don't include Incomplete MHA Web generated admins
+ . S YSSRC=$G(YSARR(601.84,YSADMIN_",",15,"E")) Q:YSSRC="web"  ;Incomplete MHA admins
  . S INCMPL(YSADMIN)=YSADMIN_U_YSDG_U_YSDTSAV_U_YSINIEN_U_YSINAM_U_YSRSTRT_U_YSCONS_U_YSLOC_U_YSINTRV_U_YSSRC
  Q
-CHKADM(YSADMIN,YSNAM,YSDFN) ;Check if Instrument Admin is the same as what is in XTMP
+CHKADM(YSADMIN,YSNAM,YSDFN) ;Check Instrument Ad= what is in XTMP
  N STAT,YSIENS,YSARR,YSERR
  I $G(YSNAM)="" S STAT=0 Q STAT
  I +$G(YSDFN)=0 S STAT=0 Q STAT
@@ -321,16 +323,16 @@ CHKADM(YSADMIN,YSNAM,YSDFN) ;Check if Instrument Admin is the same as what is in
  I $G(YSARR(601.84,YSIENS,1,"I"))'=YSDFN S STAT=0
  Q STAT
  ;
-ASMTIDA(DFN,LSTINST) ; get administrations identified by DFN and TSTIEN
- ; Used to find last completed instrument admin
+ASMTIDA(DFN,LSTINST) ; get admins by DFN/TSTIEN
+ ; Find last complete admin
  N ADMINDT,ADMINID,CMPL,PAT,NM
  K ARRAY
  S NM="",N=0
- I DFN'?1N.NP S YSDATA(1)="[ERROR]",YSDATA(2)="bad DFN" Q  ;-->out asf 2/22/08
- I '$D(^DPT(DFN,0)) S YSDATA(1)="[ERROR]",YSDATA(2)="no pt" Q  ;-->out
+ I DFN'?1N.NP S YSDATA(1)="[ERROR]",YSDATA(2)="bad DFN" Q
+ I '$D(^DPT(DFN,0)) S YSDATA(1)="[ERROR]",YSDATA(2)="no pt" Q
  F  S NM=$O(^YTT(601.84,"C",DFN,NM))  Q:'NM  D
  .S G=$G(^YTT(601.84,NM,0))
- .I G="" S YSDATA(1)="[ERROR]",YSDATA(2)=YSIENS_" bad ien in 84" Q  ;-->out
+ .I G="" S YSDATA(1)="[ERROR]",YSDATA(2)=YSIENS_" bad ien in 84"
  .S PAT=$P(G,U,2) Q:PAT'=DFN
  .S TST=$P(G,U,3)
  .S CMPL=$P(G,U,9) I CMPL="Y" D 
@@ -342,18 +344,13 @@ ASMTIDA(DFN,LSTINST) ; get administrations identified by DFN and TSTIEN
  Q
  ;
 UPDTSRFL ;
- ; ICR #4290 READ OF CLINICAL REMINDER INDEX (PXRMINDX) 
  ;   Set index for 601.84 MH ADMINISTRATIONS
  ;      X(1)=Patient X(2)=Instrument X(3)=Date Given
  ;      ^PXRMINDX(601.84,"IP",X(2),X(1),X(3),DA)=""
  ;      ^PXRMINDX(601.84,"PI",X(1),X(2),X(3),DA)=""
- ;
- ; Loop through ^PXRMINDX(601.84,"PI",X(1),X(2) to get list of completed instruments
- ; that are associated with the patient
- ;
  N INSTIEN,TEMP,SRCALL
  S INSTIEN=""
- F  S INSTIEN=$O(^PXRMINDX(601.84,"PI",DFN,INSTIEN)) Q:INSTIEN=""  D  ;Get list of instrument IENs for patient
+ F  S INSTIEN=$O(^PXRMINDX(601.84,"PI",DFN,INSTIEN)) Q:INSTIEN=""  D  ;Get list of instr IENs
  . S TEMP=$G(^YTT(601.71,INSTIEN,9))
  . S TEMP(1)=$P(TEMP,U,5),TEMP(2)=$P(TEMP,U,6) ;Get Suicide Tag & routine
  . I TEMP(1)'="",(TEMP(2)'="") D
