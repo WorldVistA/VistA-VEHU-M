@@ -20,7 +20,7 @@ ORWU ;SLC/KCM - GENERAL UTILITIES FOR WINDOWS CALLS ;Dec 4, 2023@14:09
  ; Reference to ^XQCHK supported by IA #10078
  ; Reference to $$KSP^XUPARAM supported by IA #2541
  ; Reference to $$PROD^XUPROD supported by IA #4440
- ; Reference to ^ROUTINE supported by IA #10045
+ ; Reference to ^XUSHSHP supported by IA #10045
  ; Reference to $$DECRYP^XUSRB supported by IA #12241
  ;
  Q
@@ -127,8 +127,8 @@ ORDROLE() ; returns the role a person takes in ordering
  I $D(^XUSEC("PROVIDER",DUZ)) Q 4                         ; student
  Q 0
 VALIDSIG(ESOK,X) ; returns TRUE if valid electronic signature
- S X=$$DECRYP^ROUTINE(X),ESOK=0                   ; network encrypted
- D HASH^ROUTINE
+ S X=$$DECRYP^XUSRB1(X),ESOK=0                   ; network encrypted
+ D HASH^XUSHSHP
  I X=$P($G(^VA(200,+DUZ,20)),U,4) S ESOK=1
  Q
 TOOLMENU(ORLST) ; returns a list of items for the Tools menu
