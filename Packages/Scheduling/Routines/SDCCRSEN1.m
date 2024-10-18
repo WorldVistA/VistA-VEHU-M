@@ -1,5 +1,5 @@
 SDCCRSEN1 ;CCRA/LB,PB - Appointment retrieval API;APR 4, 2019
- ;;5.3;Scheduling;**822,830,841,865**;APR 4, 2019;Build 51
+ ;;5.3;Scheduling;**822,830,841,865,882**;APR 4, 2019;Build 55
  Q
  ; Documented API's and Integration Agreements
  ; ----------------------------------------------
@@ -11,6 +11,7 @@ SDCCRSEN1 ;CCRA/LB,PB - Appointment retrieval API;APR 4, 2019
  ; the code sent the HL7 NAK message back to HSRM, but then continued to process. This resulted in an error
  ; in the VistA error trap.
  ; Patch 865 changes the text in the NAK messages to be more meaningful for the end user
+ ; Patch 882 removes the Q: command on line 41 and corrects the global reference on line 54 and 55 to change it from ^SD to ^SC
 MAKE ;MAKE APPOINTMENT: "S12"="SCHEDULE"
  S SDECLEN=$P(^SC(SDCL,"SL"),"^",1),SDECAPTID=0
  S:$G(DFN)>0 SDDFN=DFN
@@ -38,19 +39,20 @@ MAKE ;MAKE APPOINTMENT: "S12"="SCHEDULE"
  .S ERM=$TR(ERM,$C(30),".")  ;S ERM=$E(ERM,1,$L(ERM)-1)_"."
  .S ABORT="1^"_$G(ERM) D
  .I $P($G(^TMP("SDEC07",$J,3)),"^",2)["PENDING or ACTIVE" S QUIT=$$MSGTXT("Consult status is not PENDING or ACTIVE.") Q
- .Q:$G(QUIT)'=""
+ .;Q:$G(QUIT)'=""  ;May 21, 2024 - PB - Patch 882 remove this quit it is not needed.
  .I $P($G(^TMP("SDEC07",$J,3)),"^",2)'="" S QUIT=$$MSGTXT($G(ERM))
  .;I $P($G(^TMP("SDEC07",$J,3)),"^",2)["SDEC07 Error:" S QUIT=$$MSGTXT($G(ERM))
  .;patch 830 - PB added setting QUIT=1 and then a quit command to make sure the code stops if the appointment was not made.
  .S QUIT=1
  Q:QUIT=1
+ ;May 21, 2024 - PB -Patch 882, fixed the global reference in lines 53 and 54 from ^SD to ^SC
  N XCLINIC S XCLINIC=+$G(^DPT($G(DFN),"S",FMDTTM,0),"^")  I $G(XCLINIC)>0 D
  .;Get the correct appointment from the appointment multiple in file 44 by matching .01 with the patient DFN,
  .S XCLINIC=+$P(^DPT(DFN,"S",FMDTTM,0),"^")
  .I $G(XCLINIC)>0 D
  ..N DA,FDA,I1
- ..S I1=0 F  S I1=$O(^SD(XCLINIC,"S",FMDTTM,1,I1)) Q:I1'>0  I +$G(^SC(XCLINIC,"S",FMDTTM,1,I1,0))=DFN S DA=I1
- ..I +$G(^SD(XCLINIC,"S",FMDTTM,1,DA,"CONS"))="" S FDA(44.003,DA_","_FMDTTM_","_XCLINIC_",",688)=CONID
+ ..S I1=0 F  S I1=$O(^SC(XCLINIC,"S",FMDTTM,1,I1)) Q:I1'>0  I +$G(^SC(XCLINIC,"S",FMDTTM,1,I1,0))=DFN S DA=I1
+ ..I +$G(^SC(XCLINIC,"S",FMDTTM,1,DA,"CONS"))="" S FDA(44.003,DA_","_FMDTTM_","_XCLINIC_",",688)=CONID
  Q
 CANCEL ;CANCEL APPOINTMENT: "S15"="CANCEL"
  ; patch 808 - PB compare the clinic in the Patient file appointment multiple. if it matches good, otherwise use the clinic from the appointment multiple to cancel the appointment

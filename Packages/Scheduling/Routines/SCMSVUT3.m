@@ -1,5 +1,5 @@
-SCMSVUT3 ;BP/JRP/DMR - HL7 segment & field validation utilities ; Oct 19, 2023@10:47
- ;;5.3;Scheduling;**142,180,208,239,395,441,543,777,864**;AUG 13, 1993;Build 15
+SCMSVUT3 ;BP/JRP/DMR,TJB - HL7 segment & field validation utilities ; Jul 29, 2024
+ ;;5.3;Scheduling;**142,180,208,239,395,441,543,777,864,886**;AUG 13, 1993;Build 13
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;Standard input parameters
@@ -52,7 +52,7 @@ RADMTHD(DATA,DFN) ;Radiation exposure method
  .S NODE=$G(^DPT(DFN,.321))
  .S RAD=$TR($P(NODE,"^",3),"YNU","100")
  ;Invalid method code
- I (DATA'="") Q:((DATA'?1N)!(DATA<2)!(DATA>7)) 0  ;SD*543 changed >4 to >7
+ I (DATA'="") Q:((DATA'?1.2N)!(DATA<2)!(DATA>10)) 0
  ;Method code not consistant with exposure status
  I (DATA) Q:('RAD) 0
  I (DATA="") Q:((DFN)&(RAD)) 0

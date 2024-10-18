@@ -1,5 +1,5 @@
-SDEC08A ;ALB/PWC - VISTA SCHEDULING RPCS ;Aug 10, 2020@09:30
- ;;5.3;Scheduling;**745,756**;Aug 13, 1993;Build 43
+SDEC08A ;ALB/PWC,BWF - VISTA SCHEDULING RPCS ;Aug 10, 2020@09:30
+ ;;5.3;Scheduling;**745,756,886**;Aug 13, 1993;Build 13
  ;;Per VHA Directive 2004-038, this routine should not be modified
  ;
  Q
@@ -20,14 +20,7 @@ AVUPDT(SDECSCD,SDECSTART,SDECLEN) ;Update Clinic availability
  ;
 APCAN(SDECZ,SDECLOC,SDECDFN,SDECSD,SDECAPTID,SDECLEN) ;
  ;Cancel appointment for patient SDECDFN in clinic SDECSC1 at time SDECSD
- N SDECPNOD,SDECC,DA,DIE,DPTST,DR,%H
- ;save data into SDEC APPOINTMENT in case of un-cancel (status & appt length)
- S SDECPNOD=^DPT(SDECPATID,"S",SDECSD,0)
- S DPTST=$P(SDECPNOD,U,2)
- S DIE=409.84
- S DA=SDECAPTID
- S DR=".17///"_DPTST_";"_".18///"_SDECLEN
- D ^DIE
+ N SDECC,%H
  S SDECC("PAT")=SDECDFN
  S SDECC("CLN")=SDECLOC
  S SDECC("TYP")=SDECTYP

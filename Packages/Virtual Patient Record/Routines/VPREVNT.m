@@ -1,5 +1,5 @@
 VPREVNT ;SLC/MKB -- VistA event listeners ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,15,17,19,21,20,26,25,27,29,31,34,33**;Sep 01, 2011;Build 8
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,15,17,19,21,20,26,25,27,29,31,34,33,35**;Sep 01, 2011;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; External References               DBIA#
@@ -93,8 +93,8 @@ DGS ; -- DG SA FILE ENTRY NOTIFIER protocol listener
  S IEN=+$G(^TMP("DG SA FILE ENTRY NOTIFIER",$J,"IEN")) Q:IEN<1
  S DFN=+$G(^TMP("DG SA FILE ENTRY NOTIFIER",$J,"DFN","CURRENT"))
  I DFN<1 S DFN=+$G(^TMP("DG SA FILE ENTRY NOTIFIER",$J,"DFN","OLD")) Q:DFN<1
- I $G(^TMP("DG SA FILE ENTRY NOTIFIER",$J,"ACTION"))="DELETED" S ACT="@"
- I $G(^TMP("DG SA FILE ENTRY NOTIFIER",$J,"ACTION"))="MODIFIED",$P($G(^DGS(41.1,IEN,0)),U,13) S ACT="@"
+ ;I $G(^TMP("DG SA FILE ENTRY NOTIFIER",$J,"ACTION"))="DELETED" S ACT="@"
+ ;I $G(^TMP("DG SA FILE ENTRY NOTIFIER",$J,"ACTION"))="MODIFIED",$P($G(^DGS(41.1,IEN,0)),U,13) S ACT="@"
  D POST^VPRHS(DFN,"Appointment",IEN_";41.1",ACT)
  Q
  ;
@@ -105,7 +105,7 @@ SDAM ; -- SDAM APPOINTMENT EVENTS protocol listener
  ; quit if status has not changed
  Q:$G(SDATA("BEFORE","STATUS"))=$G(SDATA("AFTER","STATUS"))
  S DFN=+$P(SDATA,U,2) Q:DFN<1
- S DATE=+$P(SDATA,U,3),ACT=$S($G(SDAMEVT)=2:"@",1:"")
+ S DATE=+$P(SDATA,U,3),ACT="" ;ACT=$S($G(SDAMEVT)=2:"@",1:"")
  D POST^VPRHS(DFN,"Appointment",(DATE_","_DFN_";2.98"),ACT)
  Q
  ;

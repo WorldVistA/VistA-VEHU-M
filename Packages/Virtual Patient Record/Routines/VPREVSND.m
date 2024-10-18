@@ -1,5 +1,5 @@
 VPREVSND ;SLC/MKB -- CPRS EVSEND listeners ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**31**;Sep 01, 2011;Build 3
+ ;;1.0;VIRTUAL PATIENT RECORD;**31,35**;Sep 01, 2011;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; External References               DBIA#
@@ -31,6 +31,7 @@ OR(MSG,FD) ; -- CPRS EVSEND protocol event listener
  N VPRMSG,VPRPKG,VPRSDA,DFN,ORC,ACT
  S VPRMSG=$S($L($G(MSG)):MSG,1:"MSG") Q:'$O(@VPRMSG@(0))
  S DFN=$$PID Q:DFN<1
+ Q:$$FLAG  ;look for flag msg (no ORC), quit if found and handled
  S ORC=0 F  S ORC=$O(@VPRMSG@(+ORC)) Q:ORC'>0  I $E($G(@VPRMSG@(ORC)),1,3)="ORC" D
  . N ORDCNTRL,PKGIFN,ORIFN,STS,ORIG
  . S ORC=ORC_U_@VPRMSG@(ORC),ORDCNTRL=$TR($P(ORC,"|",2),"@","P")
@@ -126,3 +127,11 @@ LRAP(MSG) ; -- LR7O AP EVSEND OR protocol listener
  . Q:ORDCNTRL'="RE"  S PKGIFN=$P($P(ORC,"|",4),U)
  . D LRD
  Q
+ ;
+FLAG() ; -- return 1 if FL/UF message (processed, so done) [VPREVSND]
+ N I,X,Y,SEG,ORIFN S Y=0
+ S I=0 F  S I=$O(@VPRMSG@(I)) Q:I'>0  S SEG=$E($G(@VPRMSG@(I)),1,3) Q:SEG="ORC"  I SEG="OBR" D  Q:Y
+ . S X=$G(@VPRMSG@(I)) I $P(X,"|",5)'="FL",$P(X,"|",5)'="UF" Q
+ . Q:$P($P(X,"|",4),U,2)'="PS"  S ORIFN=+$P(X,"|",3)
+ . D POST^VPRHS(DFN,"Medication",ORIFN_";100") S Y=1
+ Q Y

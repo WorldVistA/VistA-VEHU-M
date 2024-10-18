@@ -1,5 +1,5 @@
 PXRMCLEH ;SLC/PKR - Utilities for managing Change Logs/Edit Histories. ;02/28/2024
- ;;2.0;CLINICAL REMINDERS;**86**;Feb 04, 2005;Build 9
+ ;;2.0;CLINICAL REMINDERS;**88**;Feb 04, 2005;Build 13
  ;
  ;===============
 CHANGELOG(CLOGSFN,IEN,CLOGTEXT) ;Add a CHANGE LOG/EDIT HISTORY entry.

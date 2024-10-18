@@ -1,5 +1,5 @@
 PXRMMSER ;SLC/PKR,AJB - Computed findings for military service information. ;02/08/2024
- ;;2.0;CLINICAL REMINDERS;**11,12,21,24,26,42,86**;Feb 04, 2005;Build 9
+ ;;2.0;CLINICAL REMINDERS;**11,12,21,24,26,42,88**;Feb 04, 2005;Build 13
  ;Reference       ICR#
  ;MSDATA^DGMSE    5354
  ;OEIF^DGMSE      5354

@@ -1,5 +1,5 @@
 VPRSDAM ;SLC/MKB -- SDA Appointment utilities ;7/29/22  14:11
- ;;1.0;VIRTUAL PATIENT RECORD;**30**;Sep 01, 2011;Build 9
+ ;;1.0;VIRTUAL PATIENT RECORD;**30,35**;Sep 01, 2011;Build 16
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -17,9 +17,9 @@ APPTS ; -- get Appointments
  ;
  N VPRX,VPRNUM,VPRDT,VPRN
  S VPRX(1)=DSTRT_";"_DSTOP,VPRX(4)=DFN
- S VPRX("FLDS")="1;2;3;5;6;8;9;10;11;12;16;18;22",VPRX("SORT")="P"
+ S VPRX("FLDS")="1;2;3;5;6;8;9;10;11;12;16;18;22;25;29;32",VPRX("SORT")="P"
  ; appointments
- S VPRX(3)="R;I;NS;NSR;NT" ;no cancelled appt's
+ S VPRX(3)="R;I;NS;NSR;NT;CP;CPR;CC;CCR" ;p35 cancelled pats
  S VPRNUM=$$SDAPI^SDAMA301(.VPRX),(VPRDT,VPRN)=0
  F  S VPRDT=$O(^TMP($J,"SDAMA301",DFN,VPRDT)) Q:VPRDT<1  D  Q:VPRN'<DMAX
  . S VPRN=VPRN+1,DLIST(VPRN)=VPRDT_","_DFN ;^TMP($J,"SDAMA301",DFN,VPRDT)
@@ -34,7 +34,7 @@ SCHADMS ; -- get Scheduled Admissions
  S VPRA=0 F  S VPRA=$O(^DGS(41.1,"B",DFN,VPRA)) Q:VPRA<1  D  Q:VPRN'<DMAX
  . S VPRX=$G(^DGS(41.1,VPRA,0))
  . S X=$P(VPRX,U,2) Q:X<DSTRT!(X>DSTOP)  ;out of date range
- . Q:$P(VPRX,U,13)  ;Q:$P(VPRX,U,17)     ;cancelled or admitted
+ . ;Q:$P(VPRX,U,13)  ;Q:$P(VPRX,U,17)     ;cancelled or admitted
  . S VPRN=VPRN+1,DLIST(VPRN)=VPRA
  Q
  ;
@@ -45,9 +45,10 @@ APPT1(VPRID) ; -- get ^TMP node for single appt, returns VPRAPPT
  I '$D(^TMP($J,"SDAMA301",DFN)) D
  . N VPRX,VPRNUM
  . S VPRX(1)=VPRDT_";"_VPRDT,VPRX(4)=DFN
- . S VPRX("FLDS")="1;2;3;5;6;8;9;10;11;12;16;18;22",VPRX("SORT")="P"
+ . S VPRX("FLDS")="1;2;3;5;6;8;9;10;11;12;16;18;22;25;29;32",VPRX("SORT")="P"
  . S VPRNUM=$$SDAPI^SDAMA301(.VPRX)
  S VPRAPPT=$G(^TMP($J,"SDAMA301",DFN,VPRDT)),VPRAPPT("C")=$G(^(VPRDT,"C"))
+ S VPRAPPT(0)=$G(^TMP($J,"SDAMA301",DFN,VPRDT,0))
  S:VPRAPPT="" VPRAPPT=VPRDT_U_$P($G(^DPT(DFN,"S",VPRDT,0)),U,1,2) ;DDEOUT=1
  Q
  ;

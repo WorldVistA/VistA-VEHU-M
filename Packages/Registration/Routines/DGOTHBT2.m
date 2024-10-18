@@ -1,25 +1,20 @@
 DGOTHBT2 ;SLC/SS,JC - OTH AND PP APIs ; 09/22/2020
- ;;5.3;Registration;**1029,1035,1047,1100**;Aug 13, 1993;Build 1
- ;
- ;ICRs:
- ;$$INSUR^IBBAPI - DBIA4419 
- ;
- ;/** Returns Category I PRF information
+ ;;5.3;Registration;**1029,1035,1047,1100,1126**;Aug 13, 1993;Build 3
+ ;ICRs: $$INSUR^IBBAPI - DBIA4419 
+ ;* Returns Category I PRF information
  ;Input:
  ; DGDFN - IEN in the file (#2)
  ;Output:
  ; Piece #1: 
- ;       "Y" patient has at least one Category I PRF flag
- ;       "N" patient does not have any Category I PRF flags
+ ;   "Y" patient has at least one Category I PRF flag
+ ;   "N" patient does not have any Category I PRF flags
  ; Piece #2: 
- ;       "A" patient has at least one active PRF
- ;       "" patient does not have any active PRF flags
+ ;   "A" patient has at least one active PRF
+ ;   "" patient does not have any active PRF flags
  ; Piece #3: 
- ;       "I" patient has at least one inactive PRF 
- ;       "" patient does not have any inactive PRF flags
- ;
+ ;   "I" patient has at least one inactive PRF 
+ ;   "" patient does not have any inactive PRF flags
  ; DGRET - subscript for ^TMP($J,DGRET,DFN)array to return data from $$GETALL^DGPFAA
- ;
  ;Example of the returned value:
  ; Y^A - if only one active  flag
  ; Y^^I - if only one inactive  flag
@@ -29,10 +24,9 @@ DGOTHBT2 ;SLC/SS,JC - OTH AND PP APIs ; 09/22/2020
  ;PRFARR("A","BEHAVIORAL")=123
  ;PRFARR("A","HIGH RISK FOR SUICIDE")=121
  ;PRFARR("I","MISSING PATIENT")=122
- ;*/
  ;
 PRFINFO(DGDFN,DGRETGL) ;
- N DGIENS,DGIEN,DGARR,DGRETVL,DGIEN2,DGRET2,DGFLSARR,DGRET
+ N DGIENS,DGIEN,DGARR,DGRETVL,DGIEN2,DGRET2,DGFLSARR,DGRET,DGEIECHK
  K DGRET
  S DGRETVL="N"
  K ^TMP($J,DGRETGL,DGDFN)
@@ -43,18 +37,32 @@ PRFINFO(DGDFN,DGRETGL) ;
  I '$$GETALL^DGPFAA(DGDFN,.DGRET2,"",1) Q DGRETVL
  ;check what statuses we have at the moment for each flag and set the return value's pieces accordingly
  S DGIEN="" F  S DGIEN=$O(DGRET2(DGIEN)) Q:DGIEN=""  D
+ . S DGEIECHK=$$CHECKEIE(DGIEN)
+ . I DGEIECHK Q
  . K DGARR
  . S DGIEN2=DGIEN_","
  . D GETS^DIQ(26.13,DGIEN2,".02;.03","IE","DGARR")
  . I $G(DGARR(26.13,DGIEN2,.03,"E"))="ACTIVE" S DGRET("A",$G(DGARR(26.13,DGIEN2,.02,"E")))=DGIEN,$P(DGRETVL,U,2)="A",$P(DGRETVL,U,1)="Y"
  . E  I $G(DGARR(26.13,DGIEN2,.03,"E"))="INACTIVE" S DGRET("I",$G(DGARR(26.13,DGIEN2,.02,"E")))=DGIEN,$P(DGRETVL,U,3)="I",$P(DGRETVL,U,1)="Y"
- ;merge the result with ^TMP
  M ^TMP($J,DGRETGL,DGDFN)=DGRET
  ;add all other related information about the flags, its history and patient data to the ^TMP
  D:$P(DGRETVL,U,3)="I" PRFAPI(DGDFN,DGRETGL,"I")
  D:$P(DGRETVL,U,2)="A" PRFAPI(DGDFN,DGRETGL,"A")
  Q DGRETVL
- ; 
+ ;
+CHECKEIE(DGIEN) ;
+ N DGBX,DGCDGPF,DGSFLAG,DGEIE,DGBXP,DGBXPFLAG,DGBXPF
+ S DGBX=0,DGEIE=0
+ F  S DGBX=$O(^DGPF(26.14,"B",DGIEN,DGBX)) Q:DGBX=""  D 
+ . S DGCDGPF=$G(^DGPF(26.14,DGBX,0))
+ . S DGSFLAG=$P(DGCDGPF,U,3)
+ . Q:DGSFLAG'=5 
+ . S DGEIE=1,DGBXP=$O(^DGPF(26.14,"B",DGIEN,DGBX),-1)
+ . S DGBXPF=$G(^DGPF(26.14,DGBXP,0))
+ . S DGBXPFLAG=$P(DGBXPF,U,3)
+ . I DGBXPFLAG'=1 S DGEIE=0
+ Q DGEIE
+ ;
 PRFAPI(DGDFN,DGRETGL,DGACT) ;
  N DGARFLAG,DGIEN,DGPRFFL,DGARRHS
  S DGPRFFL="" F  S DGPRFFL=$O(^TMP($J,DGRETGL,DGDFN,DGACT,DGPRFFL)) Q:DGPRFFL=""  S DGIEN=+$G(^TMP($J,DGRETGL,DGDFN,DGACT,DGPRFFL)) I DGIEN>0 K DGARFLAG I $$GETASGN^DGPFAA(DGIEN,.DGARFLAG) D
@@ -76,20 +84,15 @@ GETHIST(DGIEN13,DGARRFL) ;
  . K DGARRH
  . I $$GETHIST^DGPFAAH(DGIEN14,.DGARRH,1) M DGARRFL(DGDTTM)=DGARRH
  Q
- ;/**
  ;show inactive PRF only
  ; Inactive Flag (non-OTH, non-PP, but has inactive HRFS and/or MISSING PATIENT PRF(s)) -> "Inactive Flag"
  ; Note: "BEHAVIORAL" should not be displayed according requirements
  ;Input:
- ; DGDFN - IEN in the file (#2)
  ; PRFARR - returned by S PRFINF=$$PRFINFO^DGOTHBT2(DGDFN,.PRFARR)
  ; RET - local array to return information to send back to CPRS
  ;Output:
  ; RET - local array to return information to send back to CPRS
- ; 
  ;Example:DGPFAPIH
- ;
- ;*/
 INPRFONL(DGDFN,PRFTMP,RET) ;
  N DGFLIEN1,DGFLIEN2,DGCNT,DGRECN,DGMXHRFS
  N NUMHRFS,NUMMISS
@@ -107,18 +110,14 @@ INPRFONL(DGDFN,PRFTMP,RET) ;
  I DGFLIEN1 D ADDLINE(.RET," ")
  I DGFLIEN2 D SETMISP(.RET,PRFTMP,DGDFN,NUMMISS)
  Q
- ;
- ;/**
  ;set header and history for HRfS
  ;RET to set array for CPRS
  ;PRFTMP - subscript in the TMP global
- ;DGDFN - ien in the file #2
  ;DGHISNUM - number of history records to show
  ; - if patient has both HRfS and MISSING flags 
  ; then  HRfS will be shown first but we need to save a space for MISSING as well
  ; therefore we have to show fewer history entries for HRfS i.e. just 1 entry
  ; - if patient has only one HRfS flag then we show 2 entries
- ;*/
 SETHRFS(RET,PRFTMP,DGDFN,DGHISNUM) ;
  D ADDLINE(.RET,"Flag name: HIGH RISK FOR SUICIDE   Status: INACTIVE")
  D ADDLINE(.RET,"  Initial Assigned Date: "_$$FLGASSDT(PRFTMP,DGDFN,"I","HIGH RISK FOR SUICIDE"))
@@ -126,16 +125,8 @@ SETHRFS(RET,PRFTMP,DGDFN,DGHISNUM) ;
  D ADDLINE(.RET,"  Owner Site: "_$$FLOWNSITE(PRFTMP,DGDFN,"I","HIGH RISK FOR SUICIDE"))
  D ADDHIST(.RET,PRFTMP,DGDFN,"HIGH RISK FOR SUICIDE","I",DGHISNUM)
  Q
- ;
- ;/**
  ;return FLG ASSIG DATE
- ;parameters:
- ;DGPRFTMP
- ;DGDFN
- ;DGSTATUS
- ;DGFLGNAM
- ;returns
- ;*/
+ ;parameters: DGPRFTMP,DGDFN,DGSTATUS,DGFLGNAM
 FLGASSDT(DGPRFTMP,DGDFN,DGSTATUS,DGFLGNAM) ;
  N DG2613,DGDTTM
  S DGDTTM=0
@@ -143,19 +134,16 @@ FLGASSDT(DGPRFTMP,DGDFN,DGSTATUS,DGFLGNAM) ;
  I DG2613 S DGDTTM=+$$GETADT^DGPFAAH(DG2613)
  I DGDTTM>0 Q $$DATETM(DGDTTM)
  Q "UNKNOWN"
- ; 
- ;return FLG SITE
-FORGSITE(DGPRFTMP,DGDFN,DGSTATUS,DGFLGNAM) ;
+ ;
+FORGSITE(DGPRFTMP,DGDFN,DGSTATUS,DGFLGNAM) ;return FLG SITE
  Q $P($G(^TMP($J,DGPRFTMP,DGDFN,DGSTATUS,DGFLGNAM,"D","ORIGSITE")),U,2)
  ;
- ;return flag owner site
-FLOWNSITE(DGPRFTMP,DGDFN,DGSTATUS,DGFLGNAM) ;
+FLOWNSITE(DGPRFTMP,DGDFN,DGSTATUS,DGFLGNAM) ;return flag owner site
  Q $P($G(^TMP($J,DGPRFTMP,DGDFN,DGSTATUS,DGFLGNAM,"D","OWNER")),U,2)
  ;
  ;return ARR array with DGNUM of history entries 
  ;RET to set array for CPRS
  ;PRFTMP - subscript in the TMP global
- ;DGDFN - ien in the file #2
  ;DGHISNUM - number of history records to show
 ADDHIST(RET,PRFTMP,DGDFN,DGFLAG,DGSTAT,DGNUM) ;
  N DGCNT,DGDTTM,DGACTION,DGSITE,DGMOREHI,DGZ,DGPRSITE,DGDTTIME
@@ -192,7 +180,6 @@ IFMORE(PRFTMP,DGDFN,DGSTAT,DGFLAG,DGDTTM) ;
  ;set header and history for MISSING PATIENT
  ;RET to set array for CPRS
  ;PRFTMP - subscript in the TMP global
- ;DGDFN - ien in the file #2
  ;*/
 SETMISP(RET,PRFTMP,DGDFN,DGHISNUM) ;
  D ADDLINE(.RET,"Flag name: MISSING PATIENT                Status: INACTIVE")
@@ -201,11 +188,8 @@ SETMISP(RET,PRFTMP,DGDFN,DGHISNUM) ;
  D ADDLINE(.RET,"  Owner Site: "_$$FLOWNSITE(PRFTMP,DGDFN,"I","MISSING PATIENT"))
  D ADDHIST(.RET,PRFTMP,DGDFN,"MISSING PATIENT","I",DGHISNUM)
  Q
- ;
- ;/**
  ;show OTH + PRF
  ;Input:
- ; DGDFN - IEN in the file (#2)
  ; DGEXP - OTH data from $$GETEXPR^DGOTHD(DGDFN)
  ; PRFTMP - subscript to ^TMP($J,PRFTMP) with PRF data
  ; RET - to return an array with data
@@ -213,8 +197,6 @@ SETMISP(RET,PRFTMP,DGDFN,DGHISNUM) ;
  ; RET(0)=0  - nothing to display
  ;or
  ; RET(0)>0, RET - with data to display on the button
- ;
- ;*/
 OTHINPRF(DGDFN,DGEXP,PRFTMP,RET) ;
  N DGOTHTYP
  S RET(0)=0
@@ -241,7 +223,6 @@ OTHINPRF(DGDFN,DGEXP,PRFTMP,RET) ;
  .S RET(11)="Adjudication will determine eligibility for continuing care."
  .D PRWTHOTH(DGDFN,"DGPRINFO",.RET)
  .Q
- ;
  ;if OTH-90
  ;Button label:
  ; OTH-90 and Inactive Flag (OTH-90 and has inactive HRFS and/or MISSING PATIENT PRF(s)) "OTH/Inactive Flag"
@@ -254,22 +235,15 @@ OTHINPRF(DGDFN,DGEXP,PRFTMP,RET) ;
  .S RET(1)="OTH-90^Other than Honorable, click for details"
  .S RET(2)="Inactive Flag^Patient has Inactive Flag(s), click to view"
  .D PRWTHOTH(DGDFN,"DGPRINFO",.RET)
- ;if nothing
  Q
- ;
- ;/**
  ;show inactive PRF with OTH
  ; Note: "BEHAVIORAL" should not be displayed according requirements
  ;Input:
- ; DGDFN - IEN in the file (#2)
  ; PRFARR - returned by S PRFINF=$$PRFINFO^DGOTHBT2(DGDFN,.PRFARR)
  ; RET - local array to return information to send back to CPRS
  ;Output:
  ; RET - local array to return information to send back to CPRS
- ; 
  ;Example:DGPFAPIH
- ;
- ;*/
 PRWTHOTH(DGDFN,PRFTMP,RET) ;
  N DGFLIEN1,DGFLIEN2,DGCNT,DGRECN,DGMXHRFS
  N NUMHRFS,NUMMISS
@@ -289,7 +263,6 @@ PRWTHOTH(DGDFN,PRFTMP,RET) ;
  ;show inactive PRF with PP
  ; Note: "BEHAVIORAL" should not be displayed according requirements
  ;Input:
- ; DGDFN - IEN in the file (#2)
  ; PRFARR - returned by S PRFINF=$$PRFINFO^DGOTHBT2(DGDFN,.PRFARR)
  ; RET - local array to return information to send back to CPRS
  ;Output:
@@ -316,7 +289,6 @@ PRWITHPP(DGDFN,PRFTMP,RET) ;
  ;
  ;/** Check if any mailman message was already sent today and send the MailMan message for this patient
  ;Input parameters:
- ; DGDFN = IEN of patient in file #2
  ;*/
 SENDMAIL(DGDFN) ;
  N DGSENTON
@@ -330,30 +302,17 @@ SENDMAIL(DGDFN) ;
  D COMPSEND(DGDFN)
  Q
  ;
- ;/** Compose the message that notifies the Registration users added to the DGEN ELIGIBILITY ALERT group 
- ; and send it
- ; and update ^XTMP entry
- ;Input parameters:
- ; DGDFN = IEN of patient in file #2
- ;--------------------------------------------------------------
- ;*/
-COMPSEND(DGDFN) ;
+COMPSEND(DGDFN) ;Compose the message that notifies the Registration users added to the DGEN ELIGIBILITY ALERT group
  N DGMSG
  ;send email
  D COMPMSG(DGDFN,.DGMSG)
  D SENDMSG(.DGMSG,"Presumptive Psychosis information needed")
  D SETXTMP(DGDFN)
  Q
- ;
- ;
- ;/** Compose the message that notifies the Registration users added to the  DGEN ELIGIBILITY ALERT group
+ ;Compose the message that notifies the Registration users added to the  DGEN ELIGIBILITY ALERT group
  ;that PP workaround settings are not completed for the patient
- ;
  ;Input parameters:
- ; DGDFN = IEN of patient in file #2
- ;
  ;the mockup of the message sent to the DGEN ELIGIBILITY ALERT mail group: 
- ;--------------------------------------------------------------
  ;The following patient has PRESUMED PSYCHOSIS indicated,but all fields have not
  ;been completed to support this. All fields must be completed in order for this
  ;patient to be eligible for treatment under the Presumed Psychosis Program.  
@@ -363,8 +322,6 @@ COMPSEND(DGDFN) ;
  ;
  ;PATIENT NAME:    ZZTEST,PRESUMED PSYCHOSIS
  ;                 Last 4 SSN:   1234
- ;--------------------------------------------------------------
- ;*/
 COMPMSG(DGDFN,DGMSG) ;
  N DGNAME,DGSSN,DGPAT,DGDFN1
  S DGDFN1=DGDFN_","
@@ -396,7 +353,6 @@ SENDMSG(DGMSG,DGSUBJ) ;
  ;/**
  ;mailman was sent last time on the date?
  ;Input parameters:
- ; DGDFN = IEN of patient in file #2
  ;output parameters:
  ; returns 
  ; 0 - there is no any ^XTM record about last mailman  message (which means message can be sent now)
@@ -410,7 +366,6 @@ MMSENTON(DGDFN) ;
  ; 
  ;/** Set ^XTMP entry so we can check for it and prevent sending the mailman message more than once a day
  ;Input parameters:
- ; DGDFN = IEN of patient in file #2
  ;*/
 SETXTMP(DGDFN) ;
  N DGPURGE,DGNODE
@@ -437,7 +392,6 @@ DATETM(Y) ;
  ;returns number of records in the PRF history 
  ;Note: will count only INACTIVATE,REACTIVATE,CONTINUE
  ;PRFTMP - subscript in the TMP global
- ;DGDFN - ien in the file #2
  ;DGSTAT - status ("A" or "I")
  ;DGFLAG - full flag name
  ;*/
@@ -451,7 +405,6 @@ HISTLEN(PRFTMP,DGDFN,DGSTAT,DGFLAG) ;
  . I "^INACTIVATE^REACTIVATE^CONTINUE^"'[DGZ Q
  . S DGCNT=DGCNT+1
  Q DGCNT
- ;
  ;
  ;Calculate max number of history records to display for HRfS and MISSING if 
  ;  we have PP

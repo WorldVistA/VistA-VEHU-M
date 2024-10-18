@@ -1,5 +1,5 @@
 RORUTL11 ;HCIOFO/SG - ACCESS AND SECURITY UTILITIES ; 03 Dec 2015  1:56 PM
- ;;1.5;CLINICAL CASE REGISTRIES;**13,14,15,17,18,20,19,21,22,24,27,25,26,28,29,30,31,32,33,34,35,36,37,38,39,40,41**;Feb 17, 2006;Build 1
+ ;;1.5;CLINICAL CASE REGISTRIES;**13,14,15,17,18,20,19,21,22,24,27,25,26,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42**;Feb 17, 2006;Build 9
  ;
  ;******************************************************************************
  ;******************************************************************************
@@ -12,15 +12,15 @@ RORUTL11 ;HCIOFO/SG - ACCESS AND SECURITY UTILITIES ; 03 Dec 2015  1:56 PM
  ;                                      GET M VERSION
  ;ROR*1.5*14   APR  2011   A SAUNDERS   Updated version in tag VERSRV
  ;ROR*1.5*15   JUN 2011    C RAY        Updated version
- ;ROR*1.5*17   DEC 2011    C RAY        Updated version 
- ;ROR*1.5*18   MAY 2012    C RAY        Updated version 
+ ;ROR*1.5*17   DEC 2011    C RAY        Updated version
+ ;ROR*1.5*18   MAY 2012    C RAY        Updated version
  ;ROR*1.5*20   DEC 2012    C RAY        Updated version
- ;ROR*1.5*19   APR 2012    K GUPTA      Updated version                            
+ ;ROR*1.5*19   APR 2012    K GUPTA      Updated version
  ;ROR*1.5*21   AUG 2013    T KOPP       Updated version
- ;ROR*1.5*22   FEB 2014    T KOPP       Updated version 
+ ;ROR*1.5*22   FEB 2014    T KOPP       Updated version
  ;ROR*1.5*24   DEC 2014    T KOPP       Updated version
  ;ROR*1.5*27   FEB 2015    T KOPP       Updated version
- ;ROR*1.5*25   MAR 2015    T KOPP       Updated version                  
+ ;ROR*1.5*25   MAR 2015    T KOPP       Updated version
  ;ROR*1.5*26   MAY 2015    T KOPP       Updated version
  ;ROR*1.5*28   APR 2016    T KOPP       Updated version
  ;ROR*1.5*29   AUG 2016    T KOPP       Updated version
@@ -36,6 +36,7 @@ RORUTL11 ;HCIOFO/SG - ACCESS AND SECURITY UTILITIES ; 03 Dec 2015  1:56 PM
  ;ROR*1.5*39   AUG 2021    M FERRARESE  Updated version
  ;ROR*1.5*40   JUL 2022    F TRAXLER    Updated version
  ;ROR*1.5*41   JAN 2023    F TRAXLER    Updated version
+ ;ROR*1.5*42   FEB 2024    F TRAXLER    Updated version
  ;******************************************************************************
  ; This routine uses the following IAs:
  ;
@@ -109,5 +110,5 @@ RPCHECK(RPCNAME,REGIEN,FLAGS) ;
  ;associated M changes needed for it.
  ;
 VERSRV(VAL) ;
- S VAL="1.5.41"
+ S VAL="1.5.42"
  Q

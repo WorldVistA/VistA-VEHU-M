@@ -1,11 +1,12 @@
 VPRSDADG ;SLC/MKB -- SDA DG PTF utilities ;04/25/22  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**30**;Apr 05, 2022;Build 9
+ ;;1.0;VIRTUAL PATIENT RECORD;**30,35**;Apr 05, 2022;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
  ; -------------------          -----
  ; ^AUPNVSIT                     2028
  ; ^DGPM                         1865
+ ; DGMSEUTL                      5783
  ; DGPTFAPI                      3157
  ; DGPTFUT                       6130
  ; DGPTPXRM                      4457
@@ -69,4 +70,26 @@ OP1 ; -- get info for single PTF record [ID Action]
  . S:'$G(DFN) DFN=$P($G(^DGPM(ADM,0)),U,3)
  . S VST=+$$VNUM^VPRSDAV(ADM) I 'VST!'$D(^AUPNVSIT(VST,0)) S VST=""
  S VPRVST=VST
+ Q
+ ;
+MSE ;Using GETMSE^DGMSEUTL, build array for use in entity VPR PATIENT MSE ALL
+ N BRANCH,COUNT,COMP,DA,DONE,DTYP,EDATA,EDATE,I,SDATE,SERVNO,SUB,EDATE2,SDATE2,BRANCH2,DTYP2,VPRI
+ S COUNT=0,EDATE=""
+ K VPRMS,VPRSV D:$G(DFN) GETMSE^DGMSEUTL(DFN,.VPRMS)
+ ;Retrieve all MSE
+ S VPRI=0 F  S VPRI=$O(VPRMS(VPRI)) Q:'VPRI  D
+ .;DJS, skip an MSE that has Future Discharge Date; DG*5.3*935
+ .S EDATA=$G(VPRMS(VPRI)) Q:EDATA=""!($P(EDATA,U,8)'="")
+ .S EDATE=$P(EDATA,U),EDATE2=$$DATE^VPRSDA(EDATE,1)
+ .S SDATE=$P(EDATA,U,2),SDATE2=$$DATE^VPRSDA(SDATE,1),EDATE2=$$DATE^VPRSDA(EDATE,1)
+ .S BRANCH=$P(EDATA,U,3),COMP=$P(EDATA,U,4),BRANCH2=$$GET1^DIQ(23,BRANCH,.01)
+ .S SERVNO=$P(EDATA,U,5),DTYP=$P(EDATA,U,6),DTYP2=$$GET1^DIQ(25,DTYP,.01)
+ .S COUNT=COUNT+1
+ .S SUB=1,VPRSV(COUNT)=$S($G(BRANCH):1,1:"")
+ .S VPRSV(COUNT,SUB)=DTYP_U_DTYP2
+ .S VPRSV(COUNT,SUB+1)=BRANCH_U_BRANCH2
+ .S VPRSV(COUNT,SUB+2)=EDATE_U_EDATE2
+ .S VPRSV(COUNT,SUB+3)=SDATE_U_SDATE2
+ .S VPRSV(COUNT,SUB+4)=SERVNO
+ .S VPRSV(COUNT,SUB+5)=COMP_U_$$EXTERNAL^DILFD(2.3216,.04,,$G(COMP))
  Q

@@ -1,5 +1,5 @@
 VPRDVSIT ;SLC/MKB -- Visit/Encounter extract ;8/2/11  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**1,2,4,5,7**;Sep 01, 2011;Build 3
+ ;;1.0;VIRTUAL PATIENT RECORD;**1,2,4,5,7,35**;Sep 01, 2011;Build 16
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -26,7 +26,7 @@ VPRDVSIT ;SLC/MKB -- Visit/Encounter extract ;8/2/11  15:29
  ; ------------ Get encounter(s) from VistA ------------
  ;
 EN(DFN,BEG,END,MAX,ID) ; -- find patient's visits and appointments
- N VPRCNT,VPRITM,VPRDT,VPRLOC,VPRDA
+ N VPRCNT,VPRITM,VPRDT,VPRLOC,VPRDA,IDT,VPRCATG
  S DFN=+$G(DFN) Q:DFN<1
  S BEG=$G(BEG,1410101),END=$G(END,4141015),MAX=$G(MAX,9999)
  ;
@@ -34,10 +34,10 @@ EN(DFN,BEG,END,MAX,ID) ; -- find patient's visits and appointments
  I $G(ID) D EN1(ID,.VPRITM),XML(.VPRITM) G ENQ
  ;
  ; -- get all visits
+ I $L($G(FILTER("category"))) G ENAA
  I END,END'["." S END=END_".24" ;assume end of day
- S VPRCNT=0
- ;F  S IDX=$Q(@IDX,-1) Q:DFN'=$P(IDX,",",2)  Q:$P(IDX,",",3)<BEG  I $P(IDX,",",5)["P" D
- S VPRDT=END F  S VPRDT=$O(^AUPNVSIT("AET",DFN,VPRDT),-1)  Q:VPRDT<BEG  D  Q:VPRCNT'<MAX
+ S VPRCNT=0,VPRDT=END
+ F  S VPRDT=$O(^AUPNVSIT("AET",DFN,VPRDT),-1)  Q:VPRDT<BEG  D  Q:VPRCNT'<MAX
  . S VPRLOC=0 F  S VPRLOC=$O(^AUPNVSIT("AET",DFN,VPRDT,VPRLOC)) Q:VPRLOC<1  D
  .. S VPRDA=0 F  S VPRDA=$O(^AUPNVSIT("AET",DFN,VPRDT,VPRLOC,"P",VPRDA)) Q:VPRDA<1  D
  ... K VPRITM D EN1(VPRDA,.VPRITM) Q:'$D(VPRITM)
@@ -46,18 +46,17 @@ ENQ ; end
  K ^TMP("VPRTEXT",$J)
  Q
  ;
-ENAA(DFN,BEG,END,MAX,ID) ; -- find patient's visits and appointments [AA]
- N IDT,DA,VPRCNT,VPRITM
- S DFN=+$G(DFN) Q:DFN<1
- S BEG=$G(BEG,1410101),END=$G(END,4141015),MAX=$G(MAX,9999)
- I $G(ID) D EN1(ID,.VPRITM),XML(.VPRITM) Q  ;one visit
- D IDT S VPRCNT=0
- S IDT=BEG F  S IDT=$O(^AUPNVSIT("AA",DFN,IDT)) Q:IDT<1!(IDT>END)  D  Q:VPRCNT'<MAX
- . S DA=0 F  S DA=$O(^AUPNVSIT("AA",DFN,IDT,DA)) Q:DA<1  D
- .. K VPRITM D EN1(DA,.VPRITM) Q:'$D(VPRITM)
+ENAA ; -- allow search w/filter
+ D IDT S VPRCATG=$G(FILTER("category"))
+ S VPRCNT=0,IDT=BEG
+ F  S IDT=$O(^AUPNVSIT("AA",DFN,IDT)) Q:IDT<1!(IDT>END)  D  Q:VPRCNT'<MAX
+ . S VPRDA=0 F  S VPRDA=$O(^AUPNVSIT("AA",DFN,IDT,VPRDA)) Q:VPRDA<1  D
+ .. I $L(VPRCATG),VPRCATG'[$P($G(^AUPNVSIT(VPRDA,0)),U,7) Q
+ .. K VPRITM D EN1(VPRDA,.VPRITM) Q:'$D(VPRITM)
  .. D XML(.VPRITM) S VPRCNT=VPRCNT+1
+ K ^TMP("VPRTEXT",$J)
  Q
-IDT ; -- invert BEG and END dates for visit format:
+IDT ; -- invert BEG and END dates for PCE format:
  ;  IDT=(9999999-$P(VDT,"."))_"."_$P(VDT,".",2)
  N X S X=BEG
  S BEG=(9999999-$P(END,"."))
@@ -70,7 +69,7 @@ EN1(IEN,VST) ; -- return a visit in VST("attribute")=value
  S IEN=+$G(IEN) Q:IEN<1  ;invalid
  D ENCEVENT^PXAPI(IEN)
  S X0=$G(^TMP("PXKENC",$J,IEN,"VST",IEN,0)),X15=$G(^(150))
- Q:$P(X15,U,3)'="P"  ;Q:$P(X0,U,7)="E"  ;want primary, not historical
+ ;Q:$P(X15,U,3)'="P"  Q:$P(X0,U,7)="E"  ;want primary, not historical
  I $P(X0,U,7)="H" D ADM(IEN,+X0,.VST) Q
  S VST("id")=IEN,VST("dateTime")=+X0,DATE=+X0
  S FAC=+$P(X0,U,6),CATG=$P(X0,U,7),LOC=+$P(X0,U,22)

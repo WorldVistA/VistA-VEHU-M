@@ -1,5 +1,5 @@
 VPRSDAB ;SLC/MKB -- SDA Lab utilities ;4/11/19  21:05
- ;;1.0;VIRTUAL PATIENT RECORD;**20,26,27,31**;Sep 01, 2011;Build 3
+ ;;1.0;VIRTUAL PATIENT RECORD;**20,26,27,31,35**;Sep 01, 2011;Build 16
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -97,6 +97,22 @@ CH(TEST) ; -- builds DLIST(#) of result nodes for TEST
  . ; DLIST(60 ien) = CH data node#,LRIDT,LRDFN
  . S DLIST(T)=$$LRDN^LRPXAPIU(T)_","_DIEN
  Q
+ ;
+VALRNG(LOW,HIGH) ; -- Validate that range values will be accepted in SDA format for <ResultNormalRange> post REFRNG execution
+ ;LOW - Range low value
+ ;HIGH - range high value
+ ;RESULT - Ture/False value, will pass or fail SDA <ResultNormalRnage> format
+ N RESULT
+ S RESULT=1
+ S LOW=$G(LOW),HIGH=$G(HIGH)
+ ;Strip any surrounding quotes
+ I LOW?1"""".E1"""" S LOW=$E(LOW,2,$L(LOW)-1)
+ I HIGH?1"""".E1"""" S HIGH=$E(HIGH,2,$L(HIGH)-1)
+ ;If both parameters are defined, we have a ##-## range and the first character of LOW and HIGH must be numeric.
+ I LOW'="",(HIGH'="") D
+ .I $E(LOW)'?1N,($E(LOW,1,2)'?1"."1N) S RESULT=0
+ .I $E(HIGH)'?1N,($E(HIGH,1,2)'?1"."1N) S RESULT=0
+ Q RESULT
  ;
 REFRNG(RLV,RHV) ; -- format low-high ref range string
  ;RLV - Range low value

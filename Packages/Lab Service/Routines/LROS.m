@@ -1,5 +1,5 @@
-LROS ;SLC/CJS/DALOI/FHS-LAB ORDER STATUS ;10/03/16  00:48
- ;;5.2;LAB SERVICE;**121,153,202,210,221,263,450,462**;Sep 27, 1994;Build 44
+LROS ;SLC/CJS/DALOI/FHS-LAB ORDER STATUS; May 23, 2024@15:45
+ ;;5.2;LAB SERVICE;**121,153,202,210,221,263,450,462,572**;Sep 27, 1994;Build 5
  N LRLOOKUP S LRLOOKUP=1 ; Variable to indicate to lookup patients, prevent adding new entries in ^LRDPA
  ;;*
  N AGE,DOB,DOD,LRLABKY,LRPRAC,LRRB,LRTREA,LRWRD,SEX,SSN,VAPD
@@ -17,6 +17,8 @@ ENTRY D HED Q:LREND
  S LRSN=0 F  S LRSN=$O(^LRO(69,LRODT,1,"AA",LRDFN,LRSN)) Q:LRSN<1!($G(LREND))  D ORDER Q:$G(LREND)  D HED:$Y>(IOSL-2)
  Q
 ORDER ;call with LRSN, from LROE, LROE1, LRORD1, LROW2, LROR1
+ ;LR*5.2*572: add LRARRAY
+ N LRARRAY
  K D,LRTT S LREND=0
  Q:'$D(^LRO(69,LRODT,1,LRSN,0))  S LROD0=^LRO(69,LRODT,1,LRSN,0),LROD1=$S($D(^(1)):^(1),1:""),LROD3=$S($D(^(3)):^(3),1:"")
  W !?2,"-Lab Order # ",$S($D(^LRO(69,LRODT,1,LRSN,.1)):^(.1),1:"") S X=$P(LROD0,U,6) D DOC^LRX W ?45,"Provider: ",$E(LRDOC,1,25) D WAIT Q:$G(LREND)
@@ -36,6 +38,15 @@ TEST N LRY,LRURG
 TST1 S X1=+$P(LRACN0,U,4),X2=+$P(LRACN0,U,3),X3=+$P(LRACN0,U,5)
  G NOTACC:'$D(^LRO(68,X1,1,X2,1,X3,0)),NOTACC:'$D(^(3)) S LRACD=$S($D(^(9)):^(9),1:"")
  I '$D(LRTT(X1,X2,X3)) S LRTT(X1,X2,X3)="",I=0 F  S I=$O(^LRO(68,X1,1,X2,1,X3,4,I)) Q:I<.5!($G(LREND))  S LRACC=^(I,0),LRTSTS=+LRACC D TST2
+ ;LR*5.2*572: Display any tests in "rolled over" date that
+ ;            were not on original accession date.
+ I LRACD]"" D
+ . S I=0
+ . F  S I=$O(^LRO(68,X1,1,LRACD,1,X3,4,I)) Q:I<.5!($G(LREND))  D
+ . . Q:$D(^LRO(68,X1,1,X2,1,X3,4,I))
+ . . Q:$D(LRARRAY(X1,LRACD,X3,I))
+ . . S LRACC=^LRO(68,X1,1,LRACD,1,X3,4,I,0),LRTSTS=+LRACC D TST2
+ . . S LRARRAY(X1,LRACD,X3,I)=""
  I $E($P(LROD1,U,6))="*" W !,?20,$P(LROD1,U,6) D WAIT
  Q
 TST2 ;

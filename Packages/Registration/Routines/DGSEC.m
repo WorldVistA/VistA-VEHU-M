@@ -1,5 +1,6 @@
 DGSEC ;ALB/RMO - MAS Patient Look-up Security Check ; 3/24/04 7:53pm
- ;;5.3;Registration;**32,46,197,214,249,281,352,391,425,582,769,796,964**;Aug 13, 1993;Build 323
+ ;;5.3;Registration;**32,46,197,214,249,281,352,391,425,582,769,796,964,1130**;Aug 13, 1993;Build 7
+ ;Per VHA Directive 6402, this routine should not be modified.
  ;
  ;Entry point from DPTLK
  I +$G(Y)=+$G(^DISV(DUZ,"^DPT(")),$G(DPTBTDT) K DPTBTDT Q
@@ -47,7 +48,7 @@ DGSEC ;ALB/RMO - MAS Patient Look-up Security Check ; 3/24/04 7:53pm
  I DGSENS(1)=2 D
  .I DIC(0)["E" D
  ..W $C(7)
- ..D DISP(.DGSENS)
+ ..D DISP2V
  ..D NOTCE1
  .I Y>0 D
  ..D SETLOG1(+Y,DUZ,,DGOPT)
@@ -180,11 +181,10 @@ DISP(ARRAY) ;Display message text to screen
  N DGI,DGWHERE
  I '$D(DDS) W !!
  F DGI=1:0 S DGI=$O(ARRAY(DGI)) Q:'DGI  D
- .S DGWHERE=(80-$L(ARRAY(DGI)))\2
- .W ?DGWHERE,ARRAY(DGI),!
+ .W ARRAY(DGI),!
  Q
  ;
-NOTCE1 W:'$D(DDS) !! W "Do you want to continue processing this patient record" S %=2 D YN^DICN S:%<0!(%=2) Y=-1 I '% D  W:'$D(DDS) !! W "Enter 'YES' to continue processing, or 'NO' to quit processing this record." W:$D(DDS) ! G NOTCE1
+NOTCE1 W:'$D(DDS) ! W "Do you want to continue accessing this patient record" S %=2 D YN^DICN S:%<0!(%=2) Y=-1 I '% D  W:'$D(DDS) !! W "Enter 'YES' to continue accessing, or 'NO' to quit accessing this record." W:$D(DDS) ! G NOTCE1
  .I $D(DDS) D CLRMSG^DDS S DX=0,DY=DDSHBX+1 X DDXY
  Q
  ;
@@ -203,3 +203,27 @@ LOADXMY() ;this adds the contents of field #509 of File #43 to the XMY array
  I '$D(DGM) S DGERR="-1^No/Bad Field #509 entry in File #43" G QTLOADX
  S XMY("G."_DGM)="" ; pass mailgroup
 QTLOADX Q DGERR
+ ;
+DISP2V ;Display message text to screen for Vista
+ N DGLNE
+ S DGSENS(1)=1
+ S DGSENS(2)="                              ***WARNING***                                 "
+ S DGSENS(3)="                         ***RESTRICTED RECORD***                            "
+ S $P(DGLNE,"* ",40)=""
+ S DGSENS(4)=DGLNE
+ S DGSENS(5)="* 1. STOP                                                                   *"
+ S DGSENS(6)="* 2. Confirm you need access to this Restricted patient record              *"
+ S DGSENS(7)="*                                                                           *"
+ S DGSENS(8)="* This record is protected by the Privacy Act of 1974 and the Health        *"
+ S DGSENS(9)="* Insurance Portability and Accountability Act (HIPAA) Privacy Rule.        *"
+ S DGSENS(10)="*   * Access to this patient record is tracked and monitored.               *"
+ S DGSENS(11)="*   * You must have need for this record to accomplish officially           *"
+ S DGSENS(12)="*     authorized and assigned duties, such as direct patient care, to       *"
+ S DGSENS(13)="*     proceed.                                                              *"
+ S DGSENS(14)="*   * You must provide justification for your access upon request.          *"
+ S DGSENS(15)="*   * Failure to comply may result in disciplinary or adverse action up to  *"
+ S DGSENS(16)="*     and including removal from Federal service, and civil and criminal    *"
+ S DGSENS(17)="*     penalties.                                                            *"
+ I $G(DDS)="" S DGSENS(18)=DGLNE
+ D DISP(.DGSENS)
+ Q

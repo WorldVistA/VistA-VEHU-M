@@ -1,5 +1,5 @@
-SDES2PRVCLINSRC ;ALB/TJB - VISTA SCHEDULING RPCS; May 02, 2024
- ;;5.3;Scheduling;**880**;Aug 13, 1993;Build 5
+SDES2PRVCLINSRC ;ALB/TJB,JAS - VISTA SCHEDULING RPC SDES2 GET CLINICS BY PROVIDER ; Aug 13, 2024
+ ;;5.3;Scheduling;**880,887**;Aug 13, 1993;Build 7
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -36,6 +36,7 @@ BUILD(CLINICS,PROVIDERIEN,INACTFLAG) ;
  . S CLINICS("Provider",1,"AssociatedClinicName",COUNT)=$$GET1^DIQ(44,CLINICIEN,.01,"E")
  . S CLINICS("Provider",1,"AssociatedClinicStatus",COUNT)=$S(CLINSTATUS=0:"Active",1:"Inactive")
  . S CLINICS("Provider",1,"PbspID",COUNT)=$$GET1^DIQ(44,CLINICIEN,200,"E")
+ . S CLINICS("Provider",1,"VeteranSelfCancel",COUNT)=$$GET1^DIQ(44,CLINICIEN,63,"E")
  Q
  ;
 VALIDINACTIVE(ERRORS,FLAG) ; If SDINPUT("INACTIVE CLINIC") If sent make sure it is a 1 or 0

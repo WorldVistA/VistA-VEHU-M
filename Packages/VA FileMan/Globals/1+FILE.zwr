@@ -29710,6 +29710,7 @@ ZWR
 ^DIC(409.845,"%",0)="^1.005^^0"
 ^DIC(409.845,"%D",0)="^^1^1^3141010^^"
 ^DIC(409.845,"%D",1,0)="This is where Patient Preferences are defined for Patients."
+^DIC(409.845,"%MSC")=3241018.19082
 ^DIC(409.85,0)="SDEC APPT REQUEST^409.85"
 ^DIC(409.85,0,"AUDIT")=" "
 ^DIC(409.85,0,"DD")=" "
@@ -29886,7 +29887,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3240915.144432
+^DIC(409.93,"%MSC")=3241018.19082
 ^DIC(409.95,0)="PRINT MANAGER CLINIC SETUP"
 ^DIC(409.95,0,"AUDIT")="@"
 ^DIC(409.95,0,"DD")="@"

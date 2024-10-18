@@ -1,5 +1,5 @@
-SDESRTVCLN3 ;ALB/BLB,BWF - Get Clinic Info based on Clinic IEN ;DEC 5, 2023
- ;;5.3;Scheduling;**866,871**;Aug 13, 1993;Build 13
+SDESRTVCLN3 ;ALB/BLB,BWF,JAS,TJB - Get Clinic Info based on Clinic IEN ;AUG 26, 2024
+ ;;5.3;Scheduling;**866,871,887**;Aug 13, 1993;Build 7
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -73,6 +73,7 @@ JSONCLNINFO(RETSDCLNJSON,SDCLNIEN,SDEAS,HASHFLG) ;Get Clinic info
  ;"Timezone": "EASTERN",
  ;"TimezoneException": 1,
  ;"VariableApptLength": "",
+ ;"VeteranSelfCancel": "",
  ;"WorkloadValidationCheckout": ""}}
  ;
  N RETURN,HASFIELDS,ELGFIELDSARRAY,ELGRETURN,SDECI,ERRORS,SDCLNJSON
@@ -155,7 +156,7 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  S SDCLNSREC("Clinic","NonCountClinic")=$G(SDDATA(44,SDCLNIEN_",",2502,"E")) ;NON-COUNT CLINIC? (Y OR N)
  S SDCLNSREC("Clinic","DivisionIEN")=$G(SDDATA(44,SDCLNIEN_",",3.5,"I")) ;Division
  S SDCLNSREC("Clinic","DivisionName")=$G(SDDATA(44,SDCLNIEN_",",3.5,"E")) ;Division
- S STATUS=$$INACTIVE^SDESUTIL(SDCLNIEN,DT),SDSTATUS=$S(STATUS=0:"ACTIVE",1:"INACTIVE") ;Get status of clinic
+ S STATUS=$$INACTIVE^SDES2UTIL(SDCLNIEN,DT),SDSTATUS=$S(STATUS=0:"ACTIVE",1:"INACTIVE") ;Get status of clinic
  S SDCLNSREC("Clinic","ClinicStatus")=SDSTATUS
  S SDCLNSREC("Clinic","StopCodeName")=$G(SDDATA(44,SDCLNIEN_",",8,"E")) ;Stop Code Name
  S SDCLNSREC("Clinic","StopCodeNum")=$G(SDDATA(44,SDCLNIEN_",",8,"I")) ;Stop Code IEN
@@ -196,6 +197,7 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  S SDCLNSREC("Clinic","InactivateDate")=$$FMTISO^SDAMUTDT($G(SDDATA(44,SDCLNIEN_",",2505,"I"))) ;Inactivate Date
  S SDCLNSREC("Clinic","ReactivateDate")=$$FMTISO^SDAMUTDT($G(SDDATA(44,SDCLNIEN_",",2506,"I"))) ;Reactivate Date
  S SDCLNSREC("Clinic","PbspID")=$G(SDDATA(44,SDCLNIEN_",",200,"E"))
+ S SDCLNSREC("Clinic","VeteranSelfCancel")=$$GET1^DIQ(44,SDCLNIEN,63,"E")
  ; Get CHAR4 Data
  N CHAR4
  S CHAR4=$$CHAR4^SDESUTIL($G(SDDATA(44,SDCLNIEN_",",.01,"E")))

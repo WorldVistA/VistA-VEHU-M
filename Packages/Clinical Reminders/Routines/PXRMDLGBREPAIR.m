@@ -1,5 +1,5 @@
-PXRMDLGBREPAIR ;SLC/PKR - Utilities for correcting dialog duplicates. ;04/08/2024
- ;;2.0;CLINICAL REMINDERS;**86**;Feb 04, 2005;Build 9
+PXRMDLGBREPAIR ;SLC/PKR - Utilities for correcting dialog duplicates. ;05/31/2024
+ ;;2.0;CLINICAL REMINDERS;**88**;Feb 04, 2005;Build 13
  Q
  ;
  ;===============================
@@ -60,7 +60,7 @@ DUPFIX ;Check for duplicates and resolve them.
  .. S TEXT(1)=""
  .. S TEXT(2)="Removing trailing non-printing characters from:"
  .. S TEXT(3)=" "_QUOTE_NAME_QUOTE_" ("_IEN_")"
- .. S CLOGTEXT(1)="PXRM*2.0*86 renamed:"
+ .. S CLOGTEXT(1)="PXRM*2.0*88 renamed:"
  .. S CLOGTEXT(2)=QUOTE_NAME_QUOTE
  .. D BMES^XPDUTL(.TEXT)
  .. S NAME=$$RMTRNPC(NAME)
@@ -111,7 +111,7 @@ DUPFIX ;Check for duplicates and resolve them.
  ..... S TEXT(1)=""
  ..... S TEXT(2)="Renaming: "_QUOTE_NAME_QUOTE_" ("_IEN_")"
  ..... S TEXT(3)="by appending -"_TYPE
- ..... S CLOGTEXT(1)="PXRM*2.0*86 renamed:"
+ ..... S CLOGTEXT(1)="PXRM*2.0*88 renamed:"
  ..... S CLOGTEXT(2)=QUOTE_NAME_QUOTE
  ..... D BMES^XPDUTL(.TEXT)
  ..... S NAME=$E(NAME,1,62)_"-"_TYPE
@@ -150,7 +150,7 @@ DUPFIX ;Check for duplicates and resolve them.
  S NAME="",NUMRPT=0
  F  S NAME=$O(RPTLIST(NAME)) Q:NAME=""  D
  . K CLOGTEXT
- . S CLOGTEXT(1)="PXRM*2.0*86 repointed the following IENs to this entry:"
+ . S CLOGTEXT(1)="PXRM*2.0*88 repointed the following IENs to this entry:"
  . S NLC=1
  . S NENTRIES=RPTLIST(NAME)-1
  . K TEXT
@@ -192,7 +192,7 @@ DUPFIX ;Check for duplicates and resolve them.
 LASTEDITDATE(IEN) ;Return the last edited date from the Change Log.
  N DATE,LASTENTRY
  S LASTENTRY=$O(^PXRMD(801.41,IEN,110,"B"),-1)
- S DATE=$S(LASTENTRY'="":$P(^PXRMD(801.41,IEN,110,LASTENTRY,0),U,1),1:0)
+ S DATE=$S(LASTENTRY>0:$P(^PXRMD(801.41,IEN,110,LASTENTRY,0),U,1),1:0)
  Q DATE
  ;
  ;===============================

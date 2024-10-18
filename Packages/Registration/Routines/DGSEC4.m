@@ -1,5 +1,6 @@
 DGSEC4 ;ALB/MM,JAP,LAB,ATG/JPN,ISL/DKA - Utilities for record access & sensitive record processing ;July 6, 2020@21:55
- ;;5.3;Registration;**249,281,391,471,684,699,964**;Aug 13, 1993;Build 323
+ ;;5.3;Registration;**249,281,391,471,684,699,964,1130**;Aug 13, 1993;Build 7
+ ;Per VHA Directive 6402, this routine should not be modified.
  ;
  ;Line tags OWNREC & SENS moved from DGSEC in DG*5.3*249 when DGSEC 
  ;reached the maximum routine size.
@@ -183,14 +184,21 @@ SENS(DGSENS,DFN,DGDUZ,DDS,DGSENFLG) ;Determine if sensitive record
  .D PRIV
  Q
 PRIV ;Privacy Act statement for DGSENS array
- S $P(DGLNE,"* ",38)=""
- I $G(DDS)="" S DGSENS(4)=DGLNE
- S DGSENS(5)="* This record is protected by the Privacy Act of 1974 and the Health    *"
- S DGSENS(6)="* Insurance Portability and Accountability Act of 1996. If you elect    *"
- S DGSENS(7)="* to proceed, you will be required to prove you have a need to know.    *"
- S DGSENS(8)="* Accessing this patient is tracked, and your station Security Officer  *"
- S DGSENS(9)="* will contact you for your justification.                              *"
- I $G(DDS)="" S DGSENS(10)=DGLNE
+ I $G(DDS)="" S DGSENS(4)=""
+ S DGSENS(5)="1. STOP"
+ S DGSENS(6)="2. Confirm you need access to this Restricted patient record"
+ S DGSENS(7)=""
+ S DGSENS(8)="This record is protected by the Privacy Act of 1974 and the Health"
+ S DGSENS(9)="Insurance Portability and Accountability Act (HIPAA) Privacy Rule."
+ S DGSENS(10)=" * Access to this patient record is tracked and monitored."
+ S DGSENS(11)=" * You must have need for this record to accomplish officially"
+ S DGSENS(12)="  authorized and assigned duties, such as direct patient care, to"
+ S DGSENS(13)="  proceed."
+ S DGSENS(14)=" * You must provide justification for your access upon request."
+ S DGSENS(15)=" * Failure to comply may result in disciplinary or adverse action up to"
+ S DGSENS(16)="  and including removal from Federal service, and civil and criminal"
+ S DGSENS(17)="  penalties."
+ I $G(DDS)="" S DGSENS(18)=""
  Q
 EMPL(DFN,DGCHELIG) ;Does patient have any eligibility codes equal to
  ;                EMPLOYEE

@@ -1,5 +1,5 @@
-SDESPROVCLINSRCH ;ALB/BLB,BWF - VISTA SCHEDULING RPCS; Feb 13, 2023@6:10pm
- ;;5.3;Scheduling;**837,871**;Aug 13, 1993;Build 13
+SDESPROVCLINSRCH ;ALB/BLB,BWF,JAS - SDES GET CLINICS BY PROVIDER; Aug 14, 2024@3:20pm
+ ;;5.3;Scheduling;**837,871,887**;Aug 13, 1993;Build 7
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -27,6 +27,7 @@ BUILD(CLINICS,PROVIDERIEN) ;
  .S CLINICS("Provider",1,"AssociatedClinicIEN",COUNT)=CLINICIEN
  .S CLINICS("Provider",1,"AssociatedClinicName",COUNT)=$$GET1^DIQ(44,CLINICIEN,.01,"E")
  .S CLINICS("Provider",1,"PbspID",COUNT)=$$GET1^DIQ(44,CLINICIEN,200,"E")
+ .S CLINICS("Provider",1,"VeteranSelfCancel",COUNT)=$$GET1^DIQ(44,CLINICIEN,63,"E")
  Q
  ;
 VALIDATEPROVIDER(ERRORS,PROVIDERIEN) ;

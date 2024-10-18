@@ -1,5 +1,5 @@
 VPRSDAOR ;SLC/MKB -- SDA Order utilities ;7/29/22  14:11
- ;;1.0;VIRTUAL PATIENT RECORD;**30**;Sep 01, 2011;Build 9
+ ;;1.0;VIRTUAL PATIENT RECORD;**30,35**;Sep 01, 2011;Build 16
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -110,4 +110,13 @@ ORSIG(ORIFN) ; -- return string of signature data from Order Action as
  ; else, return Sig Sts & Release D/T
  S:Y="" Y=$P(X0,U,4)_U_U_$P(X0,U,16)
  S X=$P(Y,U) S:$L(X) $P(Y,U)=$$EXTERNAL^DILFD(100.008,4,,X)
+ Q Y
+ ;
+FLAGS(IFN,LIST) ; -- returns 1 or 0, if any flags are active [VPRSDAOR]
+ ; Can also return .LIST(DA) of actions w/flag nodes
+ N X,Y,I S Y=0
+ S IFN=+$G(IFN) K LIST
+ S I=0 F  S I=$O(^OR(100,IFN,8,I)) Q:I<1  I $D(^(I,3)) S X=$G(^(3)) D
+ . S LIST(I)=I_","_IFN
+ . S:X Y=1
  Q Y

@@ -1,5 +1,5 @@
 SDESGETCONSULTS ;ALB/BLB,MGD,RRM,BWF,CGP,BLB,ANU,LAB,BLB - VISTA SCHEDULING RPCS GET CONSULTS ;DEC 01,2023
- ;;5.3;Scheduling;**815,820,824,837,842,847,857,867,875,877**;Aug 13, 1993;Build 14
+ ;;5.3;Scheduling;**815,820,824,837,842,847,857,867,875,877,886**;Aug 13, 1993;Build 13
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
@@ -156,7 +156,7 @@ GETCONSULT(REQUEST,CONSULTIEN) ;Build a consult record for every consult
  S REQUEST("Request",NUM,"ConsultServiceRenderedAs")=$G(CONDATA(123,CONSULTIEN_",",14,"E"))
  S REQUEST("Request",NUM,"ConsultProhibitedClinicFlag")=$S($$GET1^DIQ(44,+CLINICIEN_",",2500,"I")="Y":1,1:0)
  S REQUEST("Request",NUM,"CPRSStatus")=$$GET1^DIQ(123,CONSULTIEN,8,"E")
- S REQUEST("Request",NUM,"ConsultCanEditPid")=$$CONSCANCELCHECK(CONSULTIEN,DFN)
+ S REQUEST("Request",NUM,"ConsultCanEditPid")=$$CONSCANCELCHECK^SDES2GETCONSULTS(CONSULTIEN,DFN)
  S REQUEST("Request",NUM,"PatientLast4")=$$LAST4SSN^SDESINPUTVALUTL(DFN)
  ; build appointment request and recall
  I '$$GETCONTIEN^SDESCONTACTS(.ERRORS,CONSULTIEN,"C") D

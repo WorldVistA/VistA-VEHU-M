@@ -1,7 +1,7 @@
 OSEHRA ZGO Export: SDEC SETTINGS
 ZWR
 ^SDEC(409.98,0)="SDEC SETTINGS^409.98^2^2"
-^SDEC(409.98,1,0)="VS GUI NATIONAL^1.7.59^3240915"
+^SDEC(409.98,1,0)="VS GUI NATIONAL^1.7.60^3241018"
 ^SDEC(409.98,1,1,0)="^409.981^11^7"
 ^SDEC(409.98,1,1,1,0)="VS GUI Keyboard Shortcuts^2"
 ^SDEC(409.98,1,1,1,1)="dvagov.sharepoint.com/sites/vhavista-scheduling-enhancements-vse/SitePages/VS-GUI-Keyboard-Shortcuts.aspx"
@@ -33,6 +33,6 @@ ZWR
 ^SDEC(409.98,1,3,"B",179,1)=""
 ^SDEC(409.98,1,3,"B",648,2)=""
 ^SDEC(409.98,1,3,"B",679,3)=""
-^SDEC(409.98,2,0)="VS GUI LOCAL^1.7.59^3240915"
+^SDEC(409.98,2,0)="VS GUI LOCAL^1.7.60^3241018"
 ^SDEC(409.98,"B","VS GUI LOCAL",2)=""
 ^SDEC(409.98,"B","VS GUI NATIONAL",1)=""

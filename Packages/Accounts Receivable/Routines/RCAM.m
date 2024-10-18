@@ -1,5 +1,5 @@
 RCAM ;WASH-ISC@ALTOONA,PA/RGY-Manager Debtor Information ;12/19/96  12:48 PM
-V ;;4.5;Accounts Receivable;**34,190,198,223,359,438**;Mar 20, 1995;Build 4
+V ;;4.5;Accounts Receivable;**34,190,198,223,359,438,441**;Mar 20, 1995;Build 2
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;PRCA*4.5*359 Ensure displayed phone is correct format: 111-222-3333
@@ -76,8 +76,7 @@ DELA ;Delete AR debtor address information
  S DA=RCDB0,DIE="^RCD(340,",DR="1.01///@;1.02///@;1.03///@;1.04///@;1.05///@;1.06///@" D ^DIE W !,"*** Old address information deleted from AR address file ***",!
  Q
 INST(RCDB) ;Edit institution
- NEW DA,DIE,DR
- S DA=+RCDB,DIE="^DIC(4,",DR="1.01;1.02;1.03;.02;1.04" D ^DIE
+ W !!,"You are not authorized to edit Institution file",!!  ; PRCA*4.5*441
  Q
 VEN(RCDB) ;Edit Vendor file
  NEW DA,DIE,DR

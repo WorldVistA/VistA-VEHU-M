@@ -1,5 +1,5 @@
 VPRDPT ;SLC/MKB -- Patient demographics extract ;8/11/11  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**1,4,5,7**;Sep 01, 2011;Build 3
+ ;;1.0;VIRTUAL PATIENT RECORD;**1,4,5,7,35**;Sep 01, 2011;Build 16
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -85,12 +85,14 @@ SVC ;-service data
  S PAT("exposures")=AO_U_IR_U_PGF_U_HNC_U_MST_U_CV
  ;
  ; rated disabilities [DGRPDB]
- N VPRDIS,DIS,NM,DX
+ N VPRDIS,DIS,NM,DX,IENS,ODT,CDT
  D RDIS^DGRPDB(DFN,.VPRDIS)
  S I=0 F  S I=$O(VPRDIS(I)) Q:I<1  D
  . S DIS=VPRDIS(I)
  . S NM=$$GET1^DIQ(31,+DIS_",",.01),DX=$$GET1^DIQ(31,+DIS_",",2)
- . S PAT("disability",+DX)=NM_U_$P(DIS,U,3)_U_$P(DIS,U,2) ;name^sc^%
+ . S IENS=I_","_DFN
+ . S ODT=$$GET1^DIQ(2.04,IENS_",",5),CDT=$$GET1^DIQ(2.04,IENS_",",6)
+ . S PAT("disability",+DX_"x"_I)=NM_U_$P(DIS,U,3)_U_$P(DIS,U,2)_U_$P(DIS,U,4)_U_ODT_U_CDT ;name^sc^%^extr^orig ed^curr ed
  Q
 PRF ;-patient record flags
  N VPRPF,I,NAME,TEXT
@@ -229,7 +231,7 @@ XML(ITEM) ; -- Return patient data as XML in @VPR@(n)
  .... S X=$G(ITEM(ATT,I,"address")) I $L(X) D ADDR(X)
  .... S X=$G(ITEM(ATT,I,"telecom")) I $L(X) D PHONE(X)
  .... D ADD("</support>")
- ... I ATT="disability" S Y=Y_"vaCode='"_I_"' "
+ ... I ATT="disability" S Y=Y_"vaCode='"_+I_"' "
  ... S Y=Y_$$LOOP_"/>" D ADD(Y)
  .. D ADD("</"_ID_">") S Y=""
  . ;
@@ -281,7 +283,7 @@ LABELS(X) ; -- return string of attribute labels for element X
  I X="pcProvider" S Y="code^name^"_$$PROVTAGS^VPRD_"^Z"
  I X="support" S Y="name^relationship^Z"
  I X="eligibility" S Y="name^primary^Z"
- I X="disability" S Y="printName^sc^scPercent^Z"
+ I X="disability" S Y="printName^sc^scPercent^extr^origEffDate^currEffDate^Z"
  I X="alias" S Y="fullName^familyName^givenNames^Z"
  I X="flag" S Y="name^text^Z"
  I X="facility" S Y="code^name^latestDate^domain^homeSite^Z"

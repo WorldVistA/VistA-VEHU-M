@@ -1,5 +1,5 @@
 SDECCONSJSON ;ALB/ANU,MGD,LAB/BLB - VISTA SCHEDULING RPCS ;MAR 31, 2022@14:39
- ;;5.3;Scheduling;**784,785,788,805,807,813,877**;Aug 13, 1993;Build 14
+ ;;5.3;Scheduling;**784,785,788,805,807,813,877,886**;Aug 13, 1993;Build 13
  ;
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
@@ -7,15 +7,15 @@ SDECCONSJSON ;ALB/ANU,MGD,LAB/BLB - VISTA SCHEDULING RPCS ;MAR 31, 2022@14:39
  ;Reference to ^GMR(123.5  In ICR #4557
  ;Reference to ^GMR(123    In ICR #6185
  ;Reference to ^ORD(100.01 In ICR #2638
- ;Reference to $$GETS^DIQ,$$GETS1^DIQ in ICR #2056  
+ ;Reference to $$GETS^DIQ,$$GETS1^DIQ in ICR #2056
  Q
  ;
 JSONCONSLIST(SDCONJSON,DFN) ;Return a list of ACTIVE or PENDING CONSULTS for patient
- ;INPUT - DFN (Date File Number) Pointer to PATIENT (#2) File. 
+ ;INPUT - DFN (Date File Number) Pointer to PATIENT (#2) File.
  ;RETURN PARMETER:
- ; List of consults in ACTIVE or PENDING CPRS STATUS.  Data is delimited by carat (^). 
+ ; List of consults in ACTIVE or PENDING CPRS STATUS.  Data is delimited by carat (^).
  ; Field List:
- ; (1)     Internal IEN 
+ ; (1)     Internal IEN
  ; (2)     Request Type
  ; (3)     File Entry Date
  ; (4)     To Service/Specialty
@@ -31,7 +31,7 @@ JSONCONSLIST(SDCONJSON,DFN) ;Return a list of ACTIVE or PENDING CONSULTS for pat
  ; (14)    Clinic indicated Date
  ; (15)    # of Phone contacts
  ; (16)    Date of Last Letter
- ; (17)    Covid Priority 
+ ; (17)    Covid Priority
  ; Number of Email Contacts
  ; Number of Text Contacts
  ; Number of Secure messages contact
@@ -107,8 +107,7 @@ BLDCONSULTREC ;Build a consult record for every consult
  S SDCONSREC("Consult",SDECI,"NumberOfTextContact")=$P(SDCONLET,U,4) ;813
  S SDCONSREC("Consult",SDECI,"NumberOfSecureMessage")=$P(SDCONLET,U,5) ;813
  S SDCONSREC("Consult",SDECI,"CovidPriority")=$$PRIORITY^SDEC51(SDCONSID) ; Get Covid priority
- S CANCHANGEPID=$$CONSCANCELCHECK(SDCONSID,DFN)
- S SDCONSREC("Consult",SDECI,"CanEditPid")=CANCHANGEPID
+ S SDCONSREC("Consult",SDECI,"CanEditPid")=$$CONSCANCELCHECK^SDES2GETCONSULTS(SDCONSID,$$GET1^DIQ(123,SDCONSID,.02,"I"))
  ;build stop code list
  S SDSTOP="",STOP=""
  S SDTOSVCI=$G(SDCONSARR(123,SDCONSID_",",1,"I"))
@@ -126,14 +125,7 @@ GETPID(SDCONSID) ;
  S CHSIEN=$O(^SDEC(409.87,CHIEN,1,9999999),-1)
  S OLDESTPID=$$GET1^DIQ(409.871,CHSIEN_","_CHIEN_",",1,"I")
  Q OLDESTPID
-CONSCANCELCHECK(SDCONSID,DFN) ;looking for most recent appt linked to this consult and checking if cancelled by patient or clinic
- N FOUND,APPTIEN,CANCHANGE
- S APPTIEN="",FOUND=0,CANCHANGE=0
- F  S APPTIEN=$O(^SDEC(409.84,"CPAT",DFN,APPTIEN),-1) Q:'APPTIEN!(FOUND=1)  D
- .I $P($$GET1^DIQ(409.84,APPTIEN,.22,"I"),";")=SDCONSID S FOUND=1 D
- ..I $$GET1^DIQ(409.84,APPTIEN,.17,"I")="PC" S CANCHANGE=1
- ..I $$GET1^DIQ(409.84,APPTIEN,.1,"I")=1 S CANCHANGE=1
- Q CANCHANGE
+ ;
 BLDJSON ;
  D ENCODE^SDESJSON(.SDCONSREC,.SDCONJSON,.ERR)
  K SDCONSREC

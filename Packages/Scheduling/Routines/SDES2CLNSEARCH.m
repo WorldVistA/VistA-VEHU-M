@@ -1,5 +1,5 @@
-SDES2CLNSEARCH ;ALB/MGD,BWF,JAS - CLINIC NAME SEARCH AND LIMITED DATA RETURN ;FEB 27, 2024
- ;;5.3;Scheduling;**870,871,875**;Aug 13, 1993;Build 25
+SDES2CLNSEARCH ;ALB/MGD,BWF,JAS,JDJ - CLINIC NAME SEARCH AND LIMITED DATA RETURN ;AUG 13, 2024
+ ;;5.3;Scheduling;**870,871,875,887**;Aug 13, 1993;Build 7
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -21,15 +21,16 @@ SEARCHCLIN(SDRETURN,SDCONTEXT,SDCLINIC) ;Search for clinics and provide return o
  ; SDCONTEXT("USER SECID") = The SECID of the user taking action in the calling application.
  ;
  ; The SDCLINIC array contains the following array elements:
- ;  SDCLINIC("SEARCHSTRING") (Req) = free text string that represents the recall clinic name that will be searched
+ ;  SDCLINIC("SEARCHSTRING") (Req) = free text string that represents the clinic name that will be searched
  ;  SDCLINIC("STATION") (Opt) = Station Number: If present, the search would be limited to matching clinics at the given institution.
  ;    If absent, the search would take place across all divisions/institutions. Example values: 534, 534GB
  ;  SDCLINIC("DATETIME") (Opt) = Date in ISO 8601 format to use for Clinic Status verification. If not passed in, defaults to DT.
  ;  SDCLINIC("RETURNACTIVE") (Opt) = Boolean to return Active or Inactive clinics.
  ;     1:Returns active and inactive clinics, 0:Returns only active clinics,  Defaults to 0 if not passed in
+ ;  SDCLINIC("LENGTH OF APPOINTMENT") (Opt) = numeric string (2-3) Example value: 30
  ;
  ; OUTPUT - SDRETURN
- ; List of Recall Clinics from the RECALL REMINDERS (#403.5) file with the following data.
+ ; List of Clinics from the HOSPITAL LOCATION (#44) file with the following data.
  ; Field List:
  ; 1. Clinic IEN
  ; 2. Clinic name
@@ -46,14 +47,14 @@ SEARCHCLIN(SDRETURN,SDCONTEXT,SDCLINIC) ;Search for clinics and provide return o
  ; 13. Status (Active or Inactive) If not passed in, default to DT
  ; 14. Non-count (Y or N)
  ;
- N SDLINICLIST,SDERRORS,SDCLINICLIST,SDJSONERRORS
+ N SDLINICLIST,SDERRORS,SDCLINICLIST,SDJSONERRORS,SDVALIDDATA
  N SDSEARCHSTRING,SDSTATION,SDDATE,SDDATETIME,SDRETURNACTIVE
  ;
  D VALCONTEXT^SDES2VALCONTEXT(.SDERRORS,.SDCONTEXT)
- I $D(SDERRORS) S SDJSONERRORS("CreateClinic",1)="" M SDJSONERRORS=SDERRORS D BUILDJSON^SDES2JSON(.SDRETURN,.SDJSONERRORS) Q
+ I $D(SDERRORS) S SDJSONERRORS("Clinic",1)="" M SDJSONERRORS=SDERRORS D BUILDJSON^SDES2JSON(.SDRETURN,.SDJSONERRORS) Q
  ;
  D VALCLINIC(.SDERRORS,.SDCLINIC,.SDVALIDDATA)
- I $D(SDERRORS) S SDJSONERRORS("CreateClinic",1)="" M SDJSONERRORS=SDERRORS D BUILDJSON^SDES2JSON(.SDRETURN,.SDJSONERRORS) Q
+ I $D(SDERRORS) S SDJSONERRORS("Clinic",1)="" M SDJSONERRORS=SDERRORS D BUILDJSON^SDES2JSON(.SDRETURN,.SDJSONERRORS) Q
  ;
  D GETCLINICLIST(.SDVALIDDATA,.SDCLINICLIST)
  D BUILDJSON^SDESBUILDJSON(.SDRETURN,.SDCLINICLIST)
@@ -61,7 +62,7 @@ SEARCHCLIN(SDRETURN,SDCONTEXT,SDCLINIC) ;Search for clinics and provide return o
  ;
 VALCLINIC(SDERRORS,SDCLINIC,SDVALIDDATA) ; validate incoming clinic parameters
  ; Input - SDERRORS = passed in by reference, represents the errors that could be generated when validating the search string
- ; SDSEARCHSTRING = represents the name or partial name of the Recall Clinic
+ ; SDSEARCHSTRING = represents the name or partial name of the Clinic
  ; SDSTATION = Station Number
  ; SDDATETIME (Opt) = Date in ISO 8601 format to use for Clinic Status verification. If not passed in, default to DT.
  ; SDRETURNACTIVE ? Boolean: 1:Return active and inactive clinics, 0:Return only active clinics
@@ -92,13 +93,13 @@ VALCLINIC(SDERRORS,SDCLINIC,SDVALIDDATA) ; validate incoming clinic parameters
  S SDVALIDDATA("RETURNACTIVE")=SDRETURNACTIVE
  Q
  ;
-GETCLINICLIST(SDVALIDDATA,SDCLINICLIST) ; pull matching recall clinics using the first input parameter passed in by the RPC
- ; Input - SEARCHSTRING = string that represents the name of the recall clinic
+GETCLINICLIST(SDVALIDDATA,SDCLINICLIST) ; pull matching clinics using the first input parameter passed in by the RPC
+ ; Input - SEARCHSTRING = string that represents the name of the clinic
  ; SDSTATION = Station Number
  ; SDDATETIME = Date/Time in FileMan format to use for Clinic Status verification
  ; SDRETURNACTIVE ? Boolean: 1:Return active and inactive clinics, 0:Return only active clinics
  ; SDCLINICLIST = passed in by reference; represents the array that will be returned as output
- ; Output - SDCLINICLIST = list of recall clinic names, clinic IENs and the associated recall reminder IENs.
+ ; Output - SDCLINICLIST = list of clinic names, clinic IENs and the associated IENs.
  N SDCLINCNT,SDRESULTS,SUB3,SDCNT,SDINDX,SDNAMEINDX
  S SDSEARCHSTRING=SDVALIDDATA("SEARCHSTRING")
  S SDSTATION=SDVALIDDATA("STATION")
@@ -132,10 +133,10 @@ GETCLINICLIST(SDVALIDDATA,SDCLINICLIST) ; pull matching recall clinics using the
  I SDCLINCNT=0 S SDCLINICLIST("Clinic",1)=""
  Q
  ;
-BUILDRETURN(SDCLINICIEN,SDCLINCNT,SDCLINICLIST,SDDATETIME) ;Build return array with recall reminder clinic data
+BUILDRETURN(SDCLINICIEN,SDCLINCNT,SDCLINICLIST,SDDATETIME) ;Build return array with reminder clinic data
  ; input - SDCLINICIEN = IEN of clinic in #44
- ; SDCLINICLIST = passed by reference, represents the array of recall clinics and associated data that will be returned to the client
- ; output - SDCLINICLIST = recall clinic array and their associated data to be sent back to the client
+ ; SDCLINICLIST = passed by reference, represents the array of clinics and associated data that will be returned to the client
+ ; output - SDCLINICLIST = clinic array and their associated data to be sent back to the client
  ;
  N STATUS,SDFIELDS,SDDATA,SDPRVCNT,SDCLINPROVIDER,SDPROVIDERID,SDPROVIDERNAME,SDDEFAULTPROV,SDPROVIDERSECID
  S SDFIELDS=".01;1;2;2.1;8;16;50.01;60;200;2500;2502;2503"

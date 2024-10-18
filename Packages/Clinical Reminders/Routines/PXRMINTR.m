@@ -1,6 +1,7 @@
-PXRMINTR ;SLC/PKR,PJH - Input transforms for Clinical Reminders. ;02/26/2024
- ;;2.0;CLINICAL REMINDERS;**4,12,16,18,26,45,86**;Feb 04, 2005;Build 9
+PXRMINTR ;SLC/PKR,PJH - Input transforms for Clinical Reminders. ;06/27/2024
+ ;;2.0;CLINICAL REMINDERS;**4,12,16,18,26,45,88**;Feb 04, 2005;Build 13
  ;References          ICR#
+ ;^AUTTHF             3083
  ;^LAB(60,LABTEST,0)  91
  ;
  ;=======================================================
