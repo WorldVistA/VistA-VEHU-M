@@ -1,6 +1,6 @@
-IBAECP ;WOIFO/AAT-LTC SINGLE PATIENT PROFILE ; 20-FEB-02
- ;;2.0;INTEGRATED BILLING;**171,176,199**;21-MAR-94
- ;; Per VHA Directive 10-93-142, this routine should not be modified
+IBAECP ;WOIFO/AAT - LTC SINGLE PATIENT PROFILE ; 20-FEB-02
+ ;;2.0;INTEGRATED BILLING;**171,176,199,729**;21-MAR-94;Build 8
+ ;;Per VA Directive 6402, this routine should not be modified.
  ;
  S:'$D(DTIME) DTIME=300 D HOME^%ZIS
  ;
@@ -171,19 +171,15 @@ ASKPAT() N DIR,DIC,Y,X,IBDFN
  . N DPTNOFZY S DPTNOFZY=1  ;Suppress PATIENT file fuzzy lookups
  . D ^DIC Q:Y<1  ; Patient code
  . S Y=+$G(Y)
- . ;W "  " D WRTPAT(Y)
  I $D(DIRUT) Q -1
  Q +Y
  ;
 ASKPATQQ N DIC,X,Y,IBDFN,IBI,DIR,DIRUT,DIROUT,DTOUT,DUOUT,IBCNT
  D ASKPHD
  S IBI=7,IBCNT=0
- ;S DIC="^DPT",DIC(0)="F",X="??" D ^DIC
  S IBDFN=0 F  S IBDFN=$O(^IBA(351.81,"AE",IBDFN)) Q:'IBDFN  D  Q:$D(DIRUT)
  . W ! S IBI=IBI+1
  . I IBI>IOSL S DIR(0)="E" D ^DIR W ! Q:$D(DIRUT)  W ! S IBI=3 ; D ASKPHD S IBI=4
- . ; S IBCNT=IBCNT+1
- . ; W $J(IBCNT,4)," ",?6
  . D WRTPAT(IBDFN)
  Q
  ;
@@ -191,9 +187,6 @@ ASKPHD ;Header
  N IBI
  W !,"Choose an LTC Patient:",!
  Q
- ;W !," LTC PATIENT NAME",?30,"BIRTH DATE",?45,"SSN",?55,"STATUS",?68,"CLK DATE"
- ;W ! F IBI=1:1:80 W "-"
- ;Q
 WRTPAT(IBDFN) ; Write patient's data
  N IBZ,IBVET,IBSC
  S IBZ=$G(^DPT(IBDFN,0)) Q:IBZ="" ""
@@ -201,11 +194,6 @@ WRTPAT(IBDFN) ; Write patient's data
  S IBVET=($P($G(^DPT(IBDFN,"VET")),U)="Y")
  W $P(IBZ,U)
  W " ",?30,$$FMTE^XLFDT($P($P(IBZ,U,3),"."),"5MZ")
- W " ",?42,$$SSN($$EXTERNAL^DILFD(2,.09,"",$P(IBZ,U,9)))
  W " ",?55,$S(IBVET:$S(IBSC:"S/C",1:"NSC")_" VETERAN",1:"")
  W " ",?68,$$FMTE^XLFDT($P($O(^IBA(351.81,"AE",IBDFN,""),-1),"."),"5MZ")
  Q
- ;
-SSN(IBN) ;Format SSN Value
- I $L(+IBN)<7 Q IBN
- Q $E(IBN,1,3)_"-"_$E(IBN,4,5)_"-"_$E(IBN,6,255)

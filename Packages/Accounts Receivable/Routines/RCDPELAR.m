@@ -1,5 +1,5 @@
 RCDPELAR ;EDE/FA - LIST ALL AUTO-POSTED RECEIPTS REPORT ;Nov 17, 2016
- ;;4.5;Accounts Receivable;**318,321,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**318,321,326,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; Main entry point
@@ -16,7 +16,7 @@ EN ; Main entry point
  S $P(INPUT,"^",4)=$$SELERA()                   ; Select type of ERAS to be displayed
  Q:'$P(INPUT,"^",4)
  ;
- ; PRCA*4.5*326 - Ask to show Medical/Pharmacy Tricare or All
+ ; PRCA*4.5*326 - Ask to show Medical/Pharmacy Tricare or All, PRCA*4.5*432 Add CHAMPVA
  S $P(INPUT,"^",10)=$$RTYPE^RCDPEU1("")
  I $P(INPUT,"^",10)<0 Q
  ;
@@ -244,7 +244,7 @@ REPORT(INPUT,RCVAUTD,IO,JOB) ; Compile and run the report
  ;                       A8 - 0 - Output to paper
  ;                            1 - Output to Excel
  ;                       A9 - Line counter for Listman output
- ;                       A10 - M/P/T/A = Medical/Pharmacy/Tricare/All  
+ ;                       A10 - M/P/T/C/A = Medical/Pharmacy/Tricare/CHAMPVA/All  
  ;           RCVAUTD -  Array of selected Divisions
  ;                      Only passed if A1=2
  ;           IO      - Interface device
@@ -264,7 +264,7 @@ REPORT(INPUT,RCVAUTD,IO,JOB) ; Compile and run the report
  S DTEND=$P($P(INPUT,"^",3),"|",2)_".9999"  ; End of Date Range
  S DTSTART=$P($P(INPUT,"^",3),"|",1)        ; End of Date Range
  S ERAFILT=$P(INPUT,"^",4)                  ; ERA Filter
- S RCTYPE=$P(INPUT,"^",10)                  ; PRCA*4.5*326 Medical/Pharmacy/Tricare/All
+ S RCTYPE=$P(INPUT,"^",10)                  ; PRCA*4.5*326 Medical/Pharmacy/Tricare/All ; PRCA*4.5*432 Add CHAMPVA
  S RCPAYS=$P(INPUT,"^",5)                   ; Payers All/Selected/Range
  ;
  ; First filter and sort the report

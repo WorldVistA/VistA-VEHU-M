@@ -1,5 +1,5 @@
 ONCSCHMG ;HINES OIFO/RTK - Grade, Discriminator, Stage Help and Utlts ;06/11/18
- ;;2.2;ONCOLOGY;**10,12,13,14**;Jul 31, 2013;Build 8
+ ;;2.2;ONCOLOGY;**10,12,13,14,20**;Jul 31, 2013;Build 5
  ;
  ;
 HLP ;Help for Grade fields
@@ -11,7 +11,7 @@ HLP ;Help for Grade fields
  N IEN F IEN=0:0 S IEN=$O(^ONCO(164.44,ONCGRIEN,2,IEN)) Q:IEN'>0  D
  .W !,?2,$P($G(^ONCO(164.44,ONCGRIEN,2,IEN,0)),U,1)
  .I $L($P($G(^ONCO(164.44,ONCGRIEN,2,IEN,0)),U,2))<75 W ?6,$P($G(^ONCO(164.44,ONCGRIEN,2,IEN,0)),U,2) Q
- .W ?6,$E($P($G(^ONCO(164.44,ONCGRIEN,2,IEN,0)),U,2),1,72),!?9,$E($P($G(^ONCO(164.44,ONCGRIEN,2,IEN,0)),U,2),73,99)
+ .W ?6,$E($P($G(^ONCO(164.44,ONCGRIEN,2,IEN,0)),U,2),1,72),!?9,$E($P($G(^ONCO(164.44,ONCGRIEN,2,IEN,0)),U,2),73,150)
  W !!
  Q
  ;

@@ -1,5 +1,5 @@
 YTQAPI2 ;ASF/ALB - MHAX REMOTE PROCEDURES cont ;10/17/16  13:37
- ;;5.01;MENTAL HEALTH;**85,96,119,121,123,130,217,235**;Dec 30, 1994;Build 1
+ ;;5.01;MENTAL HEALTH;**85,96,119,121,123,130,217,235,240**;Dec 30, 1994;Build 10
  ;
  ; Reference to ^DPT in ICR #10035
  ; Reference to LIST^DIC in ICR #2051
@@ -94,6 +94,7 @@ SETANS(YSDATA,YS) ;save an answer
  F  S N=$O(YS(N)) Q:N'>0  S N1=N1+1,^YTT(601.85,YSIENS,1,N1,0)=YS(N)
  S:N1 ^YTT(601.85,YSIENS,1,0)=U_U_N1_U_N1_U_DT_U
  S YSDATA(1)="[DATA]",YSDATA(2)="OK"
+ D UPANS^YTQEVNT(+$G(YSAD),"saveone") ; publish admin update event
  ;set has been operational
  S YSCODE=$P(^YTT(601.84,YSAD,0),U,3)
  S YSOP=$P($G(^YTT(601.71,YSCODE,2)),U,2)

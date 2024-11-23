@@ -1,5 +1,5 @@
 RCDPEMAP ;AITC/FA - LIST ALL AUTO-POSTED RECEIPTS REPORT ;Nov 17, 2016
- ;;4.5;Accounts Receivable;**332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**332,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; Main entry point
@@ -11,7 +11,7 @@ EN ; Main entry point
  Q:'INPUT                                   ; '^' or timeout
  S $P(INPUT,"^",2)=$$DTRNG(0)               ; Start Date|End date
  Q:'$P(INPUT,"^",2)                         ; '^' or timeout
- S $P(INPUT,"^",3)=$$RTYPE^RCDPEU1("")      ; M/P/T filter
+ S $P(INPUT,"^",3)=$$RTYPE^RCDPEU1("")      ; M/P/T/C filter   ;PRCA*4.5*432 Add CHAMPVA
  Q:$P(INPUT,"^",3)<0                        ; '^' or timeout
  S RCPAR("SELC")=$$PAYRNG^RCDPEU1()         ; Selected or Range of Payers
  Q:RCPAR("SELC")=-1                         ; '^' or timeout
@@ -229,7 +229,8 @@ REPORT(INPUT,RCVAUTD,IO,JOB) ; Compile and run the report
  ;                             B2 - Auto-Post End Date
  ;                       A3 - 'M' - Medical Payers only
  ;                            'P' - Pharmacy Payers only
- ;                            'T' - Tricare Payers onlye
+ ;                            'T' - Tricare Payers only
+ ;                            'C' - CHAMPVA Payers only  ;PRCA*4.5*432 Add CHAMPVA
  ;                            'A' - All Payers
  ;                       A4 - 'S' - Specific Payers
  ;                            'R' - Range of Payers
@@ -261,7 +262,7 @@ REPORT(INPUT,RCVAUTD,IO,JOB) ; Compile and run the report
  S SORT=$P(INPUT,"^",6)                     ; Type of secondary sort
  S DTEND=$P($P(INPUT,"^",2),"|",2)_".9999"  ; End of Date Range
  S DTSTART=$P($P(INPUT,"^",2),"|",1)        ; End of Date Range
- S RCTYPE=$P(INPUT,"^",3)                   ; Medical/Pharmacy/Tricare/All
+ S RCTYPE=$P(INPUT,"^",3)                   ; Medical/Pharmacy/Tricare/CHAMPVA/All  ;PRCA*4.5*432 Add CHAMPVA
  S RCPAYS=$P(INPUT,"^",4)                   ; Payers All/Selected/Range
  S USERF=$P(INPUT,"^",5)                    ; All Users/Selected Users
  ;

@@ -1,5 +1,5 @@
 RCDPEAP1 ;ALB/KML - AUTO POST MATCHING EFT ERA PAIR - CONT. ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**298,304,318,321,326,345,349,424**;Mar 20, 1995;Build 11
+ ;;4.5;Accounts Receivable;**298,304,318,321,326,345,349,424,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;Read ^IBM(361.1) via Private IA 4051
  ;
@@ -36,6 +36,7 @@ AUTOCHK(RCERA) ;Verify if ERA can be auto-posted - PRE-CHECK USED IN RCDPEM0
  ; ERA must be matched to an EFT to be eligible for mark for autopost
  S RCMATCH=$$MATCHED(RCERA)
  S RCZERO=$$ISZERO(RCERA)
+ I RCZERO I $$ISTYPE^RCDPEU1(344.4,RCERA,"C") Q 0  ; PRCA*4.5*432 Zero balance ERA with CHAMPVA payer is not an auto-post candidate
  I 'RCZERO,'RCMATCH Q 0 ; ERAs much be matched unless they are zero balance
  ;
  ; If this is a zero balance ERA and the site parameter for posting zero balance
@@ -99,6 +100,7 @@ AUTOCHK2(RCERA,RCTYP) ; RCTYP added PRCA*4.5*321
  S RC0=$G(^RCY(344.4,RCERA,0))
  S RCMATCH=$$MATCHED(RCERA)
  S RCZERO=$$ISZERO(RCERA)
+ I RCZERO I $$ISTYPE^RCDPEU1(344.4,RCERA,"C") Q "0^CHAMPVA 0 balance ERA"  ; PRCA*4.5*432 Zero balance ERA with CHAMPVA payer is not an auto-post candidate
  I 'RCZERO,'RCMATCH Q "0^ERA not matched" ; ERAs much be matched unless they are zero balance
  ; Only Auto-post zero pay ERA if parameter is enabled
  I RCZERO,'$$GET1^DIQ(344.61,"1,",1.11,"I") Q "0^Auto-post 0 balance disabled"

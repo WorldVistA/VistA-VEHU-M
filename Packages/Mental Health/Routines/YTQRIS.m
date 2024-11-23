@@ -1,5 +1,5 @@
 YTQRIS ;SLC/KCM - Instrument Selection RPC's ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,182**;Dec 30, 1994;Build 13
+ ;;5.01;MENTAL HEALTH;**130,141,182,240**;Dec 30, 1994;Build 10
  ;
  ; External Reference    ICR#
  ; ------------------   -----
@@ -220,7 +220,11 @@ ISMGR() ; return 1 if admin access to admins
  Q +YSPRIV>0
  ;
 DELADMIN(YSADM) ; delete an admin & associated records
- N DIK,DA,YSANS,YSRSLT
+ N DIK,DA,YSANS,YSRSLT,YSEVDFN,YSEVTST,YSEVCPLT
+ S YSEVDFN=+$P($G(^YTT(601.84,+YSADM,0)),U,2)
+ S YSEVTST=+$P($G(^YTT(601.84,+YSADM,0)),U,3)
+ S YSEVTST=$P($G(^YTT(601.71,YSEVTST,0)),U)
+ S YSEVCPLT=($P($G(^YTT(601.84,+YSADM,0)),U,9)="Y")
  ; delete the admin record
  S DIK="^YTT(601.84,",DA=YSADM D ^DIK
  ; delete the answer records
@@ -231,6 +235,8 @@ DELADMIN(YSADM) ; delete an admin & associated records
  S YSRSLT=0 F  S YSRSLT=$O(^YTT(601.92,"AC",YSADM,YSRSLT)) Q:YSRSLT'>0  D
  . I $P(^YTT(601.92,YSRSLT,0),U,2)'=YSADM Q  ; result doesn't match
  . S DIK="^YTT(601.92,",DA=YSRSLT D ^DIK
+ ; publish delete event for admin if it was completed
+ I YSEVCPLT D DELETE^YTQEVNT(YSADM,YSEVDFN,YSEVTST,"seldel")
  Q
 ACTCAT(RSP) ; return a list of active categories
  N TEST,CAT,X0,NM,SORTED

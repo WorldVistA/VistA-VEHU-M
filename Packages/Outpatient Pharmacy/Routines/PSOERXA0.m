@@ -1,5 +1,5 @@
 PSOERXA0 ;ALB/BWF - eRx Utilities/RPC's ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**467,586,617,651,545,743**;DEC 1997;Build 24
+ ;;7.0;OUTPATIENT PHARMACY;**467,586,617,651,545,743,769**;DEC 1997;Build 26
  ;
  Q
  ; All parameters are optional, however at least one needs to be passed in for processing to be sucessful.
@@ -12,7 +12,7 @@ DRGMTCH(PSORES,NDCUPN,DGDESC) ;
  .S DGDESC=$$UP^XLFSTR(DGDESC)
  .I $D(^PSDRUG("B",DGDESC)) D
  ..S (PSDRG,PSDRGCNT)=0 F  S PSDRG=$O(^PSDRUG("B",DGDESC,PSDRG)) Q:'PSDRG  D
- ...I '$$ACTIVE(PSDRG)!('$$OUTPAT(PSDRG))!($$INVCOMP(PSDRG)) Q
+ ...I '$$ACTIVE(PSDRG)!('$$OUTPAT(PSDRG)) Q
  ...S PSDRGCNT=PSDRGCNT+1,PSDGLST(PSDRG)=""
  ..I PSDRGCNT>1 S PSORES="0^More than one possible drug match found. Pharmacist review required."
  ..I PSDRGCNT=1 S PSMIEN=$O(^PSDRUG("B",DGDESC,0)),PSORES=PSMIEN_U_$$GET1^DIQ(50,PSMIEN,.01,"E") Q

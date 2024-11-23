@@ -1,7 +1,7 @@
 ONCWEB1 ;ALBANY OIFO/RVD - VACCR WEB SERVICE ;Nov 4, 2022@14:22:22
- ;;2.2;ONCOLOGY;**16,19**;Aug 1,2022;Build 4
+ ;;2.2;ONCOLOGY;**16,19,20**;Aug 1,2022;Build 5
  ;
- ; SAC EXEMPTION 202302071746-02 : non-ANSI standard M code
+ ; SAC EXEMPTION 202408071458-03 : non-ANSI standard M code
  ;
  Q
  ;
@@ -57,14 +57,18 @@ PPOST3(ONCHAND,XML,globalName) ;POST request
  I $DATA(^TMP($JOB,"OUT","EXCEPTION"))>0 Q 0
  ; Execute HTTP Post method ($$POST^XOBWLIB) or Get method ($$GET^XOBWLIB)
  I $G(ONCEXEC)="G" D
+ .;S:ONCSYS=0 ONC("path")="/development1/api/RunEdit/GetVersion"
  .S:ONCSYS=0 ONC("path")="/ppd/api/RunEdit/GetVersion"
- .S:ONCSYS=1 ONC("path")="/prd/api/RunEdit/GetVersion"
+ .;S:ONCSYS=1 ONC("path")="/development1/api/RunEdit/GetVersion"
+ .S:ONCSYS=1 ONC("path")="/prda/api/RunEdit/GetVersion"
  .S ONC("Content-Type")="application/json"
  .S ONC("restObject").ContentType="application/json"
  .S ONC("postResult")=$$GET^XOBWLIB(ONC("restObject"),ONC("path"),.ONCERR)
  I $G(ONCEXEC)="P" D
+ .;S:ONCSYS=0 ONC("path")="/development1/api/RunEdit/VaccrProcessCaseFile"
  .S:ONCSYS=0 ONC("path")="/ppd/api/RunEdit/VaccrProcessCaseFile"
- .S:ONCSYS=1 ONC("path")="/prd/api/RunEdit/VaccrProcessCaseFile"
+ .;S:ONCSYS=1 ONC("path")="/development1/api/RunEdit/VaccrProcessCaseFile"
+ .S:ONCSYS=1 ONC("path")="/prda/api/RunEdit/VaccrProcessCaseFile"
  .S ONC("Content-Type")="application/xml"
  .S ONC("restObject").ContentType="application/xml"
  .S ONC("postResult")=$$POST^XOBWLIB(ONC("restObject"),ONC("path"),.ONCERR)
@@ -135,14 +139,18 @@ PPOSTCS(ONCHAND,XML,globalName) ;POST request
  I $DATA(^TMP($JOB,"OUT","EXCEPTION"))>0 Q 0
  ; Execute HTTP Post method ($$POST^XOBWLIB) or Get method ($$GET^XOBWLIB)
  I $G(ONCEXEC)="G" D
+ .;S:ONCSYS=0 ONC("path")="/development1/api/RunEdit/GetVersion"
  .S:ONCSYS=0 ONC("path")="/ppd/api/RunEdit/GetVersion"
- .S:ONCSYS=1 ONC("path")="/prd/api/RunEdit/GetVersion"
+ .;S:ONCSYS=1 ONC("path")="/development1/api/RunEdit/GetVersion"
+ .S:ONCSYS=1 ONC("path")="/prda/api/RunEdit/GetVersion"
  .S ONC("Content-Type")="application/json"
  .S ONC("restObject").ContentType="application/json"
  .S ONC("postResult")=$$GET^XOBWLIB(ONC("restObject"),ONC("path"),.ONCERR)
  I $G(ONCEXEC)="P" D
+ .;S:ONCSYS=0 ONC("path")="/development1/api/RunEdit/VaccrProcessCStageCalculate"
  .S:ONCSYS=0 ONC("path")="/ppd/api/RunEdit/VaccrProcessCStageCalculate"
- .S:ONCSYS=1 ONC("path")="/prd/api/RunEdit/VaccrProcessCStageCalculate"
+ .;S:ONCSYS=1 ONC("path")="/development1/api/RunEdit/VaccrProcessCStageCalculate"
+ .S:ONCSYS=1 ONC("path")="/prda/api/RunEdit/VaccrProcessCStageCalculate"
  .S ONC("Content-Type")="application/xml"
  .S ONC("restObject").ContentType="application/xml"
  .S ONC("postResult")=$$POST^XOBWLIB(ONC("restObject"),ONC("path"),.ONCERR)

@@ -1,5 +1,5 @@
-ECXLOG ;ALB/GTS - Extract Log Report for DSS ;3/28/14  13:21
- ;;3.0;DSS EXTRACTS;**84,95,92,149**;Dec 22, 1997;Build 27
+ECXLOG ;ALB/GTS - Extract Log Report for DSS ;8/6/24  12:28
+ ;;3.0;DSS EXTRACTS;**84,95,92,149,190**;Dec 22, 1997;Build 36
  ;
 EN ;entry point from option
  ;Initialize variables
@@ -64,7 +64,7 @@ GETDATA ;Get data
  ..S ECX0=$G(^ECX(727,ECXDACT,0)),ECX1=$G(^(1))
  ..Q:ECX0=""
  ..S ECXNUM=$P(ECX0,U,1),ECXPKG=$E($P(ECX0,U,3),1,13),ECXSET=$E($P(ECX0,U,4),2,7)_"-"_$E($P(ECX0,U,5),2,7),ECXCOUNT=$P(ECX0,U,6),ECXTXDT=$G(^ECX(727,ECXDACT,"TR")),ECXPURGE=$G(^ECX(727,ECXDACT,"PURG")),ECXTRACT=$P(ECX0,U,2),ECXUSER=$P(ECX0,U,7)
- ..S ECXMONTH=$P($$FMTE^XLFDT($P(ECX0,U,4),"D")," ",1)_" "_$P($$FMTE^XLFDT($P(ECX0,U,4),"D")," ",3)
+ ..S ECXMONTH=$P($$FMTE^XLFDT($P(ECX0,U,5),"D")," ",1)_" "_$P($$FMTE^XLFDT($P(ECX0,U,5),"D")," ",3)
  ..;Resolve external values for ECXUSER
  ..K DIC S DIC="^VA(200,",DIC(0)="NZ",X=ECXUSER D ^DIC
  ..S ECXUSER=$P($G(Y(0)),U,1)

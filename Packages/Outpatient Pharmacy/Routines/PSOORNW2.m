@@ -1,11 +1,11 @@
 PSOORNW2 ;ISC-BHAM/SAB - edit orders from oerr ;Dec 04, 2019@13:25:53
- ;;7.0;OUTPATIENT PHARMACY;**10,23,37,46,117,131,133,148,222,269,206,251,422,441**;DEC 1997;Build 209
- ;Reference to ^YSCL(603.01 supported by DBIA 2697
- ;Reference to ^PS(55 supported by DBIA 2228
- ;Reference to ^PSDRUG( supported by DBIA 221
- ;Reference to ^PS(50.606 supported by DBIA 2174
- ;Reference to ^PS(50.7 supported by DBIA 2223
- ;Reference to $$GETNDC^PSSNDCUT supported by IA 4707
+ ;;7.0;OUTPATIENT PHARMACY;**10,23,37,46,117,131,133,148,222,269,206,251,422,441,747**;DEC 1997;Build 7
+ ; Reference to ^YSCL(603.01 in ICR #2697
+ ; Reference to ^PS(55 in ICR #2228
+ ; Reference to ^PSDRUG( in ICR #221
+ ; Reference to ^PS(50.606 in ICR #2174
+ ; Reference to ^PS(50.7 in ICR #2223
+ ; Reference to $$GETNDC^PSSNDCUT in ICR #4707
  ;
 1 I $G(PSODRUG("OI")) M:$G(PSOBDRG) PSOBDR=PSODRUG W !!,"Current Orderable Item: "_$P(^PS(50.7,PSODRUG("OI"),0),"^")_" "_$P(^PS(50.606,$P(^(0),"^",2),0),"^")
  S DIC("B")=$S($G(PSODRUG("OIN"))]"":PSODRUG("OIN"),1:""),DIC="^PS(50.7,",DIC(0)="AEMQZ"
@@ -108,7 +108,8 @@ DREN ;
  S PSODRUG("NDF")=$S($G(^PSDRUG(PSI,"ND"))]"":+^("ND")_"A"_$P(^("ND"),"^",3),1:0)
  S PSODRUG("MAXDOSE")=$P(PSOY,"^",4),PSODRUG("DEA")=$P(PSOY,"^",3),PSODRUG("CLN")=$S($D(^PSDRUG(+PSI,"ND")):+$P(^("ND"),"^",6),1:0)
  S PSODRUG("SIG")=$P(PSOY,"^",5),PSODRUG("NDC")=$$GETNDC^PSSNDCUT(+PSI,$G(PSOSITE)),PSODRUG("STKLVL")=$G(^PSDRUG(+PSI,660.1))
- S PSODRUG("DAW")=+$$GET1^DIQ(50,+PSI,81)
+ S PSODRUG("DAW")=$$GET1^DIQ(50,+PSI,81)
+ I PSODRUG("DAW")="" S PSODRUG("DAW")=0
  G:$G(^PSDRUG(+PSI,660))']"" DRENX
  S PSOX1=$G(^PSDRUG(+PSI,660)),PSODRUG("COST")=$P($G(PSOX1),"^",6),PSODRUG("UNIT")=$P($G(PSOX1),"^",8),PSODRUG("EXPIRATION DATE")=$P($G(PSOX1),"^",9)
 DRENX K PSDC,PSI,PSOY,Y,PSOXI,X

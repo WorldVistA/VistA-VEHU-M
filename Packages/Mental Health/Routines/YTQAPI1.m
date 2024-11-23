@@ -1,5 +1,5 @@
-YTQAPI1 ;ASF/ALB- MHAX REMOTE PROCEDURES ; 4/3/07 10:50am
- ;;5.01;MENTAL HEALTH;**85,119,121,141,217,249**;Dec 30, 1994;Build 30
+YTQAPI1 ;ASF/ALB - MHAX REMOTE PROCEDURES ;Sep 16, 2024@16:36:13
+ ;;5.01;MENTAL HEALTH;**85,119,121,141,217,249,252,240**;Dec 30, 1994;Build 10
  ;
  ;
  ;
@@ -33,13 +33,14 @@ RULES(YSDATA,YS) ;list rules for a survey
  . S N2=N2+1,YSDATA(N2)=Z(YSQID,YSBOOL,N1,3)
  Q
 EDAD(YSDATA,YS) ;Edit and Save Data
- N YSERR,YSX,YSNN,YSRESULT,G,YSF,YSV,N,YSIEN,YSFILEN
+ N YSERR,YSX,YSNN,YSRESULT,G,YSF,YSV,N,YSIEN,YSFILEN,YSERRLOG
  N YTTLKUP S YTTLKUP=1  ; don't filter 601.71
+ S YSERRLOG="EDAD^YTQAPI1 : Error Saving MH Administration"
  K ^TMP("YSMHI",$J)
  S YSFILEN=$G(YS("FILEN"))
- Q:YSFILEN<601  Q:YSFILEN>605
+ I (YSFILEN<601)!(YSFILEN>605) D  QUIT
+ . D ERR(.YSDATA,"bad filen ",YSERRLOG)
  S YSIEN=$G(YS("IEN"),"?+1")_","
- I YSFILEN="" S YSDATA(1)="[ERROR]",YSDATA(2)="bad filen " Q  ;-->out
  I YSFILEN=601.84 S N=$O(YS("FILEN"),-1)+1 S:'$D(YS(N)) YS(N)="18^`"_DUZ
  S N=0 F  S N=$O(YS(N)) Q:N'>0  D  Q:$G(YSRESULT)="^"
  . S G=YS(N)
@@ -49,11 +50,18 @@ EDAD(YSDATA,YS) ;Edit and Save Data
  . S ^TMP("YSMHI",$J,YSFILEN,YSIEN,YSF)=YSV
  . D:YSX'=1 VAL^DIE(YSFILEN,YSIEN,+YSF,"E",YSV,.YSRESULT)
  . ;
- I $G(YSRESULT)="^" S YSDATA(1)="[ERROR]",YSDATA(2)="Value for Field Not Valid^"_YSV_U_YSF Q  ;--> out
+ I $G(YSRESULT)="^" D  QUIT
+ . D ERR(.YSDATA,"Value for Field Not Valid^"_YSV_U_YSF,YSERRLOG)
+ L +^YTT(YSFILEN,0):DILOCKTM
+ I '$T D  QUIT
+ . D ERR(.YSDATA,"Could not save administration. (Failed to get lock on File #"_YSFILEN_").",YSERRLOG)
  D UPDATE^DIE("E","^TMP(""YSMHI"",$J)","YSNN","YSERR")
- I $D(YSERR) S YSDATA(1)="[ERROR]",YSDATA(2)="Update Error" Q  ;-->out
+ L -^YTT(YSFILEN,0)
+ I $D(YSERR) D  QUIT
+ . D ERR(.YSDATA,"Update Error",YSERRLOG)
  S YSDATA(1)="[DATA]",YSDATA(2)="Update ok^"_$G(YSNN(1))_U_$G(YSNN(1,0))
- I YSFILEN=601.84 L -^YTT(YSFILEN,$S(+$G(YSNN(1)):+YSNN(1),1:+$G(YS("IEN"))))
+ ; publish add/edit admin event
+ I YSFILEN=601.84 D UPADM^YTQEVNT($S(+$G(YSNN(1)):+YSNN(1),1:+$G(YS("IEN"))),"editadd")
  ;
  Q
 WPED(YSDATA,YS) ;Replace WP field
@@ -128,4 +136,11 @@ SRC(ANAME) ; return IEN for entry source, adding if needed
  S IEN="" I '$D(DIERR),YTIEN(1) S IEN=YTIEN(1)
  D CLEAN^DILF
  Q IEN
+ ;
+ERR(YSDATA,YSRETMSG,YSLOGMSG) ; Set return error array (YSDATA); and log error to VistA error trap
+ N %ZT
+ S YSDATA(1)="[ERROR]"
+ S YSDATA(2)=YSRETMSG
+ D APPERROR^%ZTER(YSLOGMSG)
+ Q
  ;

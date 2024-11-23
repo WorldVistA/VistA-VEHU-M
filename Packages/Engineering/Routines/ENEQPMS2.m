@@ -1,8 +1,8 @@
-ENEQPMS2 ;(WASH ISC)/DH-Select Equipment for PMI ;6.5.97
- ;;7.0;ENGINEERING;**26,35,42**;Aug 17, 1993
+ENEQPMS2 ;(WASH ISC)/DH-Select Equipment for PMI ;07/18/2024
+ ;;7.0;ENGINEERING;**26,35,42,106**;Aug 17, 1993;Build 4
 NTRY ;  Identify entries for specified PM worklist (single shop)
  ;  List is sorted in ^TMP($J,
- K ^TMP($J) N I,SE,NODE
+ K ^TMP($J) N DA,I,SE,NODE
  F DA=0:0 S DA=$O(^ENG(6914,"AB",ENSHKEY,DA)) Q:DA'>0  S SE=0 F  S SE=$O(^ENG(6914,"AB",ENSHKEY,DA,SE)) Q:SE'>0  D LST2
  D PR^ENEQPMS5 G OUT
  ;
@@ -13,6 +13,7 @@ MNTRY ;  Identify entries for specified PM worklist (all shops)
  D PR^ENEQPMS5 G OUT
  ;
 LST2 N EN,A,B,C,X,X1,X2,TAG,SUB,MULT
+ N ENHZ ;EN*7.0*106
  S X1=$P($G(^ENG(6914,DA,3)),U) I "^4^5^"[(U_X1_U) Q
  I 'ENSRT("OOS"),X1=2 Q
  Q:'$D(^ENG(6914,DA,4,SE,0))  I '$D(ENCRIT("ALL")) D  Q:ENCRIT<0
@@ -39,6 +40,7 @@ LSTP ;  By PM NUMBER
  S @EN("NEXT")=X1
  Q
 LSTI ;  By LOCAL ID
+ N J ;EN*7.0*106
  S (X1,X1("T"))=$P($G(^ENG(6914,DA,3)),U,7) S:X1="" (X1,X1("T"))=0
  S:X1'?.N X1("T")=""""_X1_""""
  I ENSRT("ALL") S @EN("NEXT")=X1("T"),EN("NEXT")=$C($A(EN("NEXT"))+1)

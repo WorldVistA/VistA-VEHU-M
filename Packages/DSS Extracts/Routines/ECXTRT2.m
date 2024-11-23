@@ -1,5 +1,5 @@
 ECXTRT2 ;ALB/JAP,BIR/DMA,CML,PTD-Treating Specialty Change Extract ;4/17/17  11:04
- ;;3.0;DSS EXTRACTS;**105,127,161,166,184**;Dec 22, 1997;Build 124
+ ;;3.0;DSS EXTRACTS;**105,127,161,166,184,190**;Dec 22, 1997;Build 36
  ;
 FILE ;file the extract record
  ;node0
@@ -18,8 +18,8 @@ FILE ;file the extract record
  ;new attending physician npi^new primary ward provider npi^PATCAT^
  ;node2 ;184
  ;CERNER Data (ECXCERN)^
- ;node 3 ;184
- ;New MPI (ECXNMPI)^Self Identified Gender (ECSIGI)
+ ;node 3 ;184,190
+ ;New MPI (ECXNMPI)^Self Identified Gender (ECSIGI)^d/c time
  ;
  ;convert specialties to PTF Codes for transmission
  ;
@@ -42,6 +42,7 @@ FILE ;file the extract record
  I ECXLOGIC>2007 S ECODE1=ECODE1_U_ECATLNPI_U_ECPRLNPI_U_ECATTNPI_U_ECPRVNPI
  I ECXLOGIC>2010 S ECODE1=ECODE1_U_ECXPATCAT_U ;184 Added "^"
  I ECXLOGIC>2022 S ECODE2=$G(ECXCERN)_U,ECODE3=ECXNMPI_U_ECXSIGI ;184
+ I ECXLOGIC>2024 S ECODE3=ECODE3_U_ECXDCTM ;190
  S ^ECX(ECFILE,EC7,0)=ECODE,^ECX(ECFILE,EC7,1)=ECODE1 ; ,ECRN=ECRN+1 184 - Moved record count to below
  S ^ECX(ECFILE,EC7,2)=$G(ECODE2),^ECX(ECFILE,EC7,3)=$G(ECODE3) ;184
  S ECRN=ECRN+1 ;184 - Moved record count from above

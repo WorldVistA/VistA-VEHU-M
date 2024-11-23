@@ -1,5 +1,5 @@
 RCDPEDA4 ;AITC/DW - ACTIVITY REPORT ;Feb 17, 2017@10:37:00
- ;;4.5;Accounts Receivable;**318,321,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**318,321,326,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ; Continuation of RCDPEDAR - Daily activity Report
  Q
@@ -132,7 +132,6 @@ LMHDR(RCSTOP,RCDET,RCNJ,RCDT1,RCDT2,RCHDR,DONLY) ;EP from RCDPEDAR
  . ; PRCA*4.5*318, Move entire Payment From row to left 8 spaces to adjust 
  . ; a possible 60 character Payer Name and 20 character Payer ID
  . S Z=$$SETSTR^VALM1($J("",6)_"PAYMENT FROM","",1,30)
- . S Z=$$SETSTR^VALM1("DEBIT",Z,37,5)            ; PRCA*4.5*321 Added line
  . S Z=$$SETSTR^VALM1("DEP RECEIPT #",Z,45,30)   ; PRCA*4.5*321 used to be 31,30
  . S Z=$$SETSTR^VALM1("DEP RECEIPT STATUS",Z,61,19)
  . S RCCT=RCCT+1,RCHDR(RCCT)=Z

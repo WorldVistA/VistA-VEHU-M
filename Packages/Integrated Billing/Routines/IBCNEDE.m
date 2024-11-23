@@ -1,5 +1,5 @@
 IBCNEDE ;DAOU/DAC - eIV DATA EXTRACTS ;07-MAY-2015
- ;;2.0;INTEGRATED BILLING;**184,271,300,416,438,497,549,593,595,621,659,664,668,687,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**184,271,300,416,438,497,549,593,595,621,659,664,668,687,737,794**;21-MAR-94;Build 9
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -87,9 +87,10 @@ ENX ; Purge task record - if queued
  Q
  ;====================================================
 EXTRACTS ; Run the extracts
- D EN^IBCNEDE1    ; Insurance Buffer Extract
- I $G(ZTSTOP) Q   ; If background process was stopped quit.
+ ; IB*794\DTG switch the order to run eIV Appointment extract then eIV Buffer extract
  D EN^IBCNEDE2    ; Appointment Extract
+ I $G(ZTSTOP) Q   ; If background process was stopped quit.
+ D EN^IBCNEDE1    ; Insurance Buffer Extract
  I $G(ZTSTOP) Q   ; If background process was stopped quit.
  D EN^IBCNEDE4    ; IB*2.0*621/DM add the EICD extract (formerly No Insurance)
  Q

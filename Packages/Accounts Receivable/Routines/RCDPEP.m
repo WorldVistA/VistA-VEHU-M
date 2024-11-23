@@ -1,10 +1,10 @@
 RCDPEP ;AITC/CJE - FLAG PAYERS AS PHARMACY/TRICARE ; 19-APR-2017
- ;;4.5;Accounts Receivable;**321,326,332,371**;;Build 29
+ ;;4.5;Accounts Receivable;**321,326,332,371,432**;;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN(FILTER,DATEFILT) ; -- main entry point for RCDPE PAYER FLAGS template
- ; Input: FILTER - A=All payers, P=Pharmacy payers, T=Tricare payers,
- ; M=Medical (Neither Pharmacy nor Tricare)
+ ; Input: FILTER - A=All payers, P=Pharmacy payers, T=Tricare payers, C=CHAMPVA payers
+ ; M=Medical (Neither Pharmacy nor Tricare nor CHAMPVA)
  ; DATEFILT - Additional Filter by Date. Has 3 pieces by '^'
  ;            Piece 1 - 1=Filter by date, 0=Don't
  ;            Piece 2 - START - First DATE ADDED to include(FM format)
@@ -81,23 +81,24 @@ GETDATE() ; Ask if the user wants to filter by date. If so prompt for start
 GETFILT() ; Get filter on payer type
  ; Input: None
  ; Return: Filter type.
- ;         A=All payers, P=Pharmacy payers, T=Tricare payers,
- ;         M=Medical (Neither Pharmacy nor Tricare)
+ ;         A=All payers, P=Pharmacy payers, T=Tricare payers, C=CHAMPVA payers
+ ;         M=Medical (Neither Pharmacy nor Tricare nor CHAMPVA)
  N DIR,DIROUT,DIRUT,DTOUT,DUOUT,FILTER,X,XX,Y
  ; Check for value specified on protocol
  S XX=$P($P($G(XQORNOD(0)),"^",4),"=",2) ; User selection with action
  S XX=$E(XX)
- I XX'="","APTM"[XX Q XX
+ I XX'="","APTCM"[XX Q XX
  ;
- S DIR(0)="SA^A:All;P:Pharmacy only;T:Tricare only;M:Medical"
- S DIR("A")="Select payers to show. (A)ll, (P)harmacy, (T)ricare, (M)edical: "
+ S DIR(0)="SA^A:All;P:Pharmacy only;T:Tricare only;C:CHAMPVA only;M:Medical"
+ S DIR("A")="Select payers to show. (A)ll, (P)harmacy, (T)ricare, (C)HAMPVA, (M)edical: "
  S DIR("B")="A"
  S DIR("?",1)="Select the type of filter to determine what payers will"
  S DIR("?",2)="be displayed as follows:"
  S DIR("?",3)=" A - All payers including those with and without a flag"
  S DIR("?",4)=" P - Only payers flagged for Pharmacy"
  S DIR("?",5)=" T - Only payers flagged for Tricare"
- S DIR("?")=" M - Payers NOT flagged for Pharmacy or Tricare"
+ S DIR("?",6)=" C - Only payers flagged for CHAMPVA"
+ S DIR("?")=" M - Payers NOT flagged for Pharmacy or Tricare or CHAMPVA"
  ; S DIR("??")="RCDPE PAYER FLAGS FILTER"
  ;
  D ^DIR
@@ -110,7 +111,7 @@ HDR ; EP - header code for RCDPE PAYER FLAGS template
  ;
  ; Show active filters in the template header
  N FTEXT
- S FTEXT=$S(FILTER="P":"Pharmacy",FILTER="T":"Tricare",FILTER="M":"Medical",1:"All")
+ S FTEXT=$S(FILTER="P":"Pharmacy",FILTER="T":"Tricare",FILTER="M":"Medical",FILTER="C":"CHAMPVA",1:"All") ;Add CHAMPVA PRCA*4.5*432
  S FTEXT=$$UP^XLFSTR(FTEXT)
  S FTEXT=FTEXT_" Payers"
  I DATEFILT D  ;
@@ -153,13 +154,16 @@ BLD1PAY(PAYCNT) ; (Re)build one payor line into the listman array
  S LINE=$$SETSTR^VALM1(" "_PAYCNT,"",1,6)    ; PRCA*4.5*371 - Add space for 2 extra characters to line number
  S DATALN=^TMP($J,"RCDPEPIX",PAYCNT)
  S XX=$P(DATALN,"^",2) ; Name
- S XX=$E(XX,1,55) ; Truncate name to 55 characters to fit
- S LINE=$$SETSTR^VALM1(XX,LINE,8,55)         ; PRCA*4.5*371 - Add space for 2 extra characters to line number
+ ;PRCA*4.5*432 Decrease payer by 3 characters to make room for CHAMPVA column, Add CHAMPVA column after Tricare, Adjust column spacing
+ S XX=$E(XX,1,52) ; Truncate name to 55 characters to fit ; PRCA*4.5*432 55->52
+ S LINE=$$SETSTR^VALM1(XX,LINE,8,52)         ; PRCA*4.5*371 - Add space for 2 extra characters to line number; PRCA*4.5*432 55->52
  S XX=$P(DATALN,"^",3) ; Payer ID
- S LINE=$$SETSTR^VALM1(XX,LINE,65,10)        ; PRCA*4.5*371 - Move to add space for 2 extra characters to line number
+ S LINE=$$SETSTR^VALM1(XX,LINE,62,10)        ; PRCA*4.5*371 - Move to add space for 2 extra characters to line number; PRCA*4.5*432 65->62
  S XX=$P(DATALN,"^",5) ; Phamacy payer flag
- S LINE=$$SETSTR^VALM1(XX,LINE,76,2)         ; PRCA*4.5*371 - Move to add space for 2 extra characters to line number
+ S LINE=$$SETSTR^VALM1(XX,LINE,73,2)         ; PRCA*4.5*371 - Move to add space for 2 extra characters to line number; PRCA*4.5*432 76->73
  S XX=$P(DATALN,"^",6) ; Tricare payer flag
+ S LINE=$$SETSTR^VALM1(XX,LINE,76,2)         ; PRCA*4.5*432 79->76
+ S XX=$P(DATALN,"^",8) ; CHAMPVA payer flag  ; PRCA*4.5*432 - Add CHAMPVA payer flag
  S LINE=$$SETSTR^VALM1(XX,LINE,79,2)
  S XX=$P(DATALN,"^",4) ; Date added
  S LINE=$$SETSTR^VALM1(XX,LINE,82,10)
@@ -189,16 +193,18 @@ GETPAY(FILTER,DATEFILT) ; Retrieve the payors sorted and filtered
 GET1PAY(PIEN,CNT) ; Get the data for one payer and add it to the list
  ; Input: PIEN - Internal entry number to file 344.6
  ; CNT - Incremental counter
- ; Output: ^TMP($J,"RCDPEPIX",CNT)=A1^A2^A3^A4^A5^A6
+ ; Output: ^TMP($J,"RCDPEPIX",CNT)=A1^A2^A3^A4^A5^A6^A7^A8
  ; Where A1=PIEN - The payer internal entry number on file 344.6
  ;       A2=NAME - The payer name
  ;       A3=PAYER ID (also known as TIN)
  ;       A4=DATE ADDED
  ;       A5=PHARMACY PAYER - A Yes/No/Null field to flag a payer as pharmacy
  ;       A6=TRICARE PAYER - A Yes/No/Null filed to flag a payer as tricare
+ ;       A7=EFT PAYER - A Yes/No/Null filed to flag a payer as EFT only
+ ;       A8=CHAMPVA PAYER - A Yes/No/Null filed to flag a payer as CHAMPVA   ;PRCA*4.5*432
  ;
- N DATAOUT,DATEA,OUTARR,RCID,RCNAME,RCPF,RCTF
- D GETS^DIQ(344.6,PIEN_",",".01;.02;.03;.09;.1","EI","OUTARR")
+ N DATAOUT,DATEA,OUTARR,RCCF,RCID,RCNAME,RCPF,RCTF  ;Add RCCF PRCA*4.5*432
+ D GETS^DIQ(344.6,PIEN_",",".01;.02;.03;.09;.1;.15","EI","OUTARR")  ;Add .15 PRCA*4.5*432
  S RCNAME=OUTARR(344.6,PIEN_",",.01,"E")
  S RCID=OUTARR(344.6,PIEN_",",.02,"E")
  S DATAOUT=PIEN
@@ -211,29 +217,33 @@ GET1PAY(PIEN,CNT) ; Get the data for one payer and add it to the list
  S DATAOUT=DATAOUT_"^"_RCPF ; Pharmacy payer flag
  S RCTF=$S(OUTARR(344.6,PIEN_",",.1,"I"):"Y",1:"")
  S DATAOUT=DATAOUT_"^"_RCTF ; Tricare payer flag
- S DATAOUT=DATAOUT_"^"_$S('$D(^RCY(344.4,"APT",RCNAME,RCID)):"YES",1:"") ; EFT ONLY PAYER/TIN 
+ S DATAOUT=DATAOUT_"^"_$S('$D(^RCY(344.4,"APT",RCNAME,RCID)):"YES",1:"") ; EFT ONLY PAYER/TIN
+ S RCCF=$S(OUTARR(344.6,PIEN_",",.15,"I"):"Y",1:"") ; CHAMPVA payer flag PRCA*4.5*432
+ S DATAOUT=DATAOUT_"^"_RCCF ; CHAMPVA payer flag PRCA*4.5*432
  S ^TMP($J,"RCDPEPIX",CNT)=DATAOUT
  Q
  ;
 CHKPAY(PIEN,FILTER,DATEFILT) ; Apply selected filters to a payer
  ; Input: PIEN - Internal entry number to file 344.6
- ; FILTER - A=All payers, P=Pharmacy payers, T=Tricare payers,
- ;          M=Medical (Neither Pharmacy nor Tricare)
+ ; FILTER - A=All payers, P=Pharmacy payers, T=Tricare payers, C=CHAMPVA payers
+ ;          M=Medical (Neither Pharmacy nor Tricare nor CHAMPVA)
  ; DATEFILT - Additional Filter by Date. Has 3 pieces by '^'
  ;            Piece 1 - 1=Filter by date, 0=Don't
  ;            Piece 2 - START - First DATE ADDED to include(FM format)
  ;            Piece 3 - END - Last DATE ADDED to include (FM format)
  ; Returns: 1 if record matches filter, otherwise 0.
- N D1,D2,DC,CREATED,MATCHT,MATCHD,PFLAG,TFLAG
+ N D1,D2,DC,CFLAG,CREATED,MATCHT,MATCHD,PFLAG,TFLAG  ;Add CFLAG PRCA*4.5*432
  S (MATCHT,MATCHD)=0
  I FILTER="A" D  ;
  . S MATCHT=1
  E  D  ;
  . S PFLAG=$$GET1^DIQ(344.6,PIEN_",",.09,"I")
  . S TFLAG=$$GET1^DIQ(344.6,PIEN_",",.1,"I")
+ . S CFLAG=$$GET1^DIQ(344.6,PIEN_",",.15,"I") ;Add CFLAG, CHAMPVA payer flag PRCA*4.5*432
  . I FILTER="P",PFLAG S MATCHT=1
  . I FILTER="T",TFLAG S MATCHT=1
- . I FILTER="M",'PFLAG,'TFLAG S MATCHT=1
+ . I FILTER="C",CFLAG S MATCHT=1  ;CHAMPVA payer flag PRCA*4.5*432
+ . I FILTER="M",'PFLAG,'TFLAG,'CFLAG S MATCHT=1  ;Add reference to 'CFLAG PRCA*4.5*432
  ;
  I 'DATEFILT D  ;
  . S MATCHD=1
@@ -283,7 +293,7 @@ EDIT ; EP - for RCDPE PAYER FLAGS EDIT protocol
  S DIE="^RCY(344.6,"
  W !!,"Edit flags for payer : "_$$GET1^DIQ(344.6,PIEN_",",.01,"E"),!
  S DA=PIEN
- S DR=".09Pharmacy Flag;.1Tricare Flag"
+ S DR=".09Pharmacy Flag;.1Tricare Flag;.15CHAMPVA Flag"  ;Add CHAMPVA PRCA*4.5*4.32
  D ^DIE
  ;
  L -^RCY(344.6,PIEN)
@@ -358,18 +368,25 @@ FLAGT ; EP - for RCDPE PAYER FLAG TRIC protocol
  D FLAG("T")
  Q
  ;
-FLAG(TYPE) ; Flag a list of entries as Pharmacy or Tricare
- ; Input: TYPE - P=Pharmacy, T=Tricare
+FLAGC ; EP - for RCDPE PAYER FLAG CVA protocol ; Add CHAMPVA flag PRCA*4.5*432
+ ; Toggle CHAMPVA flag on selected lines
+ ; Input: None
+ ; Output: None 
+ D FLAG("C")
+ Q
+ ;
+FLAG(TYPE) ; Flag a list of entries as Pharmacy or Tricare or CHAMPVA
+ ; Input: TYPE - P=Pharmacy, T=Tricare, C=CHAMPVA
  ; Output: File 344.6 is updated
  ; ListMan array is updated
  N CONTINUE,CTR,FIELD,PERR,PIEN,PIENS,PROMPT,SELS,STOP,XX,ZS,ZZ
- S FIELD=$S(TYPE="P":.09,1:.1)
+ S FIELD=$S(TYPE="P":.09,TYPE="T":.1,1:.15)  ;Add CHAMPVA PRCA*4.5*432
  S VALMBCK="R"
  ; Check security key for edit access
  I '$$CHKKEY() Q  ;
  ;
  S PROMPT="Select lines on which to toggle "
- S PROMPT=PROMPT_$S(TYPE="P":"Pharmacy",1:"Tricare")_" Flag"
+ S PROMPT=PROMPT_$S(TYPE="P":"Pharmacy",TYPE="T":"Tricare",1:"CHAMPVA")_" Flag"  ;Add CHAMPVA PRCA*4.5*432
  S PIENS=$$SELENT(1,PROMPT,VALMBG,VALMLST,.SELS,"RCDPEPIX",1)
  Q:PIENS=""  ;
  S (PERR,PIEN,ZZ,ZS)=""

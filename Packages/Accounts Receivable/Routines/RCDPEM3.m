@@ -1,5 +1,5 @@
 RCDPEM3 ;OIFO-BAYPINES/RBN - ERA AUDIT REPORT and return EFT function ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**276,284,298,326,375,371**;Mar 20, 1995;Build 29
+ ;;4.5;Accounts Receivable;**276,284,298,326,375,371,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; General read access of IB EOB file #361.1 is allowed from AR (IA 4051)
@@ -312,8 +312,8 @@ HDRBLD ; Create the report header
  K Y                                            ; Delete Y subscripts
  S Y="DIVISIONS: "_RCDIV
  S Y=$J("",80-$L(Y)\2)_Y,HCNT=HCNT+1,RCHDR(HCNT)=Y
- S Y="MEDICAL/PHARMACY/TRICARE: "
- S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ S Y="MEDICAL/PHARMACY/TRICARE/CHAMPVA: "  ; PRCA*4.5*432 CHAMPVA
+ S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")  ; PRCA*4.5*432 CHAMPVA
  S HCNT=HCNT+1,RCHDR(HCNT)=$J("",80-$L(Y)\2)_Y
  S HCNT=HCNT+1,RCHDR(HCNT)=""
  ;
@@ -340,8 +340,8 @@ HDRLM ; Create the Listman header
  K Y                                            ; Delete Y subscripts
  S Y="DIVISIONS: "_RCDIV,Y=Y,HCNT=HCNT+1
  S RCHDR(HCNT)=Y
- S Y="MEDICAL/PHARMACY/TRICARE: "
- S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ S Y="MEDICAL/PHARMACY/TRICARE/CHAMPVA: "  ; PRCA*4.5*432 CHAMPVA
+ S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")  ; PRCA*4.5*432 CHAMPVA
  S HCNT=HCNT+1,RCHDR(HCNT)=Y
  S HCNT=HCNT+1,RCHDR(HCNT)=""
  ;

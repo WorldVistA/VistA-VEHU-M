@@ -1,5 +1,5 @@
 RCDPENR3 ;ALB/SAB - EPay National Reports - ERA/EFT Trending Report, part 2 ;20 Aug 2018 13:01:41
- ;;4.5;Accounts Receivable;**304,321,326,332,349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**304,321,326,332,349,432**;Mar 20, 1995;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;Read ^DGCR(399) via Private IA 3820

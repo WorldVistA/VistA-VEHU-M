@@ -1,5 +1,5 @@
 ONCSGA8B ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/15/19
- ;;2.2;ONCOLOGY;**10,12,13,18**;Jul 31, 2013;Build 5
+ ;;2.2;ONCOLOGY;**10,12,13,18,20**;Jul 31, 2013;Build 5
  ;
  ;
 30 ;NET
@@ -264,6 +264,7 @@ ONCSGA8B ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/15/19
  Q
 52 ;CERVIX UTERI
  S M=$E(M,2,5)
+ I $P($G(^ONCO(165.5,D0,0)),"^",16)>3201231 D V529^ONCSGA8C Q
  I T="T1",M="M0" S SG=1 Q
  I T="T1a",M="M0" S SG="1A" Q
  I T="T1a1",M="M0" S SG="1A1" Q
@@ -361,46 +362,6 @@ ONCSGA8B ;HINES OIFO/RTK - AJCC 8th Ed Automatic Staging Tables ;01/15/19
  I T="T4",M="M0" S SG=4 Q
  I N="N3",M="M0" S SG=4 Q
  I M="M1" S SG=4
- Q
-58 ;PROSTATE
- S M=$E(M,2,5)
- I (($E(T,1,2)="T1")!(T="T2a")),N="N0",M="M0",PSA<10,G=1 S SG=1 Q
- I T="T2",N="N0",M="M0",PSA<10,G=1 S SG=1 Q
- I (($E(T,1,2)="T1")!(T="T2")!(T="T2a")),N="N0",M="M0",((PSA>10)&(PSA<20)),G=1 S SG="2A" Q
- I (($E(T,1,2)="T2")),N="N0",M="M0",PSA<20,G=1 S SG="2A" Q
- I (($E(T,1,2)="T1")!($E(T,1,2)="T2")),N="N0",M="M0",PSA<20,G=2 S SG="2B" Q
- I (($E(T,1,2)="T1")!($E(T,1,2)="T2")),N="N0",M="M0",PSA<20,G=3 S SG="2C" Q
- I (($E(T,1,2)="T1")!($E(T,1,2)="T2")),N="N0",M="M0",PSA<20,G=4 S SG="2C" Q
- I (($E(T,1,2)="T1")!($E(T,1,2)="T2")),N="N0",M="M0",PSA>19,G<5 S SG="3A" Q
- I (($E(T,1,2)="T3")!($E(T,1,2)="T4")),N="N0",M="M0",G<5 S SG="3B" Q
- I N="N0",M="M0",G=5 S SG="3C" Q
- I N="N1",M="M0" S SG="4A" Q
- I M["M1" S SG="4B" Q
- Q
-59 ;TESTIS
- S M=$E(M,2,5)
- I T="Tis",N="N0",M="M0",SCAT=0 S SG=0 Q
- I ((T["T1")!(T="T2")!(T="T3")!(T="T4")),N="N0",M="M0",SCAT=9 S SG=1 Q
- I T["T1",N="N0",M="M0",SCAT=0 S SG="1A" Q
- I T="T2",N="N0",M="M0",SCAT=0 S SG="1B" Q
- I T="T3",N="N0",M="M0",SCAT=0 S SG="1B" Q
- I T="T4",N="N0",M="M0",SCAT=0 S SG="1B" Q
- I N="N0",M="M0",((SCAT=1)!(SCAT=2)!(SCAT=3)) S SG="1S" Q
- I ((N="N1")!(N="N2")!(N="N3")),M="M0",SCAT=9 S SG=2 Q
- I N="N1",M="M0",SCAT=0 S SG="2A" Q
- I N="N1",M="M0",SCAT=1 S SG="2A" Q
- I N="N2",M="M0",SCAT=0 S SG="2B" Q
- I N="N2",M="M0",SCAT=1 S SG="2B" Q
- I N="N3",M="M0",SCAT=0 S SG="2C" Q
- I N="N3",M="M0",SCAT=1 S SG="2C" Q
- I M="M1",SCAT=9 S SG=3 Q
- I M="M1a",SCAT=0 S SG="3A" Q
- I M="M1b",SCAT=1 S SG="3A" Q
- I ((N="N1")!(N="N2")!(N="N3")),M="M0",SCAT=2 S SG="3B" Q
- I M="M1a",SCAT=2 S SG="3B" Q
- I ((N="N1")!(N="N2")!(N="N3")),M="M0",SCAT=3 S SG="3C" Q
- I M="M1a",SCAT=3 S SG="3C" Q
- I M="M1b" S SG="3C"
  Q
  ;
 CLEANUP ;Cleanup

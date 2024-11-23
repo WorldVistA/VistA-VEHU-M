@@ -1,12 +1,12 @@
 ONCOEDC1 ;HINES OIFO/GWB - "Required" data item check ;06/23/10
- ;;2.2;ONCOLOGY;**1,5,6,10,12,15,17,18**;Jul 31, 2013;Build 5
+ ;;2.2;ONCOLOGY;**1,5,6,10,12,15,17,18,20**;Jul 31, 2013;Build 5
  ;
 F1655 ;If data item blank, S CMPLT=0 and add field to list
  I DTDX>3171231 D
  .I $$GET1^DIQ(165.5,PRM,149,"I")="" S FDNUM=149 D CMPLT
  .I $$GET1^DIQ(165.5,PRM,7033,"I")="" S FDNUM=7033 D CMPLT
  .;I $$GET1^DIQ(165.5,PRM,7012,"I")="" S FDNUM=7012 D CMPLT
- .D CCDS   ;check Date of Last Cancer Status and ...Flag
+ .;D CCDS   ;check Date of Last Cancer Status and ...Flag - remove in patch 20
  ;I (DTDX>3091231),($$GET1^DIQ(165.5,PRM,234,"I")="") S FDNUM=234 D CMPLT
  I $$GET1^DIQ(165.5,PRM,361,"I")="" S FDNUM=361 D CMPLT
  I $$GET1^DIQ(165.5,PRM,155,"I")="" S FDNUM=155 D CMPLT

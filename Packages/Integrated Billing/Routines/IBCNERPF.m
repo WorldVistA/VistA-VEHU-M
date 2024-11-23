@@ -1,5 +1,5 @@
 IBCNERPF ;BP/YMG - IBCNE eIV AUTO UPDATE REPORT ;09-MAY-2023
- ;;2.0;INTEGRATED BILLING;**416,528,549,595,668,737,763**;16-SEP-09;Build 29
+ ;;2.0;INTEGRATED BILLING;**416,528,549,595,668,737,763,794**;21-MAR-94;Build 9
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; NOTE:
@@ -253,7 +253,7 @@ PATIENT ;
  D ^DIR
  I $D(DIRUT) S STOP=1 Q
  I Y="A" S IBCNESPC("PAT")="A" Q  ; "All Patients" selected
- S DIC(0)="ABEQ"
+ S DIC(0)="AMEQ"  ;IB*794/DTG change ABEQ to AMEQ to allow for ssn lookup (multi-indexes)
  S DIC("A")="Select Patient: "
  S DIC="^DPT("
 PATIENT1 ;

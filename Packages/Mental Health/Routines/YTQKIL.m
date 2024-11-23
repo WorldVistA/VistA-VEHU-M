@@ -1,5 +1,7 @@
 YTQKIL ;ASF/ALB,HIOFO/FT - MHA3 DELETES ; 11/14/11 2:01pm
- ;;5.01;MENTAL HEALTH;**85,100,106**;Dec 30, 1994;Build 10
+ ;;5.01;MENTAL HEALTH;**85,100,106,240**;Dec 30, 1994;Build 10
+ ;
+ ;
  Q
  ;
  ;Reference to ^XLFDT APIs supported by DBIA #10103
@@ -26,9 +28,15 @@ EN ; Called from ^YTKIL - Delete Patient Data [YSMKIL]
 DEL ;delete admin
  S DIR(0)="Y",DIR("A")="Are you sure",DIR("B")="No" D ^DIR
  Q:'Y
- N DA,DIK
+ N DA,DIK,YSEVDFN,YSEVTST,YSEVCPLT
+ S YSEVDFN=+$P($G(^YTT(601.84,+YSAD,0)),U,2)
+ S YSEVTST=+$P($G(^YTT(601.84,+YSAD,0)),U,3)
+ S YSEVTST=$P($G(^YTT(601.71,YSEVTST,0)),U)
+ S YSEVCPLT=($P($G(^YTT(601.84,+YSAD,0)),U,9)="Y")
  S DIK="^YTT(601.84,",DA=YSAD D ^DIK
  S YSANS=0 F  S YSANS=$O(^YTT(601.85,"AD",YSAD,YSANS)) Q:YSANS'>0  D
  . S DIK="^YTT(601.85,",DA=YSANS D ^DIK
  W "  ***Deleted"
+ ; publish delete event for admin if it was completed
+ I YSEVCPLT D DELETE^YTQEVNT(YSAD,YSEVDFN,YSEVTST,"ptdel")
  Q

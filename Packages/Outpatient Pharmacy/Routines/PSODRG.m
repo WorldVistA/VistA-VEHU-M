@@ -1,15 +1,15 @@
 PSODRG ;IHS/DSD/JCM - ORDER ENTRY DRUG SELECTION ;10/23/18 8:47am
- ;;7.0;OUTPATIENT PHARMACY;**20,23,36,53,54,46,112,139,207,148,243,268,324,251,375,387,398,390,427,411,458,504,517,457,574,524**;DEC 1997;Build 28
- ;Reference to ^PSDRUG( supported by DBIA 221
- ;Reference to ^PS(50.7 supported by DBIA 2223
- ;Reference to $$PROMPT^PSSDIN supported by DBIA 3166
- ;Reference to EN^PSSDIN supported by DBIA 3166
- ;Reference to $$GETNDC^PSSNDCUT supported by DBIA 4707
- ;Reference to ^OROCAPI controlled subscription supported by DBIA 5367
- ;Reference to $$OITM^ORX8 supported by DBIA 5469
- ;Reference to ^VADPT supported by DBIA 10061
- ;Reference to IN^PSSHRQ2 supported by DBIA 5369
- ;Reference to ^XTMP("ORRDI" supported by DBIA 5440
+ ;;7.0;OUTPATIENT PHARMACY;**20,23,36,53,54,46,112,139,207,148,243,268,324,251,375,387,398,390,427,411,458,504,517,457,574,524,747**;DEC 1997;Build 7
+ ; Reference to ^PSDRUG( in ICR #221
+ ; Reference to ^PS(50.7 in ICR #2223
+ ; Reference to $$PROMPT^PSSDIN in ICR #3166
+ ; Reference to EN^PSSDIN in ICR #3166
+ ; Reference to $$GETNDC^PSSNDCUT in ICR #4707
+ ; Reference to ^OROCAPI in ICR #5367
+ ; Reference to $$OITM^ORX8 in ICR #5469
+ ; Reference to ^VADPT in ICR #10061
+ ; Reference to IN^PSSHRQ2 in ICR #5369
+ ; Reference to ^XTMP("ORRDI" in ICR #5440
  ;
  ;*524 Add HAZ Handle & Haz Dispose Alert pre-order checks
  ;----------------------------------------------------------
@@ -96,7 +96,8 @@ SET ;
  S PSODRUG("CLN")=+$$GET1^DIQ(50,+PSOY,25,"I")  ; zero if field is null
  S PSODRUG("SIG")=$P(PSOY(0),"^",5)
  I $G(PSODRUG("NDC"))="" S PSODRUG("NDC")=$$GETNDC^PSSNDCUT(+PSOY,$G(PSOSITE))
- S PSODRUG("DAW")=+$$GET1^DIQ(50,+PSOY,81)
+ S PSODRUG("DAW")=$$GET1^DIQ(50,+PSOY,81)
+ I PSODRUG("DAW")="" S PSODRUG("DAW")=0
  S PSODRUG("STKLVL")=$$GET1^DIQ(50,+PSOY,50)
  ;PSO*7*574 - Defect 1181628 Replaced code for PRICE PER DISPENSE UNIT display 
  G:$G(^PSDRUG(+PSOY,660))']"" SETX

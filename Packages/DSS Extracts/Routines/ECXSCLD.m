@@ -1,5 +1,5 @@
 ECXSCLD ;BIR/DMA,CML-Enter, Print and Edit Entries in 728.44 ;5/9/17  12:31
- ;;3.0;DSS EXTRACTS;**2,8,24,30,71,80,105,112,120,126,132,136,142,144,149,154,161,166,184**;Dec 22, 1997;Build 124
+ ;;3.0;DSS EXTRACTS;**2,8,24,30,71,80,105,112,120,126,132,136,142,144,149,154,161,166,184,190**;Dec 22, 1997;Build 36
 EN ;entry point from option
  ;load entries
  N DIR,X,Y,DIRUT,DTOUT,DUOUT,ZTSK ;144,161
@@ -138,26 +138,27 @@ SELECT ;select IO device to 'gather clinic stop codes' and print 'unreviewd clin
 PRINT ; print worksheet for updates
  N OUT,DIR,ECALL,ECXMCA,ECXCLX
  I '$O(^ECX(728.44,0)) W !,"DSS Clinic stop code file does not exist",!! R X:5 K X Q
- W !!,"This option produces a worksheet of (A) All Clinics, (C) Active, (D) Duplicate, (I) Inactive, "
- W !,"or only the (U) Unreviewed Clinics that are awaiting approval."
- W !!,"Clinics that were defined as ""inactive"" by MAS/HAS the last time the"
- W !,"option ""Create DSS Clinic Stop Code File"" was run will be indicated with",!,"an ""*""."
- W !!,"Choose (X) for exporting the CLINICS AND STOP CODES FILE to a text file for"
- W !,"spreadsheet use.",!
- W !,"**REMINDER - The CREATE option last ran on ",$S($D(^ECX(728.44,"C")):$$FMTE^XLFDT($O(^ECX(728.44,"C"," "),-1),2),1:"- No date on file"),"." ;144
+ W !!,"This option produces a worksheet of (A) All Clinics, (C) Active, (D) Duplicate, ",!,"(I) Inactive, "
+ W "or only the (U) Unreviewed Clinics that are awaiting approval."
+ ;W !!,"Clinics that were defined as ""inactive"" by MAS/HAS the last time the"
+ ;W !,"option ""Create DSS Clinic Stop Code File"" was run will be indicated with",!,"an ""*"".",!
+ ;190 - Remove all other print options; report is now Export only
+ ;W !!,"Choose (X) for exporting the CLINICS AND STOP CODES FILE to a text file for"
+ ;W !,"spreadsheet use.",!
+ W !!,"**REMINDER - The CREATE option last ran on ",$S($D(^ECX(728.44,"C")):$$FMTE^XLFDT($O(^ECX(728.44,"C"," "),-1),2),1:"- No date on file"),"." ;144
  W !,"If the most recent clinic changes from the HOSPITAL LOCATION file #44",!,"are desired, run the CREATE option before running a report.**",! ;144
- S DIR(0)="S^A:ALL CLINICS;C:ALL ACTIVE CLINICS;D:DUPLICATE CLINICS;I:ALL INACTIVE CLINICS;U:UNREVIEWED CLINICS;X:EXPORT TO TEXT FILE FOR SPREADSHEET USE",DIR("A")="Enter ""A"", ""C"", ""D"", ""I"", ""U"", or ""X""" ;149
- S DIR("?",1)="Enter: ""C"" to print a worksheet of all active DSS Clinic Stops,"
- S DIR("?",2)="Enter: ""I"" to print a worksheet of all inactive DSS Clinic  Stops,"
- S DIR("?",3)="Enter: ""A"" to print a worksheet of all DSS Clinic  Stops,"
- S DIR("?",4)="Enter: ""U"" to print only the Clinic Stops that have not been approved."
- S DIR("?",5)="Enter: ""D"" to print the Duplicate Clinics found." ;149
- S DIR("?")="Enter: ""X"" to export CLINICS AND STOP CODES FILE to a text file."
- D ^DIR K DIR G ENDX:$D(DIRUT) S ECALL=$E(Y)
- I ECALL="X" D EXPORT^ECXSCLD1 Q
- I ECALL'="D" W !!,"**REPORT REQUIRES 132 COLUMNS TO PRINT CORRECTLY**",! ;161
- S %ZIS="Q" D ^%ZIS Q:POP
- I $D(IO("Q")) K ZTSAVE S ZTDESC="DSS clinic stop code work sheet",ZTRTN="SPRINT^ECXSCLD",ZTSAVE("ECALL")="" D ^%ZTLOAD,HOME^%ZIS Q
+ ;S DIR(0)="S^A:ALL CLINICS;C:ALL ACTIVE CLINICS;D:DUPLICATE CLINICS;I:ALL INACTIVE CLINICS;U:UNREVIEWED CLINICS;X:EXPORT TO TEXT FILE FOR SPREADSHEET USE",DIR("A")="Enter ""A"", ""C"", ""D"", ""I"", ""U"", or ""X""" ;149
+ ;S DIR("?",1)="Enter: ""C"" to print a worksheet of all active DSS Clinic Stops,"
+ ;S DIR("?",2)="Enter: ""I"" to print a worksheet of all inactive DSS Clinic  Stops,"
+ ;S DIR("?",3)="Enter: ""A"" to print a worksheet of all DSS Clinic  Stops,"
+ ;S DIR("?",4)="Enter: ""U"" to print only the Clinic Stops that have not been approved."
+ ;S DIR("?",5)="Enter: ""D"" to print the Duplicate Clinics found." ;149
+ ;S DIR("?")="Enter: ""X"" to export CLINICS AND STOP CODES FILE to a text file."
+ ;D ^DIR K DIR G ENDX:$D(DIRUT) S ECALL=$E(Y)
+ S ECALL="X" D EXPORT^ECXSCLD1 Q  ;190 - Set ECALL to "X" to make sure we don't break anythign else
+ ;I ECALL'="D" W !!,"**REPORT REQUIRES 132 COLUMNS TO PRINT CORRECTLY**",! ;161
+ ;S %ZIS="Q" D ^%ZIS Q:POP
+ ;I $D(IO("Q")) K ZTSAVE S ZTDESC="DSS clinic stop code work sheet",ZTRTN="SPRINT^ECXSCLD",ZTSAVE("ECALL")="" D ^%ZTLOAD,HOME^%ZIS Q
 SPRINT ; queued entry to print work sheet
  N DC,ECSDC,DIV1,DIV2,APPL,APPL1,APPL2,STOPC,CREDSC,NATC,DUPIEN,FIEN,ECSC,ECSCI,ECSC2 ;149
  N ECSTA6A ;184

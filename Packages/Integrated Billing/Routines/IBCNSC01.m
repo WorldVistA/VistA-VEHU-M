@@ -1,9 +1,9 @@
 IBCNSC01 ;ALB/NLR - INSURANCE COMPANY EDIT ;6/1/05 10:06am
- ;;2.0;INTEGRATED BILLING;**52,137,191,184,232,320,349,371,399,416,432,494,519,547,592,608,668,687,713,778**;21-MAR-94;Build 28
+ ;;2.0;INTEGRATED BILLING;**52,137,191,184,232,320,349,371,399,416,432,494,519,547,592,608,668,687,713,778,794**;21-MAR-94;Build 9
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 PARAM ; -- Insurance company parameters region
- N OFFSET,START,IBCNS0,IBCNS03,IBCNS06,IBCNS08,IBCNS13,IBCNS3,IBHPD
+ N OFFSET,START,IBCNS0,IBCNS03,IBCNS06,IBCNS08,IBCNS13,IBCNS3,IBHPD,IBPPORT ;IB*784/CKB - added IBPPORT
  S IBCNS0=$G(^DIC(36,+IBCNS,0)),IBCNS3=$G(^(3))
  S IBCNS03=$P(IBCNS0,"^",3),IBCNS06=$P(IBCNS0,"^",6),IBCNS08=$P(IBCNS0,"^",8)
  S IBCNS13=$G(^DIC(36,+IBCNS,.13))
@@ -14,20 +14,26 @@ PARAM ; -- Insurance company parameters region
  D SET^IBCNSP(START+2,OFFSET+10,"Reimburse?: "_$E($$EXPAND^IBTRE(36,1,$P(IBCNS0,"^",2)),1,21))
  D SET^IBCNSP(START+3,OFFSET+3,"Mult. Bedsections: "_$S(+IBCNS06:"YES",IBCNS06=0:"NO",1:""))
  D SET^IBCNSP(START+4,OFFSET+6,"One Opt. Visit: "_$S(+IBCNS08:"YES",1:"NO"))
- D SET^IBCNSP(START+5,OFFSET+4,"Diff. Rev. Codes: "_$P(IBCNS0,"^",7))
- D SET^IBCNSP(START+6,OFFSET+1,"Amb. Sur. Rev. Code: "_$P(IBCNS0,"^",9))
- D SET^IBCNSP(START+7,OFFSET+1,"Rx Refill Rev. Code: "_$P(IBCNS0,"^",15))
- D SET^IBCNSP(START+8,OFFSET+3,"Filing Time Frame: "_$P(IBCNS0,"^",12)_$S(+$P(IBCNS0,"^",18):" ("_$$FTFN^IBCNSU31(,+IBCNS)_")",1:""))
+ ;IB*794/CKB - reorder screen, move Rec Codes, to allow for the 'Precert Portal'
+ D SET^IBCNSP(START+5,OFFSET+2,"Precert Comp. Name: "_$P($G(^DIC(36,+$P(IBCNS13,"^",9),0)),"^",1))
+ D SET^IBCNSP(START+6,OFFSET+7,"Precert Phone: "_$$PHONE(IBCNS13))
+ S IBPPORT=$$PORTAL(IBCNS13)
+ D SET^IBCNSP(START+7,OFFSET+6,"Precert Portal: "_$E(IBPPORT,1,55))
+ D SET^IBCNSP(START+8,OFFSET+21," "_$E(IBPPORT,56,80))
+ D SET^IBCNSP(START+9,OFFSET+3,"Filing Time Frame: "_$P(IBCNS0,"^",12)_$S(+$P(IBCNS0,"^",18):" ("_$$FTFN^IBCNSU31(,+IBCNS)_")",1:""))
+ D SET^IBCNSP(START+10,0," ") ;IB*794/CKB - blank line
+ I +IBCNS3=2 D SET^IBCNSP(START+10,OFFSET,"Max # Test Bills/Day: "_$P(IBCNS3,U,6))
  ;
  S OFFSET=45
  D SET^IBCNSP(START+1,OFFSET+4,"Type Of Coverage: "_$$EXPAND^IBTRE(36,.13,+$P(IBCNS0,U,13)))
  D SET^IBCNSP(START+2,OFFSET+7,"Billing Phone: "_$P(IBCNS13,"^",2))
  D SET^IBCNSP(START+3,OFFSET+2,"Verification Phone: "_$P(IBCNS13,"^",4))
- D SET^IBCNSP(START+4,OFFSET+2,"Precert Comp. Name: "_$P($G(^DIC(36,+$P(IBCNS13,"^",9),0)),"^",1))
- D SET^IBCNSP(START+5,OFFSET+7,"Precert Phone: "_$$PHONE(IBCNS13))
- I +IBCNS3=2 D SET^IBCNSP(START+6,OFFSET,"Max # Test Bills/Day: "_$P(IBCNS3,U,6))
+ ;IB*794/CKB - moved Rev codes from above
+ D SET^IBCNSP(START+4,OFFSET+4,"Diff. Rev. Codes: "_$P(IBCNS0,"^",7))
+ D SET^IBCNSP(START+5,OFFSET+1,"Amb. Sur. Rev. Code: "_$P(IBCNS0,"^",9))
+ D SET^IBCNSP(START+6,OFFSET+1,"Rx Refill Rev. Code: "_$P(IBCNS0,"^",15))
  ;
- S START=11,OFFSET=2
+ S START=12,OFFSET=2
  D SET^IBCNSP(START,OFFSET+28," EDI Parameters ",IORVON,IORVOFF)
  ;/IB*2*608 (vd) for US1909 changed the line below from "TEST ONLY" to "YES-TEST"
  ;D SET^IBCNSP(START+1,OFFSET+13,"Transmit?: "_$S(+IBCNS3=1:"YES-LIVE",+IBCNS3=2:"TEST ONLY",$P(IBCNS3,U,1)="":"",1:"NO"))
@@ -91,13 +97,33 @@ REDOX S IBSAVE=+$P(IBCNS13,"^",9)
  I $P(IBCNS13,"^",9),$P(IBCNS13,"^",9)'=IBSAVE G REDOX
 PHONEQ Q IBX
  ;
+PORTAL(IBCNS13)  ;IB*794/CKB - Compute precert portal
+ N IBX,IBSAVE,IBCNT
+ S IBX=""
+ ; if there isn't a PRECERT COMPANY NAME, use precert portal from current Insurance 
+ I '$P(IBCNS13,"^",9) S IBX=$P(IBCNS13,"^",12) G PORTALQ
+PORT ;
+ S IBSAVE=+$P(IBCNS13,"^",9)
+ S IBCNT=$G(IBCNT)+1
+ ; -- if you process the same co. more than once you are in an infinite loop
+ I $D(IBCNT(IBCNS)) G PORTALQ
+ S IBCNT(IBCNS)=""
+ S IBCNS13=$G(^DIC(36,+$P(IBCNS13,"^",9),.13))
+ S IBX=$P(IBCNS13,"^",12)
+ ; -- if process the same co. more than once you are in an infinite loop
+ I $P(IBCNS13,"^",9),$P(IBCNS13,"^",9)'=IBSAVE G PORT
+PORTALQ Q IBX
+ ;
 MAIN ; -- Insurance company main address
  N OFFSET,START,IBCNS11,IBCNS13,IBADD
  S IBCNS11=$G(^DIC(36,+IBCNS,.11))
  S IBCNS13=$G(^DIC(36,+IBCNS,.13))
  ;
  ;S START=21,OFFSET=25
- S START=22+(2*IBACMAX),OFFSET=25
+ ;IB*794/CKB - fix display issue between here and MAINAD
+ ;S START=22+(2*IBACMAX),OFFSET=26 
+ S START=22+(2*IBACMAX) D SET^IBCNSP(START,0," ") ;blank line
+ S START=23+(2*IBACMAX),OFFSET=26
 MAINAD ; KDM US2487 IB*2.0*592  call in tag from IBCNSI
  D SET^IBCNSP(START,OFFSET," Main Mailing Address ",IORVON,IORVOFF)
  S OFFSET=2
@@ -231,4 +257,3 @@ YESNO(VAL) ;Translate to a YES or NO value. - /vd - IB*2.0*687
  ; INPUT:   VAL = Either 0 or 1
  ; OUTPUT:  'YES' (for VAL=1), 'NO' (for VAL=0)
  Q $S(VAL=1:"YES",1:"NO")
- ;

@@ -1,5 +1,5 @@
 ONCOAIM ;HINES OIFO/GWB - Create additional primaries for a patient ;03/08/11
- ;;2.2;ONCOLOGY;**1,4,15,17**;Jul 31, 2013;Build 6
+ ;;2.2;ONCOLOGY;**1,4,15,17,20**;Jul 31, 2013;Build 5
  ;
 EN ;Add additional primaries for patient
  D KILL
@@ -84,6 +84,7 @@ CR ;Create Primary
  S ^ONCO(165.5,"C",ONCOD0,ONCOD0P)=""
  S ACAY=$E(DT,1)+17_$E(DT,2,3)
  ;new code P17 set defaults DATE DX (3) and CASEFINDING SOURCE (21)
+ ; then removed this code from P17 to default fields 3 and 21 in P20
  ; mostly copied next 7 lines from ONCOAI
  S (SR,XD,MO,CS)=""
  N SSPIEN
@@ -95,7 +96,8 @@ CR ;Create Primary
  ;
  L +^ONCO(165.5,ONCOD0P,0):0
  S DIE="^ONCO(165.5,"
- S DR="W !;.05////^S X=AC;.06////^S X=SEQ;.07//^S X=ACAY;.04;155;3//^S X=XD;20;21//^S X=CS"
+ S DR="W !;.05////^S X=AC;.06////^S X=SEQ;.07//^S X=ACAY;.04;155;3;20;22.3//^S X=MO;21"
+ ;S DR="W !;.05////^S X=AC;.06////^S X=SEQ;.07//^S X=ACAY;.04;155;3//^S X=XD;20;22.3//^S X=MO;21//^S X=CS"
  S ACN=AC_"/"_SEQ,DA=ONCOD0P
  D ^DIE
  L -^ONCO(165.5,ONCOD0P,0)

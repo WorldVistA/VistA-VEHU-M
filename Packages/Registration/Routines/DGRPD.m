@@ -1,5 +1,5 @@
-DGRPD ;ALB/MRL,MLR,JAN,LBD,EG,BRM,JRC,BAJ,JAM,HM,BDB,ARF,RN,JAM - PATIENT INQUIRY (NEW) ; Feb 15, 2023@10:25
- ;;5.3;Registration;**109,124,121,57,161,149,286,358,436,445,489,498,506,513,518,550,545,568,585,677,703,688,887,907,925,936,940,941,987,1006,1056,1061,1059,1071,1064,1086,1095**;Aug 13, 1993;Build 23
+DGRPD ;ALB/MRL,MLR,JAN,LBD,EG,BRM,JRC,BAJ,JAM,HM,BDB,ARF,RN,JAM - PATIENT INQUIRY (NEW) ; 04/01/2024@12:01
+ ;;5.3;Registration;**109,124,121,57,161,149,286,358,436,445,489,498,506,513,518,550,545,568,585,677,703,688,887,907,925,936,940,941,987,1006,1056,1061,1059,1071,1064,1086,1095,1104**;Aug 13, 1993;Build 59
  ; *286* Newing variables X,Y in OKLINE subroutine
  ; *358* If a patient is on a domiciliary ward, don't display MEANS
  ; TEST required/Medication Copayment Exemption messages
@@ -16,6 +16,8 @@ DGRPD ;ALB/MRL,MLR,JAN,LBD,EG,BRM,JRC,BAJ,JAM,HM,BDB,ARF,RN,JAM - PATIENT INQUIR
  ; 6138 - DGHBPUTL API
  ;
  ; Reference to DIS^EASECU in ICR #6771
+ ; Reference to $$DISPLAY^PXCOMPACT in ICR #7327
+ ;
 SEL K DFN,DGRPOUT W ! S DIC="^DPT(",DIC(0)="AEQMZ" D ^DIC G Q:Y'>0 S DFN=+Y N Y W ! S DIR(0)="E" D ^DIR G SEL:$D(DTOUT)!($D(DUOUT)) D EN G SEL
 EN ;call to display patient inquiry - input DFN
  ;MPI/PD CHANGE
@@ -131,23 +133,31 @@ EN ;call to display patient inquiry - input DFN
  ;display cv status #4156
  N DGCV S DGCV=$$CVEDT^DGCV(+DFN)
  W !!,?2,"Combat Vet Status: "_$S($P(DGCV,U,3)=1:"ELIGIBLE",$P(DGCV,U,3)="":"NOT ELIGIBLE",1:"EXPIRED") I DGCV>0 W ?45,"End Date: "_$$FMTE^XLFDT($P(DGCV,U,2),"5DZ")
- ;DG*5.3*1061 Display COMPACT ACT status only if TRUE
- N DGKEY,DGREQNAME,DGRESP,DGCOMP,ELIGSEQ
- S ELIG="UNDETERMINED",(DGCOMP,DGKEY,DGREQNAME,DGRESP,ELIGSEQ)=""
- ;make call to determine patient eligibility
- S DGKEY=$$GETICN^MPIF001(DFN),DGREQNAME="VistADataVTwo"
- I $P(DGKEY,"^",1)'=-1 S DGRESP=$$EN^DGREGEEWS(DGKEY,DGREQNAME,"","",.DGCOMP)
- ;if it returns zero, check PATIENT file for Compact Act eligible code
- I $P(DGRESP,"^",1)=0 D
- . S ELIGSEQ=""
- . F  S ELIGSEQ=$O(^DPT(DFN,"E",ELIGSEQ))  Q:(ELIGSEQ="")!(ELIGSEQ="B")!(ELIG="ELIGIBLE")  D
- . . I $P($G(^DIC(8,ELIGSEQ,0)),"^",1)="COMPACT ACT ELIGIBLE" S ELIG="ELIGIBLE"
- . . Q
- . Q
- I $P(DGRESP,"^",1)=1 D
- . I DGCOMP="No" S ELIG="NOT ELIGIBLE"
- . I DGCOMP="Yes" S ELIG="ELIGIBLE"
- W !,?1,"COMPACT Act Status: "_ELIG
+ ;DG*5.3*1104 Look up COMPACT Act administrative eligibility
+ W !,?1,"COMPACT Act Status: "_$$ELIG^DGCOMPACTELIG(DFN,"DGRPD")
+ ;
+ ;check for COMPACT Act information
+ N DISPLAY
+ S DISPLAY=$$DISPLAY^PXCOMPACT(DFN)
+ ;DISPLAY will contain one of the following groups of information:
+ ;  If end date exists (episode has ended) and there are no extensions,
+ ;     "COMPACT Act Start Date"^EPISODE START DATE^"End Date"^EPISODE END DATE^"IP Benefit End Date"^INPATIENT BENEFIT END DATE^"OP Benefit end date"^OUTPATIENT BENEFIT END DATE
+ ;  If end date exists (episode has ended) and an extension exists,
+ ;     "Extension Start Date"^EXTENSION START DATE^"Episode End Date"^EPISODE END DATE
+ ;  If end date does not exist (episode is ongoing) and there are no extensions,
+ ;     For an inpatient with an INPATIENT BENEFIT END DATE,
+ ;         "COMPACT Act Start Date"^EPISODE START DATE^"Remaining Days"^REMAINING INPATIENT DAYS^"Inpatient Benefit End Date"^INPATIENT BENEFIT END DATE
+ ;     Otherwise,
+ ;         "COMPACT Act Start Date"^EPISODE START DATE^"Remaining Days"^REMAINING INPATIENT DAYS or REMAINING OUTPATIENT DAYS
+ ;  If end date does not exist (episode is ongoing) and an extension exists,
+ ;     "Extension Start Date"^EXTENSION START DATE^"Remaining Days"^EXTENSION REMAINING DAYS
+ ;
+ I $P(DISPLAY,U,3)["End Date" W !!,?6,"Episode End Date: ",$P(DISPLAY,U,4)
+ E  D
+ . I $G(DISPLAY)="" W !! Q
+ . I $P(DISPLAY,U)="COMPACT Act Start Date" W !,?4,"Episode Start Date: ",$P(DISPLAY,U,2)
+ . I $P(DISPLAY,U)="Extension Start Date" W !,?7,"Ext. Start Date: ",$P(DISPLAY,U,2)
+ . W ?38,"Residential Remaining Days: ",$P(DISPLAY,U,4),!
  ;
  ;display primary eligibility
  S X1=DGRP(.36),X=$P(DGRP(.361),"^",1) W !,"Primary Eligibility: ",$S($D(^DIC(8,+X1,0)):$P(^(0),"^",1)_" ("_$S(X="V":"VERIFIED",X="P":"PENDING VERIFICATION",X="R":"PENDING REVERIFICATION",1:"NOT VERIFIED")_")",1:DGRPU)
@@ -293,7 +303,7 @@ SOGI ;**1059 SOGI FIELDS TO BE DISPLAYED VAMPI-11114,VAMPI-11118,VAMPI-11120, VA
  .W !?20,DGSOI(2.025,EN_","_DFN_",",.01)_" ("_DGSOI(2.025,EN_","_DFN_",",.02)_")"
  .W !?25,"Date Created:",?44,DGSOI(2.025,EN_","_DFN_",",.03)
  .W !?25,"Date Last Updated: "_DGSOI(2.025,EN_","_DFN_",",.04)
- W !,"Sexual Orientation Description: ",$$GET1^DIQ(2,DFN,".0251","E")
+ W !,"Sexual Orientation Free Text: ",$$GET1^DIQ(2,DFN,".0251","E")
  W !,"Pronoun: "
  S EN=0 F  S EN=$O(^DPT(DFN,.2406,EN)) Q:'EN  D
  .S PRN=$G(^DPT(DFN,.2406,EN,0))

@@ -1,6 +1,6 @@
-IBAECB1 ;WOIFO/AAT-LTC BILLING CLOCK INQUIRY ; 21-FEB-02
- ;;2.0;INTEGRATED BILLING;**171,176**;21-MAR-94
- ;; Per VHA Directive 10-93-142, this routine should not be modified
+IBAECB1 ;WOIFO/AAT - LTC BILLING CLOCK INQUIRY ; 21-FEB-02
+ ;;2.0;INTEGRATED BILLING;**171,176,729**;21-MAR-94;Build 8
+ ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
  ;
@@ -10,7 +10,7 @@ IBAECB1 ;WOIFO/AAT-LTC BILLING CLOCK INQUIRY ; 21-FEB-02
  ;   IOST,IOSL,IOF Must be defined
  ; Output: IBQUIT=1 if user entered "^"
 REPORT ;Print the report to the current device
- N IBZ,IBN4,IBDFN,IBPTZ,IBNAM,IBSSN,IBDOB,IBVET,IBFTN,IBTAB,IBDT1,IBDT2,IBSTA
+ N IBZ,IBN4,IBDFN,IBPTZ,IBNAM,IBDOB,IBVET,IBFTN,IBTAB,IBDT1,IBDT2,IBSTA
  N:'$D(IBQUIT) IBQUIT
  S IBQUIT=0
  ;
@@ -21,12 +21,11 @@ REPORT ;Print the report to the current device
  S IBPTZ=$G(^DPT(IBDFN,0)) I IBPTZ="" W !,"Patient data not found... (",IBDFN,")" Q
  S IBN4=$G(^IBA(351.81,IBCLK,4)) ; Node 4
  S IBNAM=$P(IBPTZ,U) ; Patient name
- S IBSSN=$P(IBPTZ,U,9) ; Patient SSN
  S IBDOB=$P(IBPTZ,U,3) ; Patient DOB
  S IBVET=+$P($G(^DPT(IBDFN,"TYPE")),U,1) ; Veteran type code
  S IBVET=$S(IBVET:$P($G(^DG(391,IBVET,0)),U),1:"") ; Veteran type name
  ; Write caption
- W IBNAM,?32," ",$$SSN(IBSSN),?48," ",$$DAT1(IBDOB),?62,IBVET
+ W IBNAM,?48," ",$$DAT1(IBDOB),?62,IBVET
  W ! D LINE("=",80)
  ;
  ; The body of report
@@ -59,9 +58,6 @@ REPORT ;Print the report to the current device
 FRM(IBLBL,IBCUT) ;
  I $G(IBCUT,1) S IBLBL=$E(IBLBL,1,26)
  Q "  "_IBLBL_": "  ;;;$J("",26-$L(IBLBL))_":  "
- ;
-SSN(IBSSN) I IBSSN?9N Q $E(IBSSN,1,3)_"-"_$E(IBSSN,4,5)_"-"_$E(IBSSN,6,9)
- Q IBSSN
  ;
 DAT1(IBDAT) ;FM -> External date, like 12/25/2000
  Q $$FMTE^XLFDT(IBDAT,"5PMZ")

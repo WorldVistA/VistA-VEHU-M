@@ -1,5 +1,5 @@
-VADPT ;ALB/MRL/MJK,ERC,TDM,ARF,JAM,JMM - RETURN PATIENT VARIABLE ARRAYS [DRIVER];7/17/14
- ;;5.3;Registration;**193,343,389,415,489,498,688,754,887,996,1061,1103**;Aug 13, 1993;Build 7
+VADPT ;ALB/MRL,MJK,ERC,TDM,ARF,JAM,JMM - RETURN PATIENT VARIABLE ARRAYS [DRIVER];7/17/14
+ ;;5.3;Registration;**193,343,389,415,489,498,688,754,887,996,1061,1103,1121**;Aug 13, 1993;Build 14
  ;DFN = Patient IFN [if not passed entire array returned as null]
  ;
 DEM ;Demographic Variables
@@ -31,7 +31,9 @@ MB ;Monetary Benefits
  ;
 SVC ;Service Information
  ; DG*5.3*1103 - Increase VAN(1) to 15 for adding the TERA indicator
- S VAN=9,VAN(1)=15,VAV="VASV" D ^VADPT0 Q
+ ; DG*5.3*1121 - Increase VAN(1) to 17 for adding the Persian Gulf Deployment Indicator and Persian Gulf Indicator Last Change Date
+ ; S VAN=9,VAN(1)=15,VAV="VASV" D ^VADPT0 Q
+ S VAN=9,VAN(1)=17,VAV="VASV" D ^VADPT0 Q
  ;
 REG ;Registration data
  S VAN=10,VAV="VARP" D ^VADPT0 Q

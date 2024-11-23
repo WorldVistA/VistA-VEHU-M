@@ -1,8 +1,8 @@
-YTQPXRM4 ;ASF/ALB CLINICAL REMINDERS CONT ; 10/29/07 3:06pm
- ;;5.01;MENTAL HEALTH;**85**;DEC 30,1994;Build 48
+YTQPXRM4 ;ASF/ALB - CLINICAL REMINDERS CONT ; 10/29/07 3:06pm
+ ;;5.01;MENTAL HEALTH;**85,240**;DEC 30,1994;Build 10
  ;
  Q
-CHECKCR(YSDATA,YS) ;ckeck out cr dialog is ok
+CHECKCR(YSDATA,YS) ;check out cr dialog is ok
  ; input: CODE,DFN,^TMP($J,AARAY,sequential)=ITEM#^RESPONSE
  ;output [DATA] VS [ERROR]
  ;scoring in ^TMP($J,"YSCOR"
@@ -13,6 +13,11 @@ CHECKCR(YSDATA,YS) ;ckeck out cr dialog is ok
  D ALLIN
  Q:(YSDATA(1)'="[DATA]")  ;-->out
  D SAVEOK
+ N YSEVDFN,YSEVTST,YSEVCPLT
+ S YSEVDFN=+$P($G(^YTT(601.84,+YS84IEN,0)),U,2)
+ S YSEVTST=+$P($G(^YTT(601.84,+YS84IEN,0)),U,3)
+ S YSEVTST=$P($G(^YTT(601.71,YSEVTST,0)),U)
+ S YSEVCPLT=($P($G(^YTT(601.84,+YS84IEN,0)),U,9)="Y")
  L +^YTT(601.84,YS84IEN):30
  K YS D ANSSET
  D GETSCORE^YTQAPI8(.YSV,.YS)
@@ -21,6 +26,8 @@ CHECKCR(YSDATA,YS) ;ckeck out cr dialog is ok
  . K DIK S DA=J1,DIK="^YTT(601.85," D ^DIK
  K DIK S DA=YS84IEN,DIK="^YTT(601.84," D ^DIK ;moved 10/29/07 asf
  L -^YTT(601.84,YS84IEN):30
+ ; publish delete event for admin if it was completed
+ I YSEVCPLT D DELETE^YTQEVNT(YS84IEN,YSEVDFN,YSEVTST,"crdel")
  K ^TMP($J,"YSQU")
  Q
 SAVECR(YSDATA,YS) ;save cr entered instruments
@@ -73,7 +80,7 @@ ALLIN ;check cr Entries ok
  . ;I $P(^YTT(601.72,YSQN,2),U,6)="N" Q  ;-->out not a required ques
  . I $D(^TMP($J,"YSQU","YSKIP",YSQN)) Q  ;-->out skip rule
  . I '$D(YSANS(N)) S YSERR="0^"_$P(YSERR,U,2)_N_"," ; error set req answer not present
- I $L(YSERR)>1 S YSDATA(1)="[ERROR]" S YSDATA(2)=YSERR K ^TMP($J,"YSQU") Q  ;-->out houston we have a problem
+ I $L(YSERR)>1 S YSDATA(1)="[ERROR]" S YSDATA(2)=YSERR K ^TMP($J,"YSQU") Q  ;-->out error state
  Q
 SAVEOK ; checks out so save admin
  S:'$D(YSADATE) YSADATE="NOW"

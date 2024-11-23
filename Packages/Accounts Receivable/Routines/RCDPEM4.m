@@ -1,5 +1,5 @@
 RCDPEM4 ;OIFO-BAYPINES/PJH - EPAYMENTS AUDIT REPORTS ;Nov 17, 2014@17:00:41
- ;;4.5;Accounts Receivable;**276,284,298,304,321,326,332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**276,284,298,304,321,326,332,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EOB ; EEOB Move/Copy/Rmove Audit Report [RCDPE EEOB MOVE/COPY/RMOVE RPT]
@@ -27,7 +27,7 @@ ASKUSR ;collect filter and device options
  ; RCSTA - station
  ; RCSTOP - flag to stop report
  ; RCTMPND - ListMan storage node
- ; RCTYPE - Type of EEOBs to include M/P/T/A MEDICAL/PHARMACY/TRICARE/ALL
+ ; RCTYPE - Type of EEOBs to include M/P/T/C/A MEDICAL/PHARMACY/TRICARE/CHAMPVA/ALL
  ;
  S RCPROG=$T(+0),RCLSTMGR="",RCACT="",(RCLNCNT,RCSTOP)=0,RCTMPND=""
  ; S (RCXCLUDE("CHAMPVA"),RCXCLUDE("TRICARE"))=0  ; default to false
@@ -250,8 +250,8 @@ HDRBLD ; create the report header
  .S Y="Date Range: "_START_" - "_END_" (DATE ERA UPDATED)"
  .S HCNT=HCNT+1,RCHDR(HCNT)=$J("",80-$L(Y)\2)_Y
  .; PRCA*4.5*326
- .S Y="MEDICAL/PHARMACY/TRICARE: "
- .S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ .S Y="MEDICAL/PHARMACY/TRICARE/CHAMPVA: "
+ .S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")
  .S HCNT=HCNT+1,RCHDR(HCNT)=$J("",80-$L(Y)\2)_Y
  .S HCNT=HCNT+1,RCHDR(HCNT)=""
  .S HCNT=HCNT+1,RCHDR(HCNT)="                        Date/Time         User Who        EFT Match Status"
@@ -267,8 +267,8 @@ HDRBLD ; create the report header
  .S Y="Date Range: "_START_" - "_END_" (Date EEOB was Moved/Copied/Removed)"
  .S HCNT=HCNT+1,RCHDR(HCNT)=$J("",80-$L(Y)\2)_Y
  .; PRCA*4.5*326
- .S Y="MEDICAL/PHARMACY/TRICARE: "
- .S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ .S Y="MEDICAL/PHARMACY/TRICARE/CHAMPVA: "
+ .S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")
  .S HCNT=HCNT+1,RCHDR(HCNT)=$J("",80-$L(Y)\2)_Y
  .S Y=" Action(s) Selected: "_$S(RCACT="M":"MOVE",RCACT="C":"COPY",RCACT="R":"REMOVE",1:"ALL")
  .S HCNT=HCNT+1,RCHDR(HCNT)=$J("",80-$L(Y)\2)_Y
@@ -298,8 +298,8 @@ HDRLM ; create the Listman header
  .S HCNT=1,RCHDR(HCNT)=""
  .S Y="Divisions: "_$S(VAUTD=1:"ALL",1:DVFLTR)_"     "
  .; PRCA*4.5*326
- .S Y=Y_"MEDICAL/PHARMACY/TRICARE: "
- .S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ .S Y=Y_"MEDICAL/PHARMACY/TRICARE/CHAMPVA: "
+ .S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")
  .S HCNT=HCNT+1,RCHDR(HCNT)=Y
  .S HCNT=HCNT+1,RCHDR(HCNT)=""
  .S Y="Date Range: "_START_" - "_END_" (DATE ERA UPDATED)"
@@ -313,8 +313,8 @@ HDRLM ; create the Listman header
  .D HDRXEC(RCRTYP)  ; xecute code for line 1
  .S Y="Divisions: "_$S(VAUTD=1:"ALL",1:DVFLTR)_"     "
  .; PRCA*4.5*326
- .S Y=Y_"MEDICAL/PHARMACY/TRICARE: "
- .S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ .S Y=Y_"MEDICAL/PHARMACY/TRICARE/CHAMPVA: "
+ .S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")
  .S HCNT=1,RCHDR(HCNT)=Y
  .S Y="Date Range: "_START_" - "_END_" (Date EEOB was Moved/Copied/Removed)"
  .S HCNT=2,RCHDR(HCNT)=Y

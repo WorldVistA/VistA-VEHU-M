@@ -1,5 +1,5 @@
-YTQPXRM3 ;ASF/ALB MHQ REMOTE PROCEDURES CONT ; 5/7/07 10:44am
- ;;5.01;MENTAL HEALTH;**85**;DEC 30,1994;Build 48
+YTQPXRM3 ;ASF/ALB - MHQ REMOTE PROCEDURES CONT ; 5/7/07 10:44am
+ ;;5.01;MENTAL HEALTH;**85,240**;DEC 30,1994;Build 10
  ;
  Q
 QUESTALL(YSDATA,YS) ;all questions for a test
@@ -44,8 +44,9 @@ QUEST2 ;
  . S ^TMP($J,"YSQU","YSCA",YSQN,$P(^YTT(601.75,YSCHOICE,0),U,2))=YSCHOICE
  Q
 CHECKME ;cr checker
+ ; changed so VDIF can call this without limiting # of questions or skipping legacy
  S YSERR=0
- I YSQNUMB>200 D CLEAN(YSQNUMB_" is too many questions") Q  ;-->out
+ I '$G(YS("VDIF")),(YSQNUMB>200) D CLEAN(YSQNUMB_" is too many questions") Q  ;-->out
  S N2=0 F  S N2=$O(^TMP($J,"YSQU",N2)) Q:N2'>0!YSERR  D
  . S YSLEGA=$G(^TMP($J,"YSQU",N2,"R",0))
  . D:YSLEGA="X" CLEAN(N2_" no legacy") Q  ;--out
@@ -63,6 +64,7 @@ OLDNEW(YSCODEN,YSOLDNUM) ;
  ;output ien OF 601.87, 0=ERROR
  ;
  N N2,YSQQ,YSNAME,YS601,YSOLDNAM,YSNEWN,YSCALE1,YSC1
+ N YSOUT
  IF $G(YSOLDNUM)="" S YSOLDNUM=1
  S YSOUT=0
  I '$D(^YTT(601.71,YSCODEN,0)) Q YSOUT  ;->out
@@ -83,6 +85,7 @@ NEWOLD(YSCODEN,YSNEW) ;
  ;output  YSOLD as ien of "S" MULT of 601 (1= DEFAULT)
  ;
  N N2,YSX,YSQQ,YSNAME,YS601,YSOLDNAM,YSNEWN,YSON,YSOLDN,YSCNEW
+ N YSOUT
  IF YSNEW="" S YSNEW=1
  S YSOUT=0
  I '$D(^YTT(601.71,YSCODEN,0)) Q YSOUT  ;->out
@@ -101,6 +104,7 @@ RL(YSCODEN) ;requires license
  ;output  Y/N/0
  ;
  N X
+ N YSOUT
  S YSOUT=0
  I '$D(^YTT(601.71,YSCODEN,0)) Q YSOUT  ;->out
  S X=$$GET1^DIQ(601.71,YSCODEN_",",11,"I")

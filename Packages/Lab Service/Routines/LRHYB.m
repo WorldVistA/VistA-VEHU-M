@@ -1,5 +1,5 @@
-LRHYB ;DALOI/HOAK - HOWDY B DRIVER ;9/16/2000
- ;;5.2;LAB SERVICE;**405,417,446,457,467,491**;Sep 27, 1994;Build 2
+LRHYB ;DALOI/HOAK - HOWDY B DRIVER ;Sep 16, 2000
+ ;;5.2;LAB SERVICE;**405,417,446,457,467,491,573**;Sep 27, 1994;Build 7
  ;
 TEST ;
  S DIC=2 S DIC(0)="AEMQZ" D ^DIC
@@ -14,6 +14,7 @@ ORDCHK ; Here is where the search for an order number starts
  ; will accept. Once an order has been selected it is handed off
  ; to LRORDST to start the accessioning process.
  ;
+ N LRNAAAC
  K LRWCZZZ,LRDTF
  K LRHYCS33
  K ^TMP("LRHYDY",$J,"KILL")
@@ -50,6 +51,10 @@ ORDCHK ; Here is where the search for an order number starts
  ...  K LRCOL99 S LRCOL99=$P(^LRO(69,LR3DTN,1,LR3SN,0),U,3)
  ...  K LRCSTAT S LRCSTAT=$P(^LRO(69,LR3DTN,1,LR3SN,0),U,4)
  ...  D CSTATUS^LRHYA Q:LRHYHOK  ;Check collection status
+ ...  ;
+ ...  ;LR573 check for accession area conflict:
+ ...  S LRORD=^LRO(69,LR3DTN,1,LR3SN,.1) I '$$Q18^LROE2(DUZ(2)) S (LRLAAX,LRHYHOK)=1
+ ...  Q:LRHYHOK
  ...  ;
  ...  D OLT^LRHYA  ;print order label tests
  ...  Q:LRHYHOK
@@ -137,7 +142,7 @@ MOVE1 ;
  .  K LRSTOPZ(LRORD)
  K ^TMP("LRHYDY",$J,"MULTD")
  S LRORD=$G(LR3ORD) K LR3ORD
- K LRHOWDY,LR3SN24,LR3DTN24,LR3ZTST,LROLT1
+ K LRHOWDY,LR3SN24,LR3DTN24,LR3ZTST,LROLT1,LRNAAAC
  I $G(LRORD) I $D(LRSTOPZ(LRORD)) K LRORD,LRSTOPZ QUIT
  ;
  QUIT

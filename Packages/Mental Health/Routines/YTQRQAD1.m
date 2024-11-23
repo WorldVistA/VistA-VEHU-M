@@ -1,5 +1,5 @@
 YTQRQAD1 ;SLC/KCM - RESTful Calls to handle MHA assignments ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,178,182,181,187,199,207,204,223**;Dec 30, 1994;Build 22
+ ;;5.01;MENTAL HEALTH;**130,141,178,182,181,187,199,207,204,223,240**;Dec 30, 1994;Build 10
  ;
  ; Reference to VADPT in ICR #10061
  ; Reference to XLFDT in ICR #10103
@@ -253,7 +253,11 @@ ADMEXPD(ADMIN,TEST) ; return 1 if incomplete admin has expired
  Q 0
  ;
 DELADMIN(YSADM) ; delete an admin & associated records
- N X,Y,DIK,DA,YSANS,YSRSLT
+ N X,Y,DIK,DA,YSANS,YSRSLT,YSEVDFN,YSEVTST,YSEVCPLT
+ S YSEVDFN=+$P($G(^YTT(601.84,+YSADM,0)),U,2)
+ S YSEVTST=+$P($G(^YTT(601.84,+YSADM,0)),U,3)
+ S YSEVTST=$P($G(^YTT(601.71,YSEVTST,0)),U)
+ S YSEVCPLT=($P($G(^YTT(601.84,+YSADM,0)),U,9)="Y")
  ; delete the admin record
  S DIK="^YTT(601.84,",DA=YSADM D ^DIK
  ; delete the answer records
@@ -264,4 +268,6 @@ DELADMIN(YSADM) ; delete an admin & associated records
  S YSRSLT=0 F  S YSRSLT=$O(^YTT(601.92,"AC",YSADM,YSRSLT)) Q:YSRSLT'>0  D
  . I $P(^YTT(601.92,YSRSLT,0),U,2)'=YSADM Q  ; result doesn't match
  . S DIK="^YTT(601.92,",DA=YSRSLT D ^DIK
+ ; publish delete event for admin if it was completed
+ I YSEVCPLT D DELETE^YTQEVNT(YSADM,YSEVDFN,YSEVTST,"webdel")
  Q

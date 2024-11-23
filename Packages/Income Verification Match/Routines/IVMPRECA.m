@@ -1,5 +1,5 @@
-IVMPRECA ;ALB/KCL,BRM,PJR,RGL,CKN,TDM,KUM - DEMOGRAPHICS MESSAGE CONSISTENCY CHECK ;1/06/18 11:16AM
- ;;2.0;INCOME VERIFICATION MATCH;**5,6,12,34,58,56,115,144,121,151,145,164,210**;21-OCT-94;Build 13
+IVMPRECA ;ALB/KCL,BRM,PJR,RGL,CKN,TDM,KUM - DEMOGRAPHICS MESSAGE CONSISTENCY CHECK ;7/06/24 11:16AM
+ ;;2.0;INCOME VERIFICATION MATCH;**5,6,12,34,58,56,115,144,121,151,145,164,210,215**;21-OCT-94;Build 14
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; This routine will perform data validation checks on uploadable
@@ -228,7 +228,8 @@ PID13 ; Perform consistency checks for seq. 13
  . . I COMMTYPE="NET" D  Q
  . . . S X=$P(TELECOM(COMMTYPE),$E(HLECH),4)
  . . . I X]"",'$$CHKEMAIL^IVMPREC8(X) S HLERR="Invalid Email address"
- . . S X=$P(TELECOM(COMMTYPE),$E(HLECH)) I X]"",(($L(X)>20)!($L(X)<4)) S HLERR="Invalid phone number"
+ . .;IVM*2.0*215 - Remove validation for phone numbers
+ . .;S X=$P(TELECOM(COMMTYPE),$E(HLECH)) I X]"",(($L(X)>20)!($L(X)<4)) S HLERR="Invalid phone number"
  Q
  ;
 CLEARF(NODE,DEL,IGNORE) ;
@@ -241,3 +242,65 @@ CLEARF(NODE,DEL,IGNORE) ;
  . I $G(IGNORE)[(","_I_",") Q  ;Ignore this seq. to convert
  . I $P(NODE,DEL,I)=HLQ S $P(NODE,DEL,I)=""
  Q NODE
+ ;
+ZPDPA ; compare ZPD with DHCP
+ ; IVM*2.0*215 - Moved ZPD tag from IVMPREC8 and renamed it to ZPDPA tag to fix size error
+ ;   ZPD tag in IVMPREC8 now calls ZPDPA
+ N STFLG
+ S STFLG=0
+ S IVMPIECE=$E(IVMXREF,4,5)
+ I IVMXREF="ZPD09"!(IVMXREF="ZPD31")!(IVMXREF="ZPD32") Q:$$DODCK(DFN)
+ ; IVM*2.0*210-Quit if IVM-Language Date/Time is older
+ I IVMXREF="ZPD46"!(IVMXREF="ZPD47") Q:'$$LANGCK^IVMPREC9(DFN)
+ ;
+ I $P(IVMSEG,HLFS,IVMPIECE)]"" D
+ .; - set var to HL7 field
+ .S IVMFLD=$P(IVMSEG,HLFS,IVMPIECE)
+ .; - if HL7 date convert to FM date
+ .; IVM*2.0*210-ADD ZPD47
+ .I IVMXREF["ZPD09"!(IVMXREF["ZPD13")!(IVMXREF["ZPD32")!(IVMXREF["ZPD47") S IVMFLD=$$FMDATE^HLFNC(IVMFLD)
+ .; IVM*2.0*214 - Restore lines mistakenly removed by patch 210 and extract only 4 ~ pieces
+ .; - if HL7 name format convert to FM
+ .I IVMXREF["ZPD06"!(IVMXREF["ZPD07") S IVMFLD=$$FMNAME^HLFNC($S($L(IVMFLD,HLECH)>4:$P(IVMFLD,HLECH,1,4),1:IVMFLD))
+ .;
+ .; IVM*2.0*210-call VADPT for DHCP demographics
+ .D DEM^VADPT
+ .; - execute code on the 1 node and get DHCP field
+ .S IVMDHCP="" X:$D(^IVM(301.92,+IVMDEMDA,1)) ^(1) S IVMDHCP=Y
+ .I IVMFLD]"",(IVMFLD'=IVMDHCP) S STFLG=1 D STORE^IVMPREC9 Q
+ .I $P(IVMSEG,"^",IVMPIECE)'="""""" D
+ ..I IVMXREF["ZPD09" D STORE^IVMPREC9
+ I IVMXREF["ZPD08",STFLG,$$AUTORINC^IVMPREC9(DFN) Q
+ I IVMXREF["ZPD32",$$AUTODOD^IVMLDEMD(DFN)
+ ; IVM*2.0*210 - Preferred Language and Date/Time
+ I IVMXREF["ZPD47",$$AUTOLANG^IVMPREC9(DFN)
+ Q
+ ;
+DODCK(DFN) ;this will check if Date of Death needs to be uploaded or not.
+ ; IVM*2.0*215 - Moved DODCK tag from IVMPREC8 to fix size error
+ ;2 reqs are:
+ ;  1. When the DOD is received from ESR with a Source of Death Notification equal to "Death Certificate on file and the
+ ;     VistA DOD is null or empty then VistA will upload the Date of Death from ESR
+ ;  2. When DOD is Received from ESR and VistA DOD is already populated then Vista will ignore the DOD from ESR and VistA
+ ;     will not create an entry in the IVM demographic upload option.
+ ;
+ ; Inputs: DFN for ^DPT
+ ;         IVMXREF (must be ZPD09, ZPD31 and ZPD32)
+ ;         IVMSEG (the ZPD data)
+ ;         IVMFLD (the field number in ^DPT(DFN)
+ ;         IVMPIECE (the piece number of IVMSEG)
+ ;         IVMDHCP (the data from ^DPT(DFN)
+ ;
+ N DODARRAY,QUIT
+ ;
+ S (CKDEL,QUIT)=0
+ ;
+ I $P(IVMSEG,"^",9)="""""" Q 0
+ D GETS^DIQ(2,DFN,".351:.355","","DODARRAY")
+ S DOD=DODARRAY(2,DFN_",",.351)
+ I DOD'="" Q 1
+ I $P(IVMSEG,"^",31)=3,DOD="" S QUIT=0    ;Death Certificate not on File
+ I $P(IVMSEG,"^",31)=3,DOD'="" S QUIT=1
+ ;
+ Q QUIT ;
+ ;

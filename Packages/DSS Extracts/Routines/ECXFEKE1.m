@@ -1,5 +1,5 @@
-ECXFEKE1 ;BIR/DMA,CML-Print Feeder Keys (CONTINUED); [ 03/28/96  5:44 PM ] ;5/22/19  11:51
- ;;3.0;DSS EXTRACTS;**11,8,40,149,174**;Dec 22, 1997;Build 33
+ECXFEKE1 ;BIR/DMA,CML-Print Feeder Keys (CONTINUED); [ 03/28/96  5:44 PM ] ;2/1/24  10:46
+ ;;3.0;DSS EXTRACTS;**11,8,40,149,174,190**;Dec 22, 1997;Build 36
  ;
 SELLABKE() ;** Function to prompt user selection of type of Lab Feeder Key
  ;
@@ -22,7 +22,9 @@ SELLABKE() ;** Function to prompt user selection of type of Lab Feeder Key
  K Y,DIR,DIRUT,DTOUT,DUOUT
  Q ECXKEY
  ;
-SUR F EC=1:1:16 S EC1=$P($T(@("S"_EC)),";",3),EC2=$P(EC1,U),ECD=$P(EC1,U,2),^TMP($J,"SUR",EC2_"-10",EC)=ECD_" PATIENT TIME",^TMP($J,"SUR",EC2_"-40",EC)=ECD_" SURGEON TIME" D
+SUR ;
+ G SUR25 ; Updated for FY25 and beyond - ECX*3*190
+ F EC=1:1:16 S EC1=$P($T(@("S"_EC)),";",3),EC2=$P(EC1,U),ECD=$P(EC1,U,2),^TMP($J,"SUR",EC2_"-10",EC)=ECD_" PATIENT TIME",^TMP($J,"SUR",EC2_"-40",EC)=ECD_" SURGEON TIME" D
  .S ^TMP($J,"SUR",EC2_"-60",EC)=ECD_" RECOVERY ROOM TIME",^TMP($J,"SUR",EC2_"-70",EC)=ECD_" TECHNICIAN TIME",^TMP($J,"SUR",EC2_"-30",EC)=ECD_" CLEANUP TIME"
  .S ^TMP($J,"SUR",EC2_"-22",1)=ECD_" ANESTHESIA TIME (SPECIAL)"
  .S ^TMP($J,"SUR",EC2_"-21",1)=ECD_" ANESTHESIA TIME (GENERAL)"
@@ -33,6 +35,36 @@ SUR F EC=1:1:16 S EC1=$P($T(@("S"_EC)),";",3),EC2=$P(EC1,U),ECD=$P(EC1,U,2),^TMP
  .S ^TMP($J,"SUR",EC2_"-27",1)=ECD_" ANESTHESIA TIME (MONITORED)"
  S EC=0 F  S EC=$O(^SRO(131.9,EC)) Q:'EC  I $D(^(EC,0)) S ECD=$P(^(0),U),^TMP($J,"SUR",$$RJ^XLFSTR(EC,5,0),EC)=ECD
  Q
+SUR25 ; Code implemented with ECX*3*190
+ ; Rather than build the feeder keys from a fixed list, the Specialty Codes
+ ; will come from the SPECIALTY CODES file (#45.3). In addition, Organs
+ ; transplanted will be listed for specific Specialty Codes.
+ N CODE,IEN,DESC
+ S CODE="" F  S CODE=$O(^DIC(45.3,"B",CODE)) Q:CODE=""  S IEN=0 F  S IEN=$O(^DIC(45.3,"B",CODE,IEN)) Q:'IEN  D
+ . S DESC=$P(^DIC(45.3,IEN,0),"^",2)
+ . S ^TMP($J,"SUR","0"_CODE_"-10",CODE)=DESC_" PATIENT TIME"
+ . S ^TMP($J,"SUR","0"_CODE_"-40",CODE)=DESC_" SURGEON TIME"
+ . S ^TMP($J,"SUR","0"_CODE_"-60",CODE)=DESC_" RECOVERY ROOM TIME"
+ . S ^TMP($J,"SUR","0"_CODE_"-70",CODE)=DESC_" TECHNICIAN TIME"
+ . S ^TMP($J,"SUR","0"_CODE_"-30",CODE)=DESC_" CLEANUP TIME"
+ . S ^TMP($J,"SUR","0"_CODE_"-22",1)=DESC_" ANESTHESIA TIME (SPECIAL)"
+ . S ^TMP($J,"SUR","0"_CODE_"-21",1)=DESC_" ANESTHESIA TIME (GENERAL)"
+ . S ^TMP($J,"SUR","0"_CODE_"-23",1)=DESC_" ANESTHESIA TIME (LOCAL)"
+ . S ^TMP($J,"SUR","0"_CODE_"-24",1)=DESC_" ANESTHESIA TIME (SPI/EPI)"
+ . S ^TMP($J,"SUR","0"_CODE_"-25",1)=DESC_" ANESTHESIA TIME (OTHER)"
+ . S ^TMP($J,"SUR","0"_CODE_"-26",1)=DESC_" ANESTHESIA TIME (UNKNOWN)"
+ . S ^TMP($J,"SUR","0"_CODE_"-27",1)=DESC_" ANESTHESIA TIME (MONITORED)"
+ . I "48^49^50^59^62"[CODE D
+ . . S ^TMP($J,"SUR","0"_CODE_"-HART",1)=DESC_" HEART TRANSPLANT"
+ . . S ^TMP($J,"SUR","0"_CODE_"-LUNG",1)=DESC_" LUNG TRANSPLANT"
+ . . S ^TMP($J,"SUR","0"_CODE_"-KDNY",1)=DESC_" KIDNEY TRANSPLANT"
+ . . S ^TMP($J,"SUR","0"_CODE_"-LIVR",1)=DESC_" LIVER TRANSPLANT"
+ . . S ^TMP($J,"SUR","0"_CODE_"-PCRS",1)=DESC_" PANCREAS TRANSPLANT"
+ . . S ^TMP($J,"SUR","0"_CODE_"-INTN",1)=DESC_" INTESTINE TRANSPLANT"
+ . . S ^TMP($J,"SUR","0"_CODE_"-OTHR",1)=DESC_" OTHER TRANSPLANT"
+ S IEN=0 F  S IEN=$O(^SRO(131.9,IEN)) Q:'IEN  I $D(^(IEN,0)) S DESC=$P(^(0),U),^TMP($J,"SUR",$$RJ^XLFSTR(IEN,5,0),IEN)=DESC
+ Q
+ ;
 S1 ;;050^GENERAL(OR WHEN NOT DEFINED BELOW)
 S2 ;;051^GYNECOLOGY
 S3 ;;052^NEUROSURGERY

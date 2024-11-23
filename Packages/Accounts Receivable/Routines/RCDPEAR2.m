@@ -1,5 +1,5 @@
 RCDPEAR2 ;ALB/TMK/PJH - EFT Unmatched Aging Report - FILE 344.3 ;Nov 24, 2014@18:31:57
- ;;4.5;Accounts Receivable;**173,269,276,284,283,293,298,318,321,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**173,269,276,284,283,293,298,318,321,326,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -10,7 +10,7 @@ EN1 ; option: EFT Unmatched Aging Report [RCDPE EFT AGING REPORT]
  ; RCDISPTY = display type
  ; RCEND = end date
  ; RCLSTMGR = list manager flag
- ; RCTYPE = Type of payers to include M/P/T/A MEDICAL/PHARMACY/TRICARE/ALL
+ ; RCTYPE = Type of payers to include M/P/T/C/A MEDICAL/PHARMACY/TRICARE/CHAMPVA/ALL
  ; RCDTRNG= "1^start date^end date"
  ; RCSTART = start date
  ; RCTMPND = name of the subscript for ^TMP to use
@@ -20,7 +20,7 @@ EN1 ; option: EFT Unmatched Aging Report [RCDPE EFT AGING REPORT]
  S RCDTRNG=$$DTRNG^RCDPEM4() G:'(RCDTRNG>0) EN1Q
  S RCSTART=$P(RCDTRNG,U,2)-1,RCEND=$P(RCDTRNG,U,3)
  ;
- ; PRCA*4.5*326 - Ask to show Medical/Pharmacy Tricare or All
+ ; PRCA*4.5*326 - Ask to show Medical/Pharmacy Tricare or All  ; PRCA*4.5*4.32 CHAMPVA
  S RCTYPE=$$RTYPE^RCDPEU1("")
  I RCTYPE=-1 G EN1Q
  ;
@@ -108,6 +108,7 @@ RPTOUT ; Entry point for queued job, nightly job
  S RCZ="" F  S RCZ=$O(^TMP($J,"RCEFT_AGED",RCZ)) Q:RCZ=""  S RCIEN=0 F  S RCIEN=$O(^TMP($J,"RCEFT_AGED",RCZ,RCIEN)) Q:'RCIEN  D  G:RCSTOP PRTQ
  .I $D(ZTQUEUED),$$S^%ZTLOAD S (RCSTOP,ZTSTOP)=1 K ZTREQ I +$G(RCPGNUM) W:RCTMPND="" !!,"***TASK STOPPED BY USER***" Q
  .S RC0=$G(^RCY(344.31,RCIEN,0)),RC3443=$G(^RCY(344.3,+RC0,0))
+ .D DEBEFT^RCDPEARL(.RC0) ;Add minus sign for debit amounts PRCA*4.5*432
  .S RCTOT=RCTOT+$P(RC0,U,7)
  ;
  D:'RCLSTMGR HDRLST^RCDPEARL(.RCSTOP,.RCHDR)  ; initial report header
@@ -125,6 +126,7 @@ RPTOUT ; Entry point for queued job, nightly job
  .I RCPGNUM D SL^RCDPEARL(" ",.RCCT,.RCTMPND) ; On detail list, skip line
  .I 'RCLSTMGR,$Y>(IOSL-RCHDR(0)) D HDRLST^RCDPEARL(.RCSTOP,.RCHDR) Q:RCSTOP
  .S RC0=$G(^RCY(344.31,RCIEN,0)),RC3443=$G(^RCY(344.3,+RC0,0))
+ .D DEBEFT^RCDPEARL(.RC0) ;Add minus sign for debit amounts PRCA*4.5*432
  .S RCTOT=RCTOT+$P(RC0,U,7)
  .S Z=$$SETSTR^VALM1($J(-RCZ,4),"",1,4)
  .; PRCA*4.5*318 moved deposit date up a row to give more room for payer/payer ID
@@ -201,8 +203,8 @@ HDRBLD ; create the report header
  ;
  ; Payer(s) - PRCA*4.5*326 Add MPT filter
  S Y="PAYERS: "_$S(RCPAY="R":"RANGE",RCPAY="S":"SELECTED",1:"ALL")
- S Y=$E(Y_$J("",80),1,41)_"MEDICAL/PHARMACY/TRICARE: "
- S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ S Y=$E(Y_$J("",80),1,38)_"MEDICAL/PHARMACY/TRICARE/CHAMPVA: "  ; PRCA*4.5*4.32 CHAMPVA, 41->38
+ S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")  ; PRCA*4.5*4.32 CHAMPVA
  S HCNT=HCNT+1,RCHDR(HCNT)=Y
  S Y="DATE RANGE: "_$P($$FMTE^XLFDT(START,2),"@")_" - "_$P($$FMTE^XLFDT(END,2),"@")_" (DATE EFT FILED)"
  S Y=$J("",80-$L(Y)\2)_Y,HCNT=HCNT+1,RCHDR(HCNT)=Y
@@ -233,8 +235,8 @@ HDRLM ; create the Listman header section
  S HCNT=1,RCHDR(HCNT)=Y
  ; Payer(s) - PRCA*4.5*326 Add MPT filter
  S Y="PAYERS: "_$S(RCPAY="R":"RANGE",RCPAY="S":"SELECTED",1:"ALL")
- S Y=$E(Y_$J("",80),1,41)_"MEDICAL/PHARMACY/TRICARE: "
- S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ S Y=$E(Y_$J("",80),1,38)_"MEDICAL/PHARMACY/TRICARE/CHAMPVA: "  ; PRCA*4.5*4.32 CHAMPVA, 41->38
+ S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")  ; PRCA*4.5*4.32 CHAMPVA
  S HCNT=HCNT+1,RCHDR(HCNT)=Y
  ;
  S HCNT=HCNT+1,RCHDR(HCNT)=""
@@ -254,6 +256,7 @@ EXCEL ; Print report to screen, one record per line for export to MS Excel.
  S RCZ="" F  S RCZ=$O(^TMP($J,"RCEFT_AGED",RCZ)) Q:RCZ=""  S RCIEN=0 F  S RCIEN=$O(^TMP($J,"RCEFT_AGED",RCZ,RCIEN)) Q:'RCIEN  D  G:RCSTOP PRTQ2
  .I $D(ZTQUEUED),$$S^%ZTLOAD S (RCSTOP,ZTSTOP)=1 K ZTREQ I +$G(RCPG) W:RCTMPND="" !!,"***TASK STOPPED BY USER***" Q
  .S RC0=$G(^RCY(344.31,RCIEN,0)),RC3443=$G(^RCY(344.3,+RC0,0))
+ .D DEBEFT^RCDPEARL(.RC0) ;Add minus sign for debit amounts PRCA*4.5*432
  .N RCPAY S RCPAY=$P(RC0,U,2) S:RCPAY="" RCPAY="NO PAYER NAME RECEIVED" ; PRCA*4.5*298
  .S Z=$J(-RCZ,4)_"^"_$P(RC0,U,4)_"^"_RCPAY_"/"_$P(RC0,U,3)_"^"_$S($P(RC0,U,13):$$FMTE^XLFDT($P(RC0,U,13),2),1:"")_"^" ; PRCA*4.5*298
  .S Z=Z_$P(RC0,U,7)_"^"_$P(RC3443,U,6)_"/"_$P(RC0,U)_"."_$P(RC0,U,14)_"^" ; PRCA*4.5*326

@@ -1,5 +1,5 @@
 RCDPEWLD ;ALB/CLT - Continuation of routine RCDPEWL0 ;09 DEC 2016
- ;;4.5;Accounts Receivable;**252,317,321,326,332,424**;Mar 20, 1995;Build 11
+ ;;4.5;Accounts Receivable;**252,317,321,326,332,424,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -183,20 +183,21 @@ M1 S RCMATCHD=$G(^TMP("RCERA_PARAMS",$J,"RCMATCH")) ; PRCA*4.5*326
  S ^TMP("RCERA_PARAMS",$J,"RCMATCH")=Y
  Q 0
  ;
-CLAIMTYP()  ; Claim Type (Medical/Pharmacy/Both) Selection
+CLAIMTYP()  ; Claim Type (Medical/Pharmacy/Tricare/CHAMPVA/Both) Selection
  ; Input:   ^TMP("RCERA_PARAMS")             - Global array of preferred values (if any)
  ; Output:  ^TMP("RCERA_PARAMS",$J,"RCTYPE") - ERA Posting Status filter
  ; Returns: 1 if user quit or timed out, 0 otherwise
  N DIR,DTOUT,DUOUT,RCTYPEDF
  S RCTYPEDF=$G(^TMP("RCERA_PARAMS",$J,"RCTYPE"))
  ; PRCA*4.5*321 - Changed set of codes and help
- K DIR S DIR(0)="SA^M:MEDICAL;P:PHARMACY;T:TRICARE;A:ALL"
- S DIR("A")="(M)EDICAL, (P)HARMACY, (T)RICARE or (A)LL: "
+ K DIR S DIR(0)="SA^M:MEDICAL;P:PHARMACY;T:TRICARE;C:CHAMPVA;A:ALL"  ;PRCA*4.5*432 CHAMPVA
+ S DIR("A")="(M)EDICAL, (P)HARMACY, (T)RICARE, (C)HAMPVA or (A)LL: "  ;PRCA*4.5*432 CHAMPVA
  S DIR("B")="A"
  S DIR("?",1)="Select MEDICAL to only see ERAs with a payer type of medical."
  S DIR("?",2)="Select PHARMACY to only see ERAs with a payer type of pharmacy."
  S DIR("?",3)="Select TRICARE to only see ERAs with a payer type of Tricare."
- S DIR("?")="Select ALL to see medical, pharmacy and Tricare ERAs."
+ S DIR("?",4)="Select CHAMPVA to only see ERAs with a payer type of CHAMPVA."  ;PRCA*4.5*432 CHAMPVA
+ S DIR("?")="Select ALL to see medical, pharmacy, Tricare, and CHAMPVA ERAs."  ;PRCA*4.5*432 CHAMPVA
  ; PRCA*4.5*321 - End modified code block
  S:RCTYPEDF'="" DIR("B")=RCTYPEDF     ;Stored preferred value, use as default
  W !
@@ -294,3 +295,64 @@ VALM(INP) ; Compare input match type filter to other filters
  .W !!,"NOT MATCHED is an invalid selection for AUTO-POSTING ERAs"
  Q 1
  ;
+ ; Following FILTER code moved from RCDPEWL7 due to routine size PRCA*4.5*432
+FILTER(IEN344P4) ; Returns 1 if record in entry IEN344P4 in 344.4 passes
+ ; the edits for the worklist selection of ERAs
+ ; Parameters found in ^TMP("RCERA_PARAMS",$J)
+ N OK,RCPOST,RCAPST,RCAPSTA,RCAUTOP,RCMATCH,RCTYPE,RCDFR,RCDTO,RCPAYFR,RCPAYMNT,RCPAYTO,RCPAYR,RC0,RC4
+ S OK=1,RC0=$G(^RCY(344.4,IEN344P4,0)),RC4=$G(^RCY(344.4,IEN344P4,4))
+ ;
+ S RCMATCH=$G(^TMP("RCERA_PARAMS",$J,"RCMATCH")),RCPOST=$G(^TMP("RCERA_PARAMS",$J,"RCPOST"))
+ S RCAUTOP=$G(^TMP("RCERA_PARAMS",$J,"RCAUTOP")),RCTYPE=$G(^TMP("RCERA_PARAMS",$J,"RCTYPE"))
+ S RCDFR=+$P($G(^TMP("RCERA_PARAMS",$J,"RCDT")),U),RCDTO=+$P($G(^TMP("RCERA_PARAMS",$J,"RCDT")),U,2)
+ S RCPAYR=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U),RCPAYFR=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U,2),RCPAYTO=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U,3)
+ S RCPAYMNT=$G(^TMP("RCERA_PARAMS",$J,"RCPAYMNT"))    ; PRCA*4.5*321
+ S RCAPSTA=$G(^TMP("RCERA_PARAMS",$J,"RCAPSTA"))
+ ;
+ ; Post status
+ I $S(RCPOST="B":0,RCPOST="U":$P(RC0,U,14),1:'$P(RC0,U,14)) S OK=0 G FQ
+ ; Auto-Posting status
+ I $S(RCAUTOP="B":0,RCAUTOP="A":($P(RC4,U,2)=""),1:($P(RC4,U,2)'="")) S OK=0 G FQ
+ ; If ERA is autopost and filtering on selected Autopost statuses check status
+ I $P(RC4,U,2)'="",RCAPSTA'="A",(RCAUTOP="B")!(RCAUTOP="A") D  G:OK=0 FQ
+ .;Auto-post Status
+ .S RCAPST=$$GET1^DIQ(344.4,IEN344P4_",",4.02,"I")
+ .;Complete filter
+ .I RCAPSTA="C" S:RCAPST'=2 OK=0 G FQ
+ .;Partial filter
+ .I RCAPSTA="P" S:RCAPST'=1 OK=0 G FQ
+ .;Marked for Auto-post filter - ignores if not partial post or unposted
+ .I RCAPSTA="M",RCAPST'=1,RCAPST'=0 S OK=0 G FQ
+ .;Marked for Auto-post filter - ignores PARTIAL auto-post era if no lines on ERA are marked
+ .I RCAPSTA="M",RCAPST=1,'$O(^RCY(344.4,"AP",1,IEN344P4,"")) S OK=0 G FQ
+ .;Marked for Auto-post filter - ignores UNPROCESSED auto-post era if no marked for autopost user 
+ .I RCAPSTA="M",RCAPST=0,$$GET1^DIQ(344.4,IEN344P4_",",4.04,"I")="" S OK=0 G FQ
+ ; Match status
+ I $S(RCMATCH="B":0,RCMATCH="N":$P(RC0,U,9),1:'$P(RC0,U,9)) S OK=0 G FQ
+ ; Medical/Pharmacy/Tricare Claim
+ ; I $S(RCTYPE="B":0,RCTYPE="M":$$PHARM^RCDPEWLP(IEN344P4),1:'$$PHARM^RCDPEWLP(IEN344P4)) S OK=0 G FQ
+ I RCTYPE'="A" D  I 'OK G FQ
+ . N RCFLAG
+ . I '$$PAYFLAGS^RCDPEWL7(IEN344P4,.RCFLAG) S OK=0 Q
+ . I RCTYPE="P",'RCFLAG("P") S OK=0 Q
+ . I RCTYPE="T",'RCFLAG("T") S OK=0 Q
+ . I RCTYPE="C",'RCFLAG("C") S OK=0 Q  ;PRCA*4.5*432 CHAMPVA
+ . I RCTYPE="M",(RCFLAG("P")!RCFLAG("T")!RCFLAG("C")) S OK=0  ;PRCA*4.5*432 CHAMPVA
+ ; dt rec'd range
+ I $S(RCDFR=0:0,1:$P(RC0,U,7)\1<RCDFR) S OK=0 G FQ
+ I $S(RCDTO=DT:0,1:$P(RC0,U,7)\1>RCDTO) S OK=0 G FQ
+ ; Payer name
+ I RCPAYR'="A" D  G:'OK FQ
+ . N Q
+ . S Q=$$UP^RCDPEARL($P(RC0,U,6))
+ . I $S(Q=RCPAYFR:1,Q=RCPAYTO:1,Q]RCPAYFR:RCPAYTO]Q,1:0) Q
+ . S OK=0
+ ; PRCA*4.5*321 - Start modified code block
+ ; Zero amount or payment
+ I RCPAYMNT'="B" D  ;
+ . I RCPAYMNT="Z",$P(RC0,U,5) S OK=0 Q
+ . I RCPAYMNT="P",'$P(RC0,U,5) S OK=0
+ ; PRCA*4.5*321 - End modified code block
+ ;
+FQ Q OK
+ ; END PRCA*4.5*326

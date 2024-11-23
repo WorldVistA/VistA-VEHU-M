@@ -1,5 +1,5 @@
-DGPTF1 ;ALB/JDS/PLT - PTF ENTRY/EDIT ;5/17/05 3:29pm
- ;;5.3;Registration;**69,114,195,397,342,415,565,664,884,1095**;Aug 13, 1993;Build 23
+DGPTF1 ;ALB/JDS/PLT - PTF ENTRY/EDIT ;04/01/24 3:29pm
+ ;;5.3;Registration;**69,114,195,397,342,415,565,664,884,1095,1104**;Aug 13, 1993;Build 59
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  I '$D(IOF) S IOP="HOME" D ^%ZIS K IOP
@@ -57,21 +57,8 @@ CV S L=$S($P(A("CV"),U,1)>0:1,1:0)
  W !,"Combat Veteran: ",$S(L:"YES",1:"NO")
  I L S Y=$P(A("CV"),U,2) D D^DGPTUTL W ?45,"End Date: ",Y
  ;
- N ELIG,DGKEY,DGREQNAME,DGRESP,DGCOMP,ELIGSEQ
- S ELIG="UNDETERMINED",(DGCOMP,DGKEY,DGREQNAME,DGRESP,ELIGSEQ)=""
- S DGKEY=$$GETICN^MPIF001(DFN),DGREQNAME="VistADataVTwo"
- I $P(DGKEY,"^",1)'=-1 S DGRESP=$$EN^DGREGEEWS(DGKEY,DGREQNAME,"","",.DGCOMP)
- ;if it returns zero, check PATIENT file for Compact Act eligible code
- I $P(DGRESP,"^",1)=0 D
- . S ELIGSEQ=""
- . F  S ELIGSEQ=$O(^DPT(DFN,"E",ELIGSEQ)) Q:(ELIGSEQ="")!(ELIGSEQ="B")!(ELIG="ELIGIBLE")  D
- . . I $P($G(^DIC(8,ELIGSEQ,0)),"^",1)="COMPACT ACT ELIGIBLE" S ELIG="ELIGIBLE"
- . . Q
- . Q
- I $P(DGRESP,"^",1)=1 D
- . I DGCOMP="No" S ELIG="NOT ELIGIBLE"
- . I DGCOMP="Yes" S ELIG="ELIGIBLE"
- W !,"Acute Suicidal Crisis:                    COMPACT Act: ",ELIG
+ N ELIG S ELIG=$$ELIG^DGCOMPACTELIG(DFN,"DGPTF1")
+ W !,"Acute Suicidal Crisis: ",$S($P($G(^DGPT(PTF,70)),"^",33)=1:"YES",$P($G(^DGPT(PTF,70)),"^",33)=0:"NO",1:""),"                  COMPACT Act: ",ELIG
  D EN^DGPTF4 K A,B Q:DGPR
  ;
 JUMP F I=$Y:1:20 W !
@@ -113,3 +100,4 @@ Z I 'DGN S Z=$S(IOST="C-QUME"&($L(DGVI)'=2):Z,1:"["_Z_"]") W @DGVI,Z,@DGVO
  Q
 Z1 F I=1:1:(Z1-$L(Z)) S Z=Z_" "
  W Z
+ Q

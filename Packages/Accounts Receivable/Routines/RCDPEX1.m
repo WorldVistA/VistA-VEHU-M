@@ -1,5 +1,5 @@
 RCDPEX1 ;ALB/TMK - ELECTRONIC EOB MESSAGE EXCEPTIONS PROCESS ;2 Aug 2018 21:41:05
- ;;4.5;Accounts Receivable;**173,262,298,304,326,332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**173,262,298,304,326,332,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; Main entry point
@@ -15,7 +15,7 @@ EN ; Main entry point
  I Y=""!(Y="^") Q
  S RCEXCTYP=Y,RCQUIT=0
  I RCEXCTYP="D" D  ; Include exceptions for MEDICAL, PHARMACY or BOTH - PRCA*4.5*298 Filter question for medical, pharmacy or both
- . S RCTYPE=$$RTYPE^RCDPEU1("A") ; PRCA*4.5*326 Pick MEDICAL/PHARMACY/TRICARE/ALL
+ . S RCTYPE=$$RTYPE^RCDPEU1("A") ; PRCA*4.5*326 Pick MEDICAL/PHARMACY/TRICARE/ALL  ; PRCA*4.5*432 Add CHAMPVA
  . I RCTYPE=-1 S RCQUIT=1 Q
  . ;
  . S RCPAY=$$PAYRNG^RCDPEU1()    ; PRCA*4.5*326 New payer selection

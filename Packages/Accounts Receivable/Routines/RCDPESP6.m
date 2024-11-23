@@ -1,5 +1,5 @@
 RCDPESP6 ;AITC/CJE - ePayment Lockbox Site Parameters - Notify Changes;29 Jan 2019 18:00:14
- ;;4.5;Accounts Receivable;**326,332,345,349,424**;;Build 11
+ ;;4.5;Accounts Receivable;**326,332,345,349,424,432**;;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -388,5 +388,8 @@ PAYEX ; (EN) On exit from identify payers option, compare snapshot with live fil
  . ; Tricare flag
  . S XOLD=$P(REC0,U,10),XNEW=$$GET1^DIQ(344.6,IEN_",",.1,"I")
  . I (+XOLD)'=(+XNEW) D LNOUT(.HEAD,.LINE,"TRICARE FLAG",XOLD,XNEW,"B",.COUNT)
+ . ; CHAMPVA flag PRCA*4.5*432
+ . S XOLD=$P(REC0,U,10),XNEW=$$GET1^DIQ(344.6,IEN_",",.15,"I")
+ . I (+XOLD)'=(+XNEW) D LNOUT(.HEAD,.LINE,"CHAMPVA FLAG",XOLD,XNEW,"B",.COUNT)
  Q
  ;

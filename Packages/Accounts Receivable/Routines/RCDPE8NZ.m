@@ -1,5 +1,5 @@
-RCDPE8NZ ;ALB/TMK/KML/hrubovcak - Unapplied EFT Deposits report ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,212,208,269,276,283,293,298,317,318,326,375,371**;Mar 20, 1995;Build 29
+RCDPE8NZ ;ALB/TMK/KML/JCH - Unapplied EFT Deposits report ;Jun 06, 2014@19:11:19
+ ;;4.5;Accounts Receivable;**173,212,208,269,276,283,293,298,317,318,326,375,371,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; entry point for Unapplied EFT Deposits Report [RCDPE UNAPPLIED EFT DEP REPORT]
@@ -15,7 +15,7 @@ EN ; entry point for Unapplied EFT Deposits Report [RCDPE UNAPPLIED EFT DEP REPO
  ; RCPGNUM - page number
  ; RCRPLST - node for report list in ^TMP
  ; RCTMPND - storage node (or null) for SL^RCPEARL
- ; RCTYPE - Payer type filter M - MEDICAL, P-PHARMACY, T-TRICARE, A-ALL
+ ; RCTYPE - Payer type filter M - MEDICAL, P-PHARMACY, T-TRICARE, C-CHAMPVA, A-ALL  ;PRCA*4.5*432 CHAMPVA
  ;
  S RCRPLST=$T(+0)_"_EFT"  ; storage for list of entries
  S RCLNCNT=0,RCLSTMGR="",RCTMPND=""  ; initial values for ListMan
@@ -201,8 +201,8 @@ HDRBLD ; create the report header
  S RCHDR("XECUTE")="N Y S RCPGNUM=RCPGNUM+1,Y=$$HDRNM^"_$T(+0)_"_$S(RCLSTMGR:"""",1:$J(""Page: ""_RCPGNUM,12)),RCHDR(1)=$J("" "",80-$L(Y)\2)_Y"
  S Y="Run Date: "_RCHDR("RUNDATE")
  I RCDET'="G" D  ; PRCA*4.5*371 - Don't display MPT information in Grand Totals report
- . S Y=Y_"                 MEDICAL/PHARMACY/TRICARE: "   ; PRCA*4.5*326
- . S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL") ; PRCA*4.5*326
+ . S Y=Y_"            MEDICAL/PHARMACY/TRICARE/CHAMPVA: "   ; PRCA*4.5*326  ;PRCA*4.5*432 CHAMPVA
+ . S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL") ; PRCA*4.5*326  ;PRCA*4.5*432 CHAMPVA
  S HCNT=HCNT+1,RCHDR(HCNT)=$J("",80-$L(Y)\2)_Y
  ;
  S:RCDET="G" Y="GRAND TOTAL",Y=$J("",80-$L(Y)\2)_Y ; PRCA*4.5*371 - Grand Totals report
@@ -234,8 +234,8 @@ HDRLM ; create the report header
  N DIV,HCNT,Y
  S HCNT=0  ; header counter
  S Y="Date Range: "_$$FMTE^XLFDT(RCSTDT,2)_" - "_$$FMTE^XLFDT(RCENDT,2)_" (Deposit Date) "
- S Y=Y_"MEDICAL/PHARMACY/TRICARE: "                                                ; PRCA*4.5*326
- S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL") ; PRCA*4.5*326
+ S Y=Y_"MED/PHARM/TRIC/CHAMPVA: "                                                ; PRCA*4.5*326  ;PRCA*4.5*432 CHAMPVA
+ S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL") ; PRCA*4.5*326  ;PRCA*4.5*432 CHAMPVA
  S HCNT=HCNT+1,RCHDR(HCNT)=Y
  S Y="TOTAL NUMBER OF UNAPPLIED DEPOSITS: "_RCUNAP,HCNT=HCNT+1,RCHDR(HCNT)=Y
  S Y="TOTAL AMOUNT OF UNAPPLIED DEPOSITS: $"_$FN(RCSUM,",",2),HCNT=HCNT+1,RCHDR(HCNT)=Y

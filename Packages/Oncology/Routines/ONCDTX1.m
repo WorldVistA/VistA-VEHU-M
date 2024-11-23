@@ -1,5 +1,5 @@
-ONCDTX1 ;Hines OIFO/RTK;DELETE @FAC TREATMENT FIELDS; 09/25/98
- ;;2.2;ONCOLOGY;**1,5**;Jul 31, 2013;Build 6
+ONCDTX1 ;HINES OIFO/RTK - DELETE @FAC TREATMENT FIELDS; 09/25/98
+ ;;2.2;ONCOLOGY;**1,5,20**;Jul 31, 2013;Build 5
  ;
 DELATF ;Delete all treatment @fac
  S $P(^ONCO(165.5,DA,3.1),U,7)="" D SPSATFR    ;50.2
@@ -36,7 +36,7 @@ SPSATF ;SURGERY OF PRIMARY @FAC (F) (165.5,58.7)
  S $P(^ONCO(165.5,DA,3.1),U,8)=""
  I $D(NTDEL) Q
  W:$G(DSATF)'=1 !!,"Deleting data from the following fields...",!
- W !,"  SURGERY OF PRIMARY @FAC (F)"
+ W !,"  RX HOSP--SURG PRIMSITE 03-2022"
  W !,"  MOST DEFINITIVE SURG @FAC DATE"
  Q
  ;

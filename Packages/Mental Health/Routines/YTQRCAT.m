@@ -1,5 +1,5 @@
 YTQRCAT ;SLC/KCM - Calls to manage CAT instruments ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**182,199,202,218**;Dec 30, 1994;Build 9
+ ;;5.01;MENTAL HEALTH;**182,199,202,218,240**;Dec 30, 1994;Build 10
  ;
 SPLTADM(ADMIN) ; split CAT interview into multiple admins
  N X0 S X0=$G(^YTT(601.84,ADMIN,0))
@@ -81,6 +81,7 @@ REPOINT(ADMIN,NAME) ; re-point the instrument in ADMIN to NAME
  S IEN71=$O(^YTT(601.71,"B",NAME,0)) Q:'IEN71
  S REC(2)=IEN71
  D FMUPD^YTXCHGU(601.84,.REC,ADMIN)
+ D UPADM^YTQEVNT(ADMIN,"cat") ; publish admin update event
  Q
 SAVEANS(CATANS) ; save/update CAT interview answer
  N YSDATA,YSAD,IEN85
@@ -179,7 +180,7 @@ CHKPROG(ADMIN) ; if CAT return progress, otherwise -1
  . I $P(^YTT(601.84,ADMIN,0),U,9)="Y" S CATPROG=100
  Q CATPROG
  ;
-MVAUTOSV(OLDSET,SETID) ; move the auto-save cache when assignmetn changes
+MVAUTOSV(OLDSET,SETID) ; move the auto-save cache when assignment changes
  I +$G(OLDSET),$D(^XTMP("YTQCATSV-"_OLDSET)) D
  . K ^XTMP("YTQCATSV-"_SETID)
  . M ^XTMP("YTQCATSV-"_SETID)=^XTMP("YTQCATSV-"_OLDSET)

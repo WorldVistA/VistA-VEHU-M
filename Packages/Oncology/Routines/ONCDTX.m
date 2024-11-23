@@ -1,5 +1,5 @@
 ONCDTX ;HINES OIFO/GWB - Delete treatment data ;06/23/10
- ;;2.2;ONCOLOGY;**1,5,15**;Jul 31, 2013;Build 5
+ ;;2.2;ONCOLOGY;**1,5,15,20**;Jul 31, 2013;Build 5
  ;
 DEL ;Delete all First Course of Treatment data
  I '$D(DATEDX) Q
@@ -12,6 +12,7 @@ DEL ;Delete all First Course of Treatment data
  ;
  S $P(^ONCO(165.5,DA,3),U,38)="" D SURR
  S $P(^ONCO(165.5,DA,3.1),U,29)="" D SUR
+ S $P(^ONCO(165.5,DA,3.2),U,9)="" D SUR
  S $P(^ONCO(165.5,DA,3),U,40)="" D SCOPER
  S $P(^ONCO(165.5,DA,3.1),U,31)="" D SCOPE
  S $P(^ONCO(165.5,DA,3),U,41)="" D SOSNR
@@ -44,7 +45,9 @@ SURR ;SURGERY OF PRIMARY (R) (165.5,58.2)
  D SPSATFR^ONCDTX1
  Q
  ;
-SUR ;SURGERY OF PRIMARY (F) (165.5,58.6)
+SUR ;RX SUMM--SURG PRIMSITE 03-2022 (165.5,58.6)
+ Q  ;patch ONC*2.2*18 -- remove deletions when deleting SPS (165.5,58.6)
+ ; eventually can remove the trigger x-ref -- for now just QUIT
  Q:$P(^ONCO(165.5,DA,3.1),U,29)'=""
  S TXDT=$P(^ONCO(165.5,DA,3),U,1)_"S1"
  S $P(^ONCO(165.5,DA,3),U,1)=""
@@ -57,7 +60,7 @@ SUR ;SURGERY OF PRIMARY (F) (165.5,58.6)
  S $P(^ONCO(165.5,DA,3),U,26)=""
  I $D(NTDEL) Q
  W !!,"Deleting data from the following fields...",!
- W !,"  SURGERY OF PRIMARY (F)"
+ W !,"  "
  W !,"  MOST DEFINITIVE SURG DATE"
  W !,"  RX HOSP--SURG APP 2010"
  W !,"  SURGICAL MARGINS"

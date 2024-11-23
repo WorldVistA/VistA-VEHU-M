@@ -1,0 +1,87 @@
+DGCOMPACT ;ALB/BPA,CMC - Routine for COMPACT Act processing the DG;12/18/2023@9:26am
+ ;;5.3;Registration;**1104**;Aug 13, 1993;Build 59
+ ; *1104* APIs for COMPACT Act processing
+ ; Reference to VISIT^PXCOMPACT in ICR #7327
+ ;
+SETPTFFLG(DGENC,DGVAL) ;
+ ; API to set TRT FOR ACUTE SUICIDAL CRISIS flag in PTF 101
+ ; DGENC - Encounter ID (PTF IEN)
+ ; DGVAL - Value to set into flag
+ ;   For YES: D SETPTFFLG^DGCOMPACT(DGENC,1)
+ ;   For NO: D SETPTFFLG^DGCOMPACT(DGENC,0)
+ ;   For NULL: D SETPTFFLG^DGCOMPACT(DGENC,"")
+ ; Create a 70 level in the PTF file if it is not set
+ I $G(^DGPT(DGENC,70))="" S ^DGPT(DGENC,70)=""
+ S $P(^DGPT(DGENC,70),"^",33)=DGVAL
+ Q
+ ;
+SETPTFMVMT(DGENC,DGVAL,DGSEQ) ;
+ ; API to set TREATMENT FOR SUICIDAL CRISIS flag in PTF 501
+ ; DGENC - Encounter ID (PTF IEN)
+ ; DGVAL - Value to set into flag
+ ; DGSEQ - Movement sequence *not required
+ ;   For YES: D SETPTFMVMT^DGCOMPACT(DGENC,"Y",DGSEQ)
+ ;   For NO: D SETPTFMVMT^DGCOMPACT(DGENC,"N",DGSEQ)
+ ;   For NULL: D SETPTFMVMT^DGCOMPACT(DGENC,"",DGSEQ)
+ ; When setting a sequence other than the first one, pass the sequence number
+ I $G(DGSEQ)'="" S $P(^DGPT(DGENC,"M",DGSEQ,0),"^",33)=DGVAL
+ ; Whenever a new movement is created for a PTF, it becomes the 1 node of the subfile.
+ E  S $P(^DGPT(DGENC,"M",1,0),"^",33)=DGVAL
+ Q
+ ;
+EDITADMIT(PTF) ;
+ N ADMTYP,DFN,DGSTDT
+ S DFN=$P(^UTILITY($J,"PXCOMPACT"),"^",1),DGSTDT=$P(^UTILITY($J,"PXCOMPACT"),"^",2),ADMTYP=$P(^UTILITY($J,"PXCOMPACT"),"^",3)
+ D ADMIT^PXCOMPACT(DFN,DGSTDT,ADMTYP,PTF)
+ K ^UTILITY($J,"PXCOMPACT"),DGSTDT,ADMTYP
+ Q
+ ;
+QUERY ;
+ ;query the COMPACT ACT TRANSACTION LOG file and display contents
+ N COUNT,DATA,ICN,RECORD,REQ,REQUEST,RESP,RESPCODE,RESPDATE,ROUTINE,RSEQ,SEQ,SITE
+ I '$D(^DGCOMP(33.3,"B")) W !,"Data Not Available" Q
+ S ICN=""
+ F  S ICN=$O(^DGCOMP(33.3,"B",ICN)) Q:ICN=""  D
+ . S SEQ=""
+ . F  S SEQ=$O(^DGCOMP(33.3,"B",ICN,SEQ)) Q:SEQ=""  D
+ . . S RECORD=^DGCOMP(33.3,SEQ,0)
+ . . S ROUTINE=$P(RECORD,"^",2),REQUEST=$P(RECORD,"^",3),RESPCODE=$P(RECORD,"^",4),RESPDATE=$P(RECORD,"^",5)
+ . . S ROUTINE=$S($P(RECORD,"^",2)="":"NO ROUTINE",1:$P(RECORD,"^",2))
+ . . I $D(ROUTINE(ROUTINE,"ICN",ICN)) D  Q
+ . . . S ROUTINE(ROUTINE,"ICN",ICN,$O(ROUTINE(ROUTINE,"ICN",ICN,""))+1)=REQUEST_"^"_RESPDATE_"^"_RESPCODE
+ . . . S ROUTINE(ROUTINE,"COUNT")=$G(ROUTINE(ROUTINE,"COUNT"))+1
+ . . S ROUTINE(ROUTINE,"ICN",ICN,1)=REQUEST_"^"_RESPDATE_"^"_RESPCODE,ROUTINE(ROUTINE,"COUNT")=$G(ROUTINE(ROUTINE,"COUNT"))+1
+ . . Q
+ . Q
+ ;now display data in desired format
+ S SITE=$P($$SITE^VASITE,"^",1)
+ W !,"Site # ",SITE
+ S ROUTINE=""
+ F  S ROUTINE=$O(ROUTINE(ROUTINE)) Q:ROUTINE=""  D
+ . S COUNT=ROUTINE(ROUTINE,"COUNT")
+ . W !!,"Calling Routine: ",ROUTINE,"          Request Count: ",COUNT
+ . S ICN=""
+ . F  S ICN=$O(ROUTINE(ROUTINE,"ICN",ICN)) Q:ICN=""  D
+ . . W !,ICN
+ . . S RSEQ=""
+ . . F  S RSEQ=$O(ROUTINE(ROUTINE,"ICN",ICN,RSEQ)) Q:RSEQ=""  D
+ . . . S DATA=ROUTINE(ROUTINE,"ICN",ICN,RSEQ)
+ . . . S REQ=$$FMTE^XLFDT($P(DATA,"^",1)),RESP=$$FMTE^XLFDT($P(DATA,"^",2)),RESPCODE=$P(DATA,"^",3)
+ . . . W !,"                Request: ",$S($L(REQ)=18:REQ_":00",1:REQ)
+ . . . W !,"                Response: ",$S($L(RESP)=18:RESP_":00",1:RESP),"       ",$TR(RESPCODE,"~","^"),!
+ Q
+ADMIT(DFN,PTF) ;
+GO N %,DA,DEF,PXNWSTDT,STDT
+ W !!,"ADMITTED FOR ACUTE SUICIDAL CRISIS" S %=2 D YN^DICN I %=-1 G GO
+ I (%=2),($G(PTF)'="") D RETRACT^PXCOMPACTEOC(DFN,PTF)
+ I %=1 D
+ . W !,"         THIS ADMISSION WILL BEGIN THE COMPACT ACT BENEFIT. ARE YOU SURE" S %=2 D YN^DICN I %'=1 G GO
+ I ($$ASC^PXCOMPACT(DFN)="Y"),($$GETIPDT^PXCOMPACT(DFN)'=""),($$GETBENTYP^PXCOMPACT(DFN)="O") D
+ . S PXNWSTDT=$$GETSTDT^PXCOMPACT(DFN)
+DT ;
+ I %=1 D
+ . W !,"      ACUTE SUICIDAL CRISIS START DATE?: NOW//" R STDT:30
+ . I $G(STDT)="" S STDT="NOW"
+ . D DT^DILF("",STDT,.PXNWSTDT) I PXNWSTDT=-1 W $C(7),"??",!," Invalid Date!" S %=1 G DT
+ . S ^UTILITY($J,"PXCOMPACT")=DFN_"^"_PXNWSTDT_"^F"
+ Q

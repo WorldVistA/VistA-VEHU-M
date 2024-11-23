@@ -1,11 +1,16 @@
-PXCEVFI2 ;ISL/DEE,ESW - Supporting routines for editing a visit or v-file entry ;Jun 19, 2018@15:13
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,73,95,96,124,158,184,215,211,217,235**;Aug 12, 1996;Build 25
- ; Reference to EN^DGREGEEWS in ICR #7208
- ; Reference to KILL^VSITKIL in ICR #1909
- ; Reference to ^SCE("AVSIT") in ICR #2045
+PXCEVFI2 ;ISL/DEE,ESW - Supporting routines for editing a visit or v-file entry ;05/03/2024@10:58
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**22,73,95,96,124,158,184,215,211,217,235,240**;Aug 12, 1996;Build 55
  ; Reference to ^DIC(31) in ICR #792
- ; Reference to ^DIC(8) in ICR #602
  ; Reference to ^DIC(391) in ICR #1112
+ ; Reference to ^SCE(DA,0) in ICR #2065
+ ; Reference to INP^SDAM2 in ICR #1582
+ ; Reference to REQ^SDM1A in ICR #1583
+ ; Reference to CLINIC^SDAMU in ICR #1580
+ ; Reference to EXOE^SDCOU2 in ICR #1015
+ ; Reference to CLOE^SDCO21 in ICR #1300
+ ; Reference to SEQ^SDCO21 in ICR #1300
+ ; Reference to CL^SDCO21 in ICR #1300
+ ; Reference to ^SCE("AVSIT") in ICR #2045
  ;
  Q
 ASK(PXCVIEN,PXCFIEN,PXCEAUPN,PXCCATT,PXCCODE) ; -- Display a selection list from one V-File for this visit
@@ -138,23 +143,7 @@ DELQUIT ;
 SC(PXDFN) ;Service Connected Help
  ; Input  -- DFN      Patient file IEN
  ; Output -- Help
- N I,SDCNT,SDDC,SDRD0,ELIG,DGKEY,DGREQNAME,DGRESP,DGCOMP,ELIGSEQ
- S ELIG="UNDETERMINED",(DGCOMP,DGKEY,DGREQNAME,DGRESP,ELIGSEQ)=""
- ;make call to determine patient eligibility
- S DGKEY=$$GETICN^MPIF001(PXDFN),DGREQNAME="VistADataVTwo"
- I $P(DGKEY,"^",1)'=-1 S DGRESP=$$EN^DGREGEEWS(DGKEY,DGREQNAME,"","",.DGCOMP)
- ;if it returns zero, check PATIENT file for Compact Act eligible code
- I $P(DGRESP,"^",1)=0 D
- . S ELIGSEQ=""
- . F  S ELIGSEQ=$O(^DPT(PXDFN,"E",ELIGSEQ)) Q:(ELIGSEQ="")!(ELIGSEQ="B")!(ELIG="ELIGIBLE")  D
- . . I $P($G(^DIC(8,ELIGSEQ,0)),"^",1)="COMPACT ACT ELIGIBLE" S ELIG="ELIGIBLE"
- . . Q
- . Q
- I $P(DGRESP,"^",1)=1 D
- . I DGCOMP="No" S ELIG="NOT ELIGIBLE"
- . I DGCOMP="Yes" S ELIG="ELIGIBLE"
- W !!,"COMPACT Act Administrative Eligibility:"
- W !," COMPACT Act: ",ELIG
+ N I,SDCNT,SDDC,SDRD0
  W !!,"Patient's Service Connection and Rated Disabilities:"
  W !!,$S($P($G(^DPT(PXDFN,.3)),"^")="Y":"        SC Percent: "_$P(^(.3),"^",2)_"%",1:" Service Connected: No")
  W !,"Rated Disabilities: "

@@ -1,5 +1,5 @@
 RCDPEAA1 ;ALB/KML - AUTO POST AWAITING RESOLUTION (APAR) - LIST OF UNPOSTED EEOBS ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**298,304,317,321,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**298,304,317,321,326,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -47,7 +47,7 @@ HDR ;
  N LINE,RCMDRX,RCPAYR,SORT,X,Y
  S RCPAYR=$G(^TMP("RCDPE_APAR_EEOB_PARAMS",$J,"RCPAYR"))
  S RCMDRX=$G(^TMP("RCDPE_APAR_EEOB_PARAMS",$J,"RCMEDRX"))
- S Y=$S(RCMDRX="M":"MEDICAL",RCMDRX="P":"PHARMACY",RCMDRX="T":"TRICARE",1:"ALL")_" CLAIMS"
+ S Y=$S(RCMDRX="M":"MEDICAL",RCMDRX="P":"PHARMACY",RCMDRX="T":"TRICARE",RCMDRX="C":"CHAMPVA",1:"ALL")_" CLAIMS"  ; PRCA*4.5*432
  S X=$S(($P(RCPAYR,U)="A")!(RCPAYR=""):"ALL PAYERS",1:"PAYERS: "_$P(RCPAYR,U,2)_"-"_$P(RCPAYR,U,3))
  S VALMHDR(1)="Current View:"_$J("",4)_Y_" for "_X
  ; PRCA*4.5*321 - Start modified code block
@@ -123,7 +123,7 @@ PARAMS(SOURCE) ; Retrieve/Edit/Save View Parameters for APAR EEOB Worklist
  Q:USEPVW 0
  Q:RCQUIT 1
  ; PRCA*4.5*326 prompt for type filter first in case we need to use it in payer selection
- S RCQUIT=$$MORP() ; Select Medical or Pharmacy, or Tricare
+ S RCQUIT=$$MORP() ; Select Medical or Pharmacy, Tricare, or CHAMPVA  ; PRCA*4.5*432
  Q:RCQUIT 1
  S RCQUIT=$$PAYR() ; Select Payer(s)
  Q:RCQUIT 1
@@ -235,12 +235,12 @@ PAYR() ; Payer Selection
  . S ^TMP("RCDPE_APAR_EEOB_PARAMS",$J,"RCPAYR")=RCPAYR_"^"_RCPAYR("FROM")_"^"_Y
  Q 0
  ;
-MORP() ; Ask for Medical or Pharmacy, Tricare (Or All)
+MORP() ; Ask for Medical or Pharmacy, Tricare, CHAMPVA (Or All)
  ; Input: None
  ; Returns: 1 if user ^ arrowed or timed out, 0 otherwise
  N DEF
  S DEF=$G(^TMP("RCDPE_APAR_EEOB_PARAMS",$J,"RCMEDRX"))
- S DEF=$S(DEF="P":"PHARMACY",DEF="M":"MEDICAL",DEF="T":"TRICARE",1:"ALL") ; PRCA*4.5*326
+ S DEF=$S(DEF="P":"PHARMACY",DEF="M":"MEDICAL",DEF="T":"TRICARE",DEF="C":"CHAMPVA",1:"ALL") ; PRCA*4.5*326, PRCA*4.5*432
  S RCQ=$$RTYPE^RCDPEU1(DEF) ; PRCA*4.5*326
  I RCQ=-1 Q 1
  S ^TMP("RCDPE_APAR_EEOB_PARAMS",$J,"RCMEDRX")=RCQ

@@ -1,5 +1,5 @@
-ONCPCI ;Hines OIFO/GWB - Patient Identification/Cancer Identification screen display ;09/22/11
- ;;2.2;ONCOLOGY;**1,9,10**;Jul 31, 2013;Build 20
+ONCPCI ;HINES OIFO/GWB - Patient Identification/Cancer Identification screen display ;09/22/11
+ ;;2.2;ONCOLOGY;**1,9,10,20**;Jul 31, 2013;Build 5
  ;
 PI ;Patient Identification
  K DASH S $P(DASH,"-",80)="-"
@@ -30,7 +30,7 @@ PI ;Patient Identification
  Q
  ;
 CI ;Cancer Identification
- D ^ONCSCHMA
+ I DATEDX>3171231 D ^ONCSCHMA
  K DASH S $P(DASH,"-",80)="-"
  N DI,DIC,DR,DA,DIQ,ONC,TM1,TM2,TM3,DOTS1,DOTS2,DOTS3
  S DIC="^ONCO(165.5,"

@@ -1,5 +1,5 @@
 ECXCPRO ;ALB/JAP - PRO Extract YTD Report ;11/19/19  13:50
- ;;3.0;DSS EXTRACTS;**21,24,33,84,137,144,177**;Dec 22, 1997;Build 2
+ ;;3.0;DSS EXTRACTS;**21,24,33,84,137,144,177,190**;Dec 22, 1997;Build 36
  ;accumulates extract data by hcpcs code for all extracts in fiscal year date range
  ;if an extract has been purged, then totals will be falsely low
  ;if more than 1 extract exists for a particular month, then totals will be falsely high
@@ -42,7 +42,7 @@ EN ;setup & queue
  ;determine output device and queue if requested
  S ECXPORT=$$EXPORT^ECXUTL1 Q:ECXPORT=-1  I ECXPORT D  Q  ;144
  .K ^TMP($J,"ECXPORT") ;144
- .S ^TMP($J,"ECXPORT",0)="REPORT TYPE^PSAS HCPCS^QTY COM^TOTAL COM^AVE COM^QTY VA^TOTAL VA^AVE VA^QTY LAB^TOTAL LAB^AVE LAB^ALL AVE" ;144
+ .S ^TMP($J,"ECXPORT",0)="REPORT TYPE^PSAS HCPCS^QTY COM^TOTAL COM^AVE COM^QTY VA^TOTAL VA^AVE VA^QTY LAB^TOTAL LAB^AVE LAB^ALL AVE^NPPD CODE" ;144,190
  .S CNT=1 ;144
  .D PROCESS ;144
  .D EXPDISP^ECXUTL1 ;144
@@ -106,6 +106,7 @@ PROCESS ;begin processing
  ..S $P(^TMP($J,"ECXP",ECXSTAT,ECXTYPE,ECXHCPC),U,5)=$P(^TMP($J,"ECXP",ECXSTAT,ECXTYPE,ECXHCPC),U,5)+ECXQTY
  ..S $P(^TMP($J,"ECXP",ECXSTAT,ECXTYPE,ECXHCPC),U,6)=$P(^TMP($J,"ECXP",ECXSTAT,ECXTYPE,ECXHCPC),U,6)+ECXLLC
  ..S $P(^TMP($J,"ECXP",ECXSTAT,ECXTYPE,ECXHCPC),U,7)=$P(^TMP($J,"ECXP",ECXSTAT,ECXTYPE,ECXHCPC),U,7)+ECXLMC
+ .S $P(^TMP($J,"ECXP",ECXSTAT,ECXTYPE,ECXHCPC),U,8)=$P(NODE2,U,3) ;190
  ;setup hcpcs descriptions
  D HCPCS
  ;print report

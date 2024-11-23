@@ -1,5 +1,5 @@
 PSOERXH1 ;ALB/BWF - eRx Utilities/RPC's ; 8/3/2016 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**467,527,508,581,617,700,746**;DEC 1997;Build 106
+ ;;7.0;OUTPATIENT PHARMACY;**467,527,508,581,617,700,746,769**;DEC 1997;Build 26
  ;
  Q
  ; place eRx on Hold
@@ -46,8 +46,8 @@ HOLD ;
  I $D(^PS(52.45,"B","HFF",RESP)) D  I $D(DIRUT)!$D(DIROUT) W !,"eRx NOT placed on hold." K DIR S DIR(0)="E" D ^DIR Q
  . W !!,$G(IOINHI),"The eRx will be un-held automatically on the date you enter below and placed"
  . W !,"in '",$$GET1^DIQ(52.45,$$GET1^DIQ(52.49,PSOIEN,1,"I"),.02),"' status.",$G(IOINORM)
- . K DIR I $$GET1^DIQ(52.49,PSOIEN,6.3,"I")>DT S DIR("B")=$$GET1^DIQ(52.49,PSOIEN,6.3,"E")
- . W ! S DIR(0)="DA^"_$$FMADD^XLFDT(DT,1)_":"_$S($$GET1^DIQ(52.49,PSOIEN,95.1,"I"):$$FMADD^XLFDT(DT,185),1:$$FMADD^XLFDT(DT,364))_":EX"
+ . K DIR W ! S DIR(0)="DA^"_$$FMADD^XLFDT(DT,1)_":"_$S($$GET1^DIQ(52.49,PSOIEN,95.1,"I"):$$FMADD^XLFDT(DT,185),1:$$FMADD^XLFDT(DT,364))_":EX"
+ . I $$EFFDATE^PSOERXU5(PSOIEN,1)'="" S DIR("B")=$$FMTE^XLFDT($$EFFDATE^PSOERXU5(PSOIEN,1))
  . S DIR("A")="Future Fill Hold Date: " D ^DIR I $D(DIRUT)!$D(DIROUT) Q
  . S HFFDT=Y
  W ! K DIR,DA S DIR(0)="52.4919,1",DIR("A")="Additional Comments (Optional)" D ^DIR K DIR

@@ -1,5 +1,5 @@
-DGPMV3 ;ALB/MIR - ENTER TRANSACTION INFORMATION; 8 MAY 89 ; 3/18/13 11:24am
- ;;5.3;Registration;**34,54,62,95,692,715,895**;Aug 13, 1993;Build 11
+DGPMV3 ;ALB/MIR - ENTER TRANSACTION INFORMATION; 8 MAY 89 ; 7/08/24 10:11am
+ ;;5.3;Registration;**34,54,62,95,692,715,895,1104**;Aug 13, 1993;Build 59
  K ^UTILITY("DGPM",$J)
  D NOW^%DTC S DGNOW=%,DGPMHY=DGPMY,DGPMOUT=0 G:'DGPMN DT S X=DGPMY
  S DGPM0ND=DGPMY_"^"_DGPMT_"^"_DFN_"^^^^^^^^^^^"_$S("^1^4^"[("^"_DGPMT_"^"):"",1:DGPMCA)
@@ -19,6 +19,7 @@ DR ;select input template for transaction type
  S DIE="^DGPM(" I "^1^4^6^"[("^"_DGPMT_"^"),DGPMN S DIE("NO^")=""
  S DGODSPT=$S('$D(^DGPM(DGPMCA,"ODS")):0,^("ODS"):1,1:0)
  S DR=$S(DGPMT=1:"[DGPM ADMIT]",DGPMT=2:"[DGPM TRANSFER]",DGPMT=3:"[DGPM DISCHARGE]",DGPMT=4:"[DGPM CHECK-IN LODGER]",DGPMT=5:"[DGPM LODGER CHECK-OUT]",DGPMT=6:"[DGPM SPECIALTY TRANSFER]",1:"") G Q:DR="" K DQ,DG D ^DIE K DIE
+ I $D(^UTILITY($J,"PXCOMPACT")),'$D(^UTILITY("DGPM",$J,1,DGPMDA,"A")),$G(PTF)'="" D EDITADMIT^DGCOMPACT(PTF)
  I $D(Y)#2 S DGPMOUT=1
  ;Modified in patch dg*5.3*692 to include privacy indicator node "DIR"
  K DGZ S (^UTILITY("DGPM",$J,DGPMT,DGPMDA,"A"),DGPMA)=$S($D(^DGPM(DGPMDA,0)):^(0)_$S($G(^("DIR"))'="":U_^("DIR"),1:""),1:"")
@@ -40,6 +41,52 @@ Q S:$D(DGPMBYP) DGPMBYP=DGPMDA
  ;
 OKD K %DT W ! S DGPMER=0,(^UTILITY("DGPM",$J,DGPMT,DGPMDA,"P"),DGPMP)=^DGPM(DGPMDA,0),Y=DGPMDA D:DGPMT=6 PRIOR^DGPMV36 D @("D"_DGPMT_"^DGPMVDL"_$S(DGPMT>2:1,1:"")) G Q:DGPMER
  W !,"Are you sure you want to delete this movement" S %=2 D YN^DICN G Q:%<0,DT:%=2 I '% W !?5,"Answer yes to delete this ",DGPMUC," or no to continue" G OKD
+ ;delete an admission
+ I DGPMT=1 D
+ . ; get EOC number
+ . N DA,DIK,PXEOCNUM,PXEOCSEQ
+ . S PXEOCNUM=$$GETEOC^PXCOMPACT(DFN)
+ . ; get EOC sequence number
+ . S PXEOCSEQ=$$GETEOCSEQ^PXCOMPACT(DFN)
+ . ; delete entire episode if only 1 sequence or just delete latest sequence if >1
+ . I PXEOCSEQ=1 D
+ . . S DIK="^PXCOMP(818,",DA=PXEOCNUM
+ . . D ^DIK
+ . . K DA,DIK
+ . I PXEOCSEQ>1 D
+ . . S DA(1)=PXEOCNUM,DA=PXEOCSEQ,DIK="^PXCOMP(818,"_DA(1)_",10,"
+ . . D ^DIK
+ . . K DA,DIK
+ ;delete a discharge
+ I DGPMT=3 D
+ . N PXEOCNUM,PXEOCSEQ
+ . S PXEOCNUM=$$GETEOC^PXCOMPACT(DFN)
+ . S PXEOCSEQ=$$GETEOCSEQ^PXCOMPACT(DFN)
+ . I (PXEOCNUM'=""),(PXEOCSEQ'="") D REOPNEOC^PXCOMPACT(PXEOCNUM,PXEOCSEQ)
+ ;delete a transfer
+ I DGPMT=2 D
+ . N DGFOUND,DGMOVSEQ,PXEOCNUM,PXEOCSEQ,PXSTARTDT
+ . ;get episode of care start date
+ . S PXSTARTDT=$$GETSTDT^PXCOMPACT(DFN),DGFOUND=""
+ . I (PXSTARTDT="")!(PXSTARTDT'=$P(DGPMY,".",1)) Q
+ . ;loop through "M" levels to see if any match the start date
+ . S DGMOVSEQ=0
+ . F  S DGMOVSEQ=$O(^DGPT(PTF,"M",DGMOVSEQ)) Q:(DGMOVSEQ="")!(DGFOUND)  D
+ . . I $P(^DGPT(PTF,"M",DGMOVSEQ,0),"^",10)'=DGPMY Q
+ . . I $P(^DGPT(PTF,"M",DGMOVSEQ,0),"^",33)'="Y" Q
+ . . S DGFOUND=1
+ . I DGFOUND,$P(^DGPT(PTF,70),"^",33)=1 D
+ . . S PXEOCNUM=$$GETEOC^PXCOMPACT(DFN)
+ . . ; get EOC sequence number
+ . . S PXEOCSEQ=$$GETEOCSEQ^PXCOMPACT(DFN)
+ . . I PXEOCSEQ=1 D
+ . . . S DIK="^PXCOMP(818,",DA=PXEOCNUM
+ . . . D ^DIK
+ . . . K DA,DIK
+ . . I PXEOCSEQ>1 D
+ . . . S DA(1)=PXEOCNUM,DA=PXEOCSEQ,DIK="^PXCOMP(818,"_DA(1)_",10,"
+ . . . D ^DIK
+ . . . K DA,DIK
  D @(DGPMT_"^DGPMVDL"_$S(DGPMT>2:1,1:""))
  I DGPMT'=3,(DGPMT'=5) S DIK="^DGPM(",DA=DGPMDA D ^DIK:DGPMDA
  S (^UTILITY("DGPM",$J,DGPMT,DGPMDA,"A"),DGPMA)=$S($P(DGPMP,"^",18)'=47:"",1:^DGPM(+DGPMDA,0)) I DGPMT=6 S Y=DGPMDA D AFTER^DGPMV36

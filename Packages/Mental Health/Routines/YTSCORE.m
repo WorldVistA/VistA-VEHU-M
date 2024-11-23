@@ -1,5 +1,5 @@
-YTSCORE ;SLC/KCM - Scoring for complex instruments ;Jan 18, 2024@12:05:44
- ;;5.01;MENTAL HEALTH;**119,123,142,141,217,234,244**;Dec 30, 1994;Build 5
+YTSCORE ;SLC/KCM - Scoring for complex instruments ;Feb 28, 2024@15:02:07
+ ;;5.01;MENTAL HEALTH;**119,123,142,141,217,234,244,240**;Dec 30, 1994;Build 10
  ;
  ;
  Q
@@ -193,6 +193,7 @@ SETREV(YSAD,IEN71) ; set revision value in MH ADMINISTRATIONS to value in MH TES
  D FILE^DIE("","FDA")
  I $D(DIERR) S ^TMP($J,"YSCOR",1)="[ERROR]",^TMP($J,"YSCOR",2)="Did not set Scoring Revision in MH ADMIN"
  D CLEAN^DILF
+ D UPRSLT^YTQEVNT(YSAD,"score") ; publish score update event
  Q
  ;
 LDTSCOR(TSARR,YSAD) ;

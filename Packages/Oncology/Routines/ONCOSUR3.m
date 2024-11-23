@@ -1,7 +1,8 @@
 ONCOSUR3 ;HINES OIFO/RTK - ONCOSUR continued ;08/03/23
- ;;2.2;ONCOLOGY;**18**;Jul 31, 2013;Build 5
+ ;;2.2;ONCOLOGY;**18,20**;Jul 31, 2013;Build 5
  ;
  Q
+ ;
 SPSIT23 ;Input transform for 2023+ surgery primary site fields (58.8,58.9)
  S X=$TR(X,"ab","AB")
  N TOP S TOP=$P($G(^ONCO(165.5,D0,2)),U,1) I TOP="" W "  No PRIMARY SITE" K X Q
@@ -16,6 +17,19 @@ SPSIT23 ;Input transform for 2023+ surgery primary site fields (58.8,58.9)
  S ONCCDIEN=$O(^ONCO(164,ICD,"SPS","D",X,"")) I ONCCDIEN="" W "??" K X Q
  W "  ",$P($G(^ONCO(164,ICD,"SPS",ONCCDIEN,0)),U,1)
  K ONCEDVAL,ONCCDIEN Q
+ ;
+SPSOT23 ;Output transform for 2023+ surgery primary site fields (58.8,58.9)
+ N TOP S TOP=$P($G(^ONCO(165.5,D0,2)),U,1) I TOP="" Q
+ N INTSRVAL
+ I $G(FIELD)=58.8 S INTSRVAL=$P($G(^ONCO(165.5,D0,3.2)),U,8) I INTSRVAL="" Q
+ I $G(FIELD)=58.9 S INTSRVAL=$P($G(^ONCO(165.5,D0,3.2)),U,9) I INTSRVAL="" Q
+ N ICD S ICD=""
+ S HST14=$E($$GET1^DIQ(165.5,D0,22.1),1,4)
+ I $$HEMATO^ONCFUNC(D0) S ICD=67420
+ I ICD'=67420 S ICD=$P($G(^ONCO(164,TOP,0)),U,16) I ICD="" Q
+ S SRVALIEN=$O(^ONCO(164,ICD,"SPS","D",INTSRVAL,"")) I SRVALIEN="" Q
+ S Y=$P($G(^ONCO(164,ICD,"SPS",SRVALIEN,0)),U,3)_" "_$P($G(^ONCO(164,ICD,"SPS",SRVALIEN,0)),U,1)
+ Q
  ;
 SPSHP23 ;Help for 2023+ surgery primary site fields (58.8,58.9)
  N SYSDIS S SYSDIS=""

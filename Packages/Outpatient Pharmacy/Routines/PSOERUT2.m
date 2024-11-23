@@ -1,5 +1,5 @@
 PSOERUT2 ;ALB/MFR - eRx Drug on Holding Queue - Listman Utilities; 06/25/2022 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**700,746**;DEC 1997;Build 106
+ ;;7.0;OUTPATIENT PHARMACY;**700,746,769**;DEC 1997;Build 26
  ;
 SETDRUG(MODE,NMSPC,ERXIEN,SUGGEST,RXIEN,SDERXFLG) ; Set ListMan Side-By-Side Section for eRx Vs. User entered data on Holding Queue
  ;Input: MODE    - Display Mode: "RS": Roll & Scroll | "LM": ListMan

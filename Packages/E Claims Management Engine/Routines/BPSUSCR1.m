@@ -1,11 +1,10 @@
 BPSUSCR1 ;BHAM ISC/FLS - STRANDED SUBMISSIONS SCREEN (cont) ;10-MAR-2005
- ;;1.0;E CLAIMS MGMT ENGINE;**1,5,7,10,11,27**;JUN 2004;Build 15
+ ;;1.0;E CLAIMS MGMT ENGINE;**1,5,7,10,11,27,38**;JUN 2004;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
- ; Fileman read of New Person file (VA(200)) supported by IA10060
- ; Call to MSGSTAT^HLUTIL supported by IA3098
- ; Call to MSGACT^HLUTIL supported by IA3098
- ; Call to TRIM^XLFSTR supported by IA10104
+ ; Reference to file 200 in ICR# 10060
+ ; Reference to $$MSGSTAT^HLUTIL and $$MSGACT^HLUTIL in ICR# 3098
+ ; Reference to $$TRIM^XLFSTR in ICR# 10104
  ;
  Q
  ;
@@ -205,15 +204,23 @@ UNSTRAND(IEN59,DATA) ;
  ; Returns
  ;   1: Successful, 0:Unsucessful
  ;
- N MES,BPTYPE,HL7,MES,X
+ N BPTYPE,FILL,HL7,MES,RX,X
+ ;
  ; If the IEN of BPS Request file is passed in, that means that there was no transaction
  ;  data (no 0 node) so we need to just remove the request.  This will be done by UNQUEUE.
- I +$G(DATA)>0 D UNQUEUE(IEN59,+DATA) Q 1
+ I +$G(DATA)>0 D  Q 1
+ . D UNQUEUE(IEN59,+DATA)
+ . ;
+ . ; Add an entry to the ECME log.
+ . ;
+ . S RX=$$GET1^DIQ(9002313.77,+DATA,.01,"I")
+ . S FILL=+$$GET1^DIQ(9002313.77,+DATA,.02,"I")
+ . D RXACT^PSOBPSU2(RX,FILL,"CLAIM UNSTRANDED","M",DUZ)
+ . Q
  ;
  ; Cancel the outgoing HL7 message.  If it has a status of 1 (waiting in queue), cancel
  ;   it.  If the cancel fails, do not unstrand and display a message
  ; If it has a status of 1.5 (opening connection), do not unstrand and display a message
- ; Calls to HLUTIL supported by IA3098
  S HL7=$P($G(^BPST(IEN59,0)),U,3),MES=""
  I HL7 D  I MES]"" D LOG^BPSOSL(IEN59,$T(+0)_"-"_MES) W !!,MES,!,"The transaction(s) should process normally/no further action required" Q 0
  . N STAT,RESLT,NAME,DATE
@@ -222,10 +229,10 @@ UNSTRAND(IEN59,DATA) ;
  . S NAME=$$TRIM^XLFSTR($E($P(DATA,U,2),1,21)),DATE=$$DATTIM^BPSRPT1($P(DATA,U,3))
  . ; If status is 1 (Waiting in Queue), cancel the queue entry
  . I STAT=1 D  Q
- .. S RESLT=$$MSGACT^HLUTIL(HL7,1)
- .. D LOG^BPSOSL(IEN59,$T(+0)_"-HL7 message cancelled - Result is "_RESLT)
- .. ; If the cancel failed, set the message variable and do not unstrand
- .. I RESLT=0 S MES="The HL7 message for "_NAME_" on "_DATE_" could not be cancelled"
+ . . S RESLT=$$MSGACT^HLUTIL(HL7,1)
+ . . D LOG^BPSOSL(IEN59,$T(+0)_"-HL7 message cancelled - Result is "_RESLT)
+ . . ; If the cancel failed, set the message variable and do not unstrand
+ . . I RESLT=0 S MES="The HL7 message for "_NAME_" on "_DATE_" could not be cancelled"
  . ; If status is 1.5 (Opening Connection), set the message variable but do not try to unstrand
  . I STAT=1.5 S MES="The HL7 message for "_NAME_" on "_DATE_" is open on the HL7 queue"
  ;
@@ -244,6 +251,13 @@ UNSTRAND(IEN59,DATA) ;
  S MES=$T(+0)_"-Unstranded"
  I $G(DUZ) S MES=MES_" by "_$$GET1^DIQ(200,DUZ,.01,"E") ; IA# 10060
  D LOG^BPSOSL(IEN59,MES)
+ ;
+ ; Add an entry to the ECME log.
+ ;
+ S RX=$$GET1^DIQ(9002313.59,IEN59,1.11,"I")
+ S FILL=+$$GET1^DIQ(9002313.59,IEN59,9,"I")
+ D RXACT^PSOBPSU2(RX,FILL,"CLAIM UNSTRANDED","M",DUZ)
+ ;
  Q 1
  ;
  ;Remove all requests for this set of keys

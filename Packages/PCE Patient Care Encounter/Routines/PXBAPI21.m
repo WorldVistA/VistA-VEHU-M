@@ -1,5 +1,5 @@
-PXBAPI21 ;ISL/DCM - API for Classification check out ; 3/16/23 12:55pm
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**130,147,124,184,168,235**;Aug 12, 1996;Build 25
+PXBAPI21 ;ISL/DCM - API for Classification check out ; 04/16/24 01:49pm
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**130,147,124,184,168,235,240**;Aug 12, 1996;Build 55
  ; Reference to ^SCE(DA,0) in ICR #2065
  ; Reference to INP^SDAM2 in ICR #1582
  ; Reference to REQ^SDM1A in ICR #1583
@@ -9,6 +9,12 @@ PXBAPI21 ;ISL/DCM - API for Classification check out ; 3/16/23 12:55pm
  ; Reference to SEQ^SDCO21 in ICR #1300
  ; Reference to CL^SDCO21 in ICR #1300
  ; Reference to ^SCE("AVSIT") in ICR #2045
+ ;
+ ; In ^PXBAPI22 which is called by PXBAPI21 (not documented in ^PXBAPI22) 
+ ; Reference to ^DG(43,1,"SCLR") piece 24 in ICR #2085
+ ; Reference to ^SD(409.41,DA,0), ^SD(409.41,DA,2) in ICR #2083
+ ; Reference to VAL^SDCODD in ICR #2025
+ ; Reference to SC^SDCO23 in ICR #2468
  ;
 CLASS(ENCOWNTR,DFN,APTDT,LOC,VISIT) ;Edit classification fields
  ; Input  - ENCOWNTR - ien of ^SCE(ien (409.68 Outpatient Encounter file)
@@ -37,12 +43,7 @@ CLASS(ENCOWNTR,DFN,APTDT,LOC,VISIT) ;Edit classification fields
  . I ENCOWNTR,$P(^SCE(ENCOWNTR,0),"^",6) S ENCOWNTR=$P(^SCE(ENCOWNTR,0),"^",6)
  . I DFN="",VISIT'="" S DFN=$P(^AUPNVSIT(VISIT,0),U,5)
  N IEN,IFN,SDCLOEY,ORG,END,DA,X,SQUIT
- I $G(ENCOWNTR) Q:'$D(^SCE(+ENCOWNTR,0))  D  ;PX*1.0*235 changed above to dot structure   
- . N APTDT,DFN,LOC ;PX*1.0*235
- . S END=0,X0=^SCE(+ENCOWNTR,0)  ;PX*1.0*235 remove naked reference
- . D ENCHK(ENCOWNTR,X0) Q:END  ;PX*1.0*235
- . I DFN="",ENCOWNTR'="" S DFN=$P(X0,U,2) ;PX*1.0*235
- . G:$D(ENCOWNTR)=0 ON ;PX*1.0*235
+ I $G(ENCOWNTR) Q:'$D(^SCE(+ENCOWNTR,0))  N APTDT,DFN,LOC S END=0,X0=^SCE(+ENCOWNTR,0) D ENCHK(ENCOWNTR,X0) Q:END  G ON ;PX*1.0*240 removed dot structure to ensure proper command flow
  Q:'$G(DFN)!'$G(LOC)!'$G(APTDT)
  S X=$G(^DPT(DFN,"S",APTDT,0))
  I +X,+X=LOC,$P(X,"^",20),$D(^SCE($P(X,"^",20),0)) S ENCOWNTR=$P(X,"^",20),END=0,X0=^(0) D ENCHK(ENCOWNTR,X0) Q:END  G ON

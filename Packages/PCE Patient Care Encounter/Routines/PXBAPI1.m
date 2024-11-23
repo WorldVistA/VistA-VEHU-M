@@ -1,6 +1,7 @@
-PXBAPI1 ;ISL/JVS,dee - PCE's API - interview questions ;06/13/2018
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**1,9,23,56,104,111,113,122,116,130,147,151,124,164,182,168,211**;Aug 12, 1996;Build 454
+PXBAPI1 ;ISL/JVS,DEE - PCE's API - interview questions ;05/14/2024 10:01AM
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**1,9,23,56,104,111,113,122,116,130,147,151,124,164,182,168,211,240**;Aug 12, 1996;Build 55
  ;;
+ ; Reference to $$ELIG^DGCOMPACTELIG in ICR #7462
  Q
  ;
 PROCESS(PXBEXIT) ;
@@ -43,6 +44,10 @@ PROCESS(PXBEXIT) ;
  . ;-- Stop Codes
  . D STP(.PXBEXIT)
  E  S PXBEXIT=-3 W !,"Procedure ""INTV^PXAPI"" was called incorrectly, contact IRM."
+ ;
+ ;PX*1*240 Set VISIT pointer from checkout interview
+ I $G(^TMP("PXCOMPACT",$J,"ASC"))=1 D VISIT^PXCOMPACT(PXBVST,"O",$$GETEOC^PXCOMPACT(PXBPAT),PXBPAT)
+ K ^TMP("PXCOMPACT",$J,"ASC")
  Q
  ;
 ADDEDIT ;
@@ -93,7 +98,6 @@ ADQ(PXBEXIT) ;Ask the Administration questions
  I PXBVST'>0 D
  . ;This is only done for new visits
  . I PXBPAT'>0 S PXBPAT=$$ASKPAT I PXBPAT'>0 S PXBEXIT=-1 Q
- . S DFN=PXBPAT
  . I PXBHLOC'>0 S PXBHLOC=$$ASKHL I PXBHLOC'>0 S PXBEXIT=-1 Q
  . S PXBVSTDT=$S(PXBAPPT>0:PXBAPPT,1:$$ASKDT) I PXBVSTDT'>0 S PXBEXIT=-1 Q
  . I PXBAPPT'>0&PXBHLOC'=+$G(^DPT(PXBPAT,"S",PXBVSTDT,0)) D
@@ -144,7 +148,7 @@ ASKDT() ;Ask user for the encounter Date/Time
  Q $S(+Y>0:+Y,1:-1)
  ;
 CODT(PXBEXIT) ;Ask the user the Check out Date/Time
- N PXCHKOUT
+ N DATA,PXCHKOUT
  D CHIKOUT^PXBAPI2("",PXBPAT,PXBHLOC,PXBVSTDT)
  S PXBCODT=PXCHKOUT
  S:PXCHKOUT=-1 PXBCODT=""
@@ -154,7 +158,22 @@ CODT(PXBEXIT) ;Ask the user the Check out Date/Time
  ;. I $$MT^EASMTCHK(PXBPAT,"",EASACT,PXBVSTDT) D  S PXBEXIT=-1
  ;. . D PAUSE^VALM1
  I WHAT'["ADDEDIT",PXCHKOUT=-1 S PXBEXIT=-1
- I $G(PXBVST),$$DISPOSIT^PXUTL1(DFN,$P($G(^AUPNVSIT(PXBVST,0)),"^",1),PXBVST) S PXBEXIT=1
+ I $G(PXBVST),$$DISPOSIT^PXUTL1(PXBPAT,$P($G(^AUPNVSIT(PXBVST,0)),"^",1),PXBVST) S PXBEXIT=1
+ ;make call to determine patient eligibility
+ N ELIG S ELIG=$$ELIG^DGCOMPACTELIG(PXBPAT,"PXBAPI1")
+ W !!,"COMPACT Act Administrative Eligibility: ",ELIG
+ I ELIG'="NOT ELIGIBLE" D
+ . S DATA=$$DISPLAY^PXCOMPACT(PXBPAT)
+ . I DATA'="" W !,$P(DATA,"^",1),": ",$P(DATA,"^",2),"   ",$P(DATA,"^",3),": ",$P(DATA,"^",4)
+ . K ^TMP("PXCOMPACT",$J,"ASC")
+ . ;prompt for Treatment Related To Acute Suicidal Crisis
+ . I $$ASC^PXCOMPACT(PXBPAT)="N" Q
+ . N DIR,Y,DIRUT
+ . S DIR("A")="Was treatment for Acute Suicidal Crisis",DIR(0)="Y"
+ . S DIR("?")="Enter YES if visit is related to an Acute Suicidal Crisis or NO if it is not."
+ . W ! D ^DIR I $D(DIRUT) S Y=""
+ . S ^TMP("PXCOMPACT",$J,"ASC")=$G(Y)
+ ;
  Q
  ;
 SCC(PXBEXIT) ;Ask the user the Service connected conditions
@@ -234,4 +253,3 @@ STP(PXBEXIT) ;Ask the user Stop Codes
  I $L($T(DATE^SCDXUTL)),$$DATE^SCDXUTL(+$G(^AUPNVSIT(PXBVST,0))) Q
  D STP^PXBMSTP(PXBVST) K PRVDR
  Q
- ;

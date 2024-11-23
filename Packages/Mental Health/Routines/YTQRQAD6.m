@@ -1,12 +1,12 @@
 YTQRQAD6 ;SLC/LLB - Determine High Risk Flagging ; 07/15/2020
- ;;5.01;MENTAL HEALTH;**158,181,187,204**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**158,181,187,204,240**;Dec 30, 1994;Build 10
  ;
  ; The assumption is made that variable DFN will exist prior to calling this routine.
  ;
 FLAG(DFN,INST,HRR,PR) ; ROUTINE to calculate Positive response and High Risk flagging
  ; ICR #4290 READ OF CLINICAL REMINDER INDEX (PXRMINDX)
  ;  DFN:    IEN to Patient file (#2)
- ;  INST:   Instriment name in MH TESTS AND SURVEYS file (#601.71)
+ ;  INST:   Instrument name in MH TESTS AND SURVEYS file (#601.71)
  ;  INSTIEN: IEN to instrument in MH TESTS AND SURVEYS file (#601.71)
  ;  HRR:    High Risk Requirement
  ;             # score greater than #
@@ -194,6 +194,7 @@ SETFLAG ; Set YSFLAG into the MH ADMISISTRATION file (#601.84)
  N XXX,YSFDA
  S XXX=ADMID_","
  S YSFDA(601.84,XXX,16)=YSFLAG D FILE^DIE("K","YSFDA","YSERR")
+ D UPADM^YTQEVNT(ADMID,"flag") ; publish admin update event
  Q 
  ;
 BHS ; BHS

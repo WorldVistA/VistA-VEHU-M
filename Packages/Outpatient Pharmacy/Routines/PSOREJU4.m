@@ -1,5 +1,5 @@
 PSOREJU4 ;BIRM/LE - Pharmacy Reject Overrides ;06/26/08
- ;;7.0;OUTPATIENT PHARMACY;**289,290,358,359,385,421,448,561,562,648,702,746**;DEC 1997;Build 106
+ ;;7.0;OUTPATIENT PHARMACY;**289,290,358,359,385,421,448,561,562,648,702,746,747**;DEC 1997;Build 7
  ; Reference to DUR1^BPSNCPD3 in ICR #4560
  ; Reference to $$ELIG^BPSBUTL and $$AMT^BPSBUTL in ICR #4719
  ; Reference to 9002313.93 in ICR #4720
@@ -29,23 +29,24 @@ AUTOREJ(CODES,PSODIV) ;API to evaluate an array of reject codes to see if they a
  . E  S CODES(SEQ,COD)=0
  Q
  ;
-WRKLST(RX,RFL,COMMTXT,USERID,DTTIME,OPECC,RXCOB,RESP) ;External API to store reject codes other that 79/88/943/TRICARE/CHAMPVA on the OP Reject Worklist
- ; 
- N REJ,REJS,REJLST,I,IDX,CODE,DATA,TXT,PSOTRIC,SPDVI,PSODIV,REJCD,CLOSECHK,REJIDX
+WRKLST(RX,RFL,COMMTXT,USERID,DTTIME,OPECC,RXCOB,RESP) ;External API to store reject codes other than 79/88/943/TRICARE/CHAMPVA on the OP Reject Worklist
+ ;
+ N CLOSECHK,CODE,DATA,I,IDX,PSODIV,PSOTRIC,REJ,REJCD,REJIDX,REJLST,REJS,SPDVI,TXT
  S PSODIV=$$RXSITE^PSOBPSUT(RX,RFL)
  L +^PSRX("REJ",RX):15 Q:'$T "0^Rx locked by another user."
  I $G(RFL)="" S RFL=$$LSTRFL^PSOBPSU1(RX)
  D DUR1^BPSNCPD3(RX,RFL,.REJ,"",RXCOB)
- ;cnf, PSO*7*358, add TRICARE logic
+ ;
  S REJCD="",CLOSECHK=0
  I $L($G(RESP)) D
- .I $P(RESP,"^",3)'="T",$P(RESP,"^",3)'="C" Q       ;ignore if not TRICARE or CHAMPVA
- .I 'RESP Q   ;Piece 1 will be 0 if claim was submitted thru ECME
- .S REJCD="e"_$P(RESP,"^",3) ; either eT for TRICARE or eC for CHAMPVA
- .S REJ(1,"REJ CODE LST")=REJCD
- .S REJ(1,"PAYER MESSAGE",1)="Not ECME Billable: "_$P(RESP,U,2)
- .S REJ(1,"ELIGBLT")=$P(RESP,"^",3)
- .S CLOSECHK=1
+ . I $P(RESP,"^",3)'="T",$P(RESP,"^",3)'="C" Q       ;ignore if not TRICARE or CHAMPVA
+ . I 'RESP Q   ;Piece 1 will be 0 if claim was submitted thru ECME
+ . S REJCD="e"_$P(RESP,"^",3) ; either eT for TRICARE or eC for CHAMPVA
+ . S REJ(1,"REJ CODE LST")=REJCD
+ . S REJ(1,"PAYER MESSAGE",1)="Not ECME Billable: "_$P(RESP,U,2)
+ . S REJ(1,"ELIGBLT")=$P(RESP,"^",3)
+ . S CLOSECHK=1
+ ;
  S PSOTRIC="",PSOTRIC=$$TRIC^PSOREJP1(RX,RFL,PSOTRIC)
  K REJS S (AUTO,IDX)=""
  F  S IDX=$O(REJ(IDX)) Q:IDX=""  D  Q:AUTO'=""
@@ -54,7 +55,7 @@ WRKLST(RX,RFL,COMMTXT,USERID,DTTIME,OPECC,RXCOB,RESP) ;External API to store rej
  . . S CODE=$P(TXT,",",I)
  . . I CODE="" Q
  . . I CODE'="79"&(CODE'="88")&(CODE'="943")&('$G(PSOTRIC)) S AUTO=$$EVAL(PSODIV,CODE,OPECC) Q:'+AUTO
- . . I PSOTRIC S AUTO=1  ;cnf, send all billable and non-billable rejects to worklist if TRICARE or CHAMPVA
+ . . I PSOTRIC S AUTO=1  ; Send all billable and non-billable rejects to worklist if TRICARE or CHAMPVA
  . . I $$DUP^PSOREJU1(RX,+$$CLEAN^PSOREJU1($G(REJ(IDX,"RESPONSE IEN"))),CLOSECHK) S AUTO="0^Rx is already on Pharmacy Reject Worklist."
  . . S REJS(IDX,CODE)=""
  I '$D(REJS) L -^PSRX("REJ",RX) S AUTO="0^No action taken" Q AUTO

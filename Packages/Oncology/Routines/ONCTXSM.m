@@ -1,23 +1,23 @@
-ONCTXSM ;Hines OIFO/GWB - Treatment Summary ;06/23/10
- ;;2.2;ONCOLOGY;**1**;Jul 31, 2013;Build 8
+ONCTXSM ;HINES OIFO/GWB - Treatment Summary ;06/23/10
+ ;;2.2;ONCOLOGY;**1,20**;Jul 31, 2013;Build 5
  ;
  N COC,DFCODE,DFSP,DFTXT,DIC,DR,DA,DIQ,LEN,RRDF,SCG,SITE,SUB,SURGPS,TPG
  S SAVEY=Y
  K ONC
  D CHECKCC
  D DEFAULT
- S DR="49:58.7;124;133;346;560"
+ S DR="49:58.9;124;133;346;560"
  S DIC="^ONCO(165.5,"
  S DA=D0,DIQ="ONC(" D EN^DIQ1
  W !," Date of 1st course of tx....: ",$E(ONC(165.5,D0,49),1,6)_$E(ONC(165.5,D0,49),9,10)
  S DFSP=$$DS^ONCACDU2(D0)
  W !," Date of 1st Surgical Proc...: ",$E(DFSP,1,2)_"/"_$E(DFSP,3,4)_"/"_$E(DFSP,7,8)
  S TXT=ONC(165.5,D0,58.6),LEN=40 D TXT^ONCPTX
- W !," Surgery of primary site F...: ",$E(ONC(165.5,D0,50),1,6)_$E(ONC(165.5,D0,50),9,10),?40,TXT1
+ W !," RX Summ--Surg Primsite 03-2022: ",$E(ONC(165.5,D0,50),1,6)_$E(ONC(165.5,D0,50),9,10),?40,TXT1
  W:TXT2'="" !,?43,TXT2
  S TXT=ONC(165.5,D0,58.7),LEN=40 D TXT^ONCPTX
  I DATEDX>2971231 D
- .W !," Surgery of primary site @fac F: ",$E(ONC(165.5,D0,50.3),1,6)_$E(ONC(165.5,D0,50.3),9,10),?40,TXT1
+ .W !," RX Hosp--Surg Primsite 03-2022: ",$E(ONC(165.5,D0,50.3),1,6)_$E(ONC(165.5,D0,50.3),9,10),?40,TXT1
  .W:TXT2'="" !,?43,TXT2
  W !," Radiation...................: ",$E(ONC(165.5,D0,51),1,6)_$E(ONC(165.5,D0,51),9,10),?40,ONC(165.5,D0,51.2)
  W:DATEDX>2971231 !," Radiation @fac..............: ",$E(ONC(165.5,D0,51.5),1,6)_$E(ONC(165.5,D0,51.5),9,10),?40,ONC(165.5,DA,51.4)

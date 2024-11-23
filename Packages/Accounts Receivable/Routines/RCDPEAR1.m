@@ -1,5 +1,5 @@
 RCDPEAR1 ;ALB/TMK/PJH - ERA Unmatched Aging Report (file #344.4) ;Dec 20, 2014@18:41:35
- ;;4.5;Accounts Receivable;**173,269,276,284,293,298,321,326,371,409**;Mar 20, 1995;Build 17
+ ;;4.5;Accounts Receivable;**173,269,276,284,293,298,321,326,371,409,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -20,7 +20,7 @@ EN1 ; entry point - ERA Unmatched Aging Report [RCDPE ERA AGING REPORT]
  ; RCXCLUDE("TRICARE")  - boolean, exclude TriCare
  ; RCZROBAL             - Zero balance flag
  ; VAUTD                - Division information
- ; RCTYPE               - MEDICAL/PHARMACY/TRICARE/ALL = M/P/T/A
+ ; RCTYPE               - MEDICAL/PHARMACY/TRICARE/CHAMPVA/ALL = M/P/T/C/A
  ; RCPAY                - S=SELECTED, R=RANGE, A=ALL
  ;                        (Selected or range - payers stored in ^TMP(""RCDPEU1"",$J))
  ;
@@ -34,7 +34,7 @@ EN1 ; entry point - ERA Unmatched Aging Report [RCDPE ERA AGING REPORT]
  I 'RCDTRNG D EN1Q Q
  S RCDT("BEG")=$P(RCDTRNG,U,2),RCDT("END")=$P(RCDTRNG,U,3)
  ;
- ; PRCA*4.5*326 - Ask to show Medical/Pharmacy Tricare or All
+ ; PRCA*4.5*326 - Ask to show Medical/Pharmacy Tricare CHAMPVA or All
  S RCTYPE=$$RTYPE^RCDPEU1("A")
  I RCTYPE=-1 D EN1Q Q
  ;
@@ -277,8 +277,8 @@ HDRBLD ; Create the report header
  ; Payers - PRCA*4.5*326
  S Y="PAYERS: "
  S Y=Y_$S(RCPAY="S":"SELECTED",RCPAY="R":"RANGE",1:"ALL")
- S Y=Y_$J("",45-$L(Y))_"MEDICAL/PHARMACY/TRICARE: "
- S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ S Y=Y_$J("",38-$L(Y))_"MEDICAL/PHARMACY/TRICARE/CHAMPVA: "  ;PRCA*4.5*432 Add CHAMPVA, 45->38
+ S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")  ;PRCA*4.5*432 Add CHAMPVA
  S HCNT=HCNT+1,RCHDR(HCNT)=Y
  ;
  S Y("1ST")=$P(RCDTRNG,U,2),Y("LST")=$P(RCDTRNG,U,3)
@@ -340,8 +340,8 @@ HDRLM ; Create the list manager version of the report header
  ; Payers - PRCA*4.5*326
  S Y="PAYERS: "
  S Y=Y_$S(RCPAY="S":"SELECTED",RCPAY="R":"RANGE",1:"ALL")
- S Y=Y_$J("",45-$L(Y))_"MEDICAL/PHARMACY/TRICARE: "
- S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ S Y=Y_$J("",38-$L(Y))_"MEDICAL/PHARMACY/TRICARE/CHAMPVA: "  ;PRCA*4.5*432 Add CHAMPVA, 45->38
+ S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")  ;PRCA*4.5*432 Add CHAMPVA
  S HCNT=HCNT+1,RCHDR(HCNT)=Y
  ;
  S Y="AGED"

@@ -1,5 +1,5 @@
-RCDPEARL ;ALB/hrubovcak - Misc. Report utilities for ListMan, etc. ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**298,321,332**;15 April 2014;Build 40
+RCDPEARL ;ALB/HRUBOVCAK - Misc. Report utilities for ListMan, etc. ;Jun 06, 2014@19:11:19
+ ;;4.5;Accounts Receivable;**298,321,332,432**;15 April 2014;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; IA 594 - ACCOUNTS RECEIVABLE CATEGORY file (#430.2)
@@ -225,3 +225,14 @@ SL(T,RCLNCNT,RC2GLBL) ; Set text into global or write line
  ;
 UP(A) ; Returns UPPERCASE
  Q $$UP^XLFSTR(A)
+ ;
+DEBEFT(RC0) ; Add minus sign for debit amounts PRCA*4.5*432
+ ; Input:   RC0    - Initially set to node 0 (zero) of #344.31 entry, EDI THIRD PARTY EFT DETAIL FILE
+ ; Output:  RC0    - Add minus sign for negative dollar amounts
+ ;                   Piece 7 of RC0, #.07, AMOUNT OF PAYMENT
+ ;                   Piece 16 of RC0, #3, DEBIT/CREDIT FLAG
+ ;
+ I $E($P(RC0,U,7))="-" Q   ;If dollar amount is already preceeded by a minus sign, quit before adding a second minus sign
+ I $P(RC0,U,16)="D" S $P(RC0,U,7)="-"_$P(RC0,U,7)  ;Check for debit flag, add minus sign if present
+ Q
+ ;

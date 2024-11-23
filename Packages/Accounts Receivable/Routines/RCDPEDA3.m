@@ -1,5 +1,5 @@
 RCDPEDA3 ;AITC/DW - ACTIVITY REPORT ;Feb 17, 2017@10:37:00
- ;;4.5;Accounts Receivable;**318,321,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**318,321,326,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -67,8 +67,8 @@ HDR(INPUT) ;EP from RCDPEDAR
  S NOJUST=0
  ; PRCA*4.5*326 - Use RCPAY for payer selection type in header, Add M/P/T filter
  S Z="PAYERS: "_$S(RCPAY="A":"ALL",RCPAY="R":"RANGE",1:"SELECTED")
- S Z=$E(Z_$J("",80),1,44)_"MEDICAL/PHARMACY/TRICARE: "
- S Z=Z_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ S Z=$E(Z_$J("",80),1,38)_"MEDICAL/PHARMACY/TRICARE/CHAMPVA: "  ;PRCA*4.5*432 Add CHAMPVA, 44->38
+ S Z=Z_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")  ;PRCA*4.5*432 Add CHAMPVA
  ; PRCA*4.5*326 End changes.
  D SL(.INPUT,Z)
  S CTR=1
@@ -110,7 +110,7 @@ HDR(INPUT) ;EP from RCDPEDAR
  . S XX=$J("",3)_"TR #"                    ;PRCA*4.5*318 add TR #
  . S Z=$$SETSTR^VALM1(XX,"",1,$L(XX))
  . D SL(.INPUT,Z)                          ; TR DOC header
- . S XX=$J("",36)_"DEBIT   DEP RECEIPT #"  ;PRCA*4.5*321
+ . S XX=$J("",44)_"DEP RECEIPT #"  ;PRCA*4.5*321 ; PRCA*4.5*432
  . S Z=$$SETSTR^VALM1(XX,"",1,$L(XX))
  . S Z=$$SETSTR^VALM1("DEP RECEIPT STATUS",Z,61,19)
  . D SL(.INPUT,Z)

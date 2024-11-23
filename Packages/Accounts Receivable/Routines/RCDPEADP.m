@@ -1,5 +1,5 @@
 RCDPEADP ;OIFO-BAYPINES/PJH - AUTO-DECREASE REPORT ;Nov 23, 2014@12:48:50
- ;;4.5;Accounts Receivable;**298,318,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**298,318,326,432**;Mar 20, 1995;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  ; Read ^DGCR(399)      via Private IA 3820
  ; Read ^DG(40.8)       via Controlled IA 417
@@ -286,7 +286,7 @@ DISP(INPUTS,DTOTAL,GTOTAL) ; Format the display for screen/printer or MS Excel
  ;                             0 - Otherwise
  ;                       A6 -  1 - Output to List Manager
  ;                             0 - Otherwise
- ;                       A7 -  M/P/T/A = Medical/Pharmacy/Tricare/All
+ ;                       A7 -  C/M/P/T/A = CHAMPVA/Medical/Pharmacy/Tricare/All
  ;
  ;          IO      - Output Device
  ;          DTOTAL()- Array of totals by Internal Auto-Post date
@@ -306,9 +306,9 @@ DISP(INPUTS,DTOTAL,GTOTAL) ; Format the display for screen/printer or MS Excel
  S XX=$S($P(INPUTS,"^",3)="L":"Last to First",1:"First to Last")
  S HDRINFO("SORT")=HDRINFO("SORT")_" - "_XX
  ; PRCA*4.5*326 - Add M/P/T filter to report
- S XX=$P(INPUTS,"^",7) ; M/P/T/A = Medical/Pharmacy/Tricare/All
- S HDRINFO("TYPE")="Medical/Pharmacy/Tricare: "
- S HDRINFO("TYPE")=HDRINFO("TYPE")_$S(XX="M":"MEDICAL",XX="P":"PHARMACY",XX="T":"TRICARE",1:"ALL")
+ S XX=$P(INPUTS,"^",7) ; C/M/P/T/A = CHAMPVA/Medical/Pharmacy/Tricare/All, PRCA*4.5*432 Add CHAMPVA
+ S HDRINFO("TYPE")="CHAMPVA/Medical/Pharm/Tricare: "  ;PRCA*4.5*432 Add CHAMPVA
+ S HDRINFO("TYPE")=HDRINFO("TYPE")_$S(XX="C":"CHAMPVA",XX="M":"MEDICAL",XX="P":"PHARMACY",XX="T":"TRICARE",1:"ALL")  ;PRCA*4.5*432 Add CHAMPVA
  ;
  ; Format Division filter
  S XX=$P(INPUTS,"^",1)                      ; XX=1 - All Divisions, 2- selected

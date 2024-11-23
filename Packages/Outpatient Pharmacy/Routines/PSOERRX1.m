@@ -1,5 +1,5 @@
 PSOERRX1 ;BIRM/MFR - All Rxs eRx Queue - Supporting APIs ;08/28/22
- ;;7.0;OUTPATIENT PHARMACY;**700**;DEC 1997;Build 261
+ ;;7.0;OUTPATIENT PHARMACY;**700,769**;DEC 1997;Build 26
  ;
 HDR ; - Builds the Header section
  N LINE1,LINE2,LINE3,ARR
@@ -97,7 +97,7 @@ SETSORT(FIELD) ; Sets the data sorted by the FIELD specified
  . . . . . D RELMSG(ERXIEN,.ERXCNT)
  ;
  ; - Filter By  Message Type is set
- I '$G(MBMSITE),$G(MSTPFLTR)'="" D  Q
+ I $G(MSTPFLTR)'="" D  Q
  . S INST=0 F  S INST=$O(^PS(52.49,"MTYPE",INST)) Q:'INST  D  I ERXCNT'<PSOMAXQS Q
  . . I '$G(MBMSITE),PSNPINST'=INST Q
  . . S MSGDT=BEGDATE F  S MSGDT=$O(^PS(52.49,"MTYPE",INST,MSGDT)) Q:'MSGDT!(MSGDT>ENDDATE)  D  I ERXCNT'<PSOMAXQS Q

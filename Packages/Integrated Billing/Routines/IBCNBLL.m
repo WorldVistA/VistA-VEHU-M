@@ -1,5 +1,5 @@
 IBCNBLL ;ALB/ARH - Ins Buffer: LM main screen, list buffer entries ;1 Jun 97
- ;;2.0;INTEGRATED BILLING;**82,149,153,183,184,271,345,416,438,435,506,519,528,549,601,595,631,664,668,737,771**;21-MAR-94;Build 26
+ ;;2.0;INTEGRATED BILLING;**82,149,153,183,184,271,345,416,438,435,506,519,528,549,601,595,631,664,668,737,771,794**;21-MAR-94;Build 9
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; DBIA# 642 for call to $$LST^DGMTU
@@ -40,7 +40,9 @@ INIT ;  initialization for list manager list
  K ^TMP("IBCNBLL",$J),^TMP("IBCNBLLX",$J),^TMP("IBCNBLLY",$J),^TMP($J,"IBCNBLLS"),^TMP($J,"IBCNAPPTS")
  ; IB*2.0*737/DTG correct IBCNSORT due to removed "*"
  ; S:$G(IBCNSORT)="" IBCNSORT=$S(VIEW=1:"10^Positive Response",1:"1^Patient Name")
- S:$G(IBCNSORT)="" IBCNSORT=$S(VIEW=1:"9^Positive Response",1:"1^Patient Name")
+ ;IB*794/DTG if sort is null default to patient name for all
+ ;S:$G(IBCNSORT)="" IBCNSORT=$S(VIEW=1:"9^Positive Response",1:"1^Patient Name")
+ S:$G(IBCNSORT)="" IBCNSORT="1^Patient Name"
  S IBKEYS=$$GETKEYS(DUZ) ;IB*2*506/taz user must have either IB INSURANCE EDIT or IB GROUP/PLAN EDIT in order to view entries without defined insurance company entries
  D BLD
  Q
@@ -148,11 +150,12 @@ BLD ;  build screen display
  ;
  D SORT S IBCNT=0,VALMCNT=0,IBBUFDA=0
  ;
+ I '$D(ZTQUEUED) W !,"Building display "  ;IB*794/DJW telling users what we are doing
  S IBCNS1="" F  S IBCNS1=$O(^TMP($J,"IBCNBLLS",IBCNS1)) Q:IBCNS1=""  D
  .S IBCNS2="" F  S IBCNS2=$O(^TMP($J,"IBCNBLLS",IBCNS1,IBCNS2)) Q:IBCNS2=""  D
  ..S IBBUFDA=0 F  S IBBUFDA=$O(^TMP($J,"IBCNBLLS",IBCNS1,IBCNS2,IBBUFDA)) Q:'IBBUFDA  D
  ...S DFLG=^TMP($J,"IBCNBLLS",IBCNS1,IBCNS2,IBBUFDA)
- ...S IBCNT=IBCNT+1 I '$D(ZTQUEUED),'(IBCNT#15) W "."
+ ...S IBCNT=IBCNT+1 I '$D(ZTQUEUED),'(IBCNT#100) W "."  ;IB*794/DJW changed '(IBCNT#15) to be #100
  ...S IBLINE=$$BLDLN(IBBUFDA,IBCNT,DFLG) I IBLINE="" S IBCNT=IBCNT-1 Q  ; IB*2*506/taz If line is null stop processing this entry.
  ...D SET(IBLINE,IBCNT)
  ;
@@ -230,9 +233,10 @@ SORT ;  set up sort for list screen
  K ^TMP($J,"IBCNBLLS") I '$G(IBCNSORT) S IBCNSORT="1^Patient Name"
  ; get payer ien for Medicare WNR
  ;
+ I '$D(ZTQUEUED) W !,"Gathering and sorting the records "  ;IB*794/DJW telling users what we are doing
  S IBCNDT=0 F  S IBCNDT=$O(^IBA(355.33,"AEST","E",IBCNDT)) Q:'IBCNDT  D
  .S IBBUFDA=0 F  S IBBUFDA=$O(^IBA(355.33,"AEST","E",IBCNDT,IBBUFDA)) Q:'IBBUFDA  D
- ..S IBCNT=IBCNT+1 I '$D(ZTQUEUED),'(IBCNT#15) W "."
+ ..S IBCNT=IBCNT+1 I '$D(ZTQUEUED),'(IBCNT#100) W "."  ;IB*794/DJW changed '(IBCNT#15) to be #100
  ..S IB0=$G(^IBA(355.33,IBBUFDA,0)),IB20=$G(^IBA(355.33,IBBUFDA,20)),IB60=$G(^IBA(355.33,IBBUFDA,60))
  ..S IBCNDFN=+IB60,IBCNPAT="" I +IBCNDFN S IBCNPAT=$P($G(^DPT(IBCNDFN,0)),U,1)
  ..S INAME=$P(IB20,U)
@@ -266,7 +270,7 @@ SORT ;  set up sort for list screen
  ..K VAIN,IBCSORT1,IBCSORT2
  ..Q
  .Q
- I IBCNT,'$D(ZTQUEUED) W "|"
+ ;I IBCNT,'$D(ZTQUEUED) W "|"  ;IB*794 "|" No longer needed
  Q
  ;
 INCL(VIEW,SYM,IB0) ;
@@ -364,3 +368,8 @@ GTMFLG(IBBUFDA) ;Check if Medicare
  S MWNRFLG=0
  I MWNRIEN'="",$P($$INSERROR^IBCNEUT3("B",IBBUFDA),U,2)=MWNRIEN S MWNRFLG=1
  Q MWNRFLG
+REFRESH ; IB*794/DJW Refresh the buffer data but keep the selected view and sort
+ D INIT,HDR
+ S VALMBCK="R",VALMBG=1
+ Q 
+ ;

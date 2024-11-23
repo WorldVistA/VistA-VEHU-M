@@ -1,5 +1,5 @@
-ECXTRAC ;ALB/GTS,JAP,BIR/DMA,CML-Package Extracts for DSS ;5/19/16  10:47
- ;;3.0;DSS EXTRACTS;**9,8,14,24,30,33,49,84,105,144,161**;Dec 22, 1997;Build 6
+ECXTRAC ;ALB/GTS,JAP,BIR/DMA,CML-Package Extracts for DSS ;5/28/24  10:00
+ ;;3.0;DSS EXTRACTS;**9,8,14,24,30,33,49,84,105,144,161,190**;Dec 22, 1997;Build 36
  ;Date range, queuing and message sending for package extracts
  ;Input
  ;  ECPACK   printed name of package (e.g. Lab, Prescriptions)
@@ -96,6 +96,9 @@ QUE ;queue extract
  .S $P(^ECX(728,1,ECNODE+.1),U,ECPIECE)="R"
  .S ^XTMP("ECX EXTRACT",0)=$$FMADD^XLFDT(DT,365)_"^"_DT_"^TASK INFORMATION FOR EXTRACTS" ;144,161 Update zero node for task information in XTMP
  .S ^XTMP("ECX EXTRACT",ECHEAD)=ZTSK_"^"_$G(DUZ)_"^"_$G(ZTSK("D"))_"^"_ECSD_"^"_ECED ;144 Save data related to task
+ .; Append Extract Job # to ^XTMP entry  tjl  ECX*3*190
+ .N ECXIEN S ECXIEN=+$O(^ECX(727.1,"C",ECHEAD,0))
+ .S ^XTMP("ECX EXTRACT",ECHEAD)=^XTMP("ECX EXTRACT",ECHEAD)_"^"_ECXIEN
  .W !,"Request queued as Task #",ZTSK,".",!
  .D PAUSE
  Q

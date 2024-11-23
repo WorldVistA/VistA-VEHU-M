@@ -1,6 +1,6 @@
-IBAECP1 ;WOIFO/AAT-LTC SINGLE PATIENT PROFILE ; 20-FEB-02
- ;;2.0;INTEGRATED BILLING;**176**;21-MAR-94
- ;; Per VHA Directive 10-93-142, this routine should not be modified
+IBAECP1 ;WOIFO/AAT - LTC SINGLE PATIENT PROFILE ; 20-FEB-02
+ ;;2.0;INTEGRATED BILLING;**176,729**;21-MAR-94;Build 8
+ ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
  ;
@@ -61,7 +61,7 @@ PRINT ; Print report from the temp. global
  S IBLINE="",$P(IBLINE,"=",IOM+1)="",(IBPAG,IBTOT,IBTOTM,IBQUIT,IBCHG,IBTOTP)=0
  S IBPT=$$PT^IBEFUNC(IBDFN)
  S IBCIS=0
- S IBH="LTC Billing Profile for "_$P(IBPT,U)_"  "_$P(IBPT,U,2) D HDR
+ S IBH="LTC Billing Profile for "_$P(IBPT,U) D HDR  ; IB*2.0*729
  ;;; D CLKINFO ; Print brief clock info
  I '$D(@IBTMP) W !!,"The patient has no LTC bills within the specified period" D PAUSE(1) Q
  S (IBCURM,IBCURY)=0 ; Current month and year

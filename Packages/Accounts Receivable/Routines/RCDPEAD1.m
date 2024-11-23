@@ -1,5 +1,5 @@
 RCDPEAD1 ;OIFO-BAYPINES/PJH - AUTO-DECREASE REPORT ;Nov 23, 2014@12:48:50
- ;;4.5;Accounts Receivable;**298,318,326,345,349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**298,318,326,345,349,432**;Mar 20, 1995;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 CARCS(A1,A2,A3,CARCS) ; Get CARC Auto-Decrease data
@@ -146,7 +146,7 @@ HDR(EXCEL,HDRINFO,PAGE,NOLINE) ; Print the report header
  S MSG(3)=$S($L(Z0)<75:$J("",75-$L(Z0)\2),1:"")_Z0
  S XX=" (Date Decrease Applied)"
  S MSG(4)="               Date Range: "_HDRINFO("START")_" - "_HDRINFO("END")_XX
- S MSG(5)=$E(HDRINFO("SORT")_$J("",46),1,44)_" "_HDRINFO("TYPE") ;  ; PRCA*4.5*326
+ S MSG(5)=$E(HDRINFO("SORT")_$J("",46),1,40)_" "_HDRINFO("TYPE") ;  ; PRCA*4.5*326 ; 44-> 40 PRCA*4.5*432
  S MSG(6)=""
  I 'NOLINE D
  . S MSG(7)="Claim #       Patient Name          Payer             Decrease Amt  Date    "
@@ -171,9 +171,9 @@ HINFO(INPUTS,HDRINFO) ;Get header information
  S XX=$P(INPUTS,"^",1)                      ; XX=1 - All Divisions, 2- selected
  S HDRINFO("DIVISIONS")=$S(XX=2:$$LINE^RCDPEAD2(.RCVAUTD),1:"ALL")
  ; PRCA*4.5*326 - Add M/P/T filter to report
- S XX=$P(INPUTS,"^",7) ; M/P/T/A = Medical/Pharmacy/Tricare/All
- S HDRINFO("TYPE")="MEDICAL/PHARMACY/TRICARE: "
- S HDRINFO("TYPE")=HDRINFO("TYPE")_$S(XX="M":"MEDICAL",XX="P":"PHARMACY",XX="T":"TRICARE",1:"ALL")
+ S XX=$P(INPUTS,"^",7) ; C/M/P/T/A = CHAMPVA/Medical/Pharmacy/Tricare/All, PRCA*4.5*432 Add CHAMPVA
+ S HDRINFO("TYPE")="CHAMPVA/MEDICAL/PHARM/TRICARE: "  ;PRCA*4.5*432 Add CHAMPVA
+ S HDRINFO("TYPE")=HDRINFO("TYPE")_$S(XX="C":"CHAMPVA",XX="M":"MEDICAL",XX="P":"PHARMACY",XX="T":"TRICARE",1:"ALL")  ;PRCA*4.5*432 Add CHAMPVA
  Q
  ;
 LMAN(DATA,A1,A2,A3,XX) ; Format and save List Manager line
@@ -219,7 +219,7 @@ LMOUT(INPUT,RCVAUTD,IO) ; EP Output report to Listman
  S HDR(2)=$S($L(Z0)<75:$J("",75-$L(Z0)\2),1:"")_Z0
  S XX=" (DATE DECREASE APPLIED)"
  S HDR(3)="               DATE RANGE: "_HDRINFO("START")_" - "_HDRINFO("END")_XX
- S HDR(4)=$E(HDRINFO("SORT")_$J("",46),1,44)_" "_HDRINFO("TYPE") ; PRCA*4.5*326
+ S HDR(4)=$E(HDRINFO("SORT")_$J("",46),1,40)_" "_HDRINFO("TYPE") ; PRCA*4.5*326 ; 44-> 40 PRCA*4.5*432
  S HDR(5)=""
  S HDR(6)=""
  S HDR(7)="CLAIM #       PATIENT NAME          PAYER             DECREASE AMT  DATE    "

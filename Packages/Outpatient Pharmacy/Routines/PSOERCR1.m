@@ -1,5 +1,5 @@
 PSOERCR1 ;BHAM/MR - eRx Change Request Functionality - Add Drug ; 11/14/2019 3:46pm
- ;;7.0;OUTPATIENT PHARMACY;**746**;DEC 1997;Build 106
+ ;;7.0;OUTPATIENT PHARMACY;**746,769**;DEC 1997;Build 26
  ;
  ; Add New Medication Suggestion for Change Request
  ; Input: ERXIEN - Pointer the ERX HOLDING QUEUE file (#52.49)
@@ -16,7 +16,7 @@ DRUG ; Use eRx OR VistA drug?
  ; W !!,"eRx Drug: "_ERXDRUG,!
  S DIR(0)="S^E:USE ERX DRUG;V:CHOOSE A VISTA DRUG"
  S DIR("A")="DRUG SELECTION" I $G(DRUGTYPE)'="" S DIR("B")=DRUGTYPE
- D ^DIR I $D(DIRUT)!$D(DIROUT) G @$$GOTO(X,"EORV")
+ D ^DIR I $D(DIRUT)!$D(DIROUT) W ! G @$$GOTO(X,"DRUG")
  I Y="V",$G(DRUGTYPE)="E" S (DRUG,DRUGCODE,DRUGCODQ)=""
  S DRUGTYPE=Y
  K DIC,DUOUT S QUIT=0
@@ -36,8 +36,8 @@ DRUG ; Use eRx OR VistA drug?
  . F  D ^DIC D  I FINISH!QUIT Q
  . . I X="^"!(X["^"&($$GOTO(X,"DRUG")'["?")) S QUIT=1 Q
  . . I Y'>0 W !!,"VistA Drug is required",!,$C(7) Q
- . . I $$GETNDC^PSSNDCUT(+Y)="" W !!,"VistA Drug is missing the NDC Code, please select a different drug.",!,$C(7) Q
- . . S DRUG=$$GET1^DIQ(50,+Y,.01),DRUGCODE=$$GETNDC^PSSNDCUT(+Y),DRUGCODQ="ND",FINISH=1
+ . . I $$GETNDC^PSSNDCUT(+Y,$G(PSOSITE))="" W !!,"VistA Drug is missing the NDC Code, please select a different drug.",!,$C(7) Q
+ . . S DRUG=$$GET1^DIQ(50,+Y,.01),DRUGCODE=$$GETNDC^PSSNDCUT(+Y,$G(PSOSITE)),DRUGCODQ="ND",FINISH=1
  ;
 SUBS ; SUBSTITUTIONS? Prompt
  K DIR S DIR(0)="SA^Y:YES;N:NO",DIR("A")="SUBSTITUTIONS? "
@@ -93,7 +93,9 @@ SIG ; SIG Prompt
  . D DIRE^PSOERXX1
  ;
 NOTE ; NOTE TO PROVIDER Prompt
- K DIR,DIRUT S DIR(0)="FO^1:210",DIR("A")="ADDITIONAL NOTE TO PROVIDER" I $G(NOTE2PRV)'="" S DIR("B")=NOTE2PRV
+ K DIR,DIRUT S DIR(0)="FO^1:210",DIR("A")="SUGGESTED PROVIDER NOTE (FOR RESPONSE RX)"
+ I $G(NOTE2PRV)'="" S DIR("B")=NOTE2PRV
+ S DIR("?")="This is the suggested Provider Note that will be sent back with Rx Response if this drug option is selected by the outside Provider. It may be edited/removed by the Provider before sending the response back."
  D ^DIR I $D(DIROUT) G @$$GOTO(X,"NOTE")
  S NOTE2PRV=Y
  ;
@@ -134,6 +136,7 @@ LOADMED ; Load Default Values for an existing Medication Suggestion
  . S QTYUM=$$GET1^DIQ(52.49,ERXIEN,5.4)
  . S DAYSSUP=$$GET1^DIQ(52.49,ERXIEN,5.5)
  . S NUMREFS=$$GET1^DIQ(52.49,ERXIEN,5.6)
+ . ;S NOTE2PRV=$$GET1^DIQ(52.49,ERXIEN,8)
  I '$G(CRMED)!'$D(CRMEDS(+$G(CRMED))) Q
  ; - Loading an existing entry
  S Z=CRMEDS(CRMED),DRUGTYPE=$P(Z,"^")

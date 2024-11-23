@@ -1,5 +1,5 @@
 IBAECC ;LL/ELZ - LONG TERM CARE CLOCK MAINTANCE ; 05-FEB-02
- ;;2.0;INTEGRATED BILLING;**176,199,728**;21-MAR-94;Build 14
+ ;;2.0;INTEGRATED BILLING;**176,199,728,729**;21-MAR-94;Build 8
  ;; Per VHA Directive 10-93-142, this routine should not be modified
  ;
  ; this routine will allow users to perform LTC copay clock
@@ -8,11 +8,11 @@ IBAECC ;LL/ELZ - LONG TERM CARE CLOCK MAINTANCE ; 05-FEB-02
  ;
 OPT ; menu option main entry point
  ;
- N ADDED,DFN,DIC,IBCL,IBLTCX,IBLTCZ,IBOPCL,IBSTDT,IBRES,IBX,IBY,X,Y
+ N ADDED,DFN,DIC,IBCL,IBLTCX,IBLTCZ,IBOPCL,IBSTDT,IBRES,IBX,IBY,VADM,X,Y  ; IB*2.0*729
  ;
  ; select a patient (screen out patients with no LTC clock and are
  ; not LTC patients.
-OPTA K DIC,X,Y,DFN,IBLTCX,VADP
+OPTA K DIC,X,Y,DFN,IBLTCX ; IB*2.0*729
  N DPTNOFZY S DPTNOFZY=1  ;Suppress PATIENT file fuzzy lookups
  S DIC="^DPT(",DIC(0)="AEMNQ",DIC("S")="I $$SCREEN^IBAECC(Y)" W ! D ^DIC G:Y<1 EX
  S DFN=+Y D DEM^VADPT
@@ -175,7 +175,7 @@ START ; edit the start date
  ;
 FREE ; change the free days
  N IBF,IBX,IBC,IBD,IBFREEX,DIR,X,Y,DTOUT,DUOUT,DIRUT,DIROUT,IBOPT,IBFREEZ
- N IBCLK
+ N IBCLK,STOP  ; IB*2.0*729
  S IBCLK=IBLTCX
  ;
 AGAINF ;
@@ -184,15 +184,18 @@ AGAINF ;
  S (IBC,IBX)=0 F  S IBX=$O(^IBA(351.81,IBLTCX,1,"AC",IBX)) Q:IBX<1  S IBC=IBC+1,IBF(IBX,IBC)=$O(^IBA(351.81,IBLTCX,1,"AC",IBX,0))
  ;
  ; display free days
- ;W !,"These are the Free Days currently on file:",!
- ;S IBD=0 F  S IBD=$O(IBF(IBD)) Q:IBD<1  W !?5,$O(IBF(IBD,0)),?10,$$FMTE^XLFDT(IBD)
  D FRDAYS^IBAECB1
  ;
  ; choose add, edit, or delete free day
  S DIR(0)="SO^A:Add;E:Edit;D:Delete" D ^DIR Q:$D(DIRUT)  S IBOPT=Y
  ;
  ; choose which one to change
- I IBOPT'="A" S DIR(0)="NO^1:"_IBC_":0" D ^DIR Q:$D(DIRUT)  S IBD=0 F  S IBD=$O(IBF(IBD)) Q:IBD<1  I $D(IBF(IBD,+Y)) S IBFREEX=IBF(IBD,+Y),IBFREEZ=^IBA(351.81,IBLTCX,1,IBF(IBD,+Y),0) Q
+ S STOP=0 I IBOPT'="A" D  ; IB*2.0*729
+ .I 'IBC W ! S DIR(0)="EA",DIR("A")="There are no Free Days to choose from. Press any key to continue." D ^DIR S STOP=1 Q
+ .S DIR(0)="NO^1:"_IBC_":0" D ^DIR I $D(DIRUT) S STOP=1 Q
+ .S IBD=0 F  S IBD=$O(IBF(IBD)) Q:IBD<1  I $D(IBF(IBD,+Y)) S IBFREEX=IBF(IBD,+Y),IBFREEZ=^IBA(351.81,IBLTCX,1,IBF(IBD,+Y),0) Q
+ .Q
+ I STOP Q
  ;
  D @(IBOPT_"FREE")
  ;

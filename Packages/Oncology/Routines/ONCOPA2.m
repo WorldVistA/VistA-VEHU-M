@@ -1,5 +1,5 @@
 ONCOPA2 ;HINES OIFO/GWB - [PA Print Complete Abstract (132c)] cont ;10/05/11
- ;;2.2;ONCOLOGY;**1,5,10,12,13,15**;Jul 31, 2013;Build 5
+ ;;2.2;ONCOLOGY;**1,5,10,12,13,15,20**;Jul 31, 2013;Build 5
  ;
  N TX
  S NAME="FIRST COURSE OF TREATMENT" D FORMAT^ONCOPA1
@@ -20,9 +20,11 @@ ONCOPA2 ;HINES OIFO/GWB - [PA Print Complete Abstract (132c)] cont ;10/05/11
  W !,"   Date of no treatment:           ",ONCAB(165.5,IEN,124) D P Q:EX=U
  W ! D P Q:EX=U
  W !,"   Date First Surgical Procedure:  ",ONCAB(165.5,IEN,170) D P Q:EX=U
- W !,"   Surgery of Primary (F):         ",ONCAB(165.5,IEN,58.6) D P Q:EX=U
+ W !,"   RX Summ--Surg Primsite 03-2022: ",ONCAB(165.5,IEN,58.6) D P Q:EX=U
+ W !,"   RX Summ--Surg Prim Site 2023:   ",ONCAB(165.5,IEN,58.9) D P Q:EX=U
  W !,"   Most Definitive Surg Date:      ",ONCAB(165.5,IEN,50) D P Q:EX=U
- W !,"   Surgery of Primary @Fac (F):    ",ONCAB(165.5,IEN,58.7) D P Q:EX=U
+ W !,"   RX Hosp--Surg Primsite 03-2022: ",ONCAB(165.5,IEN,58.7) D P Q:EX=U
+ W !,"   RX Hosp--Surg Prim Site 2023:   ",ONCAB(165.5,IEN,58.8) D P Q:EX=U
  W !,"   Most Definitive Surg @Fac Date: ",ONCAB(165.5,IEN,50.3) D P Q:EX=U
  W:DATEDX>3091231 !,"   RX Hosp--Surg App 2010:         ",ONCAB(165.5,IEN,234,"E") D P Q:EX=U
  W !,"   Surgical Margins:               ",ONCAB(165.5,IEN,59) D P Q:EX=U

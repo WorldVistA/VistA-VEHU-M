@@ -1,5 +1,5 @@
 RCDPEMA1 ;EDE/FA - LIST ALL AUTO-POSTED RECEIPTS REPORT ;Nov 17, 2016
- ;;4.5;Accounts Receivable;**332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**332,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q   ; no direct entry
@@ -270,7 +270,7 @@ HDRLN3(INPUT) ; Build the 3rd header line
  ; Returns: Text for 3rd header line
  N XX,YY,ZZ
  S YY=$P(INPUT,"^",3)
- S XX="M/P/T: "_$S(YY="A":"All",YY="M":"Medical",YY="P":"Pharmacy ",1:"Tricare")_" - "
+ S XX="M/P/T/C: "_$S(YY="A":"All",YY="M":"Medical",YY="P":"Pharmacy ",YY="C":"CHAMPVA",1:"Tricare")_" - "  ;PRCA*4.5*432 Add CHAMPVA
  S XX=XX_$S($P(INPUT,"^",4)="A":" All",1:" Sel")_" Payers"
  S YY=$P($P(INPUT,"^",2),"|",1),YY="Auto-Post Date: "_$$FMTE^XLFDT(YY,"2Z")
  S ZZ=$P($P(INPUT,"^",2),"|",2),ZZ=$$FMTE^XLFDT(ZZ,"2Z")

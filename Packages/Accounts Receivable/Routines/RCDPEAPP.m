@@ -1,5 +1,5 @@
 RCDPEAPP ;OIFO-BAYPINES/PJH - AUTO POST REPORT ;Dec 20, 2014@18:42
- ;;4.5;Accounts Receivable;**298,304,326,345,424**;Mar 20, 1995;Build 11
+ ;;4.5;Accounts Receivable;**298,304,326,345,424,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;Read ^DGCR(399) via Private IA 3820
  ;Read ^DG(40.8) via Controlled IA 417
@@ -328,7 +328,7 @@ HDR(DIVS,PAYERS) ; Print the report header
  . S MSG(LN)=DIVS(XX),LN=LN+1
  ;
  S MSG(LN)="CLAIM TYPE: "
- S MSG(LN)=MSG(LN)_$S(RCLAIM="P":"PHARMACY",RCLAIM="M":"MEDICAL",RCLAIM="T":"TRICARE",1:"ALL")
+ S MSG(LN)=MSG(LN)_$S(RCLAIM="C":"CHAMPVA",RCLAIM="P":"PHARMACY",RCLAIM="M":"MEDICAL",RCLAIM="T":"TRICARE",1:"ALL")  ;PRCA*4.5*432 Add CHAMPVA
  S MSG(LN)=MSG(LN)_$J("",55-$L(MSG(LN)))_"SORTED BY: "_$S(RCSORT=0:"PAYER NAME",1:"PAYER TIN")
  S LN=LN+1
  S MSG(LN)=$S(RCWHICH=2:"TINS",1:"PAYERS")_" : "_$S(RCPAY="S":"SELECTED",RCPAY="R":"RANGE",1:"ALL")

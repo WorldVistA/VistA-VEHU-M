@@ -1,5 +1,5 @@
 ECXTRT ;ALB/JAP,BIR/DMA,CML,PTD-Treating Specialty Change Extract ;6/29/18  14:57
- ;;3.0;DSS EXTRACTS;**1,8,17,24,33,35,39,46,49,84,107,105,127,161,166,170,184**;Dec 22, 1997;Build 124
+ ;;3.0;DSS EXTRACTS;**1,8,17,24,33,35,39,46,49,84,107,105,127,161,166,170,184,190**;Dec 22, 1997;Build 36
 BEG ;entry point from option
  D SETUP I ECFILE="" Q
  D ^ECXTRAC,^ECXKILL
@@ -8,10 +8,11 @@ BEG ;entry point from option
 START ; start package specific extract
  N LOC,SPC,TRT,WRD,ECATLNPI,ECPRLNPI,ECXADMTM,ECXATLPC,ECXATNPC,ECXDCDT,ECXPRLPC,ECXPRNPC,ECXMOVL,ECXMOVN,ECXMVD1,ECXMVD2,ECXTIME,REC ;161,166
  N ECXDWARD,TEMPPDIV,ECXASIH  ;166 tjl,170
+ N ECXDCTM,ECD1,ECD2,ECPRO ;190
  S QFLG=0
  K ECXDD D FIELD^DID(405,.19,,"SPECIFIER","ECXDD")
  S ECPRO=$E(+$P(ECXDD("SPECIFIER"),"P",2)) K ECXDD
- K ^TMP($J,"ECXTMP") S TRT=0
+ K ^TMP($J,"ECXTMP"),^TMP($J,"ECXTRTMM") S TRT=0 ;190 - Clear Mailman Message tmp global
  F  S TRT=$O(^DIC(45.7,TRT)) Q:+TRT=0  S SPC=$P(^DIC(45.7,TRT,0),U,2),^TMP($J,"ECXTMP",TRT)=SPC
  S ECED=ECED+.3,ECD=ECSD1
  ;loop through type 6 movements to get treating specialty and provider changes
@@ -30,11 +31,13 @@ START ; start package specific extract
  ..K LOC D SETLOC(ECXDFN,ECXADM,ECPRO,.LOC)
  ..;get data for current (new) ts movement
  ..S ECD1=9999999.9999999-ECXMVD1
+ ..I '+ECXMVD1 D SETTMP("MISSING MOVEMENT DATE",ECDA,ECXMVD1,ECXDFN,ECXADM) Q  ;190 - if missing movement date, log error and skip record
  ..D FINDLOC(ECD1,.LOC,.ECXSPCN,.ECXPRVN,.ECXATTN,.ECXMOVN,.ECXTRTN)
  ..Q:ECXSPCN=""
  ..S ECD2=$O(LOC(ECD1)) Q:ECD2=""
  ..S ECXMVD2=9999999.9999999-ECD2
  ..;get data for previous (losing) ts movement
+ ..I '+ECD2 D SETTMP("MISSING PREVIOUS TS MOVEMENT DATE/TIME",ECDA,ECXMVD1,ECXDFN,ECXADM) Q  ;190 - if missing previous ts movement date, log error and skip record
  ..D FINDLOC(ECD2,.LOC,.ECXSPCL,.ECXPRVL,.ECXATTL,.ECXMOVL,.ECXTRTL)
  ..;if ts has changed, find los on losing ts
  ..D:ECXTRTL'=ECXTRTN PREVTRT^ECXTRT1(.LOC,ECD1,ECD2,ECXTRTL,.ECXLOS)
@@ -45,7 +48,7 @@ START ; start package specific extract
  ..;don't bother if there's no data on current attending physician or no change in attending
  ..D:(ECXATTN'="")&(ECXATTN'=ECXATTL) PREVATT^ECXTRT1(.LOC,ECD1,ECXATTN,ECD2,.ECXATTL,.ECXLOSA)
  ..S ECXDATE=$$ECXDATE^ECXUTL(ECXMVD1,ECXYM),ECXTIME=$$ECXTIME^ECXUTL(ECXMVD1)
- ..S ECXADMDT=$$ECXDATE^ECXUTL(ECXADT,ECXYM),ECXADMTM=$$ECXTIME^ECXUTL(ECXADT),ECXDCDT=""
+ ..S ECXADMDT=$$ECXDATE^ECXUTL(ECXADT,ECXYM),ECXADMTM=$$ECXTIME^ECXUTL(ECXADT),ECXDCDT="",ECXDCTM="" ;190
  ..;- Production Division
  ..S ECXPDIV=""
  ..I ECXLOGIC>2003 S ECXPDIV=$S(WRD="":"",1:$$NPDIV(WRD))
@@ -85,7 +88,7 @@ START ; start package specific extract
  F  S ECD=$O(^DGPM("ATT3",ECD)),ECDA=0 Q:'ECD  Q:ECD>ECED  F  S ECDA=$O(^DGPM("ATT3",ECD,ECDA)) Q:'ECDA  D  Q:QFLG
  .I $D(^DGPM(ECDA,0)) S EC=^(0),ECXDFN=+$P(EC,U,3) D  Q:QFLG
  ..S ECXMVD1=$P(EC,U)  ;WRD=$P(EC,U,6)  166  tjl
- ..S (ECXDATE,ECXDCDT)=$$ECXDATE^ECXUTL(ECXMVD1,ECXYM),ECXTIME=$$ECXTIME^ECXUTL(ECXMVD1)
+ ..S (ECXDATE,ECXDCDT)=$$ECXDATE^ECXUTL(ECXMVD1,ECXYM),(ECXTIME,ECXDCTM)=$$ECXTIME^ECXUTL(ECXMVD1) ;190
  ..I ECXDCDT'>0 S ECXDCDT=""
  ..S ECMT=$P(EC,U,18),ECXADM=$P(EC,U,14),ECXADT=$P($G(^DGPM(ECXADM,0)),U,1)
  ..S (ECXTRTN,ECXSPCN,ECXPRVN,ECXATTN)="" S (ECXLOS,ECXLOSA,ECXLOSP)="" S ECXDSSD=""
@@ -93,6 +96,7 @@ START ; start package specific extract
  ..S ECD1=9999999.9999999-ECXMVD1
  ..;get ts change just before d/c
  ..S ECD2=$O(LOC(ECD1)),ECXMVD2=9999999.9999999-ECD2
+ ..I '+ECD2 D SETTMP("MISSING PREVIOUS TS MOVEMENT DATE",ECDA,ECXMVD1,ECXDFN,ECXADM) Q  ;190 - if missing previous ts movement date, log error and skip record
  ..D FINDLOC(ECD2,.LOC,.ECXSPCL,.ECXPRVL,.ECXATTL,.ECXMOVL,.ECXTRTL)
  ..;
  ..;- Call sets ECXA (In/Out indicator) using date before discharge
@@ -143,6 +147,7 @@ START ; start package specific extract
  ..S ECXENC=$$ENCNUM^ECXUTL4(ECXA,ECXSSN,ECXADT,,ECXTS,ECXOBS,ECHEAD,,)
  ..I $G(ECXASIH) S ECXA="A" ;170
  ..D:ECXENC'="" FILE^ECXTRT2
+ I $D(^TMP($J,"ECXTRTMM")) D SENDMSG
  D KPATDEM^ECXUTL2
  Q
  ;
@@ -195,4 +200,49 @@ SETUP ;Set required input for ECXTRAC
  ;
 QUE ; entry point for the background requeuing handled by ECXTAUTO
  D SETUP,QUE^ECXTAUTO,^ECXKILL
+ Q
+SETTMP(ERRMSG,ECDA,ECDATE,DFN,ECADM) ;190 Set TMP global for MM messages
+ N ECMOVDT,VADM,ECXSSN,PTNAME,ECADMDT,ECDIS,ECDISDT
+ S PTNAME=$$GET1^DIQ(2,DFN,.01,"I")
+ I PTNAME["ZZ" Q  ;don't include test patients
+ D DEM^VADPT
+ S ECMOVDT=$$FMTE^XLFDT(ECDATE,"2M")
+ S SSN=$P(VADM(2),U)
+ S ECADMDT=$$GET1^DIQ(405,ECADM_",",.01,"I"),ECDIS=$$GET1^DIQ(405,ECADM_",",.17,"I")
+ ; If we couldn't get the discharge date from the admission movement and this *is* the discharge movement
+ ; then use this movement's date
+ I '+ECDIS,$$GET1^DIQ(405,ECDA_",",.02,"I")=3 S ECDIS=ECDA
+ S ECDISDT=$$GET1^DIQ(405,ECDIS_",",.01,"I")
+ S ECADMDT=$$FMTE^XLFDT(ECADMDT,"2M"),ECDISDT=$$FMTE^XLFDT(ECDISDT,"2M")
+ S ^TMP($J,"ECXTRTMM",ERRMSG,DFN,ECDA)=VADM(1)_U_SSN_U_ECMOVDT_U_ECDA_U_ECADMDT_U_ECDISDT
+ Q
+ ;
+SENDMSG ;190 Send error MM messages
+ N ERRMSG,ECMSG,ECDFN,ECSSN,ECSTR,ECDA,I,J,XMY,XMDUZ,XMSUB,XMTEXT
+ I '$D(^TMP($J,"ECXTRTMM")) Q
+ S XMSUB="RECORDS NOT PROCESSED in DSS-"_ECPACK_" Extract" ; (#"_$P(EC23,U,2)_")"
+ K XMY S XMY("G.DSS-"_ECGRP_"@"_^XMB("NETNAME"))="",XMDUZ="DSS SYSTEM"
+ S ECMSG(1,0)="Because of missing information in the PATIENT MOVEMENT file (#405), the"
+ S ECMSG(2,0)="following records were not included in the DSS-TREATING SPECIALTY CHANGE"
+ S ECMSG(3,0)="EXTRACT (#"_$P(EC23,U,2)_") for the dates from "_ECSDN_" to "_ECEDN_"."
+ S ECMSG(4,0)=""
+ S ERRMSG="",J=0
+ F I=1:1 S ERRMSG=$O(^TMP($J,"ECXTRTMM",ERRMSG)) Q:ERRMSG=""  D
+ . S ECMSG(5*I+J,0)="*** "_ERRMSG_" ***",J=J+1
+ . S ECMSG(5*I+J,0)="                                                                   MOVEMENT",J=J+1
+ . S ECMSG(5*I+J,0)="PATIENT NAME                      SSN        MOVEMENT DATE/TIME    IEN",J=J+1
+ . S ECMSG(5*I+J,0)="  ADMISSION DATE/TIME                DISCHARGE DATE/TIME              ",J=J+1
+ . S ECMSG(5*I+J,0)="-------------------------------------------------------------------------------",J=J+1
+ . S ECDFN=""
+ . F J=J:1 S ECDFN=$O(^TMP($J,"ECXTRTMM",ERRMSG,ECDFN)) Q:ECDFN=""  D
+ .. S ECDA=0
+ .. F  S ECDA=$O(^TMP($J,"ECXTRTMM",ERRMSG,ECDFN,ECDA)) Q:ECDA=""  D
+ ... S ECSTR=^TMP($J,"ECXTRTMM",ERRMSG,ECDFN,ECDA) S (ACADM,ECDIS)=""
+ ... S ECADM=$$GET1^DIQ(405,ECDA_",",.16),ECDIS=$$GET1^DIQ(405,ECDA_",",.17)
+ ... S ECMSG(5*I+J,0)=$$LJ^XLFSTR($P(ECSTR,U),30)_"  "_$$LJ^XLFSTR($P(ECSTR,U,2),11)_"  "_$$LJ^XLFSTR($P(ECSTR,U,3),20)_"  "_$$LJ^XLFSTR(ECDA,12),J=J+1
+ ... S ECMSG(5*I+J,0)="  "_$$LJ^XLFSTR($P(ECSTR,U,5),30)_"     "_$$LJ^XLFSTR($P(ECSTR,U,6),30),J=J+1
+ . S J=J+1,ECMSG(5*I+J,0)=""
+ S XMTEXT="ECMSG("
+ D ^XMD
+ K ^TMP($J,"ECXTRTMM")
  Q

@@ -1,5 +1,5 @@
 RCDPEAP ;ALB/PJH - AUTO POST MATCHING EFT ERA PAIR ;Oct 15, 2014@12:36:51
- ;;4.5;Accounts Receivable;**298,304,318,321,326,424**;Mar 20, 1995;Build 11
+ ;;4.5;Accounts Receivable;**298,304,318,321,326,424,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;Read ^IBM(361.1) via Private IA 4051
  ;
@@ -16,6 +16,7 @@ EN1 ;Auto-post newly matched and matched but unprocessed ERA
  ;Scan ERA file for auto-post candidates with AUTO-POST STATUS = UNPOSTED
  F  S RCRZ=$O(^RCY(344.4,"E",0,RCRZ)) Q:'RCRZ  D
  .S RCZERO=$$ISZERO^RCDPEAP1(RCRZ) ; PRCA*4.5*424 Check for Zero balance ERA
+ .I RCZERO I $$ISTYPE^RCDPEU1(344.4,RCRZ,"C") Q   ; PRCA*4.5*432 Zero balance ERA with CHAMPVA payer is not an auto-post candidate
  .;Get EFT reference
  .;PRCA*4.5*424 next, line don't require matched EFT for zero balance ERAs
  .S RCEFTDA=$O(^RCY(344.31,"AERA",RCRZ,"")) I 'RCZERO Q:'RCEFTDA

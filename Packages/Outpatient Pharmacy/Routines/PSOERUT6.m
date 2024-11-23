@@ -1,5 +1,5 @@
 PSOERUT6 ;ALB/MFR - eRx & Pending Order Side-by-Side LM Display - Cont'd; 06/25/2023 5:14pm
- ;;7.0;OUTPATIENT PHARMACY;**700,746**;DEC 1997;Build 106
+ ;;7.0;OUTPATIENT PHARMACY;**700,746,769**;DEC 1997;Build 26
  ;
 EN ; Continuation of PSOERUT5 due to routine size limit
  ;
@@ -90,19 +90,30 @@ CSDRG(DRGIEN) ; Controlled Substance drug?
 VS(ERXIEN,TYPE) ; View Suggestion(s)
  ;Input: ERXIEN - Pointer to ERX HOLDING QUEUE file (#52.49)
  ;       TYPE   - Type of Suggestion("PA": Patient;"PR": Provider;"DR": Drug)
- N ERXPAT,ERXPRV,DRUGHASH
- S VALMBCK="R"
- I TYPE="PR" S ERXPRV=$$GET1^DIQ(52.49,ERXIEN,2.1,"I") I 'ERXPRV
- I TYPE="PR",'$O(^PS(52.49,"APRVVPRV",ERXPRV,0)) D  Q
- . S VALMSG="There are no suggestions for this Provider" W $C(7) Q
- I TYPE="PA" S ERXPAT=+$$GET1^DIQ(52.49,+$G(ERXIEN),.04,"I") I 'ERXPAT Q 0
- I TYPE="PA",'$O(^PS(52.49,"APATVPAT",ERXPAT,0)) D  Q
- . S VALMSG="There are no suggestions for this Patient" W $C(7) Q
+ N ERXPAT,ERXPRV,DRUGHASH,ERX,VPRV,VPAT,RDAT
+ S VALMBCK="R",(VPRVOK,VPATOK)=0
+ I TYPE="PR" D
+ . S ERXPRV=$$GET1^DIQ(52.49,ERXIEN,2.1,"I")
+ . S VPRV=0 F  S VPRV=$O(^PS(52.49,"APRVVPRV",ERXPRV,VPRV)) Q:'VPRV  D  I VPRVOK Q
+ . . S RDAT=0 F  S RDAT=$O(^PS(52.49,"APRVVPRV",ERXPRV,VPRV,RDAT)) Q:'RDAT  D  I VPRVOK Q
+ . . . S ERX=0 F  S ERX=$O(^PS(52.49,"APRVVPRV",ERXPRV,VPRV,RDAT,ERX)) Q:'ERX  D  I VPRVOK Q
+ . . . . I ERX'=ERXIEN S VPRVOK=1
+ I TYPE="PR",'VPRVOK D  Q
+ . S VALMSG="There are no suggestions for this Provider" W $C(7)
+ I TYPE="PA" D
+ . S ERXPAT=+$$GET1^DIQ(52.49,+$G(ERXIEN),.04,"I")
+ . S VPAT=0 F  S VPAT=$O(^PS(52.49,"APATVPAT",ERXPAT,VPAT)) Q:'VPAT  D  I VPATOK Q
+ . . I $$DEAD^PSONVARP(VPAT) Q
+ . . S RDAT=0 F  S RDAT=$O(^PS(52.49,"APATVPAT",ERXPAT,VPAT,RDAT)) Q:'RDAT  D  I VPATOK Q
+ . . . S ERX=0 F  S ERX=$O(^PS(52.49,"APATVPAT",ERXPAT,VPAT,RDAT,ERX)) Q:'ERX  D  I VPATOK Q
+ . . . . I ERX'=ERXIEN S VPATOK=1
+ I TYPE="PA",'VPATOK D  Q
+ . S VALMSG="There are no suggestions for this Patient" W $C(7)
  I TYPE="DR" S DRUGHASH=$$DRUGHASH^PSOERUT(ERXIEN)
  I TYPE="DR",'DRUGHASH D  Q
- . S VALMSG="Unable to calculate the hash value for this eRx" W $C(7) Q
+ . S VALMSG="Unable to calculate the hash value for this eRx" W $C(7)
  I TYPE="DR",'$O(^PS(52.49,"ADRGVRX",DRUGHASH,0)) D  Q
- . S VALMSG="There are no suggestions for this Drug" W $C(7) Q
+ . S VALMSG="There are no suggestions for this Drug" W $C(7)
  D FULL^VALM1
  I TYPE="PA" D MATCHSUG^PSOERPT1(ERXIEN,1)
  I TYPE="PR" D MATCHSUG^PSOERPV1(ERXIEN,1)

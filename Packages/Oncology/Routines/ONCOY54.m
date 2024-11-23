@@ -1,4 +1,4 @@
-ONCOY54 ; GENERATED FROM 'ONCOY54' PRINT TEMPLATE (#1242) ; 12/16/23 ; (FILE 165.5, MARGIN=80)
+ONCOY54 ; GENERATED FROM 'ONCOY54' PRINT TEMPLATE (#1242) ; 11/22/24 ; (FILE 165.5, MARGIN=80)
  G BEGIN
 N W !
 T W:$X ! I '$D(DIOT(2)),DN,$D(IOSL),$S('$D(DIWF):1,$P(DIWF,"B",2):$P(DIWF,"B",2),1:1)+$Y'<IOSL,$D(^UTILITY($J,1))#2,^(1)?1U1P1E.E X ^(1)
@@ -26,12 +26,18 @@ BEGIN ;
  S X=$G(^ONCO(165.5,D0,2.1)) D N:$X>34 Q:'DN  W ?34 S Y=$P(X,U,11) S Y(0)=Y S X=Y D DATEOT^ONCOES W $E(Y,1,30)
  D T Q:'DN  D N D N:$X>2 Q:'DN  W ?2 W "Date First Surgical Procedure.:"
  S X=$G(^ONCO(165.5,D0,3.1)) D N:$X>34 Q:'DN  W ?34 S Y=$P(X,U,38) S Y(0)=Y S X=Y D DATEOT^ONCOES W $E(Y,1,30)
- D N:$X>2 Q:'DN  W ?2 W "Surgery of Primary............:"
+ D N:$X>2 Q:'DN  W ?2 W "RX Summ--Surg Primsite 03-2022:"
  S X=$G(^ONCO(165.5,D0,3)) D N:$X>34 Q:'DN  W ?34 S Y=$P(X,U,1) S Y(0)=Y S X=Y D DATEOT^ONCOES W $E(Y,1,30)
  S X=$G(^ONCO(165.5,D0,3.1)) D N:$X>45 Q:'DN  W ?45 S Y=$P(X,U,29) S Y(0)=Y S FIELD=58.6 D SPSOT^ONCOSUR W $E(Y,1,34)
- D N:$X>2 Q:'DN  W ?2 W "Surgery of Primary @Fac.......:"
+ D N:$X>2 Q:'DN  W ?2 W "RX Hosp--Surg Primsite 03-2022:"
  S X=$G(^ONCO(165.5,D0,3.1)) D N:$X>34 Q:'DN  W ?34 S Y=$P(X,U,8) S Y(0)=Y S X=Y D DATEOT^ONCOES W $E(Y,1,30)
  S X=$G(^ONCO(165.5,D0,3.1)) D N:$X>45 Q:'DN  W ?45 S Y=$P(X,U,30) S Y(0)=Y S FIELD=58.7 D SPSOT^ONCOSUR W $E(Y,1,34)
+ D N:$X>2 Q:'DN  W ?2 W "RX Summ--Surg Prim Site 2023..:"
+ S X=$G(^ONCO(165.5,D0,3)) D N:$X>34 Q:'DN  W ?34 S Y=$P(X,U,1) S Y(0)=Y S X=Y D DATEOT^ONCOES W $E(Y,1,30)
+ S X=$G(^ONCO(165.5,D0,3.2)) D N:$X>45 Q:'DN  W ?45,$E($P(X,U,9),1,34)
+ D N:$X>2 Q:'DN  W ?2 W "RX Hosp--Surg Prim Site 2023..:"
+ S X=$G(^ONCO(165.5,D0,3.1)) D N:$X>34 Q:'DN  W ?34 S Y=$P(X,U,8) S Y(0)=Y S X=Y D DATEOT^ONCOES W $E(Y,1,30)
+ S X=$G(^ONCO(165.5,D0,3.2)) D N:$X>45 Q:'DN  W ?45,$E($P(X,U,8),1,34)
  D N:$X>2 Q:'DN  W ?2 W "Surgical Margins..............:"
  S X=$G(^ONCO(165.5,D0,3)) D N:$X>34 Q:'DN  W ?34 S Y=$P(X,U,28) W:Y]"" $E($$SET^DIQ(165.5,59,Y),1,26)
  D N:$X>2 Q:'DN  W ?2 W "Scope of LN Surgery...........:"

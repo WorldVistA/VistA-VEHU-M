@@ -1,5 +1,5 @@
 RCDPARC ;ALB/TJB - CARC REPORT ON PAYER OR CARC CODE ;9/15/14 3:00pm
- ;;4.5;Accounts Receivable;**303,321,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**303,321,326,432**;Mar 20, 1995;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ; PRCA*4.5*303 - CARC and Payer report
@@ -231,8 +231,8 @@ NEWPG(RCPG,RCNEW,RCSL,CD,RA) ; Check for new page needed, output header
  . D HDRP("Divisions: "_DIVHDR_" CARCs: "_CRHDR,1)
  . ; PRCA*4.5*326 - Include M/P/T filter in header
  . S XX=$S(RCWHICH=2:"PAYER TINS",1:"835 PAYERS")_": "_$S(RCPAY="R":"Range",RCPAY="S":"Selected",1:"All")
- . S XX=XX_$J("",44-$L(XX))_"MEDICAL/PHARMACY/TRICARE: "
- . S XX=XX_$S(RCLAIM="M":"MEDICAL",RCLAIM="P":"PHARMACY",RCLAIM="T":"TRICARE",1:"ALL")
+ . S XX=XX_$J("",38-$L(XX))_"MEDICAL/PHARMACY/TRICARE/CHAMPVA: "   ;PRCA*4.5*432 Add CHAMPVA, 44->38
+ . S XX=XX_$S(RCLAIM="M":"MEDICAL",RCLAIM="P":"PHARMACY",RCLAIM="T":"TRICARE",RCLAIM="C":"CHAMPVA",1:"ALL")  ;PRCA*4.5*432 CHAMPVA
  . D HDRP(XX,1)
  . D HDRP("EOB PAID DATE RANGE: "_$$DATE^RCDPRU(RCDT1)_" - "_$$DATE^RCDPRU(RCDT2),1)
  . W !,RCHR,! S RCSL=7

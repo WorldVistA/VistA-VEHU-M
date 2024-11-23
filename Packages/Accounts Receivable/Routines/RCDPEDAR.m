@@ -1,5 +1,5 @@
 RCDPEDAR ;ALB/TMK - ACTIVITY REPORT ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,276,284,283,298,304,318,321,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**173,276,284,283,298,304,318,321,326,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -14,7 +14,7 @@ RPT ; Daily Activity Rpt On Demand
  S XX=$$DTRANGE(.RCDT1,.RCDT2)              ; Select Date Range to be used
  Q:'XX
  ;
- ; PRCA*4.5*326 - Ask to show Medical/Pharmacy Tricare or All
+ ; PRCA*4.5*326 - Ask to show Medical/Pharmacy Tricare CHAMPVA or All
  S RCTYPE=$$RTYPE^RCDPEU1("")
  I RCTYPE<0 Q
  ;

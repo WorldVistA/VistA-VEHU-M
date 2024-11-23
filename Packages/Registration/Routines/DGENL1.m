@@ -1,5 +1,5 @@
 DGENL1 ;ALB/RMO,KWP,EZ,BRM,LBD,ERC,EG,CKN,BAJ,JLS,HM,RN,ARF - Patient Enrollment - Build List Area ;5/12/11 3:53pm
- ;;5.3;Registration;**121,147,232,266,343,564,672,659,653,688,838,841,909,940,972,993,1090**;Aug 13,1993;Build 16
+ ;;5.3;Registration;**121,147,232,266,343,564,672,659,653,688,838,841,909,940,972,993,1090,1104**;Aug 13,1993;Build 59
  ;
 EN(DGARY,DFN,DGENRIEN,DGCNT) ;Entry point to build list area
  ; for patient enrollment and patient enrollment history
@@ -143,6 +143,10 @@ PF(DGARY,DFN,DGENR,DGLINE,DGCNT) ;Priority factors
  ;Camp Lejeune Eligibility Indicator - new fields added with DG*5.3*909
  S DGLINE=DGLINE+1
  D SET(DGARY,DGLINE,"Camp Lejeune: "_$S($G(DGENR("ELIG","CLE"))'="":$$EXT^DGENU("CLE",DGENR("ELIG","CLE")),1:""),10,,,,,,.DGCNT)
+ ;
+ ;COMPACT Eligibility
+ S DGLINE=DGLINE+1
+ D SET(DGARY,DGLINE,"COMPACT Eligibility: "_$$ELIG^DGCOMPACTELIG(DFN,"DGENL1"),3,,,,,,.DGCNT)
  ;
  ;Military retirement - new fields added with DG*5.3*672
  S DGLINE=DGLINE+1

@@ -1,5 +1,5 @@
 RCDPEM6 ;OIFO-BAYPINES/RBN - DUPLICATE EFT DEPOSITS AUDIT REPORT ;Jun 11, 2014@18:03:49
- ;;4.5;Accounts Receivable;**276,298,326,375**;Mar 20, 1995;Build 15
+ ;;4.5;Accounts Receivable;**276,298,326,375,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; completely refactored for PRCA*4.5*298
@@ -130,7 +130,7 @@ DSPRPRT ; Format display for screen/printer, Excel, or ListMan
 PROC(EFTIEN) ;  gather data into ^TMP
  ; EFTIEN = ien of the EFT
  ;
- N AMT,DEPNO,EFTLID,JUST,PAYER,PTR,RCRD,RTRNDT,TRACE,USER,RMTYPE ; Added EFTLID - PRCA*4.5*326
+ N AMT,DEPNO,EFTLID,JUST,PAYER,PTR,RCRD,RC0,RTRNDT,TRACE,USER,RMTYPE ; Added EFTLID - PRCA*4.5*326
  ; JUST - Justification for returning EFT
  ; TRACE - EFT Trace number
  ; AMT - amount of the EFT
@@ -143,6 +143,7 @@ PROC(EFTIEN) ;  gather data into ^TMP
  ; RMTYPE - Removal Type (Duplicate or Millenial EFT)
  ;
  S RCRD(0)=$G(^RCY(344.31,EFTIEN,0)),RCRD(3)=$G(^(3))
+ S RC0=RCRD(0),U="^" D DEBEFT^RCDPEARL(.RC0) S RCRD(0)=RC0 ;Add minus sign for debit amounts PRCA*4.5*432
  S USER=$$NAME^XUSER($P(RCRD(3),U),"F")
  S RTRNDT=$$FMTE^XLFDT($P(^RCY(344.31,EFTIEN,3),U,2),2)
  S JUST=$P(RCRD(3),U,3)
@@ -182,8 +183,8 @@ HDRBLD ; create the report header
  S RCHDR("XECUTE")="N Y S RCPGNUM=RCPGNUM+1,Y=$$HDRNM^"_$T(+0)_",RCHDR(1)=$J("" "",80-$L(Y)\2)_Y_""            Page: ""_RCPGNUM"
  S Y="RUN DATE: "_RCHDR("RUNDATE")
  ; PRCA*4.5*326 - Add M/P/T filter
- S Y=Y_$J("",17)_"MEDICAL/PHARMACY/TRICARE: "
- S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ S Y=Y_$J("",16)_"CHAMPVA/MEDICAL/PHARM/TRICARE: "   ;PRCA*4.5*432 Add CHAMPVA, 17->16
+ S Y=Y_$S(RCTYPE="C":"CHAMPVA",RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")   ;PRCA*4.5*432 Add CHAMPVA
  S HCNT=HCNT+1,RCHDR(HCNT)=$J("",80-$L(Y)\2)_Y  ; line 1 will be replaced by XECUTE code below
  ;
  S Y("1ST")=$P(RCDTRNG,U,2),Y("LST")=$P(RCDTRNG,U,3)
@@ -220,8 +221,8 @@ HDRLM ; create the Listman Screen header section
  S HCNT=HCNT+1,RCHDR(HCNT)=""
  S HCNT=HCNT+1,RCHDR(HCNT)=Y
  K Y  ; delete Y subscripts
- S Y="Medical/Pharmacy/Tricare: " ; PRCA*4.5*326 - Add M/P/T filter
- S Y=Y_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL") ; ; PRCA*4.5*326
+ S Y="CHAMPVA/Medical/Pharm/Tricare: " ; PRCA*4.5*326 - Add M/P/T filter ;PRCA*4.5*432 Add CHAMPVA
+ S Y=Y_$S(RCTYPE="C":"CHAMPVA",RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL") ; ; PRCA*4.5*326 ;PRCA*4.5*432 Add CHAMPVA
  S HCNT=HCNT+1,RCHDR(HCNT)=Y
  S HCNT=HCNT+1,RCHDR(HCNT)=""
  S Y=$$PAD^RCDPEARL(" Deposit#/EFT#",20)_"Trace #",HCNT=HCNT+1,RCHDR(HCNT)=Y ; PRCA*4.5*326

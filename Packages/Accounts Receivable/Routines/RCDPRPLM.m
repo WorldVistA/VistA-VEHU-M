@@ -1,5 +1,5 @@
 RCDPRPLM ; WISC/RFJ-receipt profile List Manager main routine ;31 Oct 2018 09:14:14
- ;;4.5;Accounts Receivable;**114,148,149,173,196,220,217,321,326,332,375,367,409**;Mar 20, 1995;Build 17
+ ;;4.5;Accounts Receivable;**114,148,149,173,196,220,217,321,326,332,375,367,409,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; option: Receipt Processing [RCDP RECEIPT PROCESSING]
@@ -47,21 +47,21 @@ INIT ;EP from ListMan template RCDP RECEIPT PROFILE MENU
  ..  S:RCEFT XX=EFTFUND_$P($G(^TMP($J,"RCEFT",RCTRDA)),U,2)
  ..  S:'RCEFT XX=$$GETUNAPP^RCXFMSCR(RCRECTDA,RCTRDA,0)
  ..  S RCDPDATA(344.01,RCTRDA,.03,"E")="[ "_XX_" ]"
- . D SET("",RCLINE,7,33,.03)
+ . D SET("",RCLINE,7,25,.03) ;33->25 PRCA*4.5*432
  . ; (#.06) DATE OF PAYMENT [6D]
  . S X=RCDPDATA(344.01,RCTRDA,.06,"I") D:X
- ..  S XX=$E(X,4,5)_"/"_$E(X,6,7)_"/"_$E(X,2,3) D SET(XX,RCLINE,35,42)
+ ..  S XX=$E(X,4,5)_"/"_$E(X,6,7)_"/"_$E(X,2,3) D SET(XX,RCLINE,34,41) ;35->34, 42->41 PRCA*4.5*432
  . ;( #.12) ENTERED BY [12P:200]
  . S X=RCDPDATA(344.01,RCTRDA,.12,"E") D:$L(X)
  ..  ; if POSTMASTER set to 'ar' else user's initials
  ..  S X=$S(RCDPDATA(344.01,RCTRDA,.12,"I")=.5:"ar",1:$E($P(X,",",2))_$E(X))
- ..  D SET(X,RCLINE,45,46)
+ ..  D SET(X,RCLINE,44,46) ;45->44 PRCA*4.5*432
  . ;(#.14) EDITED BY [14P:200]
  . S X=RCDPDATA(344.01,RCTRDA,.14,"E") D:$L(X)
- ..  S X=$E($P(X,",",2))_$E(X) D SET(X,RCLINE,54,55)
+ ..  S X=$E($P(X,",",2))_$E(X) D SET(X,RCLINE,50,55) ;54->50 PRCA*4.5*432
  . S:RCDPDATA(344.01,RCTRDA,.29,"I")="D" RCDPDATA(344.01,RCTRDA,.04,"E")=-RCDPDATA(344.01,RCTRDA,.04,"E") ; PRCA*4.5*375 - Use negative amounts when debit
- . D SET($J(RCDPDATA(344.01,RCTRDA,.04,"E"),8,2),RCLINE,62,70)  ; (#.04) PAYMENT AMOUNT [4N]
- . D SET($J(RCDPDATA(344.01,RCTRDA,.05,"E"),8,2),RCLINE,72,80)  ; (#.05) AMOUNT PROCESSED [5N]
+ . D SET($J(RCDPDATA(344.01,RCTRDA,.04,"E"),11,2),RCLINE,56,67)  ; (#.04) PAYMENT AMOUNT [4N], 8->11, 62->56, 70->67 PRCA*4.5*432
+ . D SET($J(RCDPDATA(344.01,RCTRDA,.05,"E"),11,2),RCLINE,69,80)  ; (#.05) AMOUNT PROCESSED [5N], 8->11, 72->69 PRCA*4.5*432
  . ;
  . ; If not processed, show if amount > bill
  . S X=$$CHECKPAY^RCDPRPL3(RCRECTDA,RCTRDA) D:X
@@ -114,10 +114,10 @@ INIT ;EP from ListMan template RCDP RECEIPT PROFILE MENU
  ;
  ; Show totals
  K ^TMP($J,"RCEFT")
- S RCLINE=RCLINE+1 D SET("",RCLINE,1,80),SET("--------  --------",RCLINE,62,80)
+ S RCLINE=RCLINE+1 D SET("",RCLINE,1,80),SET("-----------  -----------",RCLINE,56,80) ;62->56, ADD DASHES PRCA*4.5*432
  S RCLINE=RCLINE+1 D SET("      TOTAL DOLLARS FOR RECEIPT",RCLINE,1,80)
- D SET($J($G(RCTOTAL(1)),8,2),RCLINE,62,70)
- D SET($J($G(RCTOTAL(2)),8,2),RCLINE,72,80)
+ D SET($J($G(RCTOTAL(1)),11,2),RCLINE,56,67) ;8->11, 62->56, 70->67 PRCA*4.5*432
+ D SET($J($G(RCTOTAL(2)),11,2),RCLINE,69,80) ;8->11, 72->69 PRCA*4.5*432
  ;
  ; Show cancelled
  I $G(RCDPFCAN) S RCLINE=RCLINE+1 D SET("**indicates payment is CANCELLED",RCLINE,5,80)

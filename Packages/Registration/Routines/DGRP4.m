@@ -1,10 +1,12 @@
-DGRP4 ;ALB/MRL - REGISTRATION SCREEN 4/EMPLOYMENT INFORMATION ;06 JUN 88@2300
- ;;5.3;Registration;**624,867**;Aug 13, 1993;Build 59
+DGRP4 ;ALB/MRL,ARF - REGISTRATION SCREEN 4/EMPLOYMENT INFORMATION ;06 JUN 88@2300
+ ;;5.3;Registration;**624,867,1121**;Aug 13, 1993;Build 14
  ;
  N DGMRD
  D NEWB ;determine newborn status before building local array
  S DGRPS=4 D H^DGRPU S DGRPW=1 F I=0,.311,.25 S DGRP(I)=$S($D(^DPT(DFN,I)):^(I),1:"")
- S X=$P($G(^DIC(11,+$P(DGRP(0),"^",5),0)),"^",3) S DGMRD=$S("^M^S^"[("^"_X_"^"):1,1:0),DGRPVV(4)=$E(DGRPVV(4))_'DGMRD ; spouse's employer only editable if married or separated
+ ;S X=$P($G(^DIC(11,+$P(DGRP(0),"^",5),0)),"^",3) S DGMRD=$S("^M^S^"[("^"_X_"^"):1,1:0),DGRPVV(4)=$E(DGRPVV(4))_'DGMRD ; spouse's employer only editable if married or separated-DG*5.3*1121-commented out and replaced with the following code
+ S X=$P($G(^DIC(11,+$P(DGRP(0),"^",5),0)),"^",3) S DGMRD=$S("^M^S^"[("^"_X_"^"):1,1:0) ;DG*5.3*1121- made the "Applicant Employer, Address" and the "Spouses Employer, Address" DATA GROUPS
+ ;                                                                                     ;not editable on APPLICANT/SPOUSE EMPLOYMENT DATA, SCREEN <4> by removing the DGRPVV(4) array.
  S DGAD=.311,DGA1=3,DGA2=1 D:$P(DGRP(.311),"^",1)]"" AL^DGRPU(26) S DGAD=.25,(DGA1,DGA2)=2 I $P(DGRP(.25),"^",1)]"",DGMRD D AL^DGRPU(26)
  S Z=1 D WW^DGRPV W " Employer: " S Z=$S($P(DGRP(.311),"^",1)]"":$E($P(DGRP(.311),"^",1),1,23),1:DGRPU),Z1=26 D WW1^DGRPV S DGRPW=0,Z=2 D WW^DGRPV W " Spouse's: ",$S('DGMRD:"NOT APPLICABLE",$P(DGRP(.25),"^",1)]"":$P(DGRP(.25),"^",1),1:DGRPU)
  F I=0:0 S I=$O(DGA(I)) Q:'I  S Z=DGA(I) S:(I#2) Z="              "_Z W:(I#2)!($X>50) ! W:(I#2) Z I '(I#2) W ?54,Z

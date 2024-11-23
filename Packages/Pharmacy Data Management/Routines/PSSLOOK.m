@@ -1,20 +1,20 @@
 PSSLOOK ;BIR/WRT - Drug file lookup ;Nov 27, 2018@10:04
- ;;1.0;PHARMACY DATA MANAGEMENT;**3,7,15,16,20,24,29,38,68,61,87,90,127,147,170,189,192,200,195,213,227,220,214,233,239**;9/30/97;Build 4
+ ;;1.0;PHARMACY DATA MANAGEMENT;**3,7,15,16,20,24,29,38,68,61,87,90,127,147,170,189,192,200,195,213,227,220,214,233,239,253**;9/30/97;Build 7
  ;
- ;Reference to ^PS(50.605 supported by DBIA #2138
- ;Reference to ^PS(50.608 supported by DBIA #2136
- ;Reference to ^PS(50.609 supported by DBIA #2137
- ;Reference to ^PS(50.607 supported by DBIA #2221
- ;Reference to $$FORMRX^PSNAPIS(DA,K,.LIST) supported by DBIA #2574
- ;Reference to $$FORMI^PSNAPIS(P1,P3) supported by DBIA #2574
- ;Reference to $$PSJDF^PSNAPIS(P1,P3) supported by DBIA #2531
- ;Reference to $$PSJST^PSNAPIS(P1,P3) supported by DBIA #2531
- ;Reference to $$PROD2^PSNAPIS(P1,P3) supported by DBIA #2531
- ;Reference to $$CPTIER^PSNAPIS(P1,P3) supported by DBIA #2531
- ;Reference to $$VAGN^PSNAPIS(P1) supported by DBIA #2531
- ;Reference to ^PSNDF(50.68 supported by DBIA 3735
- ;Reference to DATA^PSN50P68 supported by DBIA 4545
- ;Reference to FD & FDT^PSNACT supported by DBIA #6754
+ ; Reference to ^PS(50.605 in ICR #2138
+ ; Reference to ^PS(50.608 in ICR #2136
+ ; Reference to ^PS(50.609 in ICR #2137
+ ; Reference to ^PS(50.607 in ICR #2221
+ ; Reference to $$FORMRX^PSNAPIS(DA,K,.LIST) in ICR #2574
+ ; Reference to $$FORMI^PSNAPIS(P1,P3) in ICR #2574
+ ; Reference to $$PSJDF^PSNAPIS(P1,P3) in ICR #2531
+ ; Reference to $$PSJST^PSNAPIS(P1,P3) in ICR #2531
+ ; Reference to $$PROD2^PSNAPIS(P1,P3) in ICR #2531
+ ; Reference to $$CPTIER^PSNAPIS(P1,P3) in ICR #2531
+ ; Reference to $$VAGN^PSNAPIS(P1) in ICR #2531
+ ; Reference to ^PSNDF(50.68 in ICR #3735
+ ; Reference to DATA^PSN50P68 in ICR #4545
+ ; Reference to FD^PSNACT, FDT^PSNACT in ICR #6754
  ;
 START S QUIT=0,PSSFG=0 D KILL F PSSXX=1:1 D PICK Q:PSSFG
 DONE D KILL K PSSFG,PSSXX,QUIT,FM,FMS,Y2K
@@ -93,7 +93,8 @@ FORMAT ; BEGIN WRITING
  D FULL Q:$G(QUIT)  F XX=1:1:77 W "-"
  W !
  D FULL Q:$G(QUIT)  W "DEA, SPECIAL HDLG: ",DEA,?48,"NDC: ",?63,NDC
- S DAW=+$$GET1^DIQ(50,IFN,81)
+ S DAW=$$GET1^DIQ(50,IFN,81)
+ I DAW="" S DAW=0
  D FULL Q:$G(QUIT)  W !,"DAW CODE:  ",DAW," - ",$$DAWEXT^PSSDAWUT(DAW)
  D FULL Q:$G(QUIT)  W !,"CS FEDERAL SCHEDULE: ",$G(CSF),?39
  S NOONEVA=$$GET1^DIQ(50,IFN,907)

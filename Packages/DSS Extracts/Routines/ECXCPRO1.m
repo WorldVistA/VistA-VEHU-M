@@ -1,5 +1,5 @@
 ECXCPRO1 ;ALB/JAP - PRO Extract YTD Report (cont) ;12/4/19  10:02
- ;;3.0;DSS EXTRACTS;**21,84,132,144,174,177**;Dec 22, 1997;Build 2
+ ;;3.0;DSS EXTRACTS;**21,84,132,144,174,177,190**;Dec 22, 1997;Build 36
  ;
 PRINT ;print report
  N PG,LN,QFLG,NODE,DESC,AVE,JJ,SS,TOTAL,TOT,TQTY
@@ -32,15 +32,16 @@ PRINT ;print report
  .F  S ECXHCPC=$O(^TMP($J,"ECXP",ECXSTAT,ECXTYPE,ECXHCPC)) Q:ECXHCPC=""  D  Q:QFLG
  ..S DESC=$G(^TMP($J,"HCPCS",ECXHCPC)) S:DESC="" DESC="(Unknown)" S DESC=ECXHCPC_" "_DESC
  ..S NODE=^TMP($J,"ECXP",ECXSTAT,ECXTYPE,ECXHCPC)
- ..;node holds - com qty^com cost^va nonlab qty^va nonlab cost^lab qty^lab labor cost^lab matrl cost
+ ..;node holds - com qty^com cost^va nonlab qty^va nonlab cost^lab qty^lab labor cost^lab matrl cost^nppd code
  ..F I=1:1:7 S X(I)=+$P(NODE,U,I)
+ ..S X(8)=$P(NODE,U,8) ;190 - Alnum field, can't be forced to number
  ..S AVE("C")=0,AVE("V")=0,AVE("L")=0,AVE("ALL")=0,TOT("L")=0,TOTAL=0,TQTY=0
  ..S:X(1)>0 AVE("C")=X(2)/X(1) S:X(3)>0 AVE("V")=X(4)/X(3) S TOT("L")=X(6)+X(7) S:X(5)>0 AVE("L")=TOT("L")/X(5)
  ..S TQTY=X(1)+X(3)+X(5),TOTAL=X(2)+X(4)+TOT("L")
  ..S:TQTY>0 AVE("ALL")=TOTAL/TQTY
  ..I '$G(ECXPORT) D:($Y+3>IOSL) HEADER Q:QFLG  ;144 Don't display anything if exporting
  ..I $G(ECXPORT) S ^TMP($J,"ECXPORT",CNT)=$S(ECXTYPE="N":"NEW",ECXTYPE="R":"RENTAL",1:"REPAIR") D  Q  ;144
- ...S ^TMP($J,"ECXPORT",CNT)=^TMP($J,"ECXPORT",CNT)_U_DESC_U_X(1)_U_X(2)_U_$FN(AVE("C"),"",2)_U_X(3)_U_X(4)_U_$FN(AVE("V"),"",2)_U_X(5)_U_TOT("L")_U_$FN(AVE("L"),"",2)_U_$FN(AVE("ALL"),"",2) ;144
+ ...S ^TMP($J,"ECXPORT",CNT)=^TMP($J,"ECXPORT",CNT)_U_DESC_U_X(1)_U_X(2)_U_$FN(AVE("C"),"",2)_U_X(3)_U_X(4)_U_$FN(AVE("V"),"",2)_U_X(5)_U_TOT("L")_U_$FN(AVE("L"),"",2)_U_$FN(AVE("ALL"),"",2)_U_X(8) ;144,190
  ...S CNT=CNT+1 ;144
  ..W !,DESC,?33,$J(X(1),8,0),?43,$J(X(2),8,0),?53,$J(AVE("C"),8,2),?63,$J(X(3),8,0),?73,$J(X(4),8,0),?83,$J(AVE("V"),8,2),?93,$J(X(5),8,0),?103,$J(TOT("L"),8,0),?113,$J(AVE("L"),8,2),?123,$J(AVE("ALL"),8,2)
  .Q:$G(ECXPORT)!(QFLG)  ;144,177 Don't continue if exporting or user entered '^'

@@ -1,11 +1,11 @@
-IVMPREC8 ;ALB/KCL,BRM,PJR,CKN,TDM,PWC,LBD,DPR,KUM - PROCESS INCOMING (Z05 EVENT TYPE) HL7 MESSAGES (CON'T) ;02 SEPT 2019  8:56 AM
- ;;2.0;INCOME VERIFICATION MATCH;**5,6,12,58,73,79,102,115,121,148,151,152,168,167,171,164,188,187,210,214**;21-OCT-94;Build 18
+IVMPREC8 ;ALB/KCL,BRM,PJR,CKN,TDM,PWC,LBD,DPR,KUM - PROCESS INCOMING (Z05 EVENT TYPE) HL7 MESSAGES (CON'T) ;7/24/24 8:56AM
+ ;;2.0;INCOME VERIFICATION MATCH;**5,6,12,58,73,79,102,115,121,148,151,152,168,167,171,164,188,187,210,214,215**;21-OCT-94;Build 14
  ;Per VA Directive 6402, this routine should not be modified.
  ;
- ; This routine will process (event type Z05) HL7 messages
+ ; This routine will process (event type Z05)
  ;
-PID ;-compare PID fields with DHCP fields
- N COMPPH1,COMPPH2,COUNTRY
+PID ;-compare PID fields with DHCP
+ N COMPPH1,COMPPH2,COUNTRY,IVMCNTRY,IVMEXT,IVMFNUM,IVMFVAL,IVMCNTRY,IVMEXT
  ;
  S IVMFLD=""
  ; - strip off seg name
@@ -15,7 +15,6 @@ PID ;-compare PID fields with DHCP fields
  .; -if PID field is the addr field-parse addr
  .S IVMADFLG=0
  .I IVMXREF["PID11",'$G(DODSEG) D  Q:IVMFLD=""
- ..;-Process Place of Birth City&State
  ..; IVM*2.0*164-Uncomment Conf and Add Res
  ..I $G(AUPFARY(IVMDEMDA))="CA" S IVMADDR=$G(ADDRESS("CA")) ;Conf Addr
  ..I $G(AUPFARY(IVMDEMDA))'="CA" D
@@ -46,7 +45,7 @@ PID ;-compare PID fields with DHCP fields
  ..I (IVMPIECE="4F")!(IVMPIECE="4CF")!(IVMPIECE="4RF") S IVMFLD=$S(FORADDR:IVMFLD,1:"") ;PROVINCE
  ..I (IVMPIECE="5F")!(IVMPIECE="5CF")!(IVMPIECE="5RF") S IVMFLD=$S(FORADDR:IVMFLD,1:"") ;POSTAL CODE
  ..I (IVMPIECE=6)!(IVMPIECE="6C")!(IVMPIECE="6R") S IVMFLD=$$CNTRCONV(COUNTRY) ;COUNTRY
- ..I IVMPIECE=7 S IVMFLD=$$BAICONV(IVMFLD) ;Bad Address Indicator
+ ..I IVMPIECE=7 S IVMFLD=$$BAICONV(IVMFLD) ;Bad Address Ind
  ..I IVMPIECE="7C" S IVMFLD=CONFADCT  ;CONFADCT set in PID11^IVMPRECA
  ..;County for Conf
  ..I IVMPIECE="9C" D
@@ -63,45 +62,71 @@ PID ;-compare PID fields with DHCP fields
  ..S IVMADFLG=1
  .I IVMXREF["PID12",'$G(DODSEG) D
  ..;IVM*2.0*164-County from PMA St
- ..;I 'FORADDR S IVMADFLG=1,IVMFLD=+$O(^DIC(5,IVMPMAST,1,"C",IVMPID(12),0))
  ..D PID12^IVMPREC9
  ..I 'FORADDR D
  ...S IVMADFLG=1
  ...I IVMPMAST'="" S IVMFLD=+$O(^DIC(5,IVMPMAST,1,"C",IVMPID(12),0))
- .;line remove so that the ph is compared before saving to 301.5.
+ .;line remove so that the ph is compared before saving to 301.5
  .I IVMXREF["PID13",$D(TELECOM),'$G(DODSEG) D
  ..;Conf Ph
  ..I IVMXREF="PID13CA",$D(TELECOM("VACPN")) D
- ...S IVMFLD=$$CONVPH($P($G(TELECOM("VACPN")),$E(HLECH))),IVMADFLG=1
- ..;Ph Num [Work]
+ ...;IVM*2.0*215-Constuct Conf ph
+ ...S IVMFLD=$P($G(TELECOM("VACPN")),$E(HLECH),6)_$P($G(TELECOM("VACPN")),$E(HLECH),7),IVMADFLG=1
+ ...S IVMFLD=$$CONVPHAN(IVMFLD)
+ ...I IVMFLD="" S IVMFLD="@"
+ ...S IVMCNTRY=$P($G(TELECOM("VACPN")),$E(HLECH),5)
+ ...S IVMCNTRY=$$CONVPHAN(IVMCNTRY)
+ ...I ($G(IVMCNTRY))=""!(IVMFLD="@") S IVMCNTRY="@"
+ ...D UPLOAD^IVMLDEM6(DFN,.13201,IVMCNTRY)
+ ...S IVMEXT=$P($G(TELECOM("VACPN")),$E(HLECH),8)
+ ...S IVMEXT=$$CONVPHAN(IVMEXT)
+ ...I ($G(IVMEXT)="")!(IVMFLD="@") S IVMEXT="@"
+ ...D UPLOAD^IVMLDEM6(DFN,.13214,$G(IVMEXT))
+ ..;[Work]
  ..I IVMXREF="PID13W",$D(TELECOM("WPN")) D
- ...S IVMFLD=$$CONVPH($P($G(TELECOM("WPN")),$E(HLECH))),IVMADFLG=1
- ..;Pager Num
+ ...; IVM*2.0*215- Work ph
+ ...S IVMFLD=$P($G(TELECOM("WPN")),$E(HLECH),6)_$P($G(TELECOM("WPN")),$E(HLECH),7),IVMADFLG=1
+ ...S IVMFLD=$$CONVPHAN(IVMFLD)
+ ...I IVMFLD="" S IVMFLD="@"
+ ...S IVMCNTRY=$P($G(TELECOM("WPN")),$E(HLECH),5)
+ ...S IVMCNTRY=$$CONVPHAN(IVMCNTRY)
+ ...I ($G(IVMCNTRY)="")!(IVMFLD="@") S IVMCNTRY="@"
+ ...D UPLOAD^IVMLDEM6(DFN,.1329,IVMCNTRY)
+ ...S IVMEXT=$P($G(TELECOM("WPN")),$E(HLECH),8)
+ ...S IVMEXT=$$CONVPHAN(IVMEXT)
+ ...I ($G(IVMEXT)="")!(IVMFLD="@") S IVMEXT="@"
+ ...D UPLOAD^IVMLDEM6(DFN,.13213,$G(IVMEXT))
+ ..;Pager
  ..I IVMXREF="PID13B",$D(TELECOM("BPN")) D
  ...S IVMFLD=$$CONVPH($P($G(TELECOM("BPN")),$E(HLECH))),IVMADFLG=1
- ..;Cell Ph Num
+ ..;Cell Ph
  ..I IVMXREF="PID13C",$D(TELECOM("ORN")) D
- ...S IVMFLD=$$CONVPH($P($G(TELECOM("ORN")),$E(HLECH))),IVMADFLG=1
- ..;Email Addr
+ ...; IVM*2.0*215- Cell ph
+ ...S IVMFLD=$P($G(TELECOM("ORN")),$E(HLECH),6)_$P($G(TELECOM("ORN")),$E(HLECH),7),IVMADFLG=1
+ ...S IVMFLD=$$CONVPHAN(IVMFLD)
+ ...I IVMFLD="" S IVMFLD="@"
+ ...S IVMCNTRY=$P($G(TELECOM("ORN")),$E(HLECH),5)
+ ...S IVMCNTRY=$$CONVPHAN(IVMCNTRY)
+ ...I ($G(IVMCNTRY)="")!(IVMFLD="@") S IVMCNTRY="@"
+ ...D UPLOAD^IVMLDEM6(DFN,.1328,IVMCNTRY)
+ ...S IVMEXT=$P($G(TELECOM("ORN")),$E(HLECH),8)
+ ...S IVMEXT=$$CONVPHAN(IVMEXT)
+ ...I ($G(IVMEXT)="")!(IVMFLD="@") S IVMEXT="@"
+ ...D UPLOAD^IVMLDEM6(DFN,.13212,$G(IVMEXT))
+ ..;Email
  ..I IVMXREF="PID13E",$D(TELECOM("NET")) D
  ...S IVMFLD=$P($G(TELECOM("NET")),$E(HLECH),4)
  ...S IVMFLD=$S($$CHKEMAIL(IVMFLD):IVMFLD,1:""),IVMADFLG=1
  .; - file addr fields and quit
  .I IVMADFLG D STORE^IVMPREC9 Q
- .;I (IVMXREF'="PID113N")&(IVMXREF'="PID114N")&($E(IVMXREF,1,5)'="PID13") S IVMFLD=$G(IVMPID(+IVMPIECE))
  .I $E(IVMXREF,1,5)'="PID13" S IVMFLD=$G(IVMPID(+IVMPIECE))
- .; -if HL7 date convert to FM date,set IVMFLD
  .I IVMXREF["PID07" S IVMFLD=$$FMDATE^HLFNC(IVMFLD)
- .; - if HL7 code convert to VistA, set IVMFLD
- .I IVMXREF["PID16" D  ;Marital Status
+ .I IVMXREF["PID16" D
  ..S IVMFLD=$S(IVMFLD="D":"DIVORCED",IVMFLD="M":"MARRIED",IVMFLD="W":"WIDOWED",IVMFLD="A":"SEPARATED",IVMFLD="S":"NEVER MARRIED",IVMFLD="U":"UNKNOWN")
  ..S IVMFLD=$O(^DIC(11,"B",IVMFLD,0))
- .;
  .I IVMXREF["PID17" S IVMFLD=$O(^DIC(13,"C",IVMFLD,0))  ;Religion
- .;
  .I IVMXREF["PID22" D  ;Ethnicity
  ..S IVMFLD=$$CODE2PTR^DGUTL4($P($G(IVMPID(22)),$E(HLECH),4),2,2)
- .;
  .I IVMXREF="PID10",'$G(DODSEG),$D(IVMRACE) D  Q
  ..N XVAL,IVMLST,DHCPLST
  ..S (XVAL,IVMLST,DHCPLST)=""
@@ -110,89 +135,39 @@ PID ;-compare PID fields with DHCP fields
  ..Q:IVMLST=DHCPLST
  ..F XVAL=1:1:($L(DHCPLST,U)-1) S IVMFLD=$P(DHCPLST,U,XVAL) D
  ...D STORE^IVMPREC9
- .; -call VADPT to return DHCP demographics
+ .;call VADPT to return DHCP demographics
  .D DEM^VADPT,ADD^VADPT,OPD^VADPT
- .; -execute code on the 1 node and get DHCP field for compare
  .S IVMDHCP="" X:$D(^IVM(301.92,+IVMDEMDA,1)) ^(1) S IVMDHCP=Y
- .;
- .; - special logic for ph,if different store value received,quit
+ .; - special logic for ph,if different store value,quit
  .I IVMXREF="PID13",$D(TELECOM("PRN")),'$G(DODSEG) D  Q
- ..S IVMFLD=$P($G(TELECOM("PRN")),$E(HLECH))
- ..I IVMFLD]"" D
- ...K UPPHN
- ...S COMPPH1=$$CONVPH(IVMFLD),COMPPH2=$$CONVPH(IVMDHCP)
- ...I COMPPH1'=COMPPH2 D STORE^IVMPREC9 S UPPHN=1
- .; -if field from IVM does not equal DHCP-store for uploading
+ ..; IVM*2.0*215 - Res ph
+ ..S IVMFLD=$P($G(TELECOM("PRN")),$E(HLECH),6)_$P($G(TELECOM("PRN")),$E(HLECH),7)
+ ..S IVMFLD=$$CONVPHAN(IVMFLD)
+ ..I IVMFLD="" S IVMFLD="@"
+ ..S IVMCNTRY=$P($G(TELECOM("PRN")),$E(HLECH),5)
+ ..S IVMCNTRY=$$CONVPHAN(IVMCNTRY)
+ ..I ($G(IVMCNTRY)="")!(IVMFLD="@") S IVMCNTRY="@"
+ ..D UPLOAD^IVMLDEM6(DFN,.1327,IVMCNTRY)
+ ..S IVMEXT=$P($G(TELECOM("PRN")),$E(HLECH),8)
+ ..S IVMEXT=$$CONVPHAN(IVMEXT)
+ ..I ($G(IVMEXT)="")!(IVMFLD="@") S IVMEXT="@"
+ ..D UPLOAD^IVMLDEM6(DFN,.13211,$G(IVMEXT))
+ ..I IVMFLD]"",(IVMFLD'=IVMDHCP) D STORE^IVMPREC9
  .I IVMFLD]"",(IVMFLD'=IVMDHCP) D STORE^IVMPREC9
  Q
  ;
 ZPD ; -compare ZPD with DHCP
- N STFLG
- S STFLG=0
- S IVMPIECE=$E(IVMXREF,4,5)
- I IVMXREF="ZPD09"!(IVMXREF="ZPD31")!(IVMXREF="ZPD32") Q:$$DODCK(DFN)
- ; IVM*2.0*210-Quit if IVM-Language Date/Time is older
- I IVMXREF="ZPD46"!(IVMXREF="ZPD47") Q:'$$LANGCK^IVMPREC9(DFN)
- ;
- I $P(IVMSEG,HLFS,IVMPIECE)]"" D
- .; - set var to HL7 field
- .S IVMFLD=$P(IVMSEG,HLFS,IVMPIECE)
- .; - if HL7 date convert to FM date
- .; IVM*2.0*210-ADD ZPD47
- .I IVMXREF["ZPD09"!(IVMXREF["ZPD13")!(IVMXREF["ZPD32")!(IVMXREF["ZPD47") S IVMFLD=$$FMDATE^HLFNC(IVMFLD)
- .; IVM*2.0*214 - Restore lines mistakenly removed by patch 210 and extract only 4 ~ pieces
- .; - if HL7 name format convert to FM
- .I IVMXREF["ZPD06"!(IVMXREF["ZPD07") S IVMFLD=$$FMNAME^HLFNC($S($L(IVMFLD,HLECH)>4:$P(IVMFLD,HLECH,1,4),1:IVMFLD))
- .;
- .; IVM*2.0*210-call VADPT for DHCP demographics
- .D DEM^VADPT
- .; - execute code on the 1 node and get DHCP field
- .S IVMDHCP="" X:$D(^IVM(301.92,+IVMDEMDA,1)) ^(1) S IVMDHCP=Y
- .I IVMFLD]"",(IVMFLD'=IVMDHCP) S STFLG=1 D STORE^IVMPREC9 Q
- .I $P(IVMSEG,"^",IVMPIECE)'="""""" D
- ..I IVMXREF["ZPD09" D STORE^IVMPREC9
- I IVMXREF["ZPD08",STFLG,$$AUTORINC^IVMPREC9(DFN) Q
- I IVMXREF["ZPD32",$$AUTODOD^IVMLDEMD(DFN)
- ; IVM*2.0*210 - Preferred Language and Date/Time
- I IVMXREF["ZPD47",$$AUTOLANG^IVMPREC9(DFN)
+ ;IVM*2.0*215 - Moved ZPD tag to ZPDA^IVMPRECA
+ D ZPDPA^IVMPRECA
  Q
  ;
-DODCK(DFN) ;this will check if Date of Death needs to be uploaded or not.
- ;2 reqs are:
- ;  1. When the DOD is received from ESR with a Source of Death Notification equal to "Death Certificate on file and the
- ;     VistA DOD is null or empty then VistA will upload the Date of Death from ESR
- ;  2. When DOD is Received from ESR and VistA DOD is already populated then Vista will ignore the DOD from ESR and VistA
- ;     will not create an entry in the IVM demographic upload option.
- ;
- ; Inputs: DFN for ^DPT
- ;         IVMXREF (must be ZPD09, ZPD31 and ZPD32)
- ;         IVMSEG (the ZPD data)
- ;         IVMFLD (the field number in ^DPT(DFN)
- ;         IVMPIECE (the piece number of IVMSEG)
- ;         IVMDHCP (the data from ^DPT(DFN)
- ;
- N DODARRAY,QUIT
- ;
- S (CKDEL,QUIT)=0
- ;
- I $P(IVMSEG,"^",9)="""""" Q 0
- D GETS^DIQ(2,DFN,".351:.355","","DODARRAY")
- S DOD=DODARRAY(2,DFN_",",.351)
- I DOD'="" Q 1
- I $P(IVMSEG,"^",31)=3,DOD="" S QUIT=0    ;Death Certificate not on File
- I $P(IVMSEG,"^",31)=3,DOD'="" S QUIT=1
- ;
- Q QUIT ;
- ;
 ZTA ; -compare ZTA with DHCP
- N COMPPH1,COMPPH2,COUNTRY
+ N COMPPH1,COMPPH2,COUNTRY,IVMPHONE
  S IVMPIECE=$E(IVMXREF,4,7)
  I $P(IVMSEG,HLFS,$E(IVMPIECE,1,2))]"" D
- .;
  .; - set var IVMFLD to incoming HL7 field
  .S IVMFLD=$P(IVMSEG,HLFS,$E(IVMPIECE,1,2))
- .;
- .; - ZTA05 as the ZTA addr field is 5 pieces seperated by HLECH (~)
+ .; - ZTA05 as the ZTA addr field is 5 ~ pieces
  .I IVMXREF["ZTA05" D
  ..S IVMADDR=$P(IVMSEG,HLFS,$E(IVMPIECE,1,2)) Q:IVMADDR=""
  ..S COUNTRY=$P(IVMADDR,$E(HLECH),6)
@@ -210,23 +185,28 @@ ZTA ; -compare ZTA with DHCP
  ..I IVMPIECE=6 S IVMFLD=$$CNTRCONV(COUNTRY)         ;COUNTRY
  ..I IVMPIECE=9 S IVMFLD=+$O(^DIC(5,+IVMTSTPT,1,"C",IVMFLD,0))  ;COUNTY
  .Q:IVMFLD=""
- .;
  .; - convert to Y/N val
  .I IVMXREF["ZTA02" S IVMFLD=$S(IVMFLD=0:"N",IVMFLD=1:"Y",1:"")
- .;
- .; - convert to FM date
+ .; - convert to FM dt
  .I (IVMXREF["ZTA03")!(IVMXREF["ZTA04")!(IVMXREF["ZTA08") S IVMFLD=$$FMDATE^HLFNC(IVMFLD)
- .;
- .; - execute code on the 1 node for DHCP field
  .S IVMDHCP="" X:$D(^IVM(301.92,+IVMDEMDA,1)) ^(1) S IVMDHCP=Y
- .;
  .; -special logic for ph
  .I IVMXREF["ZTA07" D  Q
- ..S COMPPH1=$$CONVPH(IVMFLD),COMPPH2=$$CONVPH(IVMDHCP)
- ..I COMPPH1'=COMPPH2 D STORE^IVMPREC9
- .;
+ ..;IVM*2.0*215 - Skip phone number from 1st piece
+ ..;I COMPPH1'=COMPPH2 D STORE^IVMPREC9
+ .; IVM*2.0*215-Add ZTA10 as the Temp phone is 4 ~ pieces in Seq 10
+ .I IVMXREF["ZTA10" D  Q
+ ..N IVMPH
+ ..S IVMPHONE=$P(IVMSEG,HLFS,$E(IVMPIECE,1,2)) Q:IVMPHONE=""
+ ..S IVMPIECE=$E(IVMPIECE,3)
+ ..S IVMFLD=$P(IVMPHONE,$E(HLECH),IVMPIECE)
+ ..I IVMPIECE=2 S IVMFLD=IVMFLD_$P(IVMPHONE,$E(HLECH),3)
+ ..S IVMFLD=$$CONVPHAN(IVMFLD)
+ ..S IVMPH=$P(IVMPHONE,$E(HLECH),2)_$P(IVMPHONE,$E(HLECH),3)
+ ..S IVMPH=$$CONVPHAN(IVMPH)
+ ..I (IVMFLD="")!(IVMPH="") S IVMFLD="@"
+ ..I IVMFLD]"",(IVMFLD'=IVMDHCP) D STORE^IVMPREC9
  .I IVMFLD]"",(IVMFLD'=IVMDHCP) D STORE^IVMPREC9
- .;
  .I IVMXREF["ZTA08" D
  ..I IVMFLD]"",(IVMFLD>IVMDHCP) S UPDAUPG("TA")=1
  Q
@@ -240,31 +220,25 @@ ZAV ; compare ZAV with DHCP
  I IVMXREF=$S(IVMATYP="P":"ZAV03",IVMATYP="CNF":"ZAV02",IVMATYP="R":"ZAV01",IVMATYP="C":"ZAV04",1:"") D 
  .S IVMDHCP="" X:$D(^IVM(301.92,+IVMDEMDA,1)) ^(1) S IVMDHCP=Y
  .I IVMFLD]"",(IVMFLD'=IVMDHCP) D STORE^IVMPREC9
- ;
  Q
  ;
 ZGD ; - compare ZGD with DHCP
  S IVMADFLG=0
  S IVMPIECE=$E(IVMXREF,4,7)
  I $P(IVMSEG,HLFS,$E(IVMPIECE,1,2))]"" D
- .;
  .; - set var IVMFLD to incoming HL7
  .I 'IVMADFLG S IVMFLD=$P(IVMSEG,HLFS,IVMPIECE)
- .;
- .; - ZGD06 as the ZGD address field is 5 pieces seperated by HLECH (~)
+ .; - ZGD06 as the ZGD address field is 5 ~ pieces
  .I IVMXREF["ZGD06" D
  ..S IVMADDR=$P(IVMSEG,HLFS,$E(IVMPIECE,1,2)),IVMPIECE=$E(IVMPIECE,3)
  ..S IVMFLD=$P(IVMADDR,$E(HLECH),IVMPIECE),IVMADFLG=1
  ..I IVMFLD]"",IVMPIECE=4 S IVMFLD=$O(^DIC(5,"C",IVMFLD,0))
  ..I IVMFLD]"",IVMPIECE=5 S X=IVMFLD D ZIPIN^VAFADDR S IVMFLD=$G(X)
- .;
- .; - if HL7 date convert to FM date
+ .; - if HL7 dt convert to FM dt
  .I IVMXREF["ZGD08" S IVMFLD=$$FMDATE^HLFNC(IVMFLD)
- .;
  .; - execute code on the 1 node and get DHCP
  .S IVMDHCP="" X:$D(^IVM(301.92,+IVMDEMDA,1)) ^(1) S IVMDHCP=Y
- .;
- .; if field from IVM does not equal DHCP-store for uploading
+ .; if field from IVM <> DHCP-store for uploading
  .I IVMFLD]"",(IVMFLD'=IVMDHCP) D STORE^IVMPREC9
  Q
  ;
@@ -277,17 +251,14 @@ ZCT ; - compare ZCT with DHCP
  S ZCTTYP=$E(IVMPIECE,$L(IVMPIECE)-1,$L(IVMPIECE))
  Q:$P(IVMSEG,HLFS,2)'=$S(ZCTTYP="K1":1,ZCTTYP="K2":2,ZCTTYP="E1":3,ZCTTYP="E2":4,ZCTTYP="D1":5,1:"")
  I $P(IVMSEG,HLFS,$E(IVMPIECE,1,2))]"" D
- .;
  .; -set var IVMFLD to incoming HL7 field
  .I 'IVMADFLG S IVMFLD=$P(IVMSEG,HLFS,$E(IVMPIECE,1,2))
  .;IVM*2.0*188-convert "" to @
  .I IVMFLD="""""" S IVMFLD="@"
- .;
  .; - if HL7 name format convert to FM
  .I IVMXREF["ZCT03" S IVMFLD=$$FMNAME^HLFNC(IVMFLD)
- .;
  .I IVMFLD="@," S IVMFLD="@" ;IVM*2.0*188
- .; - ZCT05 as the ZCT address field is 5 pieces seperated by HLECH (~)
+ .; - ZCT05 as the ZCT address field is 5 ~ pieces
  .I IVMXREF["ZCT05" D
  ..S IVMADDR=$P(IVMSEG,HLFS,$E(IVMPIECE,1,2)),IVMPIECE=$E(IVMPIECE,3)
  ..S IVMFLD=$P(IVMADDR,$E(HLECH),IVMPIECE),IVMADFLG=1
@@ -295,20 +266,15 @@ ZCT ; - compare ZCT with DHCP
  ..I IVMFLD="""""" S IVMFLD="@" Q
  ..I IVMFLD]"",IVMPIECE=4 S IVMFLD=$O(^DIC(5,"C",IVMFLD,0))
  ..I IVMFLD]"",IVMPIECE=5 S X=IVMFLD D ZIPIN^VAFADDR S IVMFLD=$G(X)
- .;
  .I IVMADFLG D STORE^IVMPREC9 Q
- .; - if HL7 date convert to FM date
+ .; - if HL7 dt convert to FM dt
  .I IVMXREF["ZCT10" S IVMFLD=$$FMDATE^HLFNC(IVMFLD)
- .;
  .; - execute code on the 1 node and get DHCP field
  .S IVMDHCP="" X:$D(^IVM(301.92,+IVMDEMDA,1)) ^(1) S IVMDHCP=Y
- .;
  .;IVM*2.0*188-convert "" to @
  .I IVMFLD="""""" S IVMFLD="@"
- .;
  .; if field from IVM <> DHCP-store for upload
  .I IVMFLD]"",(IVMFLD'=IVMDHCP) D STORE^IVMPREC9
- .;
  .I IVMXREF["ZCT10" D
  ..I IVMFLD]"",(IVMFLD>IVMDHCP) S UPDAUPG(ZCTTYP)=1
  Q
@@ -319,35 +285,27 @@ ZEM ; - compare ZEM with DHCP
  S IVMSEG=$$CLEARF^IVMPRECA(IVMSEG,HLFS)
  Q:$P(IVMSEG,HLFS,2)'=$S($E(IVMXREF,$L(IVMXREF))="S":2,1:1)
  I $P(IVMSEG,HLFS,$E(IVMPIECE,1,2))]"" D
- .;
  .; - set var IVMFLD to incoming HL7 field
  .I 'IVMADFLG S IVMFLD=$P(IVMSEG,HLFS,$E(IVMPIECE,1,2))
- .;
- .; - ZEM06 as the ZEM addr containing 5 pieces seperated by HLECH (~)
+ .; - ZEM06 as the ZEM addr containing 5 ~ pieces
  .I IVMXREF["ZEM06" D
  ..S IVMADDR=$P(IVMSEG,HLFS,$E(IVMPIECE,1,2)),IVMPIECE=$E(IVMPIECE,3)
  ..S IVMFLD=$P(IVMADDR,$E(HLECH),IVMPIECE)    ;,IVMADFLG=1
  ..I IVMFLD]"",IVMPIECE=4 S IVMFLD=$O(^DIC(5,"C",IVMFLD,0))
  ..I IVMFLD]"",IVMPIECE=5 S X=IVMFLD D ZIPIN^VAFADDR S IVMFLD=$G(X)
- .;
- .; - if HL7 date convert to FM date
+ .; - if HL7 dt convert to FM dt
  .I IVMXREF["ZEM09" S IVMFLD=$$FMDATE^HLFNC(IVMFLD)
- .;
- .; - execute code on the 1 node and get DHCP field
  .S IVMDHCP="" X:$D(^IVM(301.92,+IVMDEMDA,1)) ^(1) S IVMDHCP=Y
- .;
- .; if field from IVM <> DHCP-store for uploading
  .I $E(IVMXREF,1,6)="ZEM062",IVMFLD'=IVMDHCP S ZEMADRUP(IVMXREF)=1 D STORE^IVMPREC9 Q
  .I IVMFLD]"",(IVMFLD'=IVMDHCP) D STORE^IVMPREC9
  Q
  ;
 RF1 ; -compare RF1 with DHCP
  S IVMPIECE=$E(IVMXREF,4),IVMADFLG=1,RF1TYPE=$P(IVMSEG,HLFS,3)
- ;Delete the comm data (Email, Cell and Pager) if it is not received in Z05.
- ;Hence, remove it from EPCDEL if Data exist in Z05. Comm. fields contained in EPCDEL will be deleted after updating all incoming data.
+ ;Delete the comm data (Email, Cell and Pager) if not in Z05.
+ ;Remove from EPCDEL if Data exist in Z05. Comm. fields in EPCDEL deleted after updating all incoming data.
  ;IVM*2.0*164-Don't Kill if PHH
  I RF1TYPE'="PHH" K EPCDEL(RF1TYPE)
- ;K EPCDEL(RF1TYPE)
  ;if RF1 field is SEQ6, then parse subcomponents
  I RF1TYPE="SAD",((IVMXREF="RF161")!(IVMXREF="RF162")!(IVMXREF="RF171")) D RF1PROC
  ;IVM*2.0*164-Uncomment Conf and Add Res
@@ -361,18 +319,11 @@ RF1 ; -compare RF1 with DHCP
  ;IVM*2.0*214 - PHONE NUMBER [WORK] Change Date/Time
  I RF1TYPE="PHW",(IVMXREF="RF171PW") D RF1PROC
  ;IVM*2.0*164-LAST RF1 change
- ;I '$$RF1CHK^IVMPREC6(IVMRTN,IVMDA),IVMXREF="RF171P" D
  I '$$RF1CHK^IVMPREC6(IVMRTN,IVMDA),IVMXREF="RF171RA" D  ;Last RF1
  . I $$AUTOEPC^IVMPREC9(DFN,.UPDEPC)
  . N NOUPDT,NOPHUP S (NOUPDT,NOPHUP)=0 ;IVM*2*152
  . I 'UPDEPC("SAD") S NOUPDT=1
- . ;Set the NOPHUP flag = 1 if Home Ph Change Dt/Tm not more recent, or
- . ;if Home Ph Change Dt/Tm more recent, but ph the same
- . ;IVM*2*152
- . ;IVM*2.0*167-Home ph auto-upload
- . ;Always keep NOPHUP = 0 so Home ph data is not handled here    
- . ;I 'UPDEPC("PHH") S NOPHUP=1
- . ;I UPDEPC("PHH"),'$G(UPPHN) S NOPHUP=1
+ . ;Always keep NOPHUP=0 so Home ph is not handled here
  . K UPPHN
  . I $$AUTOADDR^IVMLDEM6(DFN,1,NOUPDT,NOPHUP)
  Q
@@ -380,16 +331,15 @@ RF1 ; -compare RF1 with DHCP
 RF1PROC ;
  N IVMEPC
  I $P(IVMSEG,HLFS,IVMPIECE)]"" D
- .;if RF1 field is SEQ6, then parse subcomponents
+ .;if RF1 field is SEQ6, parse subcomponents
  .I IVMXREF["RF16" D  Q
- ..;- get data containing 4 pieces seperated by HLECH (~)
+ ..;- get data containing 4 ~ pieces
  ..S IVMRFDAT=$P(IVMSEG,HLFS,6)
  ..S IVMPIECE=$E(IVMXREF,5),IVMFLD=$P(IVMRFDAT,"~",IVMPIECE)
  ..;KUM-164-SET IVMEPC TO NONBLANK 
  ..;S IVMEPC=$E(IVMXREF,6)
  ..S IVMEPC=""
  ..I (IVMXREF="RF162E")!(IVMXREF="RF162C")!(IVMXREF="RF162B")!(IVMXREF="RF162P") S IVMEPC="2"
- ..;Convert Change Source for Address, Email, Cell and Pager
  ..I IVMPIECE=2 S IVMFLD=$S(IVMEPC'="":$$EPCSRCC(IVMFLD),1:$$ADDRCNV(IVMFLD))
  ..Q:IVMFLD=""
  ..D STORE^IVMPREC9
@@ -397,36 +347,29 @@ RF1PROC ;
  ..;get address/telecomm change date/tm field
  ..S IVMFLD=$$FMDATE^HLFNC($P(IVMSEG,HLFS,7))
  ..Q:IVMFLD=""
- ..;
  ..;IVM*2*171 - If RF1 type is PHH,home ph is null in PID (IVMPHDFG)
- ..;and RESIDENCE NUMBER CHANGE DT/TM in Patient rec exists then SET EPCDEL(PHH) for ph num 
  ..;deletion IF incoming num change dt/tm is > change dt/tm in #2 rec
- ..;Check if PID13 home ph is null
  ..S:$P($G(TELECOM("PRN")),"~",1)="" IVMPHDFG=1
  ..I RF1TYPE="PHH",+IVMPHDFG,+$$GET1^DIQ(2,DFN_",",.1321,"I") D
  ...S:+$$GET1^DIQ(2,DFN_",",.1321,"I")<IVMFLD EPCDEL("PHH")=".131^.1321^.1322^.1323"
  ..D STORE^IVMPREC9
- ..;
  ..;164-Uncomment Conf and Add Res
  ..I RF1TYPE="CAD",$P($G(ADDRESS("CA")),HLFS)]"" D  Q
- ...; - execute code on the 1 node and get DHCP field
  ...S IVMDHCP="" X:$D(^IVM(301.92,+IVMDEMDA,1)) ^(1) S IVMDHCP=Y
  ...I IVMFLD]"",(IVMFLD>IVMDHCP) S UPDAUPG("CA")=1
- ..;
  ..I RF1TYPE="RAD",$P($G(ADDRESS("R")),HLFS)]"" D  Q
  ...S IVMDHCP="" X:$D(^IVM(301.92,+IVMDEMDA,1)) ^(1) S IVMDHCP=Y
  ...I IVMFLD]"",(IVMFLD>IVMDHCP) S UPDAUPG("RA")=1
- ..;
  ..; check for auto-upload
  ..S IVMDHCP=$S(RF1TYPE="SAD":$P($G(^DPT(DFN,.11)),HLFS,13),RF1TYPE="CPH":$P($G(^DPT(DFN,.13)),HLFS,9),RF1TYPE="PNO":$P($G(^DPT(DFN,.13)),HLFS,12),RF1TYPE="EAD":$P($G(^DPT(DFN,.13)),HLFS,6),1:"")
  ..;IVM*2.0*214 - Get PHONE NUMBER [WORK] from #2
- ..;I IVMDHCP="" S IVMDHCP=$S(RF1TYPE="PHH":$P($G(^DPT(DFN,.132)),HLFS,1),RF1TYPE="RAD":$P($G(^DPT(DFN,.115)),HLFS,11),1:"")     ;Added for IVM*2*152
  ..I IVMDHCP="" S IVMDHCP=$S(RF1TYPE="PHH":$P($G(^DPT(DFN,.132)),HLFS,1),RF1TYPE="PHW":$P($G(^DPT(DFN,.132)),HLFS,6),RF1TYPE="RAD":$P($G(^DPT(DFN,.115)),HLFS,11),1:"")
+ ..;IVM*2.0*215-If Last update is MPI, Accept
+ ..I IVMFLD]"",($$GET1^DIQ(2,DFN_",",.1324,"E")["PSUSER,APPLICATION PROXY"),RF1TYPE="PHH" S UPDEPC(RF1TYPE)=$G(EPCFARY(RF1TYPE))
  ..I IVMFLD]"",(IVMFLD>IVMDHCP) D
  ...S UPDEPC(RF1TYPE)=$G(EPCFARY(RF1TYPE))
  ...I RF1TYPE="SAD" S UPDEPC("SAD")=1
  ...; 167-Make Home ph rec auto-upload to Patient
- ...; Keep UPDEPC("PHH") value as Home ph record IENs of #301.92
  ...;I RF1TYPE="PHH" S UPDEPC("PHH")=1 ;IVM*2*152
  Q
 ADDRCNV(ADDRSRC) ;convert Addr Source from HL7 to DHCP
@@ -474,3 +417,6 @@ CHKEMAIL(EMAIL) ;Check for Valid Email
  I $G(EMAIL)="" Q 0
  I '(EMAIL?1.E1"@"1.E1"."1.E) Q 0
  Q 1
+CONVPHAN(PH) ;Convert Alpha Phone number to Numeric
+ S PH=$TR(PH," )(/#\-~`!@#$%^&*'|<>?,.+=_abcdefghijklmnopqrstvuwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ","")
+ Q PH

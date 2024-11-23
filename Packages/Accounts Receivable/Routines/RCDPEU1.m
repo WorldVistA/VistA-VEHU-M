@@ -1,15 +1,15 @@
 RCDPEU1 ;AITC/CJE - ELECTRONIC PAYER UTILITIES ; 7/1/19 1:08pm
- ;;4.5;Accounts Receivable;**326,332,349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**326,332,349,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  Q
 SELPAY(PARAM) ; EP
  ; New all purpose payer selection subroutine. Based off file 344.6
- ; Including options to include only given payer types (Medical/Pharmacy/Tricare/All)
+ ; Including options to include only given payer types (CHAMPVA/Medical/Pharmacy/Tricare/All)
  ; and to filter selection to include only payers that have entries in file 344.4 or 344.31
  ; This subroutine may be used to replace all previous payer seletion prompts. 
  ; Input - PARAM array of parameters passed by reference
  ;         PARAM("TYPE") - Types of payers to include in the selection (optional defaults to A)
- ;                          P - Pharmacy, T - Tricare, M - Medical (neither P nor T), A - All 
+ ;                          C - CHAMPVA, P - Pharmacy, T - Tricare, M - Medical (neither P nor T), A - All 
  ;         PARAM("FILE") - Only include payers that have entries on the ERA or EFT file (optional)
  ;                          344.4 -  ERA, 344.31 - EFT
  ;         PARAM("SRCH") - Search by payer name or TIN (optional defaults to N)
@@ -168,7 +168,7 @@ SRCHTIN(RCX,PARAM) ; Given user input narrow down the TIN that the user wants
  ;
 CHKPAY(PAYIEN,TYPE,FILE) ; Check if payer meets the filter requirements
  ; Input:  PAYIEN - Internal entry number of the payer from file 344.6
- ;         TYPE   - M - Medical, P - Pharmacy, T- Tricare, A - All
+ ;         TYPE   - C - CHAMPVA, M - Medical, P - Pharmacy, T- Tricare, A - All
  ;         FILE   - 344.4 - ERA, 344.31 EFT - Payer must have entries in the given file
  ; Return: 1 - Payer matches the filter criteria, otherwise 0.
  ;
@@ -239,23 +239,25 @@ RTYPE(DEF) ;EP
  ; Input:   DEF     - Value to use a default
  ; Returns: -1      - User ^ or timed out
  ;           A      - User selected ALL
+ ;           C      - User selected CHAMPVA
  ;           M      - User selected MEDICAL
  ;           P      - User selected PHARMACY
  ;           B      - User selected BOTH
  N DA,DIR,DTOUT,DUOUT,X,Y,DIRUT,DIROUT,RCTYPE,RETURN
  S RCTYPE=""
  S DIR("?")="Enter the type of payer to include"
- S DIR(0)="SA^M:MEDICAL;P:PHARMACY;T:TRICARE;A:ALL"
- S DIR("A")="(M)EDICAL, (P)HARMACY, (T)RICARE or (A)LL: "
+ S DIR(0)="SA^C:CHAMPVA;M:MEDICAL;P:PHARMACY;T:TRICARE;A:ALL" ; PRCA*4.5*432
+ S DIR("A")="(C)HAMPVA, (M)EDICAL, (P)HARMACY, (T)RICARE or (A)LL: " ; PRCA*4.5*432
  S DIR("B")=$S($G(DEF)'="":DEF,1:"ALL")
  D ^DIR
  K DIR
  I $D(DTOUT)!$D(DUOUT) Q -1
  Q:Y="" "A"
  S RETURN=$E(Y)
- ; If Pharmacy or Tricare chosen, check if payer exist and if not give warning
+ ; If CHAMPVA, Pharmacy or Tricare chosen, check if payers exist and if not give warning
  I (RETURN="P"&('$D(^RCY(344.6,"ARX",1)))) D WARN("pharmacy")
  I (RETURN="T"&('$D(^RCY(344.6,"ATR",1)))) D WARN("tricare")
+ I (RETURN="C"&('$D(^RCY(344.6,"ACH",1)))) D WARN("CHAMPVA") ; PRCA*4.5*432
  Q RETURN
  ;
 CLOSEDC(DEF) ;EP
@@ -298,22 +300,24 @@ GETPAY(NAME,TIN) ; EP - Get payer IEN given name and TIN
  ;
 CHKTYPE(IEN,TYPE) ; EP
  ; Inputs: IEN - Internal entry number from file 344.6
- ;         TYPE - M : Medical, P : Pharmacy, T: Tricare, A: All
+ ;         TYPE - C - CHAMPVA, M : Medical, P : Pharmacy, T: Tricare, A: All
  ; Returns: 1 if the payer matches the type, otherwise 0
  I TYPE="A" Q 1
  S FLAG("P")=+$$GET1^DIQ(344.6,IEN_",",.09,"I")
  S FLAG("T")=+$$GET1^DIQ(344.6,IEN_",",.1,"I")
+ S FLAG("C")=+$$GET1^DIQ(344.6,IEN_",",.15,"I") ; PRCA*4.5*432
  ;
  I TYPE="T",FLAG("T") Q 1
  I TYPE="P",FLAG("P") Q 1
- I TYPE="M",'FLAG("P"),'FLAG("T") Q 1
+ I TYPE="C",FLAG("C") Q 1 ; PRCA*4.5*432
+ I TYPE="M",'FLAG("P"),'FLAG("T"),'FLAG("C") Q 1 ; PRCA*4.5*432
  Q 0
 ISTYPE(FILE,IEN,TYPE) ; EP
  ; Check if payer is a given type based on IEN from a FILE
  ; Input: FILE - file from which to get Payer name and TIN
  ;               allowed values 344.4 - ERA, 344.31 - EFT, 361.1 - EOB
  ;        IEN  - Internal entry number of entry in FILE
- ;        TYPE - M : Medical, P : Pharmacy, T: Tricare
+ ;        TYPE - C : CHAMPVA, M : Medical, P : Pharmacy, T: Tricare
  ; Return 1 - payer matches type, else 0.
  I TYPE="A" Q 1
  N IEN3444,NAME,TIN
@@ -428,7 +432,7 @@ RMESS ; Output message that entry is required.
  Q
  ;
 WARN(TYPE) ; Warn user that no payers of TYPE have been flagged
- ; Input: TYPE - P=Pharmacy, T="Tricare"
+ ; Input: TYPE - C=CHAMPVA, P=Pharmacy, T=Tricare
  ; Output: warning message to screen.
  W !!,"WARNING - There are no "_TYPE_" payers flagged in the system."
  W !,"          Please use the Identify Payers option to flag payers.",*7

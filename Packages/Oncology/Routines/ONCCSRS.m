@@ -1,7 +1,9 @@
-ONCCSRS ;Hines OIFO/GWB - Re-stage using current version ;11/04/11
- ;;2.2;ONCOLOGY;**1**;Jul 31, 2013;Build 8
+ONCCSRS ;HINES OIFO/GWB - Re-stage using current version ;11/04/11
+ ;;2.2;ONCOLOGY;**1,20**;Jul 31, 2013;Build 5
  ;
  ;Re-stage 2004+ cases using current CS Version
+ D ^ONCCSRS1 Q  ;update for cloud migration -- use ONCCSRS1 routine
+ ;
  K DIRUT
  N ONCZZIS,IOP,POP
  S ONCZZIS="MQ"

@@ -1,5 +1,5 @@
 RCDPEWL7 ;ALB/TMK/KML - EDI LOCKBOX WORKLIST ERA DISPLAY SCREEN ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**208,222,269,276,298,304,318,321,326,332,349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**208,222,269,276,298,304,318,321,326,332,349,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -12,7 +12,7 @@ BLD(RCSORT) ; Build list with sort criteria
  S (RCT,VALMCNT)=0
  I '$D(^TMP($J,"RCERA_LIST")) D
  . S Z=0 F  S Z=$O(^TMP("RCDPE-ERA_WLDX",$J,Z)) Q:'Z  S RCZ=$P($G(^(Z)),U,2) D
- .. I $$FILTER(RCZ) S ^TMP($J,"RCERA_LIST",$$SL(RCZ,$P(RCSORT,U)),$$SL(RCZ,$P(RCSORT,U,2)),RCZ)=""
+ .. I $$FILTER^RCDPEWLD(RCZ) S ^TMP($J,"RCERA_LIST",$$SL(RCZ,$P(RCSORT,U)),$$SL(RCZ,$P(RCSORT,U,2)),RCZ)=""
  . K ^TMP("RCDPE-ERA_WLDX",$J),^TMP("RCDPE-ERA_WL",$J)
  ;
  S Z=""
@@ -168,7 +168,7 @@ INIT ; Entry point for List template to build the display of ERAs
  . . D RESETKB^XGF
  . ;
  . S RC0=$G(^RCY(344.4,RCZ,0))
- . I $$FILTER(RCZ) S ^TMP($J,"RCERA_LIST",$$SL(RCZ,"DR"),$$SL(RCZ,""),RCZ)=""
+ . I $$FILTER^RCDPEWLD(RCZ) S ^TMP($J,"RCERA_LIST",$$SL(RCZ,"DR"),$$SL(RCZ,""),RCZ)=""
  ;
  ; Output the list
  I 'RCQUIT D
@@ -194,9 +194,9 @@ HDR ; Header for ERA Worklist (List user Current Screen View selections)
  . I $P(X,U,2) S XX=XX_"-"_$$FMTE^XLFDT($P(X,U,2),2)
  E  S XX=XX_"NONE SELECTED"
  S X=$G(^TMP("RCERA_PARAMS",$J,"RCTYPE"))
- S XX2="MEDICAL/PHARM/TRIC: " ; PRCA*4.5*332
- S XX2=XX2_$S(X="M":"MEDICAL ONLY",X="P":"PHARMACY ONLY",X="T":"TRICARE ONLY",1:"ALL")
- S XX=$$SETSTR^VALM1(XX2,XX,40,41)
+ S XX2="MED/PHARM/TRIC/CHAMPVA: " ; PRCA*4.5*332  ;PRCA*4.5*432 CHAMPVA
+ S XX2=XX2_$S(X="M":"MEDICAL ONLY",X="P":"PHARMACY ONLY",X="T":"TRICARE ONLY",X="C":"CHAMPVA ONLY",1:"ALL")  ;PRCA*4.5*432 CHAMPVA
+ S XX=$$SETSTR^VALM1(XX2,XX,36,41)  ;PRCA*4.5*432 40->36
  S VALMHDR(1)=XX
  ;
  ; Second header line. Match/Unmatched and Auto-posting/Non Autoposting
@@ -352,8 +352,8 @@ BATQ Q RCOK
  ;
 PAYTYPE(IEN,TYPE) ; EP - New way to tell if a payer is pharamcy, Tricare or medical - Added for PRCA*4.5*321
  ; Input: IEN - Internal entry number of an ERA (#344.4)
- ;        TYPE="P" - Pharmacy, "T" - Tricare, "M" - Medical
- ;        ("M" is neither pharmacy nor Tricare)
+ ;        TYPE="P" - Pharmacy, "T" - Tricare, "M" - Medical, "C" - CHAMPVA
+ ;        ("M" is neither pharmacy nor Tricare nor CHAMPVA)
  ; Return: 1 - Payer on ERA matches the TYPE
  ;         0 - Payer on ERA does not match the type. Or can't find payer.
  ;
@@ -362,14 +362,15 @@ PAYTYPE(IEN,TYPE) ; EP - New way to tell if a payer is pharamcy, Tricare or medi
  I '$$PAYFLAGS(IEN,.FLAG) Q 0
  I TYPE="P",FLAG("P") S RETURN=1
  I TYPE="T",FLAG("T") S RETURN=1
- I TYPE="M",'FLAG("P"),'FLAG("T") S RETURN=1
+ I TYPE="C",FLAG("C") S RETURN=1  ;PRCA*4.5*432 CHAMPVA
+ I TYPE="M",'FLAG("P"),'FLAG("T"),'FLAG("C") S RETURN=1  ;PRCA*4.5*432 CHAMPVA
  Q RETURN
  ;
 PAYFLAGS(IEN,FLAG) ; EP - Return the pharmacy and tricare flags for an ERA
  ; Input: IEN - Internal entry number of an ERA (#344.4)
  ; Return: 1 - Payer found
  ;         0 - Can't find payer.
- ; Variable FLAG passed by reference to return values of the pharmacy and Tricare flags.
+ ; Variable FLAG passed by reference to return values of the pharmacy, Tricare, and CHAMPVA flags.
  ;
  N RCINS,RCPAYIEN,RCTIN,X
  S RCTIN=$$GET1^DIQ(344.4,IEN_",",.03)
@@ -388,6 +389,7 @@ PAYFLAGS(IEN,FLAG) ; EP - Return the pharmacy and tricare flags for an ERA
  ;
  S FLAG("P")=+$$GET1^DIQ(344.6,RCPAYIEN_",",.09,"I")
  S FLAG("T")=+$$GET1^DIQ(344.6,RCPAYIEN_",",.1,"I")
+ S FLAG("C")=+$$GET1^DIQ(344.6,RCPAYIEN_",",.15,"I")  ;PRCA*4.5*432 CHAMPVA
  Q 1
  ;
  ; BEGIN PRCA*4.5*326
@@ -406,63 +408,4 @@ HELP ; list manager help
  W !," 'M' = Marked for Auto-post, waiting processing."
  D PAUSE^VALM1
  Q
- ; Following FILTER code moved from RCDPEWL0 due to routine size
-FILTER(IEN344P4) ; Returns 1 if record in entry IEN344P4 in 344.4 passes
- ; the edits for the worklist selection of ERAs
- ; Parameters found in ^TMP("RCERA_PARAMS",$J)
- N OK,RCPOST,RCAPST,RCAPSTA,RCAUTOP,RCMATCH,RCTYPE,RCDFR,RCDTO,RCPAYFR,RCPAYMNT,RCPAYTO,RCPAYR,RC0,RC4
- S OK=1,RC0=$G(^RCY(344.4,IEN344P4,0)),RC4=$G(^RCY(344.4,IEN344P4,4))
  ;
- S RCMATCH=$G(^TMP("RCERA_PARAMS",$J,"RCMATCH")),RCPOST=$G(^TMP("RCERA_PARAMS",$J,"RCPOST"))
- S RCAUTOP=$G(^TMP("RCERA_PARAMS",$J,"RCAUTOP")),RCTYPE=$G(^TMP("RCERA_PARAMS",$J,"RCTYPE"))
- S RCDFR=+$P($G(^TMP("RCERA_PARAMS",$J,"RCDT")),U),RCDTO=+$P($G(^TMP("RCERA_PARAMS",$J,"RCDT")),U,2)
- S RCPAYR=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U),RCPAYFR=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U,2),RCPAYTO=$P($G(^TMP("RCERA_PARAMS",$J,"RCPAYR")),U,3)
- S RCPAYMNT=$G(^TMP("RCERA_PARAMS",$J,"RCPAYMNT"))    ; PRCA*4.5*321
- S RCAPSTA=$G(^TMP("RCERA_PARAMS",$J,"RCAPSTA"))
- ;
- ; Post status
- I $S(RCPOST="B":0,RCPOST="U":$P(RC0,U,14),1:'$P(RC0,U,14)) S OK=0 G FQ
- ; Auto-Posting status
- I $S(RCAUTOP="B":0,RCAUTOP="A":($P(RC4,U,2)=""),1:($P(RC4,U,2)'="")) S OK=0 G FQ
- ; If ERA is autopost and filtering on selected Autopost statuses check status
- I $P(RC4,U,2)'="",RCAPSTA'="A",(RCAUTOP="B")!(RCAUTOP="A") D  G:OK=0 FQ
- .;Auto-post Status
- .S RCAPST=$$GET1^DIQ(344.4,IEN344P4_",",4.02,"I")
- .;Complete filter
- .I RCAPSTA="C" S:RCAPST'=2 OK=0 G FQ
- .;Partial filter
- .I RCAPSTA="P" S:RCAPST'=1 OK=0 G FQ
- .;Marked for Auto-post filter - ignores if not partial post or unposted
- .I RCAPSTA="M",RCAPST'=1,RCAPST'=0 S OK=0 G FQ
- .;Marked for Auto-post filter - ignores PARTIAL auto-post era if no lines on ERA are marked
- .I RCAPSTA="M",RCAPST=1,'$O(^RCY(344.4,"AP",1,IEN344P4,"")) S OK=0 G FQ
- .;Marked for Auto-post filter - ignores UNPROCESSED auto-post era if no marked for autopost user 
- .I RCAPSTA="M",RCAPST=0,$$GET1^DIQ(344.4,IEN344P4_",",4.04,"I")="" S OK=0 G FQ
- ; Match status
- I $S(RCMATCH="B":0,RCMATCH="N":$P(RC0,U,9),1:'$P(RC0,U,9)) S OK=0 G FQ
- ; Medical/Pharmacy/Tricare Claim
- ; I $S(RCTYPE="B":0,RCTYPE="M":$$PHARM^RCDPEWLP(IEN344P4),1:'$$PHARM^RCDPEWLP(IEN344P4)) S OK=0 G FQ
- I RCTYPE'="A" D  I 'OK G FQ
- . N RCFLAG
- . I '$$PAYFLAGS^RCDPEWL7(IEN344P4,.RCFLAG) S OK=0 Q
- . I RCTYPE="P",'RCFLAG("P") S OK=0 Q
- . I RCTYPE="T",'RCFLAG("T") S OK=0 Q
- . I RCTYPE="M",(RCFLAG("P")!RCFLAG("T")) S OK=0
- ; dt rec'd range
- I $S(RCDFR=0:0,1:$P(RC0,U,7)\1<RCDFR) S OK=0 G FQ
- I $S(RCDTO=DT:0,1:$P(RC0,U,7)\1>RCDTO) S OK=0 G FQ
- ; Payer name
- I RCPAYR'="A" D  G:'OK FQ
- . N Q
- . S Q=$$UP^RCDPEARL($P(RC0,U,6))
- . I $S(Q=RCPAYFR:1,Q=RCPAYTO:1,Q]RCPAYFR:RCPAYTO]Q,1:0) Q
- . S OK=0
- ; PRCA*4.5*321 - Start modified code block
- ; Zero amount or payment
- I RCPAYMNT'="B" D  ;
- . I RCPAYMNT="Z",$P(RC0,U,5) S OK=0 Q
- . I RCPAYMNT="P",'$P(RC0,U,5) S OK=0
- ; PRCA*4.5*321 - End modified code block
- ;
-FQ Q OK
- ; END PRCA*4.5*326

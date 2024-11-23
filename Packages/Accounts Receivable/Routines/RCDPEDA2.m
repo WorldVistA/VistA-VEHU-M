@@ -1,5 +1,5 @@
 RCDPEDA2 ;AITC/DW - ACTIVITY REPORT ;Feb 17, 2017@10:37:00
- ;;4.5;Accounts Receivable;**318,321,326,380**;Mar 20, 1995;Build 14
+ ;;4.5;Accounts Receivable;**318,321,326,380,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -77,7 +77,7 @@ RPT2(INPUT) ;EP from RCDPEDAR
  . . . S XX=$G(^TMP($J,"TOTALS","FMS","D",-1))
  . . . S ^TMP($J,"TOTALS","FMS","D",-1)=XX+TOTDEP
  . . . S ^TMP($J,"TOTALS","FMS")="STATUS MISSING"
- . . S XX=$E($P(YY," "),1,10)
+ . . S XX=$E($P(YY," "),1,10)                   ; First Word of the status
  . . S ^TMP($J,"TOTALS","FMS")=XX               ; First Word of the status
  . . S Q=$E(YY,1)                               ; First Character of the status
  . . S Q=$S(Q="E"!(Q="R"):0,Q="Q":2,1:1)        ; Q=0 - Reject or Error, 2 - Queued, 1 - good
@@ -212,8 +212,7 @@ DETLN(INPUT,IEN3443,TOTDEP) ; Display detail line
  ;
  S YY=DEPDT ; Deposit Date
  ;PRCA*4.5*380 - Include multi-mail message indicator with date
- ;S X=$$SETSTR^VALM1($$FMTE^XLFDT(YY\1,"2Z")_$G(MULT),X,12,10)
- S X=$$SETSTR^VALM1($$FMTE^XLFDT(YY\1,"2Z"),X,12,10)
+ S X=$$SETSTR^VALM1($$FMTE^XLFDT(YY\1,"2Z")_$G(MULT),X,12,10)
  ;
  S X=$$SETSTR^VALM1("",X,23,8)
  S X=$$SETSTR^VALM1("",X,32,10)
@@ -300,13 +299,15 @@ EFTDTL(INPUT,IEN3443,IEN34431,RCFMS1,EFTCTR)   ; Display EFT Detail
  ; Output:  INPUT                   - See RPT2 for details
  ;          ^TMP($J,ONEDEP,0,1)     - Deposit Detail line
  ;          ^TMP($J,ONEDEP,EFTCTR)  - # of lines for EFT
- ;          ^TMP($J,ONEDEP,EFTCTR,xx)- EFT Deposit Lines
- N EFTLN,MDT,PAY,PAYER,PAYID,X,XX,YY,ZZ
+ ;          ^TMP($J,ONEDEP,EFTCTR,xx)- EFT Deposit Lines ;PRCA*4.5*321 capture display to ^TMP($J,"ONEDEP",EFTRCR) including line cnt
+ N EFTLN,MDT,PAY,PAYER,PAYID,RCDEBIT,X,XX,YY,ZZ ; RCDEBIT, PRCA*4.5*432
  S XX=$$GET1^DIQ(344.31,IEN34431,.01,"E")       ; EFT Transaction detail - PRCA*4.5*326
  S X=$$SETSTR^VALM1(XX,"",3,9)
  S XX=$$GET1^DIQ(344.31,IEN34431,.12,"I")       ; Date Claims Paid
  S X=$$SETSTR^VALM1($$FMTE^XLFDT(XX\1,"2Z"),X,23,8) ; PRCA*4.5*326 - move 8 back for MATCH DATE
  S XX=$$GET1^DIQ(344.31,IEN34431,.07,"I")       ; Amount of Payment
+ S RCDEBIT=$$GET1^DIQ(344.31,IEN34431,3,"E")    ; PRCA 4.5*432
+ I '($E(XX)="-") S XX=$S(RCDEBIT="D":"-",1:"")_XX  ; PRCA 4.5*432
  S X=$$SETSTR^VALM1($J(XX,"",2),X,33,18)        ; PRCA*4.5*326 - move 8 back for MATCH DATE
  ;
  ; PRCA*4.5*284, Move to left 3 space (61 to 58) to allow for 10 digit ERA #'s
@@ -339,10 +340,6 @@ EFTDTL(INPUT,IEN3443,IEN34431,RCFMS1,EFTCTR)   ; Display EFT Detail
  ; Gather & display all TR Doc #s for EFT detail record           
  D GETTR^RCDPEDA4(IEN34431,.INPUT)              ; PRCA*4.5*321 moved for routine size
  S X=""
- S XX=$$GET1^DIQ(344.31,IEN34431,3,"E")         ; Debit Flag ; PRCA 4.5*321 Added line
- S XX=$S(XX="D":"DEBIT",1:"     ")              ; PRCA*4.5*321 Added line
- S X=$$SETSTR^VALM1(XX,X,37,5)
- ;
  S XX=$$GET1^DIQ(344.31,IEN34431,.09,"I")       ; Receipt IEN
  I XX'="" D
  . S YY=$$GET1^DIQ(344,XX,.01,"I")              ; Receipt Number

@@ -1,17 +1,17 @@
 PSOVER1 ;BHAM ISC/SAB - verify one rx ;3/9/05 12:53pm
- ;;7.0;OUTPATIENT PHARMACY;**32,46,90,131,202,207,148,243,268,281,324,358,251,375,387,379,390,372,416,411,422,402,500,562**;DEC 1997;Build 19
- ;External reference ^PSDRUG( supported by DBIA 221
- ;External reference to PSOUL^PSSLOCK supported by DBIA 2789
- ;External reference to ^PS(55 supported by DBIA 2228
- ;External reference to DOSE^PSSORPH is supported by DBIA 3234
- ;External reference to ^ORRDI1 supported by DBIA 4659
- ;External reference to ^XTMP("ORRDI" supported by DBIA 4660
- ;External reference to $$DS^PSSDSAPI supported by DBIA 5425
- ;External reference to $$GETNDC^PSSNDCUT supported by DBIA 4707
- ;External reference to ^DPT( supported by DBIA 3097
- ;External reference to ^PS(50.606 supported by DBIA 2174
- ;External reference to ^PS(50.7 supported by DBIA 2223
- ;External reference to ^PS(56 supported by DBIA 2229
+ ;;7.0;OUTPATIENT PHARMACY;**32,46,90,131,202,207,148,243,268,281,324,358,251,375,387,379,390,372,416,411,422,402,500,562,747**;DEC 1997;Build 7
+ ; Reference to ^PSDRUG( in ICR #221
+ ; Reference to PSOUL^PSSLOCK in ICR #2789
+ ; Reference to ^PS(55 in ICR #2228
+ ; Reference to DOSE^PSSORPH is in ICR #3234
+ ; Reference to ^ORRDI1 in ICR #4659
+ ; Reference to ^XTMP("ORRDI" in ICR #4660
+ ; Reference to $$DS^PSSDSAPI in ICR #5425
+ ; Reference to $$GETNDC^PSSNDCUT in ICR #4707
+ ; Reference to ^DPT( in ICR #3097
+ ; Reference to ^PS(50.606 in ICR #2174
+ ; Reference to ^PS(50.7 in ICR #2223
+ ; Reference to ^PS(56 in ICR #2229
 REDO ;
  I '$G(PSOCLK) Q:$G(PSVERFLG)
  S (DRG,PSODRUG("NAME"))=$P(^PSDRUG(+$P(^PSRX(PSONV,0),"^",6),0),"^"),PSODRUG("VA CLASS")=$P(^(0),"^",2)
@@ -179,7 +179,8 @@ ORDCK ;
  S PSODRUG("NDF")=$S($G(^PSDRUG(PSDRUG("IEN"),"ND"))]"":+^("ND")_"A"_$P(^("ND"),"^",3),1:0)
  S PSODRUG("MAXDOSE")=$P(PSOVINF,"^",4),PSODRUG("DEA")=$P(PSOVINF,"^",3),PSODRUG("CLN")=$S($D(^PSDRUG(PSDRUG("IEN"),"ND")):+$P(^("ND"),"^",6),1:0)
  S PSODRUG("SIG")=$P(PSOVINF,"^",5),PSODRUG("NDC")=$$GETNDC^PSSNDCUT(PSDRUG("IEN"),$G(PSOSITE)),PSODRUG("STKLVL")=$G(^PSDRUG(PSDRUG("IEN"),660.1))
- S PSODRUG("DAW")=+$$GET1^DIQ(50,PSONV,81)
+ S PSODRUG("DAW")=$$GET1^DIQ(50,PSONV,81)
+ I PSODRUG("DAW")="" S PSODRUG("DAW")=0
  K PSOVINF
  D POST^PSODRG S DFN=PSOODFN
  I $$GET1^DIQ(52,PSONV,100,"I")=13 S PSORX("DFLG")=1 Q

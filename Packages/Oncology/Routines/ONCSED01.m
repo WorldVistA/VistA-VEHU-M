@@ -1,5 +1,5 @@
 ONCSED01 ;HINES OIFO/SG - EDITS 'RUN BATCH' REQUEST ; 11/6/06 11:48am
- ;;2.2;ONCOLOGY;**1,16,19**;Jul 31, 2013;Build 4
+ ;;2.2;ONCOLOGY;**1,16,19,20**;Jul 31, 2013;Build 5
  ;..P19
  ;P16 - hwsc encrytion function
  ;--- SOAP REQUST TO THE ONCOLOGY WEB SERVICE
@@ -214,8 +214,8 @@ XMLHDR ;XML header for Edits
  S:($L(ONCTSN)=1) ONCTSN="0"_ONCTSN
  S ONCTSN=ONCTSN_".000"_$E(ONCTZONE,1,3)_":"_$E(ONCTZONE,4,5)
  S ONCDTNW=""""_(1700+$E(ONCT,1,3))_"-"_$E(ONCT,4,5)_"-"_$E(ONCT,6,7)_"T"_ONCTHR_":"_ONCTMN_":"_ONCTSN_""""
- S ONCX21=1,ONCXML=7
- S ONCDIC="""http://naaccr.org/naaccrxml/naaccr-dictionary-220.xml"""
+ S ONCX21=1,ONCXML=6
+ S ONCDIC="""http://naaccr.org/naaccrxml/naaccr-dictionary-230.xml"""
  S ONC11=" baseDictionaryUri="
  S ONC22=" recordType=",ONC33=" timeGenerated=",ONC44=" specificationVersion="
  ;For Edits and Collaborative Staging (CS)
@@ -229,14 +229,14 @@ XMLHDR ;XML header for Edits
  ;S ^TMP("ONC",$J,6)="<requestId>"_ONCREID_"</requestId>"
  ;S ^TMP("ONC",$J,7)="<caseId>"_ONCCSID_"</caseId>"
  ;S ^TMP("ONC",$J,8)="<caseType>"_ONCCSTP_"</caseType>"
- ;S ^TMP("ONC",$J,9)="<NaaccrData baseDictionaryUri=""http://naaccr.org/naaccrxml/naaccr-dictionary-220.xml"" recordType=""C"" timeGenerated="_ONCDTNW_" specificationVersion=""1.4"" xmlns=""http://naaccr.org/naaccrxml"""_">"
+ ;S ^TMP("ONC",$J,9)="<NaaccrData baseDictionaryUri=""http://naaccr.org/naaccrxml/naaccr-dictionary-230.xml"" recordType=""C"" timeGenerated="_ONCDTNW_" specificationVersion=""1.4"" xmlns=""http://naaccr.org/naaccrxml"""_">"
  S ^TMP("ONC",$J,2)="<"_ONCREQT_">"
  ;S ^TMP("ONC",$J,3)="<requestId>"_ONCREID_"</requestId>"
  S ^TMP("ONC",$J,3)="<requestId>"_ONCREID_"</requestId>"  ;test failure
  S ^TMP("ONC",$J,4)="<caseId>"_ONCCSID_"</caseId>"
  S ^TMP("ONC",$J,5)="<caseType>"_ONCCSTP_"</caseType>"
- S ^TMP("ONC",$J,6)="<ocpApimSubscriptionKey>"_ONCSKEY_"</ocpApimSubscriptionKey>"
- S ^TMP("ONC",$J,7)="<NaaccrData baseDictionaryUri=""http://naaccr.org/naaccrxml/naaccr-dictionary-220.xml"" recordType=""C"" timeGenerated="_ONCDTNW_" specificationVersion=""1.4"" xmlns=""http://naaccr.org/naaccrxml"""_">"
+ ;S ^TMP("ONC",$J,6)="<ocpApimSubscriptionKey>"_ONCSKEY_"</ocpApimSubscriptionKey>"
+ S ^TMP("ONC",$J,6)="<NaaccrData baseDictionaryUri=""http://naaccr.org/naaccrxml/naaccr-dictionary-230.xml"" recordType=""C"" timeGenerated="_ONCDTNW_" specificationVersion=""1.4"" xmlns=""http://naaccr.org/naaccrxml"""_">"
  Q
 XMLEDIT ;Prepares EDIT xml data
  N ONCDE

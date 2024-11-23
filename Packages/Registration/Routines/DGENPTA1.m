@@ -1,5 +1,6 @@
-DGENPTA1 ;ALB/CJM,EG,CKN,ERC,TDM,PWC,JAM,KUM - Patient API - File Data ;5/24/11 4:54pm
- ;;5.3;Registration;**121,147,314,677,659,653,688,810,754,838,841,842,978,1036,1064,1093,1103**;Aug 13,1993;Build 7
+DGENPTA1 ;ALB/CJM,EG,CKN,ERC,TDM,PWC,JAM,KUM - Patient API - File Data ;7/24/24 4:54PM
+ ;;5.3;Registration;**121,147,314,677,659,653,688,810,754,838,841,842,978,1036,1064,1093,1103,1121**;Aug 13,1993;Build 14
+ ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
 LOCK(DFN) ;
  ;Description: Given an internal entry number of a PATIENT  record, this
@@ -116,6 +117,9 @@ STORE(DGPAT,ERROR,NOCHECK) ;
  ; If Indian End Date is blank or double quotes, delete the field in Patient file
  I DGINDED'=$G(DGPAT("INDEDT")),$G(DGPAT("INDEDT"))="" S DGPAT("INDEDT")="@"
  I DGINDED=$G(DGPAT("INDEDT")) K DGPAT("INDEDT")
+ ;DG*5.3*1121 - Delete Persian Gulf indicator and Persian Gulf Change date if they are blank
+ I $G(DGPAT("PGULFTS"))="" S DGPAT("PGULFTS")="@"
+ I $G(DGPAT("PGULF"))="" S DGPAT("PGULF")="@"
  ;
  F  S SUB=$O(DGPAT(SUB)) Q:(SUB="")  I (SUB'="DEATH")&(SUB'="SSN") S FIELD=$$FIELD(SUB) I FIELD S DATA(FIELD)=$G(DGPAT(SUB))
  S SUCCESS=$$UPD^DGENDBS(2,DGPAT("DFN"),.DATA)
@@ -168,4 +172,6 @@ FIELD(SUB) ;
  I FNUM="" S FNUM=$S(SUB="INDID":.571,SUB="INDADT":.573,SUB="INDSDT":.572,SUB="INDEDT":.574,1:"")
  ; DG*5.3*1103 - Update Toxic Exposure Risk Activity (TERA) indicator that is received from ZEL segment sequence #48
  I FNUM="" S FNUM=$S(SUB="TERA":.32116,1:"")
+ ;DG*5.3*1121 - Update Persian Gulf indicator and last change date that are received from ZEL segment sequence numbers #49 and #50
+ I FNUM="" S FNUM=$S(SUB="PGULF":.32117,SUB="PGULFTS":.32118,1:"")
  Q FNUM

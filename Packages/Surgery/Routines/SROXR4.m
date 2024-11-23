@@ -1,9 +1,9 @@
-SROXR4 ;BIR/MAM - CROSS REFERENCES ;01/24/11
- ;;3.0;Surgery;**62,83,100,153,166,174,175,176**;24 Jun 93;Build 8
+SROXR4 ;BIR/MAM - CROSS REFERENCES ; January 24, 2011
+ ;;3.0;Surgery;**62,83,100,153,166,174,175,176,217**;24 Jun 93;Build 1
  Q
 PRO ; stuff default prosthesis info
  I '$D(SRTN) Q
- S ^SRF(SRTN,1,DA,0)=^SRF(SRTN,1,DA,0)_"^"_$P(^SRO(131.9,X,0),"^",2,4)_"^^"_$P(^SRO(131.9,X,0),"^",6,99)
+ S ^SRF(SRTN,1,DA,0)=$P(^SRF(SRTN,1,DA,0),U)_"^"_$P(^SRO(131.9,X,0),"^",2,4)_"^^"_$P(^SRO(131.9,X,0),"^",6,99)
  I $D(^SRO(131.9,X,1)) S ^SRF(SRTN,1,DA,1)=^(1)
  Q
 CAN ; 'SET' logic of the 'ACAN' x-ref on the 'CANCEL REASON'

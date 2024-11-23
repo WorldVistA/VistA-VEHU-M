@@ -1,5 +1,5 @@
 RCDPENR2 ;ALB/SAB - EPay National Reports - ERA/EFT Trending Report ; 7/1/19 2:02pm
- ;;4.5;Accounts Receivable;**304,321,326,349**;Mar 20, 1995;Build 44
+ ;;4.5;Accounts Receivable;**304,321,326,349,432**;Mar 20, 1995;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;Read ^DGCR(399) via Private IA 3820
@@ -79,7 +79,7 @@ AUTO(RCDISP,RCBGDT,RCENDDT,RCPYRLST,RCRQDIV,RCRPT,RCEXCEL,RCRATE,RCDIV,RCAUTO) ;
  ;         RCRATE - Billing Rate Type flag
  ;         RCDIV - Divisions to report on.
  ;         RCPAY - Payers to report on (All, range, or single payer)
- ;         RCTYPE - Types of payers to include (M - Medical, P - Pharmacy, T - Tricare)
+ ;         RCTYPE - Types of payers to include (M - Medical, P - Pharmacy, T - Tricare C - CHAMPVA)
  ;         RCWHICH - select payers by name or TIN (1 - Name, 2 - TIN)
  ;
  ;Select output device
@@ -209,8 +209,8 @@ HEADER ;Print the results
  S RCDIVTXT=$$DIVTXT^RCDPENR1()
  S RCPYRTXT=$S(RCPAY="S":"SELECTED",RCPAY="R":"RANGE",1:"ALL")_" "
  S RCPYRTXT=RCPYRTXT_$S(RCWHICH=2:"TINS",1:"PAYERS")
- S RCTYPTXT=$S('+$G(RCEXCEL):"MEDICAL/PHARMACY/TRICARE: ",1:"")
- S RCTYPTXT=RCTYPTXT_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ S RCTYPTXT=$S('+$G(RCEXCEL):"MEDICAL/PHARMACY/TRICARE/CHAMPVA: ",1:"")
+ S RCTYPTXT=RCTYPTXT_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")  ;PRCA*4.5*432 Add CHAMPVA
  S RCAUTOT="MANUAL/AUTOPOST: "_$S(RCAUTO="N":"MANUAL",RCAUTO="A":"AUTOPOST",1:"BOTH")
  S RCCLMTXT="Claims: "_$S(RCCLM="C":"CLOSED",1:"ALL")              ; PRCA*4.5*349
  ;
@@ -226,8 +226,8 @@ HEADER ;Print the results
  W @IOF,"EFT/ERA TRENDING REPORT"
  I '$G(RCEXCEL) D  ;
  . W ?122,"PAGE ",$J(RCPAGE,5),!
- . W " "_$E(RCDIVTXT,1,23),?25,$E(RCPYRTXT,1,20),?46,$E(RCTYPTXT,1,35)
- . W ?80,RCAUTOT,?108,RCCLMTXT,!
+ . W " "_$E(RCDIVTXT,1,23),?25,$E(RCPYRTXT,1,20),?46,$E(RCTYPTXT,1,43)  ;PRCA*4.5*432 35 -> 43
+ . W ?90,RCAUTOT,?118,RCCLMTXT,! ;PRCA*4.5*432 80 -> 90, 108 -> 118
  . W ?5,"DATE RANGE: ",$$FMTE^XLFDT(RCBGDT,2)," - ",$$FMTE^XLFDT(RCENDDT,2)
  . W ?51,"RUN DATE: ",RCRUNDT,!
  . W RCLINE,!

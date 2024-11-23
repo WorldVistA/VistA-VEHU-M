@@ -1,5 +1,5 @@
 RCDPEAC ;ALB/TMK/PJH - ACTIVE BILLS WITH EEOB ON FILE ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**208,269,276,298,303,326,332**;Mar 20, 1995;Build 40
+ ;;4.5;Accounts Receivable;**208,269,276,298,303,326,332,432**;Mar 20, 1995;Build 16
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; Entry point for Active Bills With EEOB Report [RCDPE ACTIVE WITH EEOB REPORT]
@@ -210,7 +210,7 @@ SELECT(RCINS,RCSORT,RCZRO,RCTYPE) ; Select insurance co, sort criteria, Zero Pay
  ; Function returns values selected for RCSORT and RCINS - passed by ref
  N RCQUIT,DONE,DIR,X,Y,%DT
  S (RCQUIT,DONE,RCLSTMGR)=0
- ; PRCA*4.5*326 - Begin changed block - Ask to show Medical/Pharmacy Tricare or All
+ ; PRCA*4.5*326 - Begin changed block - Ask to show Medical/Pharmacy Tricare, CHAMPVA or All
  S RCTYPE=$$RTYPE^RCDPEU1("")
  I RCTYPE=-1 G SELQ
  ;
@@ -306,7 +306,7 @@ HDRBLD ; create the report header
  I RCINS="S" S Z=0,Z0="" F  S Z=$O(RCINS("S",Z)) Q:'Z  S Z0=Z0_$S(Z0'="":",",1:"")_$P($G(^DIC(36,Z,0)),U)
  ; PRCA*4.5*326 - Start modified block
  S Z0="PAYERS: "_$S(RCINS="A":"ALL   ",RCINS="R":"RANGE",1:"SELECTED")
- S Z0=Z0_$J("",16)_"MEDICAL/PHARMACY/TRICARE: "_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ S Z0=Z0_$J("",16)_"MEDICAL/PHARMACY/TRICARE/CHAMPVA: "_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")  ;PRCA*4.5*432 Add CHAMPVA
  S HCNT=HCNT+1,RCHDR(HCNT)=$J("",80-$L(Z0)\2)_Z0,Z0=""
  ; PRCA*4.5*326 modify next two lines for tricare filter
  S Z0=Z0_"DATE RANGE: "_$$FMTE^XLFDT(START,"2Z")_"-"_$$FMTE^XLFDT(END,"2Z")
@@ -350,7 +350,7 @@ HDRLM ; create the list manager version of the report header
  S HCNT=HCNT+1,RCHDR(HCNT)=Y
  I RCINS="S" S Z=0,Z0="" F  S Z=$O(RCINS("S",Z)) Q:'Z  S Z0=Z0_$S(Z0'="":",",1:"")_$P($G(^DIC(36,Z,0)),U)
  S Z0="PAYERS: "_$S(RCINS="A":"ALL     ",RCINS="R":"RANGE",1:"SELECTED")
- S Z0=Z0_$J("",44-$L(Z0))_"MEDICAL/PHARMACY/TRICARE: "_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ S Z0=Z0_$J("",38-$L(Z0))_"MEDICAL/PHARMACY/TRICARE/CHAMPVA: "_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")  ;PRCA*4.5*432 Add CHAMPVA
  ; PRCA*4.5*326 End modified code block
  S HCNT=HCNT+1,RCHDR(HCNT)=Z0
  I RCINS="A" S HCNT=HCNT+1,RCHDR(HCNT)=""

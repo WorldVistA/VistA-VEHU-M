@@ -1,6 +1,8 @@
 IBCNOR2 ;AITC/TAZ - IBCN BUFFER DAILY REPORT ;15-AUG-2023
- ;;2.0;INTEGRATED BILLING;**771,778**;16-SEP-09;Build 28
+ ;;2.0;INTEGRATED BILLING;**771,778,794**;21-MAR-94;Build 9
  ;;Per VA Directive 6402, this routine should not be modified.
+ ;
+ ;IB*794/DTG corrected date in line two from 16-SEP-09 to 21-MAR-94
  ;
  ; Variables:
  ;   IBCNSPC("IBOUT")   = "R" for Report format or "E" for Excel format

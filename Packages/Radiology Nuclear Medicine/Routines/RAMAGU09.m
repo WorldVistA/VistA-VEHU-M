@@ -1,5 +1,5 @@
-RAMAGU09 ;HCIOFO/SG - ORDERS/EXAMS API (RAMISC VALIDATION) ; 2/24/09 3:10pm
- ;;5.0;Radiology/Nuclear Medicine;**90**;Mar 16, 1998;Build 20
+RAMAGU09 ;HCIOFO/SG - ORDERS/EXAMS API (RAMISC VALIDATION) ; Aug 15, 2024@09:35:50
+ ;;5.0;Radiology/Nuclear Medicine;**90,219**;Mar 16, 1998;Build 1
  ;
  ;
  ; NOTE: All entry points in this routine are internal ones. Do not
@@ -220,7 +220,7 @@ VALPRM(NAME,SEQ,IENS,NODE,FLAGS) ;
  . ;--- Check if the value is not empty
  . S I=0,RC=1
  . F  S I=$O(@PNODE@(I))  Q:I'>0  I @PNODE@(I)'?." "  S RC=0  Q
- . I RC  S RC=$$IPVE^RAERR(-8,,PNODE)  Q
+ . I RC  S RC=$$IPVE^RAERR(PNODE)  Q  ;p219/KLM - INC34423845
  . S RAFDA(FILE,IENS,FIELD)=PNODE
  ;
  ;=== Pre-process the parameter value according to the field type.

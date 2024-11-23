@@ -1,5 +1,5 @@
-ONCOPA3 ;Hines OIFO/GWB - [PA Print Complete Abstract (132c)] continued ;10/07/11
- ;;2.2;ONCOLOGY;**1,12**;Jul 31, 2013;Build 8
+ONCOPA3 ;HINES OIFO/GWB - [PA Print Complete Abstract (132c)] continued ;10/07/11
+ ;;2.2;ONCOLOGY;**1,12,20**;Jul 31, 2013;Build 5
  ;
  N ALHS,ALTP,ALZN,CFH,CHST,NOK,OC,OCCP,RCDT,TBHS,TBTP,TBZN,TX,Y
  S NAME="PERSONAL DATA" D FORMAT^ONCOPA1
@@ -26,10 +26,12 @@ ONCOPA3 ;Hines OIFO/GWB - [PA Print Complete Abstract (132c)] continued ;10/07/1
  W !?1,"                  Cancer #2:  ",ONCAB(165.5,IEN,148.2,"E") D P Q:EX=U
  W !?1,"                  Cancer #3:  ",ONCAB(165.5,IEN,148.3,"E") D P Q:EX=U
  W !?1,"                  Cancer #4:  ",ONCAB(165.5,IEN,148.4,"E") D P Q:EX=U
- W !!?7,"Agent Orange Exposure:  ",ONCAB(160,PTIEN,48) D P Q:EX=U
- W !?1,"Ionizing Radiation Exposure:  ",ONCAB(160,PTIEN,50) D P Q:EX=U
- W !?1,"          Chemical Exposure:  ",ONCAB(160,PTIEN,52) D P Q:EX=U
- W !?1,"          Asbestos Exposure:  ",ONCAB(160,PTIEN,61) D P Q:EX=U
+ W !!?7,"Exposure Agent Orange:  ",ONCAB(160,PTIEN,48) D P Q:EX=U
+ W !?1,"Exposure Ionizing Radiation:  ",ONCAB(160,PTIEN,50) D P Q:EX=U
+ W !?1,"          Exposure Chemical:  ",ONCAB(160,PTIEN,52) D P Q:EX=U
+ W !?1,"          Exposure Asbestos:  ",ONCAB(160,PTIEN,61) D P Q:EX=U
+ W !?1,"          Exposure Burn Pit:  ",ONCAB(160,PTIEN,72) D P Q:EX=U
+ W !?1,"       Exposure Other Toxic:  ",ONCAB(160,PTIEN,73) D P Q:EX=U 
  W !?1,"            Vietnam Service:  ",ONCAB(160,PTIEN,62) D P Q:EX=U
  W !?1,"            Lebanon Service:  ",ONCAB(160,PTIEN,55) D P Q:EX=U
  W !?1,"            Grenada Service:  ",ONCAB(160,PTIEN,63) D P Q:EX=U

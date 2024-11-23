@@ -1,16 +1,17 @@
 ONCOEDC ;HINES OIFO/GWB - ABSTRACT STATUS (165.5,91) Input Transform ;10/19/11
- ;;2.2;ONCOLOGY;**1,5,6,10,19**;Jul 31, 2013;Build 4
- ;
+ ;;2.2;ONCOLOGY;**1,5,6,10,19,20**;Jul 31, 2013;Build 5
+ ;p20 -Abstract Status change
 CHECK ;Required field check
  ;CLASS OF CASE   = 00-22
  ;SEQUENCE NUMBER = 00-59 or 99
  ;DATE DX > 12/31/95
- N ABSTAT,CC,CMPLT,CNT,DCC,DCLC,DTDX,ERRFLG,EX,FDNUM,FLDNAME,FN,LINE
+ N ABSTAT,CC,CMPLT,CNT,DCC,DCLC,DTDX,ERRFLG,EX,FDNUM,FLDNAME,FN,LINE,ONCX
  N NODE0,ONCANL,ONCFILE,PAUSE,PRM,PTN,SQN
  ;next line added to set Abstracted By field for Accession Only cases
  I X="A",$P(^ONCO(165.5,D0,7),U,3)="" S $P(^ONCO(165.5,D0,7),U,3)=DUZ
- I (X=0)!(X=1)!(X=2)!(X="A")!(X="D") Q
  S PRM=D0
+ I X'=($P(^ONCO(165.5,D0,7),U,2)) S $P(^ONCO(165.5,D0,7),U,22)=DUZ,$P(^ONCO(165.5,D0,7),U,21)=DT
+ I (X=0)!(X=1)!(X=2)!(X="A")!(X="D") Q
  S PTN=$P($G(^ONCO(165.5,D0,0)),U,2)
  S CMPLT=1,NODE0=$G(^ONCO(165.5,D0,0)),ONCTYP="",ONCANL="" K LIST
  S (COC,CC)=$E($$GET1^DIQ(165.5,D0,.04),1,2)
@@ -93,6 +94,9 @@ PCHK ;Enter RETURN to continue or '^' to exit:
  Q
  ;
 EDITS ;Call to EDITS API
+ ; p20 do not allow completion of 2024+ cases. These comments and
+ ; the following line will be removed in p21. X=2 because its Input Transform
+ I DATEDX>3231231 W !!,"THIS CASE HAS A DATE DX OF 2024 AND CANNOT BE COMPLETED YET",! S $P(^ONCO(165.5,D0,7),U,2)=2 S X=2 R !?1,"  press RETURN to continue->",ANSWER:DTIME Q
  S ERRFLG=0
  ;Q:($G(ONCOEDIT)=1)
  W !," Calling EDITS API..."

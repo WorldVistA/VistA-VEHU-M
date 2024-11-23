@@ -1,5 +1,5 @@
 YTQAPI17 ;ALB/ASF - MHA REMOTE PROCEDURES IMPORT ;3/18/10 3:16pm
- ;;5.01;MENTAL HEALTH;**96,217,235,233**;Dec 30, 1994;Build 13
+ ;;5.01;MENTAL HEALTH;**96,217,235,233,240**;Dec 30, 1994;Build 10
  ;
  ;No external references in this routine
  ;
@@ -32,6 +32,7 @@ SAVEALL(YSDATA,YS) ;save all answers from an administration
  . S YSDATA(2)=N_"^OK"
  ;set has been operational
  S YSDATA(1)="[DATA]"
+ D UPANS^YTQEVNT($G(YSAD),"saveall") ; publish admin update event
  S YSCODE=$P(^YTT(601.84,YSAD,0),U,3)
  S YSOP=$P($G(^YTT(601.71,YSCODE,2)),U,2)
  S:YSOP="Y" $P(^YTT(601.71,YSCODE,2),U,5)="Y"

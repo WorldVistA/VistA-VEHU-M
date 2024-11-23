@@ -1,5 +1,5 @@
 RCDPPLB ;ALB/TJB - ERA/PROVIDER LEVEL ADJUSTMENTS REPORT ;1/02/15 10:00am
- ;;4.5;Accounts Receivable;**303,321,326**;Mar 20, 1995;Build 26
+ ;;4.5;Accounts Receivable;**303,321,326,432**;Mar 20, 1995;Build 16
  ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ; PRCA*4.5*303 - ERA/PROVIDER LEVEL ADJUSTMENTS REPORT 
@@ -27,7 +27,7 @@ EN ; Entry point for Report
  ; Get PLB Codes for report
  D PLBC(.RCODE) G:$G(RCODE)']"" PLBQ
  ;
- S RCTYPE=$$RTYPE^RCDPEU1() G:RCTYPE=-1 PLBQ     ; PRCA*4.5*326 - Add Tricare filter to Med/Pharm/Both
+ S RCTYPE=$$RTYPE^RCDPEU1() G:RCTYPE=-1 PLBQ     ; PRCA*4.5*326 - Add Tricare filter to Med/Pharm/Both ; PRCA*4.5*432 Add CHAMPVA
  S RCWHICH=$$NMORTIN^RCDPEAPP() Q:RCWHICH=-1     ; PRCA*4.5*326 - Filter by Payer Name or TIN
  ;
  S RCPAR("SELC")=$$PAYRNG^RCDPEU1(0,1,RCWHICH)   ; PRCA*4.5*326 - Selected or Range of Payers
@@ -93,11 +93,12 @@ REPORT ; Print out the report
  . I $L(DIVHDR)>(VAL+R2) S DIVHDR=$E(DIVHDR,1,(VAL+R2))_"..."
  . I $L(CRHDR)>(VAL+R1) S CRHDR=$E(CRHDR,1,(VAL+R2))_"..."
  ;
- I 'RCEXCEL D
- . S RCSTOP=$$NEWPG(.RCPG,1,.RCSL,RCSORT) ; PRCA*4.5*326 - use $$NEWPG for first header
- E  D
- . ; Excel Report
- . W "CODE^PAYER^TIN^REP_DATE^AMOUNT",!
+ ;I 'RCEXCEL D  ; EXCEL removed
+ S RCSTOP=$$NEWPG(.RCPG,1,.RCSL,RCSORT) ; PRCA*4.5*326 - use $$NEWPG for first header
+ ;. S RCSTOP=$$NEWPG(.RCPG,1,.RCSL,RCSORT) ; PRCA*4.5*326 - use $$NEWPG for first header
+ ;E  D
+ ;. ; Excel Report
+ ;. W "CODE^PAYER^TIN^REP_DATE^AMOUNT",!
  ;
  S $P(ZLN,"-",80)="",$P(ZDLN,"=",80)="",$P(ZLN2,"-",78)="",ZLN2="  "_ZLN2,RCSL=7
  ; Do Grand totals first - per Susan 7/16/2015
@@ -222,8 +223,10 @@ DTCM(FIRST,ZIEN,XFS,XGBL) ; Get comment or reference number
  Q ZCM
  ;
 HDR(CD) ; Report header
- Q:CD "EDI LOCKBOX 835 PROVIDER LEVEL ADJUSTMENT (PLB) REPORT - DETAIL"
- Q "EDI LOCKBOX 835 PROVIDER LEVEL ADJUSTMENT (PLB) REPORT - SUMMARY"
+ N RCNM
+ S RCNM="EDI LOCKBOX 835 PROVIDER LEVEL ADJUSTMENT (PLB) REPORT - "
+ Q:CD RCNM_"DETAIL"
+ Q RCNM_"SUMMARY"
  ;
 HDRP(Z,X,Z1) ; Print Header (Z=String, X=1 (line feed) X=0 (no LF), Z1 (page number right justified)
  N LGT S LGT=$L(Z)+$L($G(Z1))
@@ -246,8 +249,8 @@ NEWPG(RCPG,RCNEW,RCSL,CD) ; Check for new page needed, output header
  . ; PRCA*4.5*326 - Include M/P/T filter in header
  . S XX="835 PAYERS: "_$S(RCWHICH=2:"None",1:$S($E(RCPAYS)="A":"All",1:"Selected"))_" "
  . S XX=XX_"835 PAYER TINs: "_$S(RCWHICH=1:"None",1:$S($E(RCPAYS)="A":"All",1:"Selected"))_" "
- . S XX=XX_"MEDICAL/PHARMACY/TRICARE: "
- . S XX=XX_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",1:"ALL")
+ . S XX=XX_"MED/PHARM/TRICARE/CHAMPVA: "  ;PRCA*4.5*432 Add CHAMPVA
+ . S XX=XX_$S(RCTYPE="M":"MEDICAL",RCTYPE="P":"PHARMACY",RCTYPE="T":"TRICARE",RCTYPE="C":"CHAMPVA",1:"ALL")  ;PRCA*4.5*432 Add CHAMPVA
  . D HDRP(XX,1)
  . D HDRP("Date Range: "_$$DATE^RCDPRU(RCDT1)_" - "_$$DATE^RCDPRU(RCDT2),1)
  . W !,RCHR,! S RCSL=7

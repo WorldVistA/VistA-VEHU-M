@@ -1,5 +1,5 @@
-PSGOE41 ;BIR/CML3 - REGULAR ORDER ENTRY (CONT.) ;Dec 15, 2021@09:56:53
- ;;5.0;INPATIENT MEDICATIONS;**50,63,64,69,58,111,136,113,267,315,334,373,366,327,319,399**;16 DEC 97;Build 65
+PSGOE41 ;BIR/CML - REGULAR ORDER ENTRY (CONT.) ;Dec 15, 2021@09:56:53
+ ;;5.0;INPATIENT MEDICATIONS;**50,63,64,69,58,111,136,113,267,315,334,373,366,327,319,399,454**;16 DEC 97;Build 6
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ; Reference to ^DICN via DBIA 10009
  ; Reference to %DT via DBIA 10003
@@ -162,11 +162,18 @@ TIMES    ;At least one admin time, not more than interval allows.
  I $G(PSGST)="O",$L(X,"-")>1 W !,"This is a One Time Order - only one admin time is permitted." K X Q
  I $G(PSGST)="O" Q  ;Done validating One Time
  I +$G(I)=0 Q  ;No frequency - can not check frequency related items
+ ;P454 messages to the user
+ I $D(X) D  Q:'$G(X)
+ . I (X'["-") D
+ . . I (X'?2N),(X'?4N) W !,"ADMIN TIMES must be entered in a 2 or 4 digit numeric format" K X Q
+ . E  D
+ . . N LEN,TOT,CHK S LEN=$L($P(X,"-"))
+ . . F TOT=1:1:$L(X,"-") S CHK=$P(X,"-",TOT) Q:CHK=""  I ((CHK'?2N)&(CHK'?4N))!(LEN'=$L(CHK)) W !,"All ADMIN TIMES must be the same 2 or 4 digit numeric format" W !,"(i.e. 09-13 or 0900-1300)" K X Q
  S MAX=1440/I
  I MAX<1 D  Q
  . I $L(X,"-")'=1 W !,"This order requires one admin time." K X Q
  I MAX'<1,$L(X,"-")>MAX W !,"The number of admin times entered is greater than indicated by the schedule." K X Q  ;Too many times
- I MAX'<1,$L(X,"-")<MAX W !,"The number of admin times entered is fewer than indicated by the schedule."  ;Too few times
+ I MAX'<1,$L(X,"-")<MAX W !,"The number of admin times entered is fewer than indicated by the schedule." K X Q  ;Too few times ;P454 Add Kill/Quit
  Q
 DOSE ;Make certain at least one dose is given.
  Q:$G(PSGST)="OC"!($G(PSGST)="P")

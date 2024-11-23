@@ -1,5 +1,5 @@
-ECXUCBOC ;ALB/TJL-CBOC Activity Report ;4/14/17  10:33
- ;;3.0;DSS EXTRACTS;**49,148,149,160,166**;Dec 22, 1997;Build 24
+ECXUCBOC ;ALB/TJL-CBOC Activity Report ;8/6/24  12:08
+ ;;3.0;DSS EXTRACTS;**49,148,149,160,166,190**;Dec 22, 1997;Build 36
  ;
 EN ; entry point
  N X,Y,DATE,PG,COUNT,ECRUN,ECXDESC,ECXSAVE,ECXTL,YYYYMM,ECXJOB
@@ -63,7 +63,7 @@ SELECT ; user inputs for start date
  I '$D(X) W !!,"Invalid choice.  Please try again." S DIR(0)="E" W ! D ^DIR K DIR D  Q:QFLG  G SELECT ;149
  .I 'Y S QFLG=1
  S ECXJOB=X
- S Y=$P(^ECX(727,ECXJOB,0),U,4) D DD^%DT
+ S Y=$P(^ECX(727,ECXJOB,0),U,5) D DD^%DT
  S ECSTART=$P(Y," ")_$P(Y,",",2)
  Q
  ;

@@ -1,4 +1,4 @@
-OCXOZ09 ;SLC/RJS,CLA - Order Check Scan ;JUN 24,2022 at 20:02
+OCXOZ09 ;SLC/RJS,CLA - Order Check Scan ;NOV 22,2024 at 16:47
  ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
@@ -25,7 +25,7 @@ CHK187 ; Look through the current environment for valid Event/Elements for this 
  ; EQTERM( ----------> EQUALS TERM OPERATOR
  ;
  I $$EQTERM(OCXDF(47),"ANGIOGRAM (PERIPHERAL)") S OCXDF(40)=$G(OCXPSM) I $L(OCXDF(40)),(OCXDF(40)="SESSION") D CHK191
- I $$CLIST(OCXDF(47),"GLUCOPHAGE,METFORMIN") S OCXDF(40)=$G(OCXPSM) I $L(OCXDF(40)),(OCXDF(40)="SELECT") S OCXDF(2)=$P($G(OCXPSD),"|",2) I $L(OCXDF(2)) D CHK279^OCXOZ0B
+ I $$CLIST($$UP^XLFSTR(OCXDF(47)),$$UP^XLFSTR("GLUCOPHAGE,METFORMIN")) S OCXDF(40)=$G(OCXPSM) I $L(OCXDF(40)),(OCXDF(40)="SELECT") S OCXDF(2)=$P($G(OCXPSD),"|",2) D CHK278^OCXOZ0B
  Q
  ;
 CHK191 ; Look through the current environment for valid Event/Elements for this patient.
