@@ -1,5 +1,5 @@
 SCMCWSUT ;ALB/ART - PCMM Web Call Patient Summary Web Service ;09/11/2014
- ;;5.3;Scheduling;**603**;Aug 13, 1993;Build 79
+ ;;5.3;Scheduling;**603,854**;Aug 13, 1993;Build 4
  ;
  QUIT
  ;
@@ -72,6 +72,7 @@ CPRSHEAD(SCDFN) ;Get data for CPRS PCMMR Header
  NEW SCIENS,SCTEXT
  SET SCIENS=SCDFN_","
  SET SCTEXT=$$GET1^DIQ(404.41,SCIENS,.06)
- SET:SCTEXT="" SCTEXT="No PACT assigned at any VA location"
+ SET:SCTEXT="" SCTEXT="No PACT assigned at this VA location (Click for more)" ;RTW SD*5.3*854
+ ;SET:SCTEXT="" SCTEXT="No PACT assigned at any VA location" ;sd*5.3*854
  QUIT SCTEXT
  ;

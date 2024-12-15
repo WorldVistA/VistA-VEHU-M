@@ -1,5 +1,6 @@
-XTVSRFL ;Bham FO/CML3{Albany FO/GTS} - VistA Package Sizing Manager; 27-JUN-2016
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSRFL ;BHAM/MAM/GTS - VistA Package Sizing Manager;
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;;Per VA Directive 6402, this routine should not be modified.
  ;;
 INIT(VALMCNT,XTVPSPRM) ;;VistA Size Report entry point
  ;;INPUT:
@@ -211,7 +212,7 @@ TALLYRPT(DISSORT,XTVSSILN,SELPKGNM) ; Compile component totals
  .. IF '$D(^DIC(9.4,"B",$REPLACE(PKGNAME,"''",""""))),$D(^DIC(9.4,"B",PKGNAME)) SET PKGIEN=$O(^DIC(9.4,"B",PKGNAME,""))
  .IF PKGNAME'["''" SET PKGIEN=+$O(^DIC(9.4,"B",PKGNAME,""))
  .;
- .IF (PKGIEN=0),(PKGNAME=$G(SELPKGNM)) DO RMTPKGMG^XTVSLAPI("Package: "_PKGNAME_" ...not found!  Protocol count may be incorrect.",$S($G(XTVSSNDR)]"":XTVSSNDR,1:$$NETNAME^XMXUTIL(DUZ)),PKGNAME)
+ .IF (PKGIEN=0),(PKGNAME=$P($G(SELPKGNM),"^",1)) DO RMTPKGMG^XTVSLAPI("Package: "_PKGNAME_" ...not found!  Protocol count may be incorrect.",$S($G(XTVSSNDR)]"":XTVSSNDR,1:$$NETNAME^XMXUTIL(DUZ)),PKGNAME) ;p152 v2 ba
  .DO COMPNTCT(PKGNAME,PKGIEN,LINEITEM,DISSORT)
  ;
  I DISSORT=2 S D1="" F  S D1=$O(^TMP("XTVS-VPS",$J,D1)) Q:D1=""  S D2="" F  S D2=$O(^TMP("XTVS-VPS",$J,D1,D2)) Q:D2=""  S X=$G(^(D2)),^TMP("XTVS-VPS0",$J,+X,D1,D2)=$P(X,"^",2,8)
@@ -311,8 +312,8 @@ PKGFLCK ; Check for Package File entries matching Parameter names, send report m
  . SET XMSUB="PACKAGE REPORT NOTICE ("_^%ZOSF("PROD")_") ; Report process warning."
  . DO ^XMD
  . IF +XMZ'>0 DO
- .. SET ERRTEXT="'Package Report Notcie' FAILED to return to "_$$NETNAME^XMXUTIL(DUZ)_"."
- .. DO APPERROR^%ZTER("WRERR^XTVSSVR : Package extract error")
+ .. SET ERRTEXT="'Package Report Notice' FAILED to return to "_$$NETNAME^XMXUTIL(DUZ)_"."
+ .. DO APPERROR^%ZTER("PKGFLCK^XTFSRFL : Package extract error")
  ;
  KILL ^TMP("XTVS-LOCAL-ERROR",$JOB)
  QUIT

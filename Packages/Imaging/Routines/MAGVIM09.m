@@ -1,5 +1,5 @@
-MAGVIM09 ;WOIFO/DAC,BT,MAT,JSJ,RRM - Utilities for RPC calls for DICOM file processing ; Oct 04, 2022@19:19:13
- ;;3.0;IMAGING;**118,138,332,345**;Mar 19, 2002;Build 2
+MAGVIM09 ;WOIFO/DAC,MAT,JSJ,RRM,BT,JSL - Utilities for RPC calls for DICOM file processing ; Oct 04, 2022@19:19:13
+ ;;3.0;IMAGING;**118,138,332,345,357**;Mar 19, 2002;Build 29
  ;; Per VA Directive 6402, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -30,7 +30,7 @@ MAGVIM09 ;WOIFO/DAC,BT,MAT,JSJ,RRM - Utilities for RPC calls for DICOM file proc
  ;   OUT(STARTCNT+1..n)=Message
  ;   OUT(n+1..m)=Tags`TagName`TagValue
  ;
-GETWI(OUT,ID,STOPTAG) ; Return Work Item record in OUT array
+GETWI(OUT,ID,STOPTAG,SRV) ; Return Work Item record in OUT array
  ; OUT      - array that holds the result
  ; ID       - IEN of the Work Item 
  ; STOPTAG  - The last tag of a record to be returned (optional)
@@ -75,6 +75,7 @@ GETWI(OUT,ID,STOPTAG) ; Return Work Item record in OUT array
  . Q
  ; Get Tags
  S TAGS=2006.94111,I="",STOP=0
+ I $G(SRV)'="" S CNT=CNT+1,OUT(CNT)="Tag"_SSEP_"Service"_OSEP_SRV
  S I=0
  F  S I=$O(^MAGV(2006.941,ID,4,I)) Q:I=""  D  Q:STOP=1
  . S DATA=$G(^MAGV(2006.941,ID,4,I,0))
@@ -157,7 +158,7 @@ RECHKFLE(UIDS,I,UID,TYPE) ;
  I TYPE=1 S FILE=2005.63
  I TYPE=2 S FILE=2005.64
  I $D(^MAGV(FILE,"B",UID)) D
- . S IEN=$O(^MAGV(FILE,"B",UID,""),-1)
+ . S IEN=$O(^MAGV(FILE,"B",UID,""))
  . S IEN=$P(^MAGV(FILE,IEN,6),"^")
  . I TYPE=1 D
  . . S NEWUID=$P($G(^MAGV(2005.62,IEN,0)),"^")
@@ -165,7 +166,7 @@ RECHKFLE(UIDS,I,UID,TYPE) ;
  . I TYPE=2 D
  . . S NEWUID=$P($G(^MAGV(2005.63,IEN,0)),"^")
  . . ;S $P(UIDS(I),ISEP,TYPE)=NEWUID
- Q NEWUID
+ Q $G(NEWUID)  ;SF prevent UNDEF errors 
  ;
  ;Set replaced UID in UIDS array if found in 2005.66 duplicate file
 DUPUID(UIDS,I,UID,TYPE)  ;P332 added sub
@@ -189,3 +190,107 @@ DUPUID(UIDS,I,UID,TYPE)  ;P332 added sub
  . S $P(UIDS(I),ISEP,TYPE)=$P(REC0,U,2)          ;set replacement UID
  . S RPLFND=1                                    ;quit loop
  Q IEN  ;return FILE IEN for replaced UID (or null if not found)
+ ;
+ ; RPC: MAGV FIND WORK ITEM  (Calling from FIND^MAGVIM01)
+FIND(OUT,TYPE,SUBTYPE,STATUS,PLACEID,PRIORITY,STOPTAG,MAXROWS,TAGS,LASTIEN,ORDER,DTFROM,DTTO) ; Find records with given attributes - return ID
+ ;PLACEID is FILE #4's STATION NUMBER
+ N IEN,IEN2,J,TAGMATCH,SSEP,ISEP,TAG,WICOUNT,FLD
+ N VALUE,FLDS,AFLD,NOMATCH,IENS,MAGOUT,LOCIEN,SRV
+ N TAGITM,PATNAME,GLB,FLTITM,RET
+ S SSEP=$$STATSEP^MAGVIM01,ISEP=$$INPUTSEP^MAGVIM01
+ S:'$G(DTFROM) DTFROM=0
+ S:'$G(DTTO) DTTO=9999999
+ ;
+ I $G(MAXROWS)'="",'(MAXROWS?1N.N) S OUT=-2_SSEP_"Invalid MAXROWS parameter provided" Q
+ ;
+ I $G(PLACEID)'="" D  Q:$G(OUT)<0
+ . S LOCIEN=$$IEN^XUAF4(PLACEID) ;IA #2171 Get Institution IEN for a station number
+ . I LOCIEN="" S OUT=-2_SSEP_"Invalid PLACEID parameter provided"
+ . Q
+ ;
+ S OUT(0)=0
+ ; AFLD(FLD,"IE") = compare the external or internal value of the field
+ S FLDS=""
+ I $G(TYPE)'="" S FLDS=FLDS_"1;",AFLD(1)=TYPE,AFLD(1,"IE")="E"
+ I $G(SUBTYPE)'="" S FLDS=FLDS_"2;",AFLD(2)=SUBTYPE,AFLD(2,"IE")="E"
+ I $G(STATUS)'="" S FLDS=FLDS_"3;",AFLD(3)=STATUS,AFLD(3,"IE")="E"
+ I $G(LOCIEN)'="" S FLDS=FLDS_"4;",AFLD(4)=LOCIEN,AFLD(4,"IE")="I"
+ I $G(PRIORITY)'="" S FLDS=FLDS_"5;",AFLD(5)=PRIORITY,AFLD(5,"IE")="E"
+ ;
+ K FLTITM S RET=$$GFLTITM^MAGVIM01(.FLTITM,.TAGS) ;filter Source, Service, Modality, and Procedure 
+ I RET S GLB="FLTITM"
+ I 'RET S GLB="^MAGV(2006.941)"
+ ;
+ K ERR
+ S:'$G(ORDER) ORDER=1
+ I '$G(LASTIEN) D
+ . I ORDER=1 S LASTIEN=0
+ . I ORDER=-1 S LASTIEN=9999999
+ S IEN=LASTIEN,WICOUNT=1
+ ;
+ F  S IEN=$O(@GLB@(IEN),ORDER) Q:(+IEN=0)!$D(ERR)!(($G(MAXROWS)'="")&(WICOUNT>$G(MAXROWS)))  D
+ . Q:'$$DTINRNG^MAGVIM01(IEN,DTFROM,DTTO)
+ . S IENS=IEN_"," K ERR,MAGOUT
+ . D GETS^DIQ(2006.941,IENS,FLDS,"IE","MAGOUT","ERR")
+ . I $D(ERR) K OUT S OUT(0)=-1_SSEP_$G(ERR("DIERR",1,"TEXT",1)) Q  ; Set Error and quit
+ . S FLD="",NOMATCH=0
+ . F  S FLD=$O(AFLD(FLD)) Q:FLD=""!NOMATCH  D
+ . . S:AFLD(FLD)'=MAGOUT("2006.941",IENS,FLD,AFLD(FLD,"IE")) NOMATCH=1
+ . . Q
+ . Q:NOMATCH  ; get next one if no match
+ . ; Tag matching
+ . S SRV=$$SRV^MAGVIM01(IEN),J=0,TAGMATCH=1
+ . F  S J=$O(TAGS(J)) Q:(J="")!'TAGMATCH  D
+ . . S TAG=$P(TAGS(J),ISEP,1),VALUE=$P(TAGS(J),ISEP,2)
+ . . I TAG="Procedure",VALUE="[No Procedure]",'$D(^MAGV(2006.941,"H",TAG,IEN)) Q
+ . . I TAG="Modality",VALUE="[No Modality]",'$D(^MAGV(2006.941,"H",TAG,IEN)) Q
+ . . I TAG="Service",VALUE'="" D  Q
+ . . . I VALUE="[No Service]",SRV="" Q
+ . . . I SRV'=VALUE S TAGMATCH=0
+ . . I TAG="PatientName",VALUE'="",'$D(^MAGV(2006.941,"H",TAG,IEN)) S TAGMATCH=0 Q
+ . . I TAG="PatientName",VALUE'="",$D(^MAGV(2006.941,"H",TAG,IEN)) D  Q
+ . . . S TAGITM=$O(^MAGV(2006.941,"H",TAG,IEN,"")) I TAGITM="" S TAGMATCH=0 Q
+ . . . S PATNAME=$P($G(^MAGV(2006.941,IEN,4,TAGITM,0)),U,2) I PATNAME="" S TAGMATCH=0 Q
+ . . . I '$F($$UPCASE(PATNAME),$$UPCASE(VALUE)) S TAGMATCH=0 Q
+ . . I VALUE'="",$L(VALUE)<31,'$D(^MAGV(2006.941,"HH",TAG,VALUE,IEN)) S TAGMATCH=0 Q
+ . . I VALUE'="",$L(VALUE)<31,$D(^MAGV(2006.941,"HH",TAG,VALUE,IEN)) Q
+ . . S IEN2=$O(^MAGV(2006.941,"H",TAG,IEN,""))
+ . . I $P($G(^MAGV(2006.941,IEN,4,IEN2,0)),U,2)'=VALUE S TAGMATCH=0
+ . . Q
+ . I 'TAGMATCH Q
+ . ; Add work item header to output array
+ . D GETWI^MAGVIM09(.OUT,IEN,"",SRV)  ; Get Work Item Record
+ . I +OUT(0)<0 S ERR=""  ; Check for error and set ERR to quit from the loop
+ . S WICOUNT=WICOUNT+1
+ . S LASTIEN=IEN
+ . Q
+ ;Save the last IEN processed, used to retrieve more rows
+ I IEN,'$D(ERR) S OUT(0)=OUT(0)_SSEP_LASTIEN
+ Q
+ ;
+UPDWI(ID,FDA,MSGUPD) ; Update work item
+ ; Return 0|Error`Message error
+ ; 
+ ; ID - IEN of Work Item
+ ; FDA - VA FileMan FDA array
+ ; MSGUPD - Message array
+ N ERR,SSEP
+ S SSEP=$$STATSEP^MAGVIM01
+ ;
+ D VALIDATE^MAGVIM06(.FDA,.ERR)
+ I $D(ERR("DIERR",1,"TEXT",1)) Q -4_SSEP_$G(ERR("DIERR",1,"TEXT",1))
+ ;
+ K ERR
+ D FILE^DIE("E","FDA","ERR")
+ I $D(ERR("DIERR",1,"TEXT",1)) Q -3_SSEP_$G(ERR("DIERR",1,"TEXT",1))
+ ;
+ ; Update Message field
+ K ERR
+ I $D(MSGUPD) D WP^DIE(2006.941,ID_",",13,"K","MSGUPD","ERR")
+ I $D(ERR("DIERR",1,"TEXT",1)) Q -5_SSEP_$G(ERR("DIERR",1,"TEXT",1))
+ ;
+ Q 0_SSEP_"Work item "_ID_" updated"
+ ;
+UPCASE(X) ;
+ Q $TR(X,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+ ;

@@ -1,5 +1,5 @@
 SDTMPHLB ;MS/PB - TMP HL7 Routine;MAY 29, 2018
- ;;5.3;Scheduling;**704,733,714,773**;May 29, 2018;Build 9
+ ;;5.3;Scheduling;**704,733,714,773,888**;AUG 13, 1993;Build 8
  Q
 EN(CLINID) ; Entry to the routine to build an HL7 message
  ;notification to TMP about a new appointment in a TeleHealth Clinic
@@ -161,12 +161,12 @@ VISN(INSTNUM) ;
  .S VISN=$P($G(^DIC(4,VISNPTR,0)),"^",1)
  .S VISN=$P(VISN," ",2)
  Q VISN
-ACT ;
+ ;
+ACT ;888 Correct logic bug
  N INACTDT,ACTDT
- S INACTDT=CLIN(44,CLINID_",",2505,"I")
- I INACTDT="" S ACT="A"
- I INACTDT'="" D
- .S ACT="I"
- .S ACTDT=CLIN(44,CLINID_",",2506,"I")
- .I ACTDT>INACTDT S ACT="A"
+ S INACTDT=CLIN(44,CLINID_",",2505,"I"),ACTDT=CLIN(44,CLINID_",",2506,"I")
+ S ACT="I"
+ I INACTDT="",ACTDT="" S ACT="A" Q
+ I INACTDT="" S ACT="A" Q
+ I ((INACTDT'="")&(INACTDT>DT))!((ACTDT'="")&(ACTDT'>DT)) S ACT="A"
  Q

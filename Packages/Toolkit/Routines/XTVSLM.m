@@ -1,5 +1,6 @@
-XTVSLM ;Albany FO/GTS - VistA Package Sizing Manager; 23-JUN-2016
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSLM ;ALBANY FO/GTS - VistA Package Sizing Manager; 23-JUN-2016
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; -- main entry point for XTVS PACKAGE MANAGER
  NEW FIRSTITM,LASTITM
@@ -19,6 +20,7 @@ HDR ; -- header code
 INIT ; -- init variables and list array
  ;  DISPBAK  - List "BAK" files indicator [NOTE: Used by this List Template to turn on/off display of *.BAK files
  ;               [KILLed in EXIT]
+ ;  XTVPSPRM - Last selected XTMPFILE parameter file selected. [KILLed in EXIT]
  ;
  SET DISPBAK=$P($$YNCHK^XTVSLAPI("Do you want to Display XTMPSIZE*.BAK (backup files)"),"^",2)
  ;
@@ -93,7 +95,7 @@ HELP ; -- help code
  ;
 EXIT ; -- exit code
  DO KILL
- KILL DISPBAK
+ KILL DISPBAK,XTVPSPRM
  Q
  ;
 KILL ; - Kill local and global display arrays
@@ -166,11 +168,10 @@ DELPRM ; -- Delete a selected Parameter file
  SET DEFDIR=$$GET^XPAR("SYS","XTVS PACKAGE MGR DEFAULT DIR",1,"I")
  IF (+$G(FIRSTITM)'>0)!($G(LASTITM)'>0) DO JUSTPAWS^XTVSLAPI(" No Package Parameter Files to delete in "_DEFDIR_".")
  IF (+$G(FIRSTITM)>0),($G(LASTITM)>0) DO
- . NEW DELFILE,FILESEL,FILENME,CHKLKER,UNLKRSLT,DELRSLT
+ . NEW DELFILE,FILENME,CHKLKER,UNLKRSLT,DELRSLT
  . SET DELFILE=0
- . SET FILESEL=$$SELXTMP^XTVSLAPI(FIRSTITM,LASTITM,5)
- . IF +FILESEL>0 DO
- .. SET FILENME=$P($G(^TMP("XTVS PACKAGE MGR",$J,FILESEL,0)),FILESEL-5_") ",2)
+ . SET FILENME=$$SELXTMP^XTVSLAPI(FIRSTITM,LASTITM)
+ . IF FILENME]"" DO
  .. SET CHKLKER=$$REQLOCK^XTVSLAPI(FILENME)
  .. IF 'CHKLKER DO   ;LOCKED
  ... SET DELFILE=+$$YNCHK^XTVSLAPI("Do you want to PERMANENTLY DELETE "_FILENME)
@@ -202,22 +203,32 @@ RMVLCK ; -- Package Parameter lock cleanup
  .. NEW UNLKRSLT
  .. SET UNLKRSLT=$$UNLCKPFL^XTVSLAPI($P(UNLKFNME,".")_".DAT") ;Delete selected Parameter Lock file
  .. IF 'UNLKRSLT DO JUSTPAWS^XTVSLAPI($P(UNLKFNME,".")_".DAT"_" parameter file UNLOCK failed.  Check your privileges.")
- .. ;IF UNLKRSLT DO REFRESH
  DO REFRESH
  DO MSG
  QUIT
  ;
-REMREQ ; Remote Report Protocol entry point
+REMREQ ; Remote Report Protocol entry point - Called from "VistA Package Size Analysis Manager"
  ; -- Protocol: XTVS PKG QUERY REMOTE VISTA SIZE ACTION
  ;
- NEW DEFDIR
+ NEW DEFDIR,XTVSXFNM,LASTSPKG
+ DO FULL^VALM1
  SET DEFDIR=$$GET^XPAR("SYS","XTVS PACKAGE MGR DEFAULT DIR",1,"I")
  IF (+$G(FIRSTITM)'>0)!($G(LASTITM)'>0) DO JUSTPAWS^XTVSLAPI(" No Package Parameter Files in "_DEFDIR_" to select.")
  IF (+$G(FIRSTITM)>0),($G(LASTITM)>0) DO
- . SET XTTMPLNN=$$SELXTMP^XTVSLAPI(FIRSTITM,LASTITM,5)
- . IF XTTMPLNN>0 DO
- .. SET XTVPSPRM=$P(^TMP("XTVS PACKAGE MGR",$J,XTTMPLNN,0),XTTMPLNN-5_") ",2)
- .. IF XTVPSPRM]"" DO REMRPTRQ^XTVSLR(XTVPSPRM)
+ . NEW CHKLKER,LCKCHK
+ . SET XTVSXFNM=$$SELXTMP^XTVSLAPI(FIRSTITM,LASTITM)
+ . IF XTVSXFNM]"" DO
+ .. SET XTVPSPRM=XTVSXFNM
+ .. SET LASTSPKG=""
+ .. SET LCKCHK=$$CHKPID^XTVSLAPI(DEFDIR,XTVPSPRM) ;Returns 1 when current process has lock
+ .. SET CHKLKER=$$REQLOCK^XTVSLAPI(XTVPSPRM) ;Returns 1 when any process has lock
+ .. IF (+CHKLKER=0)!(+LCKCHK=1) DO
+ ... WRITE:(+CHKLKER=0) !!,$P(CHKLKER,"^",2)
+ ... WRITE:(+LCKCHK=1) !!,XTVPSPRM_" LOCK already held."
+ ... DO REMRPTRQ^XTVSLR(XTVPSPRM)
+ .. IF (+CHKLKER=1),(+LCKCHK'=1) DO
+ ... W !!," <* LOCK request denied! Try again later. *>"
+ ... DO JUSTPAWS^XTVSLAPI($P(CHKLKER,"^",2))
  DO REFRESH
  DO MSG
  ;

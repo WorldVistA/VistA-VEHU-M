@@ -1,5 +1,6 @@
-XTVSLPDC ;Albany FO/GTS - VistA Package Sizing Manager - Caption display; 12-JUL-2016
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSLPDC ;ALBANY FO/GTS - VistA Package Sizing Manager - Caption display; 12-JUL-2016
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; -- main entry point for XTVS PKG MGR PARAM CAPTN DISP
  NEW CHNGMADE
@@ -9,7 +10,7 @@ EN ; -- main entry point for XTVS PKG MGR PARAM CAPTN DISP
  QUIT
  ;
 HDR ; -- header code
- NEW DEFDIR,SPCPAD,DIRHEAD,LASTSPKG
+ NEW DEFDIR,SPCPAD,DIRHEAD
  SET SPCPAD=""
  SET DEFDIR=$$GET^XPAR("SYS","XTVS PACKAGE MGR DEFAULT DIR",1,"I")
  SET VALMHDR(1)="           VistA Package Size Analysis Manager - Captioned List"
@@ -25,7 +26,7 @@ HDR ; -- header code
  QUIT
  ;
 INIT ; -- init variables and list array
- NEW DATAITEM,PRMLNLP,PKG,LASTSPKG,CAPDAT,LPNM,LNENUM,DEFDIR,FILENAME,LCKCHK
+ NEW DATAITEM,PRMLNLP,PKG,CAPDAT,LPNM,LNENUM,DEFDIR,FILENAME,LCKCHK
  SET DEFDIR=$$GET^XPAR("SYS","XTVS PACKAGE MGR DEFAULT DIR",1,"I")
  SET LCKCHK=$$CHKPID^XTVSLAPI(DEFDIR,XTVPSPRM)
  IF $P(LCKCHK,"^")=1 DO
@@ -84,7 +85,7 @@ EXIT ; -- exit code
  . W !!," <* LOCK ERROR. LOCK required to proceed. Check LOCK file Integrity. *>"
  . DO JUSTPAWS^XTVSLAPI($P(LCKCHK,"^",2))
  ;
- KILL ^TMP("XTVS-PARAM-BI",$J)
+ KILL ^TMP("XTVS-PARAM-BI",$J),LASTSPKG
  DO KILL
  Q
  ;
@@ -99,91 +100,62 @@ KILL ; - Cleanup local and global display arrays
  KILL ^TMP("XTVS PKG MGR PARAM CAP",$J)
  QUIT
  ;
-SELPKG(ADPKG) ; Select Package to Edit from ^TMP("XTVS PKG MGR PARAM CAP",$J)
+SELPKG(ADDITM,DELIND) ; Select Package to Edit/Delete from ^TMP("XTVS PKG MGR PARAM CAP",$J)
  ; INPUT:
- ;       ADPKG : 0 - Do not allow add new package [Default]
- ;             : 1 - Allow add new package
+ ;       ADDITM : 0 - Do not allow add new package [Default]
+ ;              : 1 - Allow add new package
+ ;       DELIND : 0 - Called to select a package for add/edit [Default]
+ ;                1 - Called to select a package to delete
  ;
- NEW PKGNME,DIR,DIRUT,DTOUT,DUOUT,X,Y
- IF +$G(ADPKG)'=1 SET ADPKG=0  ;Default Add package to 'not allowed'
- SET PKGNME=0
+ ; Set:   ITEMNUM  - Number of items in SELARY 
+ ;        SELARY   - Array of Package Parameter files
+ ;        PARAMSTR - Array of string parameters as follows:
+ ;                       PARAMSTR("ADDITM")   - 0: Adding item to SELARY NOT Allowed;  1: Adding unique item to SELARY Allowed  1^1: Add duplicates allowed
+ ;                       PARAMSTR("MAXLNG")   - Maximum length of entered string [default 30, or 10 more than MINLNG when MINLNG>MAXLNG]
+ ;                       PARAMSTR("MINLNG")   - Minumum length of entered string [default 10]  - DEV NOTE: MINLNG must be > or = #Chars in PATRN begin & end strings
+ ;                       PARAMSTR("PATRN")    - Pattern match definition for text [default .ANP)
+ ;                       PARAMSTR("XTUPCASE") - 0: case matters, 1: All item text translated to upper case [default]
+ ;
+ ;
+ ; RETURN  - Name of the selected Package
+ ;
+ NEW DIR,DIRUT,DTOUT,DUOUT,X,Y,MINLG,MAXLG,PARAMSTR,SELARY,ITEMNUM,PKGNME
+ SET PARAMSTR("ADDITM")=+$G(ADDITM) ;Default - 0 No adding items
+ SET PARAMSTR("XTUPCASE")=0 ; Case matters
+ SET PARAMSTR("PATRN")=".ANP"
+ SET PARAMSTR("MINLNG")=4
+ SET PARAMSTR("MAXLNG")=50
+ SET DELIND=+$G(DELIND) ; Default 0 (add/edit)
+ SET PARAMSTR("DELIND")=DELIND
+ SET SELARY=""
+ ;
+ SET ITEMNUM=$$SETSELAY(.SELARY)
+ SET PARAMSTR("ITEMNUM")=ITEMNUM
+ ;
+ IF +ITEMNUM=0 DO JUSTPAWS^XTVSLAPI(" No packages to select. Corrupted Package parameter file!") QUIT  ;Nothing to select
+ ;
  SET DIR("A")="Select Package: "
- SET DIR(0)="FAO^2:40^K:'(X'?1P.E) X"
- SET DIR("PRE")="DO CHKX^XTVSLPDC("_ADPKG_")"
- SET DIR("?")="^DO PKGHLP^XTVSLPDC"
+ SET DIR(0)="NAO^1:"_(ITEMNUM+1)_"^K:(X'?.N) X I $D(X),(X>ITEMNUM) K X"
+ SET DIR("PRE")="D PRECHK^XTVSLPDC(.X,.LASTSPKG,.SELARY,.ITEMNUM,.PARAMSTR)"
+ IF 'ADDITM,('DELIND) SET DIR("?",2)=" New items cannot be added."
+ IF ADDITM,('$P(ADDITM,"^",2)) SET DIR("?",2)=" New items can be added but duplicates are not allowed."
+ SET DIR("?",1)=" Enter the name or number (1-"_ITEMNUM_") of the Package."
+ SET DIR("?")="   [Enter '??' for a numbered list of items OR '^' to exit]"
+ SET DIR("??")="^DO LISTOUT^XTVSLAPI(.SELARY)"
  DO ^DIR
- IF $P(X,"^",1)="+1" SET LASTSPKG=X
- IF '$D(DIRUT) SET PKGNME=Y
+ ;
+ SET PKGNME=$S(+$G(X)>0:SELARY(X),1:0) ; Return 0 if package not selected
+ IF PKGNME'=0 SET LASTSPKG=PKGNME W "  ",PKGNME
+ ;
  QUIT PKGNME
  ;
-CHKX(XADD) ;Check for Package
- ; INPUT:
- ;       XADD : 0 - Do not allow add new package
- ;            : 1 - Allow add new package
- ;
- IF (X="^")!(X']"") QUIT  ;Quit if user entry to exit
- ;
- NEW SELARY,PKGLP,ITEMNUM,XVAL,DOADD
- SET DOADD=0
- IF $G(XADD)']"" SET XADD=0
- IF X=" ",$G(LASTSPKG)]"" SET X=LASTSPKG W X
- IF (X]""),('$D(^TMP("XTVS-PARAM-CAP",$J,X))) DO
- . IF 'XADD DO PKGLIST(.X,.LASTSPKG)
- . IF XADD,$E($G(X),1,1)'="?" DO
- .. IF $L($G(X))>3 DO
- ... SET DOADD=$$YNCHK^XTVSLAPI("ADD ENTRY")
- ... IF '(+DOADD),($P(DOADD,"^",2)'=-1) DO PKGLIST(.X,.LASTSPKG)
- ... IF '(+DOADD),($P(DOADD,"^",2)=-1) K X
- .. IF ($L($G(X))'>3),($G(X)'="") DO PKGLIST(.X,.LASTSPKG)
- .. IF +DOADD DO
- ... SET ^TMP("XTVS-PARAM-CAP",$J,X)=X ;Create new entry in TMP global
- ... SET ^TMP("XTVS-PARAM-CAP",$J,X,1,"Package Name")=X
- ... SET ^TMP("XTVS-PARAM-CAP",$J,X,2,"Primary Prefix")=""
- ... SET ^TMP("XTVS-PARAM-CAP",$J,X,3,"*Lowest File#")=""
- ... SET ^TMP("XTVS-PARAM-CAP",$J,X,4,"*Highest File#")=""
- ... SET ^TMP("XTVS-PARAM-CAP",$J,X,5,"Additional Prefixes")=""
- ... SET ^TMP("XTVS-PARAM-CAP",$J,X,6,"Excepted Prefixes")=""
- ... SET ^TMP("XTVS-PARAM-CAP",$J,X,7,"File Numbers")=""
- ... SET ^TMP("XTVS-PARAM-CAP",$J,X,8,"File Ranges")=""
- ... SET ^TMP("XTVS-PARAM-CAP",$J,X,9,"Parent Package")=""
- . IF XADD,$E($G(X),1,1)="?" DO PKGLIST(.X,.LASTSPKG)
- ;
- QUIT
- ;
-PKGLIST(X,LASTSPKG) ;List packages from user entry [to support 'XADD' mod in CHKX]
- SET ITEMNUM=0
- SET PKGLP=$G(X)
- FOR  SET PKGLP=$O(^TMP("XTVS-PARAM-CAP",$J,PKGLP))  Q:PKGLP=""  Q:($E(PKGLP,1,$L($G(X)))'=$G(X))  DO
- . SET ITEMNUM=ITEMNUM+1
- . SET SELARY(ITEMNUM)=PKGLP
- IF ITEMNUM>0 DO
- . SET XVAL=0
- . DO LISTOUT^XTVSLAPI(.SELARY) ;List Packages for selection
- . FOR  READ !,"Enter number for Selected Package: ",XVAL:DTIME  Q:'$T  Q:$E(XVAL,1)="^"  Q:XVAL=""  Q:((+XVAL>0)&(+XVAL<(ITEMNUM+1)))  DO
- .. IF XVAL["?" W !,"Select a package.  [Number 1 - "_ITEMNUM_"]"
- .. IF XVAL'?1.3"?" W !,"??"
- .. DO JUSTPAWS^XTVSLAPI(" Select from the listed packages. ['^' to exit]")
- .. DO LISTOUT^XTVSLAPI(.SELARY) ; Relist packages
- . ;
- IF '((+$G(XVAL)>0)&(+$G(XVAL)<(ITEMNUM+1))) KILL X ;If didn't enter existing package or select from a list, require re-entry of package
- IF (+$G(XVAL)>0)&(+$G(XVAL)<(ITEMNUM+1)) SET (LASTSPKG,X)=SELARY(XVAL) W "   ",X
- QUIT
- ;
-PKGHLP(PRNT) ; Package selection help
- WRITE:+$G(PRNT) !,"Select a Package from list of packages. [Package Name is case sensitive.]",!
- WRITE:+$G(PRNT) !,"Parent Package indicates an association with a package that may include"
- WRITE:+$G(PRNT) !," component intersections causing duplicate counting of Routines, Options,"
- WRITE:+$G(PRNT) !," Protocols, Files, etc. by the VistA Package Size report.  For the VistA"
- WRITE:+$G(PRNT) !," Package Size Analysis Management tools, it is informational."
- WRITE:+$G(PRNT) !," However for VistA development management teams, it can mean more.",!
- IF +$$YNCHK^XTVSLAPI("Do you want a list of packages") DO 
- . NEW SELARY,ITEMNUM,PKGLP
- . SET ITEMNUM=0
- . SET PKGLP=""
- . FOR  SET PKGLP=$O(^TMP("XTVS-PARAM-CAP",$J,PKGLP))  Q:PKGLP=""  DO
- .. SET ITEMNUM=ITEMNUM+1
- .. SET SELARY(ITEMNUM)=PKGLP
- . DO LISTOUT^XTVSLAPI(.SELARY) ; Relist packages
+PRECHK(X,LASTSPKG,SELARY,ITEMNUM,PARAMSTR) ; SELPKG X value DIR("PRE") pre-check
+ NEW XTVSSAVX,DELIND
+ SET DELIND=+$G(PARAMSTR("DELIND"))
+ IF (X=" "),($G(LASTSPKG)]"") SET (XTVSSAVX,X)=LASTSPKG W "  ",LASTSPKG
+ IF (X]""),('$D(DTOUT)),($E(X,1)'="^") DO
+ . IF (X'?.N),($E(X,1)'["?") DO SELLIST^XTVSLPR2(.SELARY,.ITEMNUM,.X,.PARAMSTR)
+ IF DELIND,($G(XTVSSAVX)]""),('$D(X)!($D(X)&$G(X)']"")) D SPCPKGCK(XTVSSAVX,ITEMNUM,.SELARY)
  QUIT
  ;
 EDITPRM ; Edit parameters for a package
@@ -201,6 +173,13 @@ EDITPRM ; Edit parameters for a package
  . DO FULL^VALM1
  . SET PKGNME=$$SELPKG(1)
  . IF PKGNME'=0 DO
+ ..;
+ .. IF PKGNME["""" DO  ;Assumes that " only in PKGNME via Add New Package (XT*7.3*152)
+ ... SET PKGNME=$REPLACE(PKGNME,"""","''")
+ ... SET LASTSPKG=PKGNME
+ ... DO JUSTPAWS^XTVSLAPI("Quotation marks changed to apostrophes in "_PKGNME_" name.")
+ ..;
+ .. IF '$D(^TMP("XTVS-PARAM-CAP",$J,PKGNME)) DO SETADD(PKGNME)
  .. IF '$D(^TMP("XTVS-PARAM-BI",$J,PKGNME)) DO BEFORIMG^XTVSLPD1(PKGNME)
  .. SET CAPARY="^TMP(""XTVS-PARAM-CAP"","_$J_","""_PKGNME_""")"
  .. DO EDPKGPRM^XTVSLPD1(PKGNME)
@@ -213,7 +192,7 @@ EDITPRM ; Edit parameters for a package
  .. SET LCKCHK=$$CHKPID^XTVSLAPI(DEFDIR,XTVPSPRM)
  .. IF $P(LCKCHK,"^")=1 DO HDR,INIT
  .;
- . IF PKGNME=0 DO JUSTPAWS^XTVSLAPI(" Existing Package Not Selected.") DO MSG
+ . IF PKGNME=0 DO JUSTPAWS^XTVSLAPI(" Package Not Selected.") DO MSG
  ;
  IF $P(LCKCHK,"^")=1 SET VALMBCK="R"
  IF $P(LCKCHK,"^")'=1 SET VALMQUIT=""
@@ -227,7 +206,7 @@ DELPMPKG ; Delete parameters from a package
  SET LCKCHK=$$CHKPID^XTVSLAPI(DEFDIR,XTVPSPRM)
  IF $P(LCKCHK,"^")=1 DO
  . DO FULL^VALM1
- . SET PKGNME=$$SELPKG(0)
+ . SET PKGNME=$$SELPKG(0,1)
  . IF PKGNME'=0 DO
  .. SET CAPARY="^TMP(""XTVS-PARAM-CAP"","_$J_","""_PKGNME_""")"
  .. WRITE !,"You have chosen to delete the "_PKGNME_" entry"
@@ -243,7 +222,7 @@ DELPMPKG ; Delete parameters from a package
  ... SET CHNGMADE=$E($D(^TMP("XTVS-PARAM-BI",$J)),1,1)
  ... DO:$P($$CHKPID^XTVSLAPI(DEFDIR,XTVPSPRM),"^")=1 HDR,INIT
  .;
- . IF PKGNME=0 DO JUSTPAWS^XTVSLAPI(" Existing Package Not Selected.") DO MSG
+ . IF PKGNME=0 DO JUSTPAWS^XTVSLAPI(" Package Not Selected.") DO MSG
  .;
  . SET DEFDIR=$$GET^XPAR("SYS","XTVS PACKAGE MGR DEFAULT DIR",1,"I")
  . SET LCKCHK=$$CHKPID^XTVSLAPI(DEFDIR,XTVPSPRM)
@@ -325,4 +304,31 @@ CRTFLE(DEFDIR,FILENME,WNFILE) ; Update old file/Write New file
  . IF WNFILE DO
  .. SET CHKLKER=$$REQLOCK^XTVSLAPI(XTVPSPRM)
  .. DO JUSTPAWS^XTVSLAPI($P(CHKLKER,"^",2))
+ QUIT
+ ;
+SETADD(X) ; Add a new package to ^TMP("XTVS-PARAM-CAP")
+ SET ^TMP("XTVS-PARAM-CAP",$J,X)=X ;Create new entry in TMP global
+ SET ^TMP("XTVS-PARAM-CAP",$J,X,1,"Package Name")=X
+ SET ^TMP("XTVS-PARAM-CAP",$J,X,2,"Primary Prefix")=""
+ SET ^TMP("XTVS-PARAM-CAP",$J,X,3,"*Lowest File#")=""
+ SET ^TMP("XTVS-PARAM-CAP",$J,X,4,"*Highest File#")=""
+ SET ^TMP("XTVS-PARAM-CAP",$J,X,5,"Additional Prefixes")=""
+ SET ^TMP("XTVS-PARAM-CAP",$J,X,6,"Excepted Prefixes")=""
+ SET ^TMP("XTVS-PARAM-CAP",$J,X,7,"File Numbers")=""
+ SET ^TMP("XTVS-PARAM-CAP",$J,X,8,"File Ranges")=""
+ SET ^TMP("XTVS-PARAM-CAP",$J,X,9,"Parent Package")=""
+ QUIT
+ ;
+SETSELAY(SELARY) ; Move Package names to SELARY from ^TMP("XTVS-PARAM-CAP") array
+ NEW ITEMNUM,FILENME
+ SET FILENME=""
+ SET ITEMNUM=0
+ FOR  SET FILENME=$O(^TMP("XTVS-PARAM-CAP",$J,FILENME)) Q:FILENME=""  DO
+ . SET ITEMNUM=ITEMNUM+1 SET SELARY(ITEMNUM)=FILENME ;Parameter list
+ QUIT ITEMNUM
+ ;
+SPCPKGCK(XTVSSAVX,ITEMNUM,SELARY) ; Check for existence of the <SPACE> select package in SELARY
+ NEW SELARYCT
+ FOR SELARYCT=1:1:ITEMNUM QUIT:(SELARY(SELARYCT)=XTVSSAVX)
+ IF (+SELARYCT+1)>(+ITEMNUM) W !!,"??  ",XTVSSAVX_" VistA package is undefined."
  QUIT

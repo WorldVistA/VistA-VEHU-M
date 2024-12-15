@@ -1,10 +1,10 @@
 IBECEAU2 ;ALB/CPM - Cancel/Edit/Add... User Prompts ; 19-APR-93
- ;;2.0;INTEGRATED BILLING;**7,52,153,176,545,563,614,618,646,663,671,669,653,678,715,734,772**;21-MAR-94;Build 6
+ ;;2.0;INTEGRATED BILLING;**7,52,153,176,545,563,614,618,646,663,671,669,653,678,715,734,772,797**;21-MAR-94;Build 2
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 REAS(IBX) ; Ask for the cancellation reason.
  ; Input:   IBX  --  "C" (Cancel a charge), "E" (Edit a Charge)
- N IBUC
+ N IBEVDT,IBUC
  ;
  ;start IB*2.0*678
  ;Check the Brief Description field of the copay being cancelled to see if it is an Urgent Care Copay 
@@ -18,6 +18,8 @@ REAS(IBX) ; Ask for the cancellation reason.
  S:'IBUC DIC("S")=$S(IBXA=7:"I 1",IBXA=6:"I $P(^(0),U,3)=3",IBXA=5:"I ($P(^(0),U,3)=1)!($P(^(0),U,3)=3)",1:"I ($P(^(0),U,3)=2)!($P(^(0),U,3)=3)")_",(+($P(^(0),U,6))=0)"_",$E($P(^(0),U),1,4)'=""UC -"""  ; IB*2.0*734
  S:IBUC DIC("S")="I ($P(^(0),U,4)=1),(+($P(^(0),U,6))=0)"
  ;end IB*2.0*678
+ S IBEVDT=$P(IBND,U,14)  ; IB*2.0*797
+ S DIC("S")=DIC("S")_",+$P(^(0),U,9)'>IBEVDT,+$P(^(0),U,10)=0!(+$P(^(0),U,10)'<IBEVDT)"  ; IB*2.0*797
  ;
  D ^DIC K DIC
  S IBCRES=+Y

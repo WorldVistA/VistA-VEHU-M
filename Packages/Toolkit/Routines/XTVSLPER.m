@@ -1,5 +1,6 @@
-XTVSLPER ;Albany FO/GTS - VistA Package Sizing Manager; 7-JUL-2016
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSLPER ;ALBANY FO/GTS - VistA Package Sizing Manager; 7-JUL-2016
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; -- main entry point for XTVS PKG MGR PARAM ERROR DISP
  D EN^VALM("XTVS PKG MGR PARAM ERROR DISP")

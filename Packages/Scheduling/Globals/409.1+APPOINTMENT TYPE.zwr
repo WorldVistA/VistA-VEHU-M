@@ -47,7 +47,7 @@ ZWR
 ^SD(409.1,11,0)="SERVICE CONNECTED^^^SC"
 ^SD(409.1,11,1,0)="^409.11^1^1^3050926^^^^"
 ^SD(409.1,11,1,1,0)="Used for veterans with a service connected % of 50% and greater, or veterans being seen for a service connected condition."
-^SD(409.1,12,0)="WORLD WAR II^1^^WWII^1^31"
+^SD(409.1,12,0)="WORLD WAR II^^^WWII^1^31"
 ^SD(409.1,12,1,0)="^^1^1^3240831"
 ^SD(409.1,12,1,1,0)="Used for veterans who have served in World War II."
 ^SD(409.1,"B","CLASS II DENTAL",2)=""

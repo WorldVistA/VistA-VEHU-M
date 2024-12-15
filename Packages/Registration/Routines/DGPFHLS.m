@@ -1,5 +1,7 @@
-DGPFHLS ;ALB/RPM - PRF HL7 SEND DRIVERS ; 7/31/06 10:10am
- ;;5.3;Registration;**425,650,1005,1028,1037**;Aug 13, 1993;Build 4
+DGPFHLS ;ALB/RPM - PRF HL7 SEND DRIVERS ; Sep 11, 2023@13:22:21
+ ;;5.3;Registration;**425,650,1005,1028,1037,1091**;Aug 13, 1993;Build 28
+ ;
+ ;  Reference to SAVEHL7^EHMHL7 supported by ICR #7424
  ;
 SNDORU(DGPFIEN,DGPFHARR,DGFAC) ;Send ORU Message Types (ORU~R01)
  ;This function builds and transmits a single ORU message to all sites
@@ -76,6 +78,12 @@ SNDORU(DGPFIEN,DGPFHARR,DGFAC) ;Send ORU Message Types (ORU~R01)
  . S DGCRNR=$$CERNER2(DGPFIEN)
  . D:DGCRNR
  . . S DGSTAT2=$$XMIT1^DGPFHLU6(DGPFHIEN,DGHLEID,DGHLROOT,.DGHL)
+ . . ;
+ . . ;  Save HL7 message to EHRM HL7 Message file (#1609) - p1091
+ . . ;
+ . . N RTNVALUE K ^TMP("EHMHL7",$J) M ^TMP("EHMHL7",$J)=@DGHLROOT ;
+ . . S RTNVALUE=$$SAVEHL7X^EHMHL7("EHMHL7","PRF","VISTA-"_$$STA^XUAF4($$KSP^XUPARAM("INST")),"200CRNR",DGHL("FS"),$E(DGHL("ECH"),1),$E(DGHL("ECH"),2)) ;
+ . . K ^TMP("EHMHL7",$J) ;
  . ;
  . Q:'$G(DGSTAT)
  . I DGCRNR,'$G(DGSTAT2) Q
@@ -310,12 +318,11 @@ SNDMAIL(DGMIEN,DGHL,DGROOT) ;
  ;call to $$PROD^XUPROD supported by ICR #4440
  ;
  N XMDUZ,XMSUB,XMTEXT,XMY,XMZ ;MailMan variables
- N DGTXT,DGSTAT,DGMSA,DGMSH,DGTYP,DGFS,DGI,DGOMID
+ N DGTXT,DGSTAT,DGMSA,DGTYP,DGFS,DGI,DGMID
  S DGFS=DGHL("FS")
- S DGMSH=$G(^HLMA(DGMIEN,"MSH",1,0))
  S DGMSA=$G(@DGROOT@(1))
  S DGTYP=$P(DGMSA,DGFS,2)
- S DGOMID=$P(DGMSA,DGFS,3)
+ S DGMID=$P(DGMSA,DGFS,3)
  Q:DGTYP="AA"  ;Don't send mail messages for succesful AAs.
  S DGSTAT=$P($$SITE^VASITE,U,3)
  S XMDUZ="PRF Error Processor"
@@ -323,13 +330,11 @@ SNDMAIL(DGMIEN,DGHL,DGROOT) ;
  S XMSUB=XMSUB_" ["_$S($$PROD^XUPROD:"P",1:"T")_"]" ;production or test?
  S XMY("G.DGPF APPLICATION ERRORS")=""
  S XMTEXT="DGTXT("
- S DGTXT(1)="An error occurred processing message #"_DGMIEN
- S DGTXT(2)="Original MID: "_DGOMID
- S DGTXT(3)="Timestamp: "_$$FMTE^XLFDT($$NOW^XLFDT)_$$TZ^XLFDT
- S DGTXT(4)=""
- S DGTXT(5)="MESSAGE TEXT (ACK):"
- S DGTXT(6)=DGMSH
+ S DGTXT(1)="An error occurred in message #"_DGMIEN
+ S DGTXT(2)="Original MID: "_DGMID
+ S DGTXT(3)=""
+ S DGTXT(4)="MESSAGE TEXT (ACK):"
  S DGI=""  F  S DGI=$O(@DGROOT@(DGI)) Q:DGI=""  D
- . S DGTXT(DGI+6)=$G(@DGROOT@(DGI))
+ . S DGTXT(DGI+4)=$G(@DGROOT@(DGI))
  D ^XMD
  Q

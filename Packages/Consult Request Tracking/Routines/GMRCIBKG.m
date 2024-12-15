@@ -1,5 +1,5 @@
-GMRCIBKG ;SLC/JFR - IFC BACKGROUND ERROR PROCESSOR; 07/02/03 13:54
- ;;3.0;CONSULT/REQUEST TRACKING;**22,28,30,35,58,92,154**;DEC 27, 1997;Build 135
+GMRCIBKG ;SLC/JFR - IFC BACKGROUND ERROR PROCESSOR; Jun 18, 2024@15:09:24
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,28,30,35,58,92,154,189**;DEC 27, 1997;Build 54
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; This routine invokes IA# 3335
@@ -23,6 +23,19 @@ EN ;process file 123.6 and take action
  . ;  v-- resend if couldn't update file immediately
  . I $P(GMRCLOG0,U,6),$P(GMRCLOG0,U,8)=901 D  Q
  .. D TRIGR^GMRCIEVT($P(GMRCLOG0,U,4),$P(GMRCLOG0,U,5)) ;re-send activity
+ . ;
+ . ;  wait at least 10 minutes for 205 errors (Waiting for treating facility to update) - p189 wtc 6/18/2024
+ . ;
+ . I $P(GMRCLOG0,U,6),$P(GMRCLOG0,U,8)=205 D  Q  ;
+ .. ;
+ .. I $P(GMRCLOG0,U,1)<$$FMADD^XLFDT($$NOW^XLFDT,,-10/60) D TRIGR^GMRCIEVT($P(GMRCLOG0,U,4),$P(GMRCLOG0,U,5)) ;re-send activity
+ . ;
+ . ;  wait a day for 203 errors (Patient not in Cerner) - p189 wtc 5/4/22
+ . ;
+ . I $P(GMRCLOG0,U,6),$P(GMRCLOG0,U,8)=203 D  Q  ;
+ .. ;
+ .. I $P(GMRCLOG0,U,1)<$$FMADD^XLFDT($$NOW^XLFDT,-1) D TRIGR^GMRCIEVT($P(GMRCLOG0,U,4),$P(GMRCLOG0,U,5)) ;re-send activity
+ . ;
  . ;  v-- wait at least 1 hour on all other errors
  . I $P(GMRCLOG0,U)>GMRCTIM Q
  . ;  v-- if incomplete activity is now the earliest, resend it

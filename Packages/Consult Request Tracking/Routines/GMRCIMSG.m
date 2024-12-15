@@ -1,8 +1,9 @@
-GMRCIMSG ;SLC/JFR - IFC MESSAGE HANDLING ROUTINE; 09/26/02 00:23 ; May 10, 2022@09:28:54
- ;;3.0;CONSULT/REQUEST TRACKING;**22,28,51,44,154,184**;DEC 27, 1997;Build 22
+GMRCIMSG ;SLC/JFR - IFC MESSAGE HANDLING ROUTINE; 09/26/02 00:23 ; Oct 23, 2023@07:47:54
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,28,51,44,154,184,189**;DEC 27, 1997;Build 54
  ;
  ; Reference to EN^RMPRFC3 supported by #4661
- ; #2053 DIE, #4838 MAGDTR01, #2165 HLMA1, #10103 XLFDT, #2263 XPAR, #2171 XUAF4, #2541 XUPARAM 
+ ; #2053 DIE, #4838 MAGDTR01, #2165 HLMA1, #10103 XLFDT, #2263 XPAR, #2171 XUAF4, #2541 XUPARAM
+ ;  Reference to SAVEHL7^EHMHL7 supported by ICR #7424
  ;
  Q  ;don't start at the top
 IN ;process incoming message and save segments to ^TMP(
@@ -60,7 +61,12 @@ IN ;process incoming message and save segments to ^TMP(
  D EX
  Q
  ;
-EX ; clean up 
+EX ; clean up
+ ;
+ ;  If from Cerner, save HL7 message in file #1609.  - P189
+ ;
+ I $G(GMRCCRNR) D SAVEHL7^EHMHL7("IFC","CERNER-"_$P($P($G(^TMP("GMRCIF",$J,"OBR")),"|",2),"^",2),"VISTA-"_$$STA^XUAF4($$KSP^XUPARAM("INST")),"|","^","~") ;
+ ; 
  ; EHRM Prosthetics
  N GMRCEHRM
  S GMRCEHRM=$$EHRMCHK($G(^TMP("GMRCIF",$J,"ORC")),$G(^TMP("GMRCIF",$J,"OBR")))
@@ -90,9 +96,10 @@ EHRMCHK(ORCSEG,OBRSEG) ; Check for EHRM
  ;
 ORRIN ;process IFC responses
  K ^TMP("GMRCIF",$J)
- N HLNODE,SEG,I  ;production code
+ N HLNODE,SEG,I,PTACCTNO ;production code
  F I=1:1 X HLNEXT Q:HLQUIT'>0  D
  .S ^TMP("GMRCIF",$J,$P(HLNODE,"|"))=$E(HLNODE,5,999)
+ ;
  I $D(^TMP("GMRCIF",$J,"ORC")),$P(^("ORC"),"|")="OK" D
  . N GMRCFNUM,GMRCROUT,GMRCDA,FDA
  . S GMRCROUT=$$IEN^XUAF4($P($P(^TMP("GMRCIF",$J,"ORC"),"|",3),U,2))
@@ -103,18 +110,26 @@ ORRIN ;process IFC responses
  . ;
  . ;   If Cerner order, extract and save patient account number.  p184
  . ;
- . N PTACCTNO S PTACCTNO=$P($G(^TMP("GMRCIF",$J,"PID")),"|",18) I PTACCTNO'="" S FDA(1,123,GMRCDA_",",502)=PTACCTNO ;
+ . S PTACCTNO=$P($G(^TMP("GMRCIF",$J,"PID")),"|",18) I PTACCTNO'="" S FDA(1,123,GMRCDA_",",502)=PTACCTNO ;
  . ;
  . D UPDATE^DIE("","FDA(1)",,"GMRCERR")
  . Q
+ ;
  I $P(^TMP("GMRCIF",$J,"MSA"),"|")="AA" D
  . N MSGID,MSGLOG,FDA,GMRCDA,GMRCACT,GMRCLOG
  . S MSGID=$P(^TMP("GMRCIF",$J,"MSA"),"|",2)
  . S MSGLOG=$O(^GMR(123.6,"AM",MSGID,0)) Q:'MSGLOG
+ . ;
+ . ;  Do not delete log message for 203 error (Patient not in Cerner) until 2nd acknowledgement message is received and patient account number is filed. - wtc p189 8/21/23
+ . ;
+ . S GMRCDA=$P(^GMR(123.6,MSGLOG,0),U,4) ;
+ . I $$GET1^DIQ(123.6,MSGLOG,.08)=203,GMRCDA,$$GET1^DIQ(123,GMRCDA,502)="" Q  ;
+ . ;
  . S FDA(1,123.6,MSGLOG_",",.06)="@"
  . S FDA(1,123.6,MSGLOG_",",.08)="@"
  . D UPDATE^DIE("","FDA(1)",,"GMRCERR")
- . S GMRCDA=$P(^GMR(123.6,MSGLOG,0),U,4) Q:'GMRCDA
+ . ;S GMRCDA=$P(^GMR(123.6,MSGLOG,0),U,4) Q:'GMRCDA  ; p189 8/21/23
+ . Q:'GMRCDA  ; p189 8/21/23
  . S GMRCACT=$P(^GMR(123.6,MSGLOG,0),U,5) Q:'GMRCACT
  . S GMRCACT=$O(^GMR(123.6,"AC",GMRCDA,GMRCACT)) D
  .. I 'GMRCACT Q
@@ -135,6 +150,11 @@ ORRIN ;process IFC responses
  .. I '$$GET^XPAR("SYS","GMRC IFC ALERT IMMED ON PT ERR",1) Q
  .. D SNDALRT^GMRCIERR(MSGLOG,"C","IFC patient error at remote facility")
  . D SNDALRT^GMRCIERR(MSGLOG,"C")
+ . ;
+ . ;  If message from Cerner, save to EHRM HL7 Message file (#1609).  p189
+ . ;
+ . I $P(^TMP("GMRCIF",$J,"MSH"),"|",7)="CRNR" D SAVEHL7^EHMHL7("IFC","CERNER-"_$P($P($G(^TMP("GMRCIF",$J,"OBR")),"|",2),"^",2),"VISTA-"_$$STA^XUAF4($$KSP^XUPARAM("INST")),"|","^","~") ;
+ ;
  K ^TMP("GMRCIF",$J)
  I $T(ORRIN^MAGDTR01)'="" D  ;invoke Imaging code if tag^routine exists
  . D ORRIN^MAGDTR01

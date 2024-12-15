@@ -1,5 +1,6 @@
-XTVSLPD2 ;Albany FO/GTS - VistA Package Sizing Manager - Caption display APIs; 14-DEC-2018
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSLPD2 ;ALBANY FO/GTS - VistA Package Sizing Manager - Caption display APIs; 14-DEC-2018
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
  ;APIs 2
 PRIMPFX(XTA,XTB,XTJUMPIN) ; Enter/Edit Primary Prefix
@@ -52,7 +53,7 @@ HILOFLE(XTA,XTB,XTJUMPIN) ; Enter/Edit High or Low File Number
  QUIT
  ;
 EXADPFX(XTA,XTB,XTJUMPIN) ; Enter/Edit Excepted or Additional Prefixes
- NEW LISTDATA
+ NEW LISTDATA,PPRMT
  IF $G(XTJUMPIN) NEW DIR,X,Y,DUOUT,DIROUT,DTOUT,DIRUT
  SET DIR("A")=XTA
  SET:XTB]"" DIR("B")=XTB
@@ -182,19 +183,25 @@ EDITFRNG(DATELEMT,LISTDATA,UPDATLST) ; Update File Range
  IF '$D(DTOUT)&'$D(DUOUT)&'$D(DIROUT) DO LSTEDT(X,PCE,DATELEMT,.LISTDATA,.UPDATLST)
  QUIT
  ;
-PRNTPKG(XTA,XTB,XTJUMPIN) ; Enter/edit parent Package
+PRNTPKG(XTA,XTB,XTJUMPIN) ; Enter/edit Parent Package
  IF $G(XTJUMPIN) NEW DIR,X,Y,DUOUT,DIROUT,DTOUT,DIRUT
+ ;
+ NEW ITEMNUM,SELARY
+ SET ITEMNUM=$$SETSELAY^XTVSLPDC(.SELARY)
+ ;
  SET DIR("A")=XTA
  SET:XTB]"" DIR("B")=XTB
  SET DIR("A",1)=" "
- SET DIR("PRE")="DO:(X'=""@""&(X'[""^"")) CHKX^XTVSLPDC(0)" ;Check X for existing package
- SET DIR("?")="^DO PKGHLP^XTVSLPDC(1)"
- SET DIR(0)="FAOr^4:40^K:('(X'?1P.E)) X"
+ SET DIR("PRE")="D PRECHK^XTVSLPD2(.X,.LASTSPKG,.SELARY,.ITEMNUM)"
+ SET DIR("?")="^DO PKGHLP^XTVSLPD2(ITEMNUM)"
+ SET DIR("??")="^DO LISTOUT^XTVSLAPI(.SELARY)"
+ SET DIR(0)="FAOr^1:50^K:((X'?.ANP)&(X'?1.4N)) X"
  DO ^DIR
- IF ('$D(DTOUT)&('$D(DUOUT))) DO
+ ;
+ IF ($D(X))&('$D(DTOUT)&('$D(DUOUT))) DO
  . IF ($D(DIRUT)) DO UPDTNODE(DIRUT,EDITARY,DATANUM,DATANAME,X)
- . IF '$D(DIRUT),(@EDITARY@(DATANUM,DATANAME)'=X) SET @EDITARY@(DATANUM,DATANAME)=Y
- IF $D(DUOUT),(X["^") DO JUMP(X,DATANUM) SET DATANUM=DATANUM-1
+ . IF '$D(DIRUT),(@EDITARY@(DATANUM,DATANAME)'=X) SET @EDITARY@(DATANUM,DATANAME)=X
+ IF $D(DUOUT),($G(X)["^") DO JUMP(X,DATANUM) SET DATANUM=DATANUM-1
  QUIT
  ;
 JUMP(XVAL,XTOLDNUM) ; Jump to a data element during edit
@@ -271,6 +278,40 @@ PCEPOS(LISTDATA,DATELEMT) ; Return the piece position number of DATELEMT in LIST
  NEW PCE,DELIMPOS,ITEM
  FOR PCE=1:1 SET ITEM=$P(LISTDATA,"|",PCE) Q:ITEM=DATELEMT  IF ITEM="" SET PCE=0 QUIT
  QUIT PCE
+ ;
+PRECHK(X,LASTSPKG,SELARY,ITEMNUM) ; PRNTPKG X value DIR("PRE") pre-check
+ IF (X=" "),($G(LASTSPKG)]"") SET X=LASTSPKG W "  ",X
+ IF (X'="@"),(X'["^"),($E(X,1)'["?") DO CHKX^XTVSLPD2(.X,.SELARY,.ITEMNUM)
+ QUIT
+ ;
+CHKX(X,SELARY,ITEMNUM) ;Check X for Package [called by PRECHK via DIR("PRE") in PRNTPKG]
+ IF X'?.N DO
+ . NEW PARAMSTR
+ . SET PARAMSTR("ADDITM")=0 ;No adding items
+ . SET PARAMSTR("XTUPCASE")=0 ; Case matters
+ . SET PARAMSTR("PATRN")=".ANP"
+ . SET PARAMSTR("MINLNG")=4
+ . SET PARAMSTR("MAXLNG")=50
+ . SET SELARY=""
+ . ;
+ . SET PARAMSTR("ITEMNUM")=ITEMNUM
+ . DO SELLIST^XTVSLPR2(.SELARY,.ITEMNUM,.X,.PARAMSTR)
+ ;
+ IF $D(X),(X?.N),(X>ITEMNUM) KILL X
+ IF $D(X),(+$G(X)>0) SET (LASTSPKG,X)=SELARY(X) W "  ",X
+ ;
+ QUIT
+ ;
+PKGHLP(ITEMUM) ; Parent Package selection help
+ WRITE !,"Enter the name or number (1-"_ITEMNUM_") of the desired Parent Package."
+ WRITE !,"  Package Name is case sensitive."
+ WRITE !,"  Enter '??' for a numbered list of items OR '^' to exit.",!
+ WRITE !,"Parent Package indicates an association with a package that may include"
+ WRITE !," component intersections causing duplicate counting of Routines, Options,"
+ WRITE !," Protocols, Files, etc. by the VistA Package Size report.  For the VistA"
+ WRITE !," Package Size Analysis Management tools, it is informational."
+ WRITE !," However for VistA development management teams, it can mean more.",!
+ QUIT
  ;
 DATANAME ; Package Parameter data element names
  ;;PACKAGE NAME^1^PKGNME(DIR("A"),DIR("B"),1);;<place holder if Package name becomes editable>

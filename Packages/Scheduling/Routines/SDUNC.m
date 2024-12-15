@@ -1,5 +1,5 @@
-SDUNC ;ALB/MGD - RESTORE CLINIC AVAILABILITY ;Apr 12, 2022
- ;;5.3;Scheduling;**79,303,380,452,780,806,814,812**;Aug 13, 1993;Build 17
+SDUNC ;ALB/MGD,BLB - RESTORE CLINIC AVAILABILITY ;Apr 12, 2022
+ ;;5.3;Scheduling;**79,303,380,452,780,806,814,812,893**;Aug 13, 1993;Build 6
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  D DT^DICRW S DIC=44,DIC(0)="MEQA",DIC("S")="I $P(^(0),""^"",3)=""C"",'$G(^(""OOS""))",DIC("A")="Select CLINIC NAME: " D ^DIC K DIC("S"),DIC("A") Q:"^"[X  G:Y<0 SDUNC Q:'$D(^SC(+Y,"SL"))
@@ -25,7 +25,13 @@ N I '$F(^SC(SC,"ST",SD,1),"[") K ^SC(SC,"ST",SD) W !,*7,"CLINIC DOES NOT MEET ON
 FIX I ^SC(SC,"ST",SD,1)["X" S SDREST=^SC(SC,"OST",SD,1) D SEL Q
  S HOLD=^SC(SC,"OST",SD,1)
  Q
-CHK F N1=SD:0 S N1=$O(^SC(SC,"S",N1)) Q:'N1!(N1\1-SD)  I $D(^SC(SC,"S",N1,"MES")) D KMES I $D(SDFR1),'$D(^("MES")) Q
+CHK ;
+ I $D(^SC(SC,"FULL DAY CANCEL",SD)) D
+ .N FULLDAYFDA
+ .S FULLDAYFDA(44.1902,SD_","_SC_",",.01)="@"
+ .D FILE^DIE(,"FULLDAYFDA") K FULLDAYFDA
+ ;
+ F N1=SD:0 S N1=$O(^SC(SC,"S",N1)) Q:'N1!(N1\1-SD)  I $D(^SC(SC,"S",N1,"MES")) D KMES I $D(SDFR1),'$D(^("MES")) Q
  Q
 FIX2 Q:^SC(SC,"ST",SD,1)'["X"
  S SDREST=DH D SEL Q:'$D(SDFR1)  S DH=HOLD

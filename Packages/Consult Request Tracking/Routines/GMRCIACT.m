@@ -1,5 +1,5 @@
-GMRCIACT ;SLC/JFR - PROCESS ACTIONS ON IFC ; Apr 24, 2023@11:16:17
- ;;3.0;CONSULT/REQUEST TRACKING;**22,47,58,66,73,121,154,176,184,193,185**;DEC 27, 1997;Build 16
+GMRCIACT ;SLC/JFR - PROCESS ACTIONS ON IFC ; Aug 01, 2024@15:38:22
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,47,58,66,73,121,154,176,184,193,185,189**;DEC 27, 1997;Build 54
  ;
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
@@ -11,13 +11,15 @@ GMRCIACT ;SLC/JFR - PROCESS ACTIONS ON IFC ; Apr 24, 2023@11:16:17
  ; Reference to ^XLFNAME in ICR #3065
  ; Reference to ^XUAF4 in ICR #2171
  ; Reference to ^XLFSTR in ICR #10104
+ ; Reference to $$ADD^DGPROSAD in ICR #7421
+ ; Reference to APPERROR^%ZTER in ICR #1621
  ;
  Q  ;don't start here!
 NW(ARRAY) ;process and file new order
  ;Input:
  ; ARRAY  = name of array containing message parts
  ;
- N GMRCFDA,GMRCORC,GMRCDA,GMRCITM,GMRCITER,GMRCROUT,GMRCFCN,GMRCLAC
+ N GMRCFDA,GMRCORC,GMRCDA,GMRCITM,GMRCITER,GMRCROUT,GMRCFCN,GMRCLAC,OBR19 ;
  K ^TMP("GMRCIN",$J)
  M ^TMP("GMRCIN",$J)=@ARRAY
  S GMRCORC=^TMP("GMRCIN",$J,"ORC")
@@ -34,18 +36,34 @@ NW(ARRAY) ;process and file new order
  . S PAT=$$GETDFN^MPIF001(+$P(^TMP("GMRCIN",$J,"PID"),"|",2))
  . I +PAT'>1 S GMRCFDA(.02)="" Q
  . S GMRCFDA(.02)=+PAT
+ ;
+ ;  Save patient account number in field #502.  Below code shifted out of patient lookup so CRNRACCT set whether patient found or not.  Needed for proxy add code. p189
+ ;
+ S CRNRACCT=$P(^TMP("GMRCIN",$J,"PID"),"|",18),GMRCFDA(502)=CRNRACCT ; p184, 189
+ ;
+ ;  Save ordering provider data and placer field 1 from OBR-16 and OBR-19 in fields #507 and 508
+ ;
+ I $D(^TMP("GMRCIN",$J,"OBR")) D  ;  P184, 189
+ . N OBR16 S OBR16=$P(^("OBR"),"|",16),GMRCFDA(507)=$E(OBR16,1,255) ;
+ . S OBR19=$P(^("OBR"),"|",19),GMRCFDA(508)=$E(OBR19,1,255) ; 184V10 WTC 6/28/2022
+ . N OBR20 S OBR20=$P(^("OBR"),"|",20) I OBR20'="" S GMRCFDA(511)=$E(OBR20,1) ; 185V2 WTC 4/24/2023
+ . N OBR27 S OBR27=$P($P(^("OBR"),"|",27),U,4) I OBR27'="" S GMRCFDA(512)=$E(OBR27,1,30) ; 185V2 WTC 4/24/2023
+ ;
+ ;  If patient not found and placer is Cerner, call proxy add to create patient.  p189 wtc 4/12/2023
+ ;
+ I '$G(GMRCFDA(.02)),$G(CRNRACCT)'="" D  ;
  . ;
- . ;  Save patient account number in field #502
+ . ;  Extract EDIPI from PID-3.
  . ;
- . S CRNRACCT=$P(^TMP("GMRCIN",$J,"PID"),"|",18),GMRCFDA(502)=CRNRACCT ; p184
+ . N EDIPI,RTNCODE,PIECE ;
+ . S EDIPI="" F PIECE=1:1 Q:$P($P(^TMP("GMRCIN",$J,"PID"),"|",3),"~",PIECE)=""  I $P($P($P(^TMP("GMRCIN",$J,"PID"),"|",3),"~",PIECE),U,4)="EDIPI" S EDIPI=$P($P($P(^TMP("GMRCIN",$J,"PID"),"|",3),"~",PIECE),U,1) Q  ;
+ . Q:EDIPI=""  ;
  . ;
- . ;  Save ordering provider data and placer field 1 from OBR-16 and OBR-19 in fields #507 and 508
+ . ;  Call proxy add.  If successful, save DFN.  Otherwise, allow 201 error to be generated.
  . ;
- . I $D(^TMP("GMRCIN",$J,"OBR")) D  ;  P184
- .. N OBR16 S OBR16=$P(^("OBR"),"|",16),GMRCFDA(507)=$E(OBR16,1,255) ;
- .. N OBR19 S OBR19=$P(^("OBR"),"|",19),GMRCFDA(508)=$E(OBR19,1,255) ; 184V10 WTC 6/28/2022
- .. N OBR20 S OBR20=$P(^("OBR"),"|",20) I OBR20'="" S GMRCFDA(511)=$E(OBR20,1) ; 185V2 WTC 4/24/2023
- .. N OBR27 S OBR27=$P($P(^("OBR"),"|",27),U,4) I OBR27'="" S GMRCFDA(512)=$E(OBR27,1,30) ; 185V2 WTC 4/24/2023
+ . S RTNCODE=$$ADD^DGPROSAD(EDIPI_"~USDOD~NI~200DOD",$P($$SITE^VASITE(),U,3)) ;  ICR 7421
+ . I RTNCODE<0 D FAILPRXY^GMRCIUT1(GMRCMSGI,EDIPI,"",GMRCFCN,OBR19,$P(GMRCORC,"|",15),$P($$SITE^VASITE(),U,3),$P(RTNCODE,U,2)) Q  ; P189 WTC 6/24/24
+ . S GMRCFDA(.02)=$P(RTNCODE,U,4) ;
  ;
  I '$G(GMRCFDA(.02)) D  Q  ;reject message, patient is unknown
  . N STA S STA=$P($P(^TMP("GMRCIN",$J,"ORC"),"|",2),U,2)
@@ -147,7 +165,14 @@ NW(ARRAY) ;process and file new order
  . N GMRCRSLT
  . D RESP^GMRCIUTL("AA",HL("MID"),$P(GMRCORC,"|"),GMRCDA(1))
  . D GENACK^HLMA1(HL("EID"),HLMTIENS,HL("EIDS"),"LM",1,.GMRCRSLT)
- K ^TMP("GMRCIN",$J)
+ K ^TMP("GMRCIN",$J) Q:'GMRCCRNR  ;
+ ;
+ ;  Check if patient exists on converted VistA.  If not, add the entry.  p189 wtc 6/24/24
+ ;
+ N RTNCODE,SITE,STA ;
+ S SITE=$P(^GMR(123,GMRCDA(1),0),U,23) Q:'SITE  ;no ROUTING FACILITY
+ S STA=$$STA^XUAF4(SITE) I '$L(STA) Q  ;can't find station num for that site
+ S RTNCODE=$$CHKPROXY^GMRCIUT1(GMRCDA(1),$P(^GMR(123,GMRCDA(1),0),U,2),STA,1) ;
  Q
  ;
 DIS(GMRCAR,GMRCCRNR,GMRCMSGI) ;dis-associate a result from a remote request ; MKN GMRC*3.0*154 added GMRCCRNR and GMRCMSGI
@@ -255,4 +280,4 @@ OTHER(GMRCAR,GMRCCRNR,GMRCMSGI) ;process most IFC actions
  . D APPACK^GMRCIAC2(GMRCDA,"AA") ;send app. ACK and unlock record
  K ^TMP("GMRCIN",$J)
  Q
- ;
+ ; 

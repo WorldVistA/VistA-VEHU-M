@@ -1,8 +1,10 @@
-GMRCIEVT ;SLC/JFR - process events and build HL7 message; 6/20/2021 09:23 ; Jun 02, 2022@09:21:37
- ;;3.0;CONSULT/REQUEST TRACKING;**22,28,31,121,154,184**;DEC 27, 1997;Build 22
+GMRCIEVT ;SLC/JFR - process events and build HL7 message; 6/20/2021 09:23 ; Aug 12, 2024@09:30:42
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,28,31,121,154,184,189**;DEC 27, 1997;Build 54
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ; #7133 GETPAT MPIFRES, #7134 GETICN MPIFXMLI, #2161 HFLNC2, #2164 HLMA, #2271 HLUTIL3, #2701 MPIF001, #3015 VAFCPID, #4648 VAFCTFU2, #10112 VASITE
  ; #2053 DIE, #2056 DIQ, #2171 XUAF4, #2263 XPAR
+ ; Reference to $$ADD^DGPROSAD in ICR #7421
+ ; Reference to $$CRNRSITE^VAFCCRNR in ICR #7346
  ;
  Q  ;don't start at the top
 TRIGR(IEN,ACTN) ;determine what action was taken on IFC and call event point
@@ -13,7 +15,7 @@ TRIGR(IEN,ACTN) ;determine what action was taken on IFC and call event point
  ;CLT, GMRC*3.0*184, Do not send a msg back on receipt of a comment from
  ; cerner.  That causes a duplicate entry at cerner.
  N GMRCDQ,GMRCDQ1 S GMRCDQ=0
- S GMRCDQ1=$$NOSND^GMRCIEVT() I GMRCDQ1=1 Q
+ S GMRCDQ1=$$NOSND^GMRCIUTL() I GMRCDQ1=1 Q
  N ACTYPE
  S ACTYPE=$P(^GMR(123,IEN,40,ACTN,0),U,2)
  I 'ACTYPE Q
@@ -35,7 +37,7 @@ TRIGR(IEN,ACTN) ;determine what action was taken on IFC and call event point
  ... S DIE="^GMR(123.6,",DA=$O(^GMR(123.6,"AC",IEN,GMRCACTS,1,0))
  ... S DR=".06///@" D ^DIE
  . D LOGMSG^GMRCIUTL(IEN,ACTN,"",902) ;msg log entry but no msg sent
- I ACTYPE=2!(ACTYPE=1) D NW(IEN) Q  ;send new order
+ I ACTYPE=2!(ACTYPE=1) D NW(IEN,ACTN) Q  ;send new order - Added ACTN as parameter.  P189 WTC 6/24/2024
  I ACTYPE=9!(ACTYPE=14) D RSLT(IEN,ACTN) Q  ;inc report or add'l notes
  I ACTYPE=10,$P(^GMR(123,IEN,40,ACTN,0),U,9) D RSLT(IEN,ACTN) Q  ;comp
  I ACTYPE=12 D RSLT(IEN,ACTN) Q  ;dis-associate result
@@ -47,19 +49,20 @@ TRIGR(IEN,ACTN) ;determine what action was taken on IFC and call event point
  I ACTYPE=25 D FWD2IFC^GMRCIEV1(IEN,ACTN) Q  ; FWD into an IFC service
  D GENUPD(IEN,ACTN) ;all other updates
  Q
-NW(GMRCDA) ;build new order message for IFC
+NW(GMRCDA,ACTN) ;build new order message for IFC
  ; Input:
  ; GMRCDA = ien from file 123
  ;
- N HL,HLL,SEG,GMRC773,GMRCIQT,GMRCPD
- D CHKCORR(GMRCDA) ;MKN GMRC*3.0*154 Check PT correlation and do proxy add if required
+ N HL,HLL,SEG,GMRC773,GMRCIQT,GMRCPD,PROXYADD,GMRCDFN,STA,SITE ;
+ ;
+ S PROXYADD=$$CHKCORR(GMRCDA) Q:'PROXYADD  ;MKN GMRC*3.0*154 Check PT correlation and do proxy add if required, changed to function p189 wtc 12/5/23
  S SEG=1
  K ^TMP("HLS",$J)
  D INIT^HLFNC2("GMRC IFC ORM EVENT",.HL)
  I $G(HL) D  Q  ; if HL array can't be built, log it with an error
  . D LOGMSG^GMRCIUTL(GMRCDA,ACTN,,904) ;MKN GMRC*3.0*154 GMRCACT to ACTN
  D  I $D(GMRCIQT) D NOMPI(GMRCDA,1) Q  ;build PID seg if not a local ICN
- . N GMRCDFN S GMRCDFN=$P(^GMR(123,+GMRCDA,0),U,2)
+ . S GMRCDFN=$P(^GMR(123,+GMRCDA,0),U,2)
  . I '$G(GMRCDFN) S GMRCIQT=1 Q
  . I $$GETICN^MPIF001(GMRCDFN)<1 S GMRCIQT=1 Q
  . I $$IFLOCAL^MPIF001(GMRCDFN) S GMRCIQT=1 Q
@@ -101,11 +104,21 @@ NW(GMRCDA) ;build new order message for IFC
  N UCID S UCID=$$GET1^DIQ(123,GMRCDA,80) S:UCID]"" SEG=SEG+1,^TMP("HLS",$J,SEG)="NTE"_SEP_"P"_SEP_"UCID:"_UCID
  ;AV/MKN End of NTE for UCID *121*
  ;
+ S SITE=$P(^GMR(123,GMRCDA,0),U,23) I 'SITE D LOGMSG^GMRCIUTL(IEN,ACTN,"",903) Q  ;no ROUTING FACILITY
+ S STA=$$STA^XUAF4(SITE) I '$L(STA) D LOGMSG^GMRCIUTL(IEN,ACTN,"",903) Q  ;can't find station num for that site
+ ;
+ ;  If patient just proxy added, generate error 205 if not completed yet.  p189 wtc 6/18/2024
+ ;
+ I $P(PROXYADD,U,2)="ADDED",+$$CHKPROXY^GMRCIUT1(GMRCDA,GMRCDFN,STA)=0 D LOGMSG^GMRCIUTL(IEN,ACTN,"",205) Q  ;
+ ;
+ ;  Otherwise, set route according to whether destination site is converted (use $$GET^XPAR("SYS","GMRC IFC REGIONAL ROUTER",1)) or non-converted (use D LINK^HLUTIL3(STA,.GMRCLINK,"I"))
+ ;
  S HLL("LINKS",1)=$$ROUTE(GMRCDA) I '$L(HLL("LINKS",1)) D  Q  ;log error
- . D:'$$EXIST201^GMRCIEV1(IEN,ACTN) LOGMSG^GMRCIUTL(IEN,ACTN,"",903) ;MKN GMRC*3*154 '$$EXIST201
+ . D:'$$EXIST201^GMRCIEV1(GMRCDA,GMRCACT) LOGMSG^GMRCIUTL(GMRCDA,GMRCACT,"",903) ;MKN GMRC*3*154 '$$EXIST201
  S HLP("SUBSCRIBER")="^^^^"_$P(HLL("LINKS",1),U,3) ;MKN GMRC*3*154 Station coming back from $$ROUTE
  D GENERATE^HLMA("GMRC IFC ORM EVENT","GM",1,.GMRC773,,.HLP) ;MKN GMRC*3*154 added 6th parameter that passes to HLP array in GENERATE^HLMA
  N ERR S ERR=$S($P(GMRC773,U,2):904,1:"")
+ ;
  D LOGMSG^GMRCIUTL(GMRCDA,1,+GMRC773,ERR)
  Q
  ;
@@ -245,45 +258,21 @@ ROUTE(GMRCDA)  ; determine correct routing for IFC msg
  ; Output:
  ; the logical link to send the message to in format
  ; "GMRC IFC SUBSC^VHAHIN^STATION"
- ;need to understanding their queuing
- N SITE,GMRCLINK,STA
- N DGKEY,DGOUT,CNT,IDS,CERNERID,CONSULTDFN,GMRCDFN,MPIDATA,RETURN,PATARR,X
- S (RETURN,CERNERID,CONSULTDFN)=""
+ ;
+ N SITE,STA ;
  S SITE=$P(^GMR(123,GMRCDA,0),U,23) I 'SITE Q "" ;no ROUTING FACILITY
  S STA=$$STA^XUAF4(SITE) I '$L(STA) Q "" ;can't find station num for that site
  ;
- D LINK^HLUTIL3(STA,.GMRCLINK,"I")
+ ;  Converted site
  ;
- ;WCJ; if no patient - should not happen
- S GMRCDFN=$P(^GMR(123,GMRCDA,0),U,2) I 'GMRCDFN Q ""
+ I $$CRNRSITE^VAFCCRNR(STA)=1 Q "GMRC IFC SUBSC^"_$$GET^XPAR("SYS","GMRC IFC REGIONAL ROUTER",1)_U_STA ;
  ;
- ;pull patient Correlation list
- S DGKEY=GMRCDFN_U_"PI"_U_"USVHA"_U_$P($$SITE^VASITE,"^",3)
- D TFL^VAFCTFU2(.DGOUT,DGKEY)
+ ;  Non-converted site
  ;
- S CNT=0 F  S CNT=$O(DGOUT(CNT)) Q:'CNT  S IDS=$G(DGOUT(CNT)) D
- .I $P(IDS,"^",4)="200CRNR" I $P(IDS,"^",2)="PI" S CERNERID=IDS
- .I $P(IDS,"^",4)=STA I $P(IDS,"^",2)="PI" I $P(IDS,"^",5)="A"!($P(IDS,"^",5)="C") S CONSULTDFN=IDS
+ N GMRCLINK,SUB,DATA ;
+ I $$CRNRSITE^VAFCCRNR(STA)'=1 D LINK^HLUTIL3(STA,.GMRCLINK,"I") S SUB=$O(GMRCLINK(0)) I SUB S DATA=GMRCLINK(SUB) Q "GMRC IFC SUBSC^"_DATA_U_STA ;
  ;
- ;is consulting site known in the list and if site is Cerner enabled but not known
- I CONSULTDFN'="" D
- . ; if consulting site is known and it is NOT a Cerner enabled site
- . I $P(CONSULTDFN,"^",5)'="C" D  Q
- .. S GMRCLINK=$O(GMRCLINK(0)) I 'GMRCLINK Q  ; no link for that site
- .. S GMRCLINK=GMRCLINK(GMRCLINK) I '$L(GMRCLINK) Q  ;no link name
- .. S RETURN="GMRC IFC SUBSC^"_GMRCLINK_U_STA Q  ;MKN GMRC*3*154 added STA to RETURN
- . ;
- . ; if consulting site is known and it is a Cerner enabled site but patient unknown to Cerner
- . I $P(CONSULTDFN,"^",5)="C",(CERNERID="") S RETURN=$$GETLINK(STA) Q
- . ; if consulting site is known and it is a Cerner enabled site
- . I $P(CONSULTDFN,"^",5)="C",(CERNERID'="") D
- .. ; if Cerner enabled site AND Cerner knows patient set route to VDIF regional router
- .. S RETURN=$$GETLINK(STA) ;MKN GMRC*3*154 added STA to RETURN
- I CONSULTDFN="" D
- . D LOGMSG^GMRCIUTL(GMRCDA,1,"",201)
- . S RETURN=""
- ;
- Q RETURN
+ Q "" ;
  ;
 CNVTD(GMRCDA) ; had facility been converted
  ; Input:
@@ -312,52 +301,66 @@ CNVTD(GMRCDA) ; had facility been converted
  ; 
  ;MKN GMRC*3.0*154 Start mods - Check PT correlation and do proxy add if required
 CHKCORR(GMRCDA) ;
- N CERNERID,CNT,CONSULTDFN,DGKEY,DGOUT,GMRCDFN,IDS,SITE,STA
- S GMRCDFN=$P(^GMR(123,GMRCDA,0),U,2) I 'GMRCDFN Q
  ;
- S SITE=$P(^GMR(123,GMRCDA,0),U,23) I 'SITE Q "" ;no ROUTING FACILITY
- S STA=$$STA^XUAF4(SITE) I '$L(STA) Q "" ;can't find station num for that site
+ ;  Returns "1^ADDED" if proxy add succeeded, 1 if patient known to Cerner or site is non-converted and 0 if not. p189 wtc 12/5/23, 4/4/24
+ ;
+ N CERNERID,CNT,CONSULTDFN,DGKEY,DGOUT,GMRCDFN,IDS,SITE,STA,RTNCODE ;
+ S GMRCDFN=$P(^GMR(123,GMRCDA,0),U,2) I 'GMRCDFN Q 0 ;
+ ;
+ S SITE=$P(^GMR(123,GMRCDA,0),U,23) I 'SITE Q 0 ;no ROUTING FACILITY
+ S STA=$$STA^XUAF4(SITE) I '$L(STA) Q 0 ;can't find station num for that site
+ ;
  S (CERNERID,CONSULTDFN)=""
  ;pull patient Correlation list
  S DGKEY=GMRCDFN_U_"PI"_U_"USVHA"_U_$P($$SITE^VASITE,"^",3)
  D TFL^VAFCTFU2(.DGOUT,DGKEY)
  ;
- S CNT=0 F  S CNT=$O(DGOUT(CNT)) Q:'CNT  S IDS=$G(DGOUT(CNT)) D
- .I $P(IDS,"^",4)="200CRNR" I $P(IDS,"^",2)="PI" S CERNERID=IDS
- .I $P(IDS,"^",4)=STA I $P(IDS,"^",2)="PI" I $P(IDS,"^",5)="A"!($P(IDS,"^",5)="C") S CONSULTDFN=IDS
- . ; if consulting site is known and it is a Cerner enabled site but patient unknown to Cerner
- . I $P(CONSULTDFN,"^",5)="C",(CERNERID="") D PROXYADD(GMRCDA,GMRCDFN,STA) Q
- ; if not known trigger Proxy Add Patient
- I CONSULTDFN="" D PROXYADD(GMRCDA,GMRCDFN,STA)
- Q
+ S CNT=0,RTNCODE=0 F  S CNT=$O(DGOUT(CNT)) Q:'CNT  S IDS=$G(DGOUT(CNT)) D  ;
+ .I $P(IDS,"^",4)="200CRNR",$P(IDS,"^",2)="PI" S CERNERID=IDS ;
+ .I $P(IDS,"^",4)=STA,$P(IDS,"^",2)="PI",$P(IDS,"^",5)="A"!($P(IDS,"^",5)="C") S CONSULTDFN=IDS ;
+ ;
+ ;  Patient known to filler and filler is non-converted VistA.
+ ;
+ I CONSULTDFN'="",$$CRNRSITE^VAFCCRNR(STA)'=1 Q 1 ;
+ ;
+ ;  Filler is Cerner.  Patient known to Cerner and its converted VistA.
+ ;
+ I CERNERID'="",CONSULTDFN'="",$$CRNRSITE^VAFCCRNR(STA)=1 Q 1 ;
+ ;
+ ;  Filler is Cerner.  Patient known to Cerner but not its converted VistA.
+ ;
+ I CERNERID'="",CONSULTDFN="",$$CRNRSITE^VAFCCRNR(STA)=1 D  Q 1 ;  return 1 because response is sent to Cerner not the converted VistA
+ . S RTNCODE=$$ADD^DGPROSAD($P(CERNERID,U,1)_"~USDOD~NI~200DOD",STA) ;  ICR 7421
+ . I RTNCODE<0 D FAILPRXY^GMRCIUT1("",$P(CERNERID,U,1),GMRCDA,"","","",STA,$P(RTNCODE,U,2)) Q  ; P189 WTC 6/24/24
+ ;
+ ; if not known to filler, trigger Proxy Add Patient
+ ;
+ I CONSULTDFN=""!(CERNERID="") S RTNCODE=$$PROXYADD(GMRCDA,GMRCDFN,STA) ;
+ Q RTNCODE ;
  ;
 PROXYADD(GMRCDA,GMRCDFN,STA) ;
+ ;
+ ;  Adds patient to Cerner or non-converted VistA.  Returns "1^ADDED" if successful and 0 if not. p189 wtc 12/5/23
+ ;
  N CONSULTDFN,MPIDATA,PATARR
  S CONSULTDFN=0
  D GETPAT^MPIFRES(GMRCDFN,.PATARR)
  S PATARR(1,"preferredFacilityNumber")=STA
  S PATARR(1,"AddType")="ADDPREFTF"
  D GETICN^MPIFXMLI(.MPIDATA,.PATARR) I +MPIDATA("ICN")>0 S CONSULTDFN=+MPIDATA("ICN")
- I +CONSULTDFN=0 D LOGMSG^GMRCIUTL(GMRCDA,1,"",201)
- Q
  ;
-GETLINK(STA) ;
- N GMRCLINK
- D LINK^HLUTIL3(STA,.GMRCLINK,"I")
- S GMRCLINK(1)=$$GET^XPAR("SYS","GMRC IFC REGIONAL ROUTER",1)
- S GMRCLINK=$O(GMRCLINK(0)) I 'GMRCLINK Q "" ; no link for that site
- S GMRCLINK=GMRCLINK(GMRCLINK) I '$L(GMRCLINK) Q "" ;no link name
- Q "GMRC IFC SUBSC^"_GMRCLINK(1)_U_STA
+ ;  If proxy add failed, generate 203 error if IFC to Cerner or 201 error otherwise.
  ;
- ;MKN GMRC*3.0*154 end mods
+ I +CONSULTDFN=0 D  Q 0 ;
+ . I $$CRNRSITE^VAFCCRNR(STA)=1 D LOGMSG^GMRCIUTL(GMRCDA,1,"",203) Q  ; 
+ . I $$CRNRSITE^VAFCCRNR(STA)'=1 D LOGMSG^GMRCIUTL(GMRCDA,1,"",201) Q  ;
+ Q "1^ADDED" ;
  ;
- ;MKN GMRC*3.0*184 - ISCERNER and CRNROBX added
- ;
-ISCERNER(IEN) ;Is 'Add Comment' going to Cerner?
+ISCERNER(IEN) ;Is consult going to Cerner?
  ;Input:
  ;  IEN = file #123
  ;Output:
- ;    1 = Prcessing complete
+ ;    1 = Cerner IFC
  ;    0 = Error - see piece 2 for message 
  ;
  N GMRCCNV,GMRCDFN,GMRCKEY,GMRCN,GMRCSITE,GMRCTFL,GMRCX,STA ; p184 WTC 5/1/22
@@ -381,11 +384,3 @@ LOC(GMRCLOC,GMRCIENS) ;DETERMINE LOCATION
 SITE ;SET LOCAL SITE
  S GMRCLOC=$P($$SITE^VASITE,U,2)
  Q
-NOSND() ;Do not respond to the sent comment.
- N GMRCL,GMRCZ,GMRCARRAY
- S GMRCDQ=0
- S GMRCL="",GMRCL=$O(^GMR(123,IEN,40,"B",GMRCL),-1) Q:GMRCL="" GMRCDQ
- S GMRCZ="",GMRCZ=$O(^GMR(123,IEN,40,"B",GMRCL,""))
- D GETS^DIQ(123.02,GMRCZ_","_IEN_",",.32,"I","GMRCARRAY")
- S GMRCDQ=$G(GMRCARRAY(123.02,GMRCZ_","_IEN_",",.32,"I"),0)
- Q GMRCDQ

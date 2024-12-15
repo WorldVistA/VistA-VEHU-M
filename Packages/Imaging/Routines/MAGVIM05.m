@@ -1,5 +1,5 @@
-MAGVIM05 ;WOIFO/MAT,BT,JL,DAC,PMK - Utilities for RPC calls for DICOM file processing ;09 Sep 2021 3:13 PM
- ;;3.0;IMAGING;**118,138,164,166,194,278**;Mar 19, 2002;Build 138
+MAGVIM05 ;WOIFO/MAT,JL,DAC,PMK,BT - Utilities for RPC calls for DICOM file processing ;15 March 2023 9:56 AM
+ ;;3.0;IMAGING;**118,138,164,166,194,278,357**;Mar 19, 2002;Build 29
  ;; Per VA Directive 6402, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -33,16 +33,20 @@ MAGVIM05 ;WOIFO/MAT,BT,JL,DAC,PMK - Utilities for RPC calls for DICOM file proce
  ;  MAGVUSRDV ... DUZ(2) of the Importer 2 user.
  ;  RAIMGTYP .... TYPE OF IMAGING (#2) of the REGISTERED EXAMS sub-file (#70.02)
  ; [RASTDRPT] ... IEN of an entry in the STANDARD REPORTS file (#74.1)
- ;           ---- Next two are IEN(s) of entries in the DIAGNOSTIC CODES file(#78.3)
  ; [RADXPRIM]  .. Primary Diagnostic Code --> RAMISC Param PRIMDXCODE
- ; [RADXSCND] ... List of Secondary Diagnostic Codes --> RAMISC Param SECDXCODE
- ;  
+ ;                IEN(s) of entries in the DIAGNOSTIC CODES file(#78.3)
+ ; [RADXSCND] ... In the RPC (defined as OTHDIAG). Contains List of 
+ ;            ... (1) One or more IENs of entries in the DIAGNOSTIC CODES file (#78.3). 
+ ;            ...     (These will be the exam's Secondary Diagnostic Codes via the RAMISC parameter 'SECDXCODE')
+ ;            ... (2) Report Text and Impression Text
+ ;            ...     (Either entered manually or populated using 'GET Report from SR' in the Importer app)
+ ;
  ; Outputs:
  ; ========
- ; 
+ ;
  ; Notes:
  ; ======
- ; 
+ ;
  ; The parameters mirror those of the underlying call.
  ;
 XMCOMPLT(RETURN,RADPT,RAEXAM1,RAEXAM2,MAGVUSR,MAGVUSRDV,RAIMGTYP,RASTDRPT,RADXPRIM,RADXSCND) ;
@@ -50,6 +54,11 @@ XMCOMPLT(RETURN,RADPT,RAEXAM1,RAEXAM2,MAGVUSR,MAGVUSRDV,RAIMGTYP,RASTDRPT,RADXPR
  ;--- Initialize
  K RETURN
  N MSG,RARESULT,SEPSTAT,SEPOUTP D ZRUSEPIN
+ ;
+ N RAMAN ; Use Manually entered Report and Impression Text
+ N RARPTXT S RARPTXT="" ; Manually entered Report Text (List - multiple lines of text)
+ N RAIMPRS S RAIMPRS="" ; Manually entered Impression Text (List - multiple lines of text)
+ N RASCND
  ;
  ;--- Validate incoming parameters.
  N MAGERR,PARAM S MAGERR=0
@@ -81,6 +90,22 @@ XMCOMPLT(RETURN,RADPT,RAEXAM1,RAEXAM2,MAGVUSR,MAGVUSRDV,RAIMGTYP,RASTDRPT,RADXPR
  . S RETURN(0)="-1"_SEPSTAT_MSG
  . Q
  ; 
+ ;--- Compile Report Text, and Impression if passed in.
+ ;--- must do it this way, HDIG RPC broker doesn't work with multiple LIST input parameters
+ D:$G(RADXSCND(0))'=""
+ . ;
+ . N RCT S RCT=0
+ . N ICT S ICT=0
+ . N SCT S SCT=0
+ . N CT S CT=""
+ . F  S CT=$O(RADXSCND(CT)) Q:CT=""  D
+ . . I $E(RADXSCND(CT),1,3)="|R|" S RAMAN=1,RCT=RCT+1,RARPTXT(RCT)=$P(RADXSCND(CT),"|R|",2),RARPTXT=RARPTXT_RARPTXT(RCT) Q
+ . . I $E(RADXSCND(CT),1,3)="|I|" S RAMAN=1,ICT=ICT+1,RAIMPRS(ICT)=$P(RADXSCND(CT),"|I|",2),RAIMPRS=RAIMPRS_RAIMPRS(ICT) Q
+ . . S RASCND(SCT)=RADXSCND(CT),SCT=SCT+1
+ . . Q
+ . K RADXSCND M RADXSCND=RASCND
+ . Q
+ ;
  ;--- Set additional RAD Order/Exam parameters.
  S MAGERR=$$MAKELIST("C",RAIMGTYP,.RAMSC,MAGVUSR,MAGSITEP)
  I MAGERR D  Q
@@ -291,12 +316,13 @@ XMREGSTR(RETURN,RAOIFN,EXMDTE,RAMSC) ;
  ;
  K RETURN
  N SEPSTAT,SEPOUTP,IMAGLOC D ZRUSEPIN
+ N DIV S DIV=$$GETDIV()
  ;
  ; Check if imaging location is present - if not find outside imaging location for procedure and division
  N RODATA S RODATA=$G(^RAO(75.1,RAOIFN,0))
  D:$P(RODATA,U,20)=""
  . N LOCINFO,PROCIEN,RAMLC S PROCIEN=$P(RODATA,U,2)
- . D IMAGELOC(.RAMLC,PROCIEN,DUZ(2))
+ . D IMAGELOC(.RAMLC,PROCIEN,DIV)
  . S:$P(RAMLC,SEPSTAT)<0 RETURN(0)=RAMLC
  . Q:$G(RETURN(0))
  . S RAMLC=$P(RAMLC,SEPSTAT,2)
@@ -308,7 +334,7 @@ XMREGSTR(RETURN,RAOIFN,EXMDTE,RAMSC) ;
  ;Get imaging location IEN (#79.1)
  K RAMLC,PROCIEN
  S PROCIEN=$P(RODATA,U,2)
- D IMAGELOC(.RAMLC,PROCIEN,DUZ(2))
+ D IMAGELOC(.RAMLC,PROCIEN,DIV)
  S:$P(RAMLC,SEPSTAT)<0 RETURN(0)=RAMLC
  Q:$G(RETURN(0))
  S RAMLC=$P(RAMLC,SEPSTAT,2)
@@ -342,6 +368,12 @@ ZRUSEPIN ;
  S SEPOUTP=$$OUTSEP^MAGVIM01
  S SEPSTAT=$$STATSEP^MAGVIM01
  Q
+ ;+++ Use Alternate Division if it's available otherwise use site#
+GETDIV() ;
+ N DIV
+ S DIV=$$GET^XPAR("SYS","MAG ALTERNATE DIVISION",,"I")  ; IA# 2263
+ I DIV="" Q DUZ(2)
+ Q DIV
  ;
 MAKELIST(RACTION,RAIMGTYP,RAMSC,MAGVUSR,MAGSITEP) ; output required fields
  ; Load required flags 
@@ -380,11 +412,18 @@ MAKELIST(RACTION,RAIMGTYP,RAMSC,MAGVUSR,MAGSITEP) ; output required fields
  ;
  ;REQ011 - report entered
  S REQ(11)="RPTDTE^^"_TODAYHL7
- I $G(RASTDRPT)="" D
- . S REQ(11,1)="REPORT^1^Electronically generated report for outside study."
- . Q
- ;--- Add the REPORT text of a selected STANDARD REPORT to the RAMSC array.
- E  D STNDRPRT(RASTDRPT,"R",1)
+ I $G(RAMAN)=1 D MANRPRT(.RARPTXT,"R",1) ;--- Add manually entered REPORT text to the RAMSC array.
+ I $G(RAMAN)'=1 D
+ . I $G(RASTDRPT)="" S REQ(11,1)="REPORT^1^Electronically generated report for outside study."
+ . I $G(RASTDRPT)'="" D STNDRPRT(RASTDRPT,"R",1) ; Add the REPORT text of a selected STANDARD REPORT to the RAMSC array.
+ . Q 
+ ;
+ ;--- Report can't be blank
+ N NOREPORT S NOREPORT=0
+ I '$D(RARPTXT),$G(RASTDRPT)="" S NOREPORT=1
+ I '$D(RARPTXT),$G(RASTDRPT)'="",'$D(^RA(74.1,RASTDRPT,"R")) S NOREPORT=1
+ I $D(RARPTXT),$G(RARPTXT)="",$G(RASTDRPT)="" S NOREPORT=1
+ I NOREPORT,$G(REQ(11,1))="" S REQ(11,1)="REPORT^1^No report text"
  ;
  ;REQ012 - verified report
  S REQ(12)="VERDTE^^"_TODAYHL7
@@ -399,11 +438,18 @@ MAKELIST(RACTION,RAIMGTYP,RAMSC,MAGVUSR,MAGSITEP) ; output required fields
  ;REQ015 - reserved
  ;
  ;REQ016 - impression
- I $G(RASTDRPT)="" D
- . S REQ(16)="IMPRESSION^1^Electronically generated report for outside study."
- . Q
- ;--- Add the IMPRESSION text of a selected STANDARD REPORT to the RAMSC array.
- E  D STNDRPRT(RASTDRPT,"I",1)
+ I $G(RAMAN)=1 D MANRPRT(.RAIMPRS,"I",1) ;--- Add manually entered impression text to the RAMSC array.
+ I $G(RAMAN)'=1 D
+ . I $G(RASTDRPT)="" S REQ(16)="IMPRESSION^1^Electronically generated report for outside study."
+ . I $G(RASTDRPT)'="" D STNDRPRT(RASTDRPT,"I",1) ; Add the IMPRESSION text of a selected STANDARD REPORT to the RAMSC array.
+ . Q 
+ ;
+ ;--- Impression can't be blank
+ N NOIMPR S NOIMPR=0
+ I '$D(RAIMPRS),$G(RASTDRPT)="" S NOIMPR=1
+ I '$D(RAIMPRS),$G(RASTDRPT)'="",'$D(^RA(74.1,RASTDRPT,"I")) S NOIMPR=1
+ I $D(RAIMPRS),$G(RAIMPRS)="",$G(RASTDRPT)="" S NOIMPR=1
+ I NOIMPR,$G(REQ(16))="" S REQ(16)="IMPRESSION^1^No impression text"
  ;
  N INDEX
  F INDEX=1:1:16 I $P(INFO(0),"^",INDEX) D
@@ -423,6 +469,18 @@ STNDRPRT(RASTDRPT,SSCR,INDEX1) ;
  S CT=0 F  S CT=$O(^RA(74.1,RASTDRPT,SSCR,CT)) Q:CT=""  D
  . N RPTXT
  . S RPTXT=PREFIX_U_(CT+INDEX1)_U_$G(^RA(74.1,RASTDRPT,SSCR,CT,0)) D OUTPUT(RPTXT,.RAMSC)
+ . Q
+ Q
+ ;
+ ;+++++ Add manually entered REPORT/IMPRESSION text to the Miscellaneous Parameters array.
+ ;
+MANRPRT(TXTLST,SSCR,INDEX1) ;
+ ;
+ N PREFIX S PREFIX=$S(SSCR="R":"REPORT",SSCR="I":"IMPRESSION")
+ N CT S CT=""
+ F  S CT=$O(TXTLST(CT)) Q:CT=""  D
+ . N RPTXT
+ . S RPTXT=PREFIX_U_(CT+INDEX1)_U_TXTLST(CT) D OUTPUT(RPTXT,.RAMSC)
  . Q
  Q
  ;
@@ -478,3 +536,4 @@ ADDROOM(INFO,RAEXAM) ; add the OUTSIDE STUDY camera equipment room to the IMAGIN
  ;S RPCERR=$$CALLRPC^MAGM2VCU("MAG DICOM ADD CAMERA EQUIP RM","M",.INFO,RAEXAM)
  D ADDROOM^MAGDRPCB(.INFO,RAEXAM)
  Q
+ ;

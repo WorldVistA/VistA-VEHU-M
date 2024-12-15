@@ -1,16 +1,18 @@
-XTVSLNA1 ;BHAM/MAM/GTS - VistA Package Sizing Manager; 1-JUL-2016
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSLNA1 ;BHAM/MAM/GTS - VistA Package Sizing Manager;
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
-PKGEXT() ;Entry point - Package File extract (ACTION Protocol: XTVS PKG EXTRACT CREATE ACTION)
+PKGEXT() ; Extract Package Data and return indication of prior existence of extract
  ;
- ; STOPKILL: 0^0  $JOB sub-array for ^XTMP("XTSIZE") did not exist and was created
- ;           0^1  $JOB sub-array for ^XTMP("XTSIZE") existed and was recreated
- ;           1^1  $JOB sub-array for ^XTMP("XTSIZE") existed and was NOT recreated
+ ; Return -
+ ;  STOPKILL: 0^0  $JOB sub-array for ^XTMP("XTSIZE") did not exist and was created
+ ;            0^1  $JOB sub-array for ^XTMP("XTSIZE") existed and was recreated
+ ;            1^1  $JOB sub-array for ^XTMP("XTSIZE") existed and was NOT recreated
  ;
- NEW STOPKILL,XTVSUNME,VPNAME,VPIEN
+ NEW STOPKILL,XTVSUNME
  SET XTVSUNME=$$NAME^XUSER(DUZ)
  SET STOPKILL="0^0"
- IF ($D(^XTMP("XTSIZE",$JOB))) DO  QUIT:STOPKILL "1^1"  ;;If STOPKILL, do NOT delete existing ^XTMP("XTSIZE",$J) global
+ IF ($D(^XTMP("XTSIZE",$JOB))) DO  QUIT:STOPKILL "1^1"  ;If STOPKILL, do NOT delete existing ^XTMP("XTSIZE",$J)
  . NEW X,Y,DIR
  . SET DIR("A",1)=""
  . SET DIR("A",2)="^XTMP(""XTSIZE"","_$JOB_") already exists!"
@@ -23,17 +25,7 @@ PKGEXT() ;Entry point - Package File extract (ACTION Protocol: XTVS PKG EXTRACT 
  .. DO JUSTPAWS^XTVSLAPI("^XTMP(""XTSIZE"","_$JOB_") NOT DELETED!")
  .. SET STOPKILL="1^1"
  ;
- K ^XTMP("XTSIZE",$J)
- ;NOTE: First pce of 0 node sets ^XTMP purge date 90 days from 'Today'
- S ^XTMP("XTSIZE",$J,0)=$$FMADD^XLFDT($P($$NOW^XLFDT,"."),90)_"^"_$P($$NOW^XLFDT,".")_"^"_$$NOW^XLFDT_"-Kernel ToolKit Package File Extract by "_$S($G(XTVSUNME)]"":XTVSUNME,1:"{unknown user}")_"^"_^%ZOSF("PROD")
- ;
- S VPIEN=0 F  S VPIEN=$O(^DIC(9.4,VPIEN)) Q:'VPIEN  S VPNAME=$P($G(^DIC(9.4,VPIEN,0)),"^") IF VPNAME]"" DO
- . IF $P($G(^DIC(9.4,VPIEN,15002)),"^",3)'="X" DO 
- .. IF VPNAME["""" DO
- ... SET VPNAME=$REPLACE(VPNAME,"""","''")
- ... DO NOTCE^XTVSLAPI("Double Quotes changed to 2 single quotes in the "_VPNAME_" Package name.",$$NETNAME^XMXUTIL(DUZ),VPNAME)
- .. DO SETXTMP^XTVSLNA1 ;Extract Packages
- ;
+ DO EXTPKG^XTVSSVR($$NETNAME^XMXUTIL(DUZ)) ; Extract Packages
  QUIT STOPKILL
  ;
 SETXTMP ; set ^XTMP global with PACKAGE data
@@ -46,12 +38,10 @@ SETXTMP ; set ^XTMP global with PACKAGE data
  ; Piece 6 = Package File Ranges separated by "|"
  ; Piece 7 = Package Parent name
  ;
- NEW VPPARPKG,PARNTNME,VPN,VPLOW,VPHIGH,VPOTHER,VPNAT,VPRNGE,VPEXCPT
+ NEW VPPARPKG,PARNTNME,VPLOW,VPHIGH,VPOTHER,VPRNGE,VPEXCPT
  NEW VP11,VPNUM,VPHNUM,VPIEN2,VPLNUM,VPFNUM
- ;Get Package CLASS and PARENT PACKAGE
- S VPNAT=$G(^DIC(9.4,VPIEN,7)),VPNAT=$P(VPNAT,"^",3),VPPARPKG=$P($GET(^DIC(9.4,VPIEN,15002)),"^",2),PARNTNME=""
- IF VPNAT'="I",VPNAT'="Ia",VPNAT='"Ib",VPNAT'="Ic" QUIT  ;Only extract Class I, Ia, Ib and Ic packages
- S VPN=$P($G(^DIC(9.4,VPIEN,0)),"^",2) IF VPN']"" QUIT  ; PREFIX, Required, Do not extract if missing PREFIX
+ ;Get PARENT PACKAGE
+ S VPPARPKG=$P($GET(^DIC(9.4,VPIEN,15002)),"^",2),PARNTNME=""
  S (VPEXCPT,VPOTHER,VPRNGE)=""
  S VP11=$G(^DIC(9.4,VPIEN,11)),VPLOW=$P(VP11,"^"),VPHIGH=$P(VP11,"^",2) ;*LOWEST/*HIGHEST FILE NUMBERS
  ;Get ADDITIONAL PREFIXES

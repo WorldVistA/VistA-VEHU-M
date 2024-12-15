@@ -1,5 +1,5 @@
-GMRCISEG ;SLC/JFR - CREATE IFC HL7 SEGMENTS ;08/16/10  08:30
- ;;3.0;CONSULT/REQUEST TRACKING;**22,66,154,202**;DEC 27, 1997;Build 5
+GMRCISEG ;SLC/JFR - CREATE IFC HL7 SEGMENTS ; Jul 23, 2024@10:17:34
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,66,154,202,189**;DEC 27, 1997;Build 54
  ;   $$GET1^DIQ          ORC+28,ORC+29,OBXTZ+11
  ;#2171 XUAF4, #10103 XLFDT, #10106 HLFNC, #3042 MCAPI, #10112 VASITE, #2541 $$KSP^XUPARAM
  ;
@@ -79,7 +79,7 @@ OBXWP(GMRCO,GMRCOC,GMRCACT,GMRCSEG) ; return a WP field in OBX segs
  ;  ARRAY(2)=OBX|1|TX|coding scheme|2|text||||||obs result status
  ;
  K ^TMP("GMRCWP",$J)
- N GMRCPCS,TCH,OBX11 ; P202 ADD IBX11  
+ N GMRCPCS,TCH,OBX11 ; P202 ADD OBX11 
  D SETTCH2^GMRCIMSG() ;MKN GMRC*3.0*154 Get TCH array
  I GMRCOC="NW"!(GMRCOC="XO") D  Q
  . N SUBS S SUBS=0
@@ -94,16 +94,27 @@ OBXWP(GMRCO,GMRCOC,GMRCACT,GMRCSEG) ; return a WP field in OBX segs
  I '$D(GMRCACT)!('$D(^GMR(123,GMRCO,40,GMRCACT,1))) Q
  N CMT,ACTVT
  S CMT=0,ACTVT=$P(^GMR(123,GMRCO,40,GMRCACT,0),U,2)
- ;GMRC*202 - new OBX workflow for POST OTHER (ADDED COMMENT - ACTVT =20) or POST COMPLETE (COMPLETE/UPDATE - ACTVT=10) actions for prosthetics
+ ;GMRC*202 - new OBX workflow for POST OTHER (ADDED COMMENT - ACTVT =20) or POST COMPLETE (COMPLETE/UPDATE - ACTVT=10) actions
+ ;
+ ;  OBX-11 is comment status.  It's "F" for Admin Complete actions, "P" otherwise except if entered post-complete then "C".
+ ;
  S OBX11=$S(ACTVT=10:"F",1:"P") ;F if an admin comp. else "P"
+ ;
+ ;  Change status to changed (C) if comments added post-complete on IFC involving Cerner.
+ ;
+ I $$CNVTD^GMRCIEVT(GMRCO) D  ;
+ . N GMRCACT1 S GMRCACT1=GMRCACT-.000001 F  S GMRCACT1=$O(^GMR(123,GMRCO,40,GMRCACT1),-1) Q:'GMRCACT1  I $P(^(GMRCACT1,0),U,2)=10 S OBX11="C" Q  ; WTC p189
+ ;
  I $G(PROSTHCS)&((ACTVT=20)!(ACTVT=10)) D OBXPOST Q
  ;END GMRC*202
+ ;
  F  S CMT=$O(^GMR(123,GMRCO,40,GMRCACT,1,CMT)) Q:'CMT  D
  . S GMRCPCS(1)=3,GMRCPCS(2)="TX"
  . S GMRCPCS(3)="^COMMENTS^",GMRCPCS(4)=CMT ;MKN GMRC*3.0*154 Encode any special characters
  . S GMRCPCS(5)=$$ENCODE^GMRCHL7E($G(^GMR(123,GMRCO,40,GMRCACT,1,CMT,0)),.TCH) ;MKN GMRC*3.0*154 Encode any special characters
- . S GMRCPCS(11)=$S(ACTVT=10:"F",1:"P") ;F if an admin comp. else "P"
+ . S GMRCPCS(11)=OBX11 ; P189 WTC 6/29/2023
  . S ^TMP("GMRCWP",$J,CMT)=$$BUILD^GMRCISEG("OBX",.GMRCPCS)
+ ;
  M @GMRCSEG=^TMP("GMRCWP",$J)
  K ^TMP("GMRCWP",$J)
  Q
@@ -193,6 +204,7 @@ OBXSF(GMRCO) ; build OBX seg for Sig. Find.
  S GMRCPCS(1)=6,GMRCPCS(2)="TX",GMRCPCS(3)="^SIG FINDINGS^"
  S GMRCPCS(4)=1,GMRCPCS(5)=$P(^GMR(123,GMRCO,0),U,19),GMRCPCS(11)="O"
  Q $$BUILD^GMRCISEG("OBX",.GMRCPCS)
+ ;
 OBXPOST ;build OBX for Post Other or Post Complete Actions
  ;
  ;GMRC*2.0*202

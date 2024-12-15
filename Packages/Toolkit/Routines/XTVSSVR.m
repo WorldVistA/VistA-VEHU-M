@@ -1,7 +1,8 @@
 XTVSSVR ;ALB/GTS - VistA Package Sizing Manager; 26-FEB-2020
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
-SRVREXT ; Entry point - Server Package File extract
+SRVREXT ; Entry point - Process XTVS Request Message
  ; -- Server Option: XTVS PKG EXTRACT SERVER
  ;
  ; Message Form:
@@ -11,26 +12,17 @@ SRVREXT ; Entry point - Server Package File extract
  ;  Package Parameters: Line 1 is the package parameters for the selected package to report
  ;                       followed by parameters for all packages
  ;
- NEW XTVSLN,XMRG,XMY,XMER,XTVSEXTP,XTVSSNDR,XTVSRPTP,XTVSPRML,SELPKGPM,LNITMCT
- SET SELPKGPM=""
- SET (LNITMCT,XTVSPRML,PARMEXRT)=0
+ NEW XTVSLN,XMRG,XMY,XMER,XTVSEXTP,XTVSSNDR,XTVSRPTP,SELPKGPM
+ NEW SELPKGPM,LNITMCT,XTPPARM,XTPKGLN
+ SET (XTPKGLN,SELPKGPM)=""
+ SET (LNITMCT,XTPPARM)=0
  SET XMER=1
  FOR  Q:XMER<0  X XMREC DO
  . IF XMER'<0 DO
  .. SET XTVSLN=XMRG
- .. IF XTVSLN["REQUESTED BY:" SET XTVSSNDR=$P(XTVSLN,"REQUESTED BY: ",2) ;Addressee for report
- .. ;
- .. IF XTVSLN["Extract Indicator:" SET XTVSEXTP=+($PIECE($GET(XTVSLN),": ",2)) ;1 - Extract Packages
- .. IF XTVSLN["Report Indicator:" SET XTVSRPTP=+($PIECE($GET(XTVSLN),": ",2)) ;1 - All Packages Size rpt; 2 - Single Package Size rpt
- .. ;
- .. ; Parse out all packages in server message
- .. ;    If SELPKGPM not = NULL, 1oad XTVSLN into ^TMP("XTVS-FORUMPKG",$J,TMPSUB)
- .. IF SELPKGPM]"" SET LNITMCT=LNITMCT+1 SET ^TMP("XTVS-FORUMPKG",$J,LNITMCT)=XTVSLN ; Create Package Parameter Array
- .. ;
- .. ;    If XTVSLN["Package Parameters:", SET SELPKGPM = 2nd piece of "Package Parameters: "
- .. IF XTVSLN["Package Parameters:" SET SELPKGPM=$P(XTVSLN,"Package Parameters: ",2) ;The Package Parameters used for Size Rpt
+ .. DO PARSLN ;Process msg line to rebuild single pkg parameter def line (XT*7.3*152)
  ;
- IF XTVSEXTP=1 DO EXTPKG(XTVSSNDR,$GET(XTVSRPTP)) ; Extract Package
+ IF XTVSEXTP=1 DO EXTPKG(XTVSSNDR) DO EEXT(XTVSSNDR,+$GET(XTVSRPTP)) ; Extract Package and send
  ;
  IF $GET(XTVSRPTP)=2 DO
  . IF SELPKGPM]"" DO ONEPKGSZ(XTVSSNDR,SELPKGPM) ; Return size report for single package
@@ -39,29 +31,82 @@ SRVREXT ; Entry point - Server Package File extract
  KILL ^TMP("XTVS-FORUMPKG",$J)
  QUIT
  ;
-EXTPKG(XTVSSNDR,XTVSRPTP) ; Extract Package File
+PARSLN ; Parse message line of package parameters (XT*7.3*152)
+ ;
+ ; The following partition variables must be set by/for calling procedure:
+ ;  XTVSLN   - Curr line from rcved msg
+ ;  XTVSSNDR - Mailman address of report requester
+ ;  XTVSEXTP - Extract Indicator
+ ;  XTVSRPTP - Requested Report type
+ ;  XTPKGLN  - Current Parameter String concatonated from message lines
+ ;  LNITMCT  - Last Array node number set in result array with complete package def on single node
+ ;  SELPKGPM - Package requested for a Single Size report.
+ ;  XTPPARM  - Indicator:
+ ;                1 - SELPKGPM is being/has been defined
+ ;                0 - SELPKGPM has not started/completed definition
+ ;
+ IF XTVSLN["REQUESTED BY:" SET XTVSSNDR=$P(XTVSLN,"REQUESTED BY: ",2) ;Addressee for report
+ ;
+ IF XTVSLN["Extract Indicator:" SET XTVSEXTP=+($PIECE($GET(XTVSLN),": ",2)) ;1 - Extract Packages
+ IF XTVSLN["Report Indicator:" SET XTVSRPTP=+($PIECE($GET(XTVSLN),": ",2)) ;0/NULL - No Size rpt; 1 - All Packages Size rpt; 2 - Single Package Size rpt
+ ;
+ ; The full Package Parameter file is needed for TALLYRPT^XTVSRFL to set create ^TMP("XTVS-IDX-PKG",$J,PKGPFX,PKGNAME)
+ ; for packages in the Param file with value = 1 when KIDS Prefix, Null when not KIDS Prefix. Package
+ ; Component counting is prevented from counting an Additional Prefix in a package when it is another
+ ; packages primary prefix
+ ;
+ ; Parse out all packages in server message; server message needs all packages so Create ^TMP("XTVS-IDX-PKG",$J) array for MULTX^XTVSRFL1
+ ;    If SELPKGPM has been defined and has 9 ^ pces, 1oad XTVSLN into ^TMP("XTVS-FORUMPKG",$J,TMPSUB)
+ IF (XTPPARM) DO
+ . IF $L(SELPKGPM,"^")'<9 DO PKGLNRBD("XTVS-FORUMPKG",XTVSLN,.XTPKGLN,.LNITMCT) ; Rebuild Param file string
+ . IF $L(SELPKGPM,"^")<9 SET SELPKGPM=SELPKGPM_XTVSLN ;Concat the msg lines compising the selected Package Params
+ IF XTVSLN["Package Parameters:" SET XTPPARM=1 SET SELPKGPM=$P(XTVSLN,"Package Parameters: ",2)
+ QUIT
+ ;
+PKGLNRBD(ARRYNAME,XTVSLN,XTPKGLN,LNITMCT) ;Rebuild multiple message lines into single pkg param line (XT*7.3*152)
+ ; Input:
+ ;  ARRYNAME - First Subscript of ^TMP array [VAL] 
+ ;  XTVSLN   - Current message line [VAL]
+ ;  XTPKGLN  - Package line being created [VAL]
+ ;  LNITMCT  - Node # to store complete Package String in ^TMP array [REF]
+ ;
+ IF $L(XTPKGLN,"^")<9 SET XTPKGLN=XTPKGLN_XTVSLN
+ IF $L(XTPKGLN,"^")'<9 DO
+ . SET LNITMCT=LNITMCT+1
+ . SET ^TMP(ARRYNAME,$J,LNITMCT)=XTPKGLN ; Add Package to Parameter Array node
+ . SET XTPKGLN=""
+ QUIT
+ ;
+EXTPKG(XTVSSNDR) ; Extract Package File
  ;
  ;Input
  ; XTVSSNDR - Requesters VA Mailman address
- ; XTVSRPTP - 1: Create Size Report for all package; Null: No report
  ;
- NEW VPNAME,VPIEN
+ NEW VPNAME,VPIEN,VPNAT,VPN,VPNATRSLT,VPCURST,ACTIVST
  KILL ^XTMP("XTSIZE",$J)
  ;NOTE: First pce of 0 node sets ^XTMP purge date 90 days from 'Today'
  SET ^XTMP("XTSIZE",$J,0)=$$FMADD^XLFDT($P($$NOW^XLFDT,"."),90)_"^"_$P($$NOW^XLFDT,".")_"^"_$$NOW^XLFDT_"-Kernel ToolKit Package File Extract by "_$S($G(XTVSUNME)]"":XTVSUNME,1:"{unknown user}")_"^"_^%ZOSF("PROD")
  ;
  SET VPIEN=0
  FOR  SET VPIEN=$ORDER(^DIC(9.4,VPIEN)) QUIT:'VPIEN  SET VPNAME=$P($G(^DIC(9.4,VPIEN,0)),"^") IF VPNAME]"" DO
- . IF $P($G(^DIC(9.4,VPIEN,15002)),"^",3)'="X" DO  ;If CURRENT STATUS '= NO LONGER USED
+ . SET VPNAT=$G(^DIC(9.4,VPIEN,7)),VPNAT=$P(VPNAT,"^",3)
+ . SET VPNATRSLT=((VPNAT="I")!(VPNAT="Ia")!(VPNAT="Ib")!(VPNAT="Ic"))  ;Only extract Class I, Ia, Ib and Ic packages
+ . SET VPN=$P($G(^DIC(9.4,VPIEN,0)),"^",2) ; PREFIX, Required, Do not extract if missing PREFIX
+ . SET VPCURST=$P($G(^DIC(9.4,VPIEN,15002)),"^",3) ;Get CURRENT STATUS
+ . SET ACTIVST=((VPCURST'="X")&(VPCURST'="D")) ;If CURRENT STATUS '= NO LONGER USED and '= DECOMMISSIONED
+ . IF VPNATRSLT,VPN]"",ACTIVST DO  ;National pkg, Has prefix, Not inactive pkg
  .. IF VPNAME["""" DO
  ... SET VPNAME=$REPLACE(VPNAME,"""","''")
- ... DO NOTCE^XTVSLAPI("Double Quotes changed to 2 single quotes in the "_VPNAME_" Package name.",XTVSSNDR,VPNAME)
+ ... DO NOTCE^XTVSLAPI("Double Quotes changed to 2 single quotes in the "_VPNAME_" Package name.~EXTPKG^XTVSSVR",XTVSSNDR,VPNAME)
  .. DO SETXTMP^XTVSLNA1 ;Extract Packages
  ;
- DO EEXT(XTVSSNDR,XTVSRPTP)
  QUIT
  ;
 EEXT(XTVSSNDR,XTVSSIZE) ; Email ^XTMP("XTSIZE") extract global
+ ;
+ ;Input
+ ; XTVSSNDR - Requesters VA Mailman address
+ ; XTVSSIZE - 1: Create Size Report for all package; Null: No report
  ;
  NEW XPID,QCHK
  SET QCHK=0
@@ -208,7 +253,7 @@ ONEPKGSZ(XTVSSNDR,SELPKGPM) ; Report Package
  . ;
  . DO KIDSIDX^XTVSRFL1 ;Create Prefix-Package Indicies from KIDS
  . ;
- . DO TALLYRPT^XTVSRFL(1,1,PKGNAME) ; Needs ^TMP("XTVS-FORUMPKG",$J,TMPSUB) and DO KIDSIDX^XTVSRFL1
+ . DO TALLYRPT^XTVSRFL(1,1,SELPKGPM) ; Needs ^TMP("XTVS-FORUMPKG",$J,TMPSUB) and DO KIDSIDX^XTVSRFL1; p152 - v2 ba changed PKGNAME to SELPKGPM 
  . ;
  . DO ONERPT(XTVSSNDR,SELPKGPM,PKGNAME,PKGPFX) ;Report stat's for a single package
  ;

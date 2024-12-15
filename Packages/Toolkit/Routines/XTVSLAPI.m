@@ -1,8 +1,10 @@
-XTVSLAPI ;Albany FO/GTS - VistA Package Sizing Manager; 27-JUN-2016
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSLAPI ;ALBANY FO/GTS - VistA Package Sizing Manager; 27-JUN-2016
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
+ ;
  ; APIs
  ;
-EMAILEXT ; Extract & Email ^XTMP(""XTSIZE"","_$JOB_")
+EMAILEXT ; - Send Package File Extract via Packman; Extract & Email ^XTMP(""XTSIZE"","_$JOB_")
  ; -- Option: XTVS PKG MGR EXT PACKAGE MSG
  ;
  NEW EXTRSLT
@@ -88,7 +90,7 @@ YNCHK(APROMPT,DEFANS) ; Yes/No Prompt
  ;  DEFANS   - Default Y/N answer [DIR("B")] (optional - defaults to NO)
  ;OUTPUT
  ;  XTSVRSLT - value of Y when DIR Y/N prompt answer = Yes/No
- ;             -1 when Timeout, ^ or ^^ out.
+ ;             0^-1 when Timeout, ^ or ^^ out. 3rd ^ piece = 1 when Timeout [0^-1^1].
  ;
  NEW DIR,DIRUT,DTOUT,DUOUT,X,Y,XTSVRSLT
  SET DIR("A")=APROMPT
@@ -97,22 +99,29 @@ YNCHK(APROMPT,DEFANS) ; Yes/No Prompt
  IF '$D(DEFANS) SET DIR("B")="NO"
  DO ^DIR
  SET XTSVRSLT=Y_"^"_Y
- IF $D(DTOUT)!$D(DUOUT)!$D(DIROUT) SET XTSVRSLT="0"_"^-1"
+ IF $D(DTOUT)!$D(DUOUT)!$D(DIROUT) SET XTSVRSLT="0"_"^-1"_$S($D(DTOUT):"^1",1:"^")
  QUIT XTSVRSLT
  ;
-SELXTMP(BEGIN,END,XTOFFSET) ;Select XTMPSIZE.DAT file
+SELXTMP(BEGIN,END) ;Select XTMPSIZE.DAT file
+ ; RETURN: Selected XTMPSIZE file name
  ;
- NEW BEGRNG,ENDRNG
- SET:'$D(XTOFFSET) XTOFFSET=0
- SET BEGRNG=BEGIN-XTOFFSET
- SET ENDRNG=END-XTOFFSET
- D FULL^VALM1
- SET DIR("A",1)=""
- SET DIR("A")="Select the XTMPSIZE*.DAT Package Parameter file item number"
- SET DIR(0)="N^"_BEGRNG_":"_ENDRNG
- DO ^DIR
- IF ($D(DTOUT))!($D(DUOUT)) QUIT -1
- QUIT Y+XTOFFSET
+ NEW SELARY,ITEMNUM,FILENME,YVAL
+ SET SELARY=""
+ SET ITEMNUM=$$XTMP2SEL(BEGIN,END,.SELARY)
+ IF ITEMNUM>0 DO 
+ . NEW PARAMSTR,QSTHLP1
+ . SET QSTHLP1=" Enter the name or number (1-"_ITEMNUM_") of the parameter file."
+ . SET PARAMSTR("MINLNG")=10
+ . SET PARAMSTR("PATRN")="1""XTMPSIZE"".ANP"
+ . SET PARAMSTR("MAXLNG")=30
+ . SET PARAMSTR("DEFANS")=$G(XTVPSPRM)
+ . SET PARAMSTR("ADDITM")=0
+ . SET YVAL=+$$SELITEM^XTVSLP(QSTHLP1,.ITEMNUM,.SELARY,.PARAMSTR)
+ . IF (+$G(YVAL)>0)&(+$G(YVAL)<(ITEMNUM+1)) SET FILENME=SELARY(YVAL) W "   ",FILENME
+ ;
+ IF ITEMNUM'>0 DO JUSTPAWS^XTVSLAPI(" There are no XTMPSIZE files to select!")
+ ;
+ QUIT $G(FILENME)
  ;
 WRTTXTFL(FILENME,STORPATH) ; Output Package Manager Report to Text file
  NEW POPERR,LMTMPNDE
@@ -409,10 +418,9 @@ REQLOCK(FILENAME) ; Check LOCK on a Parameter file. If unlocked, set LOCK
  . IF LOCKERR SET LOCKRSLT="1^LOCK request for parameter file "_FILENAME_" FAILED."
  QUIT LOCKRSLT
  ;
- ;
 NOTCE(NTCTEXT,XTVSADDR,PKGNAME) ; Send Package extract notice msg to requester
  ; Input:
- ;   NTCTEXT  - Notice Text to share with reader
+ ;   NTCTEXT  - Notice Text to share with reader (text~TAG^ROUTINE)
  ;   XTVSADDR - Recipients E-Mail address
  ;   PKGNAME  - Name of package that had data cleanup during extract
  ;   
@@ -421,7 +429,7 @@ NOTCE(NTCTEXT,XTVSADDR,PKGNAME) ; Send Package extract notice msg to requester
  IF PKGNAME]"" DO
  . SET ^TMP("XTVS-REMOTE-ERROR",$JOB,1)="Notice for Package Extract on "_^%ZOSF("PROD")_"."
  . SET ^TMP("XTVS-REMOTE-ERROR",$JOB,2)="Data was cleaned up on "_PKGNAME_" extract."
- . SET ^TMP("XTVS-REMOTE-ERROR",$JOB,3)=NTCTEXT
+ . SET ^TMP("XTVS-REMOTE-ERROR",$JOB,3)=$P(NTCTEXT,"~")
  SET XMDUZ="VISTA PACKAGE SIZE ANALYSIS MANAGER"
  SET XMY(XTVSADDR)=""
  SET XMTEXT="^TMP(""XTVS-REMOTE-ERROR"","_$JOB_","
@@ -429,11 +437,12 @@ NOTCE(NTCTEXT,XTVSADDR,PKGNAME) ; Send Package extract notice msg to requester
  DO ^XMD
  IF +XMZ'>0 DO
  . SET ERRTEXT="'Extract cleanup notice message' FAILED to return to "_XTVSADDR_"."
- . DO APPERROR^%ZTER("WRERR^XTVSSVR : Package extract error")
+ . DO APPERROR^%ZTER($S($P(NTCTEXT,"~",2)]"":$P(NTCTEXT,"~",2)_" : ",1:"")_"Package extract error")
  KILL ^TMP("XTVS-REMOTE-ERROR",$JOB)
  QUIT
  ;
-RMTPKGMG(MSGTEXT,XTVSADDR,PKGNAME) ; Send Package extract notice msg to requester
+RMTPKGMG(MSGTEXT,XTVSADDR,PKGNAME) ; Send Package extract notice msg to requester.
+ ; Only invoked by SRVREXT^XTVSSVR when a remote package size report is requested for a single package and fails
  ; Input:
  ;   MSGTEXT  - Text to share with reader
  ;   XTVSADDR - Recipients E-Mail address
@@ -450,7 +459,40 @@ RMTPKGMG(MSGTEXT,XTVSADDR,PKGNAME) ; Send Package extract notice msg to requeste
  SET XMSUB="PACKAGE REPORT NOTICE ("_^%ZOSF("PROD")_") ; Report process warning."
  DO ^XMD
  IF +XMZ'>0 DO
- . SET ERRTEXT="'Package Report Notcie' FAILED to return to "_XTVSADDR_"."
- . DO APPERROR^%ZTER("WRERR^XTVSSVR : Package extract error")
+ . SET ERRTEXT="'Package Report Notice' FAILED to return to "_XTVSADDR_"."
+ . DO APPERROR^%ZTER("TALLYRPT^XTVSRFL : Package extract error")
  KILL ^TMP("XTVS-REMOTE-ERROR",$JOB)
  QUIT
+ ;
+INSRTX(X,SELARY,ITEMNUM) ;Insert item into SELARY in cardinal order
+ NEW SELITNUM,INSRTPOS,CURITNME,CURITMNM
+ SET INSRTPOS=0
+ FOR SELITNUM=1:1:ITEMNUM Q:INSRTPOS>0  DO
+ . SET CURITNME=$P(SELARY(SELITNUM),"^")
+ . IF X']CURITNME SET INSRTPOS=SELITNUM
+ IF INSRTPOS>0 FOR CURITMNM=ITEMNUM:-1:INSRTPOS SET SELARY(CURITMNM+1)=SELARY(CURITMNM) ;Move all entries following duplicate item
+ IF INSRTPOS=0 SET INSRTPOS=ITEMNUM+1
+ SET SELARY(INSRTPOS)=X
+ SET X=INSRTPOS
+ SET ITEMNUM=ITEMNUM+1
+ QUIT
+ ;
+XTMP2SEL(FIRSTITM,LASTITM,SELARY) ; Move XTMPSIZE from LM List to SELARY
+ ;      Default values if not defined:
+ ;               FIRSTITM - 1
+ ;               LASTITM  - Larger of 1 or FIRSTITM when LASTITM > FIRSTITM
+ ;
+ ; E.G. Pull XTMPSIZE file from: ^TMP("XTVS PACKAGE MGR",7566,6,0)="    1) XTMPSIZE_CLINICAL_6-15-21.DAT"
+ ;
+ NEW ITEMNUM,FILENME,LINENUM
+ ;
+ SET FIRSTITM=$S($G(FIRSTITM):+FIRSTITM,1:1)
+ SET LASTITM=$S($G(LASTITM):+LASTITM,1:1)
+ SET LASTITM=$S(FIRSTITM>LASTITM:FIRSTITM,1:LASTITM)
+ ;
+ SET ITEMNUM=0
+ FOR LINENUM=FIRSTITM:1:LASTITM DO
+ . SET FILENME=$P(^TMP("XTVS PACKAGE MGR",$J,LINENUM,0),") ",2)
+ . SET ITEMNUM=ITEMNUM+1
+ . SET SELARY(ITEMNUM)=FILENME
+ QUIT ITEMNUM

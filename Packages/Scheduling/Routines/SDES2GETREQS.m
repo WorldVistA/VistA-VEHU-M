@@ -1,5 +1,5 @@
-SDES2GETREQS ;ALB/BWF - VISTA SCHEDULING GET REQUEST RPCS ;FEB 08, 2024
- ;;5.3;Scheduling;**873**;Aug 13, 1993;Build 10
+SDES2GETREQS ;ALB/BWF - VISTA SCHEDULING GET REQUEST RPCS ;SEP 30, 2024
+ ;;5.3;Scheduling;**873,890**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -89,6 +89,7 @@ APPTREQUEST(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"ServiceConnectedPercentage")=""
  S REQUEST("Request",NUM,"PIDChangeAllowed")=""
  S REQUEST("Request",NUM,"DispositionIEN")=""
+ I '$D(REQUEST("Request",NUM,"DuplicateReason")) S REQUEST("Request",NUM,"DuplicateReason")=""
  Q
  ;
 SDECONTACT(REQUEST,NUM) ;
@@ -124,6 +125,7 @@ RECALL(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"RecallClinicSecondaryStopCodeAMIS")=""
  S REQUEST("Request",NUM,"RecallClinicSecondaryStopCodeName")=""
  S REQUEST("Request",NUM,"RecallEnteredBySecID")=""
+ I '$D(REQUEST("Request",NUM,"DuplicateReason")) S REQUEST("Request",NUM,"DuplicateReason")=""
  I '$D(REQUEST("Request",NUM,"EASTrackingNumber")) S REQUEST("Request",NUM,"EASTrackingNumber")=""
  Q
  ;
@@ -140,5 +142,6 @@ CONSULT(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"ConsultClinicIndicatedDate")=""
  S REQUEST("Request",NUM,"ConsultCanEditPid")=""
  S REQUEST("Request",NUM,"CPRSStatus")=""
+ I '$D(REQUEST("Request",NUM,"DuplicateReason")) S REQUEST("Request",NUM,"DuplicateReason")=""
  I '$D(REQUEST("Request",NUM,"EASTrackingNumber")) S REQUEST("Request",NUM,"EASTrackingNumber")=""
  Q

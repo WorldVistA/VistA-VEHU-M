@@ -1,5 +1,6 @@
-XTVSLPD1 ;Albany FO/GTS - VistA Package Sizing Manager - Caption display APIs; 12-JUL-2016
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSLPD1 ;ALBANY FO/GTS - VistA Package Sizing Manager - Caption display APIs; 12-JUL-2016
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
  ;APIs
 BADRNG(X) ;Checks user entered File Range (used by DIR call)

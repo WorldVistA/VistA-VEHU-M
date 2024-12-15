@@ -1,5 +1,5 @@
-GMRCXR ; ALB/SAT - GMR DD UTILITY ;AUG 25, 2016
- ;;3.0;CONSULT/REQUEST TRACKING;**83,86,169**;Dec 27, 1997;Build 23
+GMRCXR ; ALB/SAT - GMR DD UTILITY ; May 25, 2023@10:25:35
+ ;;3.0;CONSULT/REQUEST TRACKING;**83,86,169,189**;Dec 27, 1997;Build 54
  ;DD support for VISTA SCHEDULING ENHANCEMENT SD*5.3*627
  ;New x-ref utility for GMRC*3*169
  ;Reference is made to ICR #6184
@@ -183,8 +183,11 @@ AIFC ;create and build NEW style AIFC for all REQUEST/CONSULTATION entries in fi
  S GMRCXR("VAL",1,"COLLATION")="F"
  S GMRCXR("VAL",2)=.06
  S GMRCXR("VAL",2,"SUBSCRIPT")=2
- S GMRCXR("VAL",2,"LENGTH")=12    ;modified to correct field length - was 9
+ S GMRCXR("VAL",2,"LENGTH")=20    ;modified to correct field length - was 9 ; changed 12 to 20 *189 wtc 5/25/2023
  S GMRCXR("VAL",2,"COLLATION")="F"
  D CREIXN^DDMOD(.GMRCXR,"SW",.GMRCRES,"GMRCOUT")
  Q
+ ;
+POST189 ; post=install for GMRC*3*189
+ D AIFC Q  ;
  ;

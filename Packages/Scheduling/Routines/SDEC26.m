@@ -1,5 +1,6 @@
-SDEC26 ;ALB/SAT - VISTA SCHEDULING RPCS ;DEC 12,2022
- ;;5.3;Scheduling;**627,658,722,831**;Aug 13, 1993;Build 4
+SDEC26 ;ALB/SAT,JAS - VISTA SCHEDULING RPCS ; OCT 16, 2024
+ ;;5.3;Scheduling;**627,658,722,831,893**;Aug 13, 1993;Build 6
+ ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
  ;
@@ -84,6 +85,14 @@ SETNOTE(APID,NOTE)  ;set note to SDEC APPOINTMENT and file 44-APPOINTMENT-OTHER 
  ;S DIC("P")="44.003PA",DIC(0)="L",DLAYGO=44.003
  ;D FILE^DICN
  D SDECWP^SDEC07(APID,NOTE)
+ ;
+ ; 409.84 NOTE AUDIT multiple
+ I $L(NOTE) D
+ . N NAFDA
+ . S NAFDA(409.847,"+1,"_APID_",",.01)=$$NOW^XLFDT
+ . S NAFDA(409.847,"+1,"_APID_",",1)=DUZ
+ . S NAFDA(409.847,"+1,"_APID_",",2)=NOTE
+ . D UPDATE^DIE("","NAFDA") K NAFDA
  Q
  ;
  ;

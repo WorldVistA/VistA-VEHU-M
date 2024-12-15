@@ -1,0 +1,7 @@
+OSEHRA ZGO Export: EHRM HL7 Message Retention
+ZWR
+^EHMHL7(1609.1,0)="EHRM HL7 Message Retention^1609.1S^2^2"
+^EHMHL7(1609.1,1,0)="IFC^30"
+^EHMHL7(1609.1,2,0)="PRF^30"
+^EHMHL7(1609.1,"B","IFC",1)=""
+^EHMHL7(1609.1,"B","PRF",2)=""

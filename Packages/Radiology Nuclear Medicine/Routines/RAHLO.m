@@ -1,5 +1,5 @@
-RAHLO ;HIRMFO/GJC-Process data set from the bridge program ; Jun 02, 2020@09:33:35
- ;;5.0;Radiology/Nuclear Medicine;**4,8,27,55,66,84,94,106,144,162,165**;Mar 16, 1998;Build 3
+RAHLO ;HIRMFO/GJC - Process data set from the bridge program ; Aug 15, 2024@11:49:39
+ ;;5.0;Radiology/Nuclear Medicine;**4,8,27,55,66,84,94,106,144,162,165,218**;Mar 16, 1998;Build 1
  ; 09/07/2005 Remedy call 108405 - KAM Allow Radiology to accept dx codes from Talk Technology
  ;
  ;Integration Agreements
@@ -79,17 +79,19 @@ CHECK ; Check if our data is valid.
  I RARPT=2 S RAERR="Please use VISTA to edit CANCELLED printset cases." Q
  S RARPT=+$P(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0),"^",17)
  I '$D(^RARPT(RARPT,0)),($D(RADENDUM)#2) S RAERR="Can't add addendum, no report" Q
- I $D(^RARPT(RARPT,0)),($P(^(0),"^",5)'="V"),($D(RADENDUM)#2)  D  Q
- .S RAERR="Can't add addendum to a report that is not verified." Q  ;P94
  ;
+ I $D(^RARPT(RARPT,0)),($P(^(0),"^",5)'="V"),($D(RADENDUM)#2)  D  Q
+ .S RAERR=$P($G(^RARPT(RARPT,0)),"^")_": Cannot add addendum to a non-verified report." Q  ;P94 & P218
+ ;DO block below updated by patches 94 & 218
  I $D(^RARPT(RARPT,0)),(($P(^(0),"^",5)="V")!($P(^(0),"^",5)="EF")),('$D(RADENDUM)#2) D  Q
- .S RAERR="Report already on file" Q  ;P94
+ .S RAERR=$P($G(^RARPT(RARPT,0)),"^")_": Report already on file."
+ .Q
  ;
  I ($D(RADENDUM)#2),'$O(^TMP("RARPT-REC",$J,RASUB,"RAIMP",0)),'$O(^TMP("RARPT-REC",$J,RASUB,"RATXT",0)) S RAERR="Missing addendum report/impression text" Q
  I $D(^RADPT(RADFN,"DT",RADTI,0)) S RAMDIV=^(0),RAMLC=+$P(RAMDIV,"^",4),RAMDIV=+$P(RAMDIV,"^",3),RAMDV=$S($D(^RA(79,RAMDIV,.1)):^(.1),1:""),RAMDV=$S(RAMDV="":RAMDV,1:$TR(RAMDV,"YyNn",1100))
  I '($D(RADENDUM)#2) I $P(RAMDV,"^",16),('$D(^TMP("RARPT-REC",$J,RASUB,"RAIMP"))) S RAERR="Missing Impression Text" Q  ; impression req'd for this division
  I ($D(RADENDUM)#2),($D(^RARPT(RARPT,0))#2),($P(RAMDV,"^",16)),('$O(^RARPT(RARPT,"I",0))),('$D(^TMP("RARPT-REC",$J,RASUB,"RAIMP"))) S RAERR="Impression Text missing for current record." Q  ; impression req'd for this division
- I $D(RADENDUM)#2 D CKDUPA^RAHLO4 I RADUPA S RAERR="Duplicate Addendum" Q
+ I $D(RADENDUM)#2 D CKDUPA^RAHLO4 I RADUPA S RAERR=$P($G(^RARPT(RARPT,0)),"^")_": Duplicate Addendum" Q  ;P218
  ; check resident and staff
  N X1,X2,X3 S X2=0,X3=""
  I '$G(RATELE),+$G(^TMP("RARPT-REC",$J,RASUB,"RARESIDENT"))!(+$G(^("RASTAFF"))) D  Q:$G(RAERR)]""

@@ -1,5 +1,7 @@
-XTVSLP ;Albany FO/GTS - VistA Package Sizing Manager; 7-JUL-2016
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSLP ;ALBANY FO/GTS - VistA Package Sizing Manager; 7-JUL-2016
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
+ ;
 EN ; -- main entry point for XTVS PKG MGR PARAM DISPLAY
  D EN^VALM("XTVS PKG MGR PARAM DISPLAY")
  Q
@@ -21,7 +23,7 @@ HDR ; -- header code
  QUIT
  ;
 BUILD ; - Build local and global display arrays
- NEW DEFDIR
+ NEW DEFDIR,LINEITEM
  DO KILL ;Kill all processing & data arrays and video attributes & control arrays
  SET DEFDIR=$$GET^XPAR("SYS","XTVS PACKAGE MGR DEFAULT DIR",1,"I")
  DO OPEN^%ZISH("XTMP",DEFDIR,XTVPSPRM,"R")
@@ -36,19 +38,26 @@ BUILD ; - Build local and global display arrays
  QUIT
  ;
 INIT ; -- init variables and list array
+ NEW XTVSXFNM
+ DO FULL^VALM1
  IF (+$G(FIRSTITM)>0),($G(LASTITM)>0) DO
- . NEW XTTMPLNN,CHKLKER
- . SET XTTMPLNN=$$SELXTMP^XTVSLAPI(FIRSTITM,LASTITM,5)
- . IF +XTTMPLNN>0 DO
- .. SET XTVPSPRM=$P($G(^TMP("XTVS PACKAGE MGR",$J,XTTMPLNN,0)),XTTMPLNN-5_") ",2)
- .. SET CHKLKER=$$REQLOCK^XTVSLAPI(XTVPSPRM)
- .. IF 'CHKLKER DO
- ... IF XTVPSPRM]"" DO BUILD
- ... IF XTVPSPRM']"" SET VALMQUIT=""
- .. IF CHKLKER W !!," <* LOCK request denied! Try again later. *>"
- .. DO JUSTPAWS^XTVSLAPI($P(CHKLKER,"^",2))
- .. IF CHKLKER DO EXIT^XTVSLP S VALMQUIT=""
- . IF XTTMPLNN=-1 S VALMQUIT=""
+ . NEW CHKLKER,LCKCHK,DEFDIR
+ . SET XTVSXFNM=$$SELXTMP^XTVSLAPI(FIRSTITM,LASTITM)
+ . IF XTVSXFNM]"" DO
+ .. SET DEFDIR=$$GET^XPAR("SYS","XTVS PACKAGE MGR DEFAULT DIR",1,"I")
+ .. SET XTVPSPRM=XTVSXFNM
+ .. SET LCKCHK=$$CHKPID^XTVSLAPI(DEFDIR,XTVPSPRM) ;Returns 1 when current process has lock
+ .. SET CHKLKER=$$REQLOCK^XTVSLAPI(XTVPSPRM) ;Returns 1 when any process has lock
+ .. IF (+CHKLKER=0)!(+LCKCHK=1) DO
+ ... DO:(+CHKLKER=0) JUSTPAWS^XTVSLAPI($P(CHKLKER,"^",2))
+ ... DO:(+LCKCHK=1) JUSTPAWS^XTVSLAPI(XTVPSPRM_" LOCK already held.")
+ ... DO BUILD
+ .. IF (+CHKLKER=1),(+LCKCHK'=1) DO
+ ... W !!," <* LOCK request denied! Try again later. *>"
+ ... DO JUSTPAWS^XTVSLAPI($P(CHKLKER,"^",2))
+ ... DO EXIT^XTVSLP S VALMQUIT=""
+ . IF XTVSXFNM']"" SET VALMQUIT=""
+ IF ((+$G(FIRSTITM)'>0)&(+$G(LASTITM)'>0))!($G(XTVSXFNM)']"") SET VALMQUIT=""
  QUIT
  ;
 HELP ; -- help code
@@ -120,7 +129,7 @@ LOADTMP(LINEITEM) ;Store LineItem into ^TMP global
  ;  ^TMP("{package name}","{primary prefix}","PARENT")=Package [PARENT PACKAGE field]
  ;  ^TMP("{package name}","{primary prefix}","REMPFX","{removed prefix}")=""
  ;
- NEW FSET,BEGFLNUM,ENDFLNUM,PCENUM,FNUM
+ NEW FSET,BEGFLNUM,ENDFLNUM,PCENUM,FNUM,APFX,APFXLST,FILELIST,PKGNAME,PKGPFX,RPFX,RPFXLST
  SET FSET=0
  SET PKGNAME=$P(LINEITEM,"^")
  SET PKGPFX=$P(LINEITEM,"^",2)
@@ -256,7 +265,7 @@ CLNTMPGB ;Kill temporary globals
  QUIT
  ;
 PRMFLIST(FLESRCH,PAWSOUT) ;List parameter files for selection
- NEW DEFDIR,FILENME,FILELIST,LSTRSLT,SELARY,ITEMNUM
+ NEW DEFDIR,FILENME,FILELIST,LSTRSLT,SELARY,ITEMNUM,XVAL
  SET DEFDIR=$$GET^XPAR("SYS","XTVS PACKAGE MGR DEFAULT DIR",1,"I")
  IF $G(FLESRCH)="" SET FLESRCH="XTMPSIZE*"
  IF $G(PAWSOUT)="" SET PAWSOUT=" There are no XTMPSIZE files for comparison!"
@@ -271,8 +280,21 @@ PRMFLIST(FLESRCH,PAWSOUT) ;List parameter files for selection
  ..IF (FLESRCH[".LCK") SET ITEMNUM=ITEMNUM+1 SET SELARY(ITEMNUM)=FILENME ; Lock list
  .;
  .IF ITEMNUM>0 DO 
- .. DO LISTOUT^XTVSLAPI(.SELARY) ;List Parameter files for selection
- .. SET XVAL=+$$SELPKG(ITEMNUM,.SELARY)
+ .. NEW PARAMSTR,QSTHLP1
+ .. IF FLESRCH'[".LCK" DO
+ ... SET QSTHLP1=" Enter the name or number (1-"_ITEMNUM_") of the desired parameter file to compare."
+ ... SET PARAMSTR("MINLNG")=10
+ ..;
+ .. IF FLESRCH[".LCK" DO
+ ... DO LISTOUT^XTVSLAPI(.SELARY)
+ ... SET QSTHLP1=" Enter the name or number (1-"_ITEMNUM_") LOCK to release."
+ ... SET PARAMSTR("MINLNG")=8
+ ..;
+ .. SET PARAMSTR("PATRN")="1""XTMPSIZE"".ANP"
+ .. SET PARAMSTR("DEFANS")=""
+ .. SET PARAMSTR("MAXLNG")=30
+ .. SET PARAMSTR("ADDITM")=0
+ .. SET XVAL=+$$SELITEM(QSTHLP1,.ITEMNUM,.SELARY,.PARAMSTR)
  .. ;
  ..IF (+$G(XVAL)>0)&(+$G(XVAL)<(ITEMNUM+1)) SET FILENME=SELARY(XVAL) W "   ",FILENME
  ..IF ITEMNUM'>0 DO JUSTPAWS^XTVSLAPI(PAWSOUT)
@@ -280,21 +302,54 @@ PRMFLIST(FLESRCH,PAWSOUT) ;List parameter files for selection
  IF 'LSTRSLT DO JUSTPAWS^XTVSLAPI(PAWSOUT)
  QUIT FILENME
  ;
-SELPKG(ITEMNUM,SELARY) ; Select Package to Edit from ^TMP("XTVS PKG MGR PARAM CAP",$J)
- ; INPUT: SELARY  - Array of packages
- ;        ITEMNUM - Number of items in SELARY
+SELITEM(QSTHLP1,ITEMNUM,SELARY,PARAMSTR) ; Select Package Parameter file from SELARY
+ ; INPUT: QSTHLP1  - Help string for 1 question mark help [Optional]
+ ;        ITEMNUM  - Number of items in SELARY 
+ ;        SELARY   - Array of Package Parameter files
+ ;        PARAMSTR - Array of string parameters as follows:
+ ;                       PARAMSTR("ADDITM")   - 0: Adding item to SELARY NOT Allowed;  1: Adding unique item to SELARY Allowed  1^1: Add duplicates allowed
+ ;                       PARAMSTR("DEFANS")   - Only pertains to Package selection.  Not Null: Last selected Package
+ ;                       PARAMSTR("MAXLNG")   - Maximum length of entered string [default 30, or 10 more than MINLNG when MINLNG>MAXLNG]
+ ;                       PARAMSTR("MINLNG")   - Minumum length of entered string [default 10]  - DEV NOTE: MINLNG must be > or = #Chars in PATRN begin & end strings
+ ;                       PARAMSTR("PATRN")    - Pattern match definition for text [default .ANP)
+ ;                       PARAMSTR("XTUPCASE") - 0: case matters, 1: All item text translated to upper case [default]
  ;
- ; OUTPUT: PKGNME - Name of selected package
  ;
- NEW DIR,DIRUT,DTOUT,DUOUT,X,Y
+ ; OUTPUT: Y - Item # for selected Parameter file
+ ;
+ NEW DIR,DIRUT,DTOUT,DUOUT,X,Y,MINLG,MAXLG,ADDITEM,DEFANS
+ IF +$G(PARAMSTR("ADDITM"))=0 SET ADDITEM=0 ;Default - No adding items
+ IF +$G(PARAMSTR("ADDITM"))>0 SET ADDITEM=+$G(PARAMSTR("ADDITM"))
+ IF $G(PARAMSTR("XTUPCASE"))="" SET PARAMSTR("XTUPCASE")=1
+ IF $G(PARAMSTR("PATRN"))="" SET PARAMSTR("PATRN")=".ANP"
+ SET DEFANS=$G(PARAMSTR("DEFANS"))
+ SET MINLG=+$G(PARAMSTR("MINLNG"))
+ SET MAXLG=+$G(PARAMSTR("MAXLNG"))
+ IF MINLG=0 SET (MINLG,PARAMSTR("MINLNG"))=10
+ IF (MINLG<30),(MINLG>MAXLG) SET (MAXLG,PARAMSTR("MAXLNG"))=30
+ IF (MINLG>29),(MINLG>MAXLG) SET PARAMSTR("MAXLNG")=MINLG+10
  SET DIR("A")="Select File: "
- SET DIR(0)="NAO^1:"_ITEMNUM_"^K:(X'?.N) X"
- SET DIR("?",1)=" Select item # for the desired file from the list."
- SET DIR("?")="   [Enter'^' to exit]"
+ SET DIR(0)="NAO^1:"_(ITEMNUM+1)_"^K:(X'?.N) X I $D(X),(X>ITEMNUM) K X"
+ SET DIR("PRE")="D PRECHK^XTVSLP(DEFANS,.X,.SELARY,.ITEMNUM)"
+ IF '$D(QSTHLP1) DO
+ . SET DIR("?",1)=" Enter the name or number (1-"_ITEMNUM_") of the desired item."
+ . IF '$P(ADDITEM,"^",2) SET DIR("?",2)=" Duplicates are not allowed."
+ . SET DIR("?")="   [Enter '??' for a numbered list of items OR '^' to exit]"
+ IF $D(QSTHLP1) DO
+ . SET DIR("?",1)=QSTHLP1
+ . IF QSTHLP1'["LOCK" DO
+ .. IF 'ADDITEM SET DIR("?",2)=" New items cannot be added."
+ .. IF ADDITEM,('$P(ADDITEM,"^",2)) SET DIR("?",2)=" New items can be added but duplicates are not allowed."
+ . SET DIR("?")="   [Enter '??' for a numbered list of items OR '^' to exit]"
  SET DIR("??")="^DO LISTOUT^XTVSLAPI(.SELARY)"
  DO ^DIR
  QUIT Y
  ;
+PRECHK(DEFANS,X,SELARY,ITEMNUM) ; SELITEM X value DIR("PRE") pre-check
+ IF X=" ",$G(DEFANS)]"" SET X=DEFANS W " ",X
+ IF X]"",'$D(DTOUT),$E(X,1)'="^" DO
+ . IF ((X'?.N)&($E(X,1)'["?")) DO SELLIST^XTVSLPR2(.SELARY,.ITEMNUM,.X,.PARAMSTR)
+ QUIT
  ;
 PARMMAP ; Map of Parameter data elements
  ; 

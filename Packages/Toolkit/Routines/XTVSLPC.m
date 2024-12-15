@@ -1,7 +1,10 @@
-XTVSLPC ;Albany FO/GTS - VistA Package Sizing Manager; 17-NOV-2016
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSLPC ;ALBANY FO/GTS - VistA Package Sizing Manager; 17-NOV-2016
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
+ ;
 EN(CMPRFNME) ; -- main entry point for XTVS PKG MGR PARAM COMPARE
  ; Input: CMPRFNME - File to compare Selected XTMPSIZE.DAT file
+ ;        XTVPSPRM - Selected/Displayed Parameter file [Partition variable set by INIT^XTVSLP]
  ;
  IF CMPRFNME'["XTMPSIZE" DO  QUIT
  . DO JUSTPAWS^XTVSLAPI("Comparison XTMPSIZE.DAT file NOT selected!")
@@ -97,7 +100,7 @@ COMPARE(CPRNDNM,NODECUR,VALMCNT,PKGDEL,PKGRPTD) ; Compare Selected & Comparison 
  QUIT
  ;
 CHNGCHK(NODECUR,NODECPR,VALMCNT) ; Check selected parameter file (SEL) against a comparison parameter file (CPR)
- NEW FNDCHNG,PKGHDRPT,PKGNAME
+ NEW FNDCHNG,PKGHDRPT,PKGNAME,STRVLMCT
  NEW CURPPFX,CPRPPFX,CURHF,CPRHF,CURLF,CPRLF,CURADPFX,CPRADPFX,CUREXPFX,CPREXPFX,CURFL,CPRFL,CURFRL,CPRFRL,CURPP,CPRPP
  ;Variable doc key:
  ; CPR* is compare file data

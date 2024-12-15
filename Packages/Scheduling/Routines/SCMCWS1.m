@@ -1,5 +1,5 @@
 SCMCWS1 ;ALB/ART - PCMM Web-Call Patient Summary Web Service ;02/06/2015
- ;;5.3;Scheduling;**603**;Aug 13, 1993;Build 79
+ ;;5.3;Scheduling;**603,854**;Aug 13, 1993;Build 4
  ;
  QUIT
  ;
@@ -12,6 +12,7 @@ SCMCWS1 ;ALB/ART - PCMM Web-Call Patient Summary Web Service ;02/06/2015
  ; #10060 - NEW PERSON FILE
  ; #10103 - XLFDT - Supported APIs for date & time
  ; #10112 - VASITE - Supported APIs for site info
+ ; #20150204-01 SACC EXEMPTION for Vendor specific code is restricted.
  ;
 PCDETAIL(SCDISPLY,SCDFN) ;Call PCMM/R Web Service
  ;Inputs: SCDISPLY - Array for team assignment info - passed by reference
@@ -23,8 +24,9 @@ PCDETAIL(SCDISPLY,SCDFN) ;Call PCMM/R Web Service
  NEW SCSTAT,SCEOF,SCREADR,SCCNT,SCARRAY,SCVALUE,SCNODE,SCROW
  NEW SCREST,SCGETRC,SCERR
  NEW SCTEAMS,SCINPAT,SCNVA,SCBLOCK,SCTMLVL,SCPCLVL,SCNVALVL,SCMHLVL,SCOELVL,SCSPLVL,SCSPTYPE,SCSPMBR
- NEW SCDATA,SCX,SCY
+ NEW SCDATA,SCX,SCY,SCGFICN,SCFALSE,SCVCNT,SCDFNSAVE
  ;
+ S SCVCNT=0
  IF $$PROD^XUPROD DO
  . SET SCDATA("serverNameKey")="PCMMR SERVER"
  ELSE  DO
@@ -46,7 +48,25 @@ PCDETAIL(SCDISPLY,SCDFN) ;Call PCMM/R Web Service
  ; Set PCMM/R web service parameters
  SET SCDATA("webServiceParameters")="/"_SCDATA("site")_"/"_SCDFN_".xml"
  ;
+ I SCVCNT<1,(SCVCNT>1) D SCDFN
+ ;
+SCDICN ;START ICN FIND RTW SD*5.3*854
+ Q:SCVCNT>1
+ I $D(SCFALSE),SCVCNT<2 D
+ . S (SCTMLVL,SCPCLVL,SCNVALVL,SCMHLVL,SCOELVL,SCSPLVL,SCSPTYPE,SCSPMBR,SCCNT,SCBLOCK,SCEOF)=0
+ . S SCGFICN=$$GETICN^MPIF001(SCDFN)
+ . S SCDATA("webServiceParameters")="/"_"icn"_"/"_SCGFICN_".xml"
+ . S (SCFALSE,SCVALUE)=""
+ . S SCGETRC=$$GET^XOBWLIB(SCDATA("restObject"),SCDATA("webServiceParameters"),.SCERR,0)
+ . I 'SCGETRC D  Q
+ . . S SCRC=$$GET1^DIQ(404.41,SCDFN_",",.07,"","SCDISPLY")
+ . . I $G(SCDISPLY(1))="" D
+ . . . S SCDISPLY(1)="PCMM is unavailable."
+ . ;Q
+ ;END RTW SD*5.3*854
+ ;
  ; Retrieve the resource; execute HTTP GET method
+SCDFN ;
  SET SCGETRC=$$GET^XOBWLIB(SCDATA("restObject"),SCDATA("webServiceParameters"),.SCERR,0)
  IF 'SCGETRC DO  QUIT
  . SET SCRC=$$GET1^DIQ(404.41,SCDFN_",",.07,"","SCDISPLY")
@@ -62,24 +82,15 @@ PCDETAIL(SCDISPLY,SCDFN) ;Call PCMM/R Web Service
  . SET SCDISPLY(2)="    Invalid XML Format"
  ;
  ; Process XML
- SET SCTMLVL=0
- SET SCPCLVL=0
- SET SCNVALVL=0
- SET SCMHLVL=0
- SET SCOELVL=0
- SET SCSPLVL=0
- SET SCSPTYPE=0
- SET SCSPMBR=0
- SET SCCNT=0
- SET SCBLOCK=0
- SET SCEOF=0
- FOR  QUIT:SCEOF!SCREADR.EOF!'SCREADR.Read()  DO
+ S (SCTMLVL,SCPCLVL,SCNVALVL,SCMHLVL,SCOELVL,SCSPLVL,SCSPTYPE,SCSPMBR,SCCNT,SCBLOCK,SCEOF)=0
+ I SCVCNT<2 F  Q:SCEOF!SCREADR.EOF!'SCREADR.Read()  DO
  . ; Get element value
  . IF (SCREADR.NodeType="chars") DO
  . . SET SCNODE=SCREADR.Path
  . . SET SCVALUE=SCREADR.Value
+ . . I SCVALUE["false" S SCFALSE=SCVALUE,SCVCNT=SCVCNT+1,SCDFNSAVE=SCDFN G SCDICN ;RTW SD**5.3*854
  . . DO PARSEXML^SCMCWS1A(SCNODE,SCVALUE,.SCTEAMS,.SCNVA,.SCTMLVL,.SCPCLVL,.SCNVALVL,.SCMHLVL,.SCOELVL,.SCSPLVL,.SCSPTYPE,.SCSPMBR,.SCBLOCK,.SCEOF)
- . ; Check for last closing tag
+  . ; Check for last closing tag
  . IF (SCREADR.NodeType="endelement")&(SCREADR.LocalName="PatientSummary") DO
  . . SET SCEOF=1
  ;
@@ -94,6 +105,7 @@ PCDETAIL(SCDISPLY,SCDFN) ;Call PCMM/R Web Service
  ;
  ;Save display array in OutPatient Profile
  SET SCDISPLY(1)="ATTENTION: PCMM is unavailable, data is current as of: "_$$FMTE^XLFDT($$NOW^XLFDT(),2)
+ I $D(SCDFNSAVE) S SCOUTFLD(.04)=1 S SCX=$$ACOUTPT^SCAPMC20(SCDFN,"SCOUTFLD","SCBADOUT")
  DO WP^DIE(404.41,SCDFN_",",.07,"K","SCDISPLY")
  SET SCDISPLY(1)=""
  ;
@@ -277,12 +289,14 @@ BLDISPLY(SCTEAMS,SCINPAT,SCNVA,SCDISPLY,SCSITE) ; Build the Display Array
  ;Check if PACTs assigned
  IF 'SCTMCNT,SCDISPSV DO
  . SET:'SCOTHTM SCDISPLY(SCDISPSV-1)=""
- . SET SCDISPLY(SCDISPSV)="  No PACT assigned at any VA location."
+ . SET SCDISPLY(SCDISPSV)="  No PACT assigned at this VA location (Click for more)" ;RTW SD*5.3*854
+ . ;SET SCDISPLY(SCDISPSV)="  No PACT assigned at any VA location." ;RTW REMOUT SD*5.3*854
  IF '$DATA(SCTEAMS) DO
  . SET SCDISP=SCDISP+1
  . SET SCDISPLY(SCDISP)=""
  . SET SCDISP=SCDISP+1
- . SET SCDISPLY(SCDISP)="  No PACT assigned at any VA location."
+ . SET SCDISPLY(SCDISP)="  No PACT assigned at this VA location (Click for more)" ;RTW SD*5.3*854
+ . ;SET SCDISPLY(SCDISP)="  No PACT assigned at any VA location." ;RTW REMOUT SD*5.3*854
  ; Non-VA Providers
  QUIT:'$DATA(SCNVA)
  SET SCDISP=SCDISP+1

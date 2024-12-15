@@ -1,0 +1,52 @@
+SDES890P ;ALB/BWF - SD*5.3*890 Post Init Routine ; SEP 12, 2024
+ ;;5.3;SCHEDULING;**890**;AUG 13, 1993;Build 5
+ ;;Per VHA Directive 6402, this routine should not be modified
+ ;
+ Q
+EN ;
+ D SVCREPORT
+ Q
+ ;
+SVCREPORT   ;
+ N FLDINFO,FERR,NATIONAL,SECURITY
+ K ^XTMP("SDES890P")
+ S ^XTMP("SDES890P",0)=$$FMADD^XLFDT(DT,30)_"^"_DT_"^SD*5.3*890 Post Install Service field report"
+ D MES^XPDUTL("")
+ D MES^XPDUTL("  SD*5.3*890 Post-Install will determine if the HOSPITAL LOCATION file (#44)")
+ D MES^XPDUTL("  SERVICE field (#9) is different from the nationally released data dictionary.")
+ D MES^XPDUTL("  If there are differences, this report will be sent to your Mailman Mailbox.")
+ D MES^XPDUTL("")
+ S SECURITY("DD")="@"
+ D FILESEC^DDMOD(44,.SECURITY)
+ S NATIONAL="M:MEDICINE;S:SURGERY;P:PSYCHIATRY;R:REHAB MEDICINE;N:NEUROLOGY;0:NONE;"
+ D FIELD^DID(44,9,"","SET OF CODES","FLDINFO","FERR")
+ Q:NATIONAL=$G(FLDINFO("SET OF CODES"))
+ I $D(FERR) Q
+ S ^XTMP("SDES890P",1)="NATIONAL: "
+ S ^XTMP("SDES890P",2)=NATIONAL
+ S ^XTMP("SDES890P",3)=""
+ S ^XTMP("SDES890P",4)=""
+ S ^XTMP("SDES890P",5)="LOCAL: "
+ S ^XTMP("SDES890P",6)=$G(FLDINFO("SET OF CODES"))
+ D MAIL
+ Q
+MAIL ;
+ ; Get Station Number
+ ;
+ N STANUM,MESS1,XMTEXT,XMSUB,XMY,XMDUZ,DIFROM
+ S STANUM=$$KSP^XUPARAM("INST")_","
+ S STANUM=$$GET1^DIQ(4,STANUM,99)
+ S MESS1="Station: "_STANUM_" - "
+ ;
+ ; Send MailMan message
+ S XMDUZ=DUZ
+ S XMTEXT="^XTMP(""SDES890P"","
+ S XMSUB=MESS1_"SD*5.3*890 post install HOSPITAL LOCATION (#44), SERVICES field (#9) data dictionary report"
+ S XMDUZ=.5,XMY(DUZ)="",XMY(XMDUZ)=""
+ S XMY("DUNNAM.DAVID W@FORUM.DOMAIN.EXT")=""
+ S XMY("              @FORUM.DOMAIN.EXT")=""
+ S XMY("FISHER.BRADLEY@FORUM.DOMAIN.EXT")=""
+ S XMY("CRUZ.ORLANDO@FORUM.DOMAIN.EXT")=""
+ S XMY("BARBER.LORI@FORUM.DOMAIN.EXT")=""
+ D ^XMD
+ Q

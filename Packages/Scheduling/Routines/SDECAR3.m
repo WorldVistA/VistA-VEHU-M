@@ -1,5 +1,6 @@
-SDECAR3 ;ALB/SAT/JSM - VISTA SCHEDULING RPCS ;MAR 15, 2017
- ;;5.3;Scheduling;**658**;Aug 13, 1993;Build 23
+SDECAR3 ;ALB/SAT/JSM,JAS - VISTA SCHEDULING RPCS ; OCT 10, 2024
+ ;;5.3;Scheduling;**658,893**;Aug 13, 1993;Build 6
+ ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
  ;
@@ -93,6 +94,14 @@ APPT  ;
  ;update the SDEC APPT REQUEST file (#409.85)
  D:$D(@FDA) UPDATE^DIE("","FDA",,"ARMSG")
  I $D(ARMSG) S @RET@(1)="-1^Unable to store the changed data"_$C(30,31),ERRFLG=1 Q
+ ;
+ ; 409.85 COMMENTS AUDIT multiple
+ I $L(COMMENT) D
+ . N CAFDA
+ . S CAFDA(409.8527,"+1,"_IEN_",",.01)=$$NOW^XLFDT
+ . S CAFDA(409.8527,"+1,"_IEN_",",1)=DUZ
+ . S CAFDA(409.8527,"+1,"_IEN,",",2)=COMMENT
+ . D UPDATE^DIE("","CAFDA") K CAFDA
  Q
  ;
  ;

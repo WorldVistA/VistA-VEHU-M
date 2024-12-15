@@ -1,8 +1,9 @@
-GMRCIUTL ;SLC/JFR - UTILITIES FOR INTER-FACILITY CONSULTS ; May 01, 2023@10:38:56
- ;;3.0;CONSULT/REQUEST TRACKING;**22,58,184,185**;DEC 27, 1997;Build 16
+GMRCIUTL ;SLC/JFR - UTILITIES FOR INTER-FACILITY CONSULTS ; Jun 18, 2024@15:00:56
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,58,184,185,189**;DEC 27, 1997;Build 54
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; #2051 DIC, #2053 DIE, #3015 VAFCPID, #10112 VASITE, #10103 XLFDT, #3065 XLFNAME, #2171 XUAF4, #2541 XUPARAM, #4648 VAFCTFU2
+ ;  Reference to SAVEHL7^EHMHL7 supported by ICR #7424
  ;
  Q  ;don't start at the top
  ;
@@ -194,7 +195,7 @@ RESP(GMRCAC,GMRCMID,GMRCOC,GMRCDA,GMRCERR) ;build and send appl ACK/NAK
  ;
 LOGMSG(GMRCO,GMRCACT,GMRCMSG,GMRCER) ;create or update IFC MESSAGE LOG entry
  ;Input:
- ; GMRC0   = ien from file 123
+ ; GMRCO   = ien from file 123
  ; GMRCACT = ien in 40 multiple from file 123
  ; GMRCMSG = HL7 message ID of message being sent 
  ; GMRCER  = error number if can't transmit immediately
@@ -218,6 +219,11 @@ LOGMSG(GMRCO,GMRCACT,GMRCMSG,GMRCER) ;create or update IFC MESSAGE LOG entry
  S FDA(1,123.6,"+1,",.07)=1
  I $G(GMRCER) S FDA(1,123.6,"+1,",.08)=GMRCER
  D UPDATE^DIE("","FDA(1)","GMRCLG","GMRCERR")
+ ;
+ ;  Save Cerner-bound HL7 message in file #1609.  - P189
+ ;
+ I $$CNVTD^GMRCIEVT(GMRCO)=1,$D(^TMP("HLS",$J)) D SAVEHL7X^EHMHL7("HLS","IFC","VISTA-"_$$STA^XUAF4($$KSP^XUPARAM("INST")),"CERNER-"_$$STA^XUAF4($P(^GMR(123,GMRCO,0),U,23)),"|","^","~") ;
+ ; 
  Q
  ;
 EDIPI(DFN) ; p184
@@ -308,11 +314,35 @@ ADD2OBR(OBRSGMNT,CONSULT) ; P184
  . S ORDPRVDR=$P(^GMR(123,CONSULT,0),U,14) ;
  . I ORDPRVDR S NAME=$$GET1^DIQ(200,ORDPRVDR,.01,"E"),NPI=$P($$NPI^XUSNPI("Individual_ID",ORDPRVDR),U,1),$P(OBRSGMNT,FS,17)=$S(NPI>0:NPI,1:"")_CS_$P(NAME,",",1)_CS_$P($P(NAME,",",2)," ",1)_CS_$P($P(NAME,",",2)," ",2) ;
  ;
- Q OBRSGMNT ;
+ Q OBRSGMNT ; 
+ ;
+INCERNER(DFN) ;
+ ;
+ ;  Determine if patient is in Cerner patient database.  Return "YES" or "NO". wtc 8/17/23 p189
+ ;
+ I $G(DFN)="" Q "NO" ;
+ ;
+ N SITE,TFLIST,FOUND,I ;
+ ;
+ S SITE=$P($$SITE^VASITE(),U,3) D TFL^VAFCTFU2(.TFLIST,DFN_U_"PI"_U_"USVHA"_U_SITE) ;
+ S FOUND="NO" F I=1:1 Q:'$D(TFLIST(I))  I $P(TFLIST(I),U,4)="200CRNR",$P(TFLIST(I),U,5)="A" S FOUND="YES" Q  ;
+ ;
+ Q FOUND ;
+ ;
+NOSND() ;Do not respond to the sent comment.
+ N GMRCL,GMRCZ,GMRCARRAY
+ S GMRCDQ=0
+ S GMRCL="",GMRCL=$O(^GMR(123,IEN,40,"B",GMRCL),-1) Q:GMRCL="" GMRCDQ
+ S GMRCZ="",GMRCZ=$O(^GMR(123,IEN,40,"B",GMRCL,""))
+ D GETS^DIQ(123.02,GMRCZ_","_IEN_",",.32,"I","GMRCARRAY")
+ S GMRCDQ=$G(GMRCARRAY(123.02,GMRCZ_","_IEN_",",.32,"I"),0)
+ Q GMRCDQ
  ;
 ERR101 ;Unknown Consult/Procedure request
 ERR201 ;Unknown Patient
 ERR202 ;Local or unknown MPI identifiers
+ERR203 ;Patient not in Cerner
+ERR205 ;Waiting for treating facility list to be updated
 ERR301 ;Service not matched to receiving facility
 ERR401 ;Procedure not matched to receiving facility
 ERR501 ;Error in procedure name

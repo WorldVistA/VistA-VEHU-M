@@ -1,6 +1,8 @@
-DGPFHLR ;ALB/RPM - PRF HL7 RECEIVE DRIVERS ; 8/14/06 12:01pm
- ;;5.3;Registration;**425,650,951,1005**;Aug 13, 1993;Build 57
+DGPFHLR ;ALB/RPM - PRF HL7 RECEIVE DRIVERS ; Sep 11, 2023@10:20:27
+ ;;5.3;Registration;**425,650,951,1005,1091**;Aug 13, 1993;Build 28
  ;;Per VA Directive 6402, this routine should not be modified.
+ ;
+ ;  Reference to SAVEHL7^EHMHL7 supported by ICR #7424
  ;
 RCV ;Receive all message types and route to message specific receiver
  ;
@@ -86,6 +88,13 @@ RCVORU(DGWRK,DGMIEN,DGHL) ;Receive ORU Message Types (ORU~R01)
  ;
  I $D(DGSTOERR) D SDORUERR(DGMIEN,.DGSEGERR,.DGSTOERR,"S") ;store error
  D SNDACK^DGPFHLS(DGACKTYP,DGMIEN,.DGHL,.DGSEGERR,.DGSTOERR)
+ ;
+ ;  Save message to EHRM HL7 Message file (#1609) if received from Cerner.  p1091
+ ;
+ I $G(HL("SAF"))="200CRNR" D  ;
+ . N RTNVALUE K ^TMP("EHMHL7",$J) M ^TMP("EHMHL7",$J)=@DGWRK ;
+ . S RTNVALUE=$$SAVEHL7X^EHMHL7("EHMHL7","PRF","200CRNR","VISTA-"_$$STA^XUAF4($$KSP^XUPARAM("INST")),DGHL("FS"),$E(DGHL("ECH"),1),$E(DGHL("ECH"),2)) ;
+ . K ^TMP("EHMHL7",$J) ;
  ;
  ;cleanup
  K @DGORU

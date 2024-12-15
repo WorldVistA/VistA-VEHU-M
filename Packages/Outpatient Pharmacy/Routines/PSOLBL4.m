@@ -1,5 +1,5 @@
-PSOLBL4 ;BIR/RTR-Set up routine for HL7 interface ; 10/9/08 11:37am
- ;;7.0;OUTPATIENT PHARMACY;**26,70,156,244,233,246,319,387,354**;DEC 1997;Build 16
+PSOLBL4 ;BIR/RTR-Set up routine for HL7 interface; Sep 07, 2024@12:00
+ ;;7.0;OUTPATIENT PHARMACY;**26,70,156,244,233,246,319,387,354,761**;DEC 1997;Build 1
  ;External reference to ^PSDRUG supported by DBIA 221
  ;
  ;*244 - ignore RX's with a status > 11
@@ -103,6 +103,8 @@ RPT ;
  S $P(^UTILITY($J,"PSOHLL",II),"^",10)=+$G(PDUZ)
  Q
 SETZ ;
+ ;PSO*7.0*761: Added line below. PSLION (printer name) set in option Print from Suspense File.
+ I $G(PSOLAP)="" S PSOLAP=$G(PSLION)
  D NOW^%DTC S PSODTM=%
  S ZTRTN=$S($$GET1^DIQ(59,PSOSITE_",",105,"I")=2.4:"INIT^PSOHLDS",1:"INIT^PSOHLSG")
  S ZTIO="",ZTDTH=$H,ZTSAVE("^UTILITY($J,""PSOHL"",")="",ZTSAVE("PSOPAR")="",ZTSAVE("PSOSITE")="",ZTSAVE("PSODTM")="",ZTSAVE("PSOLAP")=""

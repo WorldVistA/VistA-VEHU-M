@@ -1,5 +1,6 @@
-XTVSLN ;Albany FO/GTS - VistA Package Sizing Manager; 30-JUN-2016
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSLN ;ALBANY FO/GTS - VistA Package Sizing Manager; 30-JUN-2016
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
 EN ; -- main entry point for XTVS PKG MGR EXTRACT MNGR
  D EN^VALM("XTVS PKG MGR EXTRACT MNGR")
@@ -145,7 +146,7 @@ DE ; -- Delete Extracts
  SET VALMBCK="R"
  QUIT
  ;
-ED ; - Extract Display
+ED ; - Display Extract
  ; -- Protocol: XTVS PKG MGR EXT DISP ACTION
  ;
  NEW XPID,QCHK
@@ -159,7 +160,7 @@ ED ; - Extract Display
  SET VALMBCK="R"
  QUIT
  ;
-PEXT ; -- Create Extract
+PEXT ; -- Extract Package Data
  ; -- Protocol: XTVS PKG EXTRACT CREATE ACTION
  ;
  NEW EXTRSLT
@@ -169,8 +170,9 @@ PEXT ; -- Create Extract
  SET VALMBCK="R"
  QUIT
  ;
-CRTPARM ; Display Package Parameter file from selected ^XTMP("XTSIZE") extract global
+CRTPARM ; Convert Extract to Parameter list
  ; -- Protocol: XTVS PKG EXT CRT PARAM ACTION
+ ; Display Package Parameter file from selected ^XTMP("XTSIZE") extract global
  ;
  NEW XPID,QCHK
  SET QCHK=0
@@ -189,7 +191,7 @@ CRTPARM ; Display Package Parameter file from selected ^XTMP("XTSIZE") extract g
  SET VALMBCK="R"
  QUIT
  ;
-EEXT ; Email ^XTMP("XTSIZE") extract global
+EEXT ; - Email extract global [^XTMP("XTSIZE")]
  ; -- Protocol: XTVS PKG EXT EMAIL ACTION
  ;
  NEW XPID,QCHK
@@ -222,7 +224,7 @@ EEXT ; Email ^XTMP("XTSIZE") extract global
  SET VALMBCK="R"
  QUIT
  ;
-QRYEXT ; Request Package File Extract from another VistA [E.G. Forum]
+QRYEXT ; Remote VistA Extract Query ; Request Package File Extract from another VistA [E.G. Forum]
  ; -- Protocol: XTVS PKG EXT QUERY REMOTE ACTION
  ;
  NEW XTVSFQ,DIR,XMY,XTVSSZRP,XTVSRPT
@@ -252,18 +254,19 @@ QRYEXT ; Request Package File Extract from another VistA [E.G. Forum]
  ;
  ; Not Forum, Query VistA site (Domain)
  IF XTVSFQ=0 DO
- . KILL DIC,X,Y,DTOUT,DUOUT
+ . KILL DIC,X,Y,DTOUT,DUOUT,XTVSYDOM
  . SET DIC="^DIC(4.2,"
  . SET DIC(0)="AEQ"
  . SET DIC("A")="Domain server to query: "
  . SET DIC("S")="I $P(^(0),U,2)'=""C""" ;Screen "CLOSED" domains
  . DO ^DIC
- . IF ($DATA(DUOUT))!($DATA(DTOUT))!(+Y=-1) DO JUSTPAWS^XTVSLAPI("VistA Domain not selected!")
- . IF '$DATA(DUOUT),'$DATA(DTOUT),+Y>0 DO
- .. IF $PIECE(Y,"^",2)["FORUM" DO
+ . SET XTVSYDOM=Y
+ . IF ($DATA(DUOUT))!($DATA(DTOUT))!(+XTVSYDOM=-1) DO JUSTPAWS^XTVSLAPI("VistA Domain not selected!")
+ . IF '$DATA(DUOUT),'$DATA(DTOUT),+XTVSYDOM>0 DO
+ .. IF $PIECE(XTVSYDOM,"^",2)["FORUM" DO
  ... SET XTVSSZRP=$$SIZRPTQY() ;Query Size rpt
- .. IF XTVSSZRP>-1 SET XMY("S.XTVS PKG EXTRACT SERVER@"_$PIECE(Y,"^",2))="" ;Query address for size rpt
- .. IF XTVSSZRP=-1 DO JUSTPAWS^XTVSLAPI("Size Report prompt not answered!")
+ ... IF XTVSSZRP=-1 DO JUSTPAWS^XTVSLAPI("Size Report prompt not answered!")
+ .. SET XMY("S.XTVS PKG EXTRACT SERVER@"_$PIECE(XTVSYDOM,"^",2))="" ;Query address for size rpt
  . KILL DIC,X,Y,DTOUT,DUOUT
  ;
  IF ($DATA(XMY)) DO
@@ -283,14 +286,6 @@ QRYEXT ; Request Package File Extract from another VistA [E.G. Forum]
  DO MSG
  SET VALMBCK="R"
  QUIT
- ;
-MMADDOK(X,XMDUZ,XMMG,XTADD) ;Confirm user entered Domain address
- NEW Y,XMDF
- SET X="S.XTVS PKG EXTRACT SERVER@"_X
- SET XMDF=""
- DO INST^XMA21
- SET XTADD=$O(XMY(""))
- QUIT Y
  ;
 SIZRPTQY() ; Prompt for Forum Size Rpt
  NEW DIR,X,Y,RESULT

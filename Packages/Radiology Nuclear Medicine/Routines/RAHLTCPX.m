@@ -1,5 +1,5 @@
-RAHLTCPX ;HIRMFO/RTK,RVD,GJC - Rad/Nuc Med HL7 TCP/IP Bridge; Sep 21, 2023@07:58:28
- ;;5.0;Radiology/Nuclear Medicine;**47,114,129,141,144,157,195,207**;Mar 16, 1998;Build 2
+RAHLTCPX ;HIRMFO/RTK,RVD,GJC - Rad/Nuc Med HL7 TCP/IP Bridge; Sep 05, 2024@08:48:49
+ ;;5.0;Radiology/Nuclear Medicine;**47,114,129,141,144,157,195,207,218**;Mar 16, 1998;Build 1
  ;
  ; this is a modified copy of RAHLTCPB for HL7 v2.4
  ;
@@ -67,7 +67,16 @@ PID ; Pick data off the 'PID' segment.
  S RADFN="" S RASSNVAL=$P($G(PAR(4)),U,1) I RASSNVAL'="" S RADFN=$O(^DPT("SSN",RASSNVAL,""))
  I RADFN="" S RADFN=$P($P($G(PAR(3)),U,1),"-",2)  ;strip station number and get DFN
  I $G(RADFN)="" S RAERR="Invalid patient identifier",RAEXIT=1 Q
- I $G(RADFN)'="" S ^TMP("RARPT-REC",$J,RASUB,"RADFN")=RADFN
+ ; ** begin RA5P218 INC34284530 **
+ ; Is RADFN the proper data type? (numeric)
+ I RADFN'=+RADFN S RAERR="Invalid patient identifier.",RAEXIT=1 Q
+ ; RADFN is numeric, check for RIS patient (#70) file record
+ I $D(^RADPT(RADFN,0))#2=0 D  Q
+ .S RAERR="Invalid patient identifier."
+ .S RAEXIT=1
+ .Q
+ S ^TMP("RARPT-REC",$J,RASUB,"RADFN")=RADFN
+ ; ** end RA5P218 INC34284530 **
  ;
  ; get SSN from PID-19/PAR(20)
  I $G(PAR(20)) S RASSN=PAR(20),^TMP("RARPT-REC",$J,RASUB,"RASSN")=RASSN

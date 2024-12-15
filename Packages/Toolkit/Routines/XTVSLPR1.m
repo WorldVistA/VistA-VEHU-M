@@ -1,5 +1,6 @@
-XTVSLPR1 ;Albany FO/GTS - VistA Package Sizing Manager; 18-DEC-2018
- ;;7.3;TOOLKIT;**143**;Apr 25, 1995;Build 116
+XTVSLPR1 ;ALBANY FO/GTS - VistA Package Sizing Manager; 18-DEC-2018
+ ;;7.3;TOOLKIT;**143,152**;Apr 25, 1995;Build 3
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
  ;APIs
 INCONSCK ;Check for overlaps in Forum Package file data
