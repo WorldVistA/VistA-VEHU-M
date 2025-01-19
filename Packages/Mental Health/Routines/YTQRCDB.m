@@ -1,5 +1,5 @@
 YTQRCDB ;BAL/KTL - MHA CLOUD DATABASE ADMIN RPC CALLS; 1/25/2017
- ;;5.01;MENTAL HEALTH;**239,224,249**;Dec 30, 1994;Build 30
+ ;;5.01;MENTAL HEALTH;**239,224,249,250**;Dec 30, 1994;Build 26
  ;
  ;
  ; Reference to FILE^DIE in ICR #2053
@@ -101,7 +101,7 @@ RVW(ARGS,DATA) ; update admin REVIEWED status
  I DATA("adminId")="" S YSMESS="Administration not sent."
  I '$D(^YTT(601.84,ADMIN))="" S YSMESS="Administration not found."
  S N0=$G(^YTT(601.84,ADMIN,0)),YSORD=$P(N0,U,6),YSCMPLT=$P(N0,U,9)
- I $G(DUZ)=YSORD,($$REQCSGN^YTQRQAD3(ADMIN)="false") S YSOK=1
+ I $G(DUZ)=YSORD S YSOK=1  ;,($$REQCSGN^YTQRQAD3(ADMIN)="false")
  S YS(601.84,ADMIN_",",19)=YSOK
  D FILE^DIE("","YS","YTERR")
  S YSOK=$S(YSOK=1:"SUCCESS",1:"FAIL")

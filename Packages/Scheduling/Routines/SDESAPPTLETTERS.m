@@ -1,5 +1,5 @@
-SDESAPPTLETTERS ;ALB/BWF - VISTA SCHEDULING RPCS - LETTER PRINT ; August 29, 2022
- ;;5.3;Scheduling;**824**;Aug 13, 1993;Build 3
+SDESAPPTLETTERS ;ALB/BWF,TJB - VISTA SCHEDULING RPCS - LETTER PRINT ; November 5, 2024
+ ;;5.3;Scheduling;**824,895**;Aug 13, 1993;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to DIVISION in ICR #7024
@@ -23,7 +23,9 @@ PRINTLETTER(SDRES,APPTIEN,LTYPE,SDEAS) ;
  .S LETTERS("Letters",LCNT,"Error")="No letter returned."
  S LCNT=LCNT+1
  S LETTERS("Letters",LCNT,"AppointmentID")=APPTIEN
- I $G(@GBL@(0))["ERROR" S LETTERS("Letters",LCNT,"Error")=$G(@GBL@(1)) Q
+ I $G(@GBL@(0))["ERROR" D  Q
+ . S LETTERS("Letters",LCNT,"Error")=$G(@GBL@(1))
+ . D BUILDJSON^SDESBUILDJSON(.SDRES,.LETTERS)
  S LINE=0 F  S LINE=$O(@GBL@(LINE)) Q:'LINE  D
  .S LETTERS("Letters",LCNT,"Text",LINE)=$G(@GBL@(LINE))
  I '$D(LETTERS) S LETTERS("Letters",1)=""
@@ -52,7 +54,8 @@ PRINTLETTERS(SDRES,APPTLIST,LTYPE,SDEAS) ;
  ..S LETTERS("Letters",LCNT,"Error")="No letter returned."
  .S LCNT=LCNT+1
  .S LETTERS("Letters",LCNT,"AppointmentID")=APPTIEN
- .I $G(@GBL@(0))["ERROR" S LETTERS("Letters",LCNT,"Error")=$G(@GBL@(1)) Q
+ .I $G(@GBL@(0))["ERROR" D  Q
+ .. S LETTERS("Letters",LCNT,"Error")=$G(@GBL@(1)) Q
  .S LINE=0 F  S LINE=$O(@GBL@(LINE)) Q:'LINE  D
  ..S LETTERS("Letters",LCNT,"Text",LINE)=$G(@GBL@(LINE))
  I '$D(LETTERS) S LETTERS("Letters",1)=""
@@ -195,7 +198,7 @@ FORM(SDC,SDCL,SDX,LEXPROC) ;
  F J=0:0 S J=$O(^SC(+SDC,"PR",J)) Q:'J>0  D
  .I $$GET1^DIQ(44.1,J_","_+SDC_",",.02,"I")'=1 Q
  .S SDPROV=$$GET1^DIQ(44.1,J_","_+SDC_",",.01,"I")
- I $D(SDC),'$D(LEXPROC),$$GET1^DIQ(44,SDLET,5,"I")="Y" D
+ I $D(SDC),'$D(LEXPROC),$$GET1^DIQ(407.5,SDLET,5,"I")="Y" D
  .I SDLOC]"" S SDECI=SDECI+1 S ^TMP("SDEC",$J,SDECI)="     "_"Location:  "_SDLOC
  I $D(SDC),'$D(LEXPROC),SDTEL]"" D
  .S SDTMP="    Telephone:  "_SDTEL

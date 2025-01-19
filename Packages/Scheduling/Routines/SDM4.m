@@ -1,16 +1,14 @@
-SDM4 ;ALB/BOK - MAKE APPOINTMENT ;JUN 21, 2017; Compiled April 9, 2007 14:26:51
- ;;5.3;Scheduling;**263,273,327,394,417,496,585,665**;Aug 13, 1993;Build 14
+SDM4 ;ALB/BOK,MGD - MAKE APPOINTMENT ;NOV 12,2024
+ ;;5.3;Scheduling;**263,273,327,394,417,496,585,665,895**;Aug 13, 1993;Build 11
  ;
  ;09/15/2002 $N FUNCTION REMOVED AND REPLACED WITH $O - IOFO - BAY PINES - TEH
  ;
  ;ICR Agreements:
  ;
- ;ICR - 1476 For reference to PRIMARY ELIG. ^DPT(IEN,.372).
- ;ICR - 427  For reference to ^DIC(8)
- ;ICR - 10061 For reference to 2^VADPT
- ;ICR - 2056 For reference to $$GET1^DIQ
- ;ICR - 10116 for reference to $$UPPER^VALM1
- ;ICR - 2516 For reference to ^DIC(8.1 - SD*585
+ ; Reference to ^DPT(IEN,.372) in ICR #1476
+ ; Reference to ^DIC(8) in ICR #427
+ ; Reference to ^DIC(8.1 in ICR #2516
+ ; Reference to ^$$ELIG^DGCOMPACTELIG in ICR #7462
  ;
  ;09/23/2005 Patch SD*5.3*417 Upper/Lower case usage.
  ;04/09/2007 Patch SD*5.3*496 Accept entry in file 44 without STOP CODE
@@ -19,6 +17,9 @@ SDM4 ;ALB/BOK - MAKE APPOINTMENT ;JUN 21, 2017; Compiled April 9, 2007 14:26:51
 TYPE ;
  D SC
 RAT ;Display rated service connected disabilities patch SD*5.3*394
+ W !!,"COMPACT Act Administrative Eligibility:"
+ W !,"    COMPACT Act: ",$$ELIG^DGCOMPACTELIG(DFN,"SDM4")
+ ;
  D 2^VADPT
  W !!,"PATIENT'S SERVICE CONNECTION AND RATED DISABILITIES:"
  IF $$GET1^DIQ(2,DFN_",",.301,"E")="YES"&($P(VAEL(3),"^",2)'="") D

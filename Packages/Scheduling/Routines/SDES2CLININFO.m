@@ -1,5 +1,5 @@
-SDES2CLININFO ;ALB/TJB - Get Clinic Info based on Clinic IEN ;OCT 3, 2024
- ;;5.3;Scheduling;**893**;Aug 13, 1993;Build 6
+SDES2CLININFO ;ALB/TJB,JAS - Get Clinic Info based on Clinic IEN ;NOV 06, 2024
+ ;;5.3;Scheduling;**893,895**;Aug 13, 1993;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -67,6 +67,11 @@ ENTRY(SDRETURN,SDCONTEXT,SDPARAM) ;SDES2 GET CLINIC INFO
  ;"StopCodeAMISNum": "",
  ;"StopCodeName": "",
  ;"StopCodeNum": "",
+ ;"Subspecialty": {
+ ; "ID": "",
+ ; "Name": "",
+ ; "Tier": "",
+ ; "Parent": ""},
  ;"Telephone": "",
  ;"TelephoneExtension": "",
  ;"Timezone": "EASTERN",
@@ -238,6 +243,19 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  .S SDCLNSREC("Clinic","SpecialInstructions",COUNT,"Instruction")=$$GET1^DIQ(44.03,COMMENTSUBIEN_","_SDCLNIEN_",",.01)
  .S SDCLNSREC("Clinic","SpecialInstructions",COUNT,"InstructionID")=COMMENTSUBIEN
  I '$D(SDCLNSREC("Clinic","SpecialInstructions")) S SDCLNSREC("Clinic","SpecialInstructions")=""
+ ;
+ ; get subspecialties
+ N SSFN,SUBSPECIEN
+ S COUNT=0
+ F SSFN=301:1:302 D
+ . S SUBSPECIEN=0
+ . F  S SUBSPECIEN=$O(^SC(SDCLNIEN,SSFN,"B",SUBSPECIEN)) Q:'SUBSPECIEN  D
+ . . S COUNT=COUNT+1
+ . . S SDCLNSREC("Clinic","Subspecialty",COUNT,"ID")=$$GET1^DIQ(409.94,SUBSPECIEN_",",.01,"E")
+ . . S SDCLNSREC("Clinic","Subspecialty",COUNT,"Name")=$$GET1^DIQ(409.94,SUBSPECIEN_",",1)
+ . . S SDCLNSREC("Clinic","Subspecialty",COUNT,"Tier")=$$GET1^DIQ(409.94,SUBSPECIEN_",",2,"E")
+ . . S SDCLNSREC("Clinic","Subspecialty",COUNT,"Parent")=$$GET1^DIQ(409.94,SUBSPECIEN_",",3,"E")
+ I '$D(SDCLNSREC("Clinic","Subspecialty")) S SDCLNSREC("Clinic","Subspecialty",1)=""
  ;
  ; Providers Multiple
  S SDX="",SDC=0

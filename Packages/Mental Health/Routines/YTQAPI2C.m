@@ -1,5 +1,5 @@
 YTQAPI2C ;SLC/BLD- MHAX ANSWERS SPECIAL HANDLING #2 ;2/7/2018  17:35
- ;;5.01;MENTAL HEALTH;**136,139**;Dec 30, 1994;Build 134
+ ;;5.01;MENTAL HEALTH;**136,139,250**;Dec 30, 1994;Build 26
  ;
  ; This routine was split from YTQAPI2A.
  ; This routine handles limited complex reporting requirements without
@@ -44,20 +44,20 @@ SPECIAL(TSTNM,YSDATA,N,YSAD,YSTSTN) ; add "hidden" computed question text
  .I ^TMP($J,"YSCOR",1)'="[DATA]" Q
  .D YSARRAY(.YSARRY)
  .M TMP=^TMP($J,"YSCOR")
- .S POSTXT1="Presence of one or more Positive Indicators means that, in addition to any immediate suicide "
- .S POSTXT2="safety measures, the treating provider should consider consulting a mental consulting a mental "
- .S POSTXT3="health professional. 'Yes' indicates a positive response. 'No' indicates a negative response."
+ .S POSTXT1="Presence of one or more Positive Indicators means that, in addition "
+ .S POSTXT2="to any immediate suicide safety measures, the treating provider "
+ .S POSTXT3="should consider consulting a mental health professional.|'Yes' indicates a positive response. 'No' indicates a negative response."
  .;
  .S QUENBR=7771
  .F I=1:1:7 S SCORE=$S($G(SCORE)="":$P(TMP(I),"=",2),1:SCORE_"^"_$P(TMP(I),"=",2))
  .S YSDATA(N)="7780^9999;1^"_POSTXT1 S N=N+1
  .S YSDATA(N)="7781^9999;1^"_POSTXT2 S N=N+1
  .S YSDATA(N)="7782^9999;1^"_POSTXT3 S N=N+1
- .I $P(SCORE,U,1)=1 S YSDATA(N)=QUENBR_"^9999;1^Active suicide ideation with a past attempt." S N=N+1,QUENBR=QUENBR+1  ;QUESTION 1
- .I $P(SCORE,U,2)=1 S YSDATA(N)=QUENBR_"^9999;1^Has or recently begun a suicide plan." S N=N+1,QUENBR=QUENBR+1   ;QUESTION 2
- .I $P(SCORE,U,3)=1 S YSDATA(N)=QUENBR_"^9999;1^Reports recent intent to act on suicidal ideation." S N=N+1,QUENBR=QUENBR+1   ;QUESTION 3
- .I $P(SCORE,U,4)=1 S YSDATA(N)=QUENBR_"^9999;1^Has a past psychiatric hospitalization." S N=N+1,QUENBR=QUENBR+1     ;QUESTION 4
- .I $P(SCORE,U,5)=1 S YSDATA(N)=QUENBR_"^9999;1^Has a pattern of excessive substance use." S N=N+1,QUENBR=QUENBR+1    ;QUESTION 5
+ .I $P(SCORE,U,1)=1 S YSDATA(N)=QUENBR_"^9999;1^Active suicide ideation |with a past attempt." S N=N+1,QUENBR=QUENBR+1                               ;QUESTION 1
+ .I $P(SCORE,U,2)=1 S YSDATA(N)=QUENBR_"^9999;1^Has or recently begun a suicide plan." S N=N+1,QUENBR=QUENBR+1                                      ;QUESTION 2
+ .I $P(SCORE,U,3)=1 S YSDATA(N)=QUENBR_"^9999;1^Reports recent intent to act on suicidal ideation." S N=N+1,QUENBR=QUENBR+1                         ;QUESTION 3
+ .I $P(SCORE,U,4)=1 S YSDATA(N)=QUENBR_"^9999;1^Has a past psychiatric hospitalization." S N=N+1,QUENBR=QUENBR+1                                    ;QUESTION 4
+ .I $P(SCORE,U,5)=1 S YSDATA(N)=QUENBR_"^9999;1^Has a pattern of excessive substance use." S N=N+1,QUENBR=QUENBR+1                                  ;QUESTION 5
  .I $P(SCORE,U,6)=1 S YSDATA(N)=QUENBR_"^9999;1^Currently presents with irritable, agitated, and/or aggressive behavior." S N=N+1,QUENBR=QUENBR+1   ;QUESTION 6
  .I SCORE'[1 S YSDATA(N)=QUENBR_"^9999;1^None" S N=N+1,QUENBR=QUENBR+1
  .S SC="" F I=1:1:6 I $P(SCORE,"^",I)>2 S SC=$S($G(SC)="":$P(SCORE,"^",I),1:SC_"^"_$P(SCORE,"^",I)),SC(I)=$P(SCORE,"^",I)

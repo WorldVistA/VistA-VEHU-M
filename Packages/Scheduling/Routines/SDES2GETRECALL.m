@@ -1,5 +1,5 @@
-SDES2GETRECALL ;ALB/TJB,BWF,JAS - VISTA SCHEDULING - GET RECALL REQUESTS ;APR 16, 2024
- ;;5.3;Scheduling;**871,873,877**;Aug 13, 1993;Build 14
+SDES2GETRECALL ;ALB/TJB,BWF,JAS - VISTA SCHEDULING - GET RECALL REQUESTS ;NOV 24, 2024
+ ;;5.3;Scheduling;**871,873,877,895**;Aug 13, 1993;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to ^VA(200 in ICR #10060 ;
@@ -118,7 +118,23 @@ GETRECALL(REQUEST,RECALLIEN,DFN,SDDUZ) ;
  ;
  I '$D(REQUEST("Request",NUM,"PatientIndicatedDate")) D
  .S REQUEST("Request",NUM,"PatientIndicatedDate")=""
+ ;
+ ; build comment audit mult
+ D BUILDCOMMAUDIT(.REQUEST,RECALLIEN,NUM)
  ; build appointment request and consult
  D APPTREQUEST^SDES2GETREQS(.REQUEST,NUM)
  D CONSULT^SDES2GETREQS(.REQUEST,NUM)
  Q
+ ;
+BUILDCOMMAUDIT(REQUEST,REQUESTIEN,NUM) ;Comment Audit Multiple (#2.7)
+ N SUBIEN,COUNT
+ S SUBIEN=0,COUNT=0
+ F  S SUBIEN=$O(^SD(403.5,REQUESTIEN,2,SUBIEN)) Q:'SUBIEN  D
+ . S COUNT=COUNT+1
+ . S REQUEST("Request",NUM,"CommentMultiple",COUNT,"DateCommAdded")=$$FMTISO^SDAMUTDT($$GET1^DIQ(403.57,SUBIEN_","_REQUESTIEN_",",.01,"I"))
+ . S REQUEST("Request",NUM,"CommentMultiple",COUNT,"CommAddedByDUZ")=$$GET1^DIQ(403.57,SUBIEN_","_REQUESTIEN_",",1,"I")
+ . S REQUEST("Request",NUM,"CommentMultiple",COUNT,"CommAddedByName")=$$GET1^DIQ(403.57,SUBIEN_","_REQUESTIEN_",",1,"E")
+ . S REQUEST("Request",NUM,"CommentMultiple",COUNT,"Comment")=$$GET1^DIQ(403.57,SUBIEN_","_REQUESTIEN_",",2,"I")
+ I '$D(REQUEST("Request",NUM,"CommentMultiple")) S REQUEST("Request",NUM,"CommentMultiple",1)=""
+ Q
+ ;

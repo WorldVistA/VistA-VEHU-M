@@ -1,5 +1,5 @@
 YTQREST ;SLC/KCM - RESTful API front controller ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,208,223,238,239,249**;Dec 30, 1994;Build 30
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,208,223,238,239,249,250**;Dec 30, 1994;Build 26
  ;
  ; Reference to EN^XPAR in ICR #2263
  ; Reference to XUP in ICR #4409
@@ -77,8 +77,8 @@ QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;GET /api/dashboard/highrisk/cssrs/:adminId WEBRPRT^YSBDD1
  ;;GET /api/dashboard/highrisk/hrpp/:dfn WEBPROF^YSBDD1
  ;;GET /api/dashboard/highrisk/note/:noteId WEBNOTE^YSBDD1
- ;;GET /api/dashboard/userpref WEBGUSRP^YTQRQAD7
- ;;POST /api/dashboard/userpref WEBPUSRP^YTQRQAD7
+ ;;GET /api/dashboard/userpref WEBGUSRP^YTQRQAD8
+ ;;POST /api/dashboard/userpref WEBPUSRP^YTQRQAD8
  ;;GET /api/mha/cdb/patient/pid/:dfn PID2^YTQRCDB2
  ;;GET /api/mha/cdb/timezone/ TZ^YTQRCDB2
  ;;GET /api/mha/cdb/instrument/list/:dfn?1.N GETLIST^YTQRCDB2

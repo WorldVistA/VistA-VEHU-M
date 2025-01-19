@@ -1,5 +1,5 @@
 YTQRQAD8 ;BAL/KTL - RESTful Calls to set/get MHA Note ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**199,207,202,204,208**;Dec 30, 1994;Build 23
+ ;;5.01;MENTAL HEALTH;**199,207,202,204,208,250**;Dec 30, 1994;Build 26
  ;
  ; Reference to TIUCNSLT in ICR #5546
  ; Reference to TIUPUTU in ICR #3351
@@ -54,3 +54,34 @@ FILPNOT(ASGN,ADMIN,CONSULT,DATA,TMPYS,FRMDEL) ;File the aggregate Progress Note
  K ^XTMP(NOD,2)  ;KILL Filed progress note text
  Q $G(YSDATA(2))
  ;
+WEBGUSRP(ARGS,RESULTS) ;Get DB Col Pref
+ N YSWPARR,JSONOUT
+ K ^TMP("YTQ-JSON",$J)
+ D GETPARAM^YTQRQAD7("YSB USER COLUMN PREFERENCE","",.YSWPARR)
+ I $G(YSWPARR(1,0))="" D
+ . K YSWPARR D DFLTUP(JSONOUT)
+ . D TOTMP^YSBRPC(.JSONOUT)
+ I $D(YSWPARR) M ^TMP("YTQ-JSON",$J)=YSWPARR
+ S RESULTS=$NA(^TMP("YTQ-JSON",$J))
+ Q
+WEBPUSRP(ARGS,DATA) ; Set DB Col Pref
+ ;Requires HTTPREQ from YTQREST
+ N YSRET
+ S YSRET=$$SETPARAM^YTQRQAD7("YSB USER COLUMN PREFERENCE","/api/mha/dashboard/userpref/",.HTTPREQ,,"DASH COLS")
+ Q YSRET
+DFLTUP(XJSON)  ;
+ N II,XDATA,XNAM,XJ,SPC,XCNT,XTABC
+ S $P(SPC," ",10)=""
+ S XCNT=1,XTABC=1,XJSON(XCNT)="{"
+ D GETWDGT^YSBRPC(.XDATA)
+ S II=0 F  S II=$O(XDATA("widgets",II)) Q:+II=0  D
+ . S XNAM=$G(XDATA("widgets",II,"name"))
+ . S XNAM=$S(XNAM="HIGH RISK":"highRisk",XNAM="MBC":"measurementBased",1:XNAM)
+ . K XDATA("widgets",II,"instrumentList")
+ . K XDATA("widgets",II,"name")
+ . M XJ(XNAM)=XDATA("widgets",II)
+ . S XJ(XNAM,"display")="true"
+ . S XJ(XNAM,"filterList","name")="name"
+ . S XJ(XNAM,"filterList","value")=""
+ D ENCODE^YSBJSON("XJ","XJSON","ERRARY")
+ Q

@@ -1,5 +1,5 @@
-YTQRQAD2 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181,199,202,204,208,233,223,234,238**;Dec 30, 1994;Build 25
+YTQRQAD2 ;SLC/KCM - RESTful Calls to set/get MHA administrations ;Oct 31, 2024@13:37:11
+ ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181,199,202,204,208,233,223,234,238,250**;Dec 30, 1994;Build 26
  ;
 SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  I $G(DATA("assignmentId"))?36ANP G POSTADM^YTQRCRW
@@ -69,10 +69,15 @@ QASAVE(DATA) ; save questions and answers in DATA
  Q ADMIN
  ;
 SETADM(DATA,NUM) ; return the id for new/updated admin
- N YSDATA,YS,NODE,ADMIN,ADMINDT,ASMTID
+ N YSDATA,YS,NODE,ADMIN,ADMINDT,ASMTID,YSERR
  S ASMTID=DATA("assignmentId")
  S NODE=$S(ASMTID?36ANP:"YTQCPRS-",1:"YTQASMT-SET-")_ASMTID
  S ADMIN=+$G(DATA("adminId"))
+ I '$D(^XTMP(NODE)) D  QUIT 0
+ . S YSERR="Unable to create admin."
+ . I ADMIN,$P($G(^YTT(601.84,ADMIN,0)),U,9)="Y" S YSERR=YSERR_" Admin was already saved." I 1
+ . E  S YSERR=YSERR_" (Scratch assignment was missing)."
+ . D SETERROR^YTQRUTL(500,YSERR)
  I 'ADMIN S ADMIN=$$ADM4ASMT(NODE,DATA("instrumentId")) ; auto-save fix
  ;Admin Date added so user can select previous date, time is arbitrary based on current MHA standard
  S ADMINDT=$G(^XTMP(NODE,1,"adminDate")) I ADMINDT]"" S ADMINDT=$$ETFM(ADMINDT) S:ADMINDT ADMINDT=ADMINDT_"."_$P($$NOW^XLFDT(),".",2)

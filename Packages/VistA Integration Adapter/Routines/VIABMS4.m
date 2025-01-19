@@ -1,5 +1,5 @@
-VIABMS4 ;AAC/JMC,AFS/PB - VIA BMS RPCs ;10/31/17  14:34
- ;;1.0;VISTA INTEGRATION ADAPTER;**15,20**;06-FEB-2014;Build 5
+VIABMS4 ;AAC/JMC,AFS/PB - VIA BMS RPCs ;12/18/23  14:34
+ ;;1.0;VISTA INTEGRATION ADAPTER;**15,20,24**;06-FEB-2014;Build 3
  ;Per VA Directive 6402, this routine should not be modified.
  ;Reference to ^OR(100 supported by IA 6475
  ;
@@ -49,7 +49,7 @@ ORDACT ; Returns a list of order actions from the ORDER file #100.008
  ; VIA("VALUE")=1 or 2 required]. 1 to filter by orderable item(s), 2 to filter by orderable action 
  ;Data returned
  ; .01 Date/Time Ordered,6 Date/Time Signed,16 Release Date/Time,5 Signed By,3 Provider,.1 Order Text
- N VIAFILE,VIAFIELDS,VIAFLAGS,OITM,I,TRESULT,I,X,N,IEN,VIATIEN,DATAFLG,VIACA,VIADTO
+ N VIAFILE,VIAFIELDS,VIAFLAGS,OITM,I,TRESULT,I,X,N,IEN,VIATIEN,DATAFLG,VIACA,VIADTO,VIALCNT
  S VIAFILE=100.008,VIAFIELDS="@;.01;6;16;5;3",VIAFLAGS="IP"
  I 'VIAVAL S VIAER="Missing VALUE of 1 or 2" D ERR^VIABMS(VIAER) Q
  S:VIASDT="" VIASDT=DT S:VIAEDT="" VIAEDT=DT
@@ -57,7 +57,8 @@ ORDACT ; Returns a list of order actions from the ORDER file #100.008
  I VIAIENS="" S VIAER="Missing Order number" D ERR^VIABMS(VIAER) Q
  I $G(VIAOIEN)'="" F I=1:1:$L(VIAOIEN,",") S OITM=$P(VIAOIEN,",",I) I OITM'="" S VIAOI(OITM)=""
  I VIAVAL=1,$O(VIAOI(""))="" S VIAER="Missing Orderable Items IEN" D ERR^VIABMS(VIAER) Q
- S VIAID="I $D(^OR(100,DA(1),8,Y,.1)) S I=0 F  S I=$O(^OR(100,DA(1),8,Y,.1,I)) Q:'I  S J=$P(^(I,0),U) D EN^DDIOL(J)"
+ S VIAID="I $D(^OR(100,DA(1),8,Y,.1)) S I=0,VIALCNT=0 F  S I=$O(^OR(100,DA(1),8,Y,.1,I)) Q:'I  S J=$P(^(I,0),U) D EN^DDIOL(J) S VIALCNT=VIALCNT+$L(J)"
+ S VIAID=VIAID_" I VIALCNT>3675 S J=""<*NOTE: order text reached max length, please check appropriate system for full order text*>"" D EN^DDIOL(J) Q"
  I VIAVAL=1 D
  . S VIASCRN="S VIACA=$P($G(^OR(100,Y(1),3)),U,7),VIADTO=$P($G(^OR(100,Y(1),3)),U) S:VIACA>0 VIADTO=$P($G(^OR(100,Y(1),8,VIACA,0)),U) "
  . S VIASCRN=VIASCRN_"S VIAX=0 F  S VIAX=$O(^OR(100,Y(1),.1,VIAX)) Q:'VIAX  I VIAX>0 S VIAV=$P(^OR(100,Y(1),.1,VIAX,0),U,1) I (VIACA=+Y1)&$$BETWEEN^VIABMS(VIADTO,VIASDT,VIAEDT)&$D(VIAOI(VIAV)) S VIAOK=1 Q"

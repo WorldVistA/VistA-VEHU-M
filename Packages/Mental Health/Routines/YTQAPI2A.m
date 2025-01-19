@@ -1,5 +1,5 @@
 YTQAPI2A ;SLC/KCM - MHAX ANSWERS SPECIAL HANDLING ;10/17/16  13:43
- ;;5.01;MENTAL HEALTH;**121,134,123**;Dec 30, 1994;Build 72
+ ;;5.01;MENTAL HEALTH;**121,134,123,250**;Dec 30, 1994;Build 26
  ;
  ; This routine handles limited complex reporting requirements without
  ; modifying YS_AUX.DLL by adding free text "answers" that can be used by
@@ -19,7 +19,7 @@ SPECIAL(YSDATA,N,YSAD,YSTSTN) ; add "hidden" computed question text
  .N ANS,CHCE,I,LP,RES,SAVEN,SC,STR,TMP
  .D SETARR
  .S LP=2,SAVEN=N
- .F  S LP=$O(YSDATA(LP)) Q:'LP  S RES=$P(YSDATA(LP),U,3) S CHCE=$S(RES=3448:0,RES=3449:1,RES>3449:2) I CHCE D
+ .F  S LP=$O(YSDATA(LP)) Q:'LP  S RES=$P(YSDATA(LP),U,3) S CHCE=$S(RES=3449:1,RES>3449:2,1:0) I CHCE D
  ..S ANS=$P(YSDATA(LP),U)
  ..I CHCE=2 D
  ...I (ANS=7216)!(ANS=7217) S TMP(7771)=7771_U_"9999;1^Positive"

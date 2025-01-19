@@ -1,5 +1,5 @@
-SDEC49 ;ALB/SAT,WTC - VISTA SCHEDULING RPCS ;Feb 12, 2020@15:22
- ;;5.3;Scheduling;**627,658,694**;Aug 13, 1993;Build 61
+SDEC49 ;ALB/SAT,WTC,TJB - VISTA SCHEDULING RPCS ;OCT 24, 2024
+ ;;5.3;Scheduling;**627,658,694,895**;Aug 13, 1993;Build 11
  ;
  ;  ICR
  ;  ---
@@ -49,8 +49,8 @@ PREFSET(SDECY,DFN,PREF,REMARK) ; Set values to SDEC PREFERENCES AND SPECIAL NEED
  ;     The RPC execution stops and the RPC Broker sends the error generated
  ;     text back to the client.
  ;
- N PIEN,PIEN1,SDFDA,SDI,SDIEN,SDACT,SDINOD,SDINOD1,SDMSG,SDPREF,SDQUIT,SDREMARK,X,Y,%DT
- S SDECI=0
+ N PIEN,PIEN1,SDFDA,SDI,SDECI,SDIEN,SDACT,SDINOD,SDINOD1,SDMSG,SDPREF,SDQUIT,SDREMARK,X,Y,%DT
+ S SDECI=0,SDACT=0
  K ^TMP("SDEC",$J)
  S SDECY="^TMP(""SDEC"","_$J_")"
  ; data header
@@ -86,22 +86,13 @@ PREFSET(SDECY,DFN,PREF,REMARK) ; Set values to SDEC PREFERENCES AND SPECIAL NEED
  .I '$D(SDPREF($P(SDINOD,"|",1))) Q
  .S PIEN1=$O(^SDEC(409.845,PIEN,1,"B",SDPREF($P(SDINOD,"|",1)),0))
  .;quit if no changes to this preference
- .;I PIEN1="",$P(SDINOD,"|",7)'=1 Q
  .S SDQUIT=0
- .;I PIEN1'="" D
- .;.D GETS^DIQ(409.8451,PIEN1_","_PIEN_",","**","IE","SDINOD1","WLMSG")
- .;.S SDACT=SDINOD1(409.8451,PIEN1_","_PIEN_",",4,"I")'=""   ;)&(SDINOD1(409.8451,PIEN1_","_PIEN_",",5,"I")="")
- .;.S SDQUIT=$S((SDACT=1)&($P(SDINOD,"|",7)=1):1,(SDACT'=1)&($P(SDINOD,"|",7)'=1):1,1:0)
  .Q:+SDQUIT
  .;edit preference record
  .I +PIEN1 D
  ..K SDFDA,SDIEN,SDMSG
  ..S SDFDA=$NA(SDFDA(409.8451,PIEN1_","_PIEN_","))
- ..;I $P(SDINOD,"|",2)'="" S %DT="TX" S X=$P(SDINOD,"|",2) D ^%DT S @SDFDA@(2)=$S(Y=-1:$$NOW^XLFDT,1:Y)  ;date/time added
- ..;I $P(SDINOD,"|",3)'="" S @SDFDA@(3)=$S(+$P(SDINOD,"|",3):+$P(SDINOD,"|",3),1:DUZ)     ;added by user
- ..S @SDFDA@(4)=$S($P(SDINOD,"|",7)=1:"",1:$$TIME($P(SDINOD,"|",4)))  ;1=active
- ..S @SDFDA@(5)=$S($P(SDINOD,"|",7)=1:"",1:$$USER($P(SDINOD,"|",5)))  ;1=active
- ..D UPDATE^DIE("","SDFDA","","SDMSG")
+ ..I $P(SDINOD,"^",4)'="" S SDACT=1
  .;
  .;add new preference record
  .I '+PIEN1 D
@@ -112,20 +103,10 @@ PREFSET(SDECY,DFN,PREF,REMARK) ; Set values to SDEC PREFERENCES AND SPECIAL NEED
  .. ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
  .. ;
  .. S X=$P(SDINOD,"|",2),Y=$$NETTOFM^SDECDATE(X,"Y","N") S @SDFDA@(2)=$S(Y=-1:$$NOW^XLFDT,1:Y)  ;date/time added
- .. ;S %DT="TX" S X=$P(SDINOD,"|",2) D ^%DT S @SDFDA@(2)=$S(Y=-1:$$NOW^XLFDT,1:Y)  ;date/time added
  ..S @SDFDA@(3)=$S(+$P(SDINOD,"|",3):+$P(SDINOD,"|",3),1:DUZ)     ;added by user
- ..S @SDFDA@(4)=$S($P(SDINOD,"|",7)=1:"",1:$$TIME($P(SDINOD,"|",4)))
- ..S @SDFDA@(5)=$S($P(SDINOD,"|",7)=1:"",1:$$USER($P(SDINOD,"|",5)))
- ..;I $P(SDINOD,"|",4)'="" S %DT="TX" S X=$P(SDINOD,"|",4) D ^%DT I Y'=-1 S @SDFDA@(4)=Y
- ..;I +$P(SDINOD,"|",5) S @SDFDA@(5)=+$P(SDINOD,"|",5)
  ..D UPDATE^DIE("","SDFDA","SDIEN","SDMSG")
  ..S PIEN1=SDIEN(1)
  .;add/edit remark
- .;I +PIEN1,$P(SDINOD,"|",6)'="" D
- .;.K SDMSG
- .;.S SDREMARK=$P(SDINOD,"|",6)
- .;.I SDREMARK]"" S SDREMARK(.5)=SDREMARK,SDREMARK="" D
- .;..D WP^DIE(409.8451,PIEN1_","_PIEN_",",6,"","SDREMARK","SDMSG")
  .;alb/sat 658 begin modification to split REMARK into multiple lines
  .I +PIEN1,REMARK'="" D   ;$P(SDINOD,"|",6)'="" D
  ..K SDMSG
@@ -134,6 +115,7 @@ PREFSET(SDECY,DFN,PREF,REMARK) ; Set values to SDEC PREFERENCES AND SPECIAL NEED
  .;alb/sat 658 end modification
  ;
  S SDECI=SDECI+1 S @SDECY@(SDECI)="0^COMPLETED"_$C(30,31)
+ I SDACT=1 S @SDECY@(SDECI)="0^COMPLETED - INACTIVE info sent nothing updated"_$C(30,31)
  Q
  ;
  ;===============================================================
@@ -199,11 +181,8 @@ PREFGET(SDECY,DFN,INAC) ; Get values from SDEC PREFERENCES AND SPECIAL NEEDS fil
  . ;
  . ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
  . ;
- . ;S SDTMP=DFN_U_SDPREF($P(PIEN1NOD,U,1))_U_$$FMTE^XLFDT($P(PIEN1NOD,U,2),8)_U_$P(PIEN1NOD,U,3)_U_$P($G(^VA(200,+$P(PIEN1NOD,U,3),0)),U,1)
  . S SDTMP=DFN_U_SDPREF($P(PIEN1NOD,U,1))_U_$$FMTONET^SDECDATE($P(PIEN1NOD,U,2))_U_$P(PIEN1NOD,U,3)_U_$$GET1^DIQ(200,+$P(PIEN1NOD,U,3)_",",.01)
- . ;S SDTMP=SDTMP_U_$S($P(PIEN1NOD,U,4)'="":$$FMTE^XLFDT($P(PIEN1NOD,U,4),8),1:"")_U_$P(PIEN1NOD,U,5)
- . S SDTMP=SDTMP_U_$S($P(PIEN1NOD,U,4)'="":$$FMTONET^SDECDATE($P(PIEN1NOD,U,4)),1:"")_U_$P(PIEN1NOD,U,5) ;
- .S SDTMP=SDTMP_U_$S($P(PIEN1NOD,U,5)'="":$P($G(^VA(200,+$P(PIEN1NOD,U,5),0)),U,1),1:"")
+ . S SDTMP=SDTMP_U_U_U
  .;get remark
  .K SDWP S X=$$GET1^DIQ(409.8451,PIEN1_","_PIEN_",",6,"","SDWP","SDMSG")
  .S SDWPA=""

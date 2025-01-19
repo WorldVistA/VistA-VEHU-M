@@ -1,5 +1,5 @@
-SDEC52A ;ALB/SAT,PC,LAB,KML - VISTA SCHEDULING RPCS ;Apr 22, 2022
- ;;5.3;Scheduling;**627,658,694,745,774,799,815**;Aug 13, 1993;Build 4
+SDEC52A ;ALB/SAT,PC,LAB,KML,JAS - VISTA SCHEDULING RPCS ;NOV 25, 2024
+ ;;5.3;Scheduling;**627,658,694,745,774,799,815,895**;Aug 13, 1993;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -43,7 +43,7 @@ RECSET(SDECY,INP) ; SET/EDIT an entry to the RECALL REMINDERS file 403.5
  N APPTLEN,CLINIEN,DATE1,DATE,DATE2,DATE3,DAPTDT,DFN,FASTING,ORGDT
  N PROVIEN,RECALLIEN,RRAPPTYP,RRNOD,RRPROVIEN,EAS
  N SDCOMM,SDFDA,SDIEN,SDMSG,SDRET
- N X,Y,%DT
+ N LASTNOTE,X,Y,%DT
  K ^TMP("SDEC52",$J,"RECSET")
  ; data header
  S SDECY="I00020ERRORID^T00030ERRORTEXT"_$C(30)
@@ -53,6 +53,7 @@ RECSET(SDECY,INP) ; SET/EDIT an entry to the RECALL REMINDERS file 403.5
  I RECALLIEN'="" I '$D(^SD(403.5,+RECALLIEN)) S SDECY=SDECY_"-1^Invalid RECALL REMINDERS id."_$C(30,31) Q
  I RECALLIEN'="" S RRNOD=$G(^SD(403.5,+RECALLIEN,0))
  I RECALLIEN="" S RECALLIEN="+1"
+ S LASTNOTE=$S(RECALLIEN="+1":"",1:$$GET1^DIQ(403.5,RECALLIEN_",",2.5,"I"))
  ;
  ;check provider (required)
  S RRPROVIEN=$G(INP(7))
@@ -75,10 +76,9 @@ RECSET(SDECY,INP) ; SET/EDIT an entry to the RECALL REMINDERS file 403.5
  ;check Recall Date (required)
  S DATE=$G(INP(10))
  ;
- ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
+ ;  Change date/time conversion so midnight is handled properly.
  ;
  S DATE=$$NETTOFM^SDECDATE(DATE,"N","N") I DATE=-1 S SDECY=SDECY_"-1^Invalid Recall Date."_$C(30,31) Q
- ;I DATE'="" S %DT="" S X=$P(DATE,"@",1) D ^%DT S DATE=Y I Y=-1 S SDECY=SDECY_"-1^Invalid Recall Date."_$C(30,31) Q
  I DATE="",RECALLIEN="+1" S SDECY=SDECY_"-1^Recall Date is required."_$C(30,31) Q
  ;
  ;check FAST/NON-FASTING (optional)
@@ -91,44 +91,41 @@ RECSET(SDECY,INP) ; SET/EDIT an entry to the RECALL REMINDERS file 403.5
  ;check Recall Date (per Patient) (optional)
  S DATE1=$G(INP(11))
  ;
- ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
+ ;  Change date/time conversion so midnight is handled properly.
  ;
  S DATE1=$$NETTOFM^SDECDATE(DATE1,"N","N") I DATE1=-1 S DATE1="" ;
- ;I DATE1'="" S %DT="" S X=$P(DATE1,"@",1) D ^%DT S DATE1=Y I Y=-1 S DATE1=""
  ;check date reminder sent (optional)
  S DAPTDT=$G(INP(12))
  ;
- ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
+ ;  Change date/time conversion so midnight is handled properly.
  ;
- S DAPTDT=$$NETTOFM^SDECDATE(DAPTDT,"N","N") I DAPTDT=-1 S DAPTDT="" ; changed ORGDT to DAPTDT  pwc/ *694
- ;I DAPTDT'="" S %DT="" S X=$P(DAPTDT,"@",1) D ^%DT S DAPTDT=Y I Y=-1 S ORGDT=""
+ S DAPTDT=$$NETTOFM^SDECDATE(DAPTDT,"N","N") I DAPTDT=-1 S DAPTDT="" ; changed ORGDT to DAPTDT
  ;check User Who Entered Recall (optional) default to current
  S PROVIEN=$G(INP(13))
  I (PROVIEN="")!('$D(^VA(200,+PROVIEN))) S PROVIEN=DUZ
  ;check Second Print date (optional)
  S DATE2=$G(INP(14))
-  ;
- ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
+ ;
+ ;  Change date/time conversion so midnight is handled properly.
  ;
  I DATE2'="" S DATE2=$$NETTOFM^SDECDATE(DATE2,"N","N") I DATE2=-1 S DATE2="" ;
- ;I DATE2="" S %DT="" S X=$P(DATE2,"@",1) D ^%DT S DATE2=Y I Y=-1 S DATE2=""
  ;check DATE/TIME RECALL ADDED (optional)
  S DATE3=$G(INP(15))
  ;
- ;  Change date/time conversion so midnight is handled properly.  wtc 694 5/17/18
+ ;  Change date/time conversion so midnight is handled properly.
  ;
  ;set EAS Tracking Number
  S EAS=$G(INP(16))
- I DATE3'="" S DATE3=$$NETTOFM^SDECDATE(DATE3,"N","N") I DATE3=-1 S DATE3="" ;  changed TIME requirement to NO in call to NETTOFM^SDECDATE  pwc/ *694
- ;I DATE3'="" S %DT="" S X=$P(DATE3,"@",1) D ^%DT S DATE3=Y I Y=-1 S DATE3=""
+ I DATE3'="" S DATE3=$$NETTOFM^SDECDATE(DATE3,"N","N") I DATE3=-1 S DATE3="" ;  changed TIME requirement to NO in call to NETTOFM^SDECDATE
  I DATE3'="",$G(RRNOD)'="",$P(RRNOD,U,14)'="" S DATE3=""   ;only add DATE/TIME RECALL ADDED if it is not already there
  ;check comment
- S (INP(4),SDCOMM)=$TR($G(INP(4)),"^"," ")   ;alb/sat 658
+ S (INP(4),SDCOMM)=$TR($G(INP(4)),"^"," ")
+ S SDCOMM=$$CTRL^XMXUTIL1(SDCOMM)
  ;
  S SDFDA=$NA(SDFDA(403.5,RECALLIEN_","))
  S @SDFDA@(.01)=DFN
  S:$G(INP(3))'="" @SDFDA@(2)=$E(INP(3),1,25)
- S:SDCOMM'="" @SDFDA@(2.5)=$E(SDCOMM,1,80)   ;alb/sat 658 use SDCOMM instead of INP(4)
+ S:SDCOMM'="" @SDFDA@(2.5)=$E(SDCOMM,1,80)   ;use SDCOMM instead of INP(4)
  S:$G(FASTING)'="" @SDFDA@(2.6)=FASTING
  S @SDFDA@(3)=RRAPPTYP
  S @SDFDA@(4)=RRPROVIEN
@@ -143,8 +140,20 @@ RECSET(SDECY,INP) ; SET/EDIT an entry to the RECALL REMINDERS file 403.5
  S @SDFDA@(100)=EAS
  D UPDATE^DIE("","SDFDA","SDIEN","SDMSG")
  S:RECALLIEN="+1" RECALLIEN=SDIEN(1)
- I $D(SDMSG) S SDECY=SDECY_"-1^Error updating RECALL REMINDERS file"_$C(30,31)
+ I $D(SDMSG) S SDECY=SDECY_"-1^Error updating RECALL REMINDERS file"_$C(30,31) Q
  I '$D(SDMSG) S SDECY=SDECY_"0^"_$S(RECALLIEN'="":RECALLIEN,1:SDIEN(1))_$C(30,31)
+ ;
+ ; 403.57 COMMENT AUDIT multiple
+ N LASTLENGTH,NEWLENGTH,NEWNOTE
+ S LASTLENGTH=$L(LASTNOTE),NEWLENGTH=$L(SDCOMM)
+ S NEWNOTE=SDCOMM
+ S:NEWNOTE[LASTNOTE NEWNOTE=$E(SDCOMM,(LASTLENGTH+1),NEWLENGTH)
+ S:$E(NEWNOTE,1,1)=" " NEWNOTE=$E(NEWNOTE,2,$L(NEWNOTE))
+ I $L($G(NEWNOTE)) D
+ .S CAFDA(403.57,"+1,"_RECALLIEN_",",.01)=$$NOW^XLFDT
+ .S CAFDA(403.57,"+1,"_RECALLIEN_",",1)=DUZ
+ .S CAFDA(403.57,"+1,"_RECALLIEN_",",2)=NEWNOTE
+ .D UPDATE^DIE("","CAFDA") K CAFDA
  Q
  ;
 RECDSET(SDECY,RECALLIEN,SDRRFTR,SDCOMM) ; DELETE an entry to the RECALL REMINDERS file 403.5
@@ -180,7 +189,7 @@ RECDSET(SDECY,RECALLIEN,SDRRFTR,SDCOMM) ; DELETE an entry to the RECALL REMINDER
  ;     The RPC execution stops and the RPC Broker sends the error generated
  ;     text back to the client.
  ;
- N APPTLEN,DATE1,DATE,DATE2,DAPTDT,DFN,FASTING,PROVIEN,RRAPPTYP,SDFDA,SDIEN,SDMSG,SDRET
+ N APPTLEN,CAFDA,DATE1,DATE,DATE2,DAPTDT,DFN,FASTING,LASTNOTE,PROVIEN,RRAPPTYP,SDFDA,SDIEN,SDMSG,SDRET
  ; data header
  S SDECY="I00020ERRORID^T00030ERRORTEXT"_$C(30)
  ;
@@ -193,17 +202,27 @@ RECDSET(SDECY,RECALLIEN,SDRRFTR,SDCOMM) ; DELETE an entry to the RECALL REMINDER
  I SDRRFTR="" K SDRRFTR
  ;
  ;check provider (required)
- ;I +RRPROVIEN I '$D(^SD(403.54,+RRPROVIEN)) S SDECY=SDECY_"-1^Invalid RECALL REMINDERS PROVIDERS id."_$C(30,31) Q
- ;I '+RRPROVIEN S SDECY=SDECY_"-1^RECALL REMINDERS PROVIDERS id is required."_$C(30,31) Q
  S RRPROVIEN=$P($G(^SD(403.5,+RECALLIEN,0)),U,5)
  I '$D(^SD(403.54,+RRPROVIEN)) S SDECY=SDECY_"-1^Invalid RECALL REMINDERS PROVIDERS defined in RECALL REMINDERS file for id "_RECALLIEN_"."_$C(30,31) Q
  ;
  ;verify comment (optional)
- S SDCOMM=$G(SDCOMM)
+ S SDCOMM=$$CTRL^XMXUTIL1($G(SDCOMM))
  I SDCOMM'="" D  ;replace existing comment before calling move/delete
- .K SDFDA
+ .K SDFDA,CAFDA
+ .S LASTNOTE=$$GET1^DIQ(403.5,RECALLIEN_",",2.5,"I")
  .S SDFDA(403.5,RECALLIEN_",",2.5)=$E(SDCOMM,1,80)
  .D UPDATE^DIE("","SDFDA")
+ .; 403.57 COMMENT AUDIT multiple
+ .N LASTLENGTH,NEWLENGTH,NEWNOTE
+ .S LASTLENGTH=$L(LASTNOTE),NEWLENGTH=$L(SDCOMM)
+ .S NEWNOTE=SDCOMM
+ .S:NEWNOTE[LASTNOTE NEWNOTE=$E(SDCOMM,(LASTLENGTH+1),NEWLENGTH)
+ .S:$E(NEWNOTE,1,1)=" " NEWNOTE=$E(NEWNOTE,2,$L(NEWNOTE))
+ .S CAFDA(403.57,"+1,"_RECALLIEN_",",.01)=$$NOW^XLFDT
+ .S CAFDA(403.57,"+1,"_RECALLIEN_",",1)=DUZ
+ .S CAFDA(403.57,"+1,"_RECALLIEN_",",2)=NEWNOTE
+ .D UPDATE^DIE("","CAFDA") K CAFDA
+ ;
  ;
  S SDRET=$$RECSETD(RECALLIEN,RRPROVIEN)
  S SDECY=SDECY_SDRET_$C(30,31)

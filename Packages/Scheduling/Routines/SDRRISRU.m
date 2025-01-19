@@ -1,5 +1,5 @@
-SDRRISRU ;ALB/MAH,BWF - Recall Reminder Utilities ;MAY 26, 2022
- ;;5.3;Scheduling;**536,627,648,799,818,866**;Aug 13, 1993;Build 22
+SDRRISRU ;ALB/MAH,BWF,JAS - Recall Reminder Utilities ;NOV 25, 2024
+ ;;5.3;Scheduling;**536,627,648,799,818,866,895**;Aug 13, 1993;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
 OPENSLOT(SDRRIEN,SDRRST,SDRRND) ; Function returns the number of open (available)
@@ -84,7 +84,7 @@ DELSET(SDRRIEN,SDRRFDA) ;
  S EAS=$G(^SD(403.5,SDRRIEN,1))
  S SDRRFDA(403.56,"+1,",.01)=$P(SDRRREC,U,1) ; patient
  S SDRRFDA(403.56,"+1,",2)=$P(SDRRREC,U,3)   ; accession #
- S SDRRFDA(403.56,"+1,",2.5)=$P(SDRRREC,U,7) ; comment
+ S SDRRFDA(403.56,"+1,",2.5)=$$CTRL^XMXUTIL1($P(SDRRREC,U,7)) ; comment
  S SDRRFDA(403.56,"+1,",2.6)=$P(SDRRREC,U,8) ; fast / non-fast
  S SDRRFDA(403.56,"+1,",3)=$P(SDRRREC,U,4)   ; test/app.
  S SDRRFDA(403.56,"+1,",4)=$P(SDRRREC,U,5)   ; provider
@@ -93,10 +93,17 @@ DELSET(SDRRIEN,SDRRFDA) ;
  S SDRRFDA(403.56,"+1,",5)=$P(SDRRREC,U,6)   ; recall date
  S SDRRFDA(403.56,"+1,",6)=$P(SDRRREC,U,10)  ; date reminder sent
  S SDRRFDA(403.56,"+1,",7)=$P(SDRRREC,U,11)  ; user who entered recall
- S SDRRFDA(403.56,"+1,",7.5)=$P(SDRRREC,U,14) ;DATE/TIME RECALL ADDED   ;alb/sat SD*5.3*627
+ S SDRRFDA(403.56,"+1,",7.5)=$P(SDRRREC,U,14) ;DATE/TIME RECALL ADDED
  S SDRRFDA(403.56,"+1,",100)=EAS ;EAS TRACKING NUMBER ADDED
  D UPDATE^DIE("","SDRRFDA","NEWIEN")
  S RREMIEN=$G(NEWIEN(1)) I 'RREMIEN Q
+ ;
+ N CAFDA
+ S CAFDA(403.58,"+1,"_RREMIEN_",",.01)=$$NOW^XLFDT
+ S CAFDA(403.58,"+1,"_RREMIEN_",",1)=$P(SDRRREC,U,11)
+ S CAFDA(403.58,"+1,"_RREMIEN_",",2)=$$CTRL^XMXUTIL1($P(SDRRREC,U,7))
+ D UPDATE^DIE("","CAFDA") K CAFDA
+ ;
  S APPTIEN=$$GETAPPT(SDRRIEN) Q:'APPTIEN
  S FDA(409.84,APPTIEN_",",5.1)=RREMIEN D FILE^DIE(,"FDA") K FDA
  Q

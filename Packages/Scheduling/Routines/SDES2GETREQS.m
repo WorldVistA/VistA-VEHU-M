@@ -1,5 +1,5 @@
-SDES2GETREQS ;ALB/BWF - VISTA SCHEDULING GET REQUEST RPCS ;SEP 30, 2024
- ;;5.3;Scheduling;**873,890**;Aug 13, 1993;Build 5
+SDES2GETREQS ;ALB/BWF,JAS - VISTA SCHEDULING GET REQUEST RPCS ;NOV 24, 2024
+ ;;5.3;Scheduling;**873,890,895**;Aug 13, 1993;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;
@@ -84,7 +84,7 @@ APPTREQUEST(REQUEST,NUM) ;
  S REQUEST("Request",NUM,"CPRSPreRequisites",1)=""
  S REQUEST("Request",NUM,"ClinicSecondaryStopCodeAMIS")=""
  S REQUEST("Request",NUM,"ClinicStopCodeAMIS")=""
- S REQUEST("Request",NUM,"CommentMultiple",1)=""
+ I '$D(REQUEST("Request",NUM,"CommentMultiple")) S REQUEST("Request",NUM,"CommentMultiple",1)=""
  S REQUEST("Request",NUM,"RequestComments")=""
  S REQUEST("Request",NUM,"ServiceConnectedPercentage")=""
  S REQUEST("Request",NUM,"PIDChangeAllowed")=""

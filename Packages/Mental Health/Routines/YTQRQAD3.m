@@ -1,5 +1,5 @@
 YTQRQAD3 ;SLC/KCM - RESTful Calls to set/get MHA administrations ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181,187,199,207,202,204,208,221,238,239**;Dec 30, 1994;Build 16
+ ;;5.01;MENTAL HEALTH;**130,141,158,178,182,181,187,199,207,202,204,208,221,238,239,250**;Dec 30, 1994;Build 26
  ;
  ; Reference to ^VA(200) in ICR #10060
  ; Reference to DIQ in ICR #2056
@@ -27,7 +27,10 @@ REPORT1(ADMIN,REPORT,TYPE) ; fill in the report text for ADMIN
  . S TSTNM=$P($G(^YTT(601.71,$P(^YTT(601.84,ADMIN,0),U,3),0)),U)
  . S YS("CODE")=TSTNM D PRIVL^YTAPI5(.YSDATA,.YS)
  . I $G(YSDATA(1))["[DATA]" I $P($G(YSDATA(2)),U)=0 S RPRIV=0
- I RPRIV=0 S RESULTS("text","\",1)="This is a restricted report" Q 
+ I RPRIV=0 D  Q
+ . S RESULTS("text","\",1)="You do not have permission to view this report."_CRLF
+ . S RESULTS("text","\",2)="If you need to review this report please contact your local"_CRLF
+ . S RESULTS("text","\",3)="MHA champion or CAC/ADPAC to add the YSP security key to VistA." Q 
  D BLDRPT^YTQRRPT(.REPORT,ADMIN,RM)
  S BCNT=0 K BARR
  S I=0 F  S I=$O(REPORT(I)) Q:+I=0  D

@@ -1,5 +1,5 @@
 YTXCHGI ;SLC/KCM - Instrument Specification Import ; 9/15/2015
- ;;5.01;MENTAL HEALTH;**121,202**;Dec 30, 1994;Build 49
+ ;;5.01;MENTAL HEALTH;**121,202,250**;Dec 30, 1994;Build 26
  ;
  ; Reference to TIUFLF7 in ICR #5352
  Q
@@ -196,7 +196,9 @@ ADDNOTE(NAME) ; Add default note for this instrument
  Q:$P($G(^YTT(601.71,IEN,2)),U,2)'="Y"       ; must be operational
  Q:$P($G(^YTT(601.71,IEN,8)),U,9)>0          ; note title already there
  S NOTE=+$$DDEFIEN^TIUFLF7("MENTAL HEALTH DIAGNOSTIC STUDY NOTE","TL")
+ S:'NOTE NOTE=+$$DDEFIEN^TIUFLF7("MH DIAGNOSTIC STUDY NOTE","TL")
  S CSLT=+$$DDEFIEN^TIUFLF7("MENTAL HEALTH CONSULT NOTE","TL")
+ S:'CSLT CSLT=+$$DDEFIEN^TIUFLF7("MH CONSULT NOTE","TL")
  I 'NOTE,'CSLT QUIT                          ; neither title found
  S REC(28)="Y"
  S REC(29)=NOTE

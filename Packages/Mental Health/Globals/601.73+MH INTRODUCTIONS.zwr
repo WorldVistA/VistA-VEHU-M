@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MH INTRODUCTIONS
 ZWR
-^YTT(601.73,0)="MH INTRODUCTIONS^601.73^2581^2469"
+^YTT(601.73,0)="MH INTRODUCTIONS^601.73^2613^2473"
 ^YTT(601.73,1,0)=1
 ^YTT(601.73,1,1,0)="^^5^5^3110104^"
 ^YTT(601.73,1,1,1,0)=" "
@@ -9316,6 +9316,18 @@ ZWR
 ^YTT(601.73,2581,0)=2581
 ^YTT(601.73,2581,1,0)="^^1^1^3240915"
 ^YTT(601.73,2581,1,1,0)="The purpose of each item is to rate the severity of that abnormality in the patient. When several keys are given for a particular grade of severity, the presence of only one is required to qualify for that rating. The keys provided are guides. One can ignore the keys if that is necessary to indicate severity, although this  should be the exception rather than the rule."
+^YTT(601.73,2612,0)=2612
+^YTT(601.73,2612,1,0)="^^1^1^3250119"
+^YTT(601.73,2612,1,1,0)="The ALSFRS-R measures 12 aspects of physical function, ranging from one's ability to swallow and use utensils to climbing stairs and breathing. Each function is scored from 4 (normal) to 0 (no ability), with a maximum total score of 48 and a minimum total score of 0."
+^YTT(601.73,2613,0)=2613
+^YTT(601.73,2613,1,0)="^^1^1^3250119"
+^YTT(601.73,2613,1,1,0)="Please rate the following statements according to how strongly you agree or how strongly you disagree with each of them. Please respond about how you have felt or what you have experienced over the past week."
+^YTT(601.73,2614,0)=2614
+^YTT(601.73,2614,1,0)="^^1^1^3250119"
+^YTT(601.73,2614,1,1,0)="Below you will find a list of statements. Please rate how true each statement is for you by selecting the number next to it."
+^YTT(601.73,2615,0)=2615
+^YTT(601.73,2615,1,0)="^^1^1^3250119"
+^YTT(601.73,2615,1,1,0)="The questions in this questionnaire begin with a statement followed by two opposite answers. Numbers extend from one extreme answer to its opposite. Please select the number between 0 and 10 which is most true for you. There are no right or wrong answers. Completely honest answers will be most helpful."
 ^YTT(601.73,"B",1,1)=""
 ^YTT(601.73,"B",2,2)=""
 ^YTT(601.73,"B",3,3)=""
@@ -11785,3 +11797,7 @@ ZWR
 ^YTT(601.73,"B",2579,2579)=""
 ^YTT(601.73,"B",2580,2580)=""
 ^YTT(601.73,"B",2581,2581)=""
+^YTT(601.73,"B",2612,2612)=""
+^YTT(601.73,"B",2613,2613)=""
+^YTT(601.73,"B",2614,2614)=""
+^YTT(601.73,"B",2615,2615)=""

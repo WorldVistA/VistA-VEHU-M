@@ -1,5 +1,7 @@
-SDAMEP2 ;ALB/CAW - Extended Display (Patient Data) ; Mar 04, 2021@10:12
- ;;5.3;Scheduling;**258,325,441,777**;Aug 13, 1993;Build 4
+SDAMEP2 ;ALB/CAW,MGD - Extended Display (Patient Data) ; NOV 13, 2024
+ ;;5.3;Scheduling;**258,325,441,777,895**;Aug 13, 1993;Build 11
+ ;
+ ; Reference to ^$$ELIG^DGCOMPACTELIG in ICR #7462
  ;
 PDATA ; Patient Data
  F SD=0,.11,.13,.32,.322,.321,.36,.52 S SD(SD)=$G(^DPT(DFN,SD))
@@ -47,6 +49,13 @@ PTELG ; Primary Eligibility and Period of Service Info
  S X=$$SETSTR^VALM1("POS:",X,55,4)
  S X=$$SETSTR^VALM1($P($G(^DIC(21,+$P(SD(.32),U,3),0)),U),X,SDSECCOL,20)
  D SET^SDAMEP1(X)
+ ;
+ N SDCOMPACT
+ S SDCOMPACT=$$ELIG^DGCOMPACTELIG(DFN,"SDAMEP2")
+ S X="",X=$$SETSTR^VALM1("COMPACT Elig.:",X,1,14)
+ S X=$$SETSTR^VALM1(SDCOMPACT,X,SDFSTCOL,21)
+ D SET^SDAMEP1(X)
+ ;
 PTADD ; Patient Address
  ;
  S X="",X=($$SETSTR^VALM1("Address:",X,7,8))

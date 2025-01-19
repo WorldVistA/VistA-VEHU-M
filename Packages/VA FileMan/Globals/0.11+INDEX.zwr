@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: INDEX
 ZWR
-^DD("IX",0)="INDEX^.11I^967^1738"
+^DD("IX",0)="INDEX^.11I^59^1738"
 ^DD("IX",.001,0)="0^ADEL^Delete Keys and Indexes associated with a deleted field.^MU^^F^R^I^0^^^^^A"
 ^DD("IX",.001,1)="Q"
 ^DD("IX",.001,2)="D:'$D(DICATTED)&'$D(DIU) DELXRF^DICATT4(DA(1),DA)"
@@ -24772,7 +24772,7 @@ ZWR
 ^DD("IX",1345,11.1,"B",1,1)=""
 ^DD("IX",1345,11.1,"BB",1,1)=""
 ^DD("IX",1346,0)="44^AG^Index by TYPE and NAME.^R^^R^IR^I^44^^^^^S"
-^DD("IX",1346,.1,0)="^^1^1^3160714"
+^DD("IX",1346,.1,0)="^^1^1^3170427"
 ^DD("IX",1346,.1,1,0)="This cross reference is used to sort by TYPE and NAME."
 ^DD("IX",1346,1)="S ^SC(""AG"",X(1),X(2),DA)="""""
 ^DD("IX",1346,2)="K ^SC(""AG"",X(1),X(2),DA)"
@@ -24803,7 +24803,7 @@ ZWR
 ^DD("IX",1347,11.1,"BB",1,1)=""
 ^DD("IX",1347,11.1,"BB",2,2)=""
 ^DD("IX",1348,0)="403.56^AC^Index by DATE/TIME RECALL ADDED and USER WHO ENTERED RECALL^R^^R^IR^I^403.56^^^^^S"
-^DD("IX",1348,.1,0)="^^2^2^3160714"
+^DD("IX",1348,.1,0)="^^2^2^3170427"
 ^DD("IX",1348,.1,1,0)="This cross reference is used to sort by DATE/TIME RECALL ADDED"
 ^DD("IX",1348,.1,2,0)="and USER WHO ENTERED RECALL."
 ^DD("IX",1348,1)="S ^SD(403.56,""AC"",X(1),X(2),DA)="""""

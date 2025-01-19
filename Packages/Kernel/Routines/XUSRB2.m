@@ -1,5 +1,5 @@
 XUSRB2 ;SFISC/RWF - RPC Broker Kernel Utilities. ;1/30/08  11:37
- ;;8.0;KERNEL;**115,150,277,337,469**;Jul 10, 1995;Build 7
+ ;;8.0;KERNEL;**115,150,277,337,469,803**;Jul 10, 1995;Build 14
  ;Per VHA Directive 2004-038, this routine should not be modified.
  Q
  ;
@@ -43,4 +43,10 @@ USERINFO(RET) ;generic user information for seeding VistaUser object.
  S RET(6)=$G(DUZ("LANG")) ;User language
  S RET(7)=DTIME ;Users DTIME
  S RET(8)=$$VPID^XUPS(DUZ) ;Return VPID
+ S RET(9)=$G(DUZ("AG"))
+ S RET(10)=$G(DUZ("AUTHENTICATION"),"NONE")
+ S RET(11)=$G(DUZ("LOA"),1)
+ S RET(12)=$G(DUZ("REMAPP"))
+ S RET(13)=$G(DUZ("AUTO"),0)
+ S RET(14)=$G(DUZ("BUF"),0)
  Q

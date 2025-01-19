@@ -1,0 +1,43 @@
+YTQRCDB5 ;BAL/KTL - MHA CLOUD DATABASE RPC CALLS; 1/25/2017
+ ;;5.01;MENTAL HEALTH;**250**;Dec 30, 1994;Build 26
+ ;
+ ;
+ ;Reference to PXRMINDX in ICR #4290
+ ;
+ Q
+GETPAT(ARGS,RESULTS) ; Get patient name list by id
+ N YSPOI,POILST,I,POI,POINAM,CNT
+ N HIT,STR
+ K ^TMP("YTQ-JSON",$J) S (HIT,CNT)=0
+ D SETRES("[")
+ S YSPOI=$G(ARGS("poilist")) I YSPOI="" D SETERROR^YTQRUTL(404,"No POI list") QUIT
+ F I=1:1:$L(YSPOI,",") D
+ . S POI=$P(YSPOI,",",I) Q:+POI=0
+ . Q:'$D(^DPT(POI))
+ . S POINAM=$P(^DPT(POI,0),U)
+ . S STR="{""id"":"""_POI_""", ""name"":"""_POINAM_""" },"
+ . D SETRES(STR) S HIT=1
+ I HIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR
+ D SETRES("]")
+ S RESULTS=$NA(^TMP("YTQ-JSON",$J))
+ Q
+GETDOC(ARGS,RESULTS) ; Get clinician name list by id
+ N YSDOC,DOCLST,I,DOC,DOCNAM,CNT
+ N HIT,STR
+ S CNT=0
+ K ^TMP("YTQ-JSON",$J) S CNT=0
+ D SETRES("[")
+ S YSDOC=$G(ARGS("doclist")) I YSDOC="" D SETERROR^YTQRUTL(404,"No DOC list") QUIT
+ F I=1:1:$L(YSDOC,",") D
+ . S DOC=$P(YSDOC,",",I) Q:+DOC=0
+ . Q:'$D(^VA(200,DOC))
+ . S DOCNAM=$P(^VA(200,DOC,0),U)
+ . S STR="{""id"":"""_DOC_""", ""name"":"""_DOCNAM_""" },"
+ . D SETRES(STR) S HIT=1
+ I HIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR
+ D SETRES("]")
+ S RESULTS=$NA(^TMP("YTQ-JSON",$J))
+ Q
+SETRES(STR) ;
+ S CNT=CNT+1,^TMP("YTQ-JSON",$J,CNT,0)=STR
+ Q

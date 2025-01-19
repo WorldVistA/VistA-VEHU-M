@@ -1,48 +1,55 @@
 YTQRQAD7 ;BAL/KTL - RESTful Calls to handle MHA Web RPCs ; 7/19/2021
- ;;5.01;MENTAL HEALTH;**181,187,202,204**;Dec 30, 1994;Build 18
+ ;;5.01;MENTAL HEALTH;**181,187,202,204,250**;Dec 30, 1994;Build 26
  ;
  ; Reference to EN^XPAR in ICR #2263
  ; Reference to ORQQCN in ICR #1671
  ; Reference to XLFJSON in ICR #6682
  ; Reference to TIU in ICR #7179
  ;
- ;User Preferences
- ;Instrument Admin COMMENT retrieval
  Q
-RBAC(ARGS,RESULTS) ;Get user Role properties
+RBAC(ARGS,RESULTS) ;Get Role prop
  N MHTITL
  S MHTITL=$$TITLE()
  Q
-IACTV(INAM) ; Return 1 if Instrument Active, 0 otherwise
+IACTV(INAM) ;1-Inst Act/0 Inact
  N IEN,STAT,OP
  S STAT=0
  S IEN=$O(^YTT(601.71,"B",INAM,"")) I +IEN=0 Q STAT
  S OP=$P($G(^YTT(601.71,IEN,2)),U,2) I OP="Y" S STAT=1
  Q STAT
-GETASMTP(ARGS,RESULTS) ; Given user DUZ get last Assignment Preferences
+GETASMTP(ARGS,RESULTS) ;last Assign Pref
  N YSWPARR
  K ^TMP("YTQ-JSON",$J)
  D GETPARAM("YS MHA_WEB LAST ASSIGN SET","{}",.YSWPARR)
+ I $G(YSWPARR(1,0))'["{}" D
+ . D CHKPRMA(.YSWPARR,"{}")
  M ^TMP("YTQ-JSON",$J)=YSWPARR
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
-SETASMTP(ARGS,DATA) ; Set a User's last Assignment Preferences
+SETASMTP(ARGS,DATA) ; Set last Assig Pref
  ; Requires HTTPREQ
- N YSRET
+ N YSRET,II,YSWPARR,CNT
+ S CNT=0
+ S II=2 F  S II=$O(HTTPREQ(II)) Q:II=""  D
+ . Q:$TR(HTTPREQ(II)," ")=""
+ . S CNT=CNT+1,YSWPARR(CNT,0)=HTTPREQ(II)
+ D CHKPRMA(.YSWPARR,"")
+ I $G(YSWPARR(1,0))="" K HTTPREQ
+ ;
  S YSRET=$$SETPARAM("YS MHA_WEB LAST ASSIGN SET","/api/mha/assignmentparam/pref/",.HTTPREQ,,"LAST ASSIGNMENT")
  Q YSRET
-GETIFAV(ARGS,RESULTS) ; Given user DUZ get Instrument Favorites
+GETIFAV(ARGS,RESULTS) ; Get Inst Fav
  N YSWPARR,INSTARR,TMPARR,I,INSTN,CHGF,DFLT
  K ^TMP("YTQ-JSON",$J)
  S DFLT="{""favlist"":[]}"
  D GETPARAM("YS MHA_WEB FAV INST",DFLT,.YSWPARR)
- I $G(YSWPARR(1,0))'["[]" D  ;Was not the default empty list
+ I $G(YSWPARR(1,0))'["[]" D
  . D CHKPRMI(.YSWPARR,DFLT,.CHGF)
  M ^TMP("YTQ-JSON",$J)=YSWPARR
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  I $G(CHGF)=1 D RSTPARAM("YS MHA_WEB FAV INST","/api/mha/instrument/lists/fav/userfav/",.YSWPARR,,"INST FAVS")
  Q
-SETIFAV(ARGS,DATA) ; Set Instrument Favorites
+SETIFAV(ARGS,DATA) ; Set Inst Fav
  ; Requires HTTPREQ
  N YSRET
  N I,YSWPARR,CHGF,CNT,DFLT
@@ -56,30 +63,30 @@ SETIFAV(ARGS,DATA) ; Set Instrument Favorites
  .. S CNT=CNT+1,HTTPREQ(CNT)=YSWPARR(I,0)
  S YSRET=$$SETPARAM("YS MHA_WEB FAV INST","/api/mha/instrument/lists/fav/userfav/",.HTTPREQ,,"INST FAVS")
  Q YSRET
-GETGRAPH(ARGS,RESULTS) ; Get Graphing Preferences
+GETGRAPH(ARGS,RESULTS) ; Get Graph Pref
  N YSWPARR
  K ^TMP("YTQ-JSON",$J)
  D GETPARAM("YS MHA_WEB GRAPH PREFS","{""graphprefs"":[]}",.YSWPARR)
  M ^TMP("YTQ-JSON",$J)=YSWPARR
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
-SETGRAPH(ARGS,DATA) ; Set a User's Graphing Preferences
+SETGRAPH(ARGS,DATA) ; Set Graph Pref
  ; Requires HTTPREQ
  N YSRET
  S YSRET=$$SETPARAM("YS MHA_WEB GRAPH PREFS","/api/mha/instrumentgraph/prefs/",.HTTPREQ,,"GRAPH PREF")
  Q YSRET
-GETSPCLG(ARGS,RESULTS) ; Get Special Report Graph Report Preferences
+GETSPCLG(ARGS,RESULTS) ; Get Special Rept Graph Pref
  N YSWPARR,INSTARR,TMPARR,I,INSTN,CHGF,DFLT
  K ^TMP("YTQ-JSON",$J)
  S DFLT="{""spclgraphprefs"":[]}"
  D GETPARAM("YS MHA_WEB SPECIAL GRAPH RPT",DFLT,.YSWPARR)
- I $G(YSWPARR(1,0))'["[]" D  ;Was not the default empty list
+ I $G(YSWPARR(1,0))'["[]" D
  . D CHKPRMI(.YSWPARR,DFLT,.CHGF)
  M ^TMP("YTQ-JSON",$J)=YSWPARR
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  I $G(CHGF)=1 D RSTPARAM("YS MHA_WEB SPECIAL GRAPH RPT","/api/mha/specialgraph/rptpref/",.YSWPARR,,"SPCL RPT")
  Q
-SETSPCLG(ARGS,DATA) ; Set Special Report Graph Report Preferences
+SETSPCLG(ARGS,DATA) ; Set Special Rept Graph Pref
  ; Requires HTTPREQ
  N YSRET
  N I,YSWPARR,CHGF,CNT,DFLT
@@ -93,73 +100,35 @@ SETSPCLG(ARGS,DATA) ; Set Special Report Graph Report Preferences
  .. S CNT=CNT+1,HTTPREQ(CNT)=YSWPARR(I,0)
  S YSRET=$$SETPARAM("YS MHA_WEB SPECIAL GRAPH RPT","/api/mha/specialgraph/rptpref/",.HTTPREQ,,"SPCL RPT")
  Q YSRET
-GETRPT(ARGS,RESULTS) ; Get Report view Preferences
+GETRPT(ARGS,RESULTS) ; Get Rept Pref
  N YSWPARR
  K ^TMP("YTQ-JSON",$J)
  D GETPARAM("YS MHA_WEB REPORT PREFS","{""reportprefs"":[]}",.YSWPARR)
  M ^TMP("YTQ-JSON",$J)=YSWPARR
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
-SETRPT(ARGS,DATA) ; Set Report view Preferences
+SETRPT(ARGS,DATA) ; Set Rept Pref
  ; Requires HTTPREQ
  N YSRET
  S YSRET=$$SETPARAM("YS MHA_WEB REPORT PREFS","/api/mha/reports/rptpref/",.HTTPREQ,,"RPT PREFS")
  Q YSRET
-GETNP(ARGS,RESULTS) ; Given user DUZ get Report Save Progress Note preference
+GETNP(ARGS,RESULTS) ; Get Rept Save Prog Note pref
  N YSWPARR
  K ^TMP("YTQ-JSON",$J)
  D GETPARAM("YS MHA_WEB PROG NOTE PREFS","{""noteprefs"":[]}",.YSWPARR)
  M ^TMP("YTQ-JSON",$J)=YSWPARR
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
-SETNP(ARGS,DATA) ; Set Save Progress Note preference
+SETNP(ARGS,DATA) ; Set Prog Note pref
  ; Requires HTTPREQ
  N YSRET
  S YSRET=$$SETPARAM("YS MHA_WEB PROG NOTE PREFS","/api/mha/notes/noteprefs/",.HTTPREQ,,"PROG NOTE PREF")
  Q YSRET
-WEBGUSRP(ARGS,RESULTS) ;Get Dashboard User Column Preferences
- N YSWPARR,JSONOUT
- K ^TMP("YTQ-JSON",$J)
- D GETPARAM("YSB USER COLUMN PREFERENCE","",.YSWPARR)
- I $G(YSWPARR(1,0))="" D
- . K YSWPARR D DFLTUP(JSONOUT)
- . D TOTMP^YSBRPC(.JSONOUT)
- I $D(YSWPARR) M ^TMP("YTQ-JSON",$J)=YSWPARR
- S RESULTS=$NA(^TMP("YTQ-JSON",$J))
- Q
-WEBPUSRP(ARGS,DATA) ; Set Dashboard Column Preferences
- ; Requires HTTPREQ
- N YSRET
- S YSRET=$$SETPARAM("YSB USER COLUMN PREFERENCE","/api/mha/dashboard/userpref/",.HTTPREQ,,"DASH COLS")
- Q YSRET
-DFLTUP(XJSON)  ;
- ; Get the Default columns to display if no set User Preferences
- N II,XDATA,XNAM,XJ,SPC,XCNT,XTABC
- S $P(SPC," ",10)=""
- S XCNT=1,XTABC=1,XJSON(XCNT)="{"
- D GETWDGT^YSBRPC(.XDATA)
- S II=0 F  S II=$O(XDATA("widgets",II)) Q:+II=0  D
- . S XNAM=$G(XDATA("widgets",II,"name"))
- . S XNAM=$S(XNAM="HIGH RISK":"highRisk",XNAM="MBC":"measurementBased",1:XNAM)
- . K XDATA("widgets",II,"instrumentList")  ;Don't include instrument list for now
- . K XDATA("widgets",II,"name")
- . M XJ(XNAM)=XDATA("widgets",II)
- . S XJ(XNAM,"display")="true"
- . S XJ(XNAM,"filterList","name")="name"
- . S XJ(XNAM,"filterList","value")=""
- D ENCODE^YSBJSON("XJ","XJSON","ERRARY")
- Q
-SETPARAM(YSPNAM,RETURL,HTTPREQ,YSWDGT,YSVAL)  ;Set Parameter
- ; Assignment Parameters=YS MHA_WEB LAST ASSIGN SET
- ; Favorite Instruments=YS MHA_WEB FAV INST
- ; Batteries=YS MHA_WEB BATTERIES
- ; Requires HTTPREQ
- ; Return Success or Failure URL string
+SETPARAM(YSPNAM,RETURL,HTTPREQ,YSWDGT,YSVAL)  ;Set Parm
  N II,CNT,YSDUZ
  N FDA,IENS,FDAIEN,YSMSG,YSJSON
  ;I '$D(HTTPREQ) Q RETURL_"NODATA"
  S CNT=0
- ;In the DATA array the body starts after the first line
  S II=2 F  S II=$O(HTTPREQ(II)) Q:II=""  D
  . Q:$TR(HTTPREQ(II)," ")=""
  . S CNT=CNT+1,YSJSON(CNT)=HTTPREQ(II)
@@ -170,28 +139,25 @@ SETPARAM(YSPNAM,RETURL,HTTPREQ,YSWDGT,YSVAL)  ;Set Parameter
  D EN^XPAR(YSDUZ,YSPNAM,YSWDGT,.YSJSON,.YSMSG)
  I +YSMSG'=0 D SETERROR^YTQRUTL(404,"PARAMETER not found: "_YSPNAM) Q RETURL_"ERROR: "_$P(YSMSG,U,2)
  Q RETURL_"OK"
-GETPARAM(YSPNAM,DFLT,YSWPARR,YSWDGT)  ;Get Parameter
+GETPARAM(YSPNAM,DFLT,YSWPARR,YSWDGT)  ;Get Parm
  N YSDUZ
  K JSONOUT
- S:$G(YSWDGT)="" YSWDGT=1  ;Parameter instance-default to 1
+ S:$G(YSWDGT)="" YSWDGT=1
  S YSDUZ=DUZ_";VA(200,"
  D GETWP^XPAR(.YSWPARR,YSDUZ,YSPNAM,YSWDGT)
  I '$D(YSWPARR) D
- . S YSWPARR(1,0)=DFLT  ;Need to define Default
- I $D(YSWPARR)=1,($G(YSWPARR)="") D  ;Parameter for User exists but it is empty
- . S YSWPARR(1,0)=DFLT  ;Need to define Default
+ . S YSWPARR(1,0)=DFLT
+ I $D(YSWPARR)=1,($G(YSWPARR)="") D  ;Param empty
+ . S YSWPARR(1,0)=DFLT  ;Default
  Q
 RSTPARAM(YSPNAM,RETURL,YSWPARR,YSWDGT,YSVAL)  ;Rest Parameter
- ; This is used when during a GET Parameter an instrument is found to be inactive and the JSON
- ; payload is changed to remove the instrument.  The parameter has to be reset with the new instrument list
- ; The JSON Array has to be set up in the format of HTTPREQ and there does not need to be any return value
  N HTTPREQ,I,NORET
  Q:$G(YSPNAM)=""
  Q:'$D(YSWPARR)
  S RETURL=$G(RETURL),YSWDGT=$G(YSWDGT),YSVAL=$G(YSVAL)
  S I=0 F  S I=$O(YSWPARR(I)) Q:+I=0  D
- . S HTTPREQ(I+2)=YSWPARR(I,0)  ;I+2 because the first line is the URL and the second line is blnk in HTTPREQ normally
- S NORET=$$SETPARAM(YSPNAM,RETURL,.HTTPREQ,YSWDGT,YSVAL)  ;Set Parameter
+ . S HTTPREQ(I+2)=YSWPARR(I,0)
+ S NORET=$$SETPARAM(YSPNAM,RETURL,.HTTPREQ,YSWDGT,YSVAL)  ;Set Parm
  Q
 GETBAT(ARGS,RESULTS) ; Given user DUZ get Instrument Batteries
  N YSWPARR,INSTARR,TMPARR,I,INSTN,CHGF,DFLT
@@ -204,7 +170,7 @@ GETBAT(ARGS,RESULTS) ; Given user DUZ get Instrument Batteries
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  I $G(CHGF)=1 D RSTPARAM("YS MHA_WEB BATTERIES","/api/mha/instrument/lists/batteries/userbat/",.YSWPARR,,"BATTERIES")
  Q
-SETBAT(ARGS,DATA) ; Set a User's Instrument Batteries
+SETBAT(ARGS,DATA) ; Set Inst Batt
  ; Requires HTTPREQ
  N YSRET
  N I,YSWPARR,CHGF,CNT,DFLT
@@ -218,11 +184,40 @@ SETBAT(ARGS,DATA) ; Set a User's Instrument Batteries
  .. S CNT=CNT+1,HTTPREQ(CNT)=YSWPARR(I,0)
  S YSRET=$$SETPARAM("YS MHA_WEB BATTERIES","/api/mha/instrument/lists/batteries/userbat/",.HTTPREQ,,"BATTERIES")
  Q YSRET
-CHKPRMI(YSWPARR,DFLT,CHGF) ;Check Parameter instrument list for inactive instruments
- ; Currently for "batteries" and "favlist"
+CHKPRMA(YSWPARR,DFLT) ;Check Last Assign
  ; Input=array of JSON
- ; Output=array of JSON with inactive instruments removed and CHGF=1 if array has changed
- ; Both input array and CHGF passed by reference
+ ; If CHGF=1 then invalid
+ N INSTARR,TMPARR,I,J,INSTN,INSTI,ISTAT,ERR
+ N FILEN,JEIN
+ D J2ARR(.YSWPARR,.TMPARR)
+ D DECODE^XLFJSON("TMPARR","INSTARR","ERR")
+ S CHGF=0
+ I '$D(ERR) D
+ . F J="interviewer","orderedBy","location" D
+ .. S FILEN=$S(J="location":44,1:200)
+ .. S INSTN=$G(INSTARR(J,"name")) S:INSTN="" INSTN=$G(INSTARR(J,"displayName"))
+ .. S INSTN=$$UP^XLFSTR(INSTN),INSTN=$$TRIM^XLFSTR(INSTN)
+ .. S JEIN=$$FNDB(INSTN,FILEN)
+ .. S INSTI=$G(INSTARR(J,"id"))
+ .. I JEIN'=INSTI S CHGF=1
+ K YSWPARR,TMPARR
+ I CHGF=1 S YSWPARR(1,0)=DFLT Q
+ D ENCODE^XLFJSON("INSTARR","TMPARR","ERR")
+ I '$D(ERR) D
+ . S I=0 F  S I=$O(TMPARR(I)) Q:+I=0  D
+ .. S YSWPARR(I,0)=TMPARR(I)
+ Q
+FNDB(FNAM,FILEN) ;Return IEN if entry found("B" xref)
+ N IEN,STAT
+ S (IEN,STAT)=0
+ I +FILEN=0 Q STAT
+ I $G(FNAM)="" Q STAT
+ I FILEN=200 D
+ . S IEN=+$O(^VA(FILEN,"B",FNAM,""))
+ I FILEN=44 D
+ . S IEN=+$O(^SC("B",FNAM,""))
+ Q IEN
+CHKPRMI(YSWPARR,DFLT,CHGF) ;Check inact inst
  N INSTARR,TMPARR,I,J,INSTN,ISTAT,ERR
  D J2ARR(.YSWPARR,.TMPARR)
  D DECODE^XLFJSON("TMPARR","INSTARR","ERR")
@@ -232,18 +227,18 @@ CHKPRMI(YSWPARR,DFLT,CHGF) ;Check Parameter instrument list for inactive instrum
  .. S I=0 F  S I=$O(INSTARR("batteries",J,"instruments",I)) Q:+I=0  D
  ... S INSTN=INSTARR("batteries",J,"instruments",I)
  ... S ISTAT=$$IACTV(INSTN)
- ... I +ISTAT=0 K INSTARR("batteries",J,"instruments",I) S CHGF=1  ;Instrument no longer active
- ... I '$D(INSTARR("batteries",J,"instruments")) K INSTARR("batteries",J)  ;No instruments in battery
+ ... I +ISTAT=0 K INSTARR("batteries",J,"instruments",I) S CHGF=1
+ ... I '$D(INSTARR("batteries",J,"instruments")) K INSTARR("batteries",J)
  I '$D(ERR),(DFLT["favlist") D
  . S I=0 F  S I=$O(INSTARR("favlist",I)) Q:+I=0  D
  .. S INSTN=$G(INSTARR("favlist",I,"instrumentName")) Q:INSTN=""
  .. S ISTAT=$$IACTV(INSTN)
- .. I +ISTAT=0 K INSTARR("favlist",I) S CHGF=1  ;Instrument no longer active
+ .. I +ISTAT=0 K INSTARR("favlist",I) S CHGF=1
  I '$D(ERR),(DFLT["spclgraphprefs") D
  . S I=0 F  S I=$O(INSTARR("selectedInstruments",I)) Q:+I=0  D
  .. S INSTN=INSTARR("selectedInstruments",I) Q:INSTN=""
  .. S ISTAT=$$IACTV(INSTN)
- .. I +ISTAT=0 K INSTARR("selectedInstruments",I) S CHGF=1  ;Instrument no longer active
+ .. I +ISTAT=0 K INSTARR("selectedInstruments",I) S CHGF=1
  K YSWPARR,TMPARR
  I '$D(INSTARR) S YSWPARR(1,0)=DFLT Q  ;No batteries left
  D ENCODE^XLFJSON("INSTARR","TMPARR","ERR")
@@ -251,7 +246,7 @@ CHKPRMI(YSWPARR,DFLT,CHGF) ;Check Parameter instrument list for inactive instrum
  . S I=0 F  S I=$O(TMPARR(I)) Q:+I=0  D
  .. S YSWPARR(I,0)=TMPARR(I)
  Q
-LOADCOM(ARGS,RESULTS) ;Get Comments for an Instrument Admin and load them for display
+LOADCOM(ARGS,RESULTS) ;Get Comments
  N YSADMIN,YSARR,I,CRLF
  S CRLF=$C(10)
  S YSADMIN=$G(ARGS("adminId"))
@@ -283,7 +278,7 @@ AINSTS(SETID,IARR)  ; Assignment Instrument Status check for Deletion
  . I MGR!(DUZ=$P(X0,U,6))!(DUZ=$P(X0,U,7)) S IARR(INST)=1 I 1
  . E  S IARR(INST)=2,IARR("STAT")="NOTALLOWED"
  Q
-GETCONS(ARGS,RESULTS)   ; Get list of patient consults
+GETCONS(ARGS,RESULTS)   ; Get consults
  N TYPE,RV,CONS,DT,STAT,LOC,TYPE,LOCA,YSSTAT,HIT,NOCONS,DFN,IEN
  S YSSTAT="5,6,8,9,15"  ;Pending, Active, Scheduled, Partial Results, Renewed
  K ^TMP("ORQQCN",$J)
@@ -303,7 +298,7 @@ GETCONS(ARGS,RESULTS)   ; Get list of patient consults
  .S LOCA=$P(DATA,U,6)
  .S STR="{""Consult"":"""_CONS_""", ""ConsultDate"":"""_$$FMTE^XLFDT($P(DT,"."))_""", ""Status"":"""_STAT_""", ""Clinic"":"""_LOC_""",""Type"":"""_TYPE_"""},"
  .D SETRES(STR)
- I HIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR  ;Remove last trailing ","
+ I HIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR
  D SETRES("]}")
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
@@ -333,7 +328,7 @@ GETCONS2(ARGS,RESULTS)   ; Get list of patient consults
  S RESULTS=$NA(^TMP("YTQ-JSON",$J))
  Q
  ;
-ASMTSTAF(ARGS,RESULTS) ; get assignment identified by assignmentId
+ASMTSTAF(ARGS,RESULTS) ; get assignment by assignmentId
  N ASMT,INTE,ORBY,LOCA,INTV,ORDBY,LOC,CON,DAT,CONTX,CONA,ADMINDT,IEN,DFN
  N YSARR,II,DATA
  S ASMT="YTQASMT-SET-"_$G(ARGS("assignmentId"))
@@ -353,7 +348,7 @@ ASMTSTAF(ARGS,RESULTS) ; get assignment identified by assignmentId
  S RESULTS("orderedbyName")=ORDBY
  S RESULTS("locationName")=LOC
  S RESULTS("adminDate")=ADMINDT
- S RESULTS("consultName")=""  ;initialize consultName
+ S RESULTS("consultName")=""  ;init consultName
  D LIST^ORQQCN(.RV,DFN)
  S IEN="" F  S IEN=$O(^TMP("ORQQCN",$J,"CS",IEN)) Q:'IEN  D
  .S DAT=^TMP("ORQQCN",$J,"CS",IEN,0)
@@ -375,8 +370,7 @@ SETRES(STR) ;
 GLIST(YSPAR,YSENT,YSLIST) ;Get the number of values for a particular parameter
  D GETLST^XPAR(.YSLIST,YSENT,YSPAR)
  Q
-SRLST(SRARR) ;Special Reports Parameters List
- ; Find all instances of Special Reports and decode from JSON into array
+SRLST(SRARR) ;Special Reports Parm List
  N YSLIST,YSDUZ,YSPAR,I,JARR,ERR,TMPAR,II
  S YSPAR="YS MHA_WEB SPECIAL GRAPH RPT"
  S YSDUZ=DUZ_";VA(200,"
@@ -390,7 +384,7 @@ SRLST(SRARR) ;Special Reports Parameters List
  . D DECODE^XLFJSON("TMPAR","JARR","ERR")
  . I '$D(ERR) M SRARR(I)=JARR
  Q
-GETSRLST(ARGS,RESULTS) ;Get Special Reports Parameter(s)
+GETSRLST(ARGS,RESULTS) ;Get Special Reports Parm
  N II,SRARR,YSARR,CNT,TMPAR
  D SRLST(.SRARR)
  S CNT=0
@@ -426,16 +420,13 @@ J2ARR(JARR,OUTARR) ;Move XLFJSON array contents to OUTARR
  S I=0 F  S I=$O(JARR(I)) Q:+I=0  D
  . S OUTARR(I)=JARR(I,0)
  Q
-TITLE() ; Get MENTAL HEALTH DIAGNOSTIC STUDY NOTE title
- ;
+TITLE() ;Get MENTAL HEALTH DIAGNOSTIC STUDY NOTE title
  N TITL,ERR,RET
  S ERR=""
  D GETLOCT(.TITL,.ERR)
  S RET=$G(TITL("MHA"))
  Q RET
- ;
-GETLOCT(TITL,ERR) ; Get the Local Title IENs
- ;
+GETLOCT(TITL,ERR) ; Get Local Title IENs
  N CSRE,MHPRNT,PNCLS,NATTIT,MHA,MHAC,FDA,FDAIEN,TIUFPRIV
  S TIUFPRIV=1
  S MHA=$$CHKTIU("MENTAL HEALTH DIAGNOSTIC STUDY NOTE","DOC")
@@ -455,4 +446,3 @@ CHKTITLE(FILE,NAME) ;
  S X=NAME
  D ^DIC
  Q +Y
- ;

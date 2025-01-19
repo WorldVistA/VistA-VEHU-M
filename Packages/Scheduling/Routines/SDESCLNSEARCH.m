@@ -1,5 +1,5 @@
-SDESCLNSEARCH ;ALB/MGD,BWF - CLINIC NAME SEARCH AND LIMITED DATA RETURN ;JUL 7, 2023
- ;;5.3;Scheduling;**824,851,861**;Aug 13, 1993;Build 17
+SDESCLNSEARCH ;ALB/MGD,BWF,JAS - CLINIC NAME SEARCH AND LIMITED DATA RETURN ;NOV 07, 2024
+ ;;5.3;Scheduling;**824,851,861,895**;Aug 13, 1993;Build 11
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -127,6 +127,18 @@ BUILDRETURN(CLINICIEN,CLINCNT,CLINICLIST) ;Build return array with recall remind
  .S CLINICLIST("Clinic",CLINCNT,"Providers",PRVCNT,"SecID")=PROVIDERSECID
  ; set empty object if no records are found
  I '$D(CLINICLIST("Clinic",CLINCNT,"Providers")) S CLINICLIST("Clinic",CLINCNT,"Providers",1)=""
+ ; get subspecialties
+ N SSCNT,SSFN,SUBSPECIEN
+ S SSCNT=0
+ F SSFN=301:1:302 D
+ . S SUBSPECIEN=0
+ . F  S SUBSPECIEN=$O(^SC(CLINICIEN,SSFN,"B",SUBSPECIEN)) Q:'SUBSPECIEN  D
+ . . S SSCNT=SSCNT+1
+ . . S CLINICLIST("Clinic",CLINCNT,"Subspecialty",SSCNT,"ID")=$$GET1^DIQ(409.94,SUBSPECIEN_",",.01,"E")
+ . . S CLINICLIST("Clinic",CLINCNT,"Subspecialty",SSCNT,"Name")=$$GET1^DIQ(409.94,SUBSPECIEN_",",1)
+ . . S CLINICLIST("Clinic",CLINCNT,"Subspecialty",SSCNT,"Tier")=$$GET1^DIQ(409.94,SUBSPECIEN_",",2,"E")
+ . . S CLINICLIST("Clinic",CLINCNT,"Subspecialty",SSCNT,"Parent")=$$GET1^DIQ(409.94,SUBSPECIEN_",",3,"E")
+ I '$D(CLINICLIST("Clinic",CLINCNT,"Subspecialty")) S CLINICLIST("Clinic",CLINCNT,"Subspecialty",1)=""
  Q
  ;
 WRONGDIVISION(CLINICIEN,STATION) ;

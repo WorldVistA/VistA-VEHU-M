@@ -1,0 +1,158 @@
+YTSALSQL ;ISP/LMT - Score ALSSQOL-SF ;Jul 03, 2024@16:08:53
+ ;;5.01;MENTAL HEALTH;**250**;Dec 30, 1994;Build 26
+ ;
+ ;
+DLLSTR(YSDATA,YS,YSTRNG) ; compute scores or report text based on YSTRNG
+ ; input
+ ;   YSDATA(2)=adminId^patientDFN^instrumentName^dateGiven^isComplete
+ ;   YSDATA(2+n)=questionId^sequence^choiceId
+ ;   YS("AD")=adminId
+ ;   YSTRNG=1 for score, 2 for report
+ ; output if YSTRNG=1: ^TMP($J,"YSCOR",n)=scaleId=score
+ ; output if YSTRNG=2: append special "answers" to YSDATA
+ ;
+ I YSTRNG=1 D SCORESV(.YSDATA)
+ I YSTRNG=2 D
+ . N YSSCORES,YSN
+ . D LDSCORES^YTSCORE(.YSDATA,.YS) ; puts score into ^TMP($J,"YSCOR",2)
+ . S YSSCORES=$$REPORT()
+ . S YSN=$O(YSDATA(""),-1) ; get last node
+ . S YSDATA(YSN+1)="7771^9999;1^"_YSSCORES
+ Q
+ ;
+SCORESV(YSDATA) ; calculate the score
+ ; expects YSDATA from DLLSTR (YSDATA from LOADANSW^YTSCORE,SCALEG^YTQAPI3)
+ ;
+ N YSBULBAR,YSBULBARAVG,YSCOUNT,YSEMOTION,YSEMOTIONAVG,YSI,YSINTERACTION,YSINTERACTIONAVG,YSINTIMACY
+ N YSINTIMACYAVG,YSJ,YSMAPPINGS,YSNODE,YSPHYSICAL,YSPHYSICALAVG,YSQID,YSQUESTIONS,YSRELIGION
+ N YSRELIGIONAVG,YSSCALE,YSSCALECONST,YSSCLID,YSSCLNM,YSSCORES,YSSKIPPED,YSTOTAL,YSTOTALAVG,YSVAL,YSX
+ ;
+ F YSI=1:1 S YSX=$P($T(MAPPING+YSI),";;",2,99) Q:YSX=""!(YSX="zzz")  D
+ . S YSSCALECONST=$P(YSX,U,1)
+ . S YSSCALE=$P(YSX,U,3)
+ . S @YSSCALECONST=YSSCALE
+ . S YSSCORES(YSSCALE)=""
+ . S YSQUESTIONS=$P(YSX,U,4)
+ . I YSQUESTIONS="" QUIT
+ . F YSJ=1:1 S YSQID=$P(YSQUESTIONS,";",YSJ) Q:YSQID=""  D
+ . . S YSMAPPINGS(YSQID)=YSSCALE
+ ;
+ S YSSKIPPED=0
+ S YSCOUNT=0
+ S YSI=2
+ F  S YSI=$O(YSDATA(YSI)) Q:'YSI!(YSSKIPPED)  D
+ . S YSQID=$P(YSDATA(YSI),U)
+ . S YSVAL=$P(YSDATA(YSI),U,3)
+ . I 'YSQID QUIT
+ . S YSSCALE=$G(YSMAPPINGS(YSQID))
+ . I 'YSSCALE QUIT
+ . I YSVAL=1155!(YSVAL=1156)!(YSVAL=1157)!(YSVAL'?1.N) S YSSKIPPED=1 QUIT
+ . S YSCOUNT=YSCOUNT+1
+ . S YSSCORES(YSSCALE)=YSSCORES(YSSCALE)+YSVAL
+ I YSCOUNT<20 S YSSKIPPED=1
+ ;
+ ; Inverted scores: Subtract the score for each subsection from the total possible score
+ S YSSCORES(YSEMOTION)=30-YSSCORES(YSEMOTION)
+ S YSSCORES(YSPHYSICAL)=50-YSSCORES(YSPHYSICAL)
+ S YSSCORES(YSBULBAR)=20-YSSCORES(YSBULBAR)
+ ;
+ S YSSCORES(YSTOTAL)=YSSCORES(YSEMOTION)+YSSCORES(YSPHYSICAL)+YSSCORES(YSBULBAR)+YSSCORES(YSINTERACTION)+YSSCORES(YSRELIGION)+YSSCORES(YSINTIMACY)
+ ;
+ S YSSCORES(YSTOTALAVG)=$J(YSSCORES(YSTOTAL)/20,0,2)
+ S YSSCORES(YSEMOTIONAVG)=$J(YSSCORES(YSEMOTION)/3,0,2)
+ S YSSCORES(YSPHYSICALAVG)=$J(YSSCORES(YSPHYSICAL)/5,0,2)
+ S YSSCORES(YSBULBARAVG)=$J(YSSCORES(YSBULBAR)/2,0,2)
+ S YSSCORES(YSINTERACTIONAVG)=$J(YSSCORES(YSINTERACTION)/4,0,2)
+ S YSSCORES(YSRELIGIONAVG)=$J(YSSCORES(YSRELIGION)/2,0,2)
+ S YSSCORES(YSINTIMACYAVG)=$J(YSSCORES(YSINTIMACY)/4,0,2)
+ ;
+ ; set scores into ^TMP($J,"YSCOR",n)=scaleName=score {rawScore^tScore}
+ K ^TMP($J,"YSCOR")
+ I $D(^TMP($J,"YSG",1)),^TMP($J,"YSG",1)="[ERROR]" D  Q  ;-->out
+ . S ^TMP($J,"YSCOR",1)="[ERROR]"
+ . S ^TMP($J,"YSCOR",2)="No Scale found for ADMIN"
+ ;
+ S ^TMP($J,"YSCOR",1)="[DATA]"
+ S YSI=2
+ S YSJ=1
+ F  S YSI=$O(^TMP($J,"YSG",YSI)) Q:'YSI  D
+ . S YSNODE=$G(^TMP($J,"YSG",YSI))
+ . I $P(YSNODE,"=",1)["Group" QUIT
+ . S YSSCLID=+$P(YSNODE,"=",2)
+ . S YSSCLNM=$P(YSNODE,U,4)
+ . S YSJ=YSJ+1
+ . S ^TMP($J,"YSCOR",YSJ)=YSSCLNM_"="_$S('YSSKIPPED:$G(YSSCORES(YSSCLID)),1:"")
+ Q
+ ;
+ ;
+MAPPING ;Map question IDs to scales; Constant^Scale Name^Scale ID^Questions IDs
+ ;;YSTOTAL^Total Score^1598
+ ;;YSEMOTION^Negative Emotion^1599^9538;9542;9543
+ ;;YSPHYSICAL^Physical Functioning^1600^9529;9530;9533;9534;9535
+ ;;YSBULBAR^Bulbar Function^1601^9531;9532
+ ;;YSINTERACTION^Interaction with people and the Environment^1602^9536;9537;9539;9544
+ ;;YSRELIGION^Religiosity^1603^9540;9541
+ ;;YSINTIMACY^Intimacy^1604^9545;9546;9547;9548
+ ;;YSTOTALAVG^Average Total^1591
+ ;;YSEMOTIONAVG^Negative Emotion Avg^1592
+ ;;YSPHYSICALAVG^Physical Functioning Avg^1593
+ ;;YSBULBARAVG^Bulbar Function Avg^1594
+ ;;YSINTERACTIONAVG^Interaction with people and the Environment Avg^1595
+ ;;YSRELIGIONAVG^Religiosity Avg^1596
+ ;;YSINTIMACYAVG^Intimacy Avg^1597
+ ;;zzz
+ ;
+ ;
+REPORT(YSRETURN) ; build the scoring display for the report
+ ; expects ^TMP($J,"YSCOR",...) and ^TMP($J,"YSG") from DLLSTR
+ ;         YSDATA from DLLSTR
+ ;
+ N YSBULBAR,YSBULBARAVG,YSEMOTION,YSEMOTIONAVG,YSI,YSINTERACTION,YSINTERACTIONAVG,YSINTIMACY,YSINTIMACYAVG
+ N YSNAME,YSPHYSICAL,YSPHYSICALAVG,YSRELIGION,YSRELIGIONAVG,YSSCALE,YSSCALECONST,YSSCALEMAP,YSSCALENAME
+ N YSSCORES,YSSKIPPED,YSTOTAL,YSTOTALAVG,YSVALUE,YSX
+ ;
+ F YSI=1:1 S YSX=$P($T(MAPPING+YSI),";;",2,99) Q:YSX=""!(YSX="zzz")  D
+ . S YSSCALECONST=$P(YSX,U,1)
+ . S YSSCALENAME=$P(YSX,U,2)
+ . S YSSCALE=$P(YSX,U,3)
+ . S @YSSCALECONST=YSSCALE
+ . S YSSCALEMAP(YSSCALENAME)=YSSCALE
+ . S YSSCORES(YSSCALE)=""
+ ;
+ S YSI=0 F  S YSI=$O(^TMP($J,"YSCOR",YSI)) Q:'YSI  D
+ . S YSNAME=$P(^TMP($J,"YSCOR",YSI),"=")
+ . S YSVALUE=$P(^TMP($J,"YSCOR",YSI),"=",2)
+ . I YSNAME="" QUIT
+ . S YSSCALE=$G(YSSCALEMAP(YSNAME))
+ . I YSSCALE="" QUIT
+ . S YSSCORES(YSSCALE)=YSVALUE
+ ;
+ S YSSKIPPED=0
+ S YSSCALE=0
+ F  S YSSCALE=$O(YSSCORES(YSSCALE)) Q:YSSCALE=""  D
+ . I $G(YSSCORES(YSSCALE))="" S YSSKIPPED=1
+ ;
+ I YSSKIPPED D  QUIT YSRETURN
+ . S YSRETURN="|No scores due to skipped items."
+ ;
+ S YSX=""
+ S YSX=YSX_"|                               Negative Emotion Total: "_$J(YSSCORES(YSEMOTION),3)_" (Max=30)"
+ S YSX=YSX_"|                           Physical Functioning Total: "_$J(YSSCORES(YSPHYSICAL),3)_" (Max=50)"
+ S YSX=YSX_"|                                Bulbar Function Total: "_$J(YSSCORES(YSBULBAR),3)_" (Max=20)"
+ S YSX=YSX_"|    Interaction with people and the Environment Total: "_$J(YSSCORES(YSINTERACTION),3)_" (Max=40)"
+ S YSX=YSX_"|                                    Religiosity Total: "_$J(YSSCORES(YSRELIGION),3)_" (Max=20)"
+ S YSX=YSX_"|                                       Intimacy Total: "_$J(YSSCORES(YSINTIMACY),3)_" (Max=40)"
+ S YSX=YSX_"|                                          TOTAL SCORE: "_$J(YSSCORES(YSTOTAL),3)_" (Max=200)"
+ S YSX=YSX_"|"
+ S YSX=YSX_"|                             Negative Emotion Average: "_$J(YSSCORES(YSEMOTIONAVG),0,2)
+ S YSX=YSX_"|                         Physical Functioning Average: "_$J(YSSCORES(YSPHYSICALAVG),0,2)
+ S YSX=YSX_"|                              Bulbar Function Average: "_$J(YSSCORES(YSBULBARAVG),0,2)
+ S YSX=YSX_"|  Interaction with people and the Environment Average: "_$J(YSSCORES(YSINTERACTIONAVG),0,2)
+ S YSX=YSX_"|                                 Religiosity  Average: "_$J(YSSCORES(YSRELIGIONAVG),0,2)
+ S YSX=YSX_"|                                     Intimacy Average: "_$J(YSSCORES(YSINTIMACYAVG),0,2)
+ S YSX=YSX_"|                                  AVERAGE TOTAL SCORE: "_$J(YSSCORES(YSTOTALAVG),0,2)
+ S YSX=YSX_"|"
+ S YSX=YSX_"|Averages are reported as a value between 0 (worse) and 10 (best)."
+ S YSRETURN=YSX
+ ;
+ Q YSRETURN
