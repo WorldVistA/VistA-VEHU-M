@@ -1,5 +1,5 @@
 PSODDPRE ; BIR/SAB - Enhanced OP order checks ;09/20/06 3:38pm
- ;;7.0;OUTPATIENT PHARMACY;**251,375,387,379,390,372,416,411,518,568**;DEC 1997;Build 5
+ ;;7.0;OUTPATIENT PHARMACY;**251,375,387,379,390,372,416,411,518,568,768**;DEC 1997;Build 12
  ;External reference to PSOL^PSSLOCK supported by DBIA 2789
  ;External reference to PSOUL^PSSLOCK supported by DBIA 2789
  ;External reference to ^PSSDSAPM supported by DBIA 5570
@@ -183,7 +183,7 @@ ULRX ;
  Q
  ;
 PRSTAT(DA) ;Displays the prescription's status
- N PSOTRANS,PSOREL,PSOCMOP,RXPSTA,PSOX,RFLZRO,PSOLRD,PSORTS,CMOP
+ N PSOTRANS,PSOREL,PSOCMOP,RXPSTA,PSOX,RFLZRO,PSOLRD,PSORTS,CMOP,PSORFL,PSOMW
  D HD^PSODDPR2():(($Y+5)>IOSL) Q:$G(PSODLQT)  ;PSO*7*411 to comment
  S RXPSTA="Processing Status: ",PSOLRD=$P($G(^PSRX(RXREC,2)),"^",13)
  ;
@@ -198,13 +198,20 @@ PRSTAT(DA) ;Displays the prescription's status
  .W:'$G(PSODUPF) IOINORM_IORVOFF
  D HD^PSODDPR2():(($Y+5)>IOSL) Q:$G(PSODLQT)
  I $G(PSOCMOP)']"" D
+ .S PSORFL=0
  .F PSOX=0:0 S PSOX=$O(^PSRX(RXREC,1,PSOX)) Q:'PSOX  D
+ ..S PSORFL=PSOX ;PSO*7*768
  ..S RFLZRO=$G(^PSRX(RXREC,1,PSOX,0))
  ..S:$P(RFLZRO,"^",18)'="" PSOLRD=$P(RFLZRO,"^",18) I $P(RFLZRO,"^",16) S PSOLRD=PSOLRD_"^R",PSORTS=$P(RFLZRO,"^",16)
  .I '$O(^PSRX(RXREC,1,0)),$P(^PSRX(RXREC,2),"^",15) S PSOLRD=PSOLRD_"^R",PSORTS=$P(^PSRX(RXREC,2),"^",15)
  .S:$G(PSODUPF) PSODUPC(ZCT)=PSODUPC(ZCT)+1 W:'$G(PSODUPF) !,$J(RXPSTA,24)
  .I +$G(PSORTS) S:$G(PSODUPF) PSODUPC(ZCT)=PSODUPC(ZCT)+1 W:'$G(PSODUPF) "Returned to stock on "_$$FMTE^XLFDT(PSORTS,2) Q
- .S:$G(PSODUPF) PSODUPC(ZCT)=PSODUPC(ZCT)+1 W:'$G(PSODUPF) $S(PSOLRD="":"Not released locally",1:"Released locally on "_$$FMTE^XLFDT($P(PSOLRD,"^"),2)_" "_$P(PSOLRD,"^",2))_$S($P(^PSRX(RXREC,0),"^",11)="W":" (Window)",1:" (Mail)")
+ .S:$G(PSODUPF) PSODUPC(ZCT)=PSODUPC(ZCT)+1
+ .;PSO*7*768 
+ .S PSOMW=""
+ .I PSORFL S PSOMW=$S($P(^PSRX(RXREC,1,PSORFL,0),"^",2)="W":" (Window)",1:" (Mail)")
+ .I PSOMW="" S PSOMW=$S($P(^PSRX(RXREC,0),"^",11)="W":" (Window)",1:" (Mail)")
+ .W:'$G(PSODUPF) $S(PSOLRD="":"Not released locally",1:"Released locally on "_$$FMTE^XLFDT($P(PSOLRD,"^"),2)_" "_$P(PSOLRD,"^",2))_PSOMW
  Q
  ;
 DATACK ;check FDB returned data to determine whether to continue processing.

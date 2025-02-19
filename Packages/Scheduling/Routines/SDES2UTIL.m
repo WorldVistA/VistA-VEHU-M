@@ -1,5 +1,5 @@
-SDES2UTIL ;ALB/MGD,ANU,TJB,BWF,MGD - SDES2 UTILITIES ;AUG 28, 2024
- ;;5.3;Scheduling;**853,857,864,877,887**;Aug 13, 1993;Build 7
+SDES2UTIL ;ALB/MGD,ANU,TJB,BWF,MGD,MCB - SDES2 UTILITIES ;NOV 19, 2024
+ ;;5.3;Scheduling;**853,857,864,877,887,897**;Aug 13, 1993;Build 2
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to INSTITUTION in #2251
@@ -88,7 +88,7 @@ DSTEND(YR,DSTSUM) ;Daylight Savings END date
  I DOW D
  .I DSTSUM="DST" S DSTDT=DSTDT+(SUNDAY*7)-DOW
  .E  S DSTDT=$$SUMMER(DSTDT,DOW,SUNDAY)
- Q $$FMADD^XLFDT(DSTDT,-1)
+ Q DSTDT
  ;
 SUMMER(DSTDT,DOW,SUNDAY) ; determine last Sunday of MARCH or OCTOBER
  ; DSTDT - March or October (e.g, CYY0301 or CYY1001)

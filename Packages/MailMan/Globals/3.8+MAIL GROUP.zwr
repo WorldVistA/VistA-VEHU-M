@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MAIL GROUP
 ZWR
-^XMB(3.8,0)="MAIL GROUP^3.8^469^445"
+^XMB(3.8,0)="MAIL GROUP^3.8^470^446"
 ^XMB(3.8,1,0)="YS PSYCHTEST^PR^^^^0"
 ^XMB(3.8,1,1,0)="^3.81P^^0"
 ^XMB(3.8,1,2,0)="^^1^1^2921113^^"
@@ -3722,6 +3722,8 @@ ZWR
 ^XMB(3.8,469,2,2,0)="to receive alerts about AR repayment plans. Mail sent using this group"
 ^XMB(3.8,469,2,3,0)="must not contain any PII or PHI."
 ^XMB(3.8,469,3)=1
+^XMB(3.8,470,0)="IBMH EXCEPTIONS^PU^n^^^^.5"
+^XMB(3.8,470,3)=1
 ^XMB(3.8,"AB",.5,120,1)=""
 ^XMB(3.8,"AB",.5,372,1)=""
 ^XMB(3.8,"AB",.5,428,1)=""
@@ -4403,6 +4405,7 @@ ZWR
 ^XMB(3.8,"AC",.5,467)=""
 ^XMB(3.8,"AC",.5,468)=""
 ^XMB(3.8,"AC",.5,469)=""
+^XMB(3.8,"AC",.5,470)=""
 ^XMB(3.8,"AC",1,228)=""
 ^XMB(3.8,"AC",1,343)=""
 ^XMB(3.8,"AC",1,347)=""
@@ -4789,6 +4792,7 @@ ZWR
 ^XMB(3.8,"B","IBCNR EPHARM",353)=""
 ^XMB(3.8,"B","IBH",420)=""
 ^XMB(3.8,"B","IBK",422)=""
+^XMB(3.8,"B","IBMH EXCEPTIONS",470)=""
 ^XMB(3.8,"B","IBN",419)=""
 ^XMB(3.8,"B","IBQ ROLLUP",142)=""
 ^XMB(3.8,"B","IBRFI 277 MESSAGE",436)=""

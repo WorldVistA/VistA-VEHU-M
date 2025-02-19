@@ -27307,7 +27307,7 @@ ZWR
 ^DIC(396.17,"%D",4,0)="reports in AMIE and TIU when the user has finished the documentation "
 ^DIC(396.17,"%D",5,0)="process.  This file serves to track documents in progress as well as "
 ^DIC(396.17,"%D",6,0)="documents that have been already completed and sent to TIU and AMIE."
-^DIC(396.17,"%MSC")=3231216.221751
+^DIC(396.17,"%MSC")=3250219.183502
 ^DIC(396.18,0)="CAPRI TEMPLATE DEFINITIONS^396.18"
 ^DIC(396.18,0,"AUDIT")="@"
 ^DIC(396.18,0,"DD")="@"
@@ -29933,7 +29933,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3250119.172154
+^DIC(409.93,"%MSC")=3250219.184103
 ^DIC(409.94,0)="SDEC SUBSPECIALTY^409.94"
 ^DIC(409.94,0,"AUDIT")="@"
 ^DIC(409.94,0,"DD")="@"

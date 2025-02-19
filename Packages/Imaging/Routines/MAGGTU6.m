@@ -1,5 +1,5 @@
 MAGGTU6 ;WOIFO/GEK,MLH,MAT,JSL/MKN - Silent Utilities ; 12/6/2022 12:43 PM
- ;;3.0;IMAGING;**24,8,48,45,20,46,59,72,93,117,138,334**;Mar 19, 2002;Build 51
+ ;;3.0;IMAGING;**24,8,48,45,20,46,59,72,93,117,138,334,335**;Mar 19, 2002;Build 3
  ;; Per VA Directive 6402, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
@@ -57,7 +57,7 @@ TIMEOUT(MAGRY,APP) ;RPC [MAGG GET TIMEOUT]
  S MAGPLC=$$PLACE^MAGBAPI(DUZ(2)) I 'MAGPLC Q  ; DBI - SEB 9/20/2002
  S MAGTIMES=$G(^MAG(2006.1,MAGPLC,"KEYS"))
  I APP="DISPLAY" S MAGRY=$P(MAGTIMES,U,2) S:MAGRY="" MAGRY=6 ;p334 - default timeout to 6 (MINS) if field #121 is null
- I APP="CAPTURE" S MAGRY=$P(MAGTIMES,U,3)
+ I APP="CAPTURE" S MAGRY=$P(MAGTIMES,U,3) S:MAGRY="" MAGRY=6 ;p335 - default timeout to 6 (MINS) if field #122 is null
  I APP="VISTARAD" S MAGRY=$P(MAGTIMES,U,4)
  I APP="TELEREADER" S MAGRY=$P(MAGTIMES,U,6)  ;  MJK - 2006.01.25 - TeleReader
  I APP="IMPORTER" S MAGRY=$P(MAGTIMES,U,8)    ;  MAT - *136

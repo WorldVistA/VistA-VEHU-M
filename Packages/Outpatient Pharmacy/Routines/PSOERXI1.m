@@ -1,5 +1,5 @@
 PSOERXI1 ;ALB/BWF - eRx Utilities/RPC's ; 12/10/22 11:24am
- ;;7.0;OUTPATIENT PHARMACY;**581,617,692,706,700,743,746**;DEC 1997;Build 106
+ ;;7.0;OUTPATIENT PHARMACY;**581,617,692,706,700,743,746,783**;DEC 1997;Build 1
  ;
  ;
  ;Reference to MAKEADD^TIUSRVP2 in ICR #4795
@@ -17,6 +17,8 @@ PSOERXI1 ;ALB/BWF - eRx Utilities/RPC's ; 12/10/22 11:24am
  ; VADAT - DUZ^RXIEN
  ; XML3 - third stream of XML
 INCERX(RES,XML,PRCHK,PACHK,DACHK,STATION,DIV,ERXHID,ERXVALS,XML2,VADAT,XML3) ;
+ ;p783 This error handling prevents delays at the eRx Hub because it always returns a result
+ N $ESTACK,$ETRAP S $ETRAP="D ERROR^PSOERXI1"
  N CURREC,FDA,EIEN,ERRTXT,ERRSEQ,PACNT,PASCNT,PAICN,PAIEN,VAINST,NPI,VAOI,VPATINST,PRVAUTOV
  S NPI=$P($G(DIV),U,2)
  S CURREC=$$PARSE^PSOERXI2(.XML,.ERXVALS,NPI,.XML2,.XML3)
@@ -213,3 +215,7 @@ CONVDTTM(VAL) ;
  S X=EDATE D ^%DT I 'Y Q ""
  S VAL=Y_$S($L(ETIME):"."_$TR(ETIME,":",""),1:"")
  Q VAL
+ERROR ;p783 Error Handling
+ D ^%ZTER
+ S RES="1^eRx received but there was an error. See error trap at "_$P($TR($$SITE^VASITE(),"^","-"),"-",1,2)
+ Q

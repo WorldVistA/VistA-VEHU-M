@@ -1,5 +1,5 @@
-DVBCPUSH ;ALB/AKG - CAPRI PUSH UTILITY RPC; APR 25, 2022@9:30am ; 5/19/23 9:07am
- ;;2.7;AMIE;**238,242,248**;Apr 10, 1995;Build 6
+DVBCPUSH ;ALB/AKG/JD - CAPRI PUSH UTILITY RPC; APR 25, 2022@9:30am ; 5/19/23 9:07am
+ ;;2.7;AMIE;**238,242,248,252**;Apr 10, 1995;Build 92
  ;Per VHA Directive 6402 this routine should not be modified
  ;ICR #2263 Supports all calls to Parameter File and XPAR usage
  ;
@@ -7,28 +7,45 @@ DVBCPUSH ;ALB/AKG - CAPRI PUSH UTILITY RPC; APR 25, 2022@9:30am ; 5/19/23 9:07am
  ;
 PARAMS(DVBLIST) ;returns data on the entire DVBA parameter list
  ;rpc returns all CAPRI namespaced Paramaters
+ ;RPC: DVBA CAPRI PARAM INQ
+ ;Updated code to allow for multi-instance parameters for CAPRI-13378.  JD - 9/10/24
+ ;
  K DVBLIST
- N DVBCNT,DVBPARAM,DVBVAL,DVBPAR
+ N DVBCNT,DVBD,DVBI,DVBPARAM,DVBPAR,DVBVAL
  S DVBCNT=0
  S DVBPARAM="" F  S DVBPARAM=$O(^XTV(8989.51,"B",DVBPARAM)) Q:DVBPARAM=""  D
+ .I $P($P(DVBPARAM,U,1)," ")'["DVBA" Q
  .S DVBPAR="" F  S DVBPAR=$O(^XTV(8989.51,"B",DVBPARAM,DVBPAR)) Q:DVBPAR=""  D
- ..I $P($P(DVBPARAM,U,1)," ")'["DVBA" Q
- ..S DVBVAL=$$GET^XPAR("PKG",DVBPARAM,1,"Q")
- ..S DVBLIST(DVBCNT)=DVBPAR_U_DVBPARAM_U_DVBVAL
+ ..D GETLST^XPAR(.DVBVAL,"PKG",DVBPARAM,"Q")
+ ..S (DVBD,DVBI)=""
+ ..F  S DVBI=$O(DVBVAL(DVBI)) Q:DVBI=""  S DVBD=DVBD_"|"_$P(DVBVAL(DVBI),U,2)
+ ..S DVBLIST(DVBCNT)=DVBPAR_U_DVBPARAM_U_$P(DVBD,"|",2,9999)
  ..S DVBCNT=DVBCNT+1
  Q
  ;
 PARAMED(DVBMSG,DVBNAME,DVBVAL) ;
- ;edits exiting paramater value from CAPRI Push Utility
+ ;edits exiting parameter value from CAPRI Push Utility
+ ;RPC: DVBA CAPRI PARAM UPDATE
+ ;Updated code to allow for multi-instance parameters for CAPRI-13378. JD - 9/11/24
+ ;
  I $G(DVBNAME)="" S DVBMSG="Missing parameter name" Q
- I $G(DVBVAL)="" S DVBMSG="Missing new value" Q
  K DVBMSG S DVBMSG=""
- N DVBERR,DVBINFO,DVBOLD
- S DVBOLD=$$GET^XPAR("PKG",DVBNAME,1,"Q")
- D EN^XPAR("PKG.AUTOMATED MED INFO EXCHANGE",DVBNAME,1,DVBVAL,.DVBERR)
- I DVBERR S DVBMSG="Failed to update because "_DVBERR_U_0  Q
- S DVBINFO=$$GET^XPAR("PKG",DVBNAME,1,"Q")
- S DVBMSG=DVBNAME_" value updated successfully from "_DVBOLD_" to "_DVBINFO_U_1
+ N DVBCNF,DVBCNS,DVBCNT,DVBDLER,DVBERR,DVBF,DVBI,DVBPI,DVBVALV
+ S (DVBCNF,DVBCNS,DVBCNT,DVBDLER)=0
+ S DVBPI=$O(^XTV(8989.51,"B",DVBNAME,""))
+ I $D(^XTV(8989.5,"AC",DVBPI))>0 D NDEL^XPAR("PKG",DVBNAME,.DVBDLER)
+ I DVBDLER'=0 S DVBMSG=DVBDLER Q
+ I $G(DVBVAL)="" S DVBMSG="The entire parameter list has been deleted" Q
+ S DVBF=""
+ F DVBI=1:1:$L(DVBVAL,"|") D
+ .S DVBVALV=$P(DVBVAL,"|",DVBI)
+ .D EN^XPAR("PKG.AUTOMATED MED INFO EXCHANGE",DVBNAME,DVBI,DVBVALV,.DVBERR)
+ .S DVBCNT=DVBCNT+1
+ .I DVBERR D  Q
+ ..S DVBCNF=DVBCNF+1
+ ..S DVBF=DVBF_"|"_DVBI_","_$P(DVBERR,U,2)
+ .S DVBCNS=DVBCNS+1
+ S DVBMSG=DVBCNS_"/"_DVBCNT_" "_$S(DVBCNS=1:"was",1:"were")_" successful"_DVBF
  Q
  ;
 PARADESC(DVBRTN,DVBIEN) ;
@@ -103,7 +120,7 @@ PURGEMET(DVBRTN,DUZ,DVBDTP) ;
  Q
 PURGEOPT ;
  W !!,"CAPRI CLINICAL DOCUMENTS EFOLDER METRIC DATA PURGE",!!
- S DIR("?")="Enter date to purge CAPRI Clinical Documents EFolder Metrics file up to.  For Example,to purge from today and older enter today's date"
+ S DIR("?")="Enter date to purge CAPRI Clinical Documents EFolder Metrics file up to.  For Example, to purge from today and older enter today's date"
  S DIR("A")="Enter date to purge CAPRI Clinical Documents EFolder Metrics file."
  S DIR(0)="D" D ^DIR K DIR Q:$D(DIRUT)!($D(DTOUT))
  D PURGEMET(.DVBRTN,DUZ,Y)
