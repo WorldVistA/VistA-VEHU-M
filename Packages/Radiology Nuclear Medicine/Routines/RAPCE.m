@@ -1,5 +1,5 @@
-RAPCE ;HIRMFO/GJC - Interface with PCE APIs for wrkload, visits ; Apr 28, 2022@08:42:59
- ;;5.0;Radiology/Nuclear Medicine;**10,17,21,26,41,57,56,153,172,174,189**;Mar 16, 1998;Build 1
+RAPCE ;HIRMFO/GJC - Interface with PCE APIs for wrkload, visits ; Jul 11, 2024@13:39
+ ;;5.0;Radiology/Nuclear Medicine;**10,17,21,26,41,57,56,153,172,174,189,217**;Mar 16, 1998;Build 1
  ;Supported IA #2053 FILE^DIE
  ;Supported IA #4663 SWSTAT^IBBAPI
  ;Controlled IA #1889 DATA2PCE^PXAPI
@@ -136,6 +136,7 @@ PROC(X) ; Set up the other '"RAPXAPI",$J,"PROCEDURE"' nodes for this case
  S ^TMP("RAPXAPI",$J,"PROCEDURE",X,"ENC PROVIDER")=$S(RA7003(15)]"":RA7003(15),1:RA7003(12)) ; Pri. Int Staff if exists, else Pri Int Resident
  S ^TMP("RAPXAPI",$J,"PROCEDURE",X,"ORD PROVIDER")=RA7003(14) ; Requesting Physician.
  S ^TMP("RAPXAPI",$J,"PROCEDURE",X,"EVENT D/T")=$$FMADD^XLFDT(RADTE,0,0,0,RACNI) ;For unique entry in V CPT post PX*1.0*211
+ S ^TMP("RAPXAPI",$J,"PROCEDURE",X,"ADD")=1 ;p217/KLM - PCE patch 214 adds the ADD node to force duplicate CPT entries.
  ;KLM/p172 - Pass the radiologist as 'Primary' for the encounter.
  S ^TMP("RAPXAPI",$J,"PROVIDER",X,"NAME")=$S(RA7003(15)]"":RA7003(15),1:RA7003(12)) ; Pri. Int Staff if exists, else Pri Int Resident
  S ^TMP("RAPXAPI",$J,"PROVIDER",X,"PRIMARY")=X

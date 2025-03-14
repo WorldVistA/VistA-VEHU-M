@@ -1,15 +1,7 @@
 OSEHRA ZGO Export: ERROR TRAP SUMMARY
 ZWR
-^%ZTER(3.077,0)="ERROR TRAP SUMMARY^3.077^6^6"
-^%ZTER(3.077,4,0)="R~DIK1, Global variable undefined: ~UTILITY(""DIK""'195'83.51'.01),150372994,-%YDB-E-GVUNDEF^3241122.0025^3241122.0025"
-^%ZTER(3.077,4,4,0)="^3.0775"
-^%ZTER(3.077,4,4,67166,0)=1
-^%ZTER(3.077,5,0)="POST+31~WEBG021P, Fall-through to a label with formallist is not allowed,150374442,-%YDB-E-FALLINTOFLST^3241122.152726^3241122.152726"
-^%ZTER(3.077,5,4,0)="^3.0775"
-^%ZTER(3.077,5,4,67166,0)="~~~~~~~~~~~~~~~1"
+^%ZTER(3.077,0)="ERROR TRAP SUMMARY^3.077^6^4"
 ^%ZTER(3.077,6,0)="TOKEN+31~DVBC252P, Fall-through to a label with formallist is not allowed,150374442,-%YDB-E-FALLINTOFLST^3250219.183502^3250219.183502"
 ^%ZTER(3.077,6,4,0)="^3.0775"
 ^%ZTER(3.077,6,4,67255,0)="~~~~~~~~~~~~~~~~~~1"
-^%ZTER(3.077,"B","POST+31~WEBG021P, Fall-through",5)=""
-^%ZTER(3.077,"B","R~DIK1, Global variable undefi",4)=""
 ^%ZTER(3.077,"B","TOKEN+31~DVBC252P, Fall-throug",6)=""

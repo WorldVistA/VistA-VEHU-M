@@ -21766,7 +21766,7 @@ ZWR
 ^DIC(351.82,"%D",9,0)="Urgent Care visit within the community."
 ^DIC(351.82,"%D",10,0)=" "
 ^DIC(351.82,"%D",11,0)="Per VHA Directive 6402, this file definition should not be modified. "
-^DIC(351.82,"%MSC")=3220611.235926
+^DIC(351.82,"%MSC")=3250314.063844
 ^DIC(351.83,0)="IB MH VISIT TRACKING^351.83"
 ^DIC(351.83,0,"AUDIT")="@"
 ^DIC(351.83,0,"DD")="@"
@@ -29933,7 +29933,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3250219.184103
+^DIC(409.93,"%MSC")=3250314.06381
 ^DIC(409.94,0)="SDEC SUBSPECIALTY^409.94"
 ^DIC(409.94,0,"AUDIT")="@"
 ^DIC(409.94,0,"DD")="@"

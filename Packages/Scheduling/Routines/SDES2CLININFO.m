@@ -1,5 +1,5 @@
-SDES2CLININFO ;ALB/TJB,JAS - Get Clinic Info based on Clinic IEN ;NOV 06, 2024
- ;;5.3;Scheduling;**893,895**;Aug 13, 1993;Build 11
+SDES2CLININFO ;ALB/TJB,JAS,TJB - Get Clinic Info based on Clinic IEN ;DEC 03, 2024
+ ;;5.3;Scheduling;**893,895,898**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -58,7 +58,8 @@ ENTRY(SDRETURN,SDCONTEXT,SDPARAM) ;SDES2 GET CLINIC INFO
  ;"Provider": {
  ; "DefaultForClinic": "",
  ; "IEN": "",
- ; "Name": ""},
+ ; "Name": ""
+ ; "Title": ""},
  ;"Reactivate Date": "",
  ;"ReqActionProfiles": "",
  ;"ReqXrayFilms": "",
@@ -113,18 +114,15 @@ CLINICLIST(SDRETURN,SDCONTEXT,SDPARAM) ;RPC: SDES2 GET CLINICS BY CLIN LIST
  S (HASHFLG,SEQUENCE)=0
  D VALCONTEXT^SDES2VALCONTEXT(.ERRORS,.SDCONTEXT)
  I $D(ERRORS) S ERRORS("Clinic")="" D BUILDJSON^SDES2JSON(.SDRETURN,.ERRORS) Q
- S NODE=""
- F  S NODE=$O(SDPARAM("CLINICIEN",NODE)) Q:NODE=""  D
- . D VALCLINIEN^SDES2VAL44(.ERRORS,$G(SDPARAM("CLINICIEN",NODE)),1)
- I $D(ERRORS) S ERRORS("Clinic")="" D BUILDJSON^SDES2JSON(.SDRETURN,.ERRORS) Q
  ;
  S NODE=""
  F  S NODE=$O(SDPARAM("CLINICIEN",NODE)) Q:NODE=""  D
- . ; N ERRORS
  . S IEN=$G(SDPARAM("CLINICIEN",NODE))
  . S SEQUENCE=SEQUENCE+1
  . I SEQUENCE>50 D ERRLOG^SDES2JSON(.ERRORS,381)
  . I $D(ERRORS) M CLINICLIST("Error","Max")=ERRORS("Error") Q
+ . I IEN="" S CLINICLIST("Error","ClinicIEN")=$$GET1^DIQ(409.93,19,1,"E") Q
+ . I '$D(^SC(IEN,0)) S CLINICLIST("Error","ClinicIEN "_IEN)=$$GET1^DIQ(409.93,20,1,"E") Q
  . ;
  . K RETURNDATA,ELGFIELDSARRAY
  . S HASFIELDS=$$BLDCLNREC(.ELGFIELDSARRAY,$G(SDPARAM("CLINICIEN",NODE)))
@@ -266,6 +264,7 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  . S SDC=SDC+1
  . S SDCLNSREC("Clinic","Provider",SDC,"Name")=$G(SDDATA(44.1,SDX,.01,"E"))
  . S SDCLNSREC("Clinic","Provider",SDC,"IEN")=$G(SDDATA(44.1,SDX,.01,"I"))
+ . S SDCLNSREC("Clinic","Provider",SDC,"Title")=$$GET1^DIQ(200,$G(SDDATA(44.1,SDX,.01,"I"))_",",8,"E")
  . S SDCLNSREC("Clinic","Provider",SDC,"DefaultForClinic")=$G(SDDATA(44.1,SDX,.02,"E"))
  ; Diagnosis Multiple
  S SDX="",SDC=0

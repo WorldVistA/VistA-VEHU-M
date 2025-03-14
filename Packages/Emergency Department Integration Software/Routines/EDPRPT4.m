@@ -1,7 +1,7 @@
-EDPRPT4 ;SLC/MKB - Delay Summary Report
- ;;1.0;EMERGENCY DEPARTMENT;;Sep 30, 2009;Build 74
+EDPRPT4 ;SLC/MKB - Delay Summary Report ; 1/13/25 12:41pm
+ ;;2.0;EMERGENCY DEPARTMENT;**6,31**;Feb 24, 2012;Build 4
  ;
-SUM(BEG,END) ; Get Delay Report for EDPSITE by date range
+SUM(BEG,END,CSV) ; Get Delay Report for EDPSITE by date range
  ;   CNT = counters
  ;   MIN = accumulate #minutes
  N IN,OUT,LOG,X,X0,X1,X3,X4,ELAPSE,ADMDEC,ADMDEL,DISP,STS,VADM,CNT,MIN,PROV,DEL,ACU,Y
@@ -10,6 +10,8 @@ SUM(BEG,END) ; Get Delay Report for EDPSITE by date range
  F  S IN=$O(^EDP(230,"ATI",EDPSITE,IN)) Q:'IN  Q:IN>END  S LOG=0 F  S LOG=+$O(^EDP(230,"ATI",EDPSITE,IN,LOG)) Q:LOG<1  D
  . S X0=^EDP(230,LOG,0),X1=$G(^(1)),X3=$G(^(3)),X4=$G(^(4,1,0))
  . S DISP=$$ECODE^EDPRPT($P(X1,U,2)),VADM=$$VADMIT^EDPRPT2(DISP)
+ . ;TDP - Patch 2, additional check for VA Admissions w/o abbreviation
+ . I VADM=0 S VADM=$$VADMIT1^EDPRPT2($P(X1,U,2))
  . S ACU=$$ECODE($P(X3,U,3)),STS=$P(X3,U,2)
  . S DEL=+$P(X1,U,5),CNT=CNT+1
  . S OUT=$P(X0,U,9) ;S:OUT="" OUT=NOW
@@ -27,43 +29,60 @@ D2 . ; VA admissions only
  .. S MIN("VA")=MIN("VA")+ELAPSE
  .. S MIN("VADEC")=MIN("VADEC")+ADMDEC
  .. S MIN("VADEL")=MIN("VADEL")+ADMDEL
- .. S:ADMDEL>359 CNT("VADEL6")=CNT("VADEL6")+1
+ .. S:ADMDEL>149 CNT("VADEL6")=CNT("VADEL6")+1
 D3 . ; elapsed visit time >=6 hrs
  . S:ELAPSE>1380 CNT("23+")=CNT("23+")+1
- . I ELAPSE>359 D
+ . I ELAPSE>239 D
  .. S CNT("6+")=CNT("6+")+1
+ . I ELAPSE>359 D
  .. S:VADM CNT("VA6")=CNT("VA6")+1
  . S:DEL CNT(DEL,ACU)=+$G(CNT(DEL,ACU))+1,CNT(DEL)=+$G(CNT(DEL))+1
  ;
 D4 ; return counts and averages as CSV
  I $G(CSV) D  Q
  . N TAB S TAB=$C(9)
- . S X=TAB_TAB_"Delay Reason"_TAB_"0"_TAB_"1"_TAB_"2"_TAB_"3"_TAB_"4"_TAB_"5"_TAB_"Total"
+ . ;***pij 4/25/2013
+ . ;S X=TAB_TAB_"Delay Reason"_TAB_"0"_TAB_"1"_TAB_"2"_TAB_"3"_TAB_"4"_TAB_"5"_TAB_"Total"
+ . ; BWF 4/26/2013 - Adding proper header
+ . S X="Delay Summary Report from "_$$FMTE^XLFDT(BEG)_" to "_$$FMTE^XLFDT(END)
  . D ADD^EDPCSV(X),BLANK^EDPCSV ;headers
- . S X="Total ED Visits: "_CNT_TAB
- . S X=X_"Average ED Visit Time: "_$S(CNT:$$ETIME^EDPRPT(MIN\CNT),1:0)
+ . S X="All ED Visits"_TAB_"VA Admitted"_TAB_"Not VA Admitted"
  . D ADD^EDPCSV(X),BLANK^EDPCSV
- . S X="Total Visits over Six Hours: "_CNT("6+")_TAB
- . S X=X_"Total Visits over 23 Hours: "_CNT("23+")
+ . S Y=CNT("VA")
+ . S X="Total Visits: "_CNT_TAB_"Total Visits: "_Y
+ . S Y=CNT-CNT("VA"),X=X_TAB_"Total Visits: "_Y
  . D ADD^EDPCSV(X),BLANK^EDPCSV
- . S X="Total Admitted to Observation: "_CNT("OBS")
+ . S X="Total Visits Over Six Hours: "_CNT("6+")_TAB
+ . S X=X_"Total Visits Over Six Hours: "_CNT("VA6")_TAB
+ . S X=X_"Average Visit Time: "_$S(Y:$$ETIME^EDPRPT((MIN-MIN("VA")\Y)),1:0)
  . D ADD^EDPCSV(X),BLANK^EDPCSV
- . S Y=CNT-CNT("VA"),X="Total Visits Not VA Admitted: "_Y_TAB
- . S X=X_"Average Visit Time for Not VA Admitted: "_$S(Y:$$ETIME^EDPRPT((MIN-MIN("VA")\Y)),1:0)
+ . S X="Total Visits Over 23 Hours: "_CNT("23+")_TAB
+ . S Y=CNT("VA"),X=X_"Average Admit Decision Time: "_$S(Y:$$ETIME^EDPRPT(MIN("VADEC")\Y),1:0)
  . D ADD^EDPCSV(X),BLANK^EDPCSV
- . S Y=CNT("VA"),X="Total VA Admits: "_Y_TAB
- . S X=X_"Total VA Admit Delay over Six Hours: "_CNT("VADEL6")
+ . S X="Average Visit Time: "_$S(CNT:$$ETIME^EDPRPT(MIN\CNT),1:0)_TAB
+ . S Y=CNT("VA"),X=X_"Average Delay Time: "_$S(Y:$$ETIME^EDPRPT(MIN("VADEL")\Y),1:0)
  . D ADD^EDPCSV(X),BLANK^EDPCSV
- . S X="Average VA Admit Decision Time: "_$S(Y:$$ETIME^EDPRPT(MIN("VADEC")\Y),1:0)_TAB
- . S X=X_"Average VA Admit Delay Time: "_$S(Y:$$ETIME^EDPRPT(MIN("VADEL")\Y),1:0)
+ . S Y=CNT("DEC"),X="Average Admit Decision Time: "_$S(Y:$$ETIME^EDPRPT(MIN("DEC")\Y),1:0)_TAB
+ . S X=X_"Number of Admit Delays over Six Hours: "_CNT("VADEL6")
  . D ADD^EDPCSV(X),BLANK^EDPCSV
- . S Y=CNT("DEC"),X="Average All Admit Decision Time: "_$S(Y:$$ETIME^EDPRPT(MIN("DEC")\Y),1:0)
+ . S X="Number Admitted to Observation: "_CNT("OBS")
  . D ADD^EDPCSV(X),BLANK^EDPCSV
- . S X=TAB_TAB_"Delay Chart" D ADD^EDPCSV(X),BLANK^EDPCSV
- . S X=TAB_TAB_"Acuity"_TAB_"None"_TAB_"1"_TAB_"2"_TAB_"3"_TAB_"4"_TAB_"5"_TAB_"Total"
+ . D BLANK^EDPCSV
+ . ;***pij 4/26/2013 delete 2 TABs
+ . ;S X=TAB_TAB_"Delay Chart" D ADD^EDPCSV(X),BLANK^EDPCSV
+ . ;BWF 4/26/2013 - Adding Header for rest of report
+ . D BLANK^EDPCSV ;add blank line
+ . S X="Delay Chart from "_$$FMTE^XLFDT(BEG)_" to "_$$FMTE^XLFDT(END) D ADD^EDPCSV(X),BLANK^EDPCSV
+ . ;S X="Delay Chart" D ADD^EDPCSV(X),BLANK^EDPCSV
+ . ;S X=TAB_TAB_"Acuity"_TAB_"None"_TAB_"1"_TAB_"2"_TAB_"3"_TAB_"4"_TAB_"5"_TAB_"Total"
+ . S X="Acuity"_TAB_"None"_TAB_"1"_TAB_"2"_TAB_"3"_TAB_"4"_TAB_"5"_TAB_"Total"
+ . ;***
  . D ADD^EDPCSV(X),BLANK^EDPCSV
  . S DEL=0 F  S DEL=$O(CNT(DEL)) Q:+DEL'=DEL  D
- .. S X=$$ENAME^EDPRPT(DEL) Q:X=""  Q:X?1." "  S X=TAB_TAB_X ;novalue
+ .. ;***pij 4/26/2013 remove the 2 TABs for each row from Delay Chart
+ .. ;S X=$$ENAME^EDPRPT(DEL) Q:X=""  Q:X?1." "  S X=TAB_TAB_X ;novalue
+ .. S X=$$ENAME^EDPRPT(DEL) Q:X=""  Q:X?1." "  ;S X=TAB_TAB_X ;novalue
+ .. ;***
  .. F I="none","one","two","three","four","five" S X=X_TAB_+$G(CNT(DEL,I))
  .. S X=X_TAB_CNT(DEL) D ADD^EDPCSV(X)
 D5 ; or return counts and averages as XML

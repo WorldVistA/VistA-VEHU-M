@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MAIL GROUP
 ZWR
-^XMB(3.8,0)="MAIL GROUP^3.8^470^446"
+^XMB(3.8,0)="MAIL GROUP^3.8^471^447"
 ^XMB(3.8,1,0)="YS PSYCHTEST^PR^^^^0"
 ^XMB(3.8,1,1,0)="^3.81P^^0"
 ^XMB(3.8,1,2,0)="^^1^1^2921113^^"
@@ -3724,6 +3724,11 @@ ZWR
 ^XMB(3.8,469,3)=1
 ^XMB(3.8,470,0)="IBMH EXCEPTIONS^PU^n^^^^.5"
 ^XMB(3.8,470,3)=1
+^XMB(3.8,471,0)="IB UC REMOTE^PU^n^^^^.5"
+^XMB(3.8,471,2,0)="^3.801^2^2^3241206^^^^"
+^XMB(3.8,471,2,1,0)=" eMail group to notify designated users via Outlook email of exceptions "
+^XMB(3.8,471,2,2,0)="encountered when processing Urgent Care push to requesting remote site."
+^XMB(3.8,471,3)=1
 ^XMB(3.8,"AB",.5,120,1)=""
 ^XMB(3.8,"AB",.5,372,1)=""
 ^XMB(3.8,"AB",.5,428,1)=""
@@ -4406,6 +4411,7 @@ ZWR
 ^XMB(3.8,"AC",.5,468)=""
 ^XMB(3.8,"AC",.5,469)=""
 ^XMB(3.8,"AC",.5,470)=""
+^XMB(3.8,"AC",.5,471)=""
 ^XMB(3.8,"AC",1,228)=""
 ^XMB(3.8,"AC",1,343)=""
 ^XMB(3.8,"AC",1,347)=""
@@ -4781,6 +4787,7 @@ ZWR
 ^XMB(3.8,"B","IB MEANS TEST",80)=""
 ^XMB(3.8,"B","IB NEW INSURANCE",114)=""
 ^XMB(3.8,"B","IB RX COPAY CAP ERROR",239)=""
+^XMB(3.8,"B","IB UC REMOTE",471)=""
 ^XMB(3.8,"B","IB UNBILLED AMOUNTS",129)=""
 ^XMB(3.8,"B","IBB PFSS CHARGE ERRORS",326)=""
 ^XMB(3.8,"B","IBB PFSS DATA TRANS ERROR",325)=""
