@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3241122.15315
+^DIC(2,"%MSC")=3250424.072853
 ^DIC(3.05,0)="FAILED ACCESS ATTEMPTS LOG^3.05"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
@@ -956,7 +956,7 @@ ZWR
 ^DIC(3.5,"%D",8,0)="cross-referenced by name, $I, volume set(CPU), and sign-on/system"
 ^DIC(3.5,"%D",9,0)="device.  It is also cross-referenced by hunt group, local synonym,"
 ^DIC(3.5,"%D",10,0)="mnemonic, subtype, and form currently mounted."
-^DIC(3.5,"%MSC")=3231216.222105
+^DIC(3.5,"%MSC")=3250424.073012
 ^DIC(3.51,0)="SPOOL DOCUMENT^3.51"
 ^DIC(3.51,0,"GL")="^XMB(3.51,"
 ^DIC(3.51,0,"GL")="^XMB(3.51,"
@@ -2110,7 +2110,7 @@ ZWR
 ^DIC(25.11,"%D",0)="^1.001^2^2^3150209^^^^"
 ^DIC(25.11,"%D",1,0)="This file contains the Health Benefit Plan names and their short and long "
 ^DIC(25.11,"%D",2,0)="descriptions."
-^DIC(25.11,"%MSC")=3240217.052628
+^DIC(25.11,"%MSC")=3250424.072853
 ^DIC(26.11,0)="PRF LOCAL FLAG^26.11"
 ^DIC(26.11,0,"GL")="^DGPF(26.11,"
 ^DIC(26.11,0,"GL")="^DGPF(26.11,"
@@ -2496,7 +2496,7 @@ ZWR
 ^DIC(38.6,"%D",3,0)="individual checks on or off the user should not alter or add to this"
 ^DIC(38.6,"%D",4,0)="file in any way.  Making any modification to this file will definitely"
 ^DIC(38.6,"%D",5,0)="cause the consistency checker to function improperly."
-^DIC(38.6,"%MSC")=3240722.042611
+^DIC(38.6,"%MSC")=3250424.072853
 ^DIC(39.4,0)="ADT/HL7 TRANSMISSION^39.4"
 ^DIC(39.4,0,"AUDIT")="@"
 ^DIC(39.4,0,"DD")="@"
@@ -2931,7 +2931,7 @@ ZWR
 ^DIC(44,"%D",0)="1^1.001^2^2^3240131^^^^"
 ^DIC(44,"%D",1,0)="Contains locations found in the hospital (ie. Wards, Clinics)"
 ^DIC(44,"%D",2,0)=" *********DO NOT RE-INDEX THIS FILE**********"
-^DIC(44,"%MSC")=3250119.172154
+^DIC(44,"%MSC")=3250424.072623
 ^DIC(44.3,0)="SDAM DATA MAP^44.3"
 ^DIC(44.3,0,"AUDIT")="@"
 ^DIC(44.3,0,"DD")="@"
@@ -5024,7 +5024,7 @@ ZWR
 ^DIC(53.46,"%D",0)="^^2^2^3050112"
 ^DIC(53.46,"%D",1,0)="This file is used to allow sites to define the behavior of inpatient orders "
 ^DIC(53.46,"%D",2,0)="for outpatients on a clinic-by-clinic basis."
-^DIC(53.46,"%MSC")=3220612.134821
+^DIC(53.46,"%MSC")=3250424.072805
 ^DIC(53.47,0)="INFUSION INSTRUCTIONS^53.47"
 ^DIC(53.47,0,"AUDIT")=""
 ^DIC(53.47,0,"DD")=""
@@ -7735,7 +7735,7 @@ ZWR
 ^DIC(70,"%D",101,0)="  RA OUTSIDE LIST     RA OUTSIDE LIST"
 ^DIC(70,"%D",102,0)=" "
 ^DIC(70,"%D",103,0)="Also, the modification of the other sort templates is not recommended."
-^DIC(70,"%MSC")=3230714.234806
+^DIC(70,"%MSC")=3250424.073046
 ^DIC(70.2,0)="NUC MED EXAM DATA^70.2PIA"
 ^DIC(70.2,0,"DD")="@"
 ^DIC(70.2,0,"GL")="^RADPTN("
@@ -9254,6 +9254,7 @@ ZWR
 ^DIC(79.3,0)="HL7 MESSAGE EXCEPTIONS^79.3"
 ^DIC(79.3,0,"GL")="^RA(79.3,"
 ^DIC(79.3,0,"GL")="^RA(79.3,"
+^DIC(79.3,"%MSC")=3250424.072928
 ^DIC(79.7,0)="RAD/NUC MED HL7 APPLICATION EXCEPTION^79.7"
 ^DIC(79.7,0,"AUDIT")="#"
 ^DIC(79.7,0,"DD")="""@"""
@@ -9286,6 +9287,7 @@ ZWR
 ^DIC(79.7,"%D",13,0)="provider classification) to ''Principal Result Interpreter' (OBR-32) data."
 ^DIC(79.7,"%D",14,0)=" "
 ^DIC(79.7,"%D",15,0)="This file is where interface specific business rules will be codified."
+^DIC(79.7,"%MSC")=3250424.072928
 ^DIC(80,0)="ICD DIAGNOSIS^80IO"
 ^DIC(80,0,"AUDIT")=""
 ^DIC(80,0,"DD")="@"
@@ -13643,6 +13645,28 @@ ZWR
 ^DIC(101.15,0)="OE/RR COM OBJECTS^101.15"
 ^DIC(101.15,0,"GL")="^ORD(101.15,"
 ^DIC(101.15,0,"GL")="^ORD(101.15,"
+^DIC(101.22,0)="OTP MEDICATION DISPENSE^101.22"
+^DIC(101.22,0,"AUDIT")="@"
+^DIC(101.22,0,"DD")="@"
+^DIC(101.22,0,"DEL")="@"
+^DIC(101.22,0,"GL")="^ORD(101.22,"
+^DIC(101.22,0,"LAYGO")="@"
+^DIC(101.22,0,"RD")="@"
+^DIC(101.22,0,"WR")="@"
+^DIC(101.22,0,"AUDIT")="@"
+^DIC(101.22,0,"DD")="@"
+^DIC(101.22,0,"DEL")="@"
+^DIC(101.22,0,"GL")="^ORD(101.22,"
+^DIC(101.22,0,"LAYGO")="@"
+^DIC(101.22,0,"RD")="@"
+^DIC(101.22,0,"WR")="@"
+^DIC(101.22,"%",0)="^1.005^^0"
+^DIC(101.22,"%D",0)="^^4^4^3240625^"
+^DIC(101.22,"%D",1,0)="This is the Opioid Treatment Program Medication Dispense record. This "
+^DIC(101.22,"%D",2,0)="file contains the patient name, dispense date and time, and other "
+^DIC(101.22,"%D",3,0)="information surrounding the dispense of medication. This data comes from "
+^DIC(101.22,"%D",4,0)="third-party vendors like MyAvatar and Methasoft, and is filed here."
+^DIC(101.22,"%MSC")=3250424.072804
 ^DIC(101.24,0)="OE/RR REPORT^101.24"
 ^DIC(101.24,0,"AUDIT")="@"
 ^DIC(101.24,0,"DD")="@"
@@ -29933,7 +29957,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3250314.06381
+^DIC(409.93,"%MSC")=3250424.072611
 ^DIC(409.94,0)="SDEC SUBSPECIALTY^409.94"
 ^DIC(409.94,0,"AUDIT")="@"
 ^DIC(409.94,0,"DD")="@"
@@ -60222,6 +60246,7 @@ ZWR
 ^DIC("B","OTH ELIGIBILITY PATIENT",33)=""
 ^DIC("B","OTHER FEDERAL AGENCY",35)=""
 ^DIC("B","OTHER STAGING FOR ONCOLOGY",164.3)=""
+^DIC("B","OTP MEDICATION DISPENSE",101.22)=""
 ^DIC("B","OUTPATIENT AMIS DATA",59.1)=""
 ^DIC("B","OUTPATIENT CLASSIFICATION",409.42)=""
 ^DIC("B","OUTPATIENT CLASSIFICATION STOP",409.45)=""

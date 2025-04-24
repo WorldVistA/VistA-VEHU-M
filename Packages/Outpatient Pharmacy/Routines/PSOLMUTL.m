@@ -1,5 +1,5 @@
 PSOLMUTL ;BIR/SAB - listman utilities ;Dec 08, 2021@10:34
- ;;7.0;OUTPATIENT PHARMACY;**19,46,84,99,131,132,148,268,225,305,386,390,622,441,746**;DEC 1997;Build 106
+ ;;7.0;OUTPATIENT PHARMACY;**19,46,84,99,131,132,148,268,225,305,386,390,622,441,746,765**;DEC 1997;Build 2
  ;External reference FULL^VALM1 supported by dbia 10116
  ;External reference $$SETSTR^VALM1 supported by dbia 10116
  ;External reference EN2^GMRAPEMO supported by dbia 190
@@ -56,7 +56,8 @@ EDTRNEW ;allows edit selection by number instead of action - renew orders
  N VALMCNT S Y=$P(XQORNOD(0),"=",2) D EDTSEL^PSOORNE4
  Q
 EDTPEN ;allows edit selection by number instead of action - pending orders
- N VALMCNT S Y=$P(XQORNOD(0),"=",2),SEDT=1 G EDTSEL^PSOORNEW
+ ;PSO*7.0*765: initialize ORCHK
+ N VALMCNT S ORCHK=0,Y=$P(XQORNOD(0),"=",2),SEDT=1 G EDTSEL^PSOORNEW
  Q
 HLDHDR ;keeps patient's header info
  S IOTM=VALM("TM"),IOBM=IOSL W IOSC W @IOSTBM W IORC

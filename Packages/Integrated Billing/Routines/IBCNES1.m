@@ -1,5 +1,5 @@
 IBCNES1 ;ALB/ESG/JM - eIV elig/benefit utilities ; 01/13/2016
- ;;2.0;INTEGRATED BILLING;**416,438,497,549,702,732**;21-MAR-94;Build 13
+ ;;2.0;INTEGRATED BILLING;**416,438,497,549,702,732,804**;21-MAR-94;Build 6
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -12,14 +12,19 @@ EB(IBVF,IBVIENS,IBVV,IBVSUB) ; Main Eligibility/Benefit Information
  ;  IBVSUB = display scratch global subscript
  ;
  N EB,EBERR,DSP,LN,COL1,COL2,ZF,ZIEN
- D GETS^DIQ(IBVF,IBVIENS,".02:.13;8*;11*","IEN","EB","EBERR")
+ ; IB*804/DJW Corrected GETS below as service types are in node 14 in file 365.02 
+ ;            but node 11 for file 2.322.  Original code only looked at node 11.
+ I IBVF=365.02 D GETS^DIQ(IBVF,IBVIENS,".02:.13;8*;14*","IEN","EB","EBERR")
+ I IBVF'=365.02 D GETS^DIQ(IBVF,IBVIENS,".02:.13;8*;11*","IEN","EB","EBERR")
  S DSP=$NA(^TMP(IBVSUB,$J,"DISP"))       ; scratch global display array
  S LN=+$O(@DSP@(""),-1)                  ; last line# used in scratch global
  ;
  S COL1=2,COL2=40
  ;
- S LN=LN+1
- D SET(LN,1,"Eligibility/Benefit Information",,IBVV)
+ ; IB*804/DJW remove "Eligibility/Benefit Info.." and move up "INSURANCE TYPE:"
+ ;S LN=LN+1
+ ;D SET(LN,1,"Eligibility/Benefit Information",,IBVV)
+ I +$G(EB(IBVF,IBVIENS,.05,"I"))'=0 S LN=LN+1 D SET(LN,1,"Insurance Type",$P($G(^IBE(365.014,+$G(EB(IBVF,IBVIENS,.05,"I")),0)),U,2))
  ;
  S LN=LN+1
  D SET(LN,COL1,"Elig/Ben Info",$P($G(^IBE(365.011,+$G(EB(IBVF,IBVIENS,.02,"I")),0)),U,2))
@@ -47,8 +52,9 @@ EB(IBVF,IBVIENS,IBVV,IBVSUB) ; Main Eligibility/Benefit Information
  S LN=LN+1
  D SET(LN,COL1,"Time Period",$P($G(^IBE(365.015,+$G(EB(IBVF,IBVIENS,.07,"I")),0)),U,2))
  ;
- S LN=LN+1
- D SET(LN,COL1,"Insurance Type",$P($G(^IBE(365.014,+$G(EB(IBVF,IBVIENS,.05,"I")),0)),U,2))
+ ; IB*804/DJW moved Insurance Type higher up
+ ;S LN=LN+1
+ ;D SET(LN,COL1,"Insurance Type",$P($G(^IBE(365.014,+$G(EB(IBVF,IBVIENS,.05,"I")),0)),U,2))
  ;
  S LN=LN+1
  D SET(LN,COL1,"Plan Coverage Desc",$G(EB(IBVF,IBVIENS,.06,"E")))

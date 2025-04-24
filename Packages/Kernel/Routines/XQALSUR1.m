@@ -1,5 +1,5 @@
-XQALSUR1 ;ISC-SF.SEA/JLI - SURROGATES FOR ALERTS ; Jul 13, 2021@11:01
- ;;8.0;KERNEL;**366,443,602,730,754**;Jul 10, 1995;Build 1
+XQALSUR1 ;ISC-SF.SEA/JLI - SURROGATES FOR ALERTS ; Apr 04, 2024@11:01
+ ;;8.0;KERNEL;**366,443,602,730,754,801**;Jul 10, 1995;Build 5
  ;Per VHA Directive 2004-038, this routine should not be modified
  Q
 RETURN(XQAUSER) ; P366 - return alerts to the user
@@ -8,20 +8,25 @@ RETURN(XQAUSER) ; P366 - return alerts to the user
  F XQAI=0:0 S XQAI=$O(^XTV(8992,XQAUSER,2,"AC",1,XQAI)) Q:XQAI'>0  D
  . I '$D(^XTV(8992,XQAUSER,2,XQAI,0)) K ^XTV(8992,XQAUSER,2,"AC",1,XQAI) Q  ;p754 somebody removed surr by gbl kill, cleanup
  . S X0=$G(^XTV(8992,XQAUSER,2,XQAI,0)) Q:$P(X0,U,4)'=1  ; P754
- . S XQASTRT=$P(X0,U) S XQAEND=$P(X0,U,3)
+ . S XQASTRT=$P(X0,U),XQAEND=$P(X0,U,3),XQASURO1=$P(X0,U,2)
  . ; and clear the flag indicating we need to restore these alerts
  . N XQAFDA S XQAFDA(8992.02,XQAI_","_XQAUSER_",",.04)="@" D FILE^DIE("","XQAFDA")
  . ; restore alerts to intended user, remove from surrogate if completed (i.e., no other surrogates and not intended recipient)
- . D PUSHBACK(XQAUSER,XQASTRT,XQAEND)
+ . F XQAUSER=XQAUSER,XQASURO1 D PUSHBACK(XQAUSER,XQASTRT,XQAEND)
  . Q
  Q
  ;
 PUSHBACK(XQAUSER,XQASTRT,XQAEND) ; P366 - identify alerts in alert tracking file for return and return them
  N XQAINIT,XQAI,X0,X30,XNOSURO,XQADT,XQAJ,XQAK,XQAL,XQAOTH,XQASUROP
  S XQAINIT=$$FIND1^DIC(8992.2,,"X","INITIAL RECIPIENT")
+ ; For each alert (XQAI) received by XQAUSER between XQASTRT and XQAEND 
  F XQADT=XQASTRT-.0000001:0 S XQADT=$O(^XTV(8992.1,"AUD",XQAUSER,XQADT)) Q:XQADT'>0  Q:XQADT>XQAEND  F XQAI=0:0 S XQAI=$O(^XTV(8992.1,"AUD",XQAUSER,XQADT,XQAI)) Q:XQAI'>0  D
- . S XQAJ=$O(^XTV(8992.1,XQAI,20,"B",XQAUSER,0)) Q:XQAJ'>0
+ . ;S XQAJ=$O(^XTV(8992.1,XQAI,20,"B",XQAUSER,0)) Q:XQAJ'>0 ; XQAUSER as recipient (XQAJ)
+ . ;p801 Find actual INITIAL RECIPIENT for this alert
+ . S XQAJ=$$INITRCP(XQAI) Q:XQAJ'>0
+ . S XQAUSER=$P(XQAJ,U,2),XQAJ=$P(XQAJ,U)
  . N XSURO,XNOSURO,XQAID S XNOSURO=0,XQAID=$P(^XTV(8992.1,XQAI,0),U)
+ . ; For each recipient type (XQAK) of XQAUSER (XQAJ), determine if received by initial-recipient (XNOSURO=0) to be returned, or not (XNOSURO=1)
  . F XQAK=0:0 S XQAK=$O(^XTV(8992.1,XQAI,20,XQAJ,1,"B",XQAK)) Q:XQAK'>0  F XQAL=0:0 S XQAL=$O(^XTV(8992.1,XQAI,20,XQAJ,1,"B",XQAK,XQAL)) Q:XQAL'>0  D
  . . S X0=^XTV(8992.1,XQAI,20,XQAJ,1,XQAL,0) S:$P(X0,U,2)>0 XSURO($P(X0,U,2))="" S:$P(X0,U,2)'>0 XNOSURO=1 ; sent to XSURO as surrogate
  . . Q
@@ -47,6 +52,23 @@ PUSHBACK(XQAUSER,XQASTRT,XQAEND) ; P366 - identify alerts in alert tracking file
  . . Q
  . Q
  Q
+ ;
+INITRCP(ALERT) ;
+ ; Find INITIAL Recipient who had a surrogate at the time
+ ; B REGULAR RECIPIENT TYPE  (8992.111,.01)
+ N INITREC,I
+ Q:$G(ALERT)'>0 "0^undefined parameter"
+ S INITREC=1,RECPT=0,NPFIEN=0 ; INITIAL-RECIPIENT type
+ S I=0 F  S I=$O(^XTV(8992.1,ALERT,20,I)) Q:I'>0  D  Q:RECPT>0
+ . S J=0 F  S J=$O(^XTV(8992.1,ALERT,20,I,1,"B",INITREC,J)) Q:J'>0  D  Q:RECPT>0
+ . . S:'$D(^XTV(8992.1,ALERT,20,I,3)) RECPT=I
+ Q:RECPT'>0 "0^No initial recipient found"
+ ; Find NPF IEN
+ S I=0 F  S I=$O(^XTV(8992.1,ALERT,20,"B",I)) Q:I'>0  D  Q:NPFIEN>0
+ . S J=0 F  S J=$O(^XTV(8992.1,ALERT,20,"B",I,J)) Q:J'>0  D  Q:NPFIEN>0
+ . . S:J=RECPT NPFIEN=I
+ Q:NPFIEN'>0 "0^IEN not found in NPF"
+ Q RECPT_"^"_NPFIEN
  ;
 SUROLIST(XQAUSER,XQALIST) ; returns for XQAUSER a list of current and/or future surrogates in XQALIST
  ;  usage  D SUROLIST^XQALSUR1(DUZ,.XQALIST)
@@ -143,7 +165,6 @@ SURRO11 ;
  ;
  ; P366 - added OPTIONAL second and third arguments to permit deletion of a specific pending surrogate and start date
 REMVSURO(XQAUSER,XQALSURO,XQALSTRT) ; SR - ends the currently active surrogate relationship
- I $G(XQAUSER)'>0 Q
  S XQALSURO=$G(XQALSURO),XQALSTRT=$G(XQALSTRT)
  N XQALFM,XQALXREF,XQALSTR1,XQALSUR1,XQALNOW,XQALEND,XQA0
  D CHEKSUBS^XQALSUR2(XQAUSER)

@@ -1,5 +1,5 @@
-SDES2GETREGS ;ALB/TJB,JAS - Get registration info JSON format ; Aug 22, 2024
- ;;5.3;SCHEDULING;**873,889**;AUG 13, 1993;Build 9
+SDES2GETREGS ;ALB/TJB,JAS - Get registration info JSON format ; Feb 10, 2025
+ ;;5.3;SCHEDULING;**873,889,901**;AUG 13, 1993;Build 7
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
@@ -136,6 +136,7 @@ GETDEMOGR(SDINFO,SDCONTEXT,SDPARAM) ;
  S SDINFO("Patient","TemporaryAddress","Country")=SDDEMO("PTCOUNTRY")
  S SDINFO("Patient","TemporaryAddress","CountryName")=$G(SDPATARR(2,SDFN,.1223,"E"))
  S SDINFO("Patient","TemporaryAddress","County")=SDDEMO("PTCOUNTY")
+ S SDINFO("Patient","TemporaryAddressActive")=$S($G(SDDEMO("PTACTIVE"))="Y":1,1:0)
  S SDINFO("Patient","TemporaryAddressStart")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDFN,.1217,"I")) ;vse-2500  IA 7019
  S SDINFO("Patient","TemporaryAddressEnd")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDFN,.1218,"I")) ;vse-2500  IA 7019
  S SDINFO("Patient","TemporaryPhone")=$G(SDPATARR(2,SDFN,.1219,"E"))
@@ -198,7 +199,7 @@ SIM(DFN)  ;get similar patient data
  Q SIM
  ;
 ASSIGNADDR(RET,DFN) ;assign values to be used to build output
- N SDD,SDI,SDM
+ N SDD,SDI,SDM,Z0
  N PCE,PCOUNTY,PTCOUNTY,PSTATE
  Q:'+$G(DFN)
  Q:'$D(^DPT(DFN,0))

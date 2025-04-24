@@ -1,5 +1,5 @@
-DGREGTED ;ALB/BAJ,BDB,JAM - Temporary & Confidential Address Edits API ;23 May 2017  12:48 PM
- ;;5.3;Registration;**688,851,941,1014,1040**;Aug 13, 1993;Build 15
+DGREGTED ;ALB/BAJ,BDB,JAM,ARF - Temporary & Confidential Address Edits API ;23 May 2017  12:48 PM
+ ;;5.3;Registration;**688,851,941,1014,1040,1127**;Aug 13, 1993;Build 11
  ;
 EN(DFN,TYPE,RET) ;Entry point
  ; This routine controls Edits to Temporary & Confidential addresses
@@ -60,8 +60,11 @@ CHK ; DG*5.3*1014; Prompt user and allow them to correct the address or continue
  I X="E"!(X="e") G RETRY  ; re-enter address
  I X'="" G CHK  ; at this point, any response but <RET> will not be accepted
  ; DG*5.3*1014; jam; Add call to Address Validation service
- N DGADVRET
+ N DGADVRET,DGOVERKEY ;DG*5.3*1127 - Added DGOVERKEY variable
  S DGADVRET=$$EN^DGADDVAL(.DGINPUT,"C")
+ ; DG*5.3*1127 - Get the override key. DGINPUT("overrideKey") will contain the value of the
+ ;               override key set in DGADDLST which is called when validating the address
+ S DGOVERKEY=$G(DGINPUT("overrideKey"))
  ; DG*5.3*1040; if return is -1 timeout occurred
  I DGADVRET=-1 S DGTMOT=1 Q
  ; if return is 0 - address could not be validated
@@ -138,6 +141,7 @@ SAVE(DGINPUT,DFN,FSTR,CNTRY) ;Save changes
  S DGINPUT(FCNTRY)=$O(^HL(779.004,"B",CNTRY,""))
  S FSTR=FSTR_","_FCNTRY
  I (TYPE="TEMP")!(TYPE="CONF") S FSTR=FSTR_","_FCITY_","_FSTATE_","_FCOUNTY ;DG*5.3*851
+ I (TYPE="CONF") S DGINPUT(.141201)=DGOVERKEY,FSTR=FSTR_","_.141201 ;DG*5.3*1127 - Store the override key returned from the address validation
  F L=1:1:$L(FSTR,",") S T=$P(FSTR,",",L) S DATA(T)=$P($G(DGINPUT(T)),U)
  ;JAM; Set the CASS field for Temp and Confidential;  DG*5.3*941
  I TYPE="TEMP" S DATA(.12115)="NC"

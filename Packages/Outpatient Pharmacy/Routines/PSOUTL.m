@@ -1,5 +1,5 @@
 PSOUTL ;BHAM ISC/SAB - PSO utility routine ;Jun 22, 2018@08:18
- ;;7.0;OUTPATIENT PHARMACY;**1,21,126,174,218,259,324,390,313,411,466,477,626,639,692**;DEC 1997;Build 4
+ ;;7.0;OUTPATIENT PHARMACY;**1,21,126,174,218,259,324,390,313,411,466,477,626,639,692,777**;DEC 1997;Build 2
  ;External reference to $$SERV^IBARX1 supported by DBIA 2245
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^PSSDIUTL supported by DBIA 5737
@@ -62,6 +62,7 @@ KILL N DFN
  .I $P($G(^PS(52.5,SFN,0)),"^",7)'="" D
  ..;Kill CMOP xrefs
  ..N PSOC7 S PSOC7=$P($G(^PS(52.5,SFN,0)),"^",7)
+ ..I PSOC7="Q" S SDT=+$P(^PS(52.5,SFN,0),"^",2) K ^PS(52.5,"AQ",SDT,+$P(^PS(52.5,SFN,0),"^",3),SFN)
  ..I PSOC7="Q"!(PSOC7="P") K ^PS(52.5,"AG",+$P(^PS(52.5,SFN,0),"^",3),SFN) D KCMPX^PSOCMOP(SFN,PSOC7)
  ..I PSOC7="X"!(PSOC7="P")!(PSOC7="L") K ^PS(52.5,$S(PSOC7="X":"AX",PSOC7="P":"AP",1:"AL"),$P(^PS(52.5,SFN,0),"^",2),$P(^(0),"^",3),SFN) D KCMPX^PSOCMOP(SFN,PSOC7)
  ..K ^PS(52.5,"APR",+$P(^PS(52.5,SFN,0),"^",8),+$P(^(0),"^",9),+$P(^(0),"^",6),+$P(^(0),"^",11),SFN),^PS(52.5,"ADL",$E(+$P(^PS(52.5,SFN,0),"^",8),1,7),SFN)

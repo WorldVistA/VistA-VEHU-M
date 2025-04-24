@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: SECURITY KEY
 ZWR
-^DIC(19.1,0)="SECURITY KEY^19.1^787^697"
+^DIC(19.1,0)="SECURITY KEY^19.1^788^698"
 ^DIC(19.1,0,"DD")="#"
 ^DIC(19.1,0,"DEL")="#"
 ^DIC(19.1,0,"GL")="^DIC(19.1,"
@@ -2993,6 +2993,10 @@ ZWR
 ^DIC(19.1,787,1,1,0)="Used to Lock the EOC menu Edit option. Also, can be used to test if a "
 ^DIC(19.1,787,1,2,0)="user holds this key before allowing the Mumps Edit code to continue to "
 ^DIC(19.1,787,1,3,0)="run.  Specific users should be assigned this key. "
+^DIC(19.1,788,0)="RA DELETEXAM^^^n^"
+^DIC(19.1,788,1,0)="^19.11^2^2^3241105^^"
+^DIC(19.1,788,1,1,0)="Radiology/Nuclear Medicine users holding the RA DELETEXAM security key can"
+^DIC(19.1,788,1,2,0)="unlock access to the [RA DELETEXAM] 'Exam Deletion' option. "
 ^DIC(19.1,"%",0)="^1.005^2^2"
 ^DIC(19.1,"%",1,0)="XU"
 ^DIC(19.1,"%",2,0)="XQ"
@@ -3503,6 +3507,7 @@ ZWR
 ^DIC(19.1,"B","QAP MANAGER",362)=""
 ^DIC(19.1,"B","RA ALLOC",370)=""
 ^DIC(19.1,"B","RA DELETERPT",83)=""
+^DIC(19.1,"B","RA DELETEXAM",788)=""
 ^DIC(19.1,"B","RA DELEXAM",81)=""
 ^DIC(19.1,"B","RA MGR",82)=""
 ^DIC(19.1,"B","RA ONLINE",163)=""

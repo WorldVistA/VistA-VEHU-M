@@ -1,5 +1,5 @@
-DGUAMWS ;ALB/MCF,JAM - UAM Address Validation Web Service ;30 June 2020 10:00 AM
- ;;5.3;Registration;**1014,1065,1084**;Aug 13, 1993;Build 4
+DGUAMWS ;ALB/MCF,JAM,ARF - UAM Address Validation Web Service ;30 June 2020 10:00 AM
+ ;;5.3;Registration;**1014,1065,1084,1127**;Aug 13, 1993;Build 11
     ;
     ; Supported ICR's:
     ; #5421 - XOBWLIB - Public APIs for HWSC
@@ -174,6 +174,7 @@ SETRRESULTS() ; checks if Confidence Score is greater than 80 and sets values.
     I DGFORGN S DGTEMP(DGPROV)=$G(DGADDR("stateProvince","name"))
     S DGTEMP(DGZIP)=$G(DGADDR("zipCode5"))_$G(DGADDR("zipCode4"))
     S DGTEMP(DGPOSTCODE)=$G(DGADDR("internationalPostalCode"))
+    S DGTEMP("validationKey")=$G(DGADDR("validationKey"))  ;DG*5.3*1127 - added the validationKey returned from Universal Address Module (UAM)
     ; traverse through DGTEMP array and convert all values to UPPERCASE.
     S DGVAL="DGTEMP" F  S DGVAL=$QUERY(@DGVAL) Q:DGVAL=""  S @DGVAL=$$UPPER^DGUTL(@DGVAL)
     Q 1

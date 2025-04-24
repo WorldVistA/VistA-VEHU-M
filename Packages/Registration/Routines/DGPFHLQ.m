@@ -1,5 +1,5 @@
 DGPFHLQ ;ALB/RPM - PRF HL7 QRY/ORF PROCESSING ; 1/23/03
- ;;5.3;Registration;**425,650,951**;Aug 13, 1993;Build 135
+ ;;5.3;Registration;**425,650,951,1135**;Aug 13, 1993;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 BLDQRY(DGDFN,DGICN,DGROOT,DGHL) ;Build QRY~R02 Message/Segments
@@ -185,7 +185,7 @@ BLDALLOB(DGROOT,DGAIENS,DGHL) ;build all OBRs and OBXs for a patient
  ..; build DBRS OBX segments
  ..; ORF message never updates existing assignment records, so send all DBRS data except for deleted entries
  ..; regardless of the action code in 26.14.
- ..S Z="" F  S Z=$O(LASTH("DBRS",Z)) Q:Z=""  D  Q:'DGOBXOK
+ ..S Z="" F  S Z=$O(LASTH("DBRS",Z)) Q:Z=""  D
  ...S DGOBXOK=0
  ...S DBRSSTR=$G(LASTH("DBRS",Z))
  ...; don't send deleted DBRS entries

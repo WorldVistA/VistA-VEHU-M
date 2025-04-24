@@ -1,5 +1,5 @@
-DGREGRED ;ALB/JAM - Residential Address Edit API ;1/6/21  10:30
- ;;5.3;Registration;**941,1010,1014,1040**;Aug 13, 1993;Build 15
+DGREGRED ;ALB/JAM,ARF - Residential Address Edit API ;1/6/21  10:30
+ ;;5.3;Registration;**941,1010,1014,1040,1127**;Aug 13, 1993;Build 11
  ;;
  ;
 EN(DFN,FLG) ;Entry point
@@ -50,8 +50,11 @@ CHK ; DG*5.3*1014; Prompt user and allow them to correct the address or continue
  I X="E"!(X="e") G RETRY  ; re-enter address
  I X'="" G CHK  ; at this point, any response but <RET> will not be accepted
  ; DG*5.3*1014; jam; Add call to Address Validation service
- N DGADVRET
+ N DGADVRET,DGOVERKEY ;DG*5.3*1127 - Added DGOVERKEY variable
  S DGADVRET=$$EN^DGADDVAL(.DGINPUT,"R")
+ ; DG*5.3*1127 - Get the override key. DGINPUT("overrideKey") will contain the value of the 
+ ;               override key set in DGADDLST which is called when validating the address
+ S DGOVERKEY=$G(DGINPUT("overrideKey"))
  ; DG*5.3*1040; if return is -1 timeout occurred
  I DGADVRET=-1 S DGTMOT=1 Q
  ; if return is 0 - address was not validated
@@ -196,6 +199,7 @@ SAVE(DGINPUT,DFN,FSTR,FORGN) ;Save changes
  ; need to get the country code into the DGINPUT array
  ; if it's a domestic address, we have to add in CITY,STATE & COUNTY
  S FSTR=FSTR_$S('FORGN:",.1154,.1155,.1157,.11573",1:",.11573")
+ S FSTR=FSTR_",.11591",DGINPUT(.11591)=DGOVERKEY  ;DG*5.3*1127 - Store the override Key returned from address validation
  F L=1:1:$L(FSTR,",") S DGN=$P(FSTR,",",L) D
  . ; Phone numbers saved separately - skip over here
  . I (DGN=.131)!(DGN=.132) Q

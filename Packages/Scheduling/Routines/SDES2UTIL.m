@@ -1,5 +1,5 @@
-SDES2UTIL ;ALB/MGD,ANU,TJB,BWF,MGD,MCB - SDES2 UTILITIES ;NOV 19, 2024
- ;;5.3;Scheduling;**853,857,864,877,887,897**;Aug 13, 1993;Build 2
+SDES2UTIL ;ALB/MGD,ANU,TJB,BWF,MGD,MCB,JHV,MCB - SDES2 UTILITIES ;Feb. 24, 2025
+ ;;5.3;Scheduling;**853,857,864,877,887,897,910**;Aug 13, 1993;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to INSTITUTION in #2251
@@ -71,6 +71,7 @@ DSTSTART(YR,DSTSUM) ;Daylight Savings or Summer start date
  I DOW D
  .I DSTSUM="DST" S DSTDT=DSTDT+(SUNDAY*7)-DOW
  .E  S DSTDT=$$SUMMER(DSTDT,DOW,SUNDAY)
+ I (DSTSUM="DST")&(DOW=0) S DSTDT=DSTDT+(7)-DOW
  Q DSTDT
 DSTEND(YR,DSTSUM) ;Daylight Savings END date
  ; YR - 2 digit year
@@ -393,7 +394,7 @@ GETSUB(TXT)  ;
  ; Input - Number or Text
  N LAST
  S LAST=""
- I +TXT,+TXT=TXT S LAST=TXT-1 Q LAST ;- handle numeric
+ I TXT?1.N S LAST=TXT-1 Q LAST ;- handle numeric
  S LAST=$E(TXT,$L(TXT))
  S LAST=$C($A(LAST)-1)
  S LAST=$E(TXT,1,$L(TXT)-1)_LAST_"~"
