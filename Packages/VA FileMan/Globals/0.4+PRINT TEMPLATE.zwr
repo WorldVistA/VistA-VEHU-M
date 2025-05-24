@@ -6309,11 +6309,12 @@ ZWR
 ^DIPT(1241,"F",2)="20~"
 ^DIPT(1241,"H")="@"
 ^DIPT(1241,"SUB")=1
-^DIPT(1242,0)="ONCOY54^3240827.1047^^165.5^^@^3240827"
+^DIPT(1242,0)="ONCOY54^3241120.1^^165.5^^@^3250203"
+^DIPT(1242,"DXS")=3
 ^DIPT(1242,"DXS",1,9.2)="S DIP(2)=$C(59)_$P($G(^DD(165.5,58,0)),U,3),DIP(1)=$S($D(^ONCO(165.5,D0,3)):^(3),1:"""") S X=$P($P(DIP(2),$C(59)_$P(DIP(1),U,26)_"":"",2),$C(59))"
 ^DIPT(1242,"DXS",2,9.2)="S DIP(2)=$C(59)_$P($G(^DD(165.5,51.3,0)),U,3),DIP(1)=$S($D(^ONCO(165.5,D0,3)):^(3),1:"""") S X=$P($P(DIP(2),$C(59)_$P(DIP(1),U,7)_"":"",2),$C(59))"
 ^DIPT(1242,"F",1)="""* FIRST COURSE OF TREATMENT *"";S1~""Neoadjuvant Therapy...........:"";C3;S1~245.1;C36;L40~""Neoadjuvant Therapy-Clin Resp.:"";C3~245.2;C36;L40~"
-^DIPT(1242,"F",2)="""Neoadjuvant Therapy-TX Effect.:"";C3~245.3;C36;L40~""First Course of Treatment Date:"";C3;S1~49;C35~""Date of No Treatment..........:"";C3~124;C35~"
+^DIPT(1242,"F",2)="""Neoadjuvant Therapy-TX Effect.:"";C3~245.3;C36;L40~""Date 1st CRS RX COC...........:"";C3;S1~49;C35~""Date of No Treatment..........:"";C3~124;C35~"
 ^DIPT(1242,"F",3)="""Date First Surgical Procedure.:"";C3;S1~170;C35~""RX Summ--Surg Primsite 03-2022:"";C3~50;C35~58.6;C46;L34~""RX Hosp--Surg Primsite 03-2022:"";C3~50.3;C35~"
 ^DIPT(1242,"F",4)="58.7;C46;L34~""RX Summ--Surg Prim Site 2023..:"";C3~50;C35~58.9;C46;L34~""RX Hosp--Surg Prim Site 2023..:"";C3~50.3;C35~58.8;C46;L34~"
 ^DIPT(1242,"F",5)="""Surgical Margins..............:"";C3~59;C35~""Scope of LN Surgery...........:"";C3~138.2;C35~138.4;C46;L34~""Scope of LN Surgery @Fac......:"";C3~"

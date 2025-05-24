@@ -1,16 +1,25 @@
-XUCERT1 ;ISD/HGW Kernel PKI Certificate Utilities (cont) ;09/17/2019  15:25
- ;;8.0;KERNEL;**659,701**;Jul 10, 1995;Build 11
+XUCERT1 ; ISD/HGW - Kernel PKI Certificate Utilities (cont) ; Nov 19, 2024@18:29:06
+ ;;8.0;KERNEL;**659,701,817**;Jul 10, 1995;Build 21
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
-VAL1(DOC,SIG) ;Function. Validate Document (Cache 2015.2 or greater)
+VAL1(DOC,SIG,ERR,XUMSAML) ;Function. Validate Document (Cache 2015.2 or greater)
  ;ZEXCEPT: Document,ValidateDocument ;Object Script
- N XUDOC,XUSTATUS
+ N XUDOC,XUSTATUS,XUCAFILE
  S XUDOC=DOC.Document ;Create the OREF
  I $G(XUDOC)="" Q "-1^Failed to import XML document"
  D XUDOC.AddIDs() ; p701
- S XUSTATUS=SIG.ValidateDocument(XUDOC)
- I $G(XUSTATUS)["Failed" Q "-1^Failed data integrity or signature validation check"
+ ; ensure the certificate authorities file is available
+ S XUCAFILE=$$CAFILE^XUPKILOG ; p817
+ ; if the certificate authorities file cannot be read then use legacy signature validation
+ I $G(XUCAFILE)="" Q $$VAL2(DOC,SIG,.ERR) ;p817
+ S XUSTATUS=SIG.ValidateDocument(XUDOC,,XUCAFILE) ; p817
+ ; if we fail digital signature validation, set XUMSAML (XU modified SAML flag)
+ ; then execute the legacy signature validation so that logins can continue to work
+ I $System.Status.IsError(XUSTATUS) D  Q $$VAL2(DOC,SIG,.ERR) ;p817
+ . S XUMSAML=1
+ . S XUMSAML("ERROR_RSA")=$System.Encryption.RSAGetLastError()
+ . S XUMSAML("ERROR_API")=$System.Status.GetErrorText(XUSTATUS)
  Q 1
  ;
 VAL2(DOC,SIG,ERR) ;Function. Validate Document (Less than Cache 2015.2)

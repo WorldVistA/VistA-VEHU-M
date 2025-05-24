@@ -1,5 +1,5 @@
-SDES2EDITTEMPADD ;ALB/JAS - SDES2 EDIT TEMP ADDRESS ;FEB 12,2025
- ;;5.3;Scheduling;**901**;Aug 13, 1993;Build 7
+SDES2EDITTEMPADD ;ALB/JAS,JAS - SDES2 EDIT TEMP ADDRESS ;MAR 25,2025
+ ;;5.3;Scheduling;**901,904**;Aug 13, 1993;Build 1
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;---------------------------------------------------------------
@@ -19,12 +19,12 @@ SDES2EDITTEMPADD ;ALB/JAS - SDES2 EDIT TEMP ADDRESS ;FEB 12,2025
  ;S TEMPADDRESS("ACTIVE FLAG")=""           REQ
  ;S TEMPADDRESS("DELETE FLAG")=""           OPT (Defaults to False)
  ;S TEMPADDRESS("STREET LINE ONE")=""       OPT (Required if Active Flag is True)
- ;S TEMPADDRESS("STREET LINE TWO")=""       OPT 
+ ;S TEMPADDRESS("STREET LINE TWO")=""       OPT
  ;S TEMPADDRESS("STREET LINE THREE")=""     OPT
  ;S TEMPADDRESS("ZIP CODE")=""              OPT (Required if Active Flag is True)
  ;S TEMPADDRESS("CITY")=""                  OPT (Required if Active Flag is True)
  ;S TEMPADDRESS("STATE")=""                 OPT (Required if Active Flag is True)
- ;S TEMPADDRESS("COUNTY")=""                OPT (Required if Active Flag is True)
+ ;S TEMPADDRESS("COUNTY")=""                OPT
  ;S TEMPADDRESS("COUNTRY")=""               OPT (Required if Active Flag is True)
  ;S TEMPADDRESS("PHONE")=""                 OPT
  ;S TEMPADDRESS("START DATE")=""            OPT (Required if Active Flag is True)
@@ -116,11 +116,11 @@ CRTTEMPADD(ERRORS,TEMPADDRESS,TEMPMSG) ;
  S FDA(2,IENS,.1214)=$G(TEMPADDRESS("CITY"))
  S FDA(2,IENS,.1215)=$G(TEMPADDRESS("STATE IEN"))
  S FDA(2,IENS,.1216)=$E($G(TEMPADDRESS("ZIP CODE")),1,5)
- S FDA(2,IENS,.12111)=$G(TEMPADDRESS("COUNTY IEN"))
+ I $G(TEMPADDRESS("COUNTY IEN"))'="" S FDA(2,IENS,.12111)=TEMPADDRESS("COUNTY IEN")
  S FDA(2,IENS,.12112)=$G(TEMPADDRESS("ZIP CODE"))
  S FDA(2,IENS,.1217)=$G(TEMPADDRESS("STARTDT"))
  S FDA(2,IENS,.1218)=$G(TEMPADDRESS("ENDDT"))
- S FDA(2,IENS,.1219)=$G(TEMPADDRESS("PHONE"))
+ I $G(TEMPADDRESS("PHONE"))'="" S FDA(2,IENS,.1219)=TEMPADDRESS("PHONE")
  S FDA(2,IENS,.1223)=$G(TEMPADDRESS("COUNTRY IEN"))
  ;
  D FILE^DIE(,"FDA","FDAERR") K FDA

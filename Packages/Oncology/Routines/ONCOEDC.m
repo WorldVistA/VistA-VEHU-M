@@ -1,5 +1,5 @@
 ONCOEDC ;HINES OIFO/GWB - ABSTRACT STATUS (165.5,91) Input Transform ;10/19/11
- ;;2.2;ONCOLOGY;**1,5,6,10,19,20**;Jul 31, 2013;Build 5
+ ;;2.2;ONCOLOGY;**1,5,6,10,19,20,21**;Jul 31, 2013;Build 6
  ;p20 -Abstract Status change
 CHECK ;Required field check
  ;CLASS OF CASE   = 00-22
@@ -55,7 +55,7 @@ CHKFLDS ;Check ONCOLOGY PRIMARY (165.5) and ONCOLOGY PATIENT (160)
  Q
  ;
 F160 ;ONCOLOGY PATIENT (160)
- F FDNUM=2,3,7,8,9,10,38,43  D
+ F FDNUM=2,3,7,8,9,10,43  D
  .D:$$GET1^DIQ(160,PTN,FDNUM,"I")="" CMPLT
  Q
  ;
@@ -94,9 +94,9 @@ PCHK ;Enter RETURN to continue or '^' to exit:
  Q
  ;
 EDITS ;Call to EDITS API
- ; p20 do not allow completion of 2024+ cases. These comments and
- ; the following line will be removed in p21. X=2 because its Input Transform
- I DATEDX>3231231 W !!,"THIS CASE HAS A DATE DX OF 2024 AND CANNOT BE COMPLETED YET",! S $P(^ONCO(165.5,D0,7),U,2)=2 S X=2 R !?1,"  press RETURN to continue->",ANSWER:DTIME Q
+ ; p21-do not allow completion of 2025+ cases. These comments and
+ ; the following line will be removed in p22. X=2 because its Input Transform
+ I DATEDX>3241231 W !!,"THIS CASE HAS A DATE DX OF 2025 AND CANNOT BE COMPLETED YET",! S $P(^ONCO(165.5,D0,7),U,2)=2 S X=2 R !?1,"  press RETURN to continue->",ANSWER:DTIME Q
  S ERRFLG=0
  ;Q:($G(ONCOEDIT)=1)
  W !," Calling EDITS API..."

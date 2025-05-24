@@ -1,5 +1,5 @@
 PSOPRK ;BIR/EJW - park/unpark functionality ; May 17, 2023@18:30:42
- ;;7.0;OUTPATIENT PHARMACY;**441,712**;DEC 1997;Build 20
+ ;;7.0;OUTPATIENT PHARMACY;**441,712,784**;DEC 1997;Build 2
  ;
  ; Reference to ^DD(52 in ICR #999
  ; Reference to ^PSDRUG( in ICR #221
@@ -51,8 +51,23 @@ EN S RXF=0 F I=0:0 S I=$O(^PSRX(DA,1,I)) Q:'I  S RXF=I,RSDT=$P(^(I,0),"^")
  I $G(PSOFRPK) D KILLPARK(DA) G UMSG
  N PRKMW D MW I PRKMW="" S VALMBCK="R" D ULP G EX
  D KILLPARK(DA)
- I 'RXF S $P(^PSRX(DA,0),"^",11)=PRKMW
- I RXF,$D(^PSRX(DA,1,RXF,0)) S $P(^PSRX(DA,1,RXF,0),"^",2)=PRKMW
+ ;PSO*7*784
+ ;I 'RXF S $P(^PSRX(DA,0),"^",11)=PRKMW
+ ;I RXF,$D(^PSRX(DA,1,RXF,0)) S $P(^PSRX(DA,1,RXF,0),"^",2)=PRKMW
+ N PSOACT,PRKMWA,PRKMWQ S (PSOACT,PRKMWA)="",PRKMWQ=0
+ ;PSOACT=Activity Log IEN
+ ;PRKMWA=M or W from last parked activity log
+ ;PRKMWQ=1 when most recent activity for 'Rx placed in Parked status' found
+ F  S PSOACT=$O(^PSRX(DA,"A",PSOACT),-1) Q:'PSOACT!PRKMWQ  D
+ . I ^PSRX(DA,"A",PSOACT,0)["Rx placed in Parked status" D
+ . . S PRKMWQ=1
+ . . S PRKMWA=^PSRX(DA,"A",PSOACT,0)
+ . . S PRKMWA=$S(PRKMWA["(W)":"W",1:"M")
+ I 'RXF,'PRKMWQ S $P(^PSRX(DA,0),"^",11)=PRKMW
+ I 'RXF,PRKMWQ S $P(^PSRX(DA,0),"^",11)=PRKMWA
+ I RXF,'PRKMWQ S $P(^PSRX(DA,1,RXF,0),"^",2)=PRKMW
+ I RXF,PRKMWQ S $P(^PSRX(DA,1,RXF,0),"^",2)=PRKMWA
+ K PRKMWA,PRKMWQ,PSOACT
 UMSG S VALMSG="RX# "_$P(^PSRX(DA,0),"^")_" unparked"
  D RXACT(DA,"UPK")
  N PSONOOR,COMM S PSONOOR="I" ; Default to POLICY
@@ -95,6 +110,8 @@ UMSG S VALMSG="RX# "_$P(^PSRX(DA,0),"^")_" unparked"
  ;
  D ULP
 EX ;
+ ;PSO*7*784 add pause to not scroll messages displayed after unparking
+ D PAUSE^VALM1
  ; If called from edit (changed to or from Park), don't unlock/kill
  I $G(PSOTOPK) K DR Q
  I $G(PSOFRPK) K DR Q

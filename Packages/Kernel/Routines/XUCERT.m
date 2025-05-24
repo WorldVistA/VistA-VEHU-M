@@ -1,9 +1,9 @@
-XUCERT ;ISD/HGW Kernel PKI Certificate Utilities ;09/13/2019  12:25
- ;;8.0;KERNEL;**659,701**;Jul 10, 1995;Build 11
+XUCERT ; ISD/HGW - Kernel PKI Certificate Utilities ; Nov 19, 2024@18:29:06
+ ;;8.0;KERNEL;**659,701,817**;Jul 10, 1995;Build 21
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
-VALIDATE(DOC,ERR) ;Extrinsic Function.
+VALIDATE(DOC,ERR,XUMSAML) ;Extrinsic Function.
  ;Validate the signatures in a digitally signed XML document which contains an EncryptedData element and EncryptedKey elements.
  ; Input:     DOC     = This string is either a closed reference to a global root containing the XML document or a filename
  ;                      and path reference identifying the XML document on the host system. See the Kernel Developers Guide
@@ -19,7 +19,7 @@ VALIDATE(DOC,ERR) ;Extrinsic Function.
  I $G(XUSIG)["-1^" S ERR("NO-SIGNATURE")="" Q 0
  D GETISSUE(XUSIG) ;Save subject of X509 certificate (issuer of signature)
  ;p701;S XUVER=$$VERSION^%ZOSV() S XUVER=$P(XUVER,".",1)_"."_$P(XUVER,".",2)
- S XUSTATUS=$$VAL2^XUCERT1(XUREAD,XUSIG,.ERR)
+ S XUSTATUS=$$VAL1^XUCERT1(XUREAD,XUSIG,.ERR,.XUMSAML) ; p817
  Q XUSTATUS
  ;
 GETISSUE(SIG) ;Subroutine. Save X509 Certificate owner to XOBDATA("XOB RPC","SAML",ISSUER")

@@ -1,5 +1,5 @@
-XUSAML ;ISD/HGW - Kernel SAML Token Implementation ; Apr 18, 2022@15:39
- ;;8.0;KERNEL;**655,659,630,701,731,771,779**;Jul 10, 1995;Build 5
+XUSAML ;ISD/HGW - Kernel SAML Token Implementation ; Nov 19, 2024@18:29:06
+ ;;8.0;KERNEL;**655,659,630,701,731,771,779,817**;Jul 10, 1995;Build 21
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Implements the Kernel SAML Token message framework for the Identification and
@@ -27,11 +27,13 @@ XUSAML ;ISD/HGW - Kernel SAML Token Implementation ; Apr 18, 2022@15:39
  ; Reference to $$AUTH^XUESSO2      Private (XU to XU)
  ;
  Q
-EN(DOC) ;Function. Main entry point
+EN(DOC,XUMSAML) ;Function. Main entry point
  ;This function parses and processes the VA Identity and Access Management (IAM) STS SAML token
  ; (version 2.0) and returns the DUZ of the user, if found. It does not log the user into VistA.
  ; Input:     DOC     = Closed reference to global root containing XML document (loaded STS SAML Token)
  ;                      Example: S Y=$$EN^XUSAML($NA(^TMP($J,1)))
+ ;            XUMSAML = Pass by reference. XU modified SAML. This variable stores the information
+ ;                      indicating that the SAML token has been modified.
  ; Return:    Fail    = "-1^Error Message"
  ;            Success = DUZ
  ;ZEXCEPT: XOBDATA ;environment variable
@@ -46,7 +48,9 @@ EN(DOC) ;Function. Main entry point
  I HDL>0 D
  . D ND(HDL,1,1,.XUPN,.XASSRT) ;Traverse and process document
  . S Y="-1^Invalid SAML assertion"
- . D VALASSRT(.XASSRT,DOC,.XUERR) ;Validate SAML assertion
+ . D VALASSRT(.XASSRT,DOC,.XUERR,.XUMSAML) ;Validate SAML assertion
+ . ;p817 if the saml token is modified, capture the saml token
+ . I $G(XUMSAML)=1 D GETSAML^XUPKILOG(DOC,.XUMSAML)
  . S Y=$$FINDUSER(.XUERR)
  . D DELETE^MXMLDOM(HDL)
  I $D(XUERR)>0 S DUZ("WARNINGS")=$$WARNINGS(.XUERR)
@@ -166,6 +170,8 @@ FINDUSER(XUERR) ;Function. Identify user
  S XARRY(11)=$$TRIM^XLFSTR(XARRY(11))
  ;
  I (XUHOME=$P($G(^XTV(8989.3,1,200)),U,3))&(XAUTH="ssoi") D  ;SSOi
+ . ; p817 gather user's information for logging
+ . I $G(XUMSAML)=1 D GETUSER^XUPKILOG(.XUMSAML)
  . S XARRY(3)=XARRY(7) ;UID=SecID
  . S DUZ("AUTHENTICATION")="SSOI"
  . ; p731,p771 ensure user is found before adding new one and deal with concurrent queries from JLV
@@ -216,7 +222,7 @@ FINDUSER(XUERR) ;Function. Identify user
  . S XUERR("SECID")=""
  . S $P(XDUZ,U,3)=XARRY(4),$P(XDUZ,U,4)=XARRY(7)
  Q XDUZ
-VALASSRT(XASSRT,DOC,XUERR) ;Intrinsic Subroutine. Validate SAML assertion
+VALASSRT(XASSRT,DOC,XUERR,XUMSAML) ;Intrinsic Subroutine. Validate SAML assertion
  ;ZEXCEPT: XOBDATA ;environment variable
  N XAUTH,XD,XNOW,XPROOF
  S XOBDATA("XOB RPC","SAML","AUTHENTICATION TYPE")=$G(^TMP("XUSAML",$J,"Name","authenticationtype"))
@@ -247,7 +253,7 @@ VALASSRT(XASSRT,DOC,XUERR) ;Intrinsic Subroutine. Validate SAML assertion
  . I '$D(XASSRT("AuthnContextClassRef")) D
  . . S XUERR("AuthnCCR")=""
  . ;Validate Digital Signature
- . D VALIDATE^XUCERT(DOC,.XUERR)
+ . D VALIDATE^XUCERT(DOC,.XUERR,.XUMSAML)
  . ;Validate Token Issuer (Subject of X509 Certificate used to sign token)
  . I '($G(XOBDATA("XOB RPC","SAML","ISSUER"))[$P($G(^XTV(8989.3,1,200)),U,1)) D
  . . S XUERR("ISSUER")=""

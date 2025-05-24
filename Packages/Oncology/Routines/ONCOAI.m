@@ -1,5 +1,5 @@
-ONCOAI ;HINES OIFO/GWB [AI Complete Abstract] ;07/22/11
- ;;2.2;ONCOLOGY;**1,17**;Jul 31, 2013;Build 6
+ONCOAI ;HINES OIFO/GWB - [AI Complete Abstract] ;07/22/11
+ ;;2.2;ONCOLOGY;**1,17,21**;Jul 31, 2013;Build 6
  ;
 BEG D EX
  W @IOF,!!!
@@ -74,6 +74,7 @@ SET S (SR,XD,MO,CS)=""
  ;S DR="3///^S X=XD;91///0;95///2;21///^S X=CS"
  S DR="91///0;95///2"
  L +^ONCO(165.5,DA):0 I $T D ^DIE L -^ONCO(165.5,DA) S ONCOL=1
+ S MO=$$HIST^ONCFUNC(DA)
  I MO="" G SET1
  I ((XD<3010000)&('$D(^ONCO(164.1,MO,0))))!((XD>3001231)&('$D(^ONCO(169.3,MO,0)))) D  W ! K DIR S DIR(0)="E" D ^DIR G:Y=0 EX G SET1
  .W !!,"WARNING:"

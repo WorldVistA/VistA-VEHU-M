@@ -1,5 +1,5 @@
-ONCPCI ;HINES OIFO/GWB - Patient Identification/Cancer Identification screen display ;09/22/11
- ;;2.2;ONCOLOGY;**1,9,10,20**;Jul 31, 2013;Build 5
+ONCPCI ;HINES OIFO/GWB - Patient ID/Cancer ID screen display ;09/22/11
+ ;;2.2;ONCOLOGY;**1,9,10,20,21**;Jul 31, 2013;Build 6
  ;
 PI ;Patient Identification
  K DASH S $P(DASH,"-",80)="-"
@@ -22,9 +22,9 @@ PI ;Patient Identification
  W !," Following Physician..........: ",ONC(165.5,D0,2.1)
  W !," Primary Surgeon..............: ",ONC(165.5,D0,2)
  W !," Physician #3.................: ",ONC(165.5,D0,2.3)
- W !," Physician #4       ..........: ",ONC(165.5,D0,2.4)
+ W !," Physician #4.................: ",ONC(165.5,D0,2.4)
  W !," Primary Payer at Dx..........: ",ONC(165.5,D0,18)
- W !," Type of Reporting Source.....: ",ONC(165.5,D0,1.2)
+ W !," Type of Reporting Source.....: ",$P($G(^ONCO(165.5,D0,0)),"^",10)," ",ONC(165.5,D0,1.2)
  W !,DASH
  K DASH,I,X
  Q
@@ -91,7 +91,7 @@ CI ;Cancer Identification
  .W !," Multiplicity Counter.........: ",ONC(165.5,D0,196)
  W !," AFIP/JPC submission..........: ",ONC(165.5,D0,83)
  W !," Diagnostic Confirmation......: ",ONC(165.5,D0,26)
- W:($$GET1^DIQ(165.5,D0,.01,"E")="LIVER")!($G(TOP)=67220) !," Hepatitis C..................: ",ONC(165.5,D0,1010)
+ ;W:($$GET1^DIQ(165.5,D0,.01,"E")="LIVER")!($G(TOP)=67220) !," Hepatitis C..................: ",ONC(165.5,D0,1010)
  ;I DATEDX<3030000 D
  ;.W !," ",TM1,DOTS1,"....: ",ONC(165.5,D0,25.1)
  ;.W !," ",TM2,DOTS2,"....: ",ONC(165.5,D0,25.2)

@@ -1,5 +1,5 @@
-SDES2APTLETTER ;ALB/TJB,TJB,TJB,MCB - VISTA SCHEDULING RPCS - LETTER PRINT ; Feb 7, 2025
- ;;5.3;Scheduling;**895,898,899,901**;Aug 13, 1993;Build 7
+SDES2APTLETTER ;ALB/TJB,TJB,TJB,MCB,JHC - VISTA SCHEDULING RPCS - LETTER PRINT ; Mar 12, 2025
+ ;;5.3;Scheduling;**895,898,899,901,903**;Aug 13, 1993;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to DIVISION in ICR #7024
@@ -78,7 +78,8 @@ VALLETTYPE(ERRORS,LTYPE) ;
  N LIEN,RESOURCE,CLIN
  I '$L(LTYPE) D ERRLOG^SDES2JSON(.ERRORS,228) Q "" ; missing letter type
  I '$D(^VA(407.6,"B",LTYPE)) D ERRLOG^SDES2JSON(.ERRORS,226,LTYPE) Q ""  ;Invalid letter type.
- S LIEN=$$FIND1^DIC(407.6,,"B",LTYPE)
+ ;S LIEN=$$FIND1^DIC(407.6,,"B",LTYPE)
+ S LIEN="",LIEN=$O(^VA(407.6,"B",LTYPE,LIEN))
  Q LIEN
  ; print single appointment letter
 APPTLETTER(SDECY,SDECAPID,LT)  ;Print Appointment Letter

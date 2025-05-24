@@ -4414,6 +4414,7 @@ ZWR
 ^ECX(728.441,2931,0)="IPVP^Intimate Partner Violence Assistance Program"
 ^ECX(728.441,2932,0)="IPVS^IPVAP Strength at Home Program"
 ^ECX(728.441,2933,0)="SOGI^Sexual Orientation and Gender Identity"
+^ECX(728.441,2933,2)=3250331
 ^ECX(728.441,2934,0)="VTHM^VET HOME"
 ^ECX(728.441,2935,0)="CCRT^Care Coordination Review Team (CCRT)"
 ^ECX(728.441,2936,0)="CRNA^Certified Registered Nurse Anesthetist"

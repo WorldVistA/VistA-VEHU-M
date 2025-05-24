@@ -1,5 +1,5 @@
-XUESSO4 ;ISD/HGW Enhanced Single Sign-On Utilities ;03/23/2020 08:58
- ;;8.0;KERNEL;**659,630,701,727**;Jul 10, 1995;Build 4
+XUESSO4 ; ISD/HGW - Enhanced Single Sign-On Utilities ; Nov 19, 2024@18:29:06
+ ;;8.0;KERNEL;**659,630,701,727,817**;Jul 10, 1995;Build 21
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -160,8 +160,8 @@ ESSO(RET,DOC) ; RPC. XUS ESSO VALIDATE - IA #6295
  ;            RET(5) = count of the number of lines of text, zero if none.
  ;            RET(5+n) = message text.
  ;
- N VCCH,XARRY,XDIV,XDIVA,XOPT,XUDEV,XUF,XUHOME,XOPTION,XUM,XUMSG,XUVOL,X,Y
- S U="^",RET(0)=0,RET(5)=0,XUF=$G(XUF,0),XUM=0,XUMSG=0,XUDEV=0
+ N VCCH,XARRY,XDIV,XDIVA,XOPT,XUDEV,XUF,XUHOME,XOPTION,XUM,XUMSG,XUVOL,X,Y,XUMSAML
+ S U="^",RET(0)=0,RET(5)=0,XUF=$G(XUF,0),XUM=0,XUMSG=0,XUDEV=0,XUMSAML=0
  ; Begin user sign-on
  S DUZ=0,DUZ(0)="" D NOW^XUSRB
  S VCCH=0 ;VC not needed per: Password Policy When Alternate Authentication Is Available (VAIQ #7781071)
@@ -170,9 +170,12 @@ ESSO(RET,DOC) ; RPC. XUS ESSO VALIDATE - IA #6295
  S XUMSG=$$INHIBIT^XUSRB() I XUMSG S XUM=1 G VAX^XUSRB ;Logon inhibited
  ;3 Strikes
  I $$LKCHECK^XUSTZIP($G(IO("IP"))) S XUMSG=7 G VAX^XUSRB ;IP locked
- S DUZ=$$EN^XUSAML(DOC) ;Process SAML token
+ S DUZ=$$EN^XUSAML(DOC,.XUMSAML) ; p817 Process SAML token
  I DUZ'>0 D  G VAX^XUSRB ; p701 failure already recorded in $$EN^XUSAML
  . S XUM=1,XUMSG=63
+ ; p817 if saml token is modified and logging is enabled then log entry
+ ; ZEXCEPT: XWBPKIFLAG ; variable used by the RPC XWB CREATE CONTEXT
+ I $G(XUMSAML)=1&$$LOG^XUPKILOG D INSERT^XUPKILOG(.XUMSAML) S XWBPKIFLAG=$G(XUMSAML("LOGIEN"))
  D USER^XUS(DUZ) ;Build USER
  S XUMSG=$$UVALID^XUS() ;Check user's status: locked out, terminated, disusered, verify code
  I XUMSG>0 S:$$REMOTEOK(.DUZ) XUMSG=0 ; p727

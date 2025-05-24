@@ -1,5 +1,5 @@
-PXAIVST ;ISL/JVS,KWP,ESW - GET A VISIT FROM ENCOUNTER NODE ;04/11/2024
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**5,9,15,74,111,96,130,124,164,168,211,238**;Aug 12, 1996;Build 3
+PXAIVST ;ISL/JVS,KWP,ESW - GET A VISIT FROM ENCOUNTER NODE ;12/01/2024
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**5,9,15,74,111,96,130,124,164,168,211,238,248**;Aug 12, 1996;Build 6
  ;
  ; Reference to ^DPT( in ICR #10035
  ; Reference to ^VA(200, in ICR #10060
@@ -106,7 +106,7 @@ CALL ;--CALL
  ;If there are multiple matches use the first one and send a MailMan message.
  I VISITLIST(0)>1 D
  . S PXAVISIT=VISITLIST(1)
- . D MULTMATCHMSG(DFN,VDT,HLOC,SVC,DSS,INS,TYPE,DUZ,.VISITLIST)
+ . D MULTMATCHMSG(VDT,HLOC,SVC,DSS,INS,TYPE,DUZ,.VISITLIST)
  ;
  ;--SET VARIABLES BEFORE
  I $G(PXAVISIT) D
@@ -129,43 +129,46 @@ CALL ;--CALL
  I '$G(PXAVISIT) S PXAVISIT=$G(^TMP("PXK",$J,"VST",1,"IEN"))
  Q
  ;
-MULTMATCHMSG(DFN,VDT,HLOC,SVC,DSS,INS,TYPE,DUZ,VISITLIST) ;Send a MailMan message to the
+MULTMATCHMSG(VDT,HLOC,SVC,DSS,INS,TYPE,DUZ,VISITLIST) ;Send a MailMan message to the
  ;PCE Management mail group when multiple vists are matched.
  ;Reference        ICR#
- ;Read ^DPT       10035
  ;Read ^VA(200    10060
  ;
- N IND,PATIENT,PROVIDER,SUBJECT,VLIST
- S PATIENT=$P(^DPT(DFN,0),U,1)
+ N IND,NL,PROVIDER,SUBJECT,VLIST
  S PROVIDER=$$GET1^DIQ(200,DUZ,.01)
  S SUBJECT="DATA2PCE - MULTIPLE VISITS WERE MATCHED"
  S VLIST=VISITLIST(1)
  F IND=2:1:VISITLIST(0) S VLIST=VLIST_", "_VISITLIST(IND)
  K ^TMP("PXMULTMSG",$J)
- S ^TMP("PXMULTMSG",$J,1,0)=PROVIDER_" (DUZ="_DUZ_") was editing an encounter for patient"
- S ^TMP("PXMULTMSG",$J,2,0)=PATIENT_" (DFN="_DFN_") and multiple Visit file entries"
- S ^TMP("PXMULTMSG",$J,3,0)="matched the visit string."
- S ^TMP("PXMULTMSG",$J,4,0)="The matching Visit file IENs are: "_VLIST_"."
- S ^TMP("PXMULTMSG",$J,5,0)=""
- S ^TMP("PXMULTMSG",$J,6,0)="The visit match parameters are:"
- S ^TMP("PXMULTMSG",$J,7,0)="DFN="_DFN
- S ^TMP("PXMULTMSG",$J,8,0)="VISIT DATE/TIME="_VDT
- S ^TMP("PXMULTMSG",$J,9,0)="HOSPITAL LOCATION="_HLOC
- S ^TMP("PXMULTMSG",$J,10,0)="SERVICE CATEGORY="_SVC
- S ^TMP("PXMULTMSG",$J,11,0)="STOP CODE="_DSS
- S ^TMP("PXMULTMSG",$J,12,0)="INSTITUTION="_INS
- S ^TMP("PXMULTMSG",$J,13,0)="TYPE="_TYPE
- S ^TMP("PXMULTMSG",$J,14,0)=""
- S ^TMP("PXMULTMSG",$J,15,0)="Only one encounter can be edited at a time, therefore the encounter"
- S ^TMP("PXMULTMSG",$J,16,0)="corresponding to the first Visit IEN on the list was edited."
- S ^TMP("PXMULTMSG",$J,17,0)=""
- S ^TMP("PXMULTMSG",$J,18,0)="To lessen the chance of future multiple matches you can use the option"
- S ^TMP("PXMULTMSG",$J,19,0)="PXQ USER REVIEW (User's Visit Review) to determine what data is contained in"
- S ^TMP("PXMULTMSG",$J,20,0)="each of the encounters and move as much of it as possible to a single"
- S ^TMP("PXMULTMSG",$J,21,0)="encounter."
- S ^TMP("PXMULTMSG",$J,22,0)=""
- S ^TMP("PXMULTMSG",$J,23,0)="If assistance is needed, please save this message and enter a ticket for help"
- S ^TMP("PXMULTMSG",$J,24,0)="from PCE Support."
+ S ^TMP("PXMULTMSG",$J,1,0)=PROVIDER_" (DUZ="_DUZ_") was editing an encounter and multiple Visit"
+ S ^TMP("PXMULTMSG",$J,2,0)="file entries matched the lookup input."
+ S ^TMP("PXMULTMSG",$J,3,0)="The matching Visit file IENs are: "_VLIST_"."
+ S ^TMP("PXMULTMSG",$J,4,0)=""
+ S ^TMP("PXMULTMSG",$J,5,0)="The lookup parameters are:"
+ S ^TMP("PXMULTMSG",$J,6,0)="VISIT DATE/TIME="_VDT
+ S ^TMP("PXMULTMSG",$J,7,0)="HOSPITAL LOCATION="_HLOC
+ S ^TMP("PXMULTMSG",$J,8,0)="SERVICE CATEGORY="_SVC
+ S ^TMP("PXMULTMSG",$J,9,0)="STOP CODE="_DSS
+ S ^TMP("PXMULTMSG",$J,10,0)="INSTITUTION="_INS
+ S ^TMP("PXMULTMSG",$J,11,0)="TYPE="_TYPE
+ S NL=11
+ F IND=1:1:VISITLIST(0) D
+ . S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)="Visit IEN="_VISITLIST(IND)
+ . S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)=" Option Used to Create: "_$$GET1^DIQ(9000010,VISITLIST(IND),.24)
+ . S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)=" Protocol: "_$$GET1^DIQ(9000010,VISITLIST(IND),.25)
+ . S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)=" Package: "_$$GET1^DIQ(9000010,VISITLIST(IND),81202)
+ . S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)=" Data Source: "_$$GET1^DIQ(9000010,VISITLIST(IND),81203)
+ S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)=""
+ S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)="Only one encounter can be edited at a time, therefore the encounter"
+ S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)="corresponding to the first Visit IEN on the list was edited."
+ S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)=""
+ S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)="To lessen the chance of future multiple matches you can use the option"
+ S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)="PXQ USER REVIEW (User's Visit Review) to determine what data is contained in"
+ S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)="each of the encounters and move as much of it as possible to a single"
+ S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)="encounter."
+ S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)=""
+ S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)="If assistance is needed, please save this message and enter a ticket for help"
+ S NL=NL+1,^TMP("PXMULTMSG",$J,NL,0)="from PCE Support."
  D SEND^PXMSG("PXMULTMSG",SUBJECT)
  K ^TMP("PXMULTMSG",$J)
  Q

@@ -1,5 +1,5 @@
-SDES2INACTCLIN ;ALB/TJB,MGD,TJB,TJB - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;Feb 20, 2025
- ;;5.3;Scheduling;**864,877,890,902**;Aug 13, 1993;Build 1
+SDES2INACTCLIN ;ALB/TJB,MGD,TJB,TJB,JAS - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;Mar 10, 2025
+ ;;5.3;Scheduling;**864,877,890,902,903**;Aug 13, 1993;Build 3
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -86,6 +86,7 @@ BLDCINREC(SDCINREC,CLINICIEN,INACTIVEDATE,ERRORS) ;Inactivate Clinic
  . F I=FMDATE-.0001:0 S I=$O(^SC(CLINICIEN,"T",I)) Q:'I!(I>SDATE)  K ^SC(CLINICIEN,"T",I)
  . F I=FMDATE-.0001:0 S I=$O(^SC(CLINICIEN,"OST",I)) Q:'I!(I>SDATE)  K ^SC(CLINICIEN,"OST",I)
  . D REMVTX(CLINICIEN,FMDATE)
+ I FMDATE=DT D REMPROV(CLINICIEN)
  S SDCINREC("ClinicInactivate",1)="Clinic is successfully inactivated."
  Q
  ;
@@ -97,6 +98,7 @@ REMVTX(SCLIN,SDDATE) ; Remove T0 to T6 patterns
  F I=1:1:6 S X2=1,X1=X D C^%DTC S DOW=$$DOW^XLFDT(X,1),SDN(DOW)=X,SDINDPAT(DOW)=$G(^SC(SCLIN,"T"_DOW,9999999,1))
  F I=0:1:6 S J=$O(^SC(SCLIN,"T"_I,(SDN(I)-0.0001)))  D  Q:$D(ERRORS)
  . Q:'$D(^SC(SCLIN,"T"_I,0))  ; skip if no Tx node
+ . Q:$O(^SC(SCLIN,"T"_I,0))=""
  . S SD=$O(^SC(SCLIN,"T"_I,J,0))
  . I J>0,SD'=9999999,$$GET1^DIQ(SDFILE(I),J_","_SCLIN_",",1,"I")'="" D  Q:$D(ERRORS)
  . . K FDA,ERR,FDAIEN
@@ -122,6 +124,15 @@ REMVTX(SCLIN,SDDATE) ; Remove T0 to T6 patterns
  . . S FDAIEN(2)=SDN(I)
  . . D UPDATE^DIE("","FDA","FDAIEN","ERR")
  . . I $D(ERR) D ERRLOG^SDES2JSON(.ERRORS,81,"Issue with filing the saved pattern for Clinic IEN:"_SCLIN_" Date: "_SDN(I))
+ Q
+ ;
+REMPROV(CLINIEN) ;Remove Providers from Clinic
+ Q:'$D(^SC(CLINIEN,"PR"))
+ N PRVDA,PRVIEN,X,Y
+ S PRVIEN=0
+ F  S PRVIEN=$O(^SC(CLINIEN,"PR",PRVIEN)) Q:'PRVIEN  D
+ . S PRVDA(44.1,PRVIEN_","_CLINIEN_",",.01)="@"
+ . D FILE^DIE(,"PRVDA") K PRVDA
  Q
  ;
 UPDATECLNRES(SDCLINICIEN,INACTIVATIONDATE,SDDUZ,ERRORS) ;Update INACTIVATED DATE/TIME and INACTIVATED BY USER in SDEC RESOURCE File #409.831

@@ -1,5 +1,5 @@
 ONCWEB2 ;ALBANY OIFO/RTK - VACCR WEB SERVICE ;Feb 14, 2024@14:22:22
- ;;2.2;ONCOLOGY;**19,20**;Aug 1,2022;Build 5
+ ;;2.2;ONCOLOGY;**19,20,21**;Aug 1,2022;Build 6
  ;
  ; SAC EXEMPTION 202408071458-03 : non-ANSI standard M code
  ;
@@ -64,7 +64,7 @@ PPOST3(ONCHAND,XML,globalName) ;POST request
  .;S:ONCSYS=0 ONC("path")="/development1/api/RunEdit/GetVersion"
  .S:ONCSYS=0 ONC("path")="/ppd/api/RunEdit/GetVersion"
  .;S:ONCSYS=1 ONC("path")="/development1/api/RunEdit/GetVersion"
- .S:ONCSYS=1 ONC("path")="/prda/api/RunEdit/GetVersion"
+ .S:ONCSYS=1 ONC("path")="/prodb/api/RunEdit/GetVersion"
  .S ONC("Content-Type")="application/json"
  .S ONC("restObject").ContentType="application/json"
  .S ONC("postResult")=$$GET^XOBWLIB(ONC("restObject"),ONC("path"),.ONCERR)
@@ -73,12 +73,12 @@ PPOST3(ONCHAND,XML,globalName) ;POST request
  ..;S:ONCSYS=0 ONC("path")="/development1/api/RunEdit/VaccrProcessIsSchemaRecordComplete"
  ..S:ONCSYS=0 ONC("path")="/ppd/api/RunEdit/VaccrProcessIsSchemaRecordComplete"
  ..;S:ONCSYS=1 ONC("path")="/development1/api/RunEdit/VaccrProcessIsSchemaRecordComplete"
- ..S:ONCSYS=1 ONC("path")="/prda/api/RunEdit/VaccrProcessIsSchemaRecordComplete"
+ ..S:ONCSYS=1 ONC("path")="/prodb/api/RunEdit/VaccrProcessIsSchemaRecordComplete"
  .I $G(ONCCSRQT)="TABLE" D
  ..;S:ONCSYS=0 ONC("path")="/development1/api/RunEdit/VaccrProcessIsTableRecordComplete"
  ..S:ONCSYS=0 ONC("path")="/ppd/api/RunEdit/VaccrProcessIsTableRecordComplete"
  ..;S:ONCSYS=1 ONC("path")="/development1/api/RunEdit/VaccrProcessIsTableRecordComplete"
- ..S:ONCSYS=1 ONC("path")="/prda/api/RunEdit/VaccrProcessIsTableRecordComplete"
+ ..S:ONCSYS=1 ONC("path")="/prodb/api/RunEdit/VaccrProcessIsTableRecordComplete"
  .S ONC("Content-Type")="application/xml"
  .S ONC("restObject").ContentType="application/xml"
  .S ONC("postResult")=$$POST^XOBWLIB(ONC("restObject"),ONC("path"),.ONCERR)
