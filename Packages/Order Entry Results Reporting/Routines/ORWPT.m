@@ -1,5 +1,5 @@
-ORWPT ;SLC/KCM/REV - Patient Lookup Functions ;Dec 06, 2024@14:43:26
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,149,206,187,190,215,243,280,306,311,441,528,519,544,405,608,628**;Dec 17, 1997;Build 13
+ORWPT ;SLC/KCM/REV - Patient Lookup Functions ;Jan 23, 2025@10:18:50
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,132,149,206,187,190,215,243,280,306,311,441,528,519,544,405,608,628,586**;Dec 17, 1997;Build 5
  ;
  ; Reference to ^UTILITY( in ICR #10061
  ; Reference to ^%ZOSF() in ICR #10096
@@ -42,6 +42,8 @@ IDINFO(REC,DFN) ; Return identifying information for a patient
  Q
 PTINQ(REF,DFN) ; Return formatted pt inquiry report
  S REF=$NA(^TMP("ORDATA",$J,1)) K @REF
+ I '+$G(DFN) D SETITEM^ORWRP(.REF,"Invalid patient number.") Q 
+ I '$D(^DPT(DFN)) D SETITEM^ORWRP(.REF,"Patient not found on local system.") Q 
  D DGINQ^ORCXPND1(DFN)
  ; insert persian gulf indicator *628 ajb
  N DATA,TDATA M TDATA=@REF K @REF

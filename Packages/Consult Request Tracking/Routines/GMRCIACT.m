@@ -1,5 +1,5 @@
-GMRCIACT ;SLC/JFR - PROCESS ACTIONS ON IFC ; Aug 01, 2024@15:38:22
- ;;3.0;CONSULT/REQUEST TRACKING;**22,47,58,66,73,121,154,176,184,193,185,189**;DEC 27, 1997;Build 54
+GMRCIACT ;SLC/JFR - PROCESS ACTIONS ON IFC ; Dec 20, 2024@08:46:34
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,47,58,66,73,121,154,176,184,193,185,189,201**;DEC 27, 1997;Build 7
  ;
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
@@ -12,14 +12,13 @@ GMRCIACT ;SLC/JFR - PROCESS ACTIONS ON IFC ; Aug 01, 2024@15:38:22
  ; Reference to ^XUAF4 in ICR #2171
  ; Reference to ^XLFSTR in ICR #10104
  ; Reference to $$ADD^DGPROSAD in ICR #7421
- ; Reference to APPERROR^%ZTER in ICR #1621
  ;
  Q  ;don't start here!
 NW(ARRAY) ;process and file new order
  ;Input:
  ; ARRAY  = name of array containing message parts
  ;
- N GMRCFDA,GMRCORC,GMRCDA,GMRCITM,GMRCITER,GMRCROUT,GMRCFCN,GMRCLAC,OBR19 ;
+ N GMRCFDA,GMRCORC,GMRCDA,GMRCITM,GMRCITER,GMRCROUT,GMRCFCN,GMRCLAC ;
  K ^TMP("GMRCIN",$J)
  M ^TMP("GMRCIN",$J)=@ARRAY
  S GMRCORC=^TMP("GMRCIN",$J,"ORC")
@@ -43,26 +42,38 @@ NW(ARRAY) ;process and file new order
  ;
  ;  Save ordering provider data and placer field 1 from OBR-16 and OBR-19 in fields #507 and 508
  ;
+ N OBR16,OBR19,OBR20,OBR27 ; P201 WTC 11.2.23
  I $D(^TMP("GMRCIN",$J,"OBR")) D  ;  P184, 189
- . N OBR16 S OBR16=$P(^("OBR"),"|",16),GMRCFDA(507)=$E(OBR16,1,255) ;
+ . S OBR16=$P(^("OBR"),"|",16),GMRCFDA(507)=$E(OBR16,1,255) ;
  . S OBR19=$P(^("OBR"),"|",19),GMRCFDA(508)=$E(OBR19,1,255) ; 184V10 WTC 6/28/2022
- . N OBR20 S OBR20=$P(^("OBR"),"|",20) I OBR20'="" S GMRCFDA(511)=$E(OBR20,1) ; 185V2 WTC 4/24/2023
- . N OBR27 S OBR27=$P($P(^("OBR"),"|",27),U,4) I OBR27'="" S GMRCFDA(512)=$E(OBR27,1,30) ; 185V2 WTC 4/24/2023
+ . S OBR20=$P(^("OBR"),"|",20) I OBR20'="" S GMRCFDA(511)=$E(OBR20,1) ; 185V2 WTC 4/24/2023
+ . S OBR27=$P($P(^("OBR"),"|",27),U,4) I OBR27'="" S GMRCFDA(512)=$E(OBR27,1,30) ; 185V2 WTC 4/24/2023
  ;
  ;  If patient not found and placer is Cerner, call proxy add to create patient.  p189 wtc 4/12/2023
+ ;  If ICN is missing from PID segment, generate 206 error and quit processing HL7 message.  p201 wtc 5/8/2024
  ;
- I '$G(GMRCFDA(.02)),$G(CRNRACCT)'="" D  ;
+ I '$G(GMRCFDA(.02)),$G(CRNRACCT)'="" D  Q:$G(GMRCITER)=206  ;
  . ;
  . ;  Extract EDIPI from PID-3.
  . ;
- . N EDIPI,RTNCODE,PIECE ;
- . S EDIPI="" F PIECE=1:1 Q:$P($P(^TMP("GMRCIN",$J,"PID"),"|",3),"~",PIECE)=""  I $P($P($P(^TMP("GMRCIN",$J,"PID"),"|",3),"~",PIECE),U,4)="EDIPI" S EDIPI=$P($P($P(^TMP("GMRCIN",$J,"PID"),"|",3),"~",PIECE),U,1) Q  ;
- . Q:EDIPI=""  ;
+ . N ICN,EDIPI,RTNCODE,PIECE ;
+ . S ICN=$P(^TMP("GMRCIN",$J,"PID"),"|",2) ; P201 WTC 5/6/24
+ . S EDIPI="" I $P($P($P(^TMP("GMRCIN",$J,"PID"),"|",3),"~",2),U,4)="EDIPI" S EDIPI=$P($P($P(^("PID"),"|",3),"~",2),U,1) ; P201 WTC 3/21/2024
+ . ;
+ . ;  ICN missing.  Log error 206 and stop processing HL7 message.
+ . ;
+ . I ICN="" D  Q  ;
+ .. ;
+ .. S GMRCITER=206 ;
+ .. D ERR206^GMRCIAC3($P(GMRCMSGI,U,1),EDIPI,GMRCFCN,OBR19,$$HL7TFM^XLFDT($P(GMRCORC,"|",15))) ;
+ .. K ^TMP("GMRCIN",$J) ;
+ . ;
+ . Q:EDIPI=""  ;  unlikely to happen that both ICN and EDIPI missing from Cerner order.  wtc 5/8/24
  . ;
  . ;  Call proxy add.  If successful, save DFN.  Otherwise, allow 201 error to be generated.
  . ;
  . S RTNCODE=$$ADD^DGPROSAD(EDIPI_"~USDOD~NI~200DOD",$P($$SITE^VASITE(),U,3)) ;  ICR 7421
- . I RTNCODE<0 D FAILPRXY^GMRCIUT1(GMRCMSGI,EDIPI,"",GMRCFCN,OBR19,$P(GMRCORC,"|",15),$P($$SITE^VASITE(),U,3),$P(RTNCODE,U,2)) Q  ; P189 WTC 6/24/24
+ . I RTNCODE<0 D FAILPRXY^GMRCIUT1($P(GMRCMSGI,U,1),EDIPI,"",GMRCFCN,OBR19,$P(GMRCORC,"|",15),$P($$SITE^VASITE(),U,3),$P(RTNCODE,U,2)) Q  ; P189 WTC 6/24/24
  . S GMRCFDA(.02)=$P(RTNCODE,U,4) ;
  ;
  I '$G(GMRCFDA(.02)) D  Q  ;reject message, patient is unknown
@@ -95,7 +106,11 @@ NW(ARRAY) ;process and file new order
  D  ;get urgency to file
  . N URG
  . S URG=$$URG^GMRCHL7A($P($P(GMRCORC,"|",7),U,6))
- . I GMRCCRNR,URG="STAT" S URG="NEXT AVAILABLE" ;MKN *176
+ . ;I GMRCCRNR,URG="STAT" S URG="NEXT AVAILABLE" ;MKN *176
+ . I $G(GMRCCRNR) D  ; WTC p201 10/20/23
+ .. I URG="STAT" S URG="STAT" ;
+ .. I URG="ROUTINE" S URG="ROUTINE" ;
+ .. I URG="URGENT"!(URG="U") S URG="STAT" ;
  . S GMRCFDA(5)=$$FIND1^DIC(101,"","X","GMRCURGENCY - "_URG)
  S GMRCFDA(8)=5
  S GMRCFDA(9)=$S($P(GMRCORC,"|",16)["FI":24,1:23),GMRCLAC=GMRCFDA(9)
@@ -145,6 +160,15 @@ NW(ARRAY) ;process and file new order
  . K ^TMP("GMRCIN",$J) Q
  K GMRCFDA,FDA
  D  ; file reason for request
+ . ;
+ . I $G(OBR19)'="" D  ;  Re-sequence reasons for request if needed.  wtc 201 11.2.2023
+ .. N IEN S IEN=$O(^GMR(123.7,"C",$$UP^XLFSTR(OBR19),0)) I IEN D RESEQNCE^GMRCIRSN(IEN) Q  ;
+ . ;
+ . ;  Add FIN to reason for request for Prosthetics orders. p201 wtc 3.21.2024
+ . ;
+ . I GMRCCRNR,$G(OBR19)'="",OBR19["PROSTHETICS IFC"!(OBR19["PSAS") D  ;
+ .. N IDX S IDX=$O(^TMP("GMRCIN",$J,"OBX",1,"A"),-1)+1,^TMP("GMRCIN",$J,"OBX",1,IDX)="1|TX|2000.02^REASON FOR REQUEST^AS4|"_IDX_"|FIN: "_CRNRACCT ;
+ . ;
  . D TRIMWP^GMRCIUTL($NA(^TMP("GMRCIN",$J,"OBX",1)),5)
  . D WP^DIE(123,GMRCDA(1)_",",20,"K",$NA(^TMP("GMRCIN",$J,"OBX",1)))
  . Q

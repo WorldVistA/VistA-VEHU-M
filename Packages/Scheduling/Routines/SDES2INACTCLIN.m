@@ -1,5 +1,5 @@
-SDES2INACTCLIN ;ALB/TJB,MGD,TJB,TJB,JAS - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;Mar 10, 2025
- ;;5.3;Scheduling;**864,877,890,902,903**;Aug 13, 1993;Build 3
+SDES2INACTCLIN ;ALB/TJB,MGD,TJB,TJB,JAS,TJB - Inactivate Clinic in HOSPITAL LOCATION FILE 44 ;April 10, 2025
+ ;;5.3;Scheduling;**864,877,890,902,903,905**;Aug 13, 1993;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -19,25 +19,30 @@ SDINACTCLN(SDRETURN,SDCONTEXT,SDPARAM) ;Inactivate Clinic
  ;
  ; SDPARAM("CLINIC IEN")=CLINIC IEN     IEN of the clinic in file 44 - Hospital location
  ; SDPARAM("INACTIVATION DATE")=DATE    ISO DATE to inactivate the clinic if empty default to today (DT)
+ ; SDPARAM("DELETE INACTIVATION")="Y"   Either not defined (don't pass in) or "Y" any other value errors
  ;
  ;RETURN PARMETER:
  ; Status
  ;
- N ERRORS,RESULTS,CLINICIEN,INACTDATE
+ N ERRORS,RESULTS,CLINICIEN,INACTDATE,DELINACT
+ S DELINACT=0
  ; validate context array
  D VALCONTEXT^SDES2VALCONTEXT(.ERRORS,.SDCONTEXT)
  I $D(ERRORS) S ERRORS("ClinicInactivate",1)="" D BUILDJSON^SDES2JSON(.SDRETURN,.ERRORS) Q
  D VALCLINIEN^SDES2VAL44(.ERRORS,$G(SDPARAM("CLINIC IEN")),1)
- I $D(ERRORS) S ERRORS("ClinicInactivate",1)="" D BUILDJSON^SDES2JSON(.SDRETURN,.ERRORS) Q
  D INIT(.SDPARAM,.CLINICIEN,.INACTDATE)
- D VALIDATE(.ERRORS,INACTDATE,CLINICIEN)
- D NOAPPOINTMENTS(CLINICIEN,INACTDATE,.ERRORS)
- I $D(ERRORS) D BUILDJSON^SDES2JSON(.SDRETURN,.ERRORS) Q
- ; File the inactivation on HOSPITAL LOCATION
- D BLDCINREC(.RESULTS,CLINICIEN,INACTDATE,.ERRORS)
- ; If the Clinic was inactivated then update the SDEC RESOURCE (409.831) with the inactivation information
- I '$D(ERRORS) D UPDATECLNRES(CLINICIEN,INACTDATE,$G(SDCONTEXT("USER DUZ")),.ERRORS)
- I $D(ERRORS) D BUILDJSON^SDES2JSON(.SDRETURN,.ERRORS) Q  ; There was a problem updating 409.831 with the inactivation
+ D VALIDATE(.ERRORS,.SDPARAM,INACTDATE,CLINICIEN,.DELINACT)
+ I $D(ERRORS) S ERRORS("ClinicInactivate",1)="" D BUILDJSON^SDES2JSON(.SDRETURN,.ERRORS) Q
+ I DELINACT=0 D  Q:$D(ERRORS)
+ . D NOAPPOINTMENTS(CLINICIEN,INACTDATE,.ERRORS)
+ . I $D(ERRORS) S ERRORS("ClinicInactivate",1)="" D BUILDJSON^SDES2JSON(.SDRETURN,.ERRORS) Q
+ . ; File the inactivation on HOSPITAL LOCATION
+ . D BLDCINREC(.RESULTS,CLINICIEN,INACTDATE,.ERRORS)
+ . ; If the Clinic was inactivated then update the SDEC RESOURCE (409.831) with the inactivation information
+ . I '$D(ERRORS) D UPDATECLNRES(CLINICIEN,INACTDATE,$G(SDCONTEXT("USER DUZ")),.ERRORS)
+ . I $D(ERRORS) S ERRORS("ClinicInactivate",1)="" D BUILDJSON^SDES2JSON(.SDRETURN,.ERRORS) Q  ; There was a problem updating 409.831 with the inactivation
+ I DELINACT=1 D
+ . D DELETEINACTIVE(.RESULTS,.SDPARAM,$S($G(SDCONTEXT("USER DUZ"))'="":SDCONTEXT("USER DUZ"),1:DUZ)) ; delete the inactivate date
  D ENCODE^SDES2JSON(.RESULTS,.SDRETURN)
  Q
  ;
@@ -48,8 +53,19 @@ INIT(SDPARAM,CLINICIEN,INACTDATE) ; initialize values needed
  I INACTDATE="" S INACTDATE=$$FMTISO^SDAMUTDT(DT)
  Q
  ;
-VALIDATE(ERRORS,INACTIVEDATE,CLINICIEN) ; validate incoming parameters
+VALPARAM(ERRORS,PARAMS,DELINACT) ; Check if we are doing a delete inactivation date
+ N INACTDT
+ Q:$D(ERRORS)
+ I '$D(PARAMS("DELETE INACTIVATION")) Q  ; No delete inactivation
+ I $G(PARAMS("DELETE INACTIVATION"))'="Y" D ERRLOG^SDES2JSON(.ERRORS,52,"Incorrect value for 'DELETE INACTIVATION' parameter, must be 'Y' or not provided") Q
+ S INACTDT=$$GET1^DIQ(44,PARAMS("CLINIC IEN"),2505,"I")
+ I INACTDT="" D ERRLOG^SDES2JSON(.ERRORS,52,"No INACTIVATE DATE on this clinic, can't delete INACTIVATE DATE") Q
+ I INACTDT=DT D ERRLOG^SDES2JSON(.ERRORS,52,"Clinic inactivated today for this clinic, can't delete INACTIVATE DATE must use clinic reactivate.") Q
+ S DELINACT=1
+ Q
+VALIDATE(ERRORS,SDPARAM,INACTIVEDATE,CLINICIEN,DELINACT) ; validate incoming parameters
  N FMDATE
+ D VALPARAM(.ERRORS,.SDPARAM,.DELINACT) Q:DELINACT
  ; Validate the inactivation date
  S FMDATE=$$ISOTFM^SDAMUTDT(INACTIVEDATE)
  I FMDATE=-1 D ERRLOG^SDES2JSON(.ERRORS,46,"For Clinic Inactivation")
@@ -149,3 +165,19 @@ UPDATECLNRES(SDCLINICIEN,INACTIVATIONDATE,SDDUZ,ERRORS) ;Update INACTIVATED DATE
  D FILE^DIE("","SDRESFDA","SDERR")
  I $D(SDERR) D ERRLOG^SDES2JSON(.ERRORS,81,"File 409.831 not updated with the inactivation date for Resource IEN="_SDCLINRES)
  Q
+ ; If the code is called with SDPARAM("DELETE INACTIVATION")="Y"
+DELETEINACTIVE(RESULTS,SDPARAM,SDDUZ) ;
+ ;
+ N FDA,FDERR,SDCLINRES
+ S SDCLINRES=$$GETRES^SDES2UTIL1(SDPARAM("CLINIC IEN"),1)
+ S FDA(44,SDPARAM("CLINIC IEN")_",",2505)="@"
+ D FILE^DIE("","FDA","FDERR")
+ I $D(FDERR) S RESULTS("ClinicInactivate",1)="" D ERRLOG^SDES2JSON(.RESULTS,52,"Error trying to delete INACTIVATE DATE on Clinic "_SDPARAM("CLINIC IEN")) Q
+ K FDA,FDERR
+ S FDA(409.831,SDCLINRES_",",.021)="@"
+ S FDA(409.831,SDCLINRES_",",.022)="@"
+ D FILE^DIE("","FDA","FDERR")
+ I $D(FDERR) S RESULTS("ClinicInactivate",1)="" D ERRLOG^SDES2JSON(.RESULTS,81,"File 409.831 not updated with the inactivation date for Resource IEN="_SDCLINRES) Q
+ S RESULTS("ClinicInactivate",1,"DeleteInactivate")="Inactivate Date successfully removed from clinic: "_SDPARAM("CLINIC IEN")_"."
+ Q
+ ;

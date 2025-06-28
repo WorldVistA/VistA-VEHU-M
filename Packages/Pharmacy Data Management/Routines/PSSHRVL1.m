@@ -1,5 +1,5 @@
-PSSHRVL1 ;WOIFO/Alex Vasquez, Timothy Sabat, Steve Gordon - Continuation Data Validation routine for drug checks ;01/15/07
- ;;1.0;PHARMACY DATA MANAGEMENT;**136,169,160,173,178,224**;9/30/97;Build 3
+PSSHRVL1 ;WOIFO/AV,TS,SG - Continuation Data Validation routine for drug checks ; Jan 15, 2007@16:00
+ ;;1.0;PHARMACY DATA MANAGEMENT;**136,169,160,173,178,224,254**;9/30/97;Build 109
  ;
  ; Reference to ^PSNDF(50.68 supported by IA #2079
  ; Reference to ^PSNDF(50.68 supported by IA #3735
@@ -142,7 +142,7 @@ GCNREASN(DRUGIEN,DRUGNM,ORDRNUM,BADGCN) ;
  ;
  S VAPROD1=""
  D  ;Case statement
- .I $G(BADGCN)=1 S MESSAGE=$$NXCHKMSG(DRUGNM) S PSSVQNOM=$$GCMESS,REASON=$S(PSSVQNOM:"^1",1:""),PSSREASN=1 Q
+ .I $G(BADGCN)=1 S MESSAGE=$$NXCHKMSG(DRUGNM) S PSSVQNOM=$$GCMESS,REASON=$S(PSSVQNOM:"^1",1:""),PSSREASN=1 S ^TMP($J,"SAVE","IN","GCNMSG")="" Q
  .I '$G(DRUGIEN),'PSSVQREM S REASON="No dispense drug found for Orderable Item",PSSREASN=2 Q
  .S NDNODE=$G(^PSDRUG(DRUGIEN,"ND"))
  .;if no ndnode or 3rd piece not populated 
@@ -223,10 +223,10 @@ DEMOCHK(AGE,BSA,WEIGHT,PSDRUG,WHERE) ;
  S PSRESULT="",PSREASON="",TEXT="",WHERE=$S(+$G(WHERE)=1:1,1:0),AGE=+$G(AGE),BSA=+$G(BSA),WEIGHT=+$G(WEIGHT)
  I AGE=0 D  Q PSRESULT
  .S TEXT=" AGE"
- .D:WHERE=0 
+ .D:WHERE=0
  ..S PSMESSAGE=$$DOSEMSG(PSDRUG)
  ..S PSREASON="One or more required patient parameters unavailable:"_TEXT
- .D:WHERE=1 
+ .D:WHERE=1
  ..S PSMESSAGE="Dosing checks could not be done for Drug: "_PSDRUG_", please complete a manual check for appropriate dosing."
  .S PSRESULT=PSMESSAGE_U_PSREASON
  Q PSRESULT

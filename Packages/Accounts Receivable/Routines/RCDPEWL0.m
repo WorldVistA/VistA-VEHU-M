@@ -1,5 +1,5 @@
 RCDPEWL0 ;ALB/TMK/PJH - ELECTRONIC EOB WORKLIST ACTIONS ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,208,252,269,298,317,321,326,332,409**;Mar 20, 1995;Build 17
+ ;;4.5;Accounts Receivable;**173,208,252,269,298,317,321,326,332,409,439**;Mar 20, 1995;Build 29
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -294,35 +294,29 @@ PRTERA ; EP from menu option View/Print ERA (VP) [RCDPE VIEW/PRINT ERA]
 PRERA ; RCSCR is assumed to be defined
  D FULL^VALM1 ; Protocol entry
 PRERA1 ; Option entry
- N DIR,X,Y,RCERADET,RCLSTMGR,POP,ZTRTN,ZTSAVE,ZTDESC,%ZIS ; PRCA*4.5*332
+ N DIR,POP,RCAUDIT,RCERADET,RCLSTMGR,X,Y,ZTRTN,ZTSAVE,ZTDESC,%ZIS ; PRCA*4.5*332
  D EXCWARN^RCDPEWLP(RCSCR)
- S DIR("?",1)="Including expanded detail will significantly increase the size of this report",DIR("?",2)="IF YOU CHOOSE TO INCLUDE IT, ALL PAYMENT DETAILS FOR EACH EEOB WILL BE"
- S DIR("?")="listed.  If you want just summary data for each EEOB, do NOT include it."
- S DIR(0)="YA",DIR("A")="Do you want to include expanded EEOB detail?: ",DIR("B")="NO"
- W !
- D ^DIR
- K DIR
- I $D(DUOUT)!$D(DTOUT) G PRERAQ
- S RCERADET=+Y
+ S RCERADET=$$ERADET^RCDPEWLE() I RCERADET=-1 G PRERAQ ; PRCA*4.5*439
+ S RCAUDIT=$$AUDIT^RCDPEWLE() I RCAUDIT=-1 G PRERAQ ; PRCA*4.5*439
  S RCLSTMGR=$$ASKLM^RCDPEARL(1)          ; PRCA*4.5*332
  I RCLSTMGR=-1 G PRERAQ                  ; PRCA*4.5*332
- I RCLSTMGR D VPERA(RCSCR,RCERADET,1) Q  ; PRCA*4.5*332
+ I RCLSTMGR D VPERA(RCSCR,RCERADET,1,RCAUDIT) Q  ; PRCA*4.5*332, PRCA*4.5*439
  S %ZIS="QM" D ^%ZIS G:POP PRERAQ
  I $D(IO("Q")) D  G PRERAQ
- . S ZTRTN="VPERA^RCDPEWL0("_RCSCR_","_RCERADET_",0)",ZTDESC="AR - Print ERA From Worklist"
+ . S ZTRTN="VPERA^RCDPEWL0("_RCSCR_","_RCERADET_",0,"_RCAUDIT_")",ZTDESC="AR - Print ERA From Worklist"
  . D ^%ZTLOAD
  . W !!,$S($D(ZTSK):"Your task # "_ZTSK_" has been queued.",1:"Unable to queue this job.")
  . K ZTSK,IO("Q") D HOME^%ZIS
  U IO
- D VPERA(RCSCR,RCERADET,0) ; PRCA*4.5*332
+ D VPERA(RCSCR,RCERADET,0,RCAUDIT) ; PRCA*4.5*332
  Q
  ;
-VPERA(RCSCR,RCERADET,LSTMGR) ; Queued entry
+VPERA(RCSCR,RCERADET,LSTMGR,RCAUDIT) ; Queued entry
  ; Input: RCSCR - IEN of ERA to be viewed (#344.4)
  ; RCERADET - 1 if inclusion of all EOB details from file 361.1 is
  ; desired, 0 if not
  ; LSTMGR - 1 display in list manager, 0 otherwise
- N RC,RCDIQ,RCDIQ1,RCDIQ2,RCDOT,RCPG,RCSCR1,RC3611,RCXM1,RCZ,RC3611,XX,Z,Z0
+ N RC,RCDIQ,RCDIQ1,RCDIQ2,RCDOT,RCPG,RCSCR1,RCSTOP,RC3611,RCXM1,RCZ,RC3611,XX,Z,Z0,ZTSTOP   ; PRCA*4.5*439 Add RCSTOP, ZTSTOP
  K ^TMP($J,"RC_SUMRAW"),^TMP($J,"RC_SUMOUT"),^TMP($J,"RC_SUMALL")
  S (RCSTOP,RCPG)=0,RCDOT="",$P(RCDOT,".",79)=""
  D GETS^DIQ(344.4,RCSCR_",","*","IEN","RCDIQ")
@@ -367,6 +361,12 @@ VPERA(RCSCR,RCERADET,LSTMGR) ; Queued entry
  ... S Z=0 F  S Z=$O(^TMP("PRCA_EOB",$J,RC3611,Z)) Q:'Z  S RC=RC+1,^TMP($J,"RC_SUMOUT",RC)=$G(^TMP("PRCA_EOB",$J,RC3611,Z))
  ... S RC=RC+2,^TMP($J,"RC_SUMOUT",RC-1)=" ",^TMP($J,"RC_SUMOUT",RC)=" "
  ... K ^TMP("PRCA_EOB",$J)
+ . ; PRCA*4.5*439 Get audit data if requested
+ . I RCAUDIT D  ;
+ .. D GETAUD^RCDPEWLE(RCSCR,.RCAUDIT)
+ .. S Z=0 F  S Z=$O(RCAUDIT(Z)) Q:'Z  S RC=RC+1,^TMP($J,"RC_SUMOUT",RC)=RCAUDIT(Z)
+ .. S RC=RC+2,^TMP($J,"RC_SUMOUT",RC-1)=" ",^TMP($J,"RC_SUMOUT",RC)=" "
+ . ; 
  . I $D(RCDIQ1(344.41,RCSCR1_","_RCSCR_",",2)) D
  .. S RC=RC+1,RCXM1(RC)="  **EXCEPTION RESOLUTION LOG DATA**"
  .. S Z=0 F  S Z=$O(RCDIQ1(344.41,RCSCR1_","_RCSCR_",",2,Z)) Q:'Z  S RC=RC+1,RCXM1(RC)=RCDIQ1(344.41,RCSCR1_","_RCSCR_",",2,Z)

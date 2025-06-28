@@ -1,5 +1,5 @@
-PSSHRIT ;WOIFO/SG,PO - Transmits a "ping" to determine if FDB server is down and record the down time ; 01 Mar 2016  3:34 PM
- ;;1.0;PHARMACY DATA MANAGEMENT;**136,168,164,173,180,184,178**;9/30/97;Build 14
+PSSHRIT ;WOIFO/SG,PO - Transmits a "ping" to determine if FDB server is down and record the down time ; Mar 01, 2016@15:34
+ ;;1.0;PHARMACY DATA MANAGEMENT;**136,168,164,173,180,184,178,254**;9/30/97;Build 109
  ;
  ;External reference to IN^PSSHRQ2 supported by DBIA 5369
  ;External reference to File 18.12 supported by DBIA 5891
@@ -253,6 +253,7 @@ INTERACT() ; check drug-drug interaction.
  ;
  S INTRO="Performing Drug-Drug Interaction Order Check for "_PSDRUG2_" and "_PSDRUG1
  S INFO=$G(^TMP($J,BASE,"OUT","DRUGDRUG","C",PSDRUG1,PSORDER,1,"PMON",9,0))
+ I '$L(INFO) S INFO=$G(^TMP($J,BASE,"OUT","DRUGDRUG","S",PSDRUG1,PSORDER,1,"PMON",9,0))   ;*254 FDB 4.5 upgrade
  S INTRO=INTRO_$S($L(INFO):"...OK",1:"...Not OK")
  W !
  I '$L(INFO) D
@@ -263,7 +264,7 @@ INTERACT() ; check drug-drug interaction.
  . W !
  . S PSSPEC("CLINICAL EFFECTS:  ")=""
  . S INFO=$$REPLACE^XLFSTR(INFO,.PSSPEC)
- . S INFO="Critical Drug Interaction: "_INFO
+ . S INFO="Significant or Critical Drug Interaction Exists: "_INFO      ;*254 FDB 4.5 upgrade
  . D OUTPUT(INFO,PSSLEFT)
  ;
  K ^TMP($J,BASE)
@@ -315,7 +316,8 @@ DOSECHK() ; check dosing
  SET ^TMP($J,BASE,"IN","DOSE","WT")=83.01
  SET ^TMP($J,BASE,"IN","DOSE","BSA")=1.532
  ;VALUES: GCN^VUID^IEN^NAME^DOSE AMOUNT^DOSE UNIT^DOSE RATE^FREQ^DURATION^DURATION RATE^ROUTE^DOSE TYPE^SPECIFIC
- S ^TMP($J,BASE,"IN","DOSE","O;1464P;PROSPECTIVE;2")="4490^4007154^^ACETAMINOPHEN 500MG TAB^3000^MILLIGRAMS^DAY^Q4H^10^DAY^ORAL^MAINTENANCE^1"
+ ;*254 FDB 4.5 upgrade changing piece 8 data (frequency) from 'Q4H' to '6'
+ S ^TMP($J,BASE,"IN","DOSE","O;1464P;PROSPECTIVE;2")="4490^4007154^^ACETAMINOPHEN 500MG TAB^3000^MILLIGRAMS^DAY^6^10^DAY^ORAL^MAINTENANCE^1"
  S ^TMP($J,BASE,"IN","PROSPECTIVE","O;1464P;PROSPECTIVE;2")="4490^4007154^^ACETAMINOPHEN 500MG TAB^O"
  D IN^PSSHRQ2(BASE)
  ;

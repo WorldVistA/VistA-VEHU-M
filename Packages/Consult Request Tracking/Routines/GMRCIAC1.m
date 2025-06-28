@@ -1,5 +1,5 @@
-GMRCIAC1 ;SLC/JFR - FILE IFC ACTIVITIES cont'd ; Mar 9,2023@15:13:24
- ;;3.0;CONSULT/REQUEST TRACKING;**22,66,73,154,193**;DEC 27, 1997;Build 40
+GMRCIAC1 ;SLC/JFR - FILE IFC ACTIVITIES cont'd ; Dec 19, 2024@13:59:55
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,66,73,154,193,201**;DEC 27, 1997;Build 7
  ;
  ; Reference to $$FIND1^DIC in ICR #2051
  ; Reference to ^DIE in ICR #2053
@@ -176,10 +176,12 @@ RESUB(GMRCAR,GMRCCRNR,GMRCMSGI) ;resubmit a cancelled, remote consult ;MKN GMRC*
  S GMRCFDA(8)=5,GMRCFDA(9)=11 ;status and last action
  S GMRCCRNR=$G(GMRCCRNR,0),GMRCMSGI=$G(GMRCMSGI) ;MKN GMRC*3*154
  ;
+ N OBR19 ; P201 WTC 11.2.23
  I $D(^TMP("GMRCIN",$J,"OBR")) D  ; has INPATIENT or OUTPATIENT changed?
  . N GMRCION
  . S GMRCION=$P(^TMP("GMRCIN",$J,"OBR"),"|",18)
  . I GMRCION'=$P(^GMR(123,GMRCDA,0),U,18) S GMRCFDA(14)=GMRCION
+ . S OBR19=$P(^TMP("GMRCIN",$J,"OBR"),"|",19) ; P201 WTC 11/2/2023
  . Q
  D  ; check for change in urgency
  . N GMRCURG
@@ -225,6 +227,10 @@ RESUB(GMRCAR,GMRCCRNR,GMRCMSGI) ;resubmit a cancelled, remote consult ;MKN GMRC*
  K GMRCFDA,FDA
  ;
  I $D(^TMP("GMRCIN",$J,"OBX",1)) D  ; reason for request change?
+ . ;
+ . I $G(OBR19)'="" D  ;  Re-sequence reason for request if needed.  wtc 201 11.2.2023
+ .. N IEN S IEN=$O(^GMR(123.7,"C",$$UP^XLFSTR(OBR19),0)) I IEN D RESEQNCE^GMRCIRSN(IEN) ;
+ . ;
  . D TRIMWP^GMRCIUTL($NA(^TMP("GMRCIN",$J,"OBX",1)),5)
  . N DIFF S DIFF=0
  . D  I 'DIFF Q

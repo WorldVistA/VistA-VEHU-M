@@ -1,5 +1,5 @@
-GMRCIAC2 ;SLC/JFR - FILE IFC ACTIVITIES CONT'D ; Feb 6, 2023@11:28:17
- ;;3.0;CONSULT/REQUEST TRACKING;**22,28,35,66,154,184,193**;DEC 27, 1997;Build 40
+GMRCIAC2 ;SLC/JFR - FILE IFC ACTIVITIES CONT'D ; Dec 19, 2024@13:59:06
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,28,35,66,154,184,193,201**;DEC 27, 1997;Build 7
  ;
  ; Reference to ^DIE in ICR #2053
  ; Reference to ^XUAF4 in ICR #2171
@@ -255,6 +255,7 @@ SENDMSG(GRP,ERR,ERRTEXT,MSGID) ; Send a MailMan Message with the errors
 CRNR ;GMRC CRNR IFC ERRORS;GMRC CRNR IFC TECH ERRORS;GMRC CRNR IFC CLIN ERRORS;GMRC TIER II CRNR IFC ERRORS
 101 ;1;1;0;1;Unknown Consult/Procedure request
 202 ;1;0;1;1;Local or Unknown MPI Identifiers
+206 ;0;0;0;0;ICN Missing from Incoming Order
 301 ;1;0;1;1;Service not Matched to Receiving Facility
 401 ;1;0;1;1;Procedure not Matched to Receiving Facility
 501 ;1;0;1;1;Error in Procedure Name
