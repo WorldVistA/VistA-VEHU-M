@@ -1,5 +1,5 @@
-SDES2SRCHCLNBYSC ;ALB/JAS - SDES2 SEARCH CLIN BY STOP CODE ;JUL 19, 2024
- ;;5.3;Scheduling;**886**;Aug 13, 1993;Build 13
+SDES2SRCHCLNBYSC ;ALB/JAS,JDJ - SDES2 SEARCH CLIN BY STOP CODE ;MAY 9, 2025
+ ;;5.3;Scheduling;**886,907**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  Q
@@ -98,7 +98,7 @@ GETCLINICLIST(CLINLIST,SDSEARCH) ; pull matching clinics using the first input p
  . I $L(STOPCODESTART) Q:$$WRONGSTOPCODE(CLNIEN,STOPCODESTART,STOPCODEEND)
  . S SDCLINCNT=SDCLINCNT+1
  . D BUILDRETURN(CLNIEN,SDCLINCNT,.CLINLIST,.SDDATETIME)
- I SDCLINCNT=0 S @CLINLIST@("ClinicAudit",1)=""
+ I SDCLINCNT=0 S @CLINLIST@("ClinicAudit",1)="No Clinics returned for the criteria entered"
  Q
  ;
 BUILDRETURN(SDCLINICIEN,SDCLINCNT,CLINLIST,SDDATETIME) ;Build return array with clinic data

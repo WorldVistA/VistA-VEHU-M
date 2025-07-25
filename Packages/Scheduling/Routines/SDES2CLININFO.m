@@ -1,5 +1,5 @@
-SDES2CLININFO ;ALB/TJB,JAS,TJB - Get Clinic Info based on Clinic IEN ;DEC 03, 2024
- ;;5.3;Scheduling;**893,895,898**;Aug 13, 1993;Build 5
+SDES2CLININFO ;ALB/TJB,JAS,TJB,MCB - Get Clinic Info based on Clinic IEN ;APRIL 5,2025
+ ;;5.3;Scheduling;**893,895,898,907**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Documented API's and Integration Agreements
@@ -8,6 +8,7 @@ SDES2CLININFO ;ALB/TJB,JAS,TJB - Get Clinic Info based on Clinic IEN ;DEC 03, 20
  ; Reference to $$GETS1^DIQ is supported by IA #2056
  ;
  ; copy of SDESRTVCLN
+ ;
  Q
  ;
 ENTRY(SDRETURN,SDCONTEXT,SDPARAM) ;SDES2 GET CLINIC INFO
@@ -32,6 +33,9 @@ ENTRY(SDRETURN,SDCONTEXT,SDPARAM) ;SDES2 GET CLINIC INFO
  ;"CreditStopCodeNum": "",
  ;"DefaultApptType": "",
  ;"DefaultToPCPractitioner": "",
+ ;"Diagnosis": {
+ ; "Code":"",
+ ; "DefaultForClinic":""},
  ;"DisplayClinicAppt": "",
  ;"DivisionIEN": 1,
  ;"DivisionName": "CHEYENNE VAMROC",
@@ -54,6 +58,9 @@ ENTRY(SDRETURN,SDCONTEXT,SDPARAM) ;SDES2 GET CLINIC INFO
  ;"PreApptLetter": "",
  ;"PreCheckinAllowed": "",
  ;"Principal": "",
+ ;"PrivilegedUser": {
+ ; "Name":"",
+ ; "IEN":""},
  ;"ProhibitAccessToClinic": "",
  ;"Provider": {
  ; "DefaultForClinic": "",
@@ -81,7 +88,7 @@ ENTRY(SDRETURN,SDCONTEXT,SDPARAM) ;SDES2 GET CLINIC INFO
  ;"VeteranSelfCancel": "",
  ;"WorkloadValidationCheckout": ""}}
  ;
- N RETURN,HASFIELDS,ELGFIELDSARRAY,ELGRETURN,SDECI,ERRORS,SDCLNJSON
+ N RETURN,HASFIELDS,ELGFIELDSARRAY,ELGRETURN,SDECI,ERRORS,SDCLNJSON,DIERR
  S (RETURN,ELGFIELDSARRAY,HASFIELDS)=""
  ;
  ; validate context array
@@ -266,6 +273,7 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  . S SDCLNSREC("Clinic","Provider",SDC,"IEN")=$G(SDDATA(44.1,SDX,.01,"I"))
  . S SDCLNSREC("Clinic","Provider",SDC,"Title")=$$GET1^DIQ(200,$G(SDDATA(44.1,SDX,.01,"I"))_",",8,"E")
  . S SDCLNSREC("Clinic","Provider",SDC,"DefaultForClinic")=$G(SDDATA(44.1,SDX,.02,"E"))
+ I '$D(SDCLNSREC("Clinic","Provider")) S SDCLNSREC("Clinic","Provider",1)=""
  ; Diagnosis Multiple
  S SDX="",SDC=0
  S SDFIELDS="2700*"
@@ -275,12 +283,14 @@ BLDCLNREC(SDCLNSREC,SDCLNIEN) ;Get Clinic data
  . S SDC=SDC+1
  . S SDCLNSREC("Clinic","Diagnosis",SDC,"Code")=$G(SDDATA(44.11,SDX,.01,"E"))
  . S SDCLNSREC("Clinic","Diagnosis",SDC,"DefaultForClinic")=$G(SDDATA(44.11,SDX,.02,"E"))
+ I '$D(SDCLNSREC("Clinic","Diagnosis")) S SDCLNSREC("Clinic","Diagnosis",1)=""
  ; Return all Privileged Users
  S (USRCNT,USRIEN)=0
  F  S USRIEN=$O(^SC(SDCLNIEN,"SDPRIV",USRIEN)) Q:'USRIEN  D
  .S USRCNT=USRCNT+1
  .S SDCLNSREC("Clinic","PrivilegedUser",USRCNT,"IEN")=USRIEN
  .S SDCLNSREC("Clinic","PrivilegedUser",USRCNT,"Name")=$$GET1^DIQ(44.04,USRIEN_","_SDCLNIEN,.01)
+ I '$D(SDCLNSREC("Clinic","PrivilegedUser")) S SDCLNSREC("Clinic","PrivilegedUser",1)=""
  ;
  ; get resource IEN
  S RESIEN=""

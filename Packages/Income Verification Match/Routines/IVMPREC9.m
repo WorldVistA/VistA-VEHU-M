@@ -1,5 +1,5 @@
-IVMPREC9 ;ALB/KCL,BRM,CKN,TDM,KUM,JAM,KUM - PROCESS INCOMING (Z05 EVENT TYPE) HL7 MESSAGES (CON'T) ;09-05-2017 10:03am
- ;;2.0;INCOME VERIFICATION MATCH;**34,58,115,121,151,159,167,192,193,187,210**;21-OCT-94;Build 13
+IVMPREC9 ;ALB/KCL,BRM,CKN,TDM,KUM,JAM,KUM - PROCESS INCOMING (Z05 EVENT TYPE) HL7 MESSAGES (CON'T) ;09-10-2024 10:03am
+ ;;2.0;INCOME VERIFICATION MATCH;**34,58,115,121,151,159,167,192,193,187,210,216**;21-OCT-94;Build 7
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ;
@@ -144,6 +144,10 @@ AUTOEPC(DFN,UPDEPC) ;
  ..S (UPDT,DFLG)=0
  ..; - check for data node in (#301.511) sub-file
  ..S IVMNODE=$G(^IVM(301.5,IVMDA2,"IN",IVMDA1,"DEM",IVMJ,0))
+ ..; IVM*2.0*216 - Remove Cell phone if VES chagne date/time is recent than DHCP change date/time and blank is sent
+ ..I ($P($G(^IVM(301.92,+IVMNODE,0)),"^",5)=.134),($P(IVMNODE,"^",2)="") D
+ ...S IVMNODE=+IVMNODE_"^@"
+ ..;
  ..I ('+IVMNODE)!($P(IVMNODE,"^",2)']"") Q
  ..;Check if fields needs to be updated for particular comm. Type.
  ..S CTYP=0 F  S CTYP=$O(UPDEPC(CTYP)) Q:CTYP=""!UPDT  D

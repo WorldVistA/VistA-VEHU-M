@@ -1,5 +1,5 @@
-SDAMUTDT ;BPOIFO/JFW,TAW,KML,LAB -Scheduling Encapsulation Utilities ;DEC 7,2023
- ;;5.3;Scheduling;**266,805,809,813,867**;13 Aug 1993;Build 8
+SDAMUTDT ;BPOIFO/JFW,TAW,KML,LAB -Scheduling Encapsulation Utilities ;MAY 8,2025
+ ;;5.3;Scheduling;**266,805,809,813,867,907**;13 Aug 1993;Build 5
  ;
  ;*****************************************************************
  ;              CHANGE LOG
@@ -20,7 +20,7 @@ FMTISO(SDFMDT,SDCLINIC) ;convert internal fileman format to extended GMT
  ;*****************************************************************
  N SDDTM,SDGMT,SDTIME,SDOFFSET,HH,MM
  I +$G(SDFMDT)=0 Q ""
- S SDDTM=$$FMTHL7^XLFDT(SDFMDT)
+ D FILEMANTOHL7^SDES2UTIL(.SDFMDT,.SDDTM)
  Q:SDDTM<0 -1
  S SDCLINIC=$G(SDCLINIC)
  ;If clinic offset is differnt from system, adjust SDFMDT
