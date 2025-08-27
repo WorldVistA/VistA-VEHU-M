@@ -1,5 +1,5 @@
-GMRCIACT ;SLC/JFR - PROCESS ACTIONS ON IFC ; Dec 20, 2024@08:46:34
- ;;3.0;CONSULT/REQUEST TRACKING;**22,47,58,66,73,121,154,176,184,193,185,189,201**;DEC 27, 1997;Build 7
+GMRCIACT ;SLC/JFR - PROCESS ACTIONS ON IFC ; Jan 27, 2025@06:03:22
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,47,58,66,73,121,154,176,184,193,185,189,201,205**;DEC 27, 1997;Build 3
  ;
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;
@@ -27,7 +27,7 @@ NW(ARRAY) ;process and file new order
  . S GMRCROUT=$$IEN^XUAF4($P($P(GMRCORC,"|",2),U,2))
  . I '$O(^GMR(123,"AIFC",GMRCROUT,GMRCFCN,0)) Q  ;no dup
  . S GMRCITER=802
- . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",GMRCITER,GMRCCRNR,GMRCMSGI) ;send app. ack w/ error ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
+ . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",GMRCITER,GMRCCRNR,GMRCMSGI,$NA(^TMP("GMRCIN",$J))) ;send app. ack w/ error ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI. P205 WTC 8/22/24
  . K ^TMP("GMRCIN",$J) Q
  I '$D(^TMP("GMRCIN",$J,"PID")) Q  ;prepare reject message (no PID)
  D  ;get patient DFN from ICN in message
@@ -65,7 +65,7 @@ NW(ARRAY) ;process and file new order
  . I ICN="" D  Q  ;
  .. ;
  .. S GMRCITER=206 ;
- .. D ERR206^GMRCIAC3($P(GMRCMSGI,U,1),EDIPI,GMRCFCN,OBR19,$$HL7TFM^XLFDT($P(GMRCORC,"|",15))) ;
+ .. D ERR206^GMRCIAC3($P(GMRCMSGI,U,1),EDIPI,GMRCFCN,OBR19,$$HL7TFM^XLFDT($P(GMRCORC,"|",15)),$NA(^TMP("GMRCIN",$J))) ; P205 WTC 8/22/24
  .. K ^TMP("GMRCIN",$J) ;
  . ;
  . Q:EDIPI=""  ;  unlikely to happen that both ICN and EDIPI missing from Cerner order.  wtc 5/8/24
@@ -80,7 +80,7 @@ NW(ARRAY) ;process and file new order
  . N STA S STA=$P($P(^TMP("GMRCIN",$J,"ORC"),"|",2),U,2)
  . N OBR S OBR=^TMP("GMRCIN",$J,"OBR")
  . D PTERRMSG^GMRCIERR(^TMP("GMRCIN",$J,"PID"),STA,,OBR)
- . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",201,GMRCCRNR,GMRCMSGI) ; send app. ack w/error ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
+ . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",201,GMRCCRNR,GMRCMSGI,$NA(^TMP("GMRCIN",$J))) ; send app. ack w/error ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI. P205 WTC 8/22/24
  . K ^TMP("GMRCIN",$J) Q
  D  ;get ordered item and service
  . S GMRCITM=$P(^TMP("GMRCIN",$J,"OBR"),"|",4)
@@ -96,7 +96,7 @@ NW(ARRAY) ;process and file new order
  .. I +SERV'>0 S GMRCITER=$P(SERV,U,3)
  .. S GMRCFDA(1)=SERV
  I $D(GMRCITER) D  Q  ;error in procedure or service, reject new order
- . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",GMRCITER,GMRCCRNR,GMRCMSGI) ; send app. ACK  ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
+ . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",GMRCITER,GMRCCRNR,GMRCMSGI,$NA(^TMP("GMRCIN",$J))) ; send app. ACK  ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI. P205 WTC 8/22/24
  . K ^TMP("GMRCIN",$J) Q
  ;
  S GMRCFDA(.01)=$$NOW^XLFDT
@@ -156,7 +156,7 @@ NW(ARRAY) ;process and file new order
  M FDA(1,123,"+1,")=GMRCFDA
  D UPDATE^DIE("","FDA(1)","GMRCDA","GMRCERR")
  I '$D(GMRCDA) D  Q  ;couldn't get new consult #
- . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",901,GMRCCRNR,GMRCMSGI) ; send app. ACK ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
+ . S GMRCCRNR=$G(GMRCCRNR),GMRCMSGI=$G(GMRCMSGI) D APPACK^GMRCIAC2(0,"AR",901,GMRCCRNR,GMRCMSGI,$NA(^TMP("GMRCIN",$J))) ; send app. ACK ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI. P205 WTC 8/22/24
  . K ^TMP("GMRCIN",$J) Q
  K GMRCFDA,FDA
  D  ; file reason for request
@@ -213,7 +213,7 @@ DIS(GMRCAR,GMRCCRNR,GMRCMSGI) ;dis-associate a result from a remote request ; MK
  S GMRCDA=$$GETDA^GMRCIAC2(GMRCORC)
  S GMRCCRNR=$G(GMRCCRNR,0),GMRCMSGI=$G(GMRCMSGI) ;MKN GMRC*3*154
  I '$$LOCKREC^GMRCUTL1(GMRCDA) D  Q  ;couldn't lock record
- . D APPACK^GMRCIAC2(GMRCDA,"AR",901,GMRCCRNR,GMRCMSGI) ;send app. ACK ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
+ . D APPACK^GMRCIAC2(GMRCDA,"AR",901,GMRCCRNR,GMRCMSGI,$NA(^TMP("GMRCIN",$J))) ;send app. ACK ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI. P205 WTC 8/22/24
  . K ^TMP("GMRCID",$J) Q
  ;    v--check to see if a dup transmission
  I $$DUPACT^GMRCIAC2(GMRCDA,12,GMRCORC,^TMP("GMRCID",$J,"OBX",4,1),GMRCCRNR,GMRCMSGI) K ^TMP("GMRCID",$J) Q  ;MKN GMRC*3*154 added CRNR and MSGI ;p193
@@ -252,7 +252,7 @@ OTHER(GMRCAR,GMRCCRNR,GMRCMSGI) ;process most IFC actions
  S GMRCROL=$P(^GMR(123,GMRCDA,12),U,5)
  S GMRCCRNR=$G(GMRCCRNR,0),GMRCMSGI=$G(GMRCMSGI) ;MKN GMRC*3*154
  I '$$LOCKREC^GMRCUTL1(GMRCDA) D  Q  ;couldn't lock record
- . D APPACK^GMRCIAC2(GMRCDA,"AR",901,GMRCCRNR,GMRCMSGI) ; send app. ACK ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI
+ . D APPACK^GMRCIAC2(GMRCDA,"AR",901,GMRCCRNR,GMRCMSGI,$NA(^TMP("GMRCIN",$J))) ; send app. ACK ;MKN GMRC*3*154 added GMRCCRNR and GMRCMSGI. P205 WTC 8/22/24
  . K ^TMP("GMRCIN",$J) Q
  ;
  I $P(GMRCORC,"|")'="IP" D  ; status update
@@ -261,7 +261,10 @@ OTHER(GMRCAR,GMRCCRNR,GMRCMSGI) ;process most IFC actions
  . ; IP=receive, SC=schedule, CA=cancel, DC=discontinue
  D  ; get last action taken
  . I '$G(GMRCFDA(8)) S (GMRCFDA(9),GMRCLAT)=20 Q
- . I GMRCFDA(8)=6 S (GMRCFDA(9),GMRCLAT)=21 Q
+ . ;
+ . ;  Set last action taken to STATUS CHANGE (3) if appointment unscheduled and filler is converted site.  p205 wtc 8/20/24
+ . ;
+ . I GMRCFDA(8)=6 S (GMRCFDA(9),GMRCLAT)=21 Q:'$$CNVTD^GMRCIEVT(GMRCDA)  S:$P($P(GMRCORC,"|",16),U,1)="U" (GMRCFDA(9),GMRCLAT)=3 ; 
  . I GMRCFDA(8)=8 S (GMRCFDA(9),GMRCLAT)=8 Q
  . I GMRCFDA(8)=1 S (GMRCFDA(9),GMRCLAT)=6 Q
  . I GMRCFDA(8)=13 S (GMRCFDA(9),GMRCLAT)=19 Q
@@ -272,6 +275,13 @@ OTHER(GMRCAR,GMRCCRNR,GMRCMSGI) ;process most IFC actions
  M FDA(1,123,GMRCDA_",")=GMRCFDA
  D UPDATE^DIE("","FDA(1)",,"GMRCERR") ;file last action and update status
  K GMRCFDA
+ ;
+ ;  Add comment that appointment has been cancelled by converted filler site.  wtc p205 8/15/24
+ ;
+ I $$CNVTD^GMRCIEVT(GMRCDA),$P(GMRCORC,"|")="SC",$P(GMRCORC,"|",5)="IP",GMRCLAT=3 D  ;
+ . N OBXIDX S OBXIDX=$O(^TMP("GMRCIN",$J,"OBX",3,"A"),-1) I 'OBXIDX S OBXIDX=0 ;
+ . S OBXIDX=OBXIDX+1,^TMP("GMRCIN",$J,"OBX",3,OBXIDX)="3|TX|^COMMENTS^|"_OBXIDX_"|Appointment has been cancelled." ; 
+ ;
  D FILEACT^GMRCIAC2(GMRCDA,GMRCLAT,,$NA(^TMP("GMRCIN",$J)),$G(GMRCCRNR),$$GET1^DIQ(123,GMRCDA,.07,"I")) ; P184
  D  ;send notifications
  . N GMRCTX,GMRCNOT,GMRCFL
@@ -303,5 +313,5 @@ OTHER(GMRCAR,GMRCCRNR,GMRCMSGI) ;process most IFC actions
  D  ;send appl ACK
  . D APPACK^GMRCIAC2(GMRCDA,"AA") ;send app. ACK and unlock record
  K ^TMP("GMRCIN",$J)
- Q
- ; 
+ Q  ;
+ ;

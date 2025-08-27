@@ -1,9 +1,9 @@
-GMRCIAC3 ;ALB/WTC - FILE IFC ACTIVITIES CONT'D ; Dec 20, 2024@08:45:24
- ;;3.0;CONSULT/REQUEST TRACKING;**201**;DEC 27, 1997;Build 7
+GMRCIAC3 ;ALB/WTC - FILE IFC ACTIVITIES CONT'D ; Jan 27, 2025@06:03:05
+ ;;3.0;CONSULT/REQUEST TRACKING;**201,205**;DEC 27, 1997;Build 3
  ;
  Q  ;
  ;
-ERR206(MSGID,EDIPI,CRNRORDR,ORDRDESC,ORDRDATE) ;
+ERR206(MSGID,EDIPI,CRNRORDR,ORDRDESC,ORDRDATE,GMRCMSG) ;
  ;
  ;  Special processing for error code 206 ICN Missing from Incoming Order
  ;
@@ -12,6 +12,7 @@ ERR206(MSGID,EDIPI,CRNRORDR,ORDRDESC,ORDRDATE) ;
  ;  CRNRORDR = Cerner order number
  ;  ORDRDESC = Order description
  ;  ORDRDATE = Date of order
+ ;  GMRCMSG  = Name of array where HL7 message is stored
  ;
  ;  Set do not purge flag for incoming order.
  ;
@@ -19,7 +20,7 @@ ERR206(MSGID,EDIPI,CRNRORDR,ORDRDESC,ORDRDATE) ;
  ;
  ;  Send Application rejection ACK.
  ;
- D APPACK^GMRCIAC2(0,"AR",206,1,MSGID) ;
+ D APPACK^GMRCIAC2(0,"AR",206,1,MSGID,GMRCMSG) ;
  ;
  ;  Log message for later re-processing.
  ;

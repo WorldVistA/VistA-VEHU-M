@@ -1,6 +1,9 @@
-ORMPS ; SLC/MKB/TC - Process Pharmacy ORM msgs ;10/16/14  07:34
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**3,54,62,86,92,94,116,138,152,141,165,149,213,195,243,306,350,480**;Dec 17, 1997;Build 4
+ORMPS ; SLC/MKB/TC - Process Pharmacy ORM msgs ; Aug 28, 2024@09:14:37
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**3,54,62,86,92,94,116,138,152,141,165,149,213,195,243,306,350,480,609**;Dec 17, 1997;Build 23
  ;Per VHA Directive 2004-038, this routine should not be modified.
+ ;
+ ; Reference to $$MVT^DGPMOBS in ICR #2664
+ ; Reference to $$NOW^XLFDT in ICR #10103
  ;
 EN ; -- entry point
  I '$L($T(@ORDCNTRL)) Q  ;S ORERR="Invalid order control code" Q
@@ -77,6 +80,7 @@ SN1 ; save order
  . S TYPE=$S(TYPE="R":2,1:1) Q:'$D(^OR(100,ORIG,0))
  . S $P(^OR(100,ORIFN,3),U,5)=ORIG,$P(^(3),U,11)=TYPE
  . S $P(^OR(100,ORIG,3),U,6)=ORIFN,EVNT=$P(^(0),U,17)
+ . M ^OR(100,ORIFN,11)=^OR(100,ORIG,11) ; Move transfer multiple to new order
  . I $L(EVNT),TYPE=1 S $P(^OR(100,ORIFN,0),U,17)=EVNT
  . I TYPE=2,$G(ORCAT)="I" S ORSTRT=ORLOG D PARENT^ORMPS3 ;ck if complex
  I $G(ORCAT)="O" S ZSC=$$ZSC^ORMPS3 I ZSC,$P(ZSC,"|",2)'?2.3U S ^OR(100,ORIFN,5)=$TR($P(ZSC,"|",2,9),"|","^") ;1 or 0 instead of [N]SC
@@ -109,7 +113,7 @@ SC ; -- Status changed (verified, expired, suspended, renewed, reinstate)
  . I $$CHANGED^ORMPS2 S ORNATR="S" D RO^ORMPS2 S DONE=1 Q
  . I $P(ZRX,"|",7)="TPN",+$P(OR0,U,11)'=$O(^ORD(100.98,"B","TPN",0)) D
  .. N DA,DR,DIE,ORDG S ORDG=+$O(^ORD(100.98,"B","TPN",0))
- .. ;four slashes below is OK, basically simlulating a direct write of the global for the TO field which has no Input Transform anyway
+ .. ;four slashes below is OK, basically simulating a direct write of the global for the TO field which has no Input Transform anyway
  .. S DA=+ORIFN,DR="23////"_ORDG,DIE="^OR(100," D ^DIE
  . I $P(OR3,U,11)=2,$P(OR0,U,12)="I" S ORSTRT=+$P($G(^OR(100,+ORIFN,8,1,0)),U,16) ;use Release Date for inpt renewals
  I $P(OR0,U,12)="I",$P(ZRX,"|",4)="R",+$P(ZRX,"|",2)=+ORIFN S ORSTRT=$P(OR0,U,8) ;keep orig start when renewed

@@ -1,24 +1,16 @@
-ORNEWPERS ; NA/AJB - NEW PERSON RPC ;02/09/23  06:03
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**596**;Dec 17, 1997;Build 7
+ORNEWPERS ; NA/AJB - NEW PERSON RPC ; Sep 25, 2024@12:13:03
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**596,609**;Dec 17, 1997;Build 23
  ;
- ; External reference to $$DT^XLFDT supported by IA 10103
- ; External reference to $$ALL^VASITE suppored by IA 10112
- ; External reference to $$SCRDFCS^TIULA3 supported by IA 3976
- ; External reference to $$DIV4^XUSER supported by 2343
- ; External reference to $$PROVIDER^XUSER supported by IA 2343
- ; External reference to $$GET^XUA4A72 supported by IA 1625
- ; External reference to $$GET1^DIQ supported by IA 2056
- ; External reference to $$ACCESS^XQCHK supported by IA 10078
- ; External reference to $$NPI^XUSNPI supported by IA 4532
- ; External reference to $$ISA^USRLM supported by IA 1544
- ; External reference to $$REQCOSIG^TIULP supported by IA 2322
- ; External reference to $$ISA^USRLM supported by 1544
- ; External reference to GETLST^XPAR supported by IA 2263
- ; External reference to File ^DIC(49 supported by IA 4330
- ; External reference to File ^TIU(8925 supported by IA 2937
- ; External reference to File ^VA supported by IA 4329
- ; External reference to File ^VA supported by IA 10060
- ; External reference to File ^XUSEC supported by IA 10076
+ ; Reference to ^DIC( in ICR #916
+ ; Reference to ^DIC(3.1 in ICR #1234
+ ; Reference to ^DIC(49 in ICR #4330
+ ; Reference to ^VA(200,D0,5 in ICR #4329
+ ; Reference to $$ISA^USRLM in ICR #1544
+ ; Reference to $$DIV4^XUSER in ICR #2533
+ ; Reference to $$NPI^XUSNPI in ICR #4532
+ ; Reference to ^TIU(8925.1 in ICR #4082
+ ; Reference to $$REQCOSIG^TIULP in ICR #2322
+ ; Reference to $$ISA^TIULX in ICR #3058
  ;
  Q
 PARAMETERS ; FROM^DIR^KEY^DATE^RDV^ALL^PDMP^SPN^EXC^NVAP^DFC^TIUDA^TYPE^HELP^DEBUG
@@ -35,7 +27,7 @@ NEWPERSON(ORY,PARAMS) ; all parameters passed by reference
  I TAG="COS" S P("DSC")=$$FIND1^DIC(8925.1,"","","DISCHARGE SUMMARY","","I $P(^(0),U,4)=""CL""","") ;     discharge summary class
  F I=0:1 S J=$P($T(@TAG+I),";;",2,3) Q:J=""  S XEC(I)=J ;                                                 execution criteria [evaluated reverse order]
  I HELP'=0 D HELP(.ORY,.INF,.XEC) Q  ;                                                                    REMOTE PROCEDURE information
- ; similiar provider name lookup receives IEN, returns all users that match LAST,FI [ignores max limit]
+ ; similar provider name lookup receives IEN, returns all users that match LAST,FI [ignores max limit]
  ; example:  CPRSPROVIDER,FIRSTNAME becomes CPRSPROVIDER,FH~
  I SPN N SPNQ D SPN(.FROM,.SPNQ) ;                                                                        similar provider name lookup
  S I=0 F  Q:$S(SPN:0,1:(I'<MAX))  S FROM=$O(@GBL@(FROM),DIR) Q:$S(SPN:'(FROM[SPNQ),1:FROM="")  D  ;       main loop
@@ -66,7 +58,7 @@ SPN(FROM,SPNQ) ; similar provider name lookup
  Q
 DETAILS(NODE0,IEN,MORE,DIV) ; get user information
  N DTL,ENTRY S DIV=$G(DIV),DTL="",ENTRY=IEN_"^"_$$NAMEFMT^XLFNAME($P(NODE0,U),"F","DcMPC")_"^",MORE=$G(MORE,0) ;         IEN^user name
- S:$P(NODE0,U,9) DTL(1)=$$TITLE^XLFSTR($G(^DIC(3.1,$P(NODE0,U,9),0))) ;                                                  title
+ S:$P(NODE0,U,9) DTL(1)=$$TITLE^XLFSTR($P($G(^DIC(3.1,$P(NODE0,U,9),0)),U)) ;                                            title
  I MORE D
  . N SRV S SRV=$P($G(^VA(200,IEN,5)),U) S:SRV SRV=$$TITLE^XLFSTR($P($G(^DIC(49,SRV,0)),U)) S:SRV'="" DTL(2)=SRV ;        service/section
  . I +DIV S DIV=$S($P(DIV,U,2)'="":$P(DIV,U,2),1:$$GET1^DIQ(4,+DIV,.01)) S:DIV'="" DTL(3)=DIV Q  ;                       division
@@ -96,7 +88,7 @@ HELP(ORY,INF,XEC) ; return detailed parameter &  user evaluation information
  . S I=0 F  S I=$O(@GBL@(I)) Q:'I  S X=X+1,ORY(X)=@GBL@(I,0)
  S X=X+1,ORY(X)="",X=X+1,ORY(X)="Parameter       Value"
  S I=0 F  S I=$O(INF(I)) Q:'I  S X=X+1,ORY(X)=$O(INF(I,"")),J=INF(I,$O(INF(I,""))),ORY(X)=$$SETSTR(J,ORY(X),17,$L(J))
- S X=X+1,ORY(X)="",X=X+1,ORY(X)="COR=CPRS GUI ""core"" tab status",X=X+1,ORY(X)="NVA=Non-VA Providers tab staus"
+ S X=X+1,ORY(X)="",X=X+1,ORY(X)="COR=CPRS GUI ""core"" tab status",X=X+1,ORY(X)="NVA=Non-VA Providers tab status"
  S X=X+1,ORY(X)="",X=X+1,ORY(X)="Current Evaluation Criteria"
  S I="" F  S I=$O(XEC(I),-1) Q:I=""  S X=X+1,ORY(X)=$P(XEC(I),";;")
  Q
@@ -109,7 +101,7 @@ USRCLEX(IEN,CLASS,ERR,DATE) ; NSR 20120101
 COS ;;I $$REQCOSIG^TIULP(TYPE,TIUDA,IEN,DATE);;"User requires co-signature for a:",!,?4,$E($$GET1^DIQ(8925.1,TYPE,.01),1,67)
  ;;I TYPE=DSC!($$ISA^TIULX(TYPE,DSC)),'$$ISA^USRLM(IEN,"PROVIDER",,DATE);;"Not a PROVIDER User Class for a title in DISCHARGE SUMMARY Class"
 DFC ;;I DFC,'$$PROVIDER^TIUPXAP1(IEN,DATE);;"Not a member of a Provider 'Person Class' for default co-signer selection"
- ;;I DFC,DUZ=IEN;;"Cannot assign youself as default co-signer"
+ ;;I DFC,DUZ=IEN;;"Cannot assign yourself as default co-signer"
 USR ;;I EXC,+ORUCE,$$USRCLEX(IEN,+ORUCE,"ERR",DATE);;"Member of "_$P(ORUCE,U,2)_" user class excluded via parameter"
  ;;I EXC,NVA;;"Non-VA Provider excluded for Additional Signer selection"
  ;;I COR,VAL=-3;;"OR CPRS GUI CHART option missing"

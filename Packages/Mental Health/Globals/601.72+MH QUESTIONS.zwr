@@ -34178,9 +34178,9 @@ ZWR
 ^YTT(601.72,8797,1,1,0)="How would you rate your fatigue on average?"
 ^YTT(601.72,8797,2)="2474^1^15064^0^0^N"
 ^YTT(601.72,8798,0)=8798
-^YTT(601.72,8798,1,0)="^^1^1^3230415"
+^YTT(601.72,8798,1,0)="^^1^1^3250827"
 ^YTT(601.72,8798,1,1,0)="How would you rate your pain on average?"
-^YTT(601.72,8798,2)="2474^7^15065^0^10^N"
+^YTT(601.72,8798,2)="2474^7^15065^0^10^Y"
 ^YTT(601.72,8799,0)=8799
 ^YTT(601.72,8799,1,0)="^^1^1^3230819"
 ^YTT(601.72,8799,1,1,0)="Please list current medication and total daily doses below: "

@@ -1,8 +1,8 @@
-ORCSAVE  ;SLC/MKB/JDL-Save ;Dec 02, 2021@13:09:37
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,56,70,73,92,94,116,141,163,187,190,195,243,303,293,280,306,286,269,423,421,382,397,377,453,405,499**;Dec 17, 1997;Build 165
+ORCSAVE ; SLC/MKB/JDL - Save orders ; Sep 11, 2024@10:18:24
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,56,70,73,92,94,116,141,163,187,190,195,243,303,293,280,306,286,269,423,421,382,397,377,453,405,499,609**;Dec 17, 1997;Build 23
  ;Per VA Directive 6402, this routine should not be modified.
  ;
- ; DBIA 10103   ^XLFDT
+ ; Reference to $$NOW^XLFDT in ICR #10103
  ;
 NEW(ORDIALOG,ORDG,ORPKG,ORCAT,OREVENT,ORDUZ,ORLOG) ; -- New order
  ; Returns ORIFN = [new] order number, if created/saved
@@ -46,6 +46,7 @@ RN ; -- save new/unreleased renewal order into Orders file
  D EN Q:'ORIFN  S:'$G(ORDA) ORDA=1
  S $P(^OR(100,ORIFN,3),U,5)=OLDIFN,$P(^(3),U,11)=2
  S $P(^OR(100,OLDIFN,3),U,6)=ORIFN S:$D(^(5)) ^OR(100,ORIFN,5)=^OR(100,OLDIFN,5)
+ M:$D(ACFLAG) ^OR(100,ORIFN,11)=^OR(100,OLDIFN,11)
  Q
  ;
 EN ; -- save new/unreleased order in ORDIALOG() into Orders file
@@ -59,7 +60,7 @@ EN ; -- save new/unreleased order in ORDIALOG() into Orders file
  S CATG=$S($L($G(ORCAT)):ORCAT,1:$S($$INPT^ORCD:"I",1:"O"))
  S PKG=$S($G(ORPKG):ORPKG,1:$P(^ORD(101.41,+ORDIALOG,0),U,7))
  S LOG=$S($G(ORLOG):ORLOG,1:+$E(NOW,1,12)),USR=$S($G(ORDUZ):ORDUZ,1:DUZ)
- I $G(ORIFN),$D(^OR(100,ORIFN,0)) S STS=$P(^(3),U,3) G EN2 ; unrel order
+ I $G(ORIFN),$D(^OR(100,ORIFN,0)) S STS=$P(^(3),U,3) G EN2 ; unreleased order
  S DG=$S($G(ORDG):+ORDG,1:$P(^ORD(101.41,+ORDIALOG,0),U,5))
  I $G(OREVENT),"^PSO^RA^"'["^"_$$GET1^DIQ(9.4,+PKG_",",1)_"^",'$G(DGPMT) S LOC="",TRSPEC="" ; p286 added radiology package
  E  S LOC=$G(ORL),TRSPEC=$G(ORTS)
@@ -204,7 +205,7 @@ RESUME(IFN) ; -- add Response nodes for RESUME tray service
  D ^DIC S:Y ^OR(100,+IFN,4.5,+Y,1)=1
  Q
  ;
-PROVIDER(ORDER,PROV) ; -- Change PROVider assigned to ORDER
+PROVIDER(ORDER,PROV) ; -- Change provider assigned to ORDER
  Q:'$G(ORDER)  Q:'$G(PROV)
  N ORACT S ORACT=+$P(ORDER,";",2) S:'ORACT ORACT=1
  S $P(^OR(100,+ORDER,8,ORACT,0),U,3)=PROV

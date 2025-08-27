@@ -1,5 +1,5 @@
 PSODDPRE ; BIR/SAB - Enhanced OP order checks ;09/20/06 3:38pm
- ;;7.0;OUTPATIENT PHARMACY;**251,375,387,379,390,372,416,411,518,568,768**;DEC 1997;Build 12
+ ;;7.0;OUTPATIENT PHARMACY;**251,375,387,379,390,372,416,411,518,568,768,770**;DEC 1997;Build 145
  ;External reference to PSOL^PSSLOCK supported by DBIA 2789
  ;External reference to PSOUL^PSSLOCK supported by DBIA 2789
  ;External reference to ^PSSDSAPM supported by DBIA 5570
@@ -123,14 +123,14 @@ FDB ;build drug check input
  .S CT=CT+1
  .I STA="PENDING" N DDRG D
  ..Q:$G(^TMP("PSORXDC",$J,$P(PSOSD(STA,DNM),"^",10),0))]""
- ..Q:$G(PSODRUG("IEN"))=$P(^PS(52.41,$P(PSOSD(STA,DNM),"^",10),0),"^",9)
- ..Q:$P(^PS(52.41,$P(PSOSD(STA,DNM),"^",10),0),"^",3)="RF"
+ ..Q:$G(PSODRUG("IEN"))=$P($G(^PS(52.41,$P(PSOSD(STA,DNM),"^",10),0)),"^",9)
+ ..Q:$P($G(^PS(52.41,$P(PSOSD(STA,DNM),"^",10),0)),"^",3)="RF"
  ..Q:$G(^TMP("PSORXPO",$J,$P(PSOSD(STA,DNM),"^",10),0))
- ..S RXREC=$P(PSOSD(STA,DNM),"^",10),ORN=$P(^PS(52.41,RXREC,0),"^"),ODRG=$P(^(0),"^",9),ORTYP="P"
+ ..S RXREC=$P(PSOSD(STA,DNM),"^",10),ORN=$P($G(^PS(52.41,RXREC,0)),"^"),ODRG=$P($G(^(0)),"^",9),ORTYP="P"
  ..I ODRG D  K ODRG Q
  ...I $P($G(^PSDRUG(ODRG,0)),"^",3)["S"!($E($P($G(^PSDRUG(ODRG,0)),"^",2),1,2)="XA") Q 
  ...S PDNM=$P(^PSDRUG(ODRG,0),"^") D ID
- ..E  N PSOI,DDRG,ODRG,SEQN,DDRG S PSOI=$P(^PS(52.41,RXREC,0),"^",8) D
+ ..E  N PSOI,DDRG,ODRG,SEQN,DDRG S PSOI=+$P($G(^PS(52.41,RXREC,0)),"^",8) I PSOI D
  ...S PDNM=$P(^PS(50.7,PSOI,0),"^")_" "_$P(^PS(50.606,$P(^(0),"^",2),0),"^")
  ...S DDRG=$$DRG^PSSDSAPM(PSOI,"O") I '$P(DDRG,";") D:'$$NVATST(PSOI,"O") OIX Q
  ...I $P($G(^PSDRUG($P(DDRG,";"),0)),"^",3)["S"!($E($P($G(^PSDRUG($P(DDRG,";"),0)),"^",2),1,2)="XA") Q

@@ -2024,7 +2024,7 @@ ZWR
 ^YTT(601.71,241,2)="^Y^N^Y^Y"
 ^YTT(601.71,241,6)="Barry Dellinger^3180724^Barry Dellinger^3190205.1931^Y"
 ^YTT(601.71,241,7)="Copyright © 1989, National Center for PTSD"
-^YTT(601.71,241,8)="Keane, T.M., Fairbank, J.A., Caddell, J.M., Zimering, R.T., Taylor, K.L., & Mora, C. (1989). Clinical evaluation of a measure to assess combat exposure (PDF). Psychological Assessment, 1, 53-55.^N^N^Y^Y^Y^^Y"
+^YTT(601.71,241,8)="Keane, T.M., Fairbank, J.A., Caddell, J.M., Zimering, R.T., Taylor, K.L., & Mora, C. (1989). Clinical evaluation of a measure to assess combat exposure (PDF). Psychological Assessment, 1, 53-55.^N^N^Y^Y^Y^^Y^274"
 ^YTT(601.71,241,9)="^YTSCES^1"
 ^YTT(601.71,241,10,0)="^601.71101P^1^1"
 ^YTT(601.71,241,10,1,0)=2
@@ -2428,11 +2428,11 @@ ZWR
 ^YTT(601.71,297,2)="^Y^N^N^Y"
 ^YTT(601.71,297,6)="Kevin Meldrum^3220815^Kevin Meldrum^3230130.1747^N"
 ^YTT(601.71,297,8)="Cella, D. et al. (2010). Initial Adult Health Item Banks and First Wave Testing of the Patient-Reported Outcomes Measurement Information System (PROMIS(tm)) Network: 2005-2008. J Clin Epidemiol. 2010 November ; 63(11): 1179-1194.^N^N^Y^N^Y^^Y^274^0"
-^YTT(601.71,297,9)="DLLSTR^YTSPRM10^1"
+^YTT(601.71,297,9)="DLLSTR^YTSPRM10^2"
 ^YTT(601.71,297,10,0)="^601.71101P^1^1"
 ^YTT(601.71,297,10,1,0)=13
 ^YTT(601.71,297,10,"B",13,1)=""
-^YTT(601.71,297,11,0)="^^1^1^3230415"
+^YTT(601.71,297,11,0)="^^1^1^3250827"
 ^YTT(601.71,297,11,1,0)="PROMIS10: Higher scores are better"
 ^YTT(601.71,298,0)="GASS^^Glasgow Antipsychotic Side-Effect Scale (GASS)"
 ^YTT(601.71,298,1)="^Waddell L and Taylor M^NHS - Oxford Health^^3080000"

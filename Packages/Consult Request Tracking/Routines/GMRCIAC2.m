@@ -1,5 +1,5 @@
-GMRCIAC2 ;SLC/JFR - FILE IFC ACTIVITIES CONT'D ; Dec 19, 2024@13:59:06
- ;;3.0;CONSULT/REQUEST TRACKING;**22,28,35,66,154,184,193,201**;DEC 27, 1997;Build 7
+GMRCIAC2 ;SLC/JFR - FILE IFC ACTIVITIES CONT'D ; Jan 27, 2025@06:02:47
+ ;;3.0;CONSULT/REQUEST TRACKING;**22,28,35,66,154,184,193,201,205**;DEC 27, 1997;Build 3
  ;
  ; Reference to ^DIE in ICR #2053
  ; Reference to ^XUAF4 in ICR #2171
@@ -201,13 +201,14 @@ DUPACT(GMRCO,ACTVT,ORC,OBX,CRNR,MSGI) ;check to see if activity is a dup transmi
  . D APPACK(GMRCO,"AR",802,CRNR,MSGI) ;send app. ACK and unlock record
  Q 0
  ;
-APPACK(GMRCO,ACK,ERR,CRNR,MSGID) ;send application acknowledgement for all cases ;MKN GMRC*3*154 added CRNR and MSGID
+APPACK(GMRCO,ACK,ERR,CRNR,MSGID,GMRCMSG) ;send application acknowledgement for all cases ;MKN GMRC*3*154 added CRNR and MSGID
  ;Input:
  ;  GMRCO = ien from file 123
  ;  ACK   = ACK code to include  ("AA"=accept or "AR"=reject)
  ;  ERR   = error code to return if there is one (optional)
  ;  CRNR  = 1 message came from Cerner  ELSE  message did not come from Cerner
  ;  MSGID = HL7 message ID
+ ;  GMRCMSG = ARRAY WHERE HL7 MESSAGE IS STORED - WTC P205 8/22/24
  ;
  ; Output: none
  ;
@@ -215,8 +216,10 @@ APPACK(GMRCO,ACK,ERR,CRNR,MSGID) ;send application acknowledgement for all cases
  N GMRCRSLT
  I '$G(ERR) S ERR=""
  S CRNR=$G(CRNR,0),MSGID=$G(MSGID)
- D RESP^GMRCIUTL(ACK,HL("MID"),,,ERR) ;build HLA("HLA", array
- D GENACK^HLMA1(HL("EID"),HLMTIENS,HL("EIDS"),"LM",1,.GMRCRSLT)
+ I CRNR=0!($G(GMRCMSG)="") D  ;
+ . D RESP^GMRCIUTL(ACK,HL("MID"),,,ERR) ;build HLA("HLA", array
+ . D GENACK^HLMA1(HL("EID"),HLMTIENS,HL("EIDS"),"LM",1,.GMRCRSLT)
+ I CRNR=1 D RESP^GMRCIUT1(ACK,HL("MID"),,,ERR,$G(GMRCMSG)) ; P205 WTC 8/22/24
  ;
  D UNLKREC^GMRCUTL1(GMRCO) ;unlock record
  ;

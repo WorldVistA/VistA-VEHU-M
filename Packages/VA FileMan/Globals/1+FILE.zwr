@@ -2969,7 +2969,7 @@ ZWR
 ^DIC(44,"%D",0)="1^1.001^2^2^3240131^^^^"
 ^DIC(44,"%D",1,0)="Contains locations found in the hospital (ie. Wards, Clinics)"
 ^DIC(44,"%D",2,0)=" *********DO NOT RE-INDEX THIS FILE**********"
-^DIC(44,"%MSC")=3250424.072623
+^DIC(44,"%MSC")=3250827.134849
 ^DIC(44.3,0)="SDAM DATA MAP^44.3"
 ^DIC(44.3,0,"AUDIT")="@"
 ^DIC(44.3,0,"DD")="@"
@@ -4593,7 +4593,7 @@ ZWR
 ^DIC(52.45,0,"WR")="@"
 ^DIC(52.45,"%D",0)="^1.001^1^1^3170711^^"
 ^DIC(52.45,"%D",1,0)="This file holds various codes needed by eRx package."
-^DIC(52.45,"%MSC")=3240831.141139
+^DIC(52.45,"%MSC")=3250827.135008
 ^DIC(52.46,0)="ERX EXTERNAL PATIENT^52.46"
 ^DIC(52.46,0,"AUDIT")="@"
 ^DIC(52.46,0,"DD")="@"
@@ -4666,7 +4666,7 @@ ZWR
 ^DIC(52.49,0,"WR")="@"
 ^DIC(52.49,"%D",0)="^1.001^1^1^3170711^^"
 ^DIC(52.49,"%D",1,0)="This file holds the eRx prescriptions received from Change Healthcare."
-^DIC(52.49,"%MSC")=3240831.141139
+^DIC(52.49,"%MSC")=3250827.135008
 ^DIC(52.5,0)="RX SUSPENSE^52.5PI"
 ^DIC(52.5,0,"GL")="^PS(52.5,"
 ^DIC(52.5,0,"GL")="^PS(52.5,"
@@ -13408,10 +13408,10 @@ ZWR
 ^DIC(100.04,0,"RD")="@"
 ^DIC(100.04,0,"WR")="@"
 ^DIC(100.04,"%",0)="^1.005^^0"
-^DIC(100.04,"%D",0)="^1.001^2^2^3240118^^^^"
+^DIC(100.04,"%D",0)="^^2^2^3170407^^"
 ^DIC(100.04,"%D",1,0)="The file contains pre-defined override reasons that can be used"
 ^DIC(100.04,"%D",2,0)="when order checks are overridden."
-^DIC(100.04,"%MSC")=3241122.153055
+^DIC(100.04,"%MSC")=3250827.145038
 ^DIC(100.05,0)="ORDER CHECK INSTANCES^100.05"
 ^DIC(100.05,0,"AUDIT")="@"
 ^DIC(100.05,0,"DD")="@"
@@ -33997,7 +33997,7 @@ ZWR
 ^DIC(601.84,"%D",9,0)="indicates whether the instrument has been completed, who ordered the "
 ^DIC(601.84,"%D",10,0)="instrument, how many questions were answered and if the test has been "
 ^DIC(601.84,"%D",11,0)="electronically signed."
-^DIC(601.84,"%MSC")=3240915.144353
+^DIC(601.84,"%MSC")=3250827.134911
 ^DIC(601.844,0)="MH ADMINISTRATION SOURCE^601.844"
 ^DIC(601.844,0,"DD")="@"
 ^DIC(601.844,0,"DEL")="@"
