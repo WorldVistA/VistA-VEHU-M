@@ -1,5 +1,5 @@
 IBOEMP2 ;ALB/ARH - EMPLOYER REPORT (PRINT) ; 6/19/93
- ;;2.0;INTEGRATED BILLING;**91,746**; 21-MAR-94;Build 8
+ ;;2.0;INTEGRATED BILLING;**746,811**; 21-MAR-94;Build 5
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;Array:  patient:  DFN)=pt name ^ SSN ^ event date ^ appt type ^ prim elig

@@ -1,5 +1,5 @@
-XOBVRPCX ;; mjk/alb - VistaLink RPC Formatter Sink ; 07/27/2002  13:00
- ;;1.6;VistALink;;May 08, 2009;Build 15
+XOBVRPCX ;MJK/ALB- VistaLink RPC Formatter Sink ; 07/27/2002  13:00
+ ;;1.6;VistALink;**8**;May 08, 2009;Build 17
  ;Per VHA directive 2004-038, this routine should not be modified.
  QUIT
  ;
@@ -164,3 +164,6 @@ SETVER(VERSION) ; -- set rpc version
  SET XOBDATA("XOB RPC","VERSION")=VERSION
  QUIT 1
  ;
+SAML ;
+ SET XOBDATA("XOB RPC","SECURITY","TYPE","SAML")=$$GETVAL()
+ QUIT

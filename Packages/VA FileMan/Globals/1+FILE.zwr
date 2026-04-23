@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3260325.035745
+^DIC(2,"%MSC")=3260422.163153
 ^DIC(3.05,0)="FAILED ACCESS ATTEMPTS LOG^3.05"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
@@ -2534,7 +2534,7 @@ ZWR
 ^DIC(38.6,"%D",3,0)="individual checks on or off the user should not alter or add to this"
 ^DIC(38.6,"%D",4,0)="file in any way.  Making any modification to this file will definitely"
 ^DIC(38.6,"%D",5,0)="cause the consistency checker to function improperly."
-^DIC(38.6,"%MSC")=3250424.072853
+^DIC(38.6,"%MSC")=3260422.165909
 ^DIC(39.4,0)="ADT/HL7 TRANSMISSION^39.4"
 ^DIC(39.4,0,"AUDIT")="@"
 ^DIC(39.4,0,"DD")="@"
@@ -4305,7 +4305,7 @@ ZWR
 ^DIC(51.1,0,"GL")="^PS(51.1,"
 ^DIC(51.1,"%D",0)="^^1^1^2930716^^^^"
 ^DIC(51.1,"%D",1,0)="  Sets of standard times over which medications are to be administered."
-^DIC(51.1,"%MSC")=3250626.160145
+^DIC(51.1,"%MSC")=3260422.163238
 ^DIC(51.15,0)="ADMINISTRATION SHIFT^51.15"
 ^DIC(51.15,0,"DD")="@"
 ^DIC(51.15,0,"GL")="^PS(51.15,"
@@ -4380,7 +4380,7 @@ ZWR
 ^DIC(51.24,"%D",12,0)="The associated FIRST DATABANK Dose Unit will be used for the Dosage "
 ^DIC(51.24,"%D",13,0)="Checks provided by FIRST DATABANK. Updates cannot be made at a local"
 ^DIC(51.24,"%D",14,0)="facility."
-^DIC(51.24,"%MSC")=3250626.160145
+^DIC(51.24,"%MSC")=3260422.163238
 ^DIC(51.25,0)="DOSE UNIT CONVERSION^51.25"
 ^DIC(51.25,0,"AUDIT")="@"
 ^DIC(51.25,0,"DD")="@"
@@ -19717,7 +19717,7 @@ ZWR
 ^DIC(228,"%D",11,0)="2815 - allows for pointers to the CPT file (#81)"
 ^DIC(228,"%D",12,0)="10082 - allows for pointers to the DIAGNOSIS file (#80)"
 ^DIC(228,"%D",13,0)="        allows for direct global reads of entire zeroth node"
-^DIC(228,"%MSC")=3190524.155805
+^DIC(228,"%MSC")=3260422.165832
 ^DIC(228.1,0)="DENTAL HISTORY^228.1IA"
 ^DIC(228.1,0,"AUDIT")="@"
 ^DIC(228.1,0,"DD")="@"
@@ -29979,7 +29979,7 @@ ZWR
 ^DIC(409.84,"%",0)="^1.005^^0"
 ^DIC(409.84,"%D",0)="^^1^1^3141010^"
 ^DIC(409.84,"%D",1,0)="This is where appointment definitions are linked to a resource."
-^DIC(409.84,"%MSC")=3241215.145244
+^DIC(409.84,"%MSC")=3260422.163154
 ^DIC(409.842,0)="SDEC CHECK-IN STEP STATUS^409.842"
 ^DIC(409.842,0,"AUDIT")="@"
 ^DIC(409.842,0,"DD")="@"
@@ -35591,6 +35591,7 @@ ZWR
 ^DIC(667,"%D",0)="^^2^2^2940830^"
 ^DIC(667,"%D",1,0)="This file contains information on vehicles and vehicle auto-adaptive"
 ^DIC(667,"%D",2,0)="equipment related to Prosthetics."
+^DIC(667,"%MSC")=3260422.163303
 ^DIC(667.1,0)="PROS AUTO-ADAPTIVE EQUIP^667.1"
 ^DIC(667.1,0,"GL")="^RMPR(667.1,"
 ^DIC(667.1,0,"GL")="^RMPR(667.1,"
@@ -44212,6 +44213,28 @@ ZWR
 ^DIC(1609.1,"%D",5,0)="Option EHMHL7 PURGE uses this file when scanning file #1609 and selecting "
 ^DIC(1609.1,"%D",6,0)="entries to be deleted."
 ^DIC(1609.1,"%MSC")=3241215.145829
+^DIC(1610,0)="EHRM ACTIVE CLINIC^1610"
+^DIC(1610,0,"AUDIT")="@"
+^DIC(1610,0,"DD")="@"
+^DIC(1610,0,"DEL")="@"
+^DIC(1610,0,"GL")="^EHRM(1610,"
+^DIC(1610,0,"LAYGO")="@"
+^DIC(1610,0,"RD")="@"
+^DIC(1610,0,"WR")="@"
+^DIC(1610,0,"AUDIT")="@"
+^DIC(1610,0,"DD")="@"
+^DIC(1610,0,"DEL")="@"
+^DIC(1610,0,"GL")="^EHRM(1610,"
+^DIC(1610,0,"LAYGO")="@"
+^DIC(1610,0,"RD")="@"
+^DIC(1610,0,"WR")="@"
+^DIC(1610,"%",0)="^1.005^^0"
+^DIC(1610,"%D",0)="^^4^4^3240322^"
+^DIC(1610,"%D",1,0)="This file stores the VistA clinics that are active on a site "
+^DIC(1610,"%D",2,0)="after it is converted to Millennium.  The file is used by the automated "
+^DIC(1610,"%D",3,0)="clinic inactivation tool (included with EHM*1*10) so the clinics are left"
+^DIC(1610,"%D",4,0)="active."
+^DIC(1610,"%MSC")=3260422.163154
 ^DIC(1927.09,0)="NUPA SAVED NOTES^1927.09"
 ^DIC(1927.09,0,"AUDIT")="@"
 ^DIC(1927.09,0,"DD")="@"
@@ -53898,7 +53921,7 @@ ZWR
 ^DIC(8969,"%D",0)="^^2^2^3150707^"
 ^DIC(8969,"%D",1,0)="This file contains current configuration data related to the daily "
 ^DIC(8969,"%D",2,0)="operation of each monitor deployed."
-^DIC(8969,"%MSC")=3240217.051236
+^DIC(8969,"%MSC")=3260422.164802
 ^DIC(8969.02,0)="VSM MONITOR DEFAULTS^8969.02"
 ^DIC(8969.02,0,"GL")="^KMPV(8969.02,"
 ^DIC(8969.02,0,"GL")="^KMPV(8969.02,"
@@ -53916,7 +53939,7 @@ ZWR
 ^DIC(8969.03,"%D",0)="^^2^2^3150706^"
 ^DIC(8969.03,"%D",1,0)="Records the time each VSM Monitor is run on a given day. If a monitor is "
 ^DIC(8969.03,"%D",2,0)="not run the appropriate RUNTIME field for that monitor will be null."
-^DIC(8969.03,"%MSC")=3181031.132721
+^DIC(8969.03,"%MSC")=3260422.164802
 ^DIC(8970.1,0)="SAGG PROJECT^8970.1"
 ^DIC(8970.1,0,"DD")="@"
 ^DIC(8970.1,0,"GL")="^KMPS(8970.1,"
@@ -54289,7 +54312,7 @@ ZWR
 ^DIC(8989.3,"%D",7,0)="interactive users and for TaskMan.  Defaults for fields such as timed"
 ^DIC(8989.3,"%D",8,0)="read, auto menu, and ask device are defined for use when not otherwise"
 ^DIC(8989.3,"%D",9,0)="specified for a user or device."
-^DIC(8989.3,"%MSC")=3250725.13413
+^DIC(8989.3,"%MSC")=3260422.163325
 ^DIC(8989.5,0)="PARAMETERS^8989.5"
 ^DIC(8989.5,0,"AUDIT")="@"
 ^DIC(8989.5,0,"DD")="@"
@@ -59542,6 +59565,7 @@ ZWR
 ^DIC("B","EEO CORRECTIVE ACTIONS",785.2)=""
 ^DIC("B","EEO INFORMAL COMPLAINTS",785.5)=""
 ^DIC("B","EEO SERVER PARAMETERS",789.5)=""
+^DIC("B","EHRM ACTIVE CLINIC",1610)=" "
 ^DIC("B","EHRM HL7 Message",1609)=""
 ^DIC("B","EHRM HL7 Message Retention",1609.1)=""
 ^DIC("B","EHRM MIGRATED FACILITIES",391.919)=""

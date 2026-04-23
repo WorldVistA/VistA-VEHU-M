@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: INDEX
 ZWR
-^DD("IX",0)="INDEX^.11I^1757^1768"
+^DD("IX",0)="INDEX^.11I^63^1768"
 ^DD("IX",.001,0)="0^ADEL^Delete Keys and Indexes associated with a deleted field.^MU^^F^R^I^0^^^^^A"
 ^DD("IX",.001,1)="Q"
 ^DD("IX",.001,2)="D:'$D(DICATTED)&'$D(DIU) DELXRF^DICATT4(DA(1),DA)"
@@ -28561,7 +28561,7 @@ ZWR
 ^DD("IX",1548,11.1,"BB",1,1)=""
 ^DD("IX",1548,"NOREINDEX")=1
 ^DD("IX",1549,0)="2^AY^Action cross reference to send an HL7 notification when an appt is cancelled.^MU^^F^IR^W^2.98^^^^^A"
-^DD("IX",1549,.1,0)="^^10^10^3200413"
+^DD("IX",1549,.1,0)="^^10^10^3190915"
 ^DD("IX",1549,.1,1,0)="The Tele Health Management Platform (TMP)"
 ^DD("IX",1549,.1,2,0)="application allows users to schedule and cancel"
 ^DD("IX",1549,.1,3,0)="tele health appointments in VistA. TMP needs to"

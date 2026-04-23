@@ -1,6 +1,6 @@
-XOBVRPC ;; mjk/alb - VistaLink RPC Server Listener Code ; 07/27/2002  13:00
- ;;1.6;VistALink Security;**4**;May 08, 2009;Build 7
- ; ;Per VA Directive 6402, this routine should not be modified.
+XOBVRPC ;MJK/ALB - VistaLink RPC Server Listener Code ; 07/27/2002  13:00
+ ;;1.6;VistALink Security;**4,8**;May 08, 2009;Build 17
+ ;;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
  ; ------------------------------------------------------------------------
@@ -45,7 +45,7 @@ EN(XOBDATA) ; -- handle parsed messages request
  S XOBERR=0
  I +$G(XOBSYS("RPC REAUTH")) D  G:XOBERR ENQ
  . ;
- . ; -- reauthenticate user based on type (i.e. DUZ,AV,VPID,CCOW,APPPROXY)
+ . ; -- reauthenticate user based on type (i.e. DUZ,AV,VPID,CCOW,APPPROXY,SAML) ;RTW ADDED SAML for XOBV*1,6*8
  . S XOBERR=$$SETUPDUZ^XOBSRA()
  . I XOBERR D ERROR(XOBERR,RPCNAME) Q
  . ;

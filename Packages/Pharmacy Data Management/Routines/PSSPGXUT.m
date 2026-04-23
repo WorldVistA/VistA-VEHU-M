@@ -1,5 +1,5 @@
 PSSPGXUT ;BIR/RTR - PHARMACOGENOMICS UTILITY ROUTINE ;09/20/07
- ;;1.0;PHARMACY DATA MANAGEMENT;**262**;9/30/97;Build 66
+ ;;1.0;PHARMACY DATA MANAGEMENT;**262,268**;9/30/97;Build 4
  ;
 DATA(PSSGNPH,PSSRESUL) ;Validate HDR Gene and Phenotype data to send to vendor
  ;PSSRESUL(N, "GENE") = Gene from HDR ^ Vendor mapped Gene ^ 1 if not map
@@ -188,11 +188,11 @@ NOCONN ;Both HDR & FDB are not connecting
  ;
 PGXCHK() ; check pgx called from PSSHRIT - pss*1*262
  ; Return 1 if OK, 0 if not OK.
- N VAL,DRGIEN,GENE,INFO,INTRO,BASE,DRUG,DRGNM,GENES,X1,PSSDS1,PSSDX,PSSDXC
+ N VAL,DRGIEN,GENE,INFO,INTRO,BASE,DRUG,DRGNM,GENES,X1,PSSDS1,PSSDX,PSSDXC,PSSCPSOV
  N PSSLEFT S PSSLEFT=4     ; left margin for results
  ;
  S DRGNM="CLOPIDOGREL BISULFATE 75MG TAB"
- S GENE="CYP2C19",PSSDXC=1
+ S GENE="CYP2C19",(PSSDXC,PSSCPSOV)=1
  ;
  S BASE=$T(+0)_" PGXCHK"
  S GENES(GENE,"GENE")="",GENES(GENE,"PHENOTYPE")="INTERMEDIATE METABOLIZER"
@@ -229,3 +229,7 @@ SUPP() ;Suppress if disabled in CPRS - called from PSSPGXPR
  .I $G(PSSORSUP)="H",$G(PSSTCNTV)="Interruptive" S PSSSUPFL=1 Q
  .I $G(PSSORSUP)="M",$G(PSSTCNTV)="Informational" S PSSSUPFL=1
  Q 0
+ ;
+SCR ;Set screen message text from PSSPGXPR
+ S PSSTEMPX="Please perform a manual PGx Order check by using the Check Pharmacogenomic Interaction option for Drug: "_$G(PSSPHAR(PSSSUB1,PSSXL,"DRUG"))
+ Q
