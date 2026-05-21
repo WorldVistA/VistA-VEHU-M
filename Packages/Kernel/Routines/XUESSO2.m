@@ -1,5 +1,5 @@
 XUESSO2 ;ISD/HGW - Enhanced Single Sign-On Utilities ; Apr 19, 2022@14:57
- ;;8.0;KERNEL;**655,659,630,701,731,771,779,799**;Jul 10, 1995;Build 3
+ ;;8.0;KERNEL;**655,659,630,701,731,771,779,799,759**;Jul 10, 1995;Build 40
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ; This utility will identify a VistA user for auditing and HIPAA requirements.
@@ -119,9 +119,12 @@ ADDUSER(XATR) ;Function. Add user using minimum attributes for user identificati
  ; Return: Fail    = "-1^Error Message"
  ;         Success = IEN of NEW PERSON file (#200) entry (Note: this routine will NOT set DUZ to the identified IEN)
  ;
- N SID,NEWDUZ,ERRMSG
+ N SID,NEWDUZ,ERRMSG,RAIEN,RANM
  I '$$AUTH() Q "-1^Not an authorized calling routine"
  I $G(DUZ("LOA"))<2 Q "-1^Not authorized"
+ S RAIEN=$P($G(DUZ("REMAPP")),U) ;P759 CEP
+ S RANM=$P($G(DUZ("REMAPP")),U,2) ;P759 CEP
+ I '$$CANADD($G(DUZ("REMAPP"))) Q "-1^"_"BSE LOGIN ERROR - "_RANM_" remote application is not allowed to add new users." ;P759 CEP
  S ERRMSG=""
  ;Minimum 4 Attributes are required to add a new user
  I ($G(XATR(1))="")!($L($G(XATR(1)))<4) Q "-1^Subject Organization is required to add a new user"
@@ -145,6 +148,18 @@ ADDUSER(XATR) ;Function. Add user using minimum attributes for user identificati
  I ($G(DUZ("REMAPP"))'="") D SETREMAP(NEWDUZ,$P(DUZ("REMAPP"),"^"))
  Q NEWDUZ  ;Every thing OK
  ;
+CANADD(REMLN) ; Function P759 CEP
+ ; P759 CEP
+ ; CALLED BY XUESSO2 AND XUESS01
+ ; Input:  REMLN = DUZ("REMAPP") (if defined) RA_IEN ^ RA_NAME
+ ; Output: 1 if allowed to add users or field is blank
+ ;         0 if not found or not allowed to add users
+ N XURAAUTH,XURACADD,ENTRY
+ Q:$G(REMLN)="" 1 ;DEFAULT TO 1 IF DUZ("REMAPP") WAS NULL
+ S ENTRY=$P(REMLN,U) Q:+ENTRY'>0 0
+ S XURAAUTH=$G(^XWB(8994.5,ENTRY,2))
+ S XURACADD=$P(XURAAUTH,U) S:XURACADD="" XURACADD=1 ;IF NOTHING THERE, DEF 1
+ Q +$G(XURACADD)
 SECMATCH(SECID) ;Function. Find match for SECID.
  N Y,Z
  I $G(SECID)="" Q ""

@@ -1,16 +1,17 @@
-ALPBINP ;OIFO-DALLAS/SED/KC/MW  BCMA - BCBU INPT TO HL7; May 22, 2025@16:
- ;;3.0;BAR CODE MED ADMIN;**8,37,73,87,102,105,115,153**;May 2007;Build 3
+ALPBINP ;OIFO-DALLAS/SED/KC/MW  BCMA - BCBU INPT TO HL7; Sep 02, 2025@10:10
+ ;;3.0;BAR CODE MED ADMIN;**8,37,73,87,102,105,115,153,156**;May 2007;Build 2
  ;;Per VHA Directive 2004-038, this routine should not be modified.
  ;This routine will intercept the HL7 message that it sent from Pharmacy
  ;to CPRS to update order information. The message is then parsed and 
  ;repackage so it can be sent to the BCBU workstation.
  ;
- ; Reference/IA
- ; EN^PSJBCBU/3876
- ; $$EN^VAFHLPID/263
- ; $$EN^VAFHAPV1/4512
- ; EN1^GMRADPT/10099
- ; EN^PSJBCMA1/2829
+ ; Reference to EN^PSJBCBU in ICR #3876
+ ; Reference to EN^VAFHLPID in ICR #263
+ ; Reference to EN^VAFHAPV1 in ICR #4512
+ ; Reference to EN1^GMRADPT in ICR #10099
+ ; Reference to EN^PSJBCMA1 in ICR #2829
+ ; Reference to ^PS(55 in ICR #7330 
+ ; Reference to ^VA(200 in ICR #10060 
  ;
  ;*87 - add ability to send two HL7 msgs for a Remove/Give scenario.  
  ;      Sends the associated Give first then the Remove Medlog trans.
@@ -86,6 +87,13 @@ SEED ;Entry point for ^ALPBIND
  . S ALPST=$$STAT^ALPBUTL1($P(HLA("HLS",ORC),HLFS,6))
  . Q:ALPST=""
  . S $P(HLA("HLS",ORC),HLFS,6)=$P(HLA("HLS",ORC),HLFS,6)_HLCS_ALPST
+ . ;PSB*3.0*156: Code updated to correctly display nurse on MAR report.
+ . I $P($P(HLA("HLS",ORC),HLFS,4),HLCS)["U" D
+ . . N ALPUD,ALPPH
+ . . S ALPUD=+$P(HLA("HLS",ORC),HLFS,4)
+ . . S ALPPH=$P($G(^PS(55,ALPDFN,5,ALPUD,4)),"^",3)
+ . . I ALPPH]"" S ALPPH=ALPPH_HLCS_$P($G(^VA(200,ALPPH,0)),"^")
+ . . S $P(HLA("HLS",ORC),HLFS,11)=ALPPH
  D AL1
  ;Capture message to review for testing before sending
  D SEND

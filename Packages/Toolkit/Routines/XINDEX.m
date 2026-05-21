@@ -1,5 +1,5 @@
 XINDEX ;ISC/REL,GFT,GRK,RWF - INDEX & CROSS-REFERENCE ; Sep 07, 2022@14:22:58
- ;;7.3;TOOLKIT;**20,27,48,61,66,68,110,121,128,132,133,148,151,153,155,158**;Apr 25, 1995;Build 3
+ ;;7.3;TOOLKIT;**20,27,48,61,66,68,110,121,128,132,133,148,151,153,155,158,10001**;Apr 25, 1995;Build 3
  ;Per VHA Directive 2004-038, this routine should not be modified.
  G ^XINDX6
 SEP F I=1:1 S CH=$E(LIN,I) D QUOTE:CH=Q Q:" "[CH
@@ -18,9 +18,13 @@ A2 S RTN=$O(^UTILITY($J,RTN)) G ^XINDX5:RTN=""
  D BEG
  G A2
  ;P158 CEP - LOAD1 sub for ability to look beyond blank lines
+ ;P10001 SMH - Fix this so that vendor specific code (ZLOAD) only runs on Cache/IRIS
+ ;           - Rest of the systems can user the classic code.
 LOAD1 S X=RTN,XCNP=0,DIF="^UTILITY("_$J_",1,RTN,0," X ^%ZOSF("TEST") Q:'$T  D
- . X "N %,%N S %N=0 X ""ZL @X F XCNP=XCNP+1:1 S %N=%N+1,%=$T(+%N) Q:XCNP>$G(^ROUTINE(X,0,0))  S @(DIF_XCNP_"""",0)"""")=%"""
- . S ^UTILITY($J,1,RTN,0,0)=XCNP-1
+ . I ^%ZOSF("OS")["OpenM" D
+ .. X "N %,%N S %N=0 X ""ZL @X F XCNP=XCNP+1:1 S %N=%N+1,%=$T(+%N) Q:XCNP>$G(^ROUTINE(X,0,0))  S @(DIF_XCNP_"""",0)"""")=%"""
+ .. S ^UTILITY($J,1,RTN,0,0)=XCNP-1
+ . E  S X=RTN,XCNP=0,DIF="^UTILITY("_$J_",1,RTN,0," X ^%ZOSF("TEST") Q:'$T  X ^%ZOSF("LOAD") S ^UTILITY($J,1,RTN,0,0)=XCNP-1
  I $D(^UTILITY($J,1,RTN,0,0)) S ^UTILITY($J,1,RTN,"RSUM")="B"_$$SUMB^XPDRSUM($NA(^UTILITY($J,1,RTN,0)))
  Q
 LOAD ;original LOAD subroutine - no longer called (p158 CEP

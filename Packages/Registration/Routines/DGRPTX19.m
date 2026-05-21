@@ -1,4 +1,4 @@
-DGRPTX19 ; ;11/22/24
+DGRPTX19 ; ;05/21/26
  S X=DG(DQ),DIC=DIE
  K DIV S DIV=X,D0=DA,DIV(0)=D0 S Y(0)=X S Y(1)=$C(59)_$P($G(^DD(2,.36235,0)),U,3) S X=$P($P(Y(1),$C(59)_Y(0)_":",2),$C(59))="NO" I X S X=DIV S Y(1)=$S($D(^DPT(D0,.362)):^(.362),1:"") S X=$P(Y(1),U,4),X=X S DIU=X K Y S X="" X ^DD(2,.36235,1,1,1.4)
  S X=DG(DQ),DIC=DIE

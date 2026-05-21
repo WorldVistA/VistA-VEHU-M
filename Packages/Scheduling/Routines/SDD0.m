@@ -1,5 +1,5 @@
-SDD0 ;SF/GFT,ALB/BOK,JSH,LDB,BWF - REMAP A CLINIC ;26 JAN 84  3:00 pm
- ;;5.3;Scheduling;**167,401,529,674,726,753,775,780,894**;Aug 13, 1993;Build 8
+SDD0 ;SF/GFT,ALB/BOK,JSH,LDB,BWF,DJA - REMAP A CLINIC ;MAR 12,2026
+ ;;5.3;Scheduling;**167,401,529,674,726,753,775,780,894,940**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
 SETX ;
  N SDDIV
@@ -8,7 +8,7 @@ SETX ;
  Q:'$D(^SC(SC,"SL"))  S SDSL=^("SL"),SL=+^("SL"),X=$P(SDSL,U,3),STARTDAY=$S($L(X):X,1:8),X=$P(SDSL,U,6),HSI=$S('X:4,X<3:8/X,1:2),SI=$S(X:X,1:4),SDSI=SI
  S:SI=1 SI=4 S:SI=2 SI=4 S SDSOH=$S($P(SDSL,U,8)']"":0,1:1)
  K SDIN,SDRE,SDRE1 N SDNODE I $D(^SC(SC,"I")) S SDIN=+^("I"),SDRE=+$P(^("I"),"^",2),Y=SDRE D DTS^SDUTL S SDRE1=Y
- N SDX,SDIEN,SDBEG,SDDOW,SDBEGO,SDBEGZ,SDHOLX ;New variables for SD*5.3*674 and SD*5.3*726 changes
+ N SDX,SDIEN,SDBEG,SDDOW,SDBEGO,SDBEGZ,SDHOLX,SDHOLFLG ;New variables for SD*5.3*674 and SD*5.3*726 changes
  ;Set beginning date to use for indefinite clinic availabilities
  F SDX=0:1:6 S SDDOW(SDX,9999999)="" ;SD*5.3*674
  S SDBEGO="" F SDDAY=0:1:6 S SDCNT=0 F  S SDCNT=$O(^SC(+SC,"T"_SDDAY,SDCNT)) Q:'SDCNT  S SDBEGO=SDBEGO_U_SDCNT
@@ -26,9 +26,10 @@ CHECK S X=DATE D DW^%DTC S DAY=$P("SUN^MON^TUES^WEDNES^THURS^FRI^SATUR",U,Y+1),D
  I $D(^SC(SC,"OST",DATE,1)),^(1)]"" S (X,DR)=DATE D DOW^SDM0 S DOW=Y,SM=^SC(SC,"OST",DATE,1),SS=0 G I
  G Z:'$D(^SC(SC,"T"_DOW,SS,1)) I ^(1)="" S MSG="no master pattern for this day" D:SDNODE PRNT Q
  S DH=^(1),X=DATE G FIX ;NAKED REFERENCE ^SC(IFN,"T"_DOW,DATE,1)
-HOLIDAY S SDHOLX="   "_$E(DATE,6,7)_"    "_X ;set variable to the before image to compare it before sending HL7 message to TMP
- I $G(^SC(SC,"ST",DATE,1))'=SDHOLX D EN^SDTMPHLC(SC,DATE,,"C",X) ;894 - send HL7 message to TMP if new holiday to be added
+HOLIDAY S SDHOLX="   "_$E(DATE,6,7)_"    "_X,SDHOLFLG=0 ;set variable to the before image to compare it before sending HL7 message to TMP
+ I $G(^SC(SC,"ST",DATE,1))'=SDHOLX S SDHOLFLG=1
  S ^SC(SC,"ST",DATE,1)=SDHOLX,^(0)=DATE
+ I SDHOLFLG D EN^SDTMPHLC(SC,DATE,,"C",X) ;894 - send HL7 message to TMP if new holiday to be added
 Z S MSG=$S($D(SDHOL)&SDAPPT:"- Appts!",'SDSOH&$D(SDHOL):"- Inserted",1:"") I MSG]"" S MSG=X_MSG D PRNT
  Q
 END K %,%DT,DATE,DAY,DH,DOW,DR,DR1,HSI,I,P,POP,S,SB,SC,SDAPPT,SDAPPT1,SDBD,SDNM,SDED,SDHOL,SD0,SDIN,SDRE,SDRE1,SDSAVX,SDSL,SDSOH,SI,SM,SS,SD,SCI,SCC,ST,STARTDAY,STR,X,MSG,Y,YP,PG,DGVAR,DGPGM,VAUTD,VAUTC,SDU,BEGDATE,ENDDATE D CLOSE^DGUTQ Q

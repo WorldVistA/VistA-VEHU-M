@@ -1,22 +1,25 @@
-ORWORB ; SLC/DEE,REV,CLA,WAT - RPC FUNCTIONS WHICH RETURN USER ALERT ;03/01/23  12:43
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,148,173,190,215,243,296,329,334,410,377,498,405,596**;Dec 17, 1997;Build 0
+ORWORB ; SLC/DEE,REV,CLA,WAT - RPC FUNCTIONS WHICH RETURN USER ALERT ;Oct 29, 2025@09:33:53
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**10,85,116,148,173,190,215,243,296,329,334,410,377,498,405,596,508**;Dec 17, 1997;Build 39
  ;;Per VHA Directive 2004-038, this routine should not be modified
  ;
- ; External reference to ^DPT( supported by IA 10035
- ; External reference to ^XTV(8992 supported by IA 2689
- ; External reference to ^XTV(8992.1 supported by IA 7063
- ; External reference to ^VA(200,5 supported by IA 4329
- ; External reference to ^XUSEC( supported by IA 10076
- ; External reference to RAO7PC4 supported by IA 3563
- ; External reference to TIUSRVLO supported by IA 2834
- ; External reference to VADPT supported by IA 10061
- ; External reference to XLFDT supported by IA 10103
- ; External reference to XPAR supported by IA 2263
- ; External reference to XQALDATA supported by IA 4834
- ; External reference to XQALERT supported by IA 10081
- ; External reference to XQALBUTL supported by IA 2788
+ ; Reference to ^DPT( supported by DBIA 10035
+ ; Reference to ^XTV(8992 supported by DBIA 2689
+ ; Reference to ^XTV(8992.1 supported by DBIA 7063
+ ; Reference to ^VA(200,5 supported by DBIA 4329
+ ; Reference to ^XUSEC( supported by DBIA 10076
+ ; Reference to RAO7PC4 supported by DBIA 3563
+ ; Reference to TIUSRVLO supported DBIA IA 2834
+ ; Reference to VADPT supported by DBIA 10061
+ ; Reference to XLFDT supported by DBIA 10103
+ ; Reference to XPAR supported by DBIA 2263
+ ; Reference to XQALDATA supported by DBIA 4834
+ ; Reference to XQALERT supported by DBIA 10081
+ ; Reference to XQALBUTL supported by DBIA 2788
+ ; Reference to ALTDATA^PXRMCALT supported by DBIA 7258
+ ; Reference to $$GET1^DIQ(200,D0_",",.01) supported by ICR 7143
  ;
  Q
+ ;
 GETLTXT(ORY,ORAID) ;get the long text for an alert
  N ORDATA
  D ALERTDAT^XQALBUTL(ORAID,"ORDATA")
@@ -81,7 +84,7 @@ USERLIST(ORY,STRTDATE,STOPDATE) ;process for obtaining user's notifications
  . . . S $P(ALRT,U,2)=$P($P(NODE,U),":"),$P(ALRT,U,4)=$S(ALRT[" STAT ":"HIGH",1:"Moderate")
  . . . S X=$P(ALRTXQA,";",3),$P(Y,"/",1)=$E(X,4,5),$P(Y,"/",2)=$E(X,6,7),$P(Y,"/",3)=(1700+$E(X,1,3))
  . . . S X=$E($P(X,".",2)_"0000",1,4),$P(Y,"@",2)=$E(X,1,2)_":"_$E(X,3,4),$P(ALRT,U,5)=Y
- . . . S $P(ALRT,U,6)=$P($P(NODE,U),": ",2),$P(ALRT,U,8)=ALRTXQA,$P(ALRT,U,9)=REM_U
+ . . . S $P(ALRT,U,6)=$P($P(NODE,U),": ",2,999),$P(ALRT,U,8)=ALRTXQA,$P(ALRT,U,9)=REM_U
  . . . S J=J+1,^TMP("ORBG",$J,J)=ALRT
  .. ; *596 ajb
  ..I $P(ALRTXQA,",")="OR" D
@@ -137,7 +140,7 @@ USERLIST(ORY,STRTDATE,STOPDATE) ;process for obtaining user's notifications
  ..S ALRTIEN=$O(^XTV(8992.1,"B",ALRTXQA,0)) Q:'ALRTIEN
  ..S DUZIEN=$O(^XTV(8992.1,ALRTIEN,20,"B",DUZ,"")) Q:'DUZIEN
  ..S SURRFOR=+$G(^XTV(8992.1,ALRTIEN,20,DUZIEN,3,1,0)) ; get first "surrogate for" and return returns 0 if empty
- ..I SURRFOR S $P(^TMP("ORBG",$J,J),U,15)=$P(^VA(200,SURRFOR,0),U)
+ ..I SURRFOR S $P(^TMP("ORBG",$J,J),U,15)=$$GET1^DIQ(200,SURRFOR_",",.01)
  S ^TMP("ORBG",$J)=""
  S ORY=$NA(^TMP("ORBG",$J))
  K ^TMP("ORB",$J)

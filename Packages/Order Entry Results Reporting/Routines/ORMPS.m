@@ -1,10 +1,11 @@
-ORMPS ; SLC/MKB/TC - Process Pharmacy ORM msgs ; Aug 28, 2024@09:14:37
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**3,54,62,86,92,94,116,138,152,141,165,149,213,195,243,306,350,480,609**;Dec 17, 1997;Build 23
+ORMPS ;SLC/MKB/TC - Process Pharmacy ORM msgs ;Jul 31, 2025@10:30:23
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**3,54,62,86,92,94,116,138,152,141,165,149,213,195,243,306,350,480,609,508**;Dec 17, 1997;Build 39
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; Reference to $$MVT^DGPMOBS in ICR #2664
  ; Reference to $$NOW^XLFDT in ICR #10103
  ;
+ Q
 EN ; -- entry point
  I '$L($T(@ORDCNTRL)) Q  ;S ORERR="Invalid order control code" Q
  I ORDCNTRL'="SN",ORDCNTRL'="ZC",ORDCNTRL'="ZP",'ORIFN!('$D(^OR(100,+ORIFN,0))) S ORERR="Invalid OE/RR order number" Q
@@ -83,7 +84,7 @@ SN1 ; save order
  . M ^OR(100,ORIFN,11)=^OR(100,ORIG,11) ; Move transfer multiple to new order
  . I $L(EVNT),TYPE=1 S $P(^OR(100,ORIFN,0),U,17)=EVNT
  . I TYPE=2,$G(ORCAT)="I" S ORSTRT=ORLOG D PARENT^ORMPS3 ;ck if complex
- I $G(ORCAT)="O" S ZSC=$$ZSC^ORMPS3 I ZSC,$P(ZSC,"|",2)'?2.3U S ^OR(100,ORIFN,5)=$TR($P(ZSC,"|",2,9),"|","^") ;1 or 0 instead of [N]SC
+ I $G(ORCAT)="O" D GETHL7^ORSPECAUTH(.@ORMSG,+ORIFN)   ;508 Get ZSC
 SN2 D DATES^ORCSAVE2(ORIFN,ORSTRT,ORSTOP)
  D:ORSTS STATUS^ORCSAVE2(ORIFN,ORSTS)
  D RELEASE^ORCSAVE2(ORIFN,1,ORLOG,ORDUZ,ORNATR)

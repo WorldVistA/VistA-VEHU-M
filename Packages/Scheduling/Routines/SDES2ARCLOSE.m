@@ -1,5 +1,5 @@
-SDES2ARCLOSE  ;ALB/ANU,BLB,LAB,TJB,LAB - SDES2 DISPOSITION APPT REQ; JAN 23,2026
- ;;5.3;Scheduling;**866,873,875,909,929**;Aug 13, 1993;Build 9
+SDES2ARCLOSE  ;ALB/ANU,BLB,LAB,TJB,LAB - SDES2 DISPOSITION APPT REQ; MAR 19,2026
+ ;;5.3;Scheduling;**866,873,875,909,929,940**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ; Reference to DUZ^XUP is supported by IA #7487
@@ -49,6 +49,7 @@ VALPARAMS(PARAMS,SDERRORS) ; Validate
  ; Validate Disposition
  S DISP=$G(PARAMS("DISP"))
  I $G(DISP)="" D ERRLOG^SDESJSON(.SDERRORS,42)
+ Q:$D(SDERRORS) ""
  ; Re-mapped the Dispositions to their corresponding pointer value
  S:(+DISP=0) DISP=$O(^SDEC(409.853,"B",DISP,""))
  D:$$GET1^DIQ(409.853,DISP,.01)="" ERRLOG^SDESJSON(.SDERRORS,43)

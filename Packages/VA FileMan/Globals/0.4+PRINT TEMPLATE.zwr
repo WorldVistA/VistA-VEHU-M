@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: PRINT TEMPLATE
 ZWR
-^DIPT(0)="PRINT TEMPLATE^.4I^2751^1888"
+^DIPT(0)="PRINT TEMPLATE^.4I^2755^1892"
 ^DIPT(.01,0)="CAPTIONED^"
 ^DIPT(.01,"F",1)="S DIC=DCC,DA=D0 D EN^DIQ"
 ^DIPT(.02,0)="FILE SECURITY CODES^^^1"
@@ -15650,12 +15650,12 @@ ZWR
 ^DIPT(2284,0)="PXRM HEALTH FACTOR RESOLUTIONS^3000307.1703^@^801.95^^@^3000505"
 ^DIPT(2284,"F",1)=""""";C1~""HEALTH FACTOR NAME: "";R20;C1~.01~""Resolution Status: "";R20;C1~.02,.01~"""";C1;S1~"
 ^DIPT(2284,"H")="REMINDER HEALTH FACTOR RESOLUTION LIST"
-^DIPT(2286,0)="PXRM TERM INQUIRY^3200114.1212^@^811.5^^@^3220531"
+^DIPT(2286,0)="PXRM TERM INQUIRY^3250311.1302^@^811.5^^@^3250804"
 ^DIPT(2286,"%D",0)="^.4001^1^1^3040426^^"
 ^DIPT(2286,"%D",1,0)="This template prints a single reminder term definition."
 ^DIPT(2286,"F",1)=".01;C1;X~""No."";C66~0;C70;X;L11~""--------------------------------------------------------------------------------"";C1~""Class:"";C1~100;C25;X~"
-^DIPT(2286,"F",2)="""Sponsor:"";C1~101;C25;X~""Date Created: "";C1~.04;C25;X~""Review Date:"";C1~102;C25;X~""Description:"";C1;S1~1,.01;C3;X~""Findings: "";C1;S1//~"
-^DIPT(2286,"F",3)="D PFIND^PXRMPTTR;Z;""D PFIND^PXRMPTTR""~"
+^DIPT(2286,"F",2)="""Sponsor:"";C1~101;C25;X~""Usage:"";C1~103;C25;X~""Date Created: "";C1~.04;C25;X~""Review Date:"";C1~102;C25;X~""Description:"";C1;S1~1,.01;C3;X~"
+^DIPT(2286,"F",3)="""Findings: "";C1;S1//~D PFIND^PXRMPTTR;Z;""D PFIND^PXRMPTTR""~"
 ^DIPT(2286,"H")="REMINDER TERM LIST"
 ^DIPT(2288,0)="PXRM DIALOG FORCED VALUE^3010427.1314^@^801.41^^@^3010523"
 ^DIPT(2288,"F",1)=""""";C1~""Name:"";C1;R29;S1~.01;L35~""Disabled:"";C1;R29~3;L35~""Class: "";C1;R30~100;C32;X~""Sponsor: "";C1;R30~101;C32;X~""Review Date:"";C1;R30~102;C32;X~"
@@ -18837,6 +18837,27 @@ ZWR
 ^DIPT(2751,"F",1)=".01;W17;R~2;W16;R~3;W15;R~1;W15~5;W12~4,.01;W30;C1~4,1;W5;""Full?"";R~4,2;W6;R;""# Sec""~4,3;W9;R;""Days Off""~"
 ^DIPT(2751,"F",2)="4,4;W11;R;""Days Back""~4,5;W11;R;""Days Total""~4,6;W6;R;""#Recs""~4,7;W4;R;""#W""~4,8;W4;""#E""~4,9;W4;""#I""~4,10;W4;""#C""~4,11;W4;""#?""~"
 ^DIPT(2751,"H")="QUERY STATS List"
+^DIPT(2752,0)="OR PRINT M PLUGIN^3240410.1512^@^101.75^^@^3240729"
+^DIPT(2752,"F",1)=".01;C1;X~""No."";C66~0;C70;X;L9~""--------------------------------------------------------------------------------"";C1~""Type:"";C1~3;C25;X~"
+^DIPT(2752,"F",2)="""Short Description:"";C1~10;C3;X~""Full Description:"";C1;S1~20,.01;C3;X~""Routine:"";C1;S1~1;C25;X~""Entry Point:"";C1~2;C25;X~""Mandatory Parameter:"";C1~"
+^DIPT(2752,"F",3)="4;C25;X~"
+^DIPT(2752,"H")="OR M CODE PLUGIN DETAIL"
+^DIPT(2753,0)="ORE PRINT EDITOR^3250312.1003^@^101.74^^@^3250312"
+^DIPT(2753,"F",1)=".01;C1;X~""No."";C66~0;C70;X;L9~""--------------------------------------------------------------------------------"";C1~""Display Name:"";C1~1;C25;X~"
+^DIPT(2753,"F",2)="""Description:"";C1;S1~20,.01;C3~""Inactive:"";C1;S1~2;C25;X~""Number of Columns:"";C1~3;C25;X~""Number of Rows"";C1~4;C25;X~""Save Button Text:"";C1~5;C25;X~"
+^DIPT(2753,"F",3)="""Cancel Button Text:"";C1~6;C25;X~""Plugin:"";C1~40;C25;X~""Refresh All Panels:"";C1~8;C25;X~""Note Title:"";C1~42;C25;X~""Layout:"";C1~"
+^DIPT(2753,"F",4)="D INQEDITOR^OREDITOR;Z;""D INQEDITOR^OREDITOR""~D ^DIWW;Z;""D ^DIWW""~"
+^DIPT(2753,"H")="EDITOR DETAIL"
+^DIPT(2754,0)="ORI PRINT COMPONENT^3240410.1345^@^101.73^^@^3250724"
+^DIPT(2754,"F",1)=".01;C1;X~""No."";C66~0;C70;X;L9~""--------------------------------------------------------------------------------"";C1~""Type:"";C1~1;C25;X~"
+^DIPT(2754,"F",2)="""Component Name:"";C1~2;C25;X~""Description:"";C1;S1~20,.01;C3~""Error Message:"";C1;S1~30;C25;X~""Data Properties:"";C1~40,"""";S1~40,""Property Id:"";C3~"
+^DIPT(2754,"F",3)="40,.01;C25;X~40,""Required:"";C3~40,1;C25;X~"
+^DIPT(2754,"H")="INFORMATION/EDITOR COMPONENTS DETAIL"
+^DIPT(2755,0)="ORI PANEL INQUIRY^3240416.1007^@^101.71^^@^3250605"
+^DIPT(2755,"F",1)=".01;C1;X~""No,"";C66~0;C70;X;L11~""--------------------------------------------------------------------------------"";C1~""Active:"";C1;S1~.02;C25;X~"
+^DIPT(2755,"F",2)="""Last Update:"";C1~.03;C25;X~""Update Source:"";C1~.04;C25;X~1,""Packages: "";C1;S1~1,.01;C13;X~1,D INQPANEL^ORIMGR;Z;""D INQPANEL^ORIMGR""~"
+^DIPT(2755,"F",3)="1,D ^DIWW;Z;""D ^DIWW""~"
+^DIPT(2755,"H")="Information Panel Inquiry"
 ^DIPT("AF",2,.01,901)=""
 ^DIPT("AF",2,.01,1018)=""
 ^DIPT("AF",2,.02,2067)=""
@@ -21809,6 +21830,7 @@ ZWR
 ^DIPT("B","OP LAB",316)=""
 ^DIPT("B","OPEN CASES",61)=""
 ^DIPT("B","OPT ENCOUNTERS",1443)=""
+^DIPT("B","OR PRINT M PLUGIN",2752)=""
 ^DIPT("B","OR QUICK ORDER AUDIT REPORT",2736)=""
 ^DIPT("B","ORAM TEAM LIST",2570)=""
 ^DIPT("B","ORAM TEAM LIST",2571)=""
@@ -21817,6 +21839,9 @@ ZWR
 ^DIPT("B","ORDER DATES DELIM",2630)=""
 ^DIPT("B","ORDER DATES DELIM2",2631)=""
 ^DIPT("B","ORDERS TO FIX",2695)=""
+^DIPT("B","ORE PRINT EDITOR",2753)=""
+^DIPT("B","ORI PANEL INQUIRY",2755)=""
+^DIPT("B","ORI PRINT COMPONENT",2754)=""
 ^DIPT("B","PACKAGE FILES",11)=""
 ^DIPT("B","PACKAGE LIST",8)=""
 ^DIPT("B","PAT LIST SOCIAL",57)=""
@@ -22894,6 +22919,10 @@ ZWR
 ^DIPT("F101.24","CAPTIONED",.01)=1
 ^DIPT("F101.41","CAPTIONED",.01)=1
 ^DIPT("F101.43","CAPTIONED",.01)=1
+^DIPT("F101.71","ORI PANEL INQUIRY",2755)=1
+^DIPT("F101.73","ORI PRINT COMPONENT",2754)=1
+^DIPT("F101.74","ORE PRINT EDITOR",2753)=1
+^DIPT("F101.75","OR PRINT M PLUGIN",2752)=1
 ^DIPT("F102.4","CAPTIONED",.01)=1
 ^DIPT("F1020.3","CAPTIONED",.01)=1
 ^DIPT("F1020.4","CAPTIONED",.01)=1

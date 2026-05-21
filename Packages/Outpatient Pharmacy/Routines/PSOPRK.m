@@ -1,12 +1,14 @@
 PSOPRK ;BIR/EJW - park/unpark functionality ; May 17, 2023@18:30:42
- ;;7.0;OUTPATIENT PHARMACY;**441,712,784**;DEC 1997;Build 2
+ ;;7.0;OUTPATIENT PHARMACY;**441,712,784,798**;DEC 1997;Build 6
  ;
  ; Reference to ^DD(52 in ICR #999
  ; Reference to ^PSDRUG( in ICR #221
  ; Reference to $$L^PSSLOCK,PSOL^PSSLOCK,PSOUL^PSSLOCK,UL^PSSLOCK in ICR #2789
  ;
 UNPARK ;
- N RXIEN,PSOOLDFILLDT
+ N RXIEN,PSOOLDFILLDT,REFCK
+ ;PSO*7*798 initialize REFCK
+ S REFCK=0
  I '$D(PSOPAR) D ^PSOLSET G:'$D(PSOPAR) EX
  I $G(PSOBEDT),$G(PSOREJCT) W $C(7),$C(7) S VALMSG="Invalid Action at this time !",VALMBCK="" Q
  I $G(PSONACT) W $C(7),$C(7) S VALMSG="No Pharmacy Orderable Item !",VALMBCK="" Q
@@ -63,6 +65,9 @@ EN S RXF=0 F I=0:0 S I=$O(^PSRX(DA,1,I)) Q:'I  S RXF=I,RSDT=$P(^(I,0),"^")
  . . S PRKMWQ=1
  . . S PRKMWA=^PSRX(DA,"A",PSOACT,0)
  . . S PRKMWA=$S(PRKMWA["(W)":"W",1:"M")
+ ; PSO*7.0*798: Moved REFCK call up to preserve the users choice when UPK action is used. 
+ D REFCK
+ I 'REFCK S PRKMWA=PRKMW
  I 'RXF,'PRKMWQ S $P(^PSRX(DA,0),"^",11)=PRKMW
  I 'RXF,PRKMWQ S $P(^PSRX(DA,0),"^",11)=PRKMWA
  I RXF,'PRKMWQ S $P(^PSRX(DA,1,RXF,0),"^",2)=PRKMW
@@ -76,7 +81,8 @@ UMSG S VALMSG="RX# "_$P(^PSRX(DA,0),"^")_" unparked"
  S (NEW1,NEW11)="^^"
  S (RXF,RXFL(DA))=0 F JJ=0:0 S JJ=$O(^PSRX(DA,1,JJ)) Q:'JJ  S (RXFL(RXIEN),RXF)=JJ
  I $G(PSXSYS) D UNPARK^PSOCMOPA I $G(XFLAG) D ULP G EX
- I $G(RXIEN) N REFCK S REFCK=0 D REFCK I $G(REFCK) D  D ULP G EX
+ ; PSO*7.0*798: Moved REFCK call up to preserve the users choice when UPK action is used.
+ I $G(RXIEN),REFCK  D  D ULP G EX
  . I $$TITRX^PSOUTL(RXIEN)="t" S VALMSG=VALMSG_" - Cannot Refill Titration Rx" Q
  . I $O(^PS(52.41,"ARF",RXIEN,0)) S VALMSG=VALMSG_" - Refill request exists" Q
  . N X,Y,DIC,JJ

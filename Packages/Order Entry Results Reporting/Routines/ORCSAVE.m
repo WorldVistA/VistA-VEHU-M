@@ -1,9 +1,11 @@
-ORCSAVE ; SLC/MKB/JDL - Save orders ; Sep 11, 2024@10:18:24
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,56,70,73,92,94,116,141,163,187,190,195,243,303,293,280,306,286,269,423,421,382,397,377,453,405,499,609**;Dec 17, 1997;Build 23
+ORCSAVE  ;SLC/MKB/JDL/GN -Save ;Jul 31, 2025@10:30:11
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**7,56,70,73,92,94,116,141,163,187,190,195,243,303,293,280,306,286,269,423,421,382,397,377,453,405,499,609,508**;Dec 17, 1997;Build 39
  ;Per VA Directive 6402, this routine should not be modified.
  ;
- ; Reference to $$NOW^XLFDT in ICR #10103
+ ; Referenece to $$NOW^XLFDT in ICR #10103
+ ; Reference to $$FINDBYCODE^PXSPECAUTH in ICR #7506
  ;
+ Q
 NEW(ORDIALOG,ORDG,ORPKG,ORCAT,OREVENT,ORDUZ,ORLOG) ; -- New order
  ; Returns ORIFN = [new] order number, if created/saved
  D EN
@@ -19,7 +21,9 @@ XX ; -- save new/unreleased edited order into Orders file
  D EN Q:'ORIFN  S:'$G(ORDA) ORDA=1
  I $G(OLDIFN) D  ;save links between orders
  . S $P(^OR(100,ORIFN,3),U,5)=OLDIFN,$P(^(3),U,11)=1
- . S $P(^OR(100,OLDIFN,3),U,6)=ORIFN S:$D(^(5)) ^OR(100,ORIFN,5)=^OR(100,OLDIFN,5)
+ . S $P(^OR(100,OLDIFN,3),U,6)=ORIFN
+ . I $P($G(^OR(100,OLDIFN,112,0)),U,4) M ^OR(100,ORIFN,112)=^OR(100,OLDIFN,112)  ;if old order merge to new order 112 mult
+ . I '$P($G(^OR(100,ORIFN,112,0)),U,4),$D(^OR(100,OLDIFN,5)) D MERGE112          ;if no 112 mult data and there is old order 5 node, then update to new order 112 mult
  I $D(^OR(100,+OLDIFN,0)) D
  . Q:'$G(OREVTDF)
  . N OLDEVT,OLDSTS,LSTACT,PATID,NOW,WHEN
@@ -45,8 +49,19 @@ RN ; -- save new/unreleased renewal order into Orders file
  N OLDIFN S OLDIFN=+ORIFN K ORIFN
  D EN Q:'ORIFN  S:'$G(ORDA) ORDA=1
  S $P(^OR(100,ORIFN,3),U,5)=OLDIFN,$P(^(3),U,11)=2
- S $P(^OR(100,OLDIFN,3),U,6)=ORIFN S:$D(^(5)) ^OR(100,ORIFN,5)=^OR(100,OLDIFN,5)
+ S $P(^OR(100,OLDIFN,3),U,6)=ORIFN
  M:$D(ACFLAG) ^OR(100,ORIFN,11)=^OR(100,OLDIFN,11)
+ M:$D(^OR(100,OLDIFN,112)) ^OR(100,ORIFN,112)=^OR(100,OLDIFN,112)       ;508 save SA info, but not to old 5 node anymore, do a Merge for old to new 112 node
+ I '$P($G(^OR(100,ORIFN,112,0)),U,4),$D(^OR(100,OLDIFN,5)) D MERGE112   ;    if no 112 mult data and there is old order 5 node, then update to new order 112 mult
+ Q
+ ;
+MERGE112 ;save SA data to new order
+ N ID,IDNM,N5,QQ,TMPARR,VALUE
+ S N5=^OR(100,OLDIFN,5)
+ F QQ=1:1:8 D
+ . S VALUE=$P(N5,U,QQ)
+ . S IDNM=$$OLDCODE^ORSPECAUTH(QQ),ID=$$FINDBYCODE^PXSPECAUTH(IDNM)
+ . D UPDATE112^ORSPECAUTH(ORIFN,ID,VALUE,.TMPARR)                       ;GSNBUGFIX FOR B4
  Q
  ;
 EN ; -- save new/unreleased order in ORDIALOG() into Orders file

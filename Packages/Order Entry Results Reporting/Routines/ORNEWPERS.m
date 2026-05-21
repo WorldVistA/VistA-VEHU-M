@@ -1,16 +1,25 @@
-ORNEWPERS ; NA/AJB - NEW PERSON RPC ; Sep 25, 2024@12:13:03
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**596,609**;Dec 17, 1997;Build 23
+ORNEWPERS ; NA/AJB - NEW PERSON RPC ;Dec 31, 2025@12:51:27
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**596,609,508**;Dec 17, 1997;Build 39
  ;
- ; Reference to ^DIC( in ICR #916
- ; Reference to ^DIC(3.1 in ICR #1234
- ; Reference to ^DIC(49 in ICR #4330
- ; Reference to ^VA(200,D0,5 in ICR #4329
- ; Reference to $$ISA^USRLM in ICR #1544
- ; Reference to $$DIV4^XUSER in ICR #2533
+ ; Reference to $$DT^XLFDT in ICR #10103
+ ; Reference to $$ALL^VASITE in ICR #10112
+ ; Reference to $$DIV4^XUSER in ICR #2343
+ ; Reference to $$PROVIDER^XUSER in ICR #2343
+ ; Reference to $$GET^XUA4A72 in ICR #1625
+ ; Reference to $$GET1^DIQ in ICR #2056
+ ; Reference to $$ACCESS^XQCHK in ICR #10078
  ; Reference to $$NPI^XUSNPI in ICR #4532
- ; Reference to ^TIU(8925.1 in ICR #4082
- ; Reference to $$REQCOSIG^TIULP in ICR #2322
  ; Reference to $$ISA^TIULX in ICR #3058
+ ; Reference to $$REQCOSIG^TIULP in ICR #2322
+ ; Reference to $$ISA^USRLM in ICR #1544
+ ; Reference to $$PROVIDER^TIUPXAP1 in ICR #7618
+ ; Reference to GETLST^XPAR in ICR #2263
+ ; Reference to File ^DIC(49 in ICR #4330
+ ; Reference to File ^TIU(8925 in ICR #2937
+ ; Reference to File ^VA(200 in ICR #4329
+ ; Reference to File ^VA(200 in ICR #10060
+ ; Reference to File ^XUSEC in ICR #10076
+ ; Reference to File ^DIC(3.1 in ICR #1234
  ;
  Q
 PARAMETERS ; FROM^DIR^KEY^DATE^RDV^ALL^PDMP^SPN^EXC^NVAP^DFC^TIUDA^TYPE^HELP^DEBUG
@@ -20,6 +29,7 @@ NEWPERSON(ORY,PARAMS) ; all parameters passed by reference
  S PARAMETERS=$P($T(PARAMETERS),"; ",2) F I=1:1:$L(PARAMETERS,U) S PRM=$P(PARAMETERS,U,I) N @(PRM) D  ;   setup parameters
  . S (@(PRM),P(PRM))=$G(PARAMS(PRM)) ;                                                                    set variables & parameters
  . S INF(I,PRM)=$S($D(PARAMS(PRM)):PARAMS(PRM),1:"") ;                                                    set for help
+ I $$GET^XPAR("ALL","ORWCH NON-VA PROVS FEATURE")=0 S (NVAP,P("NVAP"))=1 ;                                backward compatibility for non-va providers
  I EXC S P("ORUCE")=$$GET^XPAR("SYS","OR CPRS USER CLASS EXCLUDE",1,"B") ;                                set OR CPRS USER CLASS EXCLUDE parameter
  S DIR=$S('DIR:1,1:DIR),MAX=44 ;                                                                          direction & max results
  S GBL=$S((ALL!RDV):$NA(^VA(200,"B")),1:$NA(^VA(200,"AUSER"))) ;                                          search global
@@ -66,8 +76,9 @@ DETAILS(NODE0,IEN,MORE,DIV) ; get user information
  . N X S X=0 F  S X=$O(DIV(X)) Q:'+X  I +DIV(X) S DIV=$$GET1^DIQ(4,X,.01) ;                                              default division
  . S:DIV'="" DTL(3)=DIV ;                                                                                                division
  N NPI S NPI=+$$NPI^XUSNPI("Individual_ID",IEN) S:+NPI>0 DTL(4)="[NPI: "_NPI_"]" ;                                       NPI
+ S DTL(5)="" I NVAP S DTL(5)=$S($$CPRSTAB(IEN,$O(^ORD(101.13,"B","NVA",0)),DATE):"Non VA-Provider",1:"")
  N X S X=0 F  S X=$O(DTL(X)) Q:'X  S:$O(DTL(0))=X DTL="- " S DTL=DTL_DTL(X)_$S($O(DTL(X))=4:" ",$O(DTL(X)):", ",1:"") ;  set details
- Q ENTRY_DTL
+ Q ENTRY_DTL_U_$S(DTL(5)'="":"N",1:"")
 CPRSTAB(USER,TAB,DATE) ; return tab status
  ; 0 missing/expired, 1 assigned & current
  N RESULT S DATE=$S(+DATE:DATE,1:DT),RESULT=0
@@ -106,7 +117,6 @@ USR ;;I EXC,+ORUCE,$$USRCLEX(IEN,+ORUCE,"ERR",DATE);;"Member of "_$P(ORUCE,U,2)_
  ;;I EXC,NVA;;"Non-VA Provider excluded for Additional Signer selection"
  ;;I COR,VAL=-3;;"OR CPRS GUI CHART option missing"
  ;;S VAL=$$ACCESS^XQCHK(IEN,"OR CPRS GUI CHART") I COR,VAL=0;;"Not assigned OR CPRS GUI CHART option [any menu tree]"
- ;;I 'NVAP,NVA;;"Non-VA Provider excluded via parameter"
 PDM ;;I PDMP,'$$ISAUTH^ORPDMP(IEN);;"Not authorized for PDMP access"
  ;;I NVA,COR;;"Non-VA and 'core' CPRS TAB ACCESS "_$S(DATE:"active on "_$$FMTE^XLFDT(DATE),1:"currently active")
  ;;I 'NVA,'COR;;"No CPRS TAB ACCESS assigned"
@@ -114,6 +124,7 @@ PDM ;;I PDMP,'$$ISAUTH^ORPDMP(IEN);;"Not authorized for PDMP access"
 RDV ;;I $P(NODE0,U,11)>0,$P(NODE0,U,11)'>$S(DATE:DATE,1:DT);;"Termination date reached "_$$FMTE^XLFDT($P(NODE0,U,11))
 ALL ;;I DATE,$$GET^XUA4A72(IEN,DATE)'>0;;"No active 'Person Class' for "_$$FMTE^XLFDT(DATE)
  ;;I KEY'="",'$D(^XUSEC(KEY,IEN));;"Not assigned "_KEY_" Security Key"
+ ;;I 'NVAP,NVA;;"Non-VA Provider excluded via parameter"
  ;;
 DEBUG ; evaluate a specific user, list below prompts user to determine RPC criteria entry point
  ;;ALL^YE^NO^Terminated or DISUSER allowed
@@ -141,7 +152,7 @@ DEBUG ; evaluate a specific user, list below prompts user to determine RPC crite
  G EXIT:'VAL  W !!,IOUON_"Optional Parameters"_IOUOFF
  S DIC=19.1,DIC("A")="Enter a SECURITY KEY: ",VAL=$$DIC(.DIC) G EXIT:VAL=U  S P("KEY")=$S(+VAL:$P(VAL,U,2),1:"") ; security key
  S DIR(0)="DO",DIR("A")="Enter a DATE",VAL=$$DIR(.DIR) G EXIT:VAL=U  S P("DATE")=$S(+VAL:VAL,1:"") ;               date for evaluation
- I $S(TAG="ALL":0,TAG="RDV":0,TAG="PDM":0,1:1) D  G EXIT:VAL=U
+ D  G EXIT:VAL=U
  . S DIR(0)="YE",DIR("A")="Include Non-VA Providers",DIR("B")="NO",VAL=$$DIR(.DIR) Q:VAL=U  S P("NVAP")=VAL ;      ask Non-VA Provider
  . S DIR(0)="YE",DIR("A")="Screen for OR CPRS USER CLASS EXCLUDE parameter",DIR("B")="NO",VAL=$$DIR(.DIR) Q:VAL=U  S P("EXC")=VAL ; ask parameter definition
  I P("EXC") S P("ORUCE")=$$GET^XPAR("SYS","OR CPRS USER CLASS EXCLUDE",1,"B") ;                                    set ASU class
