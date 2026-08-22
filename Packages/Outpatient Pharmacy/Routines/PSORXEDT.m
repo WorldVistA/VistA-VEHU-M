@@ -1,5 +1,5 @@
 PSORXEDT ;BIR/SAB - Edit RX Routine ;Jan 05, 2021@12:04
- ;;7.0;OUTPATIENT PHARMACY;**21,23,44,71,146,185,148,253,390,372,416,313,427,422,402,500,482,556,622,753**;DEC 1997;Build 53
+ ;;7.0;OUTPATIENT PHARMACY;**21,23,44,71,146,185,148,253,390,372,416,313,427,422,402,500,482,556,622,753,695**;DEC 1997;Build 21
  ;External Reference to ^PS(55 supported by DBIA 2228
  ;External reference to $$BSA^PSSDSAPI supported by DBIA 5425
  D:'$D(PSOPAR) ^PSOLSET I '$D(PSOPAR) G EOJ Q
@@ -89,9 +89,14 @@ PT ;
  S RSLT=$$CRCL^PSOORUT2(DFN)
  ; Display format of CrCL and Creatinine results updated - PSO*7.0*556
  I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)<.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
- I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"  (CREAT: "_$P($G(RSLT),"^",3)_"mg/dL "_$P($G(RSLT),"^")_")"
+ I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"  (CREAT: "_$P($G(RSLT),"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
  I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)<.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
- I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"(est.)"_" (CREAT: "_$P($G(RSLT),"^",3)_"mg/dL "_$P($G(RSLT),"^")_")"
+ ;PSO*7.0*695: modified line below to check for null and added line to check for non-numeric result.
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)="") S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)]"")&('+$P($G(RSLT),"^",3)) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: "_$P($G(RSLT),"^",3)_")"
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"(est.)"_" (CREAT: "_$P($G(RSLT),"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
+ ;PSO*7.0*695: Added line below
+ I $E($P($G(RSLT),"^",3))="<"!($E($P($G(RSLT),"^",3))=">") S $P(ZDSPL,"CREAT: ",2)=$P(RSLT,"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
  S ^TMP("PSOHDR",$J,13,0)=$G(ZDSPL)
  K PSOBSA,RSLT,ZDSPL
  S ^TMP("PSOHDR",$J,14,0)=$$POSTSHRT^WVRPCOR(PSODFN)

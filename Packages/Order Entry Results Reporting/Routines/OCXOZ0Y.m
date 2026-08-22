@@ -1,4 +1,4 @@
-OCXOZ0Y ;SLC/RJS,CLA - Order Check Scan ;JUN 24,2026 at 13:48
+OCXOZ0Y ;SLC/RJS,CLA - Order Check Scan ;AUG 22,2026 at 11:44
  ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
@@ -105,8 +105,8 @@ R67R2B ; Send Order Check, Notication messages and/or Execute code for  Rule #67
  Q:$D(OCXRULE("R67R2B"))
  ;
  N OCXNMSG,OCXCMSG,OCXPORD,OCXFORD,OCXDATA,OCXNUM,OCXDUZ,OCXQUIT,OCXLOGS,OCXLOGD
- I ($G(OCXOSRC)="CPRS ORDER PRESCAN") S OCXCMSG=(+OCXPSD)_"^28^^Metformin - no serum creatinine within past "_$$GETDATA(DFN,"86^112",127)_" days." I 1
- E  S OCXCMSG="Metformin - no serum creatinine within past "_$$GETDATA(DFN,"86^112",127)_" days."
+ I ($G(OCXOSRC)="CPRS ORDER PRESCAN") S OCXCMSG=(+OCXPSD)_"^28^^Metformin - no serum creatinine within past "_$$GETDATA(DFN,"86^112",127)_" days. See https://www.kidneyfund.org/all-about-kidneys" I 1
+ E  S OCXCMSG="Metformin - no serum creatinine within past "_$$GETDATA(DFN,"86^112",127)_" days. See https://www.kidneyfund.org/all-about-kidneys"
  S OCXNMSG=""
  ;
  Q:$G(OCXOERR)

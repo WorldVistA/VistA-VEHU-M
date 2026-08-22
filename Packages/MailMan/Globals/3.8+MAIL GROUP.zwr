@@ -1,6 +1,6 @@
 OSEHRA ZGO Export: MAIL GROUP
 ZWR
-^XMB(3.8,0)="MAIL GROUP^3.8^473^449"
+^XMB(3.8,0)="MAIL GROUP^3.8^474^450"
 ^XMB(3.8,1,0)="YS PSYCHTEST^PR^^^^0"
 ^XMB(3.8,1,1,0)="^3.81P^^0"
 ^XMB(3.8,1,2,0)="^^1^1^2921113^^"
@@ -2721,7 +2721,7 @@ ZWR
 ^XMB(3.8,302,6,0)="^3.812^^0"
 ^XMB(3.8,302,8,0)="^3.814P"
 ^XMB(3.8,302,9,0)="^3.815P"
-^XMB(3.8,303,0)="PXRM MANAGER^PR^n^22^3260228^0"
+^XMB(3.8,303,0)="PXRM MANAGER^PR^n^23^3260822^0"
 ^XMB(3.8,303,1,0)="^3.81P^3^3"
 ^XMB(3.8,303,1,1,0)=10000000020
 ^XMB(3.8,303,1,2,0)=11745
@@ -3741,6 +3741,13 @@ ZWR
 ^XMB(3.8,473,6,0)="^3.812^1^1"
 ^XMB(3.8,473,6,1,0)="S.MAG CACHE SETTINGS UPDATE@VISTA-SILVER.VISTACORE.US"
 ^XMB(3.8,473,6,"B","S.MAG CACHE SETTINGS UPDATE@VI",1)=""
+^XMB(3.8,474,0)="HL7 INTERFACE DELAY^PU^y^^^0^.5"
+^XMB(3.8,474,2,0)="^3.801^4^4^3260128^^^^"
+^XMB(3.8,474,2,1,0)="This mail group will receive notification if there are issues related to "
+^XMB(3.8,474,2,2,0)="the process to Find/Add user(s) via HL7 Interface."
+^XMB(3.8,474,2,3,0)="For example, LOCK failure for the ^VA(200,""HL7"") global as utilized by "
+^XMB(3.8,474,2,4,0)="XUESSO1."
+^XMB(3.8,474,3)=1
 ^XMB(3.8,"AB",.5,120,1)=""
 ^XMB(3.8,"AB",.5,372,1)=""
 ^XMB(3.8,"AB",.5,428,1)=""
@@ -4426,6 +4433,7 @@ ZWR
 ^XMB(3.8,"AC",.5,471)=""
 ^XMB(3.8,"AC",.5,472)=""
 ^XMB(3.8,"AC",.5,473)=""
+^XMB(3.8,"AC",.5,474)=""
 ^XMB(3.8,"AC",1,228)=""
 ^XMB(3.8,"AC",1,343)=""
 ^XMB(3.8,"AC",1,347)=""
@@ -4785,6 +4793,7 @@ ZWR
 ^XMB(3.8,"B","HDIS LAB EXCEPTIONS",407)=""
 ^XMB(3.8,"B","HELLO",117)=""
 ^XMB(3.8,"B","HILL,BETTY",217)=""
+^XMB(3.8,"B","HL7 INTERFACE DELAY",474)=""
 ^XMB(3.8,"B","HLEV EVENT MONITOR",293)=""
 ^XMB(3.8,"B","HLEV SERVER",294)=""
 ^XMB(3.8,"B","HMP IRM GROUP",432)=""

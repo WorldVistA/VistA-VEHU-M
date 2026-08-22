@@ -1,4 +1,4 @@
-OCXOZ0H ;SLC/RJS,CLA - Order Check Scan ;JUN 24,2026 at 13:48
+OCXOZ0H ;SLC/RJS,CLA - Order Check Scan ;AUG 22,2026 at 11:44
  ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
@@ -113,6 +113,7 @@ EL86 ; Examine every rule that involves Element #86 [GLUCOPHAGE ORDER]
  ;
  D R67R1A^OCXOZ0Y   ; Check Relation #1 in Rule #67 'GLUCOPHAGE - LAB RESULTS'
  D R67R2A^OCXOZ0Y   ; Check Relation #2 in Rule #67 'GLUCOPHAGE - LAB RESULTS'
+ D R67R3A^OCXOZ0Z   ; Check Relation #3 in Rule #67 'GLUCOPHAGE - LAB RESULTS'
  Q
  ;
 EL111 ; Examine every rule that involves Element #111 [GLUCOPHAGE CREATININE > 1.5]
@@ -129,6 +130,14 @@ EL112 ; Examine every rule that involves Element #112 [NO GLUCOPHAGE CREATININE]
  Q:$G(OCXOERR)
  ;
  D R67R2A^OCXOZ0Y   ; Check Relation #2 in Rule #67 'GLUCOPHAGE - LAB RESULTS'
+ Q
+ ;
+EL149 ; Examine every rule that involves Element #149 [GLUCOPHAGE CREATININE INVALID IS TRUE]
+ ;  Called from SCAN+9^OCXOZ01.
+ ;
+ Q:$G(OCXOERR)
+ ;
+ D R67R3A^OCXOZ0Z   ; Check Relation #3 in Rule #67 'GLUCOPHAGE - LAB RESULTS'
  Q
  ;
 EL122 ; Examine every rule that involves Element #122 [AMITRIPTYLINE ORDER]

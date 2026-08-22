@@ -1,8 +1,8 @@
-PSJHEAD ;BIR/KKA-PROFILE HEADER ; 4/1/08 4:29pm
- ;;5.0;INPATIENT MEDICATIONS;**8,20,85,95,203,260,256,387**;16 DEC 97;Build 1
+PSJHEAD ;BIR/KKA - PROFILE HEADER; Jul 20, 2022@19:00
+ ;;5.0;INPATIENT MEDICATIONS;**8,20,85,95,203,260,256,387,436**;16 DEC 97;Build 14
  ;
- ; Reference to ^PS(55 supported by DBIA #2191.
- ;External reference to $$BSA^PSSDSAPI supported by DBIA 5425.
+ ; Reference to ^PS(55 in ICR #2191
+ ; Reference to $$BSA^PSSDSAPI in ICR #5425
  ;
 ENTRY(DFN,PSJOPC,PG,PSJNARC,PSJTEAM,PSJY2K)   ;
  ;DFN=patient internal entry number
@@ -49,11 +49,18 @@ ENHEAD ; print new page, name, ssn, dob, and ward
  S PSJBSA=$$BSA^PSSDSAPI(DFN),PSJBSA=$P(PSJBSA,"^",3),PSJBSA=$S(PSJBSA'>0:"_________",1:$J(PSJBSA,4,2))
  S RSLT=$$CRCL^PSJLMHED(DFN)
  ; Display format of CrCL and Creatinine results updated - PSJ*5.0*387
- I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)<.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
- I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"  (CREAT: "_$P($G(RSLT),"^",3)_"mg/dL "_$P($G(RSLT),"^")_")"
- I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)<.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
- I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"(est.)"_" (CREAT: "_$P($G(RSLT),"^",3)_"mg/dL "_$P($G(RSLT),"^")_")"
- W !?2,$G(ZDSPL),?51,"BSA (m2): ",$G(PSJBSA) K ZDSPL,RSLT,PSJBSA
+ I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)<.01) S ZDSPL=" CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
+ I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL=" CrCL: "_$P(RSLT,"^",2)_"  (CREAT: "_$P($G(RSLT),"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
+ ;PSJ*5.0*436: modified line below to check for null and added line to check for non-numeric result.
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)="") S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)]"")&('+$P($G(RSLT),"^",3)) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: "_$P($G(RSLT),"^",3)_")"
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL=" CrCL: "_$P(RSLT,"^",2)_"(est.)"_" (CREAT: "_$P($G(RSLT),"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
+ ;PSJ*5.0*436: Added line below.
+ I $E($P($G(RSLT),"^",3))="<"!($E($P($G(RSLT),"^",3))=">") S $P(ZDSPL,"CREAT: ",2)=$P(RSLT,"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
+ ;PSJ*5.0*436: Adjust spacing.
+ N PSJXSP
+ S PSJXSP=$S(ZDSPL["Unable":62,1:51)
+ W !?2,$G(ZDSPL),?PSJXSP,"BSA (m2): ",$G(PSJBSA) K ZDSPL,RSLT,PSJBSA
  ;
  I PSJNARC=1 W !?1,"Pharmacy Narrative: " S WCNT=1,SI=$G(^PS(55,DFN,1)) W:SI=""&($E(IOST)="P") " ____________________" I SI]"" D
  .S LENCHK=0,LEN=$L(SI)

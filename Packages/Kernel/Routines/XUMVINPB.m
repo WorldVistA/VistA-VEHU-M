@@ -1,5 +1,5 @@
 XUMVINPB ;MVI/DRI - Master Veteran Index New Person Bulk Pull RPC ;7/29/20  13:59
- ;;8.0;KERNEL;**710,725,733,819**;Jul 10, 1995;Build 1
+ ;;8.0;KERNEL;**710,725,733,819,844**;Jul 10, 1995;Build 1
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**710 - STORY_952862  (dri) new routine
@@ -7,6 +7,7 @@ XUMVINPB ;MVI/DRI - Master Veteran Index New Person Bulk Pull RPC ;7/29/20  13:5
  ;                      sort by Active, Disuser/Terminate, Visitor or All
  ;**733 - STORY 1291666 (dri) add field 101.13
  ;**819 - STORY VAMPI-29086 (jfw) See below for new fields
+ ;**844 - STORY VAMPI-34804 (jfw) Add Station # to Division Fld Info
  ;
  ;Reference to ^XWB2HL7 supported by IA #3144
  ;
@@ -179,7 +180,10 @@ BULKGET(XURET,XUDUZ,XUTYPE) ;rpc to retrieve bulk pull of new person file data
  ...N IENS,MCNT,SFILE,SFLD
  ...S MCNT=1,SFILE=$S(FLD=16:200.02,FLD=51:200.051,FLD=203:200.03),SFLD=.01
  ...I '$D(XUARR(SFILE)) S @XUGBL@(CNT)=FILE_";"_FLD_";"_SFLD_"^"_$G(FLDNM(SFILE,SFLD,"LABEL"))_"^"_MCNT_"^^" S CNT=CNT+1 Q
- ...S IENS="" F  S IENS=$O(XUARR(SFILE,IENS)) Q:IENS=""  S @XUGBL@(CNT)=FILE_";"_FLD_";"_SFLD_"^"_$G(FLDNM(SFILE,SFLD,"LABEL"))_"^"_MCNT_"^"_$G(XUARR(SFILE,IENS,SFLD,"I"))_"^"_$G(XUARR(SFILE,IENS,SFLD,"E")) S MCNT=MCNT+1,CNT=CNT+1
+ ...S IENS="" F  S IENS=$O(XUARR(SFILE,IENS)) Q:IENS=""  D
+ ....;**844 Story VAMPI-34804 (jfw) - Add Station # to end of Division Info
+ ....S @XUGBL@(CNT)=FILE_";"_FLD_";"_SFLD_"^"_$G(FLDNM(SFILE,SFLD,"LABEL"))_"^"_MCNT_"^"_$G(XUARR(SFILE,IENS,SFLD,"I"))_"^"_$G(XUARR(SFILE,IENS,SFLD,"E"))_$S(SFILE="200.02":"^"_$$STA^XUAF4($G(XUARR(SFILE,IENS,SFLD,"I"))),1:"")
+ ....S MCNT=MCNT+1,CNT=CNT+1
  ..;
  ..I FLD=10.1 D  Q  ;name components
  ...S @XUGBL@(CNT)=FILE_";"_FLD_"^"_$G(FLDNM(FILE,FLD,"LABEL"))_"^^"_$G(XUARR(FILE,XUDUZ_",",FLD,"I"))_"^"_$G(XUARR(FILE,XUDUZ_",",FLD,"E")) S CNT=CNT+1

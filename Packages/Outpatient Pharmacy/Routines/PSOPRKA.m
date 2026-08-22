@@ -1,5 +1,5 @@
 PSOPRKA ;BIR/EJW - PARK/UNPARK functionality (cont.) ; Apr 24, 2023@08:17:57
- ;;7.0;OUTPATIENT PHARMACY;**441,712,763**;DEC 1997;Build 3
+ ;;7.0;OUTPATIENT PHARMACY;**441,712,763,827**;DEC 1997;Build 4
  ;
  ; Reference to $$L^PSSLOCK,PSOL^PSSLOCK,PSOUL^PSSLOCK,UL^PSSLOCK in ICR #2789
  ;(modified from hold rtn PSOHLDA)
@@ -69,7 +69,7 @@ UNPARK(PSODA,PSODFN,ERRMSG,PSOARR) ; UNPARK FROM CPRS and refill option (includi
  S STA=+$G(^PSRX(DA,"STA")) I STA'=0!('$G(^PSRX(DA,"PARK"))) S ERRMSG(1)="Cannot unpark. Order is not parked." D ULP Q
  K DIR,DTOUT,DUOUT,DIRUT
 EN ;
- N I,UNRFIL
+ N I,UNRFIL,UPKSUSP S UPKSUSP=0
  S (RXF,UNRFIL)=0 F I=0:0 S I=$O(^PSRX(DA,1,I)) Q:'I  S RXF=I
  S RSDT="",LBLP=0
  D GETRELDT(DA)
@@ -78,7 +78,13 @@ EN ;
  I 'RSDT,'LBLP D ^PSOCMOPA
  ; Unpark whether reusing fill or not
  D KILLPARK^PSOPRK(DA)
- I 'RSDT,'LBLP,'$D(PSOCMOP) D  ; If last fill not released and label not printed, put it on suspense with routing of mail when unparked; reset dates
+ ;p827 I 'RSDT,'LBLP,'$D(PSOCMOP) D  ; If last fill not released and label not printed, put it on suspense with routing of mail when unparked; reset dates
+ N PSOACT,ACTLOG,ACTREF,ACTDESC S PSOACT=999,ACTLOG=0
+ I RXF,$G(PSOREF("MAIL/WINDOW"))'="W" D
+ .F  S PSOACT=$O(^PSRX(DA,"A",PSOACT),-1)  Q:'PSOACT!UPKSUSP  D
+ ..S ACTLOG=$G(^PSRX(DA,"A",PSOACT,0)),ACTREF=$P(ACTLOG,"^",4),ACTDESC=$P(ACTLOG,"^",5) Q:ACTREF'=RXF
+ ..I ACTDESC["Rx placed in Parked status and removed from SUSPENSE",ACTDESC["(M)",ACTREF=RXF S UPKSUSP=1
+ I (UPKSUSP)!('RSDT&'LBLP&'$D(PSOCMOP)) D  ; If last fill not released and label not printed, put it on suspense with routing of mail when unparked; reset dates
  .I RXF S PSORX("FILL DATE")=$P(^PSRX(DA,1,RXF,0),"^")
  .I 'RXF S PSORX("FILL DATE")=$P(^PSRX(DA,3),"^",2)
  .I PSORX("FILL DATE")<DT S PSORX("FILL DATE")=DT
@@ -141,7 +147,7 @@ UPKSUSP ; Update routing and date fields for latest fill and put on suspense
  S (RXN,DA)=PSODA
  S SD=FILLDATE
  I '$G(PSOSITE) N PSOSITE S PSOSITE=$$RXSITE^PSOBPSUT(RXN,$G(RXF))
- N DRADD S DRADD="" I 'RXF,$G(^PSDRUG($P(PSOX("RX0"),"^",6),3)) S DRADD=";3////Q" ;p763
+ N DRADD S DRADD="" I ('RXF&$G(^PSDRUG($P(PSOX("RX0"),"^",6),3)))!(UPKSUSP) S DRADD=";3////Q" ;p763 p827 added UPKSUSP
  S RXP=+$G(RXPR(DA)),DIC="^PS(52.5,",DIC(0)="L",X=RXN
  S DIC("DR")=".02///"_SD_";.03////"_$P(^PSRX(DA,0),"^",2)_";.04///M;.05///"_RXP_";.06////"_PSOSITE_";2///0"_$G(DRADD) K DD,DO D FILE^DICN D  I +Y,'$G(RXP),$G(RXRP(RXN)) S $P(^PS(52.5,+Y,0),"^",12)=1
  .K DD,DO I +Y,$G(PSOEXREP) S $P(^PS(52.5,+Y,0),"^",12)=1

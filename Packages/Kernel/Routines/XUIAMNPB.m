@@ -1,5 +1,5 @@
 XUIAMNPB ;BHM/DRI - IAM BACKGROUND JOB TO TRANSMIT NEW PERSON DATA ;26-Feb-2025 11:02 AM
- ;;8.0;KERNEL;**799**;Jul 10, 1995;Build 3
+ ;;8.0;KERNEL;**799,844**;Jul 10, 1995;Build 1
  ;;Per VHA Directive 2004-038, this routine should not be modified
  ;
  Q
@@ -110,7 +110,7 @@ EN1 ;entry point for new person field monitor batch update background job
  .;
  .;VISITOR- STATION NUMBER, NAME OF SITE, DUZ AT SITE, FIRST DATE VISIT, LAST DATE VISIT, PHONE AT SITE
  .S CT=1,EN="" F  S EN=$O(XUARR(200.06,EN)) Q:EN=""  D
- ..S XUIAM("visits",CT)=$G(XUARR(200.06,EN,.01,"E"))_"^"_$G(XUARR(200.06,EN,1,"I"))_"^"_$G(XUARR(200.06,EN,2,"E"))
+ ..S XUIAM("visits",CT)=$G(XUARR(200.06,EN,.01,"E"))_"^"_$$ESC($G(XUARR(200.06,EN,1,"I")))_"^"_$$ESC($G(XUARR(200.06,EN,2,"E"))) ;**844 VAMPI-34799 (cmc) include site name in check for delimiters
  ..S XUIAM("visits",CT)=$G(XUIAM("visits",CT))_"^"_$$FMTHL7^XLFDT($G(XUARR(200.06,EN,3,"I")))_"^"_$$FMTHL7^XLFDT($G(XUARR(200.06,EN,4,"I")))_"^"_$$ESC($G(XUARR(200.06,EN,5,"I")))
  ..S CT=CT+1
  .;

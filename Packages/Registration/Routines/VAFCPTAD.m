@@ -1,17 +1,18 @@
 VAFCPTAD ;ISA/RJS,ZOLTAN - Add an entry to the PATIENT (#2) file; 26-Apr-2023 4:26 PM
- ;;5.3;Registration;**149,800,876,944,950,955,1033,1042,1050,1099,1131**;Aug 13, 1993;Build 4
+ ;;5.3;Registration;**149,800,876,944,950,955,1033,1042,1050,1099,1131,1162**;Aug 13, 1993;Build 1
  ;
 ADD(RETURN,PARAM) ;Entry point for VAFC VOA ADD PATIENT remote procedure
  ;Input  PARAM array = List of data to be used for the creation of a VistA PATIENT (#2) record at the Preferred Facility.
  ;Required elements include:
  ;  PARAM("PRFCLTY")=PREFERRED FACILITY
  ;  PARAM("NAME")=NAME (last name minimal; recommend full name), 30 chars max
- ;  PARAM("GENDER")=SEX                    PARAM("DOB")=DATE OF BIRTH
+ ;  PARAM("GENDER")=SEX  PARAM("DOB")=DATE OF BIRTH
  ;  PARAM("SSN")=SOCIAL SECURITY NUMBER OR NULL IF NONE and want a psuedo SSN created
  ;  PARAM("SRVCNCTD")=SERVICE CONNECTED?   PARAM("TYPE")=Patient TYPE
- ;  PARAM("VET")=VETERAN (Y/N)?            PARAM("FULLICN")=INTEGRATION CONTROL NUMBER with CHECKSUM
+ ;  PARAM("VET")=VETERAN (Y/N)?   PARAM("FULLICN")=INTEGRATION CONTROL NUMBER with CHECKSUM
  ;Optional elements include:
- ;  PARAM("LONGNAME")=NAME (set if full name is greater than 30 chars) ;**1050,VAMPI-9503 (mko): New input, allows setting Name Components to long name
+ ;  PARAM("PreferredName")=preferred name ;**1162(cmc) new optional trait
+ ;  PARAM("LONGNAME")=NAME (if full name is greater than 30 chars) ;**1050,VAMPI-9503 (mko): New input, allows setting Name Components to long name
  ;  PARAM("POBCTY")=PLACE OF BIRTH [CITY]  PARAM("POBST")=PLACE OF BIRTH [STATE]
  ;  PARAM("MMN")=MOTHER'S MAIDEN NAME      PARAM("MBI")=MULTIPLE BIRTH INDICATOR
  ;  PARAM("ALIAS",#)=ALIAS NAME(last^first^middle^suffix)^ALIAS SSN
@@ -19,8 +20,8 @@ ADD(RETURN,PARAM) ;Entry point for VAFC VOA ADD PATIENT remote procedure
  ;  PARAM("ENROLLMENT")=1 if would like the ES messaging triggered
  ;  PARAM("ResAddL1")=Resident Street Address line 1     ;PARAM("ResAddL2")=Resident Street Address line 2
  ;  PARAM("ResAddL3")=Resident Street Address line 3     ;PARAM("ResAddCity")=Resident City
- ;  PARAM("ResAddState")=Resident State                  ;PARAM("ResAddZIP")=Resident Zip
- ;  PARAM("ResPhone")=Home Phone Number                  ;PARAM("ResAddCountry")=COUNTRY FOR FORIEGN ADDRESS
+ ;  PARAM("ResAddState")=Resident State;PARAM("ResAddZIP")=Resident Zip
+ ;  PARAM("ResPhone")=Home Phone Number;PARAM("ResAddCountry")=COUNTRY FOR FORIEGN ADDRESS
  ;  PARAM("ResAddPCode")=POSTAL CODE FOR FORIEGN ADDRESS ;PARAM("ResAddProvince")=PROVINCE FOR FORIEGN ADDRESS
  ;Output:
  ;  On Failure:  -1^error text - record add failed
@@ -29,7 +30,7 @@ ADD(RETURN,PARAM) ;Entry point for VAFC VOA ADD PATIENT remote procedure
 EN1 ;Check value of all required fields
  K RETURN D NOW^%DTC
  N ALSERR,DIERR,DPTIDS,DPTX,ERROR,FLG,FDA,FN,LN,MN,RESULT,RGRSICN,SFX,VAL,VAFCA08,X,Y,UPDNC,VAFCDFN,VAFCDOB,VAFCICN,VAFCMMN,VAFCNAM,VAFCPF,VAFCPOBC,VAFCPOBS
- N VAFCRSN,VAFCSRV,VAFCSSN,VAFCSUM,VAFCSX,VAFCTYP,VAFCVET,VAFCMBI,VAFCPN,VAFCPR,VAFCPC,VAFCPCT,VAFCAL1,VAFCAL2,VAFCAL3,VAFCACY,VAFCAST,VAFCAZ,VAFCACTY,CNTY
+ N VAFCRSN,VAFCSRV,VAFCSSN,VAFCSUM,VAFCSX,VAFCPFN,VAFCTYP,VAFCVET,VAFCMBI,VAFCPN,VAFCPR,VAFCPC,VAFCPCT,VAFCAL1,VAFCAL2,VAFCAL3,VAFCACY,VAFCAST,VAFCAZ,VAFCACTY,CNTY
  N VAFCSEQ S VAFCSEQ=$$RECORD(.PARAM)
  S (RGRSICN,VAFCA08)=1 S FLG=0 ;allow update to ICN; prevent triggering of messages
  ;PREFERRED FACILITY
@@ -117,6 +118,10 @@ EN1 ;Check value of all required fields
  .S VAL=$G(PARAM("POBST")) D CHK^DIE(2,.093,,VAL,.RESULT) I RESULT="^" S UNDEF=1 Q
  I $G(PARAM("POBST"))'="" S VAFCPOBS=VAL,FLG=1
  ;
+ ;Optional - Preferred Name, RESET TO NULL IF INVALID VALUE TO ALLOW ADD TO CONTINUE **xx
+ I $D(PARAM("PreferredName")) S VAL=$G(PARAM("PreferredName")) D CHK^DIE(2,.2405,,VAL,.RESULT) I RESULT="^" S PARAM("PreferredName")=""
+ I $G(PARAM("PreferredName"))'="" S VAFCPFN=VAL,FLG=1
+ ;
  ;Optional - MOTHER'S MAIDEN NAME RESET TO NULL IF INVALID VALUE TO ALLOW ADD TO CONTINUE **1033
  I $D(PARAM("MMN")) S VAL=$G(PARAM("MMN")) D CHK^DIE(2,.2403,,VAL,.RESULT) I RESULT="^" S PARAM("MMN")=""
  I $G(PARAM("MMN"))'="" S VAFCMMN=VAL,FLG=1
@@ -190,6 +195,7 @@ FILE ;Call FILE^DICN to add new entry to PATIENT (#2) file
  D
  .N DIERR,DIMSG,DIHELP,FDA,IENS,MSG
  .S IENS=VAFCDFN_","
+ .S:$G(VAFCPFN)]"" FDA(2,IENS,.2405)=VAFCPFN ;PREFERRED NAME **1162
  .S:$G(VAFCPOBC)]"" FDA(2,IENS,.092)=VAFCPOBC ;POB CITY
  .S:$G(VAFCPOBS)]"" FDA(2,IENS,.093)=VAFCPOBS ;POB STATE
  .S:$G(VAFCMMN)]"" FDA(2,IENS,.2403)=VAFCMMN ;MMN

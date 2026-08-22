@@ -1,5 +1,21 @@
-ORKPS ; slc/CLA - Order checking support procedures for medications ;12/29/17  11:58
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**6,32,74,94,123,141,190,232,316,272,346,345,382,469**;Dec 17, 1997;Build 0
+ORKPS ; SLC/CLA - Order checking support procedures for medications ;02/13/26  09:58
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**6,32,74,94,123,141,190,232,316,272,346,345,382,469,582**;Dec 17, 1997;Build 9
+ ;
+ ;Reference to CPRS^PSODDPR4 in ICR #5366
+ ;Reference to CPRS^PSODDPR8 in ICR #5784
+ ;Reference to OCL^PSOORRL in ICR #2400
+ ;Reference to $$PRE^PSSDSAPK in ICR #5497
+ ;Reference to $$DRG^PSSDSAPM in ICR #5570
+ ;Reference to ADM^VADPT2 in ICR #325
+ ;Reference to ^DIC(42 in ICR #10039 (Field 44)
+ ;Reference to NOW^%DTC in ICR #10000
+ ;Reference to NDF^PSS50 in ICR #4533
+ ;Reference to DRGIEN^PSS52P7 in ICR #4550
+ ;Reference to OERR^VADPT in ICR #10061
+ ;Reference to ADM^VADPT2 in ICR #325
+ ;Reference to $$FMADD^XLFDT,$$FMTE^XLFDT in ICR #10103
+ ;Reference to $$UP^XLFSTR in ICR #10104
+ ;Reference to $$GET^XPAR in ICR #2263
  Q
 CHECK(YY,DFN,MED,OI,ORKDG,OROIL,ORSUPPLY,ORIVTYPE,ORIVRAN,ORDODSG) ; return drug order checks
  ;YY:    returned array of data
@@ -187,9 +203,10 @@ GLCREAT(DFN) ;extrinsic function returns patient's (DFN) most recent serum
  ; creatinine within # of days from parameter ORK GLUCOPHAGE CREATININE
  ; results format: test id^result units flag ref range collect d/t^result
  ; used by order check GLUCOPHAGE-LAB RESULTS
- N ORLOC,ORPAR,ORDAYS
+ N ORLOC,ORPAR,ORDAYS,ORRSLT,ORINVLD
  N BDT,CDT,ORY,ORX,ORZ,TEST,ORI,ORJ,CREARSLT,LABFILE,SPECFILE,SPECIMEN,VAIN,VADM,RSLTS
  Q:'$L(DFN) "0^"
+ S ORINVLD=0
  S ORDAYS=$$GCDAYS(DFN)
  Q:'$L(ORDAYS) "0^"
  D NOW^%DTC
@@ -213,8 +230,11 @@ GLCREAT(DFN) ;extrinsic function returns patient's (DFN) most recent serum
  ..S CDT=$P(ORZ,U,7)
  ..I CDT'<BDT S RSLTS(CDT)=ORZ,CREARSLT=1  ;*SMT Use RSLTS as array.
  Q:+$G(CREARSLT)<1 "0^"
- S CDT=$O(RSLTS(0)),ORZ=RSLTS(CDT)  ;*SMT
- Q $P(ORZ,U)_U_$P(ORZ,U,3)_" "_$P(ORZ,U,4)_" "_$P(ORZ,U,5)_" ("_$P(ORZ,U,6)_")  "_$$FMTE^XLFDT(CDT,"2P")_U_$P(ORZ,U,3)
+ S CDT=$O(RSLTS(""),-1),ORZ=RSLTS(CDT)  ;*SMT
+ S ORRSLT=$P(ORZ,U,3) I +ORRSLT'=ORRSLT D
+ . S ORRSLT=$$RSLTCALC(ORRSLT,.ORINVLD)
+ . I ORINVLD S ORRSLT=-99999999999
+ Q $P(ORZ,U)_U_$P(ORZ,U,3)_" "_$P(ORZ,U,4)_" "_$P(ORZ,U,5)_" ("_$P(ORZ,U,6)_")  "_$$FMTE^XLFDT(CDT,"2P")_U_ORRSLT_U_ORINVLD
 GCDAYS(DFN) ;extrinsic function to return number of days to look for
  ; glucophage serum creatinine result
  Q:'$L(DFN) ""
@@ -277,3 +297,33 @@ OI2DD(OROI,ORPSPKG,ORCHKTYP)       ;rtn dispense drugs for a PS OI
  S ORRET=$$DRG^PSSDSAPM(PSOI,ORPSPKG,ORCHKTYP)
  I ORCHKTYP=1,(+$P(ORRET,";",4)) S $P(ORRET,";",4)=PSOI
  Q ORRET
+RSLTCALC(ORRSLT,ORINVLD) ;Recalculate results
+ N DONE,ORRSLT1,ORRSLTNSPC,PATTERN,PC
+ S ORRSLTNSPC=+$TR(ORRSLT," ")
+ I (ORRSLT?.1(1." ")1(1.N,1"."1.N,1.N1"."1.N).1(1." ")) Q +ORRSLTNSPC
+ I (ORRSLT["NOT GREATER THAN"!(ORRSLT["NOT LESS THAN")!(ORRSLT["EQUAL")!(ORRSLT["=")!(ORRSLT["'>")!(ORRSLT["'<")) D  Q ORRSLT
+ . S DONE=0
+ . F PC="=","'>","'<","=>",">=","=<","<=","NOT GREATER THAN","NOT LESS THAN","EQUAL" D  Q:DONE
+ .. S PATTERN=".1(1."" "")1"""_PC_""".1(1."" "")1(1.N,1"".""1.N,1.N1"".""1.N).1(1."" "")"
+ .. I ORRSLT'?@PATTERN Q
+ .. S ORRSLT=+$TR($P(ORRSLT,PC,2)," ")
+ .. S DONE=1
+ . I 'DONE S ORINVLD=1 ;ORRSLT=0 ;Unable to evaluate number
+ I (ORRSLT["GREATER THAN"!(ORRSLT[">")) D  Q ORRSLT
+ . S DONE=0
+ . F PC=">","GREATER THAN" D  Q:DONE
+ .. S PATTERN=".1(1."" "")1"""_PC_""".1(1."" "")1(1.N,1"".""1.N,1.N1"".""1.N).1(1."" "")"
+ .. I ORRSLT'?@PATTERN Q
+ .. S ORRSLT=+$TR($P(ORRSLT,PC,2)," ")+.01001 ;SUMPM request to make >1.49 to trigger the >1.5 Order Check
+ .. S DONE=1
+ . I 'DONE S ORINVLD=1 ;ORRSLT=0 ;Unable to evaluate number
+ I (ORRSLT["LESS THAN"!(ORRSLT["<")) D  Q ORRSLT
+ . S DONE=0
+ . F PC="<","LESS THAN" D  Q:DONE
+ .. S PATTERN=".1(1."" "")1"""_PC_""".1(1."" "")1(1.N,1"".""1.N,1.N1"".""1.N).1(1."" "")"
+ .. I ORRSLT'?@PATTERN Q
+ .. S ORRSLT=+$TR($P(ORRSLT,PC,2)," ")-.00001
+ .. S DONE=1
+ . I 'DONE S ORINVLD=1 ;ORRSLT=0 ;Unable to evaluate number
+ S ORINVLD=1
+ Q 0  ;Unable to evaluate number

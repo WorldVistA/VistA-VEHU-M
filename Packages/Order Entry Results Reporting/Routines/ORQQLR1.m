@@ -1,11 +1,11 @@
-ORQQLR1 ; slc/CLA - Extrinsic functions and procedures which return patient lab results ; 7/10/17 5:45pm
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**6,51,74,143,414**;Dec 17, 1997;Build 8
+ORQQLR1 ; SLC/CLA - Extrinsic functions and procedures which return patient lab results;11/06/25  08:48
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**6,51,74,143,414,582**;Dec 17, 1997;Build 9
  ;Per VA Directive 6402, this routine should not be modified.
  ;
- ;DBIA reference section
- ;2387  ^LAB(60
- ;2503  RR^LR7OR1
- ;10103 FMTE^XLFDT
+ ;Reference to ^LAB(60 in ICR #2387
+ ;Reference to RR^LR7OR1 in ICR #2503
+ ;Reference to $$FMTE^XLFDT in ICR #10103
+ ;Reference to $$UP^XLFSTR in ICR #10104
  ;
 OETOLAB(ORNUM) ;extrinsic funct to get a lab order number from an oe/rr number
  N LRNUM
@@ -60,7 +60,7 @@ NATL(PT,NID,SPEC) ;extrinsic function to return pt's most recent lab results for
  ;
 NATLC(PT,NID,SPEC) ;extrinsic function to return pt's most recent lab results for a lab national id in the format:
  ; test id^abbrev test name^result^units^flag^collection d/t
- N ORY,ORX,ORN,ORLR,SUB,INVDT,SEQ,ORDG
+ N ORY,ORX,ORN,ORLR,SUB,INVDT,SEQ,ORDG,RESULT
  S SUB="",INVDT=0,SEQ=0,ORY=""
  I +$G(SPEC)<1 S SPEC=""
  ;get lab results
@@ -82,7 +82,7 @@ LOCL(PT,LID,SPEC) ;extrinsic function to return pt's most recent lab results for
  ;
 LOCLC(PT,LID,SPEC) ;extrinsic function to return pt's most recent lab results for a lab local id in the format:
  ; test id^abbrev test name^result^units^flag^collection d/t
- N ORY,ORX,SUB,INVDT,SEQ,RESULT
+ N ORY,ORX,ORX2,ORX2U,SUB,INVDT,SEQ,RESULT
  S SUB="",INVDT=0,SEQ=0,ORY=""
  ;get lab results
  I +$G(SPEC)<1 S SPEC=""
@@ -90,11 +90,14 @@ LOCLC(PT,LID,SPEC) ;extrinsic function to return pt's most recent lab results fo
  D RR^LR7OR1(PT,"","","","",LID,"L",,SPEC) I $D(^TMP("LRRR",$J,PT)) D
  .S SUB=$O(^TMP("LRRR",$J,PT,SUB)) Q:SUB=""
  .S INVDT="" F  S INVDT=$O(^TMP("LRRR",$J,PT,SUB,INVDT)) Q:'INVDT  D
- ..S SEQ="" F  S SEQ=$O(^TMP("LRRR",$J,PT,SUB,INVDT,SEQ)) Q:'SEQ!(+$G(RESULT)>0)  D
+ ..;OR*3.0*582: Changed +$G(RESULT)>0 to $D(RESULT) to allow for alphanumeric results
+ ..S SEQ="" F  S SEQ=$O(^TMP("LRRR",$J,PT,SUB,INVDT,SEQ)) Q:'SEQ!($D(RESULT))  D
  ...S ORX=^(SEQ)
- ...I $P(ORX,U,2)'="canc" D  ;if results were not cancelled in lab:
- ....S RESULT=$P(ORX,U,2)
- ....S ORY=$P(ORX,U)_U_$P(ORX,U,15)_U_$P(ORX,U,2)_U_$P(ORX,U,4)
+ ...S ORX2=$P(ORX,U,2)
+ ...S ORX2U=$$UP^XLFSTR(ORX2)
+ ...I ORX2U'="CANC",ORX2U'="PENDING" D  ;if results were not cancelled in lab:
+ ....S RESULT=ORX2
+ ....S ORY=$P(ORX,U)_U_$P(ORX,U,15)_U_ORX2_U_$P(ORX,U,4)
  ....S ORY=ORY_U_$P(ORX,U,3)_U_$P(ORX,U,5)_U_(9999999-INVDT)
  K ^TMP("LRRR",$J)
  Q ORY

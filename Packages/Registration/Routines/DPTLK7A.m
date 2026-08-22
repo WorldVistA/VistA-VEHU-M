@@ -1,5 +1,5 @@
 DPTLK7A ;OAK/MKO-MAS PATIENT LOOKUP ENTERPRISE SEARCH (cont) ;13 May 2020  1:13 PM
- ;;5.3;Registration;**1024,1139**;Aug 13, 1993;Build 2
+ ;;5.3;Registration;**1024,1139,1162**;Aug 13, 1993;Build 1
  ;**1024,Story 1258907 (mko): Routine created with subroutines ADDTF and CHKSRCID
  Q
  ;
@@ -50,6 +50,7 @@ FORMATR(DGF,DGM,DG20NAME) ; - merge MPI and user input (MPI authorative)
  S DGF(.03)=$G(DGM(DGX,"DOB"))
  S DGF(.09)=$G(DGM(DGX,"SSN"))
  S DGF(.2403)=$G(DGM(DGX,"MMN"))
+ S DGF(.2405)=$G(DGM(DGX,"PreferName"))  ;**1162 VAMPI-34893 (jfw) - Update Preferred Name
  S DGF(.092)=$G(DGM(DGX,"POBCity"))
  S DGY=$S($G(DGM(DGX,"POBState"))]"":$O(^DIC(5,"C",DGM(DGX,"POBState"),0)),1:"")
  S DGF(.093)=DGY

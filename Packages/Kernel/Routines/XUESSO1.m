@@ -1,5 +1,5 @@
 XUESSO1 ;SEA/LUKE - Single Sign-on Utilities ; Apr 08, 2022@13:58
- ;;8.0;KERNEL;**165,183,196,245,254,269,337,395,466,523,655,659,771,759**;Jul 10, 1995;Build 40
+ ;;8.0;KERNEL;**165,183,196,245,254,269,337,395,466,523,655,659,771,759,838**;Jul 10, 1995;Build 4
  ;Per VA Directive 6402, this routine should not be modified.
  ;
 GET(INDUZ) ;Gather identifying data from user's home site.
@@ -84,10 +84,40 @@ PUT(DATIN) ;;Setup data from authenticating site GET() at receiving site
  ;I '$$ACTIVE^XUAF4(XSITEIEN) Q 0 ;Quit if authenticating VistA is not an active VA site (spoofed)
  ;I $P($$NS^XUAF4(XSITEIEN),"^",1)'=SITE Q 0 ;Quit if authenticating VistA name and station number mismatch (spoofed)
  ;Get a LOCK. Block if can't get.
- L +^VA(200,"HL7"):10 Q:'$T 0
- S XT=$$TALL($G(DUZ,0)) L -^VA(200,"HL7")
+ ;
+ ;p838 Try $$TALL up to MAXTRY times to FIND/ADD user in VA(200), and release LOCK regardless of outcome.
+ ;L +^VA(200,"HL7"):10 Q:'$T 0 
+ ;S XT=$$TALL($G(DUZ,0)) L -^VA(200,"HL7")
+ L +^VA(200,"HL7"):$G(DTIME,10) I '$T D APPERRMSG,APPERROR^%ZTER("HL7 Interface Lock failed") Q 0
+ S XT=$$TRYTALL($G(DUZ,0))
+ L -^VA(200,"HL7"):$G(DTIME,10) I '$T D APPERRMSG,APPERROR^%ZTER("HL7 Interface Unlock failed") Q 0
+ ;p838 end of retry logic
  I XT Q $$SET(NEWDUZ) ;Return 1 if OK.
  Q 0
+ ;
+APPERRMSG(KEEPDAYS) ;
+ N FDT,XMDUZ,XMSG,XMSUB,XMTEXT,XMY
+ S KEEPDAYS=$G(KEEPDAYS,7)
+ S FDT=$P($$NOW^XLFDT(),".")
+ I '$D(^XTMP("HL7DELAY "_FDT,0)) Q
+ S ^XTMP("HL7DELAY "_FDT,0)=FDT+KEEPDAYS_"^"_FDT_"^HL7 Interface Delay Notification"
+ ; Send Mailman message if notification mail group exists
+ I $D(^XMB(3.8,"B","HL7 INTERFACE DELAY")) D
+ . S XMY("G.HL7 INTERFACE DELAY")=""
+ . S XMDUZ=.5,XMSUB="HL7 Interface Delay Notification",XMTEXT="XMSG("
+ . S XMSG(1)="The HL7 Interface is experiencing delays in processing "_$G(NAME)_" due to locking issues."
+ . D ^XMD
+ Q
+ ;
+TRYTALL(XDUZ) ;
+ N $ESTACK,$ETRAP,HANGTIME,HLMTIENS,MAXTRY,TLX,TRY
+ S $ETRAP="D APPERROR^%ZTER(""HL7 Interface FIND/ADD failed : Unmanaged error - review the stack trace."")"
+ S (TRY,TLX)=0,(MAXTRY,HANGTIME)=3
+ F TRY=1:1:MAXTRY D  Q:TLX
+ . S TLX=$$TALL(XDUZ) Q
+ . HANG:'TLX&(TRY<MAXTRY) HANGTIME
+ I (TRY=MAXTRY)&('TLX)&($G(HLMTIENS)'="") S X=$$DONTPURG^HLUTIL
+ Q TLX
  ;
 TALL(XUDUZ) ;INTRINSIC. Test for existing user or adds a new one
  ; p771 replace parameter DUZ with XUDUZ to not hide DUZ nodes being used in function

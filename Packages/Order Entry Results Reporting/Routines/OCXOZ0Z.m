@@ -1,4 +1,4 @@
-OCXOZ0Z ;SLC/RJS,CLA - Order Check Scan ;JUN 24,2026 at 13:48
+OCXOZ0Z ;SLC/RJS,CLA - Order Check Scan ;AUG 22,2026 at 11:44
  ;;3.0;ORDER ENTRY/RESULTS REPORTING;**32,221,243**;Dec 17,1997;Build 242
  ;;  ;;ORDER CHECK EXPERT version 1.01 released OCT 29,1998
  ;
@@ -8,6 +8,43 @@ OCXOZ0Z ;SLC/RJS,CLA - Order Check Scan ;JUN 24,2026 at 13:48
  ; ** will be lost the next time the rule compiler executes.    **
  ; ***************************************************************
  ;
+ Q
+ ;
+R67R3A ; Verify all Event/Elements of  Rule #67 'GLUCOPHAGE - LAB RESULTS'  Relation #3 'GLUCOPHAGE ORDER AND GLUCOPHAGE CREATININE INVALID'
+ ;  Called from EL86+7^OCXOZ0H, and EL149+5^OCXOZ0H.
+ ;
+ Q:$G(OCXOERR)
+ ;
+ ;      Local Extrinsic Functions
+ ; MCE149( ---------->  Verify Event/Element: 'GLUCOPHAGE CREATININE INVALID IS TRUE'
+ ; MCE86( ----------->  Verify Event/Element: 'GLUCOPHAGE ORDER'
+ ;
+ Q:$G(^OCXS(860.2,67,"INACT"))
+ ;
+ I $$MCE86 D 
+ .I $$MCE149 D R67R3B
+ Q
+ ;
+R67R3B ; Send Order Check, Notication messages and/or Execute code for  Rule #67 'GLUCOPHAGE - LAB RESULTS'  Relation #3 'GLUCOPHAGE ORDER AND GLUCOPHAGE CREATININE INVALID'
+ ;  Called from R67R3A+12.
+ ;
+ Q:$G(OCXOERR)
+ ;
+ ;      Local Extrinsic Functions
+ ; GETDATA( ---------> GET DATA FROM THE ACTIVE DATA FILE
+ ;
+ Q:$D(OCXRULE("R67R3B"))
+ ;
+ N OCXNMSG,OCXCMSG,OCXPORD,OCXFORD,OCXDATA,OCXNUM,OCXDUZ,OCXQUIT,OCXLOGS,OCXLOGD
+ I ($G(OCXOSRC)="CPRS ORDER PRESCAN") S OCXCMSG=(+OCXPSD)_"^28^^Unable to evaluate Metformin - Creatinine results: "_$$GETDATA(DFN,"86^149",125) I 1
+ E  S OCXCMSG="Unable to evaluate Metformin - Creatinine results: "_$$GETDATA(DFN,"86^149",125)
+ S OCXNMSG=""
+ ;
+ Q:$G(OCXOERR)
+ ;
+ ; Send Order Check Message
+ ;
+ S OCXOCMSG($O(OCXOCMSG(999999),-1)+1)=OCXCMSG
  Q
  ;
 R68R1A ; Verify all Event/Elements of  Rule #68 'DANGEROUS MEDS OVER AGE 64'  Relation #1 'MED ORDER FOR PT > 64 AND AMITRIPTYLINE'
@@ -196,11 +233,35 @@ MCE132() ; Verify Event/Element: LESS THAN LAB THRESHOLD
  Q:'(OCXDF(37)) 0 I $D(^TMP("OCXCHK",$J,OCXDF(37),132)) Q $G(^TMP("OCXCHK",$J,OCXDF(37),132))
  Q 0
  ;
+MCE149() ; Verify Event/Element: GLUCOPHAGE CREATININE INVALID IS TRUE
+ ;
+ ;  OCXDF(127) -> RECENT GLUCOPHAGE CREATININE DAYS data field
+ ;  OCXDF(125) -> RECENT GLUCOPHAGE CREATININE TEXT data field
+ ;  OCXDF(166) -> RECENT GLUCOPHAGE CREATININE INVALID data field
+ ;  OCXDF(37) -> PATIENT IEN data field
+ ;
+ N OCXRES
+ S OCXDF(37)=$G(DFN) I $L(OCXDF(37)) S OCXRES(149,37)=OCXDF(37)
+ Q:'(OCXDF(37)) 0 I $D(^TMP("OCXCHK",$J,OCXDF(37),149)) Q $G(^TMP("OCXCHK",$J,OCXDF(37),149))
+ S OCXRES(149)=0,OCXDF(166)=$P($$GLCREAT^ORKPS(OCXDF(37)),"^",4) I $L(OCXDF(166)) S OCXRES(149,166)=OCXDF(166) I (OCXDF(166))
+ E  Q 0
+ S OCXDF(125)=$P($$GLCREAT^ORKPS(OCXDF(37)),"^",2),OCXDF(127)=$P($$GCDAYS^ORKPS(OCXDF(37)),"^",1),OCXRES(149)=11 M ^TMP("OCXCHK",$J,OCXDF(37),149)=OCXRES(149)
+ Q +OCXRES(149)
+ ;
 MCE5() ; Verify Event/Element: HL7 FINAL LAB RESULT
  ;
  ;
  N OCXRES
  I $L(OCXDF(37)) S OCXRES(5,37)=OCXDF(37)
  Q:'(OCXDF(37)) 0 I $D(^TMP("OCXCHK",$J,OCXDF(37),5)) Q $G(^TMP("OCXCHK",$J,OCXDF(37),5))
+ Q 0
+ ;
+MCE86() ; Verify Event/Element: GLUCOPHAGE ORDER
+ ;
+ ;  OCXDF(37) -> PATIENT IEN data field
+ ;
+ N OCXRES
+ S OCXDF(37)=$G(DFN) I $L(OCXDF(37)) S OCXRES(86,37)=OCXDF(37)
+ Q:'(OCXDF(37)) 0 I $D(^TMP("OCXCHK",$J,OCXDF(37),86)) Q $G(^TMP("OCXCHK",$J,OCXDF(37),86))
  Q 0
  ;

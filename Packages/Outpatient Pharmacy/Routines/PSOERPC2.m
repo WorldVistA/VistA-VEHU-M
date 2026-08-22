@@ -1,9 +1,9 @@
 PSOERPC2 ;BIRM/MFR - All Patients (Patient Centric) eRx Queue - Supporting APIs 2 ;09/28/22
- ;;7.0;OUTPATIENT PHARMACY;**700,746**;DEC 1997;Build 106
+ ;;7.0;OUTPATIENT PHARMACY;**700,746,817**;DEC 1997;Build 7
  ;
 INIT ; Initialization for the option (Setting global variables, Reviewing Locks, Holds, etc.)
  ; MBMSITE indicates whether it's an MbM site or not, RESETLBD indicates whether the Look Back Days should be reset
- S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0),RESETLBD=1
+ S MBMSITE=$S($$GET1^DIQ(59.7,1,102,"I")="MBM":1,1:0),RESETLBD=1,PSOALLST=$S(MBMSITE=1:1,MBMSITE=0:0,1:0)
  ;Review/Clean-up Locks (e.g.,Session crased and ^XTMP global remained)
  D REVLOCKS
  ;Review/Releases Future Fill Holds

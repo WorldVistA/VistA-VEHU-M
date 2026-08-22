@@ -1,5 +1,5 @@
 PSOORUT2 ;BIR/SAB - Build Listman Screen ;Jan 05, 2021@12:08
- ;;7.0;OUTPATIENT PHARMACY;**11,146,132,182,233,243,261,268,264,305,390,411,402,500,556,622,746,753**;DEC 1997;Build 53
+ ;;7.0;OUTPATIENT PHARMACY;**11,146,132,182,233,243,261,268,264,305,390,411,402,500,556,622,746,753,695**;DEC 1997;Build 21
  ;External reference to $$PRIAPT^SDPHARM1 supported by DBIA 4196
  ;External reference to ^PS(55 supported by DBIA 2228
  ;External reference to ^DIC(31 supported by DBIA 658
@@ -30,9 +30,13 @@ PSOORUT2 ;BIR/SAB - Build Listman Screen ;Jan 05, 2021@12:08
  ; RSLT -- DATE^CRCL^Serum Creatinine -- Ex.  11/25/11^68.7^1.1
  ; Display format of CrCL and Creatinine results updated - PSO*7.0*556
  I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)<.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
- I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"  (CREAT: "_$P($G(RSLT),"^",3)_"mg/dL "_$P($G(RSLT),"^")_")"
- I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)<.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
- I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"(est.)"_" (CREAT: "_$P($G(RSLT),"^",3)_"mg/dL "_$P($G(RSLT),"^")_")"
+ I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"  (CREAT: "_$P($G(RSLT),"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
+ ;PSO*7.0*695: modified line below to check for null and added line to check for non-numeric result.
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)="") S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)]"")&('+$P($G(RSLT),"^",3)) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: "_$P($G(RSLT),"^",3)_")"
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"(est.)"_" (CREAT: "_$P($G(RSLT),"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
+ ;PSO*7.0*695; Added line below
+ I $E($P($G(RSLT),"^",3))="<"!($E($P($G(RSLT),"^",3))=">") S $P(ZDSPL,"CREAT: ",2)=$P(RSLT,"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
  S ^TMP("PSOHDR",$J,13,0)=$G(ZDSPL)
  S ^TMP("PSOHDR",$J,14,0)=$$POSTSHRT^WVRPCOR(PSODFN)
  ;
@@ -180,10 +184,13 @@ CRCL(DFN) ;
  .S OCXTS=0 F  S OCXTS=$O(PSCXTLS(OCXTS)) Q:'OCXTS  D
  ..S SCR=$$LOCL^ORQQLR1(DFN,$P(PSCXTL(OCXT),U),$P(PSCXTLS(OCXTS),U))
  ..I $P(SCR,U,7)>$P(PSCR,U,7) S PSCR=SCR
- S SCR=PSCR,SCRV=$P(SCR,U,3) Q:+$G(SCRV)<.01 RSLT
+ ;PSO*7.0*695: Changed +$G(SCRV)<.01 to $G(SCRV)=""
+ S SCR=PSCR,SCRV=$P(SCR,U,3) Q:$G(SCRV)="" RSLT
  S SCRD=$P(SCR,U,7) Q:'$L(SCRD) RSLT
  S RSLT=SCRD_"^<Not Found>^"_$P($G(SCR),"^",3)
  S X1=$P(RSLT,"^"),X2=$$FMTE^XLFDT(X1,"2M"),$P(RSLT,"^")=$P(X2,"@") K X1,X2
+ ;PSO*7.0*695: Added line below.
+ I '+$P($G(RSLT),"^",3) S $P(RSLT,U,2)="<Unable to calculate>" Q RSLT
  D VITAL^ORQQVI("WEIGHT","WT",DFN,.PSRW,0,"",$$NOW^XLFDT)
  Q:'$D(PSRW) RSLT
  S ABW=$P(PSRW(1),U,3) Q:+$G(ABW)<1 RSLT
@@ -207,7 +214,8 @@ CRCL(DFN) ;
  .E  S ADJBW=LOWBW
  I +$G(ADJBW)<1 D
  .S ADJBW=ABW
- S CRCL=(((140-ZAGE)*ADJBW)/(SCRV*72))
+ ;PSO*7.0*695: add +SCRV check to prevent divide error
+ S CRCL=$S(+SCRV:(((140-ZAGE)*ADJBW)/(SCRV*72)),1:"")
  S:SEX="M" RSLT=SCRD_U_$J(CRCL,1,1)
  S:SEX="F" RSLT=SCRD_U_$J((CRCL*.85),1,1)
  S X1=$P(RSLT,"^"),X2=$$FMTE^XLFDT(X1,"2M"),$P(RSLT,"^")=$P(X2,"@") K X1,X2

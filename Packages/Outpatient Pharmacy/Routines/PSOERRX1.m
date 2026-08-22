@@ -1,5 +1,5 @@
 PSOERRX1 ;BIRM/MFR - All Rxs eRx Queue - Supporting APIs ;08/28/22
- ;;7.0;OUTPATIENT PHARMACY;**700,769,770,805**;DEC 1997;Build 2
+ ;;7.0;OUTPATIENT PHARMACY;**700,769,770,805,817**;DEC 1997;Build 7
  ;
 HDR ; - Builds the Header section
  N LINE1,LINE2,LINE3,ARR
@@ -157,8 +157,6 @@ SETITEM(FIELD,ERXIEN,COUNTER) ; Adds an eRx Record to the Sorted List
  I $D(PRVFLTR),'$D(PRVFLTR(EPROVIEN)) Q
  S VPATIEN=$P(ERXNODE0,"^",5),MTYPE=$P(ERXNODE0,"^",8)
  S STATIEN=+$G(^PS(52.49,ERXIEN,1)),ERXSTAT=$P(^PS(52.45,STATIEN,0),"^")
- ;p805 only actionable statuses should display for non-MBM site when Remove All Filters is selected.
- I '$G(MBMSITE),$G(Y)["RAF^PSOERRX0" S PSOALLST=0,STSFLTR=0
  ; Actionable/Non-Actionable Status
  I '$G(PSOALLST),'$G(STSFLTR),$F(",RJ,RM,REM,PR,E,RXA,CXA,CAA,CAN,CXP,RXP,RXA,ICA,CNP,CRP,CRC,RRC,CXC,CNE,CRN,CRR,CRX,CXQ,RXA,RXC,RRN,RRX,RRR,RRP,IRA,",","_$E(ERXSTAT,1,3)_",") Q
  S RESTYPE=$P($G(^PS(52.49,ERXIEN,52)),"^",1)

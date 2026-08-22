@@ -1,13 +1,13 @@
-PSJLMHED ;BIR/MLM - BUILD LM HEADERS ; 8/6/14 11:00am
- ;;5.0;INPATIENT MEDICATIONS;**4,58,85,110,148,181,260,275,331,256,353,387**;16 DEC 97;Build 1
+PSJLMHED ;BIR/MLM - BUILD LM HEADERS; Jul 20, 2022@19:00
+ ;;5.0;INPATIENT MEDICATIONS;**4,58,85,110,148,181,260,275,331,256,353,387,436**;16 DEC 97;Build 14
  ;
- ; Reference to ^PS(55 is supported by DBIA 2191.
- ; Reference to $$CWAD^ORQPT2 is supported by DBIA 2831.
- ; Reference to ^SC( is supported by DBIA 10040.
- ; External reference to $$BSA^PSSDSAPI supported by DBIA 5425.
- ; External reference to ^ORQQVI supported by DBIA 5770.
- ; External reference to ^ORB31 supported by DBIA 5140.
- ; External reference to ^ORQQLR1 supported by DBIA 5787.
+ ; Reference to ^PS(55 in ICR #2191
+ ; Reference to $$CWAD^ORQPT2 in ICR #2831
+ ; Reference to ^SC in ICR #10040
+ ; Reference to $$BSA^PSSDSAPI in ICR #5425
+ ; Reference to ^ORQQVI in ICR #5770
+ ; Reference to ^ORB31 in ICR #5140
+ ; Reference to ^ORQQLR1 in ICR #5787
  ;
 HDR(DFN) ; -- list screen header
  ;   input:       DFN := ifn of pat
@@ -28,10 +28,17 @@ HDR(DFN) ; -- list screen header
  S RSLT=$$CRCL(DFN)
  ; Display format of CrCL and Creatinine results updated - PSJ*5.0*387
  I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)<.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
- I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"  (CREAT: "_$P($G(RSLT),"^",3)_"mg/dL "_$P($G(RSLT),"^")_")"
- I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)<.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
- I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"(est.)"_" (CREAT: "_$P($G(RSLT),"^",3)_"mg/dL "_$P($G(RSLT),"^")_")"
- S PSJDB=$G(ZDSPL),VALMHDR(6)=$$SETSTR^VALM1("BSA (m2): "_$G(PSJBSA),PSJDB,50,23) K PSJBSA,RSLT,ZDSPL
+ I ($P($G(RSLT),"^",2)["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"  (CREAT: "_$P($G(RSLT),"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
+ ;PSJ*5.0*436: modified line below to check for null and added line to check for non-numeric result.
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)="") S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: Not Found)"
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)]"")&('+$P($G(RSLT),"^",3)) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_" (CREAT: "_$P($G(RSLT),"^",3)_")"
+ I ($P($G(RSLT),"^",2)'["Not Found")&($P($G(RSLT),"^",3)>=.01) S ZDSPL="  CrCL: "_$P(RSLT,"^",2)_"(est.)"_" (CREAT: "_$P($G(RSLT),"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
+ ;PSJ*5.0*436: Added line below.
+ I $E($P($G(RSLT),"^",3))="<"!($E($P($G(RSLT),"^",3))=">") S $P(ZDSPL,"CREAT: ",2)=$P(RSLT,"^",3)_" mg/dL "_$P($G(RSLT),"^")_")"
+ ;PSJ*5.0*436: adjust spacing
+ N PSJXSP
+ S PSJXSP=$S(ZDSPL["Unable":62,1:53)
+ S PSJDB=$G(ZDSPL),VALMHDR(6)=$$SETSTR^VALM1("BSA (m2): "_$G(PSJBSA),PSJDB,PSJXSP,23) K PSJBSA,RSLT,ZDSPL
  Q
  ; 
 HDRO(DFN) ; Standardized part of profile header.
@@ -121,10 +128,13 @@ CRCL(DFN) ;
  .S OCXTS=0 F  S OCXTS=$O(PSCXTLS(OCXTS)) Q:'OCXTS  D
  ..S SCR=$$LOCL^ORQQLR1(DFN,$P(PSCXTL(OCXT),U),$P(PSCXTLS(OCXTS),U))
  ..I $P(SCR,U,7)>$P(PSCR,U,7) S PSCR=SCR
- S SCR=PSCR,SCRV=$P(SCR,U,3) Q:+$G(SCRV)<.01 RSLT
+ ;PSJ*5.0*436: Changed +$G(SCRV)<.01 to $G(SCRV)=""
+ S SCR=PSCR,SCRV=$P(SCR,U,3) Q:$G(SCRV)="" RSLT
  S SCRD=$P(SCR,U,7) Q:'$L(SCRD) RSLT
  S RSLT=SCRD_"^<Not Found>^"_$P($G(SCR),"^",3)
  S X1=$P(RSLT,"^"),X2=$$FMTE^XLFDT(X1,"2M"),$P(RSLT,"^")=$P(X2,"@") K X1,X2
+ ;PSJ*5.0*436: Added line below.
+ I '+$P($G(RSLT),"^",3) S $P(RSLT,U,2)="<Unable to calculate>" Q RSLT
  D VITAL^ORQQVI("WEIGHT","WT",DFN,.PSRW,0,"",$$NOW^XLFDT)
  Q:'$D(PSRW) RSLT
  S ABW=$P(PSRW(1),U,3) Q:+$G(ABW)<1 RSLT

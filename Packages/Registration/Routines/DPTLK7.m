@@ -1,5 +1,5 @@
 DPTLK7 ;OAK/ELZ,ARF - MAS PATIENT LOOKUP ENTERPRISE SEARCH ;15 May 2020  2:31 PM
- ;;5.3;Registration;**915,919,926,967,981,1000,1024,1111,1139**;Aug 13, 1993;Build 2
+ ;;5.3;Registration;**915,919,926,967,981,1000,1024,1111,1139,1162**;Aug 13, 1993;Build 1
  ;
 SEARCH(DGX,DGXOLD) ; do a search, pass in what the user entered
  ; DGX is what the user originally entered, name is assumed unless it
@@ -323,6 +323,8 @@ FORMAT(DGR,DGN,DGF) ; - format data for MPI call
  . S:$P($G(DGF(.11573)),"^")]"" DGR("ResAddCountry")=$P(DGF(.11573),"^")
  Q
  ;
+ ;**1162 VAMPI-34893 (jfw) - No code change, just adding the following note for future ref:
+ ;  Stuff required for PREFERRED NAME as Input Transform modified and now doesn't match PV BR.
 ADD(DGF,DG20NAME) ; - stuff in patient
  ; Pass in the fields to set in the DGF array.
  ; Alaso Name components in DG20NAME array.  Returns new DFN

@@ -1,5 +1,5 @@
 PSOLMUTL ;BIR/SAB - listman utilities ;Dec 08, 2021@10:34
- ;;7.0;OUTPATIENT PHARMACY;**19,46,84,99,131,132,148,268,225,305,386,390,622,441,746,765,770**;DEC 1997;Build 145
+ ;;7.0;OUTPATIENT PHARMACY;**19,46,84,99,131,132,148,268,225,305,386,390,622,441,746,765,770,695**;DEC 1997;Build 21
  ;External reference FULL^VALM1 supported by dbia 10116
  ;External reference $$SETSTR^VALM1 supported by dbia 10116
  ;External reference EN2^GMRAPEMO supported by dbia 190
@@ -28,7 +28,10 @@ HDR ;patient med profile display
  Q:$G(PS)="VIEW"!($G(PS)="DELETE")
  K HDR S HDR=$G(^TMP("PSOHDR",$J,13,0))
  I $G(HDR)]"" D  Q
- .S VALMHDR(5)=$$SETSTR^VALM1(" BSA (m2): "_^TMP("PSOHDR",$J,12,0),HDR,49,19)
+ .;PSO*7.0*695: Adjust spacing if Creat is "unable to calculate".
+ .N PSOXSP
+ .S PSOXSP=$S(HDR["Unable":61,1:49)
+ .S VALMHDR(5)=$$SETSTR^VALM1(" BSA (m2): "_^TMP("PSOHDR",$J,12,0),HDR,PSOXSP,19)
  .S VALMHDR(6)=$G(^TMP("PSOHDR",$J,9,0))
  .S VALMHDR(7)=$G(^TMP("PSOHDR",$J,10,0))
  .S VALMHDR(8)=$G(^TMP("PSOHDR",$J,11,0))

@@ -1,5 +1,5 @@
 MPIFXMLP ;OAK/ELZ - MPIF PROBLISTIC SEARCH ;21 May 2020  1:20 PM
- ;;1.0;MASTER PATIENT INDEX VISTA;**61,67,74,79**;30 Apr 99;Build 2
+ ;;1.0;MASTER PATIENT INDEX VISTA;**61,67,74,79,81**;30 Apr 99;Build 1
  ;
  ;
 PATIENT(RETURN,MPIARR) ; - query for patients based on traits
@@ -194,7 +194,8 @@ SE(MPIN,MPIA) ; - used for the parser to call back with STARTELEMENT
  I MPIN="NAME" D  Q
  . S MPIUSE=MPIA("type")
  . S:MPIUSE="A" MPIALIAS=MPIALIAS+1
- I MPIUSE="D",MPIN="NAME" S MPIVAR=",""PreferName"")" q
+ ;**81 VAMPI-34893 (jfw) - Update Tag to LASTNAME from NAME for PreferredName
+ I MPIUSE="D",MPIN="LASTNAME" S MPIVAR=",""PreferName"")" Q
  I MPIN="FIRSTNAME",MPIUSE="L" S MPIVAR=",""FirstName"")" Q
  I MPIN="LASTNAME",MPIUSE="L" S MPIVAR=",""Surname"")" Q
  I MPIN="MIDDLENAME",MPIUSE="L" S MPIVAR=",""MiddleName"")" Q
