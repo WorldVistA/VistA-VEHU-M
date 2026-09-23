@@ -1,5 +1,5 @@
 IBCNEHLM ;DAOU/ALA - HL7 Registration MFN Message ; 02-JUN-2015
- ;;2.0;INTEGRATED BILLING;**184,251,300,416,438,497,506,549,601,621,631,659,664,687,702,732,752**;21-MAR-94;Build 20
+ ;;2.0;INTEGRATED BILLING;**184,251,300,416,438,497,506,549,601,621,631,659,664,687,702,732,752,836**;21-MAR-94;Build 12
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -75,8 +75,9 @@ REG ;  Registration message for when a site installs
  ; IB*2.0*752 Now version 16, To allow FSC to send IN1 & GT1 data (including SUBSCRIBER ID, etc.)
  ;                            for a 271 w/ a AAA error. Also added FSC control of file numbers #365.022 - #365.046 
  ;                            (minus #365.030 & #365.040)
+ ; IB*2.0*836 Now version 17, Added the value of E1 TRANSACTIONS ENABLED 
  ;
- S IVER="16"
+ S IVER="17"
  I IHLP="I" S (IHLT,IHLS)=""
  ;
  I IHLP="B",IHLT=""!(IHLS="") D  S QFL=1
@@ -129,19 +130,22 @@ HL ;  When a site installs, the enrollment should be an
  ;                             number of outgoing EICD-triggered (A2) 270 transactions
  ;                             number of outgoing MBI Request 270 transactions
  ;                             number of incoming MBI positive responses that indicated as having returned the MBI (%)
- ; DSTAT3 is set in IBCNEDST
+ ;IB*2*836/CKB - added DSTAT4
+ ; DSTAT3 and DSTAT4 are set in IBCNEDST
  N DSTATI,DSTAT3,DSTATPA
  S DSTATI=1,DSTAT3="",DSTATPA=HLREP
  ; IB*2.0*702/DTG- end Added
  S DSTAT=$$GETSTAT^IBCNEDST(.MCAUTO)
- S DSTAT2=$$GETSTAT2^IBCNEDST()                 ; IB*2.0*549 Added line
+ ;IB*2*836/CKB - XX = DSTAT2 is the 1st piece "||" DSTAT4 is the 2nd piece
+ N XX S XX=$$GETSTAT2^IBCNEDST()                 ; IB*2.0*549 Added line
+ S DSTAT2=$P(XX,"||"),DSTAT4=$P(XX,"||",2)
  S VNTE="NTE"_HLFS_"1"_HLFS_HLFS_IBPERSIST_HLREP_$TR(DSTAT,U,HLREP)
  S VNTE=VNTE_HLREP_RETRY_HLREP_TIMOUT           ; IB*2.0*506
  S VNTE=VNTE_HLREP_$TR(DSTAT2,U,HLREP)          ; IB*2.0*549 Added line
  S VNTE=VNTE_HLREP_MCAUTO
- ; IB*2.0*702/DTG- Added start
- I $G(DSTAT3)'="" S VNTE=VNTE_HLREP_DSTAT3
- ; IB*2.0*702/DTG Added end
+ ; IB*2.0*702/DTG- Added DSTAT3
+ S VNTE=VNTE_HLREP_DSTAT3
+ S VNTE=VNTE_HLREP_DSTAT4   ;IB*2*836/CKB
  S ^TMP("HLS",$J,4)=VNTE
  ;
  D GENERATE^HLMA("IBCNE IIV REGISTER","GM",1,.HLRESLT,"")

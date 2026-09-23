@@ -1,5 +1,5 @@
 VPREVNT ;SLC/MKB -- VistA event listeners ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,10,15,17,19,21,20,26,25,27,29,31,34,33,35**;Sep 01, 2011;Build 16
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,10,15,17,19,21,20,26,25,27,29,31,34,33,35,37**;Sep 01, 2011;Build 10
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; External References               DBIA#
@@ -31,6 +31,7 @@ VPREVNT ;SLC/MKB -- VistA event listeners ;10/25/18  15:29
  ; ^GMR(120.86                        3449
  ; ^TIU(8925.1                        5677
  ; ^TIU(8925.7                        7416
+ ; ^GMR(123                           7610
  ; %ZTLOAD                           10063
  ; DIQ                                2056
  ; XLFDT                             10103
@@ -249,6 +250,15 @@ WV ; -- WV PREGNANCY STATUS CHANGE EVENT protocol listener
  S VPRFLAG=0
  F VPRFLD="FROM TIME","STATE","STATUS","TO TIME" S:$G(VPRPREG("BEFORE",VPRFLD))'=$G(VPRPREG("AFTER",VPRFLD)) VPRFLAG=1 Q:VPRFLAG=1
  I VPRFLAG=1 D POST^VPRHS(VPRDFN,"SocialHistory",VPRDFN_";790.05")
+ Q
+ ;
+REFCOM(IEN) ; - AVPR xref on file #123 field 9 for comment changes VPR*1*37, DBIA #7610
+ S IEN=+$G(IEN) Q:IEN<1
+ N GMR0,GMRIEN,DFN,GMRACT
+ S GMR0=$G(^GMR(123,IEN,0)),GMRIEN=+IEN Q:GMRIEN<1
+ S GMRACT=$P(GMR0,U,13) Q:GMRACT'=20  ; quit if not for Added Comment
+ S DFN=$$GET1^DIQ(123,GMRIEN,.02,"I") Q:+DFN<1
+ D POST^VPRHS(DFN,"Referral",GMRIEN_";123")
  Q
  ;
  ; Deprecated calls:

@@ -1,5 +1,5 @@
 VPRSDAP ;SLC/MKB -- SDA Pharmacy utilities ;10/25/18  15:29
- ;;1.0;VIRTUAL PATIENT RECORD;**8,24,14,28,30**;Sep 01, 2011;Build 9
+ ;;1.0;VIRTUAL PATIENT RECORD;**8,24,14,28,30,37**;Sep 01, 2011;Build 10
  ;;Per VHA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -41,6 +41,8 @@ PS1(IEN) ; -- set up single medication
  S X=$P($G(@VPRPS@(0)),U,6) D
  . S:X="DISCONTINUE" X="DISCONTINUED"
  . I X["/" S:X["/PARK" X=$P(X,"/") S:X["/SUSP" X="SUSPENDED"
+ . I X="" S X="NO STATUS"
+ . Q
  S $P(@VPRPS@(0),U,6)=X
  Q
  ;

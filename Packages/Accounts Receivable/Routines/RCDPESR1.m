@@ -1,5 +1,5 @@
 RCDPESR1 ;ALB/TMP - Server interface to AR from Austin ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,214,208,202,271,298,321,345,349,439**;Mar 20, 1995;Build 29
+ ;;4.5;Accounts Receivable;**173,214,208,202,271,298,321,345,349,439,455**;Mar 20, 1995;Build 19
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ;Reference to $$RXBIL^IBNCPDPU supported by DBIA 4435
@@ -44,12 +44,13 @@ OUTMSG(RCERR,RCXMZ) ; Build message to send to Outlook address
  N CT,RCMTXT,RCXM,TDATE,TTYPE,XMBODY,XMDUZ,XMSUBJ,XMTO,XMZ
  S TDATE=$G(^TMP("RCERR",$J,"DATE")),TDATE=$$FMTE^XLFDT(TDATE)
  S TTYPE=$G(^TMP("RCMSG",$J))
+ S TTYPE=$S(TTYPE="":$S($G(^TMP("RCERR",$J,"TYPE"))'="":^("TYPE"),1:"Cannot be determined"),1:TTYPE)
  S XMBODY="RCXM"
  ;
  S CT=1
  S RCXM(CT)="** AN EXCEPTION HAS BEEN DETECTED FOR AN EDI LOCKBOX MESSAGE **",CT=CT+1,RCXM(CT)=" "
  S CT=CT+1
- S RCXM(CT)="Message Type: "_$S(TTYPE="":$S($G(^TMP("RCERR",$J,"TYPE"))'="":^("TYPE"),1:"Cannot be determined"),1:TTYPE)
+ S RCXM(CT)="Message Type: "_TTYPE
  ;
  S CT=CT+2
  S RCXM(CT-1)=" ",RCXM(CT)="Message Date: "_TDATE
@@ -65,7 +66,7 @@ OUTMSG(RCERR,RCXMZ) ; Build message to send to Outlook address
  . D OUTERA($NA(^TMP("RCERR",$J,"MSG")),.CT,"RCXM")
  ;
  S XMDUZ="",XMSUBJ="EDI LBOX-STA# "_$P($$SITE^VASITE,"^",3)_"-TRANSMISSION ERROR"
- S XMTO("vha835payerinquiry@domain")=""
+ S XMTO("vha835payerinquiry@domain.ext")=""
  D
  . N DUZ S DUZ=.5,DUZ(0)="@"
  . D SENDMSG^XMXAPI(.5,XMSUBJ,XMBODY,.XMTO,,.XMZ)
@@ -96,26 +97,40 @@ OUTEFT(RAW,CT,RCMTXT) ; Format EFT for Outlook message
  N AMT,DATA,EFTCNT,EFTTOT,I,Z
  Q:RCMTXT=""!(RAW="")
  S (EFTCNT,EFTTOT)=0
- S I="" F  S I=$O(@RAW@(I)) Q:'I  D
- . S DATA=$G(@RAW@(I))
- . I $P(DATA,U)="835EFT" D  ;
- . . S DATA("HEAD",1)="Deposit Number: "_$P(DATA,U,6)
- . . S DATA("HEAD",2)="Deposit Date: "_$P(DATA,U,7)
- . . S DATA("HEAD",3)="Deposit Total: "_$$ZERO^RCDPESR9($P(DATA,U,8),1)
- . I $P(DATA,U)="01" D  ;
- . . I EFTCNT=0 D  ;
- . . . S EFTCNT=EFTCNT+1
- . . . S DATA("EFT",EFTCNT)="*** EFT DETAIL ***"
- . . S AMT=$$ZERO^RCDPESR9($P(DATA,U,4),1)
- . . S EFTCNT=EFTCNT+1 S DATA("EFT",EFTCNT)=" "
- . . S EFTCNT=EFTCNT+1 S DATA("EFT",EFTCNT)="Trace Number: "_$P(DATA,U,2)
- . . S EFTCNT=EFTCNT+1 S DATA("EFT",EFTCNT)="Dollar Amt: "_AMT
- . . S EFTCNT=EFTCNT+1 S DATA("EFT",EFTCNT)="Payer Name: "_$P(DATA,U,5)
- . . S EFTCNT=EFTCNT+1 S DATA("EFT",EFTCNT)="Payer ID: "_$P(DATA,U,6)
- . . S EFTTOT=EFTTOT+AMT
- S DATA("HEAD",4)="EFT Total Amt: "_$J(EFTTOT,$L(EFTTOT),2)
+ ; PRCA*4.5*455 - Add error processing for FHIR format transactions
+ I $G(RCXMZ)["FHIR" D  ;
+ . S RAW=$NA(^TMP("RCRAW",$J))
+ . S DATA("HEAD",1)="Error Detail: "_$G(^TMP("RCFHIR",$J,"ERRORMSG"))
+ . S DATA("HEAD",2)=" "
+ . S DATA("HEAD",3)="Deposit Number: "_$G(^TMP("RCFHIR",$J,"paymentnotice-pncdepositnumber"))
+ . S DATA("HEAD",4)="Deposit Date: "_$G(^TMP("RCFHIR",$J,"paymentnotice-paymentdate"))
+ . S DATA("HEAD",5)="Deposit Total: "_$G(^TMP("RCFHIR",$J,"paymentnotice-amount"))
+ . S EFTCNT=EFTCNT+1,DATA("EFT",EFTCNT)="Trace Number: "_$P($G(^TMP("RCFHIR",$J,"paymentnotice-payment-identifier-value")),".",1)
+ . S EFTCNT=EFTCNT+1,DATA("EFT",EFTCNT)="Dollar Amt: "_$G(^TMP("RCFHIR",$J,"paymentnotice-amount"))
+ . S EFTCNT=EFTCNT+1,DATA("EFT",EFTCNT)="Payer Name: "_$G(^TMP("RCFHIR",$J,"payer-name"))
+ . S EFTCNT=EFTCNT+1,DATA("EFT",EFTCNT)="Payer ID: "_$G(^TMP("RCFHIR",$J,"payer-identifier-value"))
+ E  D  ;
+ . S I="" F  S I=$O(@RAW@(I)) Q:'I  D
+ . . S DATA=$G(@RAW@(I))
+ . . I $P(DATA,U)="835EFT" D  ;
+ . . . S DATA("HEAD",1)="Deposit Number: "_$P(DATA,U,6)
+ . . . S DATA("HEAD",2)="Deposit Date: "_$P(DATA,U,7)
+ . . . S DATA("HEAD",3)="Deposit Total: "_$$ZERO^RCDPESR9($P(DATA,U,8),1)
+ . . I $P(DATA,U)="01" D  ;
+ . . . I EFTCNT=0 D  ;
+ . . . . S EFTCNT=EFTCNT+1
+ . . . . S DATA("EFT",EFTCNT)="*** EFT DETAIL ***"
+ . . . S AMT=$$ZERO^RCDPESR9($P(DATA,U,4),1)
+ . . . S EFTCNT=EFTCNT+1 S DATA("EFT",EFTCNT)=" "
+ . . . S EFTCNT=EFTCNT+1 S DATA("EFT",EFTCNT)="Trace Number: "_$P(DATA,U,2)
+ . . . S EFTCNT=EFTCNT+1 S DATA("EFT",EFTCNT)="Dollar Amt: "_AMT
+ . . . S EFTCNT=EFTCNT+1 S DATA("EFT",EFTCNT)="Payer Name: "_$P(DATA,U,5)
+ . . . S EFTCNT=EFTCNT+1 S DATA("EFT",EFTCNT)="Payer ID: "_$P(DATA,U,6)
+ . . . S EFTTOT=EFTTOT+AMT
+ . S DATA("HEAD",4)="EFT Total Amt: "_$J(EFTTOT,$L(EFTTOT),2)
  ;
  ; Add header data to message
+ S CT=CT+1,@RCMTXT@(CT)=" "
  S Z=0 F  S Z=$O(DATA("HEAD",Z)) Q:'Z  D
  . S CT=CT+1,@RCMTXT@(CT)=DATA("HEAD",Z)
  S CT=CT+1,@RCMTXT@(CT)=" "
@@ -123,6 +138,9 @@ OUTEFT(RAW,CT,RCMTXT) ; Format EFT for Outlook message
  S Z=0 F  S Z=$O(DATA("EFT",Z)) Q:'Z  D
  . S CT=CT+1,@RCMTXT@(CT)=DATA("EFT",Z)
  ;
+ S CT=CT+1,@RCMTXT@(CT)=" "
+ S CT=CT+1,@RCMTXT@(CT)="*** RAW MESSAGE DATA *** "
+ S CT=CT+1,@RCMTXT@(CT)=" "
  S Z=0 F  S Z=$O(@RAW@(Z)) Q:'Z  D
  . S CT=CT+1,@RCMTXT@(CT)=$G(@RAW@(Z))
  Q

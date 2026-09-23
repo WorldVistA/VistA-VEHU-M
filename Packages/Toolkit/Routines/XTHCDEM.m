@@ -1,14 +1,26 @@
-XTHCDEM ;HCIOFO/SG - HTTP 1.0 CLIENT (DEMO) ;11/05/09  17:19
- ;;7.3;TOOLKIT;**123**;Apr 25, 1995;Build 4
+XTHCDEM ;HCIOFO/SG - HTTP 1.0 CLIENT (DEMO) ; Oct 01, 2025  10:54
+ ;;7.3;TOOLKIT;**123,162**;Apr 25, 1995;Build 4
+ ;Per VA Directive 6402, this routine should not be modified.
  ;
  ;##### DEMO ENTRY POINT
  ;
  ; The ^TMP($J,"XTHC") global node is used by the entry point.
  ;
-DEMO ;
+DEMO(OPTION) ;XT162
  N BODY,DIR,DIRUT,DTOUT,DUOUT,HEADER,RC,URL,X,Y
  S BODY=$NA(^TMP($J,"XTHC"))
- S URL="http://www.hardhats.org"
+ S OPTION=$G(OPTION) ;XT162
+ I OPTION=1 D
+ . S URL="https://www.amazon.com"  ;native https
+ E  I OPTION=2 D
+ . S URL="https://www.howsmyssl.com/"  ;native https
+ E  I OPTION=3 D
+ . S URL="https://postman-echo.com/get" ;native https
+ E  I OPTION=4 D
+ . S URL="https://httpbin.org/get"
+ E  I OPTION=5 D
+ . S URL="http://httpforever.com" ;permanent http site
+ E  S URL="http://www.hardhats.org" ;this will redirect
  ;
  S RC=0
  F  D  Q:RC

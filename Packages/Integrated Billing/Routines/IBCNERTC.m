@@ -1,5 +1,5 @@
-IBCNERTC ;AITC/HN - Covered by Health Insurance ;03-MAR-2017
- ;;2.0;INTEGRATED BILLING;**593,822**;21-MAR-94;Build 21
+IBCNERTC ;AITC/HN - Covered by Health Insurance ; 03-MAR-2017
+ ;;2.0;INTEGRATED BILLING;**593,822,836**;21-MAR-94;Build 12
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ;**Program Description**
@@ -38,6 +38,9 @@ INS(DFN,IBDT) ;Check insurance
  . S IBIENS=DA_","_DFN_","
  . S EFFDT=$$GET1^DIQ(2.312,IBIENS,8,"I")
  . I EFFDT'=IBDT Q
+ . ;IB*837/CKB - if FUTURE EFFECT DATE PROCESSING is "NO", DO NOT create a buffer entry
+ . I $$GET1^DIQ(350.9,"1,",54.06)="NO" Q
+ . ; 
  . ; Add check to see if already in buffer
  . S DEFIND=$$BFEXIST(DFN,IBIEN) Q:DEFIND=1
  . S IBSYM=$P($$INSERROR^IBCNEUT3("I",IBIEN),"^",1)

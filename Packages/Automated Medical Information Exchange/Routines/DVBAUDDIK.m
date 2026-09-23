@@ -1,0 +1,90 @@
+DVBAUDDIK ;ALB/CP - FM DIK API Subroutine Calls ; 3/27/18 7:56pm
+ ;;2.7;AMIE;**256**;;Build 19
+ ; Per VHA Directive 6402 this routine should not be modified
+ ; FileMan DIK API IA: 10013 (Supported)
+ ;
+ Q
+ ;
+DELEVENT(DVBIENEVENT) ; Deletes an entry in the AMIE OPTION AUDIT
+ ;   EVENT file #369.999
+ N @($$DIK^DVBAUDNEW1())
+ ; ZEXCEPT: DA,DIK,DVBQUIT
+ ;
+ S DVBQUIT=0 I '$G(DVBIENEVENT) S DVBQUIT=1 Q
+ ;
+ S DIK="^DVB(396.999,"
+ S DA=DVBIENEVENT
+ D ^DIK
+ ;
+ Q  ; Quit DELEVENT
+ ;
+OCCURENC(DVBIEN19,DVBIEN1ST) ; 
+ ;
+ N @($$DIK^DVBAUDNEW1())
+ ; ZEXCEPT: DA,DIK,DVBQUIT
+ ;
+ S DVBQUIT=0 I '$G(DVBIEN19)!('$G(DVBIEN1ST)) S DVBQUIT=1 Q
+ ;
+ S DIK="^DVB(396.9991,DVBIEN19,""OCCUR""," ; Global of OCCURANCE multiple
+ S DA(1)=DVBIEN19
+ S DA=DVBIEN1ST
+ D ^DIK
+ ;
+ Q  ; Quit OCCURANC
+ ;
+OPTSUM(DVBIEN19) ; Delete an entry in the AMIE AUDIT SUMMARY BY OPTION #396.9991
+ ;
+ N @($$DIK^DVBAUDNEW1())
+ ; ZEXCEPT: DA,DIK,DVBQUIT
+ ;
+ S DVBQUIT=0 I '$G(DVBIEN19) S DVBQUIT=1 Q
+ ;
+ S DIK="^DVB(396.9991,"
+ S DA=DVBIEN19
+ D ^DIK
+ ;
+ Q  ; Quit OPTSUM
+ ;
+USEROPT(DVBIEN19) ; 
+ ;
+ ;   ^DVB(396.9992,"OPTION",DVBIEN19,DVBIEN200,DVBIEN19)=""
+ ;
+ N DVBIEN200
+ ; ZEXCEPT: DA,DIK,DVBQUIT,U
+ ;
+ S DVBQUIT=0 I '$G(DVBIEN19) S DVBQUIT=1 Q
+ ;
+ ; Find each user who has utilized the DVBIEN19 option.
+ ;
+ S DVBIEN200=""
+ F  S DVBIEN200=$O(^DVB(396.9992,"OPTION",DVBIEN19,DVBIEN200)) Q:DVBIEN200=""  D  ;
+ . N @($$DIK^DVBAUDNEW1())
+ . S DIK="^DVB(396.9992,DVBIEN200,""OPTION""," ;Global root of OPTION mult
+ . S DA(1)=DVBIEN200
+ . S DA=DVBIEN19
+ . D ^DIK
+ . ;
+ . ; Quit, if sub-file entries still exist
+ . ;
+ . Q:$P($G(^DVB(396.9992,DVBIEN200,"OPTION",0)),U,4)>0
+ . ;
+ . ; If  no OPTION multiple sub-file entries are left for this
+ . ;     USER, then delete the USER record.
+ . ;
+ . D USERSUM(DVBIEN200) ; Delete the AMIE AUDIT SUMMARY BY USER entry
+ ;
+ Q  ; Quit USEROPT
+ ;
+USERSUM(DVBIEN200) ; Delete an entry in the AMIE AUDIT SUMMARY BY USER #396.9992
+ ;
+ N @($$DIK^DVBAUDNEW1())
+ ; ZEXCEPT: DA,DIK,DVBQUIT
+ ;
+ S DVBQUIT=0 I '$G(DVBIEN200) S DVBQUIT=1 Q
+ ;
+ S DIK="^DVB(396.9992,"
+ S DA=DVBIEN200
+ D ^DIK
+ ;
+ Q  ; Quit USERSUM
+ ;

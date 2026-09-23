@@ -1,5 +1,5 @@
 FBCHVP ;AISC/CMR - VOID & CANCEL VOIDED INPATIENT PAYMENT ;5/16/14  16:17
- ;;3.5;FEE BASIS;**55,69,154**;JAN 30, 1995;Build 12
+ ;;3.5;FEE BASIS;**55,69,154,196**;JAN 30, 1995;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;Variable 'FBVOID' is set if cancelling a voided payment.
  ;Variable 'FBTYPE' is set to 6 for CH or 7 for CNH.
@@ -46,7 +46,9 @@ WRT1 N FBMRVP S FBMRVP=^TMP($J,"FBCHVP",FBI,"FBMR")
  I $P(FBMRVP,U,5)]"" W !,?5,"FPPS Claim ID: ",$P(FBMRVP,U,5),?33,"FPPS Line Item: ",$P(FBMRVP,U,6)
  N A2 S A2=+FBAMTP D PMNT^FBAACCB2
  Q
-HED W !,"Patient Name: ",$P(^DPT(DFN,0),"^"),?50,"Pt.ID ",$$SSN^FBAAUTL(DFN),!!,?2,"VENDOR: ",$P(^FBAAV(FBV,0),"^"),!,?10,"('*' Represents Reimbursement to Patient)",!,?10,"('#' Represents a Voided Payment)"
+HED ;
+ W:$G(FBSSNRF)="" !,"Patient Name: ",$P(^DPT(DFN,0),"^"),?50,"Pt.ID ",$$SSN^FBAAUTL(DFN),!!,?2,"VENDOR: ",$P(^FBAAV(FBV,0),"^"),!,?10,"('*' Represents Reimbursement to Patient)",!,?10,"('#' Represents a Voided Payment)"
+ W:$G(FBSSNRF)=1 !,"Patient Name: ",$P(^DPT(DFN,0),"^"),?50,"Pt.ID ",$$SSNL4^FBAAUTL($$SSN^FBAAUTL(DFN)),!!,?2,"VENDOR: ",$P(^FBAAV(FBV,0),"^"),!,?10,"('*' Represents Reimbursement to Patient)",!,?10,"('#' Represents a Voided Payment)"
  W !,"   FROM DATE",?16,"TO DATE",?26,"DRG",?33,"AMT CLAIMED",?48,"AMT PAID",?60,"INVOICE #",?72,"BATCH #"
  W !,?5,"COV.DAYS",?19,"ADJ CODE",?34,"REMIT REMARKS",?55,"PATIENT CONTROL #"
  W !,Q,!

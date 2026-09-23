@@ -1,5 +1,5 @@
 FBAAMST ;WCIOFO/SAB-MST REPORT ;6/12/2001
- ;;3.5;FEE BASIS;**30**;JAN 30, 1995
+ ;;3.5;FEE BASIS;**30,196**;JAN 30, 1995;Build 7
  ;
  ; locate POV for MST
  S FBPOV=$$POV^FBAAUTL3("55")
@@ -120,7 +120,8 @@ PRINT ; report data
  . . S FBPNAME=$P(FBPAT,U)
  . . S FBDFN=$P(FBPAT,U,2)
  . . S FBX=$G(^TMP($J,"FBA",FBPAT))
- . . W !!,FBPNAME,?40,"Patient ID: ",$P(FBX,U),?67,"Gender: ",$P(FBX,U,2)
+ . . W:$G(FBSSNRF)="" !!,FBPNAME,?40,"Patient ID: ",$P(FBX,U),?67,"Gender: ",$P(FBX,U,2)
+ . . W:$G(FBSSNRF)=1 !!,FBPNAME,?40,"Patient ID: ",$$SSNL4^FBAAUTL($P(FBX,U)),?67,"Gender: ",$P(FBX,U,2)
  . . ; loop thru authorizations
  . . S FBAUT=""
  . . F  S FBAUT=$O(^TMP($J,"FBA",FBPAT,FBAUT)) Q:FBAUT=""  D  Q:FBQUIT

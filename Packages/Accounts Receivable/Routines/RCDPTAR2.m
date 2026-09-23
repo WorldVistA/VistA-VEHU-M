@@ -1,5 +1,5 @@
 RCDPTAR2 ;AITC/CJE - EFT TRANSACTION AUDIT REPORT (Continued) ;08/14/23
- ;;4.5;Accounts Receivable;**424,439,446**;Mar 20, 1995;Build 15
+ ;;4.5;Accounts Receivable;**424,439,446,455**;Mar 20, 1995;Build 19
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -151,3 +151,18 @@ MDATE(STATUS,EFTIEN) ; Finds the Match Date from the Match History Global for th
  I RCDATA(344.314,IENS,.01,"I")=0 Q ""
  Q RCDATA(344.314,IENS,.02,"I")
  ;
+ ; New subrutine for PRCA*4.5*455
+DEPSBAL(RCDNUM,RCDDT) ; EP from RCDPTAR1
+ ; Given a deposit number and deposit date see if any of the EDI Lockbox Deposits are unbalanced
+ ; Input : RCDNUM - Deposit Number
+ ;         RCDDT  - Deposit Date
+ ; Returns : 0 if any of the deposits are unbalanced. Otherwise 1.
+ N DEPDATA,RCDIEN,RETURN
+ S RETURN=1
+ I $G(RCDNUM)=""!($G(RCDDT)="") Q RETURN
+ ;
+ S RCDIEN=0
+ F  S RCDIEN=$O(^RCY(344.3,"ADEP2",RCDNUM,RCDDT,RCDIEN)) Q:'RCDIEN!('RETURN)  D  ; PRCA*4.5*439
+ . S DEPDATA=$G(^RCY(344.3,RCDIEN,0)) Q:'$L($G(DEPDATA))          ; Quit if zero node does not exist or has bad data
+ . I $P(DEPDATA,U,15) S RETURN=0                                  ; Piece 15 is the unbalance flag
+ Q RETURN

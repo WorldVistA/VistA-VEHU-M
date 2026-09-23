@@ -1,5 +1,5 @@
-SDES2PROVSEARCH ;ALB/JAS,JHC - Get Provider based on Search String ;JULY 1, 2025
- ;;5.3;Scheduling;**890,909**;Aug 13, 1993;Build 12
+SDES2PROVSEARCH ;ALB/JAS,JHC,LAB - Get Provider based on Search String ;JULY 9, 2026
+ ;;5.3;Scheduling;**890,909,951**;Aug 13, 1993;Build 5
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;External References
@@ -38,14 +38,8 @@ PROVIDERSEARCH(JSONRETURN,SDCONTEXT,SDINPUT) ; rpc = SDES2 SEARCH PROVIDERS
  D VALIDATEINPUT(.SDERRORS,SEARCHSTRING)
  I $D(SDERRORS) M SDRETURN=SDERRORS S SDRETURN("Provider",1)="" D BUILDJSON^SDES2JSON(.JSONRETURN,.SDRETURN) Q
  ;
- ; Find list of matching users
- D GETUSERLIST(.USERLIST,SEARCHSTRING)
- ;
- ; Filter out non-providers and inactive users
- D BLDPROVIDERLIST(.PROVIDERLIST,.USERLIST)
- ;
- ; Prepare return array
- D BUILDRETURN(.PROVIDERETURN,.PROVIDERLIST)
+ D NEWPROVLIST(SEARCHSTRING,.PROVIDERLIST)
+ D BUILDRETURN(.PROVIDERLIST,.PROVIDERETURN)
  D BUILDJSON^SDES2JSON(.JSONRETURN,.PROVIDERETURN)
  Q
  ;
@@ -55,36 +49,26 @@ VALIDATEINPUT(ERRORLIST,SEARCHSTRING) ; validate incoming parameters
  I ($L(SEARCHSTRING)<3)!($L(SEARCHSTRING)>35) D ERRLOG^SDES2JSON(.ERRORLIST,230)
  Q
  ;
-GETUSERLIST(USERLIST,SEARCHSTRING) ; pull matching providers using the first input parameter passed in by the RPC
- ; Input - SEARCHSTRING = string that represents the name of the person
- ;         USERLIST = passed in by reference; represents the array that will be returned as output
- ; Output - USERLIST = list of USER names and internal entry numbers from NEW PERSON file (200)
- N C,RESULTS,SUBIEN,USERDUZ
- K USERLIST
- S SUBIEN=0
- D FIND^DIC(200,,"@;.01",,SEARCHSTRING,,,,,"RESULTS")
- F  S SUBIEN=$O(RESULTS("DILIST",2,SUBIEN)) Q:SUBIEN=""  D
- . S USERDUZ=RESULTS("DILIST",2,SUBIEN)
- . S USERLIST(USERDUZ)=RESULTS("DILIST","ID",SUBIEN,.01)
+NEWPROVLIST(SEARCHSTRING,PROVIDERLIST) ;Loop through "B" cross reference for providers
+ N USERDUZ,PROVIDERNAME,STRINGLENGTH,DATE
+ S USERDUZ=""
+ S DATE=$P(DT,".")
+ S STRINGLENGTH=$L(SEARCHSTRING)
+ S PROVIDERNAME=$O(^VA(200,"B",SEARCHSTRING),-1)
+ I $E(PROVIDERNAME,1,STRINGLENGTH)=SEARCHSTRING D
+ . S PROVIDERNAME=$O(^VA(200,"B",PROVIDERNAME),-1)
+ F  S PROVIDERNAME=$O(^VA(200,"B",PROVIDERNAME)) Q:PROVIDERNAME=""!($E(PROVIDERNAME,1,STRINGLENGTH)'=SEARCHSTRING)  D
+ . S USERDUZ=""
+ . F  S USERDUZ=$O(^VA(200,"B",PROVIDERNAME,USERDUZ)) Q:USERDUZ=""  D
+ . . I $$ACTIVPRV^PXAPI(USERDUZ,DATE)&($$ACTIVE^XUSER(USERDUZ)) S PROVIDERLIST(USERDUZ)=""
  Q
  ;
-BLDPROVIDERLIST(PROVIDERLIST,USERLIST) ;
- ; input - USERLIST = list of USER names and internal entry numbers from NEW PERSON file (200)
- ;         PROVIDERLIST = passed by reference, represents the screened list of actual providers that are active
- ; output - PROVIDERLIST = array of active providers
- N USERDUZ
- S USERDUZ=0
- F  S USERDUZ=$O(USERLIST(USERDUZ)) Q:'USERDUZ  D
- . I '$$ACTIVPRV^PXAPI(USERDUZ,DT)!('$$ACTIVE^XUSER(USERDUZ)) Q
- . S PROVIDERLIST(USERDUZ)=""
- Q
- ;
-BUILDRETURN(PROVIDERETURN,PROVIDERLIST) ;Build return array with provider data
+BUILDRETURN(PROVIDERLIST,PROVIDERETURN) ;Build return array with provider data
  ; input - PROVIDERLIST = array of active providers
  ;         PROVIDERETURN = passed by reference, represents the array of providers and associated data that will be returned to the client
  ; output - PROVIDERETURN = provider array and their associated data to be sent back to the client
  ;
- N PROVIDERDATA,IEN,IENS,INFO,RECORDNUMBER
+ N PROVIDERDATA,IEN,IENS,INFO,RECORDNUMBER,IE
  S (RECORDNUMBER,IEN)=0
  F  S IEN=$O(PROVIDERLIST(IEN)) Q:'IEN  D GETS^DIQ(200,IEN_",",".01;.131:.138;.151;8;53.5;205.1","IE","INFO") D
  . S RECORDNUMBER=RECORDNUMBER+1
@@ -108,6 +92,7 @@ BUILDRETURN(PROVIDERETURN,PROVIDERLIST) ;Build return array with provider data
  . . S PROVIDERETURN("Provider",RECORDNUMBER,"PersonClass",IENS)=$$GET1^DIQ(200.05,IENS_","_IEN_",",.01)
  . S IENS=0 F  S IENS=$O(^VA(200,IEN,"USC3",IENS)) Q:'IENS  D
  . . S PROVIDERETURN("Provider",RECORDNUMBER,"UserClass",IENS)=$$GET1^DIQ(200.07,IENS_","_IEN_",",.01)
+ . K INFO,IE
  I '$D(PROVIDERETURN("Provider")) S PROVIDERETURN("Provider",1)=""
  Q
  ;

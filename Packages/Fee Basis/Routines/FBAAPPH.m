@@ -1,5 +1,5 @@
 FBAAPPH ;AISC/GRR-PHARMACY HISTORY LIST FOR PATIENT ;7/17/2003
- ;;3.5;FEE BASIS;**12,61**;JAN 30, 1995
+ ;;3.5;FEE BASIS;**12,61,196**;JAN 30, 1995;Build 7
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  D DT^DICRW S FBAAOUT=0
 RD K FBAANQ W !! S FBAAOUT=0,DIC="^FBAAA(",DIC(0)="AEQM" D ^DIC G Q:X=""!(X="^"),RD:Y<0 S DFN=+Y
@@ -53,7 +53,8 @@ WRT I FSW S FSW=0 D HED
  D PMNT^FBAACCB2
  K FBSAR Q
 HED W:$E(IOST,1,2)'="C-" !?25,"PHARMACY PAYMENT HISTORY",!?24,$E(Q,1,26)
- W !,"Patient: ",NAME,?41,"Pt ID: ",FBSSN,?60,"DOB: ",DOB
+ I '$G(FBSSNRF) W !,"Patient: ",NAME,?41,"Pt ID: ",FBSSN,?60,"DOB: ",DOB
+ I $G(FBSSNRF)=1 W !,"Patient: ",NAME,?41,"Pt ID: ",$$SSNL4^FBAAUTL(FBSSN),?60,"DOB: ",DOB
  W !,"('*' Reimbursement to Patient   '+' Cancellation Activity)   '#' Voided Payment)"
  W !,"Vendor Name",?48,"ID #",?60,"Chain #"
  W !,?3,"Fill Date",?64,"Date Certified"

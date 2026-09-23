@@ -1,5 +1,5 @@
 FBAAVP ;AISC/DMK - VOID & CANCEL VOIDED MEDICAL PAYMENT ;5/15/14  17:36
- ;;3.5;FEE BASIS;**4,69,154**;JAN 30, 1995;Build 12
+ ;;3.5;FEE BASIS;**4,69,154,196**;JAN 30, 1995;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;Variable 'FBVOID' is set if cancelling a voided payment.
  D DT^DICRW
@@ -34,7 +34,9 @@ WRT N FBFPPSC S FBFPPSC=$P($G(^FBAAC(DFN,1,DA,1,B,1,K,3)),U,1)
  I $D(^FBAAC(DFN,1,DA,1,B,1,K,"R")),^("R")]"" W !?3,"Reason:",!?10,^("R"),!
  S ^TMP($J,CNT)=FBAADT_"^"_FBAACPT_$S($G(FBMODLE)]"":"-"_FBMODLE,1:"")_"^"_$J(A1,8)_"^"_$J(A2,8)_"^"_FBFPPSC_"^"_FBIN_"^"_B2_"^"_FBAAPD_"^"_FBSD_"^"_FBSV_"^"_FD_"^"_A2_"^"_FBON Q
  Q
-HED W @IOF,"Patient Name: ",$P(^DPT(DFN,0),"^"),?50,"Pt.ID ",$$SSN^FBAAUTL(DFN),!!,?2,"VENDOR: ",$P(^FBAAV(DA,0),"^"),!,?10,"('*' Reimb. to Patient   '#' Voided Payment)"
+HED ;
+ W:$G(FBSSNRF)="" @IOF,"Patient Name: ",$P(^DPT(DFN,0),"^"),?50,"Pt.ID ",$$SSN^FBAAUTL(DFN),!!,?2,"VENDOR: ",$P(^FBAAV(DA,0),"^"),!,?10,"('*' Reimb. to Patient   '#' Voided Payment)"
+ W:$G(FBSSNRF)=1 @IOF,"Patient Name: ",$P(^DPT(DFN,0),"^"),?50,"Pt.ID ",$$SSNL4^FBAAUTL($$SSN^FBAAUTL(DFN)),!!,?2,"VENDOR: ",$P(^FBAAV(DA,0),"^"),!,?10,"('*' Reimb. to Patient   '#' Voided Payment)"
  W !," SVC DATE",?11,"CPT-MOD",?20,"AMT CLAIMED",?35,"AMT PAID",?47,"INVOICE #",?57,"BATCH #",?66,"DATE PAID",!,Q,!
  Q
 Q K DIC,DIE,DA,DF,DA(1),^TMP($J),A,A1,A2,B,B1,B2,C,CNT,D,D0,D1,D2,D3,DI,DR,DFN,DIYS,FBAACB,FBAACPT,FBAADT,FBAAPD,FBX,DIR,FBDT,FBIN,FBON,FBSD,FBSV,FD,FBVD,FBVOID,I,K,L,ON,POP,P3,P4,Q,V,X,Y,VP,VAL,ZS,Z,ZZ,FBSSN,DIRUT,FBMOD,FBMODLE

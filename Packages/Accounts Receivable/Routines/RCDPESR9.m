@@ -1,5 +1,5 @@
 RCDPESR9 ;ALB/TMK,DWA - ERA return file field captions ;09-SEP-2003
- ;;4.5;Accounts Receivable;**173,252,269,302,371**;Mar 20, 1995;Build 29
+ ;;4.5;Accounts Receivable;**173,252,269,302,371,455**;Mar 20, 1995;Build 19
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Note: if the 835 flat file changes, make the corresponding changes
@@ -207,12 +207,18 @@ FDT(X) ; returns MM/DD/YYYY or MM/DD/YY from YYYYMMDD or YYMMDD in X
 ZERO(X,D,NULL) ; Returns numeric value of X without leading 0's
  ; or null if no value wanted for 0 amount
  ; D = 1 if dollar amt
- N Z
- I X["." S Z=$P(X,"."),X=+Z_"."_$P(X,".",2)
- I X'["." D
- . I $G(D) S X=+$E(X,1,$L(X)-2)_"."_$E(X,$L(X)-1,$L(X))
- . S X=$S('$G(D):+X,1:$J(X,"",2))
- Q $S(X:X,$G(NULL):"",1:X)
+ ; PRCA*4.5*455 - Subroutine re-written to fix issue negative dollar amounts less than 1 dollar
+ N SIGN,W,P,RETURN,Z
+ I X'[".",'$G(D) D  ;
+ . S RETURN=+X
+ E  D  ;
+ . S SIGN="",Z=X
+ . I $E(X)="-" S SIGN="-",Z=$E(X,2,$L(X))
+ . I X["." S W=+$P(Z,"."),P=$P(Z,".",2)
+ . I X'["." S W=+$E(Z,1,$L(Z)-2),P=$E(Z,$L(Z)-1,$L(Z))
+ . S RETURN=SIGN_W_"."_P
+ . I $G(D) S RETURN=$J(RETURN,2)
+ Q $S(RETURN:RETURN,$G(NULL):"",1:RETURN)
  ;
 YN(X) ; Returns YES for X="Y" and NO for X="N"
  S X=$S(X="Y":"YES",X="N":"NO",1:X)

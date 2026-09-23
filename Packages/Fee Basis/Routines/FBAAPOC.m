@@ -1,14 +1,16 @@
 FBAAPOC ;AISC/GRR-PRINT OBSOLETE CARDS ;15APR86
- ;;3.0;FEE BASIS;**12**;NOV 26, 1993
+ ;;3.5;FEE BASIS;**196**;JAN 30, 1995;Build 7
+ ;;Per VHA Directive 10-93-142, this routine should not be modified.
  S VAR="",PGM="START^FBAAPOC" D ZIS^FBAAUTL G:FBPOP Q
-START S FBAAOUT=0 U IO S UL="" F A=1:1:80 S UL=UL_"="
+START S FBOUT=0 U IO S UL="" F A=1:1:80 S UL=UL_"="
  W:$E(IOST,1,2)="C-" @IOF D HED
- S J=0 F JJ=0:0 S J=$O(^FBAA(161.83,"C",J)) Q:J'>0!(FBAAOUT)  F K=0:0 S K=$O(^FBAA(161.83,"C",J,K)) Q:K'>0!(FBAAOUT)  F L=0:0 S L=$O(^FBAA(161.83,"C",J,K,L)) Q:L'>0!(FBAAOUT)  I $D(^FBAA(161.83,K,1,L,0)) S Y(0)=^(0) D GOT Q:FBAAOUT
-Q W ! K A,J,K,JJ,UL,FBAAOUT,FBDT,FBNM,FBSSN,FBR,FBPOP,L,Y
+ S J=0 F JJ=0:0 S J=$O(^FBAA(161.83,"C",J)) Q:J'>0!($G(FBOUT))  F K=0:0 S K=$O(^FBAA(161.83,"C",J,K)) Q:K'>0!($G(FBOUT))  F L=0:0 S L=$O(^FBAA(161.83,"C",J,K,L)) Q:L'>0!($G(FBOUT))  I $D(^FBAA(161.83,K,1,L,0)) S Y(0)=^(0) D GOT Q:FBOUT
+Q W ! K A,J,K,JJ,UL,FBOUT,FBDT,FBNM,FBSSN,FBR,FBPOP,L,Y
  D CLOSE^FBAAUTL Q
-GOT S FBDT=$P(Y(0),"^",1),FBNM=$S($D(^DPT(K,0)):$P(^(0),"^",1),1:""),FBSSN=$S(FBNM="":"",1:$$SSN^FBAAUTL(K)),FBDT=$S(FBDT[".":$P(FBDT,".",1),1:FBDT),FBR=$P(Y(0),"^",3)
- I $E(IOST,1,2)["C-",$Y+4>IOSL S DIR(0)="E" D ^DIR K DIR S:'Y FBAAOUT=1 Q:FBAAOUT  W @IOF D HED
+GOT S FBDT=$P(Y(0),"^"),FBNM=$S($D(^DPT(K,0)):$P(^(0),"^"),1:""),FBSSN=$S(FBNM="":"",1:$$SSN^FBAAUTL(K)),FBDT=$S(FBDT[".":$P(FBDT,"."),1:FBDT),FBR=$P(Y(0),"^",3)
+ I $E(IOST,1,2)["C-",$Y+4>IOSL S DIR(0)="E" D ^DIR K DIR S:'Y FBOUT=1 Q:FBOUT  W @IOF D HED
  E  I $Y+4>IOSL W @IOF
- W !!,J,?10,FBNM,?42,$S(FBSSN="":"",1:FBSSN),?61,$S(FBDT="":"",1:$E(FBDT,4,5)_"/"_$E(FBDT,6,7)_"/"_$E(FBDT,2,3)),!,?2,FBR
+ W:$G(FBSSNRF)="" !!,J,?10,FBNM,?42,$G(FBSSN),?61,$$DATX^FBAAUTL(FBDT),!,?2,FBR
+ W:$G(FBSSNRF)=1 !!,J,?10,FBNM,?42,$$SSNL4^FBAAUTL($G(FBSSN)),?61,$$DATX^FBAAUTL(FBDT),!,?2,FBR
  Q
-HED W "Old Card ",?10,"Patient Name",?42,"Patient SSN",?61,"Change Date",!?1,"Number",!?2,"Reason For Change",!,UL Q
+HED W !,"Old Card ",?10,"Patient Name",?42,"Pt.ID",?61,"Change Date",!?1,"Number",!?2,"Reason For Change",!,UL Q

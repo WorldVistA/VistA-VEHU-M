@@ -1,5 +1,5 @@
-PSOVEXR1 ;BIRM/KML - PHARMACY TELEPHONE REFILLS - CONTINUED ; 06/07/18 08:47am
- ;;7.0;OUTPATIENT PHARMACY;**653**;Dec 1997;Build 14
+PSOVEXR1 ;BIRM/KML - PHARMACY TELEPHONE REFILLS - CONTINUED; May 22, 2026@11:20
+ ;;7.0;OUTPATIENT PHARMACY;**653,832**;Dec 1997;Build 4
  ;
 PSOBLD ; This will transfer entries from the vendor daily telephone refill requests global when the pharmacy audio refills option is accessed.
  ;VEXHRX(19080,PSOSITE,"PSODFN-PSORXIEN")=PSORDT_"^"_PSOSTAT_"^"_PSOP3_"^"_PSOP4_"^"_PSOORF_"^"_PSORSLT_"^"_PSOUSER_"^"_PSOPRF
@@ -20,7 +20,25 @@ PSOBLD ; This will transfer entries from the vendor daily telephone refill reque
  K FDA,PSOERR
  S (PSOORF,PSOPRF,PSORSLT,PSORDT,PSOSTAT,PSOUSER)=""
  K ^XTMP("PSOVEXRX",$J)
- L +^XTMP("PSOVEXRX"):5 I '$T W !,"Process Telephone Refills is not available.  Please try again later." S QUIT=1 Q
+ L +^XTMP("PSOVEXRX"):5 D  Q:'$T
+ . I '$T D  Q
+ . . S QUIT=1
+ . . ;Performing $G in case another vendor process somehow sets this lock,
+ . . ;even though that is extremely unlikely.
+ . . N PSOSTR S PSOSTR=$G(^XTMP("PSOVEXRX"))
+ . . I PSOSTR="" D  Q
+ . . . W !!,"Unknown process has the lock. Audit has not been set."
+ . . . W !,"Please try again later."
+ . . N PSOWHO S PSOWHO=$$NAME^XUSER($P(PSOSTR,"^"))
+ . . W !!,$S(PSOWHO'="":PSOWHO,1:$P(PSOSTR,"^"))," locked this option"
+ . . W !,$P($$FMTE^XLFDT($P(PSOSTR,U,2)),":",1,2)," with job number: ",$P(PSOSTR,U,3),"."
+ . . I PSOWHO]"" W !,"Please try again later or contact end user to exit the option." Q
+ . . ;Extremely unlikely that a process (not a user) is locking the option, but displaying text anyway.
+ . . W !,"Please try again later."
+ . ;Set audit of who, when, and job number when locked.
+ . S ^XTMP("PSOVEXRX")=DUZ_"^"_$$NOW^XLFDT_"^"_$J
+ ;PSO*7.0*832: Adding zero node to adhere to ^XTMP rule. Previously was not set.
+ S ^XTMP("PSOVEXRX",0)=$$FMADD^XLFDT(DT,5)_"^"_DT_"^PSO PROCESS TELEPHONE REFILLS option"
  M ^XTMP("PSOVEXRX",$J)=^VEXHRX(19080)   ; populate XTMP with AUDIOCARE vendor array data for further processing
  S PSOSITE=0 F  S PSOSITE=$O(^XTMP("PSOVEXRX",$J,PSOSITE)) Q:'PSOSITE  D
  . S PSODFNRX=0 F  S PSODFNRX=$O(^XTMP("PSOVEXRX",$J,PSOSITE,PSODFNRX)) Q:'PSODFNRX  D
@@ -48,7 +66,12 @@ CLEAN ;delete completed records from the new file 52.444.
  ;scheduled to run daily
  N PSORDT,PSORXEN
  K ^XTMP("PSOVEXRX",$J)
- L +^XTMP("PSOVEXRX"):5 I '$T Q
+ ;PSO*7.0*832: Add lock audit.
+ ;             If locked, no need to display a message since this is a background job.
+ L +^XTMP("PSOVEXRX"):5 D  I '$T Q
+ . I $T S ^XTMP("PSOVEXRX")="PSO PURGE PROCESSED 52.444 option^"_$$NOW^XLFDT_"^"_$J
+ ;PSO*7.0*832: Adding zero node to adhere to ^XTMP rule. Previously was not set.
+ S ^XTMP("PSOVEXRX",0)=$$FMADD^XLFDT(DT,5)_"^"_DT_"^PSO PURGE PROCESSED 52.444 option"
  M ^XTMP("PSOVEXRX",$J)=^VEXHRX(19080)   ; populate XTMP with AUDIOCARE vendor array data for further processing
  D SETVEN
  S PSORDT=0 F  S PSORDT=$O(^PS(52.444,"E",PSORDT)) Q:'PSORDT  D
@@ -84,6 +107,11 @@ SETVEN ;adds fill date, status and processing result to vendor global to facilit
  M ^VEXHRX(19080)=^XTMP("PSOVEXRX",$J)
  K ^XTMP("PSOVEXRX",$J)
  L -^XTMP("PSOVEXRX")
+ ;Deleting lock audit and stray zero node to prevent confusion during troubleshooting.
+ ;Hesitant to kill just in case it would cause issues.
+ ;The background process XQ XUTL $J NODES will clean these up periodically.
+ S ^XTMP("PSOVEXRX")=""
+ S ^XTMP("PSOVEXRX",0)=""
  Q
  ;
 TILDECHK(PSORXIEN,PSORXEN) ;check for the tilde character (~) in the free text dosage field of the medications instructions

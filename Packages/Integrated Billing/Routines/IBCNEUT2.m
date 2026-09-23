@@ -1,5 +1,5 @@
-IBCNEUT2 ;DAOU/DAC - eIV MISC. UTILITIES ;06-JUN-2002
- ;;2.0;INTEGRATED BILLING;**184,416,435,713,737,806,822**;21-MAR-94;Build 21
+IBCNEUT2 ;DAOU/DAC - eIV MISC. UTILITIES ; 06-JUN-2002
+ ;;2.0;INTEGRATED BILLING;**184,416,435,713,737,806,822,836**;21-MAR-94;Build 12
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Reference to ^XLFDT  in ICR #10103
@@ -175,6 +175,9 @@ EBSUMMARY(DFN,RIEN,SOI,ARRAY) ; Added IB*806
  N IBVIENS,INSTYP,MWNRTYP,TMP,XXDT,ZIEN
  K ARRAY,^TMP("EBSUMEUT2",$J)
  ;
+ ;IB*836/CKB - prevent hard crash when Elig data is stored in the patient/insurance record
+ ; but there is no pointer (2.312,8.03 EB DISPLAY VIEW) to the Response (file #365)
+ I RIEN="" G XEBSUM
  I '$D(^IBCN(365,RIEN,2)) G XEBSUM  ; NO Benefits received
  ;
  S (IBSPDT,IBSUSCT,IBPEDT,IBELGINF)=""

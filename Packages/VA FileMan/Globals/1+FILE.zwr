@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3260722.124904
+^DIC(2,"%MSC")=3260923.153821
 ^DIC(3.05,0)="FAILED ACCESS ATTEMPTS LOG^3.05"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
@@ -2837,7 +2837,7 @@ ZWR
 ^DIC(43,"%D",6,0)="your divisions (if multi-division facility) and the devices to which"
 ^DIC(43,"%D",7,0)="you desire your 10-10's, routing slips, etc., printed to.  The ADT"
 ^DIC(43,"%D",8,0)="parameters must be set prior to running ADT."
-^DIC(43,"%MSC")=3260521.162022
+^DIC(43,"%MSC")=3260923.153759
 ^DIC(43.1,0)="MAS EVENT RATES^43.1D"
 ^DIC(43.1,0,"DD")="@"
 ^DIC(43.1,0,"DEL")="D"
@@ -2969,7 +2969,7 @@ ZWR
 ^DIC(44,"%D",0)="1^1.001^2^2^3240131^^^^"
 ^DIC(44,"%D",1,0)="Contains locations found in the hospital (ie. Wards, Clinics)"
 ^DIC(44,"%D",2,0)=" *********DO NOT RE-INDEX THIS FILE**********"
-^DIC(44,"%MSC")=3250827.134849
+^DIC(44,"%MSC")=3260923.153655
 ^DIC(44.3,0)="SDAM DATA MAP^44.3"
 ^DIC(44.3,0,"AUDIT")="@"
 ^DIC(44.3,0,"DD")="@"
@@ -13677,7 +13677,7 @@ ZWR
 ^DIC(100.9,"%D",3,0)="notification ID (IEN in this file) to order entry routines.  Based on the"
 ^DIC(100.9,"%D",4,0)="notification IEN, data from this file is used to generate the notification"
 ^DIC(100.9,"%D",5,0)="and help determine its recipients."
-^DIC(100.9,"%MSC")=3220624.224538
+^DIC(100.9,"%MSC")=3260923.153605
 ^DIC(100.95,0)="QUICK ORDER AUDIT^100.95"
 ^DIC(100.95,0,"AUDIT")=""
 ^DIC(100.95,0,"DD")=""
@@ -15251,6 +15251,7 @@ ZWR
 ^DIC(119.6,"%D",6,0)=""
 ^DIC(119.6,"%D",7,0)="This file will also be used to store outpatient locations necessary"
 ^DIC(119.6,"%D",8,0)="for the outpatient meals enhancement."
+^DIC(119.6,"%MSC")=3260923.153605
 ^DIC(119.71,0)="PRODUCTION FACILITY^119.71"
 ^DIC(119.71,0,"DD")="#"
 ^DIC(119.71,0,"DEL")="#f"
@@ -15372,7 +15373,7 @@ ZWR
 ^DIC(120.5,"%D",0)="^^2^2^2970207^^^^"
 ^DIC(120.5,"%D",1,0)="This file contains vital sign information and other measurement data for a "
 ^DIC(120.5,"%D",2,0)="patient."
-^DIC(120.5,"%MSC")=3170413.142351
+^DIC(120.5,"%MSC")=3260923.153605
 ^DIC(120.51,0)="GMRV VITAL TYPE^120.51I"
 ^DIC(120.51,0,"AUDIT")="@"
 ^DIC(120.51,0,"DD")="@"
@@ -15663,7 +15664,7 @@ ZWR
 ^DIC(123,"%D",5,0)="  "
 ^DIC(123,"%D",6,0)="The only associating of results to a consult or request, for this "
 ^DIC(123,"%D",7,0)="version, is based on Medicine Package procedure results."
-^DIC(123,"%MSC")=3250626.160906
+^DIC(123,"%MSC")=3260923.153843
 ^DIC(123.033,0)="GMRC CONSULT MAPPING^123.033"
 ^DIC(123.033,0,"AUDIT")="@"
 ^DIC(123.033,0,"DD")="@"
@@ -21767,7 +21768,7 @@ ZWR
 ^DIC(350.9,"%D",10,0)="This file should always be edited by use of the provided options."
 ^DIC(350.9,"%D",11,0)=" "
 ^DIC(350.9,"%D",12,0)="Per VHA Directive 10-93-142, this file definition should not be modified."
-^DIC(350.9,"%MSC")=3260325.035746
+^DIC(350.9,"%MSC")=3260923.153821
 ^DIC(351,0)="MEANS TEST BILLING CLOCK^351I"
 ^DIC(351,0,"DD")="@"
 ^DIC(351,0,"GL")="^IBE(351,"
@@ -28084,6 +28085,35 @@ ZWR
 ^DIC(396.95,"%D",8,0)="NOTICE: This file is part of an implementation of a Nationally"
 ^DIC(396.95,"%D",9,0)="        Controlled Procedure.  Local modifications to this file"
 ^DIC(396.95,"%D",10,0)="        are prohibited per VHA Directive 10-93-142"
+^DIC(396.999,0)="AMIE OPTION AUDIT EVENT^396.999"
+^DIC(396.999,0,"GL")="^DVB(396.999,"
+^DIC(396.999,0,"GL")="^DVB(396.999,"
+^DIC(396.999,"%",0)="^1.005^^0"
+^DIC(396.999,"%D",0)="^^6^6^3260812^"
+^DIC(396.999,"%D",1,0)="This file will track AMIE VistA Options that are being accessed by "
+^DIC(396.999,"%D",2,0)="users. This file will store the initial data created in an audited "
+^DIC(396.999,"%D",3,0)="option, an option is audited by adding the following code to the Option "
+^DIC(396.999,"%D",4,0)="File entry action: D AUDIT^DVBAUDOA.  Data is then moved from this file "
+^DIC(396.999,"%D",5,0)="to files 396.9991 and 396.9992 when the option DVBA SUMMARIZE AUDIT RECS "
+^DIC(396.999,"%D",6,0)="is selected."
+^DIC(396.999,"%MSC")=3260923.153632
+^DIC(396.9991,0)="AMIE AUDIT SUMMARY BY OPTION^396.9991"
+^DIC(396.9991,0,"GL")="^DVB(396.9991,"
+^DIC(396.9991,0,"GL")="^DVB(396.9991,"
+^DIC(396.9991,"%",0)="^1.005^^0"
+^DIC(396.9991,"%D",0)="^^2^2^3260728^"
+^DIC(396.9991,"%D",1,0)="This file will track AMIE VistA Options that are being accessed by "
+^DIC(396.9991,"%D",2,0)="users.  "
+^DIC(396.9991,"%MSC")=3260923.153632
+^DIC(396.9992,0)="AMIE AUDIT SUMMARY BY USER^396.9992"
+^DIC(396.9992,0,"GL")="^DVB(396.9992,"
+^DIC(396.9992,0,"GL")="^DVB(396.9992,"
+^DIC(396.9992,"%",0)="^1.005^^0"
+^DIC(396.9992,"%D",0)="^^3^3^3260802^"
+^DIC(396.9992,"%D",1,0)="This file will track AMIE VistA Options that are being accessed by "
+^DIC(396.9992,"%D",2,0)="users.  This file will store user information such as title and "
+^DIC(396.9992,"%D",3,0)="service/section."
+^DIC(396.9992,"%MSC")=3260923.153632
 ^DIC(399,0)="BILL/CLAIMS^399I"
 ^DIC(399,0,"DD")="@"
 ^DIC(399,0,"DEL")="@"
@@ -28331,7 +28361,7 @@ ZWR
 ^DIC(403.5,"%D",3,0)="from this file to RECALL REMINDERS REMOVED file. Patients should not be"
 ^DIC(403.5,"%D",4,0)="entered into this file when their future appoitment is less than 30 days."
 ^DIC(403.5,"%D",5,0)="The records are maintained by Recall Date and patient name."
-^DIC(403.5,"%MSC")=3250119.172154
+^DIC(403.5,"%MSC")=3260923.153655
 ^DIC(403.51,0)="RECALL REMINDERS APPT TYPE^403.51"
 ^DIC(403.51,0,"AUDIT")="@"
 ^DIC(403.51,0,"DD")="@"
@@ -28450,7 +28480,7 @@ ZWR
 ^DIC(403.56,"%D",0)="^1.001^2^2^3090611^^"
 ^DIC(403.56,"%D",1,0)="This file holds records deleted from the RECALL REMINDERS [#403.5]"
 ^DIC(403.56,"%D",2,0)="file, whether deleted by the user or because they were given appointments."
-^DIC(403.56,"%MSC")=3250119.172154
+^DIC(403.56,"%MSC")=3260923.153655
 ^DIC(404.41,0)="OUTPATIENT PROFILE^404.41P"
 ^DIC(404.41,0,"DD")="@"
 ^DIC(404.41,0,"DEL")="@"
@@ -29140,6 +29170,7 @@ ZWR
 ^DIC(407.5,"%D",2,0)="include letters notifying patients of future appointments, cancelled"
 ^DIC(407.5,"%D",3,0)="appointments, and scheduled admissions.  The site can edit the text that"
 ^DIC(407.5,"%D",4,0)="they would like to appear in these letters."
+^DIC(407.5,"%MSC")=3260923.153655
 ^DIC(407.6,0)="LETTER TYPE^407.6I"
 ^DIC(407.6,0,"DD")="@"
 ^DIC(407.6,0,"DEL")="@"
@@ -30144,7 +30175,7 @@ ZWR
 ^DIC(409.831,"%D",2,0)="A Resource Object can be a NEW PERSON, HOSPITAL LOCATION, or an SDEC "
 ^DIC(409.831,"%D",3,0)="ADDITIONAL RESOURCE."
 ^DIC(409.831,"%D",4,0)="A Resource is linked to a HOSPITAL LOCATION (or Clinic)."
-^DIC(409.831,"%MSC")=3170503.1614
+^DIC(409.831,"%MSC")=3260923.153655
 ^DIC(409.832,0)="SDEC RESOURCE GROUP^409.832"
 ^DIC(409.832,0,"AUDIT")=""
 ^DIC(409.832,0,"DD")=""
@@ -30163,6 +30194,7 @@ ZWR
 ^DIC(409.832,"%",0)="^1.005^^0"
 ^DIC(409.832,"%D",0)="^^1^1^3141010^"
 ^DIC(409.832,"%D",1,0)="This is where Resources are 'grouped' with other Resources."
+^DIC(409.832,"%MSC")=3260923.153655
 ^DIC(409.833,0)="SDEC RESOURCE USER^409.833"
 ^DIC(409.833,0,"AUDIT")=""
 ^DIC(409.833,0,"DD")=""
@@ -30221,7 +30253,7 @@ ZWR
 ^DIC(409.84,"%",0)="^1.005^^0"
 ^DIC(409.84,"%D",0)="^^1^1^3141010^"
 ^DIC(409.84,"%D",1,0)="This is where appointment definitions are linked to a resource."
-^DIC(409.84,"%MSC")=3260422.163154
+^DIC(409.84,"%MSC")=3260923.153655
 ^DIC(409.842,0)="SDEC CHECK-IN STEP STATUS^409.842"
 ^DIC(409.842,0,"AUDIT")="@"
 ^DIC(409.842,0,"DD")="@"
@@ -30240,7 +30272,7 @@ ZWR
 ^DIC(409.842,"%D",0)="^1.001^2^2^3210621^^"
 ^DIC(409.842,"%D",1,0)="This file is comprised of the various different appointment CHECK-IN"
 ^DIC(409.842,"%D",2,0)="STEP STATUSes that are referenced by the applications that utilize it."
-^DIC(409.842,"%MSC")=3220624.203529
+^DIC(409.842,"%MSC")=3260923.153655
 ^DIC(409.845,0)="SDEC PREFERENCES AND SPECIAL NEEDS^409.845"
 ^DIC(409.845,0,"AUDIT")=""
 ^DIC(409.845,0,"DD")=""
@@ -30259,7 +30291,7 @@ ZWR
 ^DIC(409.845,"%",0)="^1.005^^0"
 ^DIC(409.845,"%D",0)="^^1^1^3141010^^"
 ^DIC(409.845,"%D",1,0)="This is where Patient Preferences are defined for Patients."
-^DIC(409.845,"%MSC")=3250119.172154
+^DIC(409.845,"%MSC")=3260923.153655
 ^DIC(409.85,0)="SDEC APPT REQUEST^409.85"
 ^DIC(409.85,0,"AUDIT")=" "
 ^DIC(409.85,0,"DD")=" "
@@ -30280,7 +30312,7 @@ ZWR
 ^DIC(409.85,"%D",1,0)="This file contains the SDEC Appt Request entries for the Appointment "
 ^DIC(409.85,"%D",2,0)="Scheduling application."
 ^DIC(409.85,"%D",3,0)="Each entry represents a unique appointment request."
-^DIC(409.85,"%MSC")=3241215.145244
+^DIC(409.85,"%MSC")=3260923.153655
 ^DIC(409.853,0)="SDEC DISPOSITION REASON^409.853"
 ^DIC(409.853,0,"AUDIT")="@"
 ^DIC(409.853,0,"DD")="@"
@@ -30324,7 +30356,7 @@ ZWR
 ^DIC(409.86,"%D",2,0)="information regarding appointment follow up each time a patient is"
 ^DIC(409.86,"%D",3,0)="contacted. This file should not be edited using Fileman, the file is"
 ^DIC(409.86,"%D",4,0)="updated using the VSE VS GUI."
-^DIC(409.86,"%MSC")=3230311.17472
+^DIC(409.86,"%MSC")=3260923.153655
 ^DIC(409.87,0)="SDEC CONSULT PID HISTORY^409.87"
 ^DIC(409.87,0,"AUDIT")="@"
 ^DIC(409.87,0,"DD")="@"
@@ -59174,8 +59206,11 @@ ZWR
 ^DIC("B","AMBULATORY SURG. CHECK-OFF SHE",350.71)=""
 ^DIC("B","AMENDMENTS",443.6)=""
 ^DIC("B","AMENDMENTS TO DELIVERY SCHEDUL",441.7)=""
+^DIC("B","AMIE AUDIT SUMMARY BY OPTION",396.9991)=""
+^DIC("B","AMIE AUDIT SUMMARY BY USER",396.9992)=""
 ^DIC("B","AMIE C&P EXAM TRACKING",396.95)=""
 ^DIC("B","AMIE EXAM",396.6)=""
+^DIC("B","AMIE OPTION AUDIT EVENT",396.999)=""
 ^DIC("B","AMIE REPORT",396.2)=""
 ^DIC("B","AMIE SITE PARAMETER",396.1)=""
 ^DIC("B","AMIS 334-341",42.6)=""

@@ -1,5 +1,5 @@
-MDCLIO1 ;HINES OIFO/DP - CliO backend driver (Continuation);02 Sep 2005
- ;;1.0;CLINICAL PROCEDURES;**16**;Apr 01, 2004;Build 280
+MDCLIO1 ;HINES OIFO/DP - CliO backend driver (Continuation);02 Sep 2005 ;Jan 14, 2026@15:22
+ ;;1.0;CLINICAL PROCEDURES;**16,94**;Apr 01, 2004;Build 6
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; This routine uses the following IAs:
@@ -88,7 +88,7 @@ GETTIUPN ; Gets list of all Progress Note Titles
  S MDDATA=$$UP^XLFSTR(P2(0))
  D NEWDOC^MDCLIO("RESULTS","VERSION INFORMATION")
  D LONGLIST^TIUSRVD(.MDRET,3,MDDATA)
- I $D(MDRET(44)),$P($P(MDRET(44),U,2),$$UP^XLFSTR(P2(0)))="" D XMLFTR^MDCLIO("RESULTS") Q
+ ;I $D(MDRET(44)),$P($P(MDRET(44),U,2),$$UP^XLFSTR(P2(0)))="" D XMLFTR^MDCLIO("RESULTS") Q
  F Y=0:0 S Y=$O(MDRET(Y)) Q:'Y  D:$P(MDRET(Y),U,2)?@("1"""_MDDATA_""".E")
  .D XMLHDR^MDCLIO("RECORD")
  .D XMLDATA^MDCLIO("ID",$P(MDRET(Y),U,1))

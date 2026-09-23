@@ -1,5 +1,5 @@
 RCDPEM0 ;ALB/TMK - ERA MATCHING TO EFT (cont) ;Jun 11, 2014@13:04:03
- ;;4.5;Accounts Receivable;**173,208,220,298,304,345,375,349,409,424,439**;Mar 20, 1995;Build 29
+ ;;4.5;Accounts Receivable;**173,208,220,298,304,345,375,349,409,424,439,455**;Mar 20, 1995;Build 19
  ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
@@ -206,7 +206,11 @@ ADDREC(RCDEP,RCZ) ; Add receipt, send CR to FUND 528704, Rev src cd 8NZZ for tot
  . ;
  . ; Save details for status report
  . N Z,TOT
- . S (TOT,Z)=0 F  S Z=$O(^RCY(344,RECTDA,1,Z)) Q:'Z  S TOT=TOT+$P($G(^RCY(344,RECTDA,1,Z,0)),U,4)
+ . S (TOT,Z)=0 F  S Z=$O(^RCY(344,RECTDA,1,Z)) Q:'Z  D  ; PRCA*4.5*455 Take debit flag into account
+ . . N RCAMT,RCDEBT
+ . . S RCAMT=+$P($G(^RCY(344,RECTDA,1,Z,0)),U,4)
+ . . S RCDEBT=$P($G(^RCY(344,RECTDA,1,Z,0)),U,29)
+ . . S TOT=TOT+$S(RCDEBT="D":-RCAMT,1:RCAMT)
  . S $P(^TMP($J,"RCDPETOT",344.3,RCZ),U,2)=TOT
  . ;
  . I $P($G(^RCY(344,RECTDA,2)),U)="" D  ; Receipt not processed fully
@@ -251,4 +255,3 @@ STORERR(RCFILE,RCZ,RCER) ; Store error text in word processing field
  ; RCER = array containing the error text (passed by ref)
  D WP^DIE(RCFILE,RCZ_",",2,"A","RCER")
  Q
- ;

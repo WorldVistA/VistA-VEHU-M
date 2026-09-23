@@ -1,5 +1,5 @@
 FBAAAUDR ;WIOFO/SAB - AUTHORIZATION DATA AUDIT REPORT ;3/27/2014
- ;;3.5;FEE BASIS;**151**;JAN 30, 1995;Build 14
+ ;;3.5;FEE BASIS;**151,196**;JAN 30, 1995;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; IAs
@@ -43,7 +43,8 @@ QEN ; queued entry point
  ;
  ; display patient
  W !,"Patient: ",$$GET1^DIQ(161,DFN_",",.01)
- W "   Pt.ID: ",$$SSN^FBAAUTL(DFN),!
+ W:$G(FBSSNRF)="" "   Pt.ID: ",$$SSN^FBAAUTL(DFN),!
+ W:$G(FBSSNRF)=1 "   Pt.ID: ",$$SSNL4^FBAAUTL($$SSN^FBAAUTL(DFN)),!
  ;
  ; display current authorization data
  W !,"Current Authorization Data: "

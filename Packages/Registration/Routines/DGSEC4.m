@@ -1,5 +1,5 @@
 DGSEC4 ;ALB/MM,JAP,LAB,ATG/JPN,ISL/DKA - Utilities for record access & sensitive record processing ;July 6, 2020@21:55
- ;;5.3;Registration;**249,281,391,471,684,699,964,1130,1150**;Aug 13, 1993;Build 8
+ ;;5.3;Registration;**249,281,391,471,684,699,964,1130,1150,1170**;Aug 13, 1993;Build 2
  ;Per VHA Directive 6402, this routine should not be modified.
  ;
  ;Line tags OWNREC & SENS moved from DGSEC in DG*5.3*249 when DGSEC 
@@ -112,7 +112,7 @@ OWNREC(DGREC,DFN,DGDUZ,DGMSG,DGNEWPT,DGPTSSN) ;Determine if user accessing his/h
  .Q:$P(DGTFDATA,"^",2)'="PI"
  .Q:$P(DGTFDATA,"^",4)'=DGSTA
  .S DGTFDFN=$P(DGTFDATA,"^",1)
- .I DFN=DGTFDFN D  Q
+ .I $G(DFN)=DGTFDFN D  Q
  ..S DGREC(1)=1
  ..S DGREC(2)="Security regulations prohibit computer access to your own medical record."
  S DGNPSSN=$$GET1^DIQ(200,DGDUZ_",",9,"I","","DGNPERR")

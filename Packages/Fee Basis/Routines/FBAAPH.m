@@ -1,5 +1,5 @@
 FBAAPH ;AISC/DMK,GRR-LIST PAYMENT HISTORY ;8/10/2003
- ;;3.5;FEE BASIS;**2,4,32,61**;JAN 30, 1995
+ ;;3.5;FEE BASIS;**2,4,32,61,196**;JAN 30, 1995;Build 7
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  D DT^DICRW
 RD K FBAANQ,FB,FBTRX W !! S FBAAOUT=0,DIC="^FBAAC(",DIC(0)="AEQMNZ",DIC("A")="Select Fee Patient: " D ^DIC K DIC("A") G Q:X="^"!(X=""),RD:Y<0 S DFN=+Y,FBNAME=Y(0,0)
@@ -64,7 +64,8 @@ WRTCK I ($Y+5)>IOSL,$E(IOST,1,2)["C-" S DIR(0)="E" D ^DIR K DIR  S:'Y FBAAOUT=1 
  I ($Y+5)>IOSL W @IOF D HED
  Q
 HED I $E(IOST,1,2)'="C-" W !?24,"MEDICAL PAYMENT HISTORY",!?23,$E(Q,1,25)
- W !,"Patient: ",FBNAME,?40,"SSN: ",$$SSN^FBAAUTL(DFN),!,?10,"('*' Reimb. to Patient  '+' Cancel. Activity  '#' Voided Payment)"
+ W:$G(FBSSNRF)="" !,"Patient: ",FBNAME,?40,"SSN: ",$$SSN^FBAAUTL(DFN),!,?10,"('*' Reimb. to Patient  '+' Cancel. Activity  '#' Voided Payment)"
+ W:$G(FBSSNRF)=1 !,"Patient: ",FBNAME,?40,"SSN: ",$$SSNL4^FBAAUTL($$SSN^FBAAUTL(DFN)),!,?10,"('*' Reimb. to Patient  '+' Cancel. Activity  '#' Voided Payment)"
  W !,?4,"(paid symbol: 'R' RBRVS  'F' 75th percentile  'C' contract  'M' Mill Bill"
  W !,?4,"              'U' U&C)"
  W !,?2,"Svc Date",?12,"CPT-MOD",?22,"Rev.Code",?31,"Units",?38,"Patient Account No.",?60,"Invoice #",?71,"Batch #"

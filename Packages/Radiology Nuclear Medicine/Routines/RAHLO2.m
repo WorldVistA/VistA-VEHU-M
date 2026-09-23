@@ -1,5 +1,5 @@
-RAHLO2 ;HIRMFO/GJC-File rpt (data from bridge program) ;10 Apr 2019 3:05 PM
- ;;5.0;Radiology/Nuclear Medicine;**55,80,84,144,157**;Mar 16, 1998;Build 2
+RAHLO2 ;HIRMFO/GJC/NMG-File rpt (data from bridge program); May 12 2026 12:10 PM
+ ;;5.0;Radiology/Nuclear Medicine;**55,80,84,144,157,230**;Mar 16, 1998;Build 1
  ;
  ;Integration Agreements
  ;----------------------
@@ -79,6 +79,8 @@ DIAG ; Check if the Diagnostic Codes passed are valid.  Set RADX equal
  Q
 SECDX ; Kill old sec. Dx nodes, and add the new ones into the 70.14 multiple
  ; called from RAHLO.  Needs RADFN,RADTI & RACNI to function.
+ ; RA*5*230: Don't set for teleradiology
+ Q:$G(RATELE)
  Q:'$D(RADFN)!('$D(RADTI))!('$D(RACNI))
  I $O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"DX",0)) D KILSECDG^RAHLO4
  ;K RAFDA N RAX S RAX=0,RAFDA(70,"?1,",.01)=RADFN

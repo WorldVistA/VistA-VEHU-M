@@ -1,5 +1,5 @@
 IBCNBCD2 ;ALB/AWC - MCCF FY14 Display Group Plan Coverage Limitations from Insurance Buffer entry ;25 Feb 2015
- ;;2.0;INTEGRATED BILLING;**528**;21-MAR-94;Build 163
+ ;;2.0;INTEGRATED BILLING;**528,836**;21-MAR-94;Build 12
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; Input Parameters:
@@ -13,6 +13,23 @@ COVLIM(IBBUFDA,IBGRPDA,IBCSAV,IBQ,IBERR) ; Coverage Limitations entry point. - C
  N IBSYS S IBSYS=$NA(^IBA(355.32)) ; -- **** VistA System Coverage Limitation Global ****
  ; -- **** CAUTION DO NOT KILL ****  
  ;
+ ;
+ ;IB*836/DTG use listman Coverage Limitations
+ENN ; -- main entry point for BI ADD/EDIT COVERAGE
+ ;
+ S IBQ=$$ASKREV() Q:IBQ'=1!($D(DTOUT))  Q:$D(IBERR)
+ N IBCNS,IBCPOL,VALMBCK,VALMBG,VALMCNT
+ S IBCPOL=IBGRPDA,IBCNS=$G(IBINSDA)
+ S VALMBCK="R",VALMBG=1,VALMCNT=0
+ S IBSORT="1^Coverage Category"
+ D EN^VALM("IBCNS ADD/EDIT COVERAGE")
+ Q
+ ;
+ ; ********************************************************************
+ ; *****                                                         ******
+ ; ***** The following code has been deprecated as of IB*836/DTG ******
+ ; *****                                                         ******
+ ; ********************************************************************
  ;
  F  S IBQ=$$ASKREV() Q:IBQ'=1!($D(DTOUT))  D  Q:$D(IBERR)
  . ;

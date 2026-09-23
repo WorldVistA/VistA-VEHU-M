@@ -1,5 +1,5 @@
 RCDPEM ;ALB/TMK/PJH - POST EFT, ERA MATCHING TO EFT ;Jun 06, 2014@19:11:19
- ;;4.5;Accounts Receivable;**173,255,269,276,283,298,304,318,321,326,345,349,424**;Mar 20, 1995;Build 11
+ ;;4.5;Accounts Receivable;**173,255,269,276,283,298,304,318,321,326,345,349,424,455**;Mar 20, 1995;Build 19
  ;Per VA Directive 6402, this routine should not be modified.
  ; IA 4050 covers call to SPL1^IBCEOBAR
  ; Note - keep processing in line with RCDPXPAP
@@ -11,7 +11,7 @@ EN ; Post EFT deposits, auto-match EFT's and ERA's
  ;  (1) match (0/1/-1)   (2) total $   (3) posted (0/1)  (4) error ref
  ;  (5) EFT deposit ien 344.1 if added for EFT
  ;
- N RCZ,RCSUM,RCDEP,RECTDA,RC0,RCER,RCDUZ,Z,Z0,Z1,DA,X,Y,DIE,DR
+ N RCZ,RCSUM,RCSUMF,RCDEP,RECTDA,RC0,RCER,RCDUZ,Z,Z0,Z1,DA,X,Y,DIE,DR
  M RCDUZ=DUZ
  N DUZ S DUZ=+$O(^VA(200,"B","EDILOCKBOX,AUTOMATIC",0)),DUZ(0)="",DUZ(2)=$G(RCDUZ(2)) S:'DUZ DUZ=.5
  K ^TMP($J,"RCXM"),^TMP($J,"RCTOT")
@@ -26,9 +26,10 @@ EN ; Post EFT deposits, auto-match EFT's and ERA's
  S ^TMP($J,"RCTOT","EFT_DEP")=0
  S RCZ=0 F  S RCZ=$O(^RCY(344.3,"APOST",0,RCZ)) Q:'RCZ  S RC0=$G(^RCY(344.3,RCZ,0))  I RC0'="",$P(RC0,U,8) D
  . S ^TMP($J,"RCTOT","EFT_DEP")=^TMP($J,"RCTOT","EFT_DEP")+1
- . ; Verify check sums
+ . ; Verify check sums. PRCA*4.5*455 - FHIR format does not currently use checksum for deposit since each EFT is separate message.
+ . S RCSUMF=$P(RC0,U,9)
  . S RCSUM=$$CHKSUM^RCDPESR3(RCZ)
- . I RCSUM'=$P(RC0,U,9) D  Q
+ . I RCSUMF'="",RCSUM'=RCSUMF D  Q
  .. ; Bulletin that check sums do not match
  .. ; Update record error list and checksum error field
  .. S RCER(1)=$$SETERR^RCDPEM0(2)

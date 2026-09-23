@@ -1,5 +1,5 @@
 IBCNEDST ;ALB/YMG - HL7 Registration Message Statistics ; 07-MAR-2013
- ;;2.0;INTEGRATED BILLING;**497,506,549,595,659,664,668,702,737**;21-MAR-94;Build 19
+ ;;2.0;INTEGRATED BILLING;**497,506,549,595,659,664,668,702,737,836**;21-MAR-94;Build 12
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -27,7 +27,11 @@ GETSTAT2() ;EP
  S XX=$$GET1^DIQ(350.9002,XX_",1,",.05,"I")         ; Maximum Buffer Extract
  S $P(DATA,"^",5)=XX
  S $P(DATA,"^",6)=$$GET1^DIQ(350.9,"1,",51.32,"I") ; MEDICARE Freshness Days  ;/vd - IB*2*659
- Q DATA
+ ;
+ ;NOTE: All NEW fields added will need to be done like field #54.05  ;IB*2*836/CKB
+ ;
+ S DSTAT4=$E($$GET1^DIQ(350.9,"1,",54.05),1)        ; E1 TRANSACTIONS ENABLED ;IB*2*836/CKB
+ Q DATA_"||"_DSTAT4
  ;
 GETSTAT(MCAUTO) ; get statistical data
  ; Statistics are to match the eIV Statistical Report (^IBCNEPR8)

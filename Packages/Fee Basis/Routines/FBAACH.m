@@ -1,5 +1,5 @@
 FBAACH ;AISC/GRR-DISPLAY ID CARD HISTORY FOR PATIENT ;13APR86
- ;;3.5;FEE BASIS;;JAN 30, 1995
+ ;;3.5;FEE BASIS;**196**;JAN 30, 1995;Build 7
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  S IOP=$S($D(ION):ION,1:"HOME") D ^%ZIS K IOP S UL="" F A=1:1:79 S UL=UL_"="
 RD K FBOUT W !! S DIC="^FBAAA(",DIC(0)="AEQM" D ^DIC G Q:X="^"!(X=""),RD:Y<0 S DFN=+Y
@@ -10,7 +10,9 @@ RD K FBOUT W !! S DIC="^FBAAA(",DIC(0)="AEQM" D ^DIC G Q:X="^"!(X=""),RD:Y<0 S D
  D HED W !,?6,"Current ID Card: ",FBIDC,?32,"Date Issued: ",$E(FBDT,4,5),"/",$E(FBDT,6,7),"/",$E(FBDT,2,3)
  I $D(^FBAA(161.83,DFN)) D HED2,LISTH G RD
  W !!,?5,"No previous ID Cards!",! G RD
-HED W @IOF,"Patient: ",FBNM,?41,"SSN: ",FBSSN,! Q
+HED ;
+ I $G(FBSSNRF)="" W @IOF,"Patient: ",FBNM,?41,"SSN: ",FBSSN,! Q
+ I $G(FBSSNRF)=1  W @IOF,"Patient: ",FBNM,?41,"SSN: ",$$SSNL4^FBAAUTL(FBSSN),! Q
 NOC W !,"Does not currently have ID Card!",! Q
 HED2 W !!,"Date/Time Changed",?22,"Old Card #",?35,"Person Who Changed",!,?5,"Reason For Change",!,UL Q
 LISTH I $D(^FBAA(161.83,DFN,1)) F J=0:0 S J=$O(^FBAA(161.83,DFN,1,J)) Q:J'>0  I $D(^(J,0)) S Y(0)=^(0) D GOT Q:$G(FBOUT)

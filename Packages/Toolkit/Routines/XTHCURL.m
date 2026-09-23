@@ -1,6 +1,6 @@
-XTHCURL ;HCIOFO/SG - HTTP 1.0 CLIENT (URL TOOLS) ;07/29/10  14:01
- ;;7.3;TOOLKIT;**123**;Apr 25, 1995;Build 4
- ;Per VHA Directive 2004-038, this routine should not be modified
+XTHCURL ;HCIOFO/SG - HTTP 1.0 CLIENT (URL TOOLS) ; Oct 01, 2025  10:54
+ ;;7.3;TOOLKIT;**123,162**;Apr 25, 1995;Build 4
+ ;Per VA Directive 6402, this routine should not be modified.
  Q
  ;
  ;***** ENCODES THE STRING
@@ -9,6 +9,7 @@ XTHCURL ;HCIOFO/SG - HTTP 1.0 CLIENT (URL TOOLS) ;07/29/10  14:01
  ;
 ENCODE(STR) ;
  N CH,I
+ I $G(STR)="" Q "" ;XT162
  F I=1:1  S CH=$E(STR,I)  Q:CH=""  I CH?1CP  D
  . I CH="." Q
  . I CH=" "  S $E(STR,I)="+"  Q
@@ -30,7 +31,8 @@ ENCODE(STR) ;
  ;
 MAKEURL(HOST,PORT,PATH,QUERY) ;
  N NAME,QSTR,VAL
- S:HOST'["://" HOST="http://"_HOST
+ I $G(HOST)=""!('$D(QUERY)) Q "" ;XT162
+ I HOST'["://" S HOST=$S(PORT=443:"https://",1:"http://")_HOST ;XT162
  S PORT=$S($G(PORT)>0:":"_(+PORT),1:"")
  ;---
  S (NAME,QSTR)=""
@@ -47,14 +49,11 @@ MAKEURL(HOST,PORT,PATH,QUERY) ;
  ; PATH          Source path
  ;
 NORMPATH(PATH) ;
- N LAST
  ;--- Make sure the path has a leading slash if it
- ;--- is not empty and has no query string
- I $E(PATH,1)'="/"  S:$E(PATH,1)'="?" PATH="/"_PATH
- ;--- Append a trailing slash to the path if it has
- ;--- neither a file name nor a query string
- S LAST=$L(PATH,"/"),LAST=$P(PATH,"/",LAST)
- I LAST'="",LAST'["?",LAST'["."  S PATH=PATH_"/"
+ ;--- is not empty and has no query string.
+ I $E(PATH,1)'="/",PATH'="" S:$E(PATH,1)'="?" PATH="/"_PATH ;XT162
+ ;--- The logic to append a trailing slash has been removed as it
+ ;--- can break modern RESTful URLs (e.g. /api/resource/123)
  Q PATH
  ;
  ;##### PARSES THE URL INTO COMPONENTS
@@ -70,10 +69,14 @@ NORMPATH(PATH) ;
  ;            0  Ok
  ;
 PARSEURL(URL,HOST,PORT,PATH) ;
+ ;XT162 Updated entire function to also handle https
+ N ISHTTPS
+ I $G(URL)="" Q "-1^No URL to parse."
+ S ISHTTPS=($$UP^XLFSTR(URL)?1"HTTPS://".E)
  S:$F(URL,"://") URL=$P(URL,"://",2,999)
  S HOST=$TR($P(URL,"/")," ")
  S PATH=$$NORMPATH($P(URL,"/",2,999))
  S PORT=$P(HOST,":",2),HOST=$P(HOST,":")
- Q:HOST?." " $$ERROR^XTHC10(1,URL)
- S:PORT'>0 PORT=80
+ Q:HOST?." " "-1^Missing host name"
+ I PORT'>0 S PORT=$S(ISHTTPS:443,1:80)
  Q 0

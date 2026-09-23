@@ -1,5 +1,5 @@
 PRCABJ ;WASH-ISC@ALTOONA,PA/LDB,TJK - NIGHTLY PROCESS FOR ACCOUNTS RECEIVABLE ;11/8/96  3:54 PM
- ;;4.5;Accounts Receivable;**11,34,101,114,155,153,141,165,167,173,201,237,304,301,378,400,447**;Mar 20, 1995;Build 4
+ ;;4.5;Accounts Receivable;**11,34,101,114,155,153,141,165,167,173,201,237,304,301,378,400,447,473**;Mar 20, 1995;Build 4
  ;Per VA Directive 6402, this routine should not be modified.
  ;
  ;This routine is called by the PRCA NIGHTLY PROCESS option which should be run nightly to call the following tasks
@@ -35,7 +35,7 @@ DRIVER ;All processes are called from this point
  N CHK,POP,% S CHK=0
  D CHK,RECALL,CHK,INT,CHK,RPP,CHK,EN^RCCPCBJ,CHK,STM,CHK,RECPT,CHK,TOP,CHK,TCSP,CHK,EVNT,CHK,BNUM  ; PRCA*4.5*400
  D CHK,ENUM,CHK,PURFMS,CHK,EN3^RCFMOBR,CHK,START^RCRJR,CHK,UB
- D CHK,STATMNT,CHK,UDLIST^PRCABJ1,CHK,LIST,CHK,COMMENT  ; PRCA*4.5*400 removed call to REPAY tag
+ D CHK,STATMNT  ; PRCA*4.5*400 removed call to REPAY tag PRCA*4.5*471 remove UDLIST, LIST and comment tags
  D CHK,WRKLD,CHK,EFT,CHK,ABAUDIT,CHK,ARDM,CHK,CLNMTR  ; PRCA*4.5*447 removed call to CBO tag
  D NOW^%DTC S $P(^RC(342,1,0),"^",10)=%
  L -^RC("PRCABJ")
@@ -227,4 +227,14 @@ RECALL ; if HRFS patient flag is set or date of death is set, then recall CS bil
  .S RCDFN=$P(Z,";"),HRFSFLG=$$CHKHRFS^RCHRFSUT(RCDFN,DT)
  .I HRFSFLG=1 S Z=$$CANCDMC^RCDMC90U(RCDB) D HRFSCMNT^RCEVGEN(RCDB)
  .Q
+ Q
+ ;
+TESTMAIL(RCSTR) ;TESTING SETUP FOR PRCA*4.5*473
+ ;
+ S XMSUB=RCSTR
+ S ^TMP($J,"RCUCEXCP",1)="Testing "_RCSTR_" Exception List."
+ S XMTEXT="^TMP($J,""RCUCEXCP"","
+ S XMDUZ="AR PACKAGE"
+ S XMY("G.PRCA ERROR")=""
+ D ^XMD
  Q

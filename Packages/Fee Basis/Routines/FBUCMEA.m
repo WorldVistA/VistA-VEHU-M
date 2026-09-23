@@ -1,5 +1,5 @@
 FBUCMEA ;WOIFO/SAB-UNAUTHORIZED CLAIM MAIN MENU ENTRY ACTION ;12/17/2001
- ;;3.5;FEE BASIS;**38**;JAN 30, 1995
+ ;;3.5;FEE BASIS;**38,196**;JAN 30, 1995;Build 7
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  N DFN,DIR,FBDA,FBDT,FBEXP,FBFR,FBO,FBOUT,FBPG,FBTO,FBVET,FBX,FBY
  ;
@@ -27,7 +27,8 @@ FBUCMEA ;WOIFO/SAB-UNAUTHORIZED CLAIM MAIN MENU ENTRY ACTION ;12/17/2001
  . . . . S DFN=$P(FBY,U,4)
  . . . . D DEM^VADPT
  . . . . I $Y+6>IOSL D HD Q:FBOUT
- . . . . W !,$E($P(FBX,";"),1,20),?22,$P(VADM(2),U,2)
+ . . . . I $G(FBSSNRF)="" W !,$E($P(FBX,";"),1,20),?22,$P(VADM(2),U,2)
+ . . . . I $G(FBSSNRF)=1 W !,$E($P(FBX,";"),1,20),?22,$$SSNL4^FBAAUTL($P(VADM(2),U,2))
  . . . . W ?36,$E($$VEN^FBUCUTL($P(FBY,U,3)),1,20)
  . . . . W ?59,$$FMTE^XLFDT(FBEXP,"2F")
  . . . . W ?69,$E($$GET1^DIQ(162.7,FBDA_",",24),1,10)

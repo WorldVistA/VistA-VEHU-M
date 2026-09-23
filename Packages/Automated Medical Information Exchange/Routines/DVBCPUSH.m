@@ -1,5 +1,5 @@
 DVBCPUSH ;ALB/AKG/JD - CAPRI PUSH UTILITY RPC; APR 25, 2022@9:30am ; 5/19/23 9:07am
- ;;2.7;AMIE;**238,242,248,252,254**;Apr 10, 1995;Build 41
+ ;;2.7;AMIE;**238,242,248,252,254,256**;Apr 10, 1995;Build 19
  ;Per VHA Directive 6402 this routine should not be modified
  ;ICR #2263 Supports all calls to Parameter File and XPAR usage
  ;
@@ -10,6 +10,7 @@ PARAMS(DVBLIST) ;returns data on the entire DVBA parameter list
  ;RPC: DVBA CAPRI PARAM INQ
  ;Updated code to allow for multi-instance parameters for CAPRI-13378.  JD - 9/10/24
  ;Update to return word processing parameters CAPRI-16484 2/24/25 CP
+ ;Updates to return non number instances CAPRI-26530 4/10/26 CP
  ;
  K DVBLIST
  N DVBCNT,DVBD,DVBI,DVBPARAM,DVBPAR,DVBVAL,DVBERR,DVBTYP
@@ -232,4 +233,4 @@ SPLIT(DVBUPD,DVBDATA) ;
  . S DVBUPD(DVBCNT)=$E(DVBDATA,DVBST,DVBEND)
  . S DVBST=DVBST+100,DVBEND=DVBEND+100
  . Q
- Q 
+ Q

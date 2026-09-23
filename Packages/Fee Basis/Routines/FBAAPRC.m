@@ -1,5 +1,5 @@
 FBAAPRC ;AISC/DMK-PRINT REPORT OF CONTACT ;08/02/88
- ;;3.5;FEE BASIS;;JAN 30, 1995
+ ;;3.5;FEE BASIS;**196**;JAN 30, 1995;Build 7
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  D DT^DICRW,SITEP^FBAAUTL
 RD S DIC="^FBAAA(",DIC(0)="AEQM" D ^DIC Q:X=""!(X="^")  G:Y<0 RD S DFN=+Y G:$O(^FBAAA(DFN,2,0))'>0 NONE S DIC="^FBAAA("_DFN_",2," D ^DIC Q:Y<0  S ROC=+Y,SITE=$P(FBSITE(0),"^",1)
@@ -10,7 +10,8 @@ START U IO S I=ROC,(USR,VEN,J)="",FBX=$G(^FBAAA(DFN,2,I,0)),USR=$P($G(^FBAAA(DFN
  S TEL=$S($D(^DPT(DFN,.13)):$P(^DPT(DFN,.13),"^"),1:"None on File"),STAT=$S(J(5)']"":" ",$D(^DIC(5,J(5),0)):$P(^(0),"^",2),1:" ")
  S FBCON=$P($G(^FBAAA(DFN,2,ROC,0)),"^",6),FBCON=$S(FBCON="T":"Telephone",FBCON="P":"Personal",1:"Unknown")
  S L="|",(PI,QQ,Q)="",$P(Q,"-",80)="-",$P(QQ,"=",80)="=" W !!!,QQ,!,?40,L,"VA Office",?58,L,"SSN #",!
- W ?40,L,?58,L,!,?8,">>  REPORT  OF  CONTACT  <<",?40,L,$E(SITE,1,18),?58,L,?60,$P(^DPT(DFN,0),"^",9),!,?40,L,$E(SITE,19,30),?58,L,!,Q,!,?3," Name of Veteran",?34,L,"Telephone No. of Vet.",?58,L,"Date of Contact",!
+ W:$G(FBSSNRF)="" ?40,L,?58,L,!,?8,">>  REPORT  OF  CONTACT  <<",?40,L,$E(SITE,1,18),?58,L,?60,$P(^DPT(DFN,0),"^",9),!,?40,L,$E(SITE,19,30),?58,L,!,Q,!,?3," Name of Veteran",?34,L,"Telephone No. of Vet.",?58,L,"Date of Contact",!
+ W:$G(FBSSNRF)=1 ?40,L,?58,L,!,?8,">>  REPORT  OF  CONTACT  <<",?40,L,$E(SITE,1,18),?58,L,?60,$$SSNL4^FBAAUTL($P(^DPT(DFN,0),"^",9)),!,?40,L,$E(SITE,19,30),?58,L,!,Q,!,?3," Name of Veteran",?34,L,"Telephone No. of Vet.",?58,L,"Date of Contact",!
  W ?34,L,?58,L,!,?3,$E(NAM,1,30),?34,L,TEL,?58,L,?61,DAT,!,Q,!,?3," Address of Veteran",?58,L,"Type of Contact",!,?3,J(1),?58,L,!,?3,J(4) I J(5)]"" W ",",STAT," ",J(6)
  W ?58,L,?63,FBCON,!,Q,!,?3," Person Contacted",?58,L,"Telephone Number of",!,?58,L,"  Person Contacted",!,?3,VEN,?58,L,?61,VENTEL,!,Q,!,?3,"Brief statement of information requested and given",!
 ALRT1 W !!! Q:'$D(^FBAAA(DFN,2,I,1,0))  K ^UTILITY($J,"W") S DIWL=10,DIWR=70,DIWF="W" S FBI=I

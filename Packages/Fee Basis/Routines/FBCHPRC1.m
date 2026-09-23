@@ -1,8 +1,12 @@
 FBCHPRC1 ;AISC/DMK-PRINT REPORT OF CONTACT CONT ;08/02/88
- ;;3.5;FEE BASIS;;JAN 30, 1995
+ ;;3.5;FEE BASIS;**196**;JAN 30, 1995;Build 7
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  W ?70,"Page ",FB("PG"),!
- W ?40,L,?58,L,!,?8,">>  REPORT  OF  CONTACT  <<",?40,L,$E(FBSITE,1,18),?58,L,?60,$P(VADM(2),"^",2),!,?40,L,$E(FBSITE,19,30),?58,L,"DOB: ",$P(VADM(3),"^",2),!,Q,!,?3," Name of Veteran",?34,L,"Telephone No. of Vet.",?58,L,"Date of Contact",!
+ I $G(FBSSNRF)="" D
+ . W ?40,L,?58,L,!,?8,">>  REPORT  OF  CONTACT  <<",?40,L,$E(FBSITE,1,18),?58,L,?60,$P(VADM(2),"^",2),!,?40,L,$E(FBSITE,19,30),?58,L,"DOB: ",$P(VADM(3),"^",2),!,Q,!,?3," Name of Veteran",?34,L,"Telephone No. of Vet.",?58,L,"Date of Contact",!
+ I $G(FBSSNRF)=1  D
+ . W ?40,L,?58,L,!,?8,">>  REPORT  OF  CONTACT  <<",?40,L,$E(FBSITE,1,18),?58,L,?60,$$SSNL4^FBAAUTL($P(VADM(2),"^",2)),!,?40,L,$E(FBSITE,19,30),?58,L,"DOB: ",$P(VADM(3),"^",2),!,Q,!
+ . W ?3," Name of Veteran",?34,L,"Telephone No. of Vet.",?58,L,"Date of Contact",!
  W ?34,L,?58,L,!,?3,$E(VADM(1),1,30),?34,L,VAPA(8),?58,L,?61,FB(4),!,Q,!,?3," Address of Veteran",?58,L,"Type of Contact",!,?3,VAPA(1),?58,L,!,?3,VAPA(4),",",$P(VAPA(5),"^",2)
  W " ",$S('+$G(VAPA(11)):VAPA(6),$P(VAPA(11),U,2)]"":$P(VAPA(11),U,2),1:VAPA(6)),?58,L
  W ?63,$S(FB(6)="T":"Telephone",1:"Personal"),!,Q,!,?3," Person Contacted",?58,L,"Telephone Number of",!,?3,FB(7),?58,L,"  Person Contacted",!,?3,FB(8),?58,L,?61,FB(18)

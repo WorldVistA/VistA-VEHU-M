@@ -1,5 +1,5 @@
 VPRHSX1 ;SLC/MKB -- HS Mgt Options cont ;09/18/18 4:36pm
- ;;1.0;VIRTUAL PATIENT RECORD;**25,27,31**;Sep 01, 2011;Build 3
+ ;;1.0;VIRTUAL PATIENT RECORD;**25,27,31,37**;Sep 01, 2011;Build 10
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  ; External References          DBIA#
@@ -117,7 +117,7 @@ SELECT(FNUM) ; -- select ID(s) for update list
  W !!,"Available "_TYPE_"s for "_$P($G(^DPT(DFN,0)),U)_": " D LIST
  S DIR(0)="LAO^1:"_$O(DLIST("A"),-1),DIR("A")="Select ITEM(S): "
  S DIR("?")="Select the number(s) of the records for updating."
- S DIR("??")="^D LIST^VPRHSX"
+ S DIR("??")="^D LIST^VPRHSX1"
  D ^DIR
  Q Y
  ;

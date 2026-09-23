@@ -1,5 +1,5 @@
 FBAACIE ;AISC/GRR - COMPLETE PHARMACY INVOICE ;1/22/2015
- ;;3.5;FEE BASIS;**38,61,91,154,158**;JAN 30, 1995;Build 94
+ ;;3.5;FEE BASIS;**38,61,91,154,158,196**;JAN 30, 1995;Build 7
  ;;Per VA Directive 6402, this routine should not be modified.
  D DT^DICRW,HOME^%ZIS I '$D(^FBAA(162.1,"AC",2)) W !!,*7,"There are no Invoices Pending completion!",!! Q
  D SITEP^FBAAUTL I FBPOP W !,*7,"Fee Site Parameters must be Initialized!" K FBPOP Q
@@ -27,7 +27,9 @@ GOT S FBDRUG=$P(Y(0),"^",2)
  S FB1725=$S($P(Y(2),U,6)["FB583":+$P($G(^FB583(+$P(Y(2),U,6),0)),U,28),1:0)
  S FTP=$P(Y(2),U,7)
  W @IOF,"Vendor: ",FBVNAME,"   Vendor ID: ",FBVID
- W !!,"Patient: ",FBPATN,"   Patient ID: ",FBPID
+ I $G(FBSSNRF)=2 W !!,"Patient: ",FBPATN," ("_$P(FBPID,"-",3)_")","   ICN: ",$$GETICN^FBAAUTL(DFN)
+ I $G(FBSSNRF)=1 W !!,"Patient: ",FBPATN,"   Patient ID: ","XXX-XX-"_$P(FBPID,"-",3)
+ I $G(FBSSNRF)="" W !!,"Patient: ",FBPATN,"   Patient ID: ",FBPID
  W !,"FPPS Claim ID: ",$S(FBFPPSC="":"N/A",1:FBFPPSC)
  W ?28,"FPPS Line Item: ",$S(FBFPPSL="":"N/A",1:FBFPPSL)
  W !!,"Drug Name",?32,"   RX #  "," Strength  ","  Qty","   Amt Claimed   ",!,UL

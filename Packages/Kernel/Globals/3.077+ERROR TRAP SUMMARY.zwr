@@ -1,7 +1,3 @@
 OSEHRA ZGO Export: ERROR TRAP SUMMARY
 ZWR
-^%ZTER(3.077,0)="ERROR TRAP SUMMARY^3.077^5^3"
-^%ZTER(3.077,5,0)="LR588 : Application Error! please disregard NO need to report^3260624.134024^3260624.134024"
-^%ZTER(3.077,5,4,0)="^3.0775"
-^%ZTER(3.077,5,4,67745,0)="~~~~~~~~~~~~~1"
-^%ZTER(3.077,"B","LR588 : Application Error! ple",5)=""
+^%ZTER(3.077,0)="ERROR TRAP SUMMARY^3.077^^0"

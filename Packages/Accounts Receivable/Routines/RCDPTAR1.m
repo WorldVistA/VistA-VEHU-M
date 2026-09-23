@@ -1,5 +1,5 @@
 RCDPTAR1 ;ALB/DMB - EFT TRANSACTION AUDIT REPORT (Summary) ;08/19/15
- ;;4.5;Accounts Receivable;**303,326,380,409,424,439,446**;Mar 20, 1995;Build 15
+ ;;4.5;Accounts Receivable;**303,326,380,409,424,439,446,455**;Mar 20, 1995;Build 19
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
  Q
@@ -56,7 +56,7 @@ SUM2 ;EP from RCDPTAR
  . F  S RCDIEN=$O(^RCY(344.3,"ADEP2",RCDNUM,CDDT,RCDIEN)) Q:'RCDIEN  D  ; PRCA*4.5*439
  . . S RCDBAL1=$$DEPBAL^RCDPTAR2(RCDIEN)               ; Is deposit out of balance, PRCA*4.5*446
  . . S $P(RCDBAL,U,3)=$P(RCDBAL,U,3)+$P(RCDBAL1,U,3)
- . . S:'$P(RCDBAL1,U,1) $P(RCDBAL,U,1)=0        ; Check for out of balance, PRCA*4.5*446
+ . . S:'$P(RCDBAL1,U,1) $P(RCDBAL,U,1)=0        ;Check for out of balance, PRCA*4.5*446
  . W $J($P(RCDBAL,U,3),19,2)                    ; Deposit total
  . I 'RCDBAL W " **UNBALANCED**"                ; Add UNBALANCED indicator if deposit is not in balance, PRCA*4.5*439
  . I CTR#10=0 D  Q:RCDDT'=""                    ; Ask selection every 10 times
@@ -280,7 +280,7 @@ REPORT2(RCDNUM,RCDDT,RCEXCEL) ; Output the report (new summary mode)
  S RCSCR=$S($E($G(IOST),1,2)="C-":1,1:0)
  S RCNOW=$$UP^XLFSTR($$NOW^RCDPRU(2)),RCPG=0,RCHR="",$P(RCHR,"-",IOM+1)=""
  ;
- S RCDBAL=$$DEPBAL^RCDPTAR2(RCDNUM)
+ S RCDBAL=$$DEPSBAL^RCDPTAR2(RCDNUM,RCDDT) ; PRCA*4.5*455 - Are any of the deposits for this # and date unbalanced
  ; Display header for first page
  U IO
  D HEADER(RCNOW,.RCPG,RCHR,"","",RCEXCEL,RCDNUM,RCDDT,RCDBAL)  ; Add parameter RCDBAL PRCA*4.5*439
@@ -330,9 +330,7 @@ HEADER(RCNOW,RCPG,RCHR,RCDT1,RCDT2,RCEXCEL,RCDNUM,RCDDT,RCDBAL) ; Display the re
  ;          RCEXCEL - 1 - Excel output, 0 otherwise
  ;          RCDNUM  - Deposit Number or null if original summary report
  ;          RCDDT   - Internal Deposit Date or null if original summary report
- ;          RCDBAL  - Piece 1: 1 if deposit is in balance, 0 otherwise   ; Add parameter PRCA*4.5*439
- ;                    Piece 2: Total of EFTs on the deposit
- ;                    Piece 3: Deposit Total
+ ;          RCDBAL  - 1 if deposit is in balance, 0 otherwise   ; Add parameter PRCA*4.5*439
  ;
  ; Output:  RCPG    - Updated page number
  ;

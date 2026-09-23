@@ -1,5 +1,5 @@
 FBSHRAD ;WCIOFO/SAB-REPORT ACTIVE AUTHORIZATIONS FOR DATE ;2/9/1999
- ;;3.5;FEE BASIS;**13**;JAN 30, 1995
+ ;;3.5;FEE BASIS;**13,196**;JAN 30, 1995;Build 7
  ;
  ; ask program
  S DIC="^FBAA(161.8,",DIC(0)="AQEM",DIC("B")="STATE HOME"
@@ -122,7 +122,8 @@ PRINT ; report data
  . . . . S FBC("VEN")=FBC("VEN")+1
  . . . . S:FBDD FBD("VEN")=FBD("VEN")+FBDAYS
  . . . . I $Y+5>IOSL D HD Q:FBQUIT  D HDPOV,HDVEN
- . . . . W !,?4,FBPNAME,?35,$P(VADM(2),U,2)
+ . . . . I $G(FBSSNRF)="" W !,?4,FBPNAME,?35,$P(VADM(2),U,2)
+ . . . . I $G(FBSSNRF)=1 W !,?4,FBPNAME,?35,$$SSNL4^FBAAUTL($P(VADM(2),U,2))
  . . . . W:FBDD ?48,$J(FBDAYS,3)
  . . . . W ?53,$$FMTE^XLFDT($P(FBA,U)),?67,$$FMTE^XLFDT($P(FBA,U,2))
  . . . . W !,?6,"DOB: ",$P(VADM(3),U,2)

@@ -1,5 +1,5 @@
-XQARPRT2 ;DCN/BUF,JLI/OAK-OIFO - LOOKUP PROVIDER ALERTS ;4/9/07  10:16
- ;;8.0;KERNEL;**316,443,690**;Jul 10, 1995;Build 18
+XQARPRT2 ;DCN/BUF,JLI/OAK-OIFO - LOOKUP PROVIDER ALERTS ;MAR 13, 2025@08:04
+ ;;8.0;KERNEL;**316,443,690,812**;Jul 10, 1995;Build 8
  ;Per VHA VA Directive 6402, this routine should not be modified
  ;  Based on the original routine AEKALERT
  Q
@@ -91,8 +91,10 @@ PRNTATRK(IEN) ; Print data for an entry from the alert tracking file
  ;
 HEADER(XQANAME,DOFF) ; Output header at start of report XQANAME indicates who report is for
  IF '$D(ZTQUEUED) W:DOFF @IOF ; XU*8*690 - Remove initial FormFeed when queued to task job (Printer)
- W:'DOFF ! W $S('DOFF:"Found "_XQATOT_" ",1:""),$S($D(XQAWORDS)>1:"Selected ",1:""),"Alerts for ",XQANAME,!,"  for dates ",$$FMTE^XLFDT(XQASDATE)," through "
+ W:'DOFF ! W $S('DOFF:"Found "_XQATOT_" ",1:""),$S($D(XQAWORDS)>1:"Selected ",1:""),"Alerts for ",XQANAME,! ;p812
  N OUTDATE S OUTDATE=$$FMTE^XLFDT(XQAEDATE,"D") I 'DOFF,$D(XQADATE),XQADATE<XQAEDATE,'$D(ZTQUEUED) S OUTDATE=$$FMTE^XLFDT(XQADATE)
+ I OUTDATE'="" W "  for dates ",$$FMTE^XLFDT(XQASDATE)," through "
+ E  W "  for the specified dates"
  W OUTDATE S XQACTR=2
  D WORDHDR
  W ! S XQACTR=XQACTR+1
@@ -113,38 +115,63 @@ DTPT ; OPT - GIVEN DATE AND PATIENT, TAKE A LOOK AT ALL USING 'D' X-REF
  D DATES Q:Y'>0
  D WORDS() K Y Q:$D(DIRUT)
  S %ZIS="MQ" D ^%ZIS Q:POP  I $D(IO("Q")) K IO("Q") S ZTRTN="DTPTDQ^XQARPRT2",ZTDESC="List of Patient Alerts",ZTSAVE("*")="" D ^%ZTLOAD W:$G(ZTSK)>0 !,"Task number is ",ZTSK K ZTSK Q
-DTPTDQ ;
- N XQANWID,FOUND,ONE,ZERO,XQACTR,XQAIEN,XQATYPE,XQADATE,HEADERID,XQATOT
+DTPTDQ ;Print the alerts that belong to the patient
+ N ONE,ZERO,XQAIEN,XQATYPE,XQADATE,HEADERID
  S HEADERID="Patient "_$$GET1^DIQ(2,XQADFN_",",.01)_" ("_$$GET1^DIQ(2,XQADFN_",",.0905)_")"
  D HEADER(HEADERID,1)
  S XQADATE=XQASDATE-0.0000001 F  S XQADATE=$O(^XTV(8992.1,"D",XQADATE)) Q:(XQADATE'>0)!(XQADATE>XQAEDATE)  D  Q:$D(DIRUT)
  . S XQAIEN=0 F  S XQAIEN=$O(^XTV(8992.1,"D",XQADATE,XQAIEN)) Q:XQAIEN=""  S ONE=$G(^XTV(8992.1,XQAIEN,1)),ZERO=$G(^(0)),XQATYPE=$E(ZERO,1,3) D  Q:$D(DIRUT)
- . . S FOUND=0
- . . I (XQATYPE="DVB")!(XQATYPE="OR,") I $P(ZERO,U,4)=XQADFN S FOUND=1
- . . I (XQATYPE="GMA"),$P(ONE,U)[XQANAME S FOUND=1
- . . I (XQATYPE="TIU"),$P(ONE,U)[$E(XQANAME,1,9),$P(ONE,U)[XQA1U4NP S FOUND=1
- . . I FOUND D PRNTATRK(XQAIEN)
- . . Q
+ . . I $$BELONGS(XQADFN,XQANAME,XQA1U4N,XQATYPE,$P(ZERO,U,4),ONE)=1 D PRNTATRK(XQAIEN) Q
  . Q
  D HEADER(HEADERID,0)
  Q
  ;
+BELONGS(PTID,PNAME,P1U4N,ATYPE,APTID,ATEXT) ;Does alert belong to the patient p812
+ ; INPUT
+ ; PTID = Patient IEN, PNAME = Patient = Name, P1U4N = Patient 1U4N
+ ; ATYPE = Alert Type, APTID = Alert PATIEN IEN, ATEXT = Alert Text 
+ ;
+ N FOUND
+ S FOUND=0
+ I (ATYPE="DVB")!(ATYPE="OR,") I APTID=PTID S FOUND=1 ;I $P(ZERO,U,4)
+ I (APTID=PTID)!(APTID="") D  ;p812
+ . I (ATYPE="GMA"),$P(ATEXT,U)[PNAME!((ATEXT="")&(APTID'="")) S FOUND=1
+ . I (ATYPE="TIU") D
+ . . I $P(ATEXT,U)[$E(PNAME,1,9),$P(ATEXT,U)[P1U4N S FOUND=1 Q
+ . . I $P(ATEXT,U)=""&(APTID=PTID) S FOUND=1
+ Q FOUND
+ ;
 CHEKSCAN(XQADFN) ; Output a list of dates when OR, and DVB alerts are found
- N DIR,OLDEST,X,Y,XQASDATE,XX,CNT,COL,BASECNT,I
- W !!! S DIR(0)="Y",DIR("A")="Do you want to scan for a list of dates that have at least some alerts for this patient",DIR("A",1)="The quick scan method used here will not pick up some alerts,"
- S DIR("A",2)="but should give an indication of when alerts might be found.",DIR("A",3)=""
+ N DIR,OLDEST,OLDSIT,ONE,X,Y,XQASDATE,XX,CNT,COL,BASECNT,I,XZERO ;p812
+ W !!! S DIR(0)="Y",DIR("A")="Do you want to scan for a list of dates that have alerts for this patient",DIR("A",1)="The quick scan method used here will not pick up some alerts (Matches only" ; p812
+ S DIR("A",2)="on Patient ID) but the scan should give an indication of when alerts might",DIR("A",3)="be found.",DIR("A",4)="" ;p812
  D ^DIR K DIR Q:$D(DIRUT)  I Y D
  . K ^TMP("XQARPRT2",$J)
  . N OLDEST S OLDEST=$$FMTE^XLFDT($$OLDEST(),"5DZ")
- . S DIR(0)="SO^;1:1 Week ago;2:1 month ago;3:3 months ago;4:6 months ago;5:1 year ago;6:As far back as possible",DIR("A")="Select a period for starting",DIR("A",1)="The oldest entry in your Alert Tracking file is from "_OLDEST,DIR("A",2)=""
+ . N OLDSIT S OLDSIT="" F I=0:0 S I=$O(^XTV(8992.1,"C",XQADFN,I)) Q:I'>0  S ZERO=$P(^XTV(8992.1,I,0),U,2) D  Q:OLDSIT'=""  ; p812
+ . . S XZERO=^XTV(8992.1,I,0),ONE=$G(^XTV(8992.1,I,1))
+ . . I '$$BELONGS(XQADFN,XQANAME,XQA1U4N,$E(XZERO,1,3),$P(XZERO,U,4),ONE) Q
+ . . S OLDSIT=$$FMTE^XLFDT((ZERO\1),"5DZ")
+ . I OLDSIT="" S OLDSIT="(No Date)"
+ . I $O(^XTV(8992.1,"C",XQADFN,0))'>0 W !!,"*** NO ALERTS FOUND FOR THIS PATIENT" ;p812
+ . E  W !!,"SOME ALERTS WERE FOUND FOR THIS PATIENT" ;p812
+ . S DIR(0)="S0^;1:1 Week ago;2:1 month ago;3:3 months ago;4:6 months ago;5:1 year ago;6:As far back as possible"
+ . S DIR("A")="Select a period for starting",DIR("A",1)="The oldest entry for this patient in the Alert Tracking file is from "_OLDSIT ;p812
+ . S DIR("A",2)="The oldest entry for this site in the Alert Tracking file is from "_OLDEST,DIR("A",3)="" ;p812
  . D ^DIR K DIR Q:Y'>0
  . S X=$S(Y=1:"1W",Y=2:"1M",Y=3:"3M",Y=4:"6M",Y=5:"12M",1:"1000M"),X="T-"_X D ^%DT S XQASDATE=Y
- . F I=0:0 S I=$O(^XTV(8992.1,"C",XQADFN,I)) Q:I'>0  S ZERO=$P(^XTV(8992.1,I,0),U,2) I ZERO'<XQASDATE S ^TMP("XQARPRT2",$J,(ZERO\1))=$G(^TMP("XQARPRT2",$J,(ZERO\1)))+1
+ . F I=0:0 S I=$O(^XTV(8992.1,"C",XQADFN,I)) Q:I'>0  S ZERO=$P(^XTV(8992.1,I,0),U,2) I ZERO'<XQASDATE D  ; p812
+ . . S XZERO=^XTV(8992.1,I,0),ONE=$G(^XTV(8992.1,I,1))
+ . . I '$$BELONGS(XQADFN,XQANAME,XQA1U4N,$E(XZERO,1,3),$P(XZERO,U,4),ONE) Q
+ . . S ^TMP("XQARPRT2",$J,(ZERO\1))=$G(^TMP("XQARPRT2",$J,(ZERO\1)))+1
  . ; Output date and number found in vertical columns, with (if lots of dates) three columns per screen
  . I $D(^TMP("XQARPRT2",$J)) W !,"Dates and number of alerts found in () [may not be all of them]"
  . ; S CNT=0,COL=1,BASECNT=0 F I=0:0 S I=$O(^TMP("XQARPRT2",$J,I)) Q:I'>0  S CNT=CNT+1,XX(CNT)=$G(XX(CNT))_$$FMTE^XLFDT(I,"5DZ")_"  ("_^(I)_")"_"     " I (CNT-BASECNT)>(IOSL-4) S COL=COL+1 S:'(COL#3) BASECNT=CNT S CNT=BASECNT
  . S CNT=2 F I=0:0 S I=$O(^TMP("XQARPRT2",$J,I)) Q:I'>0  S CNT=CNT+1,XX(CNT\3)=$G(XX(CNT\3))_$$FMTE^XLFDT(I,"5DZ")_"  ("_^(I)_")"_"     "
  . F I=0:0 S I=$O(XX(I)) Q:I'>0  W !,XX(I)
+ . I '$D(XX) W !,"*** NO ALERTS FOUND FOR THIS TIME PERIOD" ;p812
+ . W !!,"*** The final report method used here will include Alerts that have a match on the" ;p812
+ . W !,"Patient ID, and Display text of the Name and last four of the SSN.",!
  . Q
  Q
  ;

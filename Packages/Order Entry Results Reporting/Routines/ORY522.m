@@ -1,0 +1,64 @@
+ORY522 ;SLC/NCD - PRE-INSTALL ACTION FOR VITALS WEIGHT ALERT ; Feb 7, 2024@12:50:55
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**522**;Dec 17, 1997;Build 43
+ ;
+ ; Reference to EN^XPAR in ICR #2263
+ ; Reference to MES^XPDUTL in ICR #10141
+ ; Reference to UPDATE^DIE in ICR #2053
+ ;
+ Q
+PRE ;CHECK FOR EXISTENCE OF WEIGHT CHECK ALERT IN OE/RR NOTIFICATION FILE
+ N ORDI,ORMSG,ORTEXT
+ S ORDI=97
+ I $D(^ORD(100.9,ORDI,0)) D  Q
+ . S ORTEXT=^ORD(100.9,ORDI,0) I $P(ORTEXT,"^")="WEIGHT THRESHOLD EXCEEDED" Q
+  . N ORMSG
+  . S ORMSG(1)="  WARNING:",ORMSG(2)="  A notification already exists in entry number "_ORDI_". Installation is aborted."
+  . D MES^XPDUTL(.ORMSG)
+  . S XPDABORT=1
+  Q
+  ;
+SENDNOT(ORNAME) ;Return true if the current notification should be sent
+ I ORNAME="WEIGHT THRESHOLD EXCEEDED" Q 1
+ Q 0
+ ;
+POST ;SET UP PARAMETERS FOR THE NEW NOTIFICATION
+ N ORENT,ORINST,ORDI,XPDABORT,ORMSG,EXIT,LINE,I
+ D MES^XPDUTL("  Loading parameter values for new notification: Vitals...")
+ S ORENT="PKG.ORDER ENTRY/RESULTS REPORTING"
+ S ORDI=97
+ S EXIT=0
+ F LINE=1:1 Q:$G(EXIT)  D
+ . N TEXT,ORERROR
+ . S TEXT=$P($T(PARAM+LINE),";",3)
+ . S ORINST=$P($G(^ORD(100.9,ORDI,0)),U,1)
+ . I $P(TEXT," ")="ORB" D  Q
+ .. D EN^XPAR(ORENT,$P(TEXT,U),ORINST,$P(TEXT,U,2),.ORERROR)  ;ICR #2336
+ .. I +ORERROR D
+ ... S ORMSG(1)=" ",EXIT=2
+ ... S ORMSG(2)="ERROR: Unable to configure the new "_ORINST_" notification"
+ ... S ORMSG(3)="Kernel Parameter Tools Error #"_+ORERROR_": "_$P(ORERROR,U,2)
+ ... D MES^XPDUTL(.ORMSG)
+ . I TEXT="" S EXIT=1
+ D:$G(EXIT)<2 MES^XPDUTL("  Finished loading new notification values")
+ F I="GMV WEIGHT ALERT","GMV WEIGHT CHECK" D INSERT("OR CPRS GUI CHART",I)
+ Q
+ ;
+PARAM ;PARAMETER VALUES TO LOAD
+ ;;ORB ARCHIVE PERIOD^30
+ ;;ORB DELETE MECHANISM^Individual Recipient
+ ;;ORB PROCESSING FLAG^Enabled
+ ;;ORB PROVIDER RECIPIENTS^AP
+ ;;ORB URGENCY^High
+ ;;ORB FORWARD SURROGATES^0
+ ;;ORB FORWARD BACKUP REVIEWER^0
+ ;;ORB FORWARD SUPERVISOR^0
+ Q
+INSERT(OPTION,RPC) ; Call FM Updater with each RPC
+ ; Input  -- OPTION   Option file (#19) Name field (#.01)
+ ;           RPC      RPC sub-file (#19.05) RPC field (#.01)
+ ; Output -- None
+ N FDA,FDAIEN,ERR,DIERR
+ S FDA(19,"?1,",.01)=OPTION
+ S FDA(19.05,"?+2,?1,",.01)=RPC
+ D UPDATE^DIE("E","FDA","FDAIEN","ERR")
+ Q
