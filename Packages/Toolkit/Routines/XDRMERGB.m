@@ -1,5 +1,6 @@
 XDRMERGB ;SF-IRMFO.SEA/JLI - TENATIVE UPDATE POINTER NODES ;5/14/98  10:30
- ;;7.3;TOOLKIT;**23,137**;Apr 25, 1995;Build 10
+ ;;7.3;TOOLKIT;**23,137,164**;Apr 25, 1995;Build 3
+ ;;Per VA Directive 6402, this routine should not be modified
  ;;
  Q
  ;
@@ -166,8 +167,8 @@ QUE ;  (Moved from XDRMERG0)
  . W !!?15,$C(7),"No Verified Duplicates included in merge",$C(7),!!
  ;
  K DIR S DIR(0)="Y"
- S DIR("A",1)="This process will take a **LONG** time (usually over 15 hours, and sometimes"
- S DIR("A",2)="considerably longer), but you CAN stop and restart the process when you"
+ S DIR("A",1)="This process will take some time to complete,"
+ S DIR("A",2)="but you CAN stop and restart the process when you"
  S DIR("A")="want using the options.  OK"
  D ^DIR K DIR Q:Y'>0
 NAME W !! S DIR(0)="F^2:30"

@@ -1,5 +1,5 @@
 DGREGTED ;ALB/BAJ,BDB,JAM,ARF,JAM - Temporary & Confidential Address Edits API ;23 May 2017  12:48 PM
- ;;5.3;Registration;**688,851,941,1014,1040,1127,1143**;Aug 13, 1993;Build 36
+ ;;5.3;Registration;**688,851,941,1014,1040,1127,1143,1167**;Aug 13, 1993;Build 7
  ;
 EN(DFN,TYPE,RET) ;Entry point
  ; This routine controls Edits to Temp & Conf addresses
@@ -203,15 +203,19 @@ SAVEFROMLOCAL(DGTYPE) ; DG*5.3*1143 Save data to the DB from the local array (TE
  . . ; If the "DELETE" node = 1 The user said YES to delete the data - delete the fields
  . . I $G(DGADDGRP3("DELETE"))=1 S DGADDGRP3(DGN)="@"
  . . S DGFDA(2,DFN_",",DGN)=DGADDGRP3(DGN)
- . . ; for phone number, update the extension field
- . . I DGN=.1219 S DGFDA(2,DFN_",",.12117)=$P(DGADDGRP3(DGN),"X",2)
+ . . ; DG*5.3*1167 - Store the extension only if one exists in the number field or delete if the phone is being deleted
+ . . I DGN=.1219 D
+ . . . I DGADDGRP3(DGN)["X" S DGFDA(2,DFN_",",.12117)=$P(DGADDGRP3(DGN),"X",2)
+ . . . I DGADDGRP3(DGN)="@" S DGFDA(2,DFN_",",.12117)="@"
  I DGTYPE="CONF" D
  . I $G(DGADDGRP4("DELETE"))=0 S DGFDA(2,DFN_",",.14105)="N" Q
  . F  S DGN=$O(DGADDGRP4(DGN)) Q:'DGN  D
  . . I $G(DGADDGRP4("DELETE"))=1 S DGADDGRP4(DGN)="@"
  . . S DGFDA(2,DFN_",",DGN)=DGADDGRP4(DGN)
- . . ; for phone number, update the extension field (which will be cleared if phone is deleted)
- . . I DGN=.1315 S DGFDA(2,DFN_",",.13214)=$P(DGADDGRP4(DGN),"X",2)
+ . . ; DG*5.3*1167 - Store the extension only if one exists in the number field or delete if the phone is being deleted
+ . . I DGN=.1315 D
+ . . . I DGADDGRP4(DGN)["X" S DGFDA(2,DFN_",",.13214)=$P(DGADDGRP4(DGN),"X",2)
+ . . . I DGADDGRP4(DGN)="@" S DGFDA(2,DFN_",",.13214)="@"
  D FILE^DIE("","DGFDA","MSG")
  ;
  ; Save Address categories

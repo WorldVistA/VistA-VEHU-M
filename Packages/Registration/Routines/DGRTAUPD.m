@@ -1,5 +1,5 @@
 DGRTAUPD ;ALB/JAM - Real-time update of address and other contact info ;15 May 2025  10:33 AM
- ;;5.3;Registration;**1143**;Aug 13, 1993;Build 36
+ ;;5.3;Registration;**1143,1167**;Aug 13, 1993;Build 7
  ;
  Q
 EN(DFN,DGERRS,DGADDGRP1,DGADDGRP2,DGADDGRP3,DGADDGRP4,DGADDGRP5) ; Entry point for address update for Real-Time updating to ES
@@ -49,14 +49,16 @@ EN(DFN,DGERRS,DGADDGRP1,DGADDGRP2,DGADDGRP3,DGADDGRP4,DGADDGRP5) ; Entry point f
  . ; Residential address only has ZIP+4 which contains the entire zip code - break this up into the 2 fields
  . S DGADDRESSDTO("RES","zipCode")=$E($G(DGADDRESSDTO("RES","zipPlus4")),1,5)
  . S DGADDRESSDTO("RES","zipPlus4")=$E($G(DGADDRESSDTO("RES","zipPlus4")),6,9)
- . ; DGPHONEDTO for Home phone
- . D FILLDTO("HOMEPH",.DGADDGRP1,.DGPHONEDTO)
- . S DGPHONEDTO("HOMEPH","phoneType")="HOME"
- . S DGPHONEDTO("HOMEPH","sourceType")="VAMC"
- . ; DGPHONEDTO for Office phone
- . D FILLDTO("OFFICEPH",.DGADDGRP1,.DGPHONEDTO)
- . S DGPHONEDTO("OFFICEPH","phoneType")="BUSINESS"
- . S DGPHONEDTO("OFFICEPH","sourceType")="VAMC"
+ . ; DGPHONEDTO for Home phone - DG*5.3*1167 - add a check that the field is defined in group 1
+ . I $D(DGADDGRP1(.131)) D
+ . . D FILLDTO("HOMEPH",.DGADDGRP1,.DGPHONEDTO)
+ . . S DGPHONEDTO("HOMEPH","phoneType")="HOME"
+ . . S DGPHONEDTO("HOMEPH","sourceType")="VAMC"
+ . ; DGPHONEDTO for Office phone - DG*5.3*1167 - add a check that the field is defined in group 1
+ . I $D(DGADDGRP1(.132)) D
+ . . D FILLDTO("OFFICEPH",.DGADDGRP1,.DGPHONEDTO)
+ . . S DGPHONEDTO("OFFICEPH","phoneType")="BUSINESS"
+ . . S DGPHONEDTO("OFFICEPH","sourceType")="VAMC"
  ;
  I $D(DGADDGRP2) D
  . ; Mailing address (which may also include work/home phone)

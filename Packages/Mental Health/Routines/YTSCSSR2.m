@@ -1,5 +1,5 @@
 YTSCSSR2 ;ISP/LMT - C-SSRS_V2 Report ;Aug 06, 2025@12:06:28
- ;;5.01;MENTAL HEALTH;**269**;Dec 30, 1994;Build 7
+ ;;5.01;MENTAL HEALTH;**269,246**;Dec 30, 1994;Build 38
  ;
  ;
 DLLSTR(YSDATA,YS,YSTRNG) ; compute scores or report text based on YSTRNG
@@ -24,12 +24,16 @@ REPORT(YSDATA,YS) ; Add Interpretation to report
  ;Be careful making changes to risk level text.
  S YSNONE="   No C-SSRS items endorsed. No additional action is required |"
  S YSNONE=YSNONE_" based on current screening results."
- S YSLOW="   Items endorsed indicate LOW risk C-SSRS screening level: Mental health |"
- S YSLOW=YSLOW_" follow-up (may include but is not limited to, reviewing mental |"
- S YSLOW=YSLOW_" health needs with a provider) must be offered."
- S YSMOD="   Items endorsed indicate MODERATE risk C-SSRS screening level: |"
- S YSMOD=YSMOD_" Mental health follow-up (may include but is not limited to, |"
- S YSMOD=YSMOD_" reviewing mental health needs with a provider) must be offered."
+ S YSLOW="   Items endorsed indicate LOW risk C-SSRS screening level: The |"
+ S YSLOW=YSLOW_" patient must be offered the opportunity to discuss and |"
+ S YSLOW=YSLOW_" address their mental health needs. This discussion can occur |"
+ S YSLOW=YSLOW_" with an appropriate healthcare professional in any clinical |"
+ S YSLOW=YSLOW_" setting."
+ S YSMOD="   Items endorsed indicate MODERATE risk C-SSRS screening level: The |"
+ S YSMOD=YSMOD_" patient must be offered the opportunity to discuss and|"
+ S YSMOD=YSMOD_" address their mental health needs. This discussion can occur |"
+ S YSMOD=YSMOD_" with an appropriate healthcare professional in any clinical |"
+ S YSMOD=YSMOD_" setting."
  S YSHIGH="   Items endorsed indicate HIGH risk C-SSRS screening level. Address any |"
  S YSHIGH=YSHIGH_" immediate safety concerns. The Comprehensive Suicide Risk Evaluation must|"
  S YSHIGH=YSHIGH_" be completed and documented by an LIP or APP same day (except in settings|"

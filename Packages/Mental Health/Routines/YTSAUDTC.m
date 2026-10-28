@@ -1,5 +1,5 @@
 YTSAUDTC ;SLC/PIJ - Score AUDC ; 01/08/2016
- ;;5.01;MENTAL HEALTH;**123,141**;DEC 30,1994;Build 85
+ ;;5.01;MENTAL HEALTH;**123,141,246**;DEC 30,1994;Build 38
  ;
  ;Public, Supported ICRs
  ; #2056 - Fileman API - $$GET1^DIQ
@@ -26,6 +26,8 @@ SCORE ;
  .S SC="| "_YSINSNAM_" score could not be determined. "
  ;
  S SCORE=$P($G(^TMP($J,"YSCOR",2)),"=",2)
+ S SC="  Score: "_SCORE_" points, which is a "_$S(SCORE>=5:"positive",1:"negative")_" result."  ;Change to ALWAYS use >=5 as the cutoff YS246
+ Q
  ; cut-off after question 3 set up to vary based on sex
  I 'YSGVN!YSSRC D  QUIT  ; 'YSGVN if no admin yet, YSSRC if MHA > 1.0.3.81
  . S SC="  Score: "_SCORE_" points, which is a "_$S(SCORE>=5:"positive",1:"negative")_" result."

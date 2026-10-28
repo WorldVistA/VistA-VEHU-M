@@ -1,5 +1,5 @@
-PSOATRF ;BIR/MHA - Automate Internet Refill ;Feb 03, 2022@11:08:24
- ;;7.0;OUTPATIENT PHARMACY;**264,322,388,313,441**;DEC 1997;Build 209
+PSOATRF ;BIR/MHA,NMG - Automate Internet Refill; Jan 07, 2026@11:19
+ ;;7.0;OUTPATIENT PHARMACY;**264,322,388,313,441,820**;DEC 1997;Build 4
  ;Reference to ^PSSLOCK supported by DBIA 2789
  ;Reference ^PSDRUG supported by DBIA 221
  ;Reference ^PS(55 supported by DBIA 2228
@@ -30,6 +30,10 @@ START ;
 END ;
  I $D(^XTMP(PSOITNS,$J)) D SMAIL^PSOATRF1 G:'$G(PSOITC) KV
  S PSOITMG(1)=$S($G(PSOITC):"Total internet refills/fills processed = "_PSOITC,PSOITMG="":"There are no internet refills/fills to process.",1:PSOITMG)
+ S PSOITMG(2)=""
+ S PSOITMG(3)="The count represents the internet refill requests processed at"
+ S PSOITMG(4)="the time the background job ran. For a total count of requests"
+ S PSOITMG(5)="processed in a specific timeframe, use the Internet Refill Report."
  D GRP
  S:'$O(XMY(0)) XMY(DUZ)=""
  S XMDUZ=.5,XMSUB="Outpatient Pharmacy - PSO AUTO REFILL"

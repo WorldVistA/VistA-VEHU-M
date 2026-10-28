@@ -1,5 +1,5 @@
-IVMPLOG ;ALB/CJM,RTK,ERC,KUM,ARF - API for IVM PATIENT file; ; 8/15/08 12:49pm
- ;;2.0;INCOME VERIFICATION MATCH;**9,19,12,21,17,28,36,40,49,68,115,194,219**; 21-OCT-94;Build 36
+IVMPLOG ;ALB/CJM,RTK,ERC,KUM,ARF,JAM - API for IVM PATIENT file; ; 8/15/08 12:49pm
+ ;;2.0;INCOME VERIFICATION MATCH;**9,19,12,21,17,28,36,40,49,68,115,194,219,223**; 21-OCT-94;Build 4
  ;;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
@@ -250,6 +250,7 @@ EVENT(DFN,RTAU) ;
  ;
  ;Input: DFN
  ;       RTAU - Optional:  If set to 1, check if the Real-time Address Update process is enabled - IVM*2.0*219
+ ;                         IVM*2.0*223 - See below. The use of this parameter is no longer used.
  ;Output: none
  Q:'$G(DFN)
  ;
@@ -257,7 +258,8 @@ EVENT(DFN,RTAU) ;
  ;
  ;IVM*2.0*219 - If RTAU parameter set to 1, quit if the Real-time Address Update process is enabled - 
  ;              Do not process for HL7 transmission.
- I $G(RTAU)=1 I $$GET1^DIQ(43,1,1403)="YES" Q
+ ; IVM*2.0*223 - remove the change below made by IVM*2.0*219 - the RTAU parameter is no longer used.
+ ;I $G(RTAU)=1 I $$GET1^DIQ(43,1,1403)="YES" Q
  ;
  ;don't want to log event if called due to file re-indexing
  I $D(DIU(0))!($D(DIK)&$D(DIKJ)&$D(DIKLK)&$D(DIKS)&$D(DIN)) Q

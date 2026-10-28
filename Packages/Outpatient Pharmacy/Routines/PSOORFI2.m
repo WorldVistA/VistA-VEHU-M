@@ -1,5 +1,5 @@
 PSOORFI2 ;BIR/BHW-finish cprs orders cont. ;07/29/96
- ;;7.0;OUTPATIENT PHARMACY;**7,15,23,27,46,130,146,177,222,225,338,313,408,612,770**;DEC 1997;Build 145
+ ;;7.0;OUTPATIENT PHARMACY;**7,15,23,27,46,130,146,177,222,225,338,313,408,612,770,760**;DEC 1997;Build 13
  ;External reference ^YSCL(603.01 supported by DBIA 2697
  ;External references PSOL and PSOUL^PSSLOCK supported by DBIA 2789
  ;External reference to EN1^ORCFLAG is supported by DBIA 3620
@@ -130,7 +130,7 @@ CNT(SITE)  ; - Counter for flagged pending orders by Site
  K ^TMP($J,"PSOFLPO")
  S (CNT,LOGIN,ORD)=0
  F  S LOGIN=$O(^PS(52.41,"AD",LOGIN)) Q:'LOGIN  D
- . F  S ORD=$O(^PS(52.41,"AD",LOGIN,SITE,ORD)) Q:'ORD  D
+ . F  S ORD=$O(^PS(52.41,"AD",LOGIN,SITE,ORD)) Q:'ORD  Q:'$D(^PS(52.41,ORD,0))  D
  . . I $P(^PS(52.41,ORD,0),"^",3)="DC"!($P(^PS(52.41,ORD,0),"^",3)="DE") Q
  . . I $P($G(^PS(52.41,ORD,0)),"^",23) S CNT=CNT+1 S:$P(^(0),"^",2) ^TMP($J,"PSOFLPO",$P(^(0),"^",2))=""
  Q CNT

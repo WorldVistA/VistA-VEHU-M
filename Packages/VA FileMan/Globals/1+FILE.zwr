@@ -786,7 +786,7 @@ ZWR
 ^DIC(2,"%D",14,0)="in the file you will note that many are preceeded by an asterisk."
 ^DIC(2,"%D",15,0)="Those fields are scheduled to be removed from the file due to either"
 ^DIC(2,"%D",16,0)="lack of use or replacement by another field/file in the next release."
-^DIC(2,"%MSC")=3260923.153821
+^DIC(2,"%MSC")=3261028.192237
 ^DIC(3.05,0)="FAILED ACCESS ATTEMPTS LOG^3.05"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
 ^DIC(3.05,0,"GL")="^%ZUA(3.05,"
@@ -30468,7 +30468,7 @@ ZWR
 ^DIC(409.93,"%D",0)="^^2^2^3220509^"
 ^DIC(409.93,"%D",1,0)="This file is used to hold the error codes returned to the user interface "
 ^DIC(409.93,"%D",2,0)="or web application."
-^DIC(409.93,"%MSC")=3260722.124728
+^DIC(409.93,"%MSC")=3261028.192457
 ^DIC(409.94,0)="SDEC SUBSPECIALTY^409.94"
 ^DIC(409.94,0,"AUDIT")="@"
 ^DIC(409.94,0,"DD")="@"
@@ -43465,8 +43465,12 @@ ZWR
 ^DIC(869.3,0)="HL COMMUNICATION SERVER PARAMETERS^869.3"
 ^DIC(869.3,0,"GL")="^HLCS(869.3,"
 ^DIC(869.3,0,"GL")="^HLCS(869.3,"
-^DIC(869.3,"%D",0)="^^1^1^2990303^^^^"
-^DIC(869.3,"%D",1,0)="Parameter file used by the HL7 Communication Server"
+^DIC(869.3,"%",0)="^1.005^^0"
+^DIC(869.3,"%D",0)="^^3^3^3260630^"
+^DIC(869.3,"%D",1,0)="This is the parameter file used by the HL7 Communication Server. Many of "
+^DIC(869.3,"%D",2,0)="the fields in this file are updated via HL* code, rather than FileMan "
+^DIC(869.3,"%D",3,0)="APIs."
+^DIC(869.3,"%MSC")=3261028.192716
 ^DIC(870,0)="HL LOGICAL LINK^870"
 ^DIC(870,0,"GL")="^HLCS(870,"
 ^DIC(870,0,"GL")="^HLCS(870,"

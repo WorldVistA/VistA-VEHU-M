@@ -1,5 +1,5 @@
 DGREGTE2 ;ALB/BAJ,TDM,BDB,JAM - Temporary & Confidential Address Support Routine; 02/27/2006 ; 22 Mar 2017  1:10 PM
- ;;5.3;Registration;**688,754,851,1040,1143**;Aug 13, 1993;Build 36
+ ;;5.3;Registration;**688,754,851,1040,1143,1167**;Aug 13, 1993;Build 7
  ;
  Q
  ;
@@ -120,7 +120,8 @@ RESTORE ; Restore original set of Confidential Categories
  Q DGOK
  ;
 READ(DGTYPE,DGN,ANS) ; DG*5.3*1143 - User entry for start/end dates
- ; Input:  DGN - Field number to prompt for
+ ; Input:  DGTYPE - "TEMP" or "CONF"
+ ;         DGN - Field number to prompt for
  ; Output: ANS - (pass by reference) the internal format of the user entry
  ; Returns: 1= ok response  0 = no response (timeout or user exit)
  N DIR,X,Y,DGCURRENT,DGDEF
@@ -140,6 +141,13 @@ PROMPT ; Tag for entering in the date
  D ^DIR
  I $D(DTOUT) S DGTMOT=1 Q 0
  I $D(DUOUT) Q 0
+ ; DG*5.3*1167 - Check if valid date - user may have accepted the default which may not be a valid value
+ N DGVAL
+ S DGVAL=Y
+ I DGN=.1217!(DGN=.1218) I DGVAL'="" D  I '$D(DGVAL)  W !,*7,"Invalid date.",! G PROMPT
+ . ; Check if valid FileMan value - Reject if the length not 7 or if the Day value is zero
+ . I $L(DGVAL)'=7!($E(DGVAL,6,7)="00") K DGVAL
+ ;
  ; If an end date entered, check the value against the start date (previously stored in local input array)
  I Y'="" I DGN=.1218,(Y<DGINPUT(.1217)) W !,"End Date must not be before Start Date." G PROMPT
  I Y'="" I DGN=.1418,(Y<DGINPUT(.1417)) W !,"End Date must not be before Start Date." G PROMPT
@@ -214,7 +222,7 @@ DISPFGN(DGCMP,DGM) ;tag to display Foreign data
  Q
  ;
 LOADTEMP ; DG*5.3*1143 - Called from TADD^DGLOCK when the address active? flag is set from YES to NO
- ; Load DGADDGRP3 Temp Address array from the DB
+ ; Load DGADDGRP3 Temp Address array from the DB subce ES wants the full address data sent 
  N DGRP
  S DGRP(.121)=$G(^DPT(DFN,.121))
  S DGRP(.122)=$G(^DPT(DFN,.122))
@@ -233,10 +241,15 @@ LOADTEMP ; DG*5.3*1143 - Called from TADD^DGLOCK when the address active? flag i
  S DGADDGRP3(.1215)=$P(DGRP(.121),"^",5)
  ; Zip 
  S DGADDGRP3(.1216)=$P(DGRP(.121),"^",6)
+ ; DG*5.3*1167 - Old data in VistA may include partial start/end dates or invalid formatted phone numbers
+ ;  Sending these will result in a validation error from the gateway.
+ ;  To prevent this possibility, do not sent the phone and fill in default date values
  ; Start Date
- S DGADDGRP3(.1217)=$P(DGRP(.121),"^",7)
+ ;S DGADDGRP3(.1217)=$P(DGRP(.121),"^",7)
+ S DGADDGRP3(.1217)=3260704
  ; End Date
- S DGADDGRP3(.1218)=$P(DGRP(.121),"^",8)
+ ;S DGADDGRP3(.1218)=$P(DGRP(.121),"^",8)
+ S DGADDGRP3(.1218)=3260704
  ; Temp Phone
  S DGADDGRP3(.1219)=$P(DGRP(.121),"^",10)
  ; County

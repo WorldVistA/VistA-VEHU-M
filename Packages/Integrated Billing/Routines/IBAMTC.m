@@ -1,5 +1,5 @@
 IBAMTC ;ALB/CPM - MEANS TEST NIGHTLY COMPILATION JOB ; 07 Jun 2021  4:17 PM
- ;;2.0;INTEGRATED BILLING;**34,52,70,93,100,118,115,132,150,153,137,176,215,275,321,312,457,519,549,614,703,706,630,704,760**;21-MAR-94;Build 25
+ ;;2.0;INTEGRATED BILLING;**34,52,70,93,100,118,115,132,150,153,137,176,215,275,321,312,457,519,549,614,703,706,630,704,760,807**;21-MAR-94;Build 11
  ;;Per VA Directive 6402, this routine should not be modified.
  ;
 INIT ; Entry point - initialize variables and parameters
@@ -10,6 +10,7 @@ INIT ; Entry point - initialize variables and parameters
  S IBNGHTSK=1
  D CANCEL($$FMADD^XLFDT(DT,-7),$$NOW^XLFDT(),1) ; cancel copays (covid relief)   IB*2.0*706
  S (IBY,Y)=1 D SITE^IBAUTL I Y<1 S IBY=Y D ERR G CLEAN  ; moved from below  IB*2.0*760
+ D CANC ; cancel copays  IB*2.0*807
  D CANCCD ; cancel copays (Cleland-Dole)  IB*2.0*760
  ;
  D UPDT^IBARXEPS($$FMADD^XLFDT(DT,-30),DT,1)
@@ -351,4 +352,72 @@ DXSLIST ; List of Specific Compact Act Related Diagnosis codes  IB*2.0*760
  ;;T14.91XD
  ;;T14.91XS
  ;;EXIT
+ Q
+ ;
+CANC ; cancel copays  IB*2.0*807
+ N DFN,IBACT,IBATYP,IBCRES,IBDSDT,IBERROR,IBEVDT,IBFILE,IBGRP,IBIEN,IBIEN1,IBINFLG,IBINSTDT,IBN0,IBOPDT,IBRES,IBRTN,IBRX,IBRXDSDT,IBRXDT,IBRXFLDT,IBRXN,IBRXRFDT,IBRXRLDT,IBSCDT,IBSCFLG,IBSTAT
+ N IBVSTAT,IBVSTIEN,STATSTR,TMPDT,Z
+ N VAEL,VAIP
+ S STATSTR="^BILLED^HOLD - RATE^HOLD - REVIEW^ON HOLD^"  ; bill statuses to include
+ S DFN=0 F  S DFN=$O(^IB("C",DFN)) Q:'DFN  D
+ .S (IBINFLG,IBINSTDT,IBSCDT,IBSCFLG)=0
+ .S Z=$$INDGET^IBINUT1(DFN) I $P(Z,U)="Y" S IBINSTDT=$P(Z,U,2),IBINFLG=1  ; patient is AI/AN
+ .D ELIG^VADPT I +$P($G(VAEL(3)),U,2)'<50 S IBSCDT=$$GETEFFDT^RCDMCRUT(DFN,50,100) S:IBSCDT>0 IBSCFLG=1  ; patient is SC 50%-100%
+ .I 'IBINFLG,'IBSCFLG Q 
+ .S IBIEN=0 F  S IBIEN=$O(^IB("C",DFN,IBIEN)) Q:'IBIEN  D
+ ..S IBN0=$G(^IB(IBIEN,0)) I IBN0="" Q  ; file 350, node 0
+ ..S IBIEN1=$P(IBN0,U,9)  ; parent charge ien
+ ..I IBIEN'=IBIEN1 Q  ; not the parent charge
+ ..S IBSTAT=$$GET1^DIQ(350,IBIEN_",",.05)  ; status from 350/.05 (external)
+ ..I STATSTR'[(U_IBSTAT_U) Q  ; only cancel copays with specific status
+ ..S IBATYP=+$P(IBN0,U,3) I IBATYP'>0 Q  ; file 350.1 ien
+ ..S IBACT=$G(^IBE(350.1,IBATYP,0))  ; node 0 in file 350.1 for the action type of this charge
+ ..I $P(IBACT,U,5)'=1 Q  ; action type is not "New"
+ ..S IBGRP=$P(IBACT,U,11)  ; billing group
+ ..I IBGRP=6!(IBGRP=7) Q  ; skip CHAMPVA/TRICARE charges
+ ..S IBEVDT=+$P(IBN0,U,15)
+ ..S Z=$$FNDMHVST(DFN,IBEVDT),IBVSTIEN=$P(Z,U),IBVSTAT=$P(Z,U,2)  ; find exisiting MH visit
+ ..I IBINFLG,$$INDCHKDT^IBINUT1(IBEVDT,IBINSTDT) D
+ ...I IBGRP=9 Q  ; skip institutional LTC  IB*2.0*807
+ ...S IBCRES=$O(^IBE(350.3,"B","AI/AN VERIFIED",0))
+ ...S IBRTN=$$CANCEL^IBECEAU6(IBIEN,IBCRES,1,0) ; cancel copay (AI/AN)
+ ...I IBVSTIEN,IBVSTAT'>2 S IBRTN=$$UPDATE^IBECEAMH(1,IBVSTIEN,4,"",1,1,.IBERROR)  ; update MH visit to "visit only" / "SC/SA" reason
+ ...Q
+ ..I IBSCFLG D
+ ...I $P(IBACT,U)["URGENT CARE" Q  ; skip UC action type
+ ...S IBRES=$P(IBN0,U,4)  ; resulting from
+ ...S IBFILE=$P(IBRES,":")
+ ...S (IBDSDT,IBOPDT,IBRXDT)=0
+ ...I IBGRP=4!(IBFILE=44)!(IBFILE=409.68) S IBOPDT=$P(IBN0,U,17)  ; outpatient
+ ...I IBGRP=8!(IBFILE=405)!(IBFILE=45) D  ; inpatient  IB*2.0*807
+ ....I IBFILE=405 S VAIP("E")=$P($P(IBRES,";"),":",2) D IN5^VADPT S IBDSDT=+$P($G(VAIP(17,1)),U)
+ ....I IBFILE=45 S IBDSDT=+$$GET1^DIQ(45,$P($P(IBRES,";"),":",2),70)
+ ....I IBDSDT'>0 S IBDSDT=+$P(IBN0,U,15)
+ ....Q
+ ...I IBGRP=5!(IBFILE=52) D  ; Rx
+ ....I IBFILE'=52 S IBRXDT=$P(IBN0,U,14) Q  ; bill from date
+ ....S IBRX=+$P(IBRES,":",2),IBRXN=+$P(IBRES,":",3)
+ ....S IBRXRLDT=$$FILE^IBRXUTL(IBRX,31)\1  ; Rx release date
+ ....I 'IBRXRLDT Q
+ ....I IBRXN>0 D  Q  ; refill
+ .....S IBRXRLDT=+$$SUBFILE^IBRXUTL(IBRX,IBRXN,52,17)  ;  IB*2.0*807
+ .....S IBRXRFDT=+$$SUBFILE^IBRXUTL(IBRX,IBRXN,52,.01)
+ .....I IBRXRFDT,IBRXRFDT>IBRXRLDT S IBRXDT=IBRXRFDT Q  ; use refill date
+ .....S IBRXDT=IBRXRLDT  ; use release date
+ .....Q
+ ....S IBRXFLDT=$$FILE^IBRXUTL(IBRX,22)  ; Rx fill date
+ ....S IBRXDSDT=$$FILE^IBRXUTL(IBRX,25)  ; Rx dispense date
+ ....S IBRXDT=IBRXRLDT
+ ....I IBRXFLDT,IBRXFLDT>IBRXDT S IBRXDT=IBRXFLDT
+ ....I IBRXDSDT,IBRXDSDT>IBRXDT S IBRXDT=IBRXDSDT
+ ....Q
+ ...S TMPDT=$S(IBDSDT>IBOPDT:IBDSDT,1:IBOPDT)
+ ...I IBRXDT>TMPDT S TMPDT=IBRXDT
+ ...I TMPDT<IBSCDT Q
+ ...S IBCRES=$O(^IBE(350.3,"B","CHANGE IN ELIGIBILITY",0))
+ ...S IBRTN=$$CANCEL^IBECEAU6(IBIEN,IBCRES,1,0) ; cancel copay (SC 50%-100%)
+ ...I IBVSTIEN,IBVSTAT'>2 S IBRTN=$$UPDATE^IBECEAMH(1,IBVSTIEN,4,"",1,1,.IBERROR)  ; update MH visit to "visit only" / "SC/SA" reason
+ ...Q
+ ..Q
+ .Q
  Q

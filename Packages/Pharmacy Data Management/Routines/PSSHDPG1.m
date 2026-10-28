@@ -1,5 +1,5 @@
-PSSHDPG1 ;BIRM/KML -  APIs SUPPORTING REQUEST AND RETRIEVAL OF PGx DATA FROM HDR ;9/28/23
- ;;1.0;PHARMACY DATA MANAGEMENT;**262**;9/30/97;Build 66
+PSSHDPG1 ;BIRM/KML -  APIs SUPPORTING REQUEST AND RETRIEVAL OF PGx DATA FROM HDR; Apr 10, 2026@17:41
+ ;;1.0;PHARMACY DATA MANAGEMENT;**262,270**;9/30/97;Build 8
  ;
  ; Reference to $$GETREST^XOBWLIB supported by DBIA# 5421
  ; Reference to $$GET^XOBWLIB supported by DBIA# 5421
@@ -103,6 +103,8 @@ SETARRAY(PSSGENES) ; ;move from temp global into LOCAL array
  . S PSSXZY(PSSCNT,"GENOTYPE")=$G(^TMP($J,"PSSHDPG1","ClinicalData",0,"patient",0,"medOrderCheckRead",0,"pgxDatas",0,"pgxData",INDX,"vinciGenotype",0))
  . S PSSXZY(PSSCNT,"PHENOTYPE")=$G(^TMP($J,"PSSHDPG1","ClinicalData",0,"patient",0,"medOrderCheckRead",0,"pgxDatas",0,"pgxData",INDX,"vinciPhenotype",0))
  . S PSSXZY(PSSCNT,"RESULT_DATE")=$G(^TMP($J,"PSSHDPG1","ClinicalData",0,"patient",0,"medOrderCheckRead",0,"pgxDatas",0,"pgxData",INDX,"resultDate",0))
+ . ;PSS*1.0*270: Retrieve Modified date/time if result date is null.
+ . I PSSXZY(PSSCNT,"RESULT_DATE")']"" S PSSXZY(PSSCNT,"RESULT_DATE")=$G(^TMP($J,"PSSHDPG1","ClinicalData",0,"patient",0,"medOrderCheckRead",0,"pgxDatas",0,"pgxData",INDX,"modifiedDateTime",0))
  . S PSSXZY(PSSCNT,"NPP_SharePointURL")=$P($G(^TMP($J,"PSSHDPG1","ClinicalData",0,"patient",0,"medOrderCheckRead",0,"nppSharepointURL",0,"url",0)),"? ",2)
  . S PSSXZY(PSSCNT,"FULL_ICN")=$G(^TMP($J,"PSSHDPG1","ClinicalData",0,"patient",0,"medOrderCheckRead",0,"pgxDatas",0,"pgxData",INDX,"patientFullICN",0))
  . S PSSXZY(PSSCNT,"PGXSID")=$G(^TMP($J,"PSSHDPG1","ClinicalData",0,"patient",0,"medOrderCheckRead",0,"pgxDatas",0,"pgxData",INDX,"pgxSID",0))

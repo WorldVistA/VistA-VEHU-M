@@ -1,35 +1,39 @@
-MAGQBUT4 ;WOIFO/RMP,DAC,JSJ - BP Utilities ; Jun 16, 2022@14:42:24
- ;;3.0;IMAGING;**7,8,48,20,81,39,121,135,196,198,214,222,235,238,243,248,325,293,331,347**;Mar 19, 2002;Build 6
+MAGQBUT4 ;WOIFO/RMP,DAC,JSJ,DWM - BP Utilities ; Jul 6, 2026@10:47
+ ;;3.0;IMAGING;**7,8,48,20,81,39,121,135,196,198,214,222,235,238,243,248,325,293,331,347,355**;Mar 19, 2002;Build 4
  ;; Per VA Directive 6402, this routine should not be modified.
  ;; +---------------------------------------------------------------+
  ;; | Property of the US Government.                                |
  ;; | No permission to copy or redistribute this software is given. |
- ;; | Use of unreleased versions of this software requires the user |
- ;; | to execute a written test agreement with the VistA Imaging    |
- ;; | Development Office of the Department of Veterans Affairs,     |
- ;; | telephone (301) 734-0100.                                     |
+ ;; |                                                               |
  ;; | The Food and Drug Administration classifies this software as  |
  ;; | a medical device.  As such, it may not be changed in any way. |
  ;; | Modifications to this software may result in an adulterated   |
  ;; | medical device under 21CFR820, the use of which is considered |
  ;; | to be a violation of US Federal Statutes.                     |
  ;; +---------------------------------------------------------------+
- ;;
  ;
  Q
 VOKR(RESULT,VER) ; RPC for VOK [MAGQ VOK]
- ; P196 changed the way version checking works.  
- ;  we now allow older versions of the BP to run. 
- N CLPATCH,SVRPATCH
- ;   get client Patch number
+ ; P196 changed the way version checking works,
+ ;  we now allow older versions of the BP to run.
+ ; Expected version format from client: VER="3.0P355"
+ ;
+ N CLPATCH,SVRPATCH,I
+ ;  Get client Patch number
+ I VER="" S RESULT="0^BLANK" Q
  S CLPATCH=$$TRIM($P(VER,"P",2))
- ; These are allowable Clients.
- S SVRPATCH=",293,331,347" ; P293,P331,P347 drop P325 continue last 3
- ; if client patch is allowed Result = 1^...
- I SVRPATCH[CLPATCH S RESULT="1^3.0P331"
- E  S RESULT="0^3.0P331"
+ I CLPATCH="" S RESULT="0^"_VER Q
+ ;
+ ; These are the allowable Clients
+ ; P331,P347,P355 (drop P293, continue last 3)
+ F I=331,347,355 S SVRPATCH(I)=""
+ ;
+ ; If client patch is allowed Result = 1^...
+ I $D(SVRPATCH(CLPATCH)) S RESULT="1^"_VER
+ E  S RESULT="0^"_VER
  Q
 OLD ;
+ N X,SLINE,PNUM,CVERS
  S VER="3.0P"_($$TRIM($P(VER,"P",2)))
  S X="ERR^MAGQBTM",@^%ZOSF("TRAP")
  S SLINE=$T(+2)
@@ -37,7 +41,7 @@ OLD ;
  S CVERS=$$TRIM($P(SLINE,";",3))_"P"_PNUM
  S RESULT=$S(CVERS=VER:1,1:0)_U_CVERS
  Q
- ; 
+ ;
 CONV(ARR,ICT) ;Convert any single node array to FM Style multiple
  ;  The node subscripts of ARR are ignored, and not retained
  ; i.e.  ARR(34)=8
@@ -142,7 +146,7 @@ TRIM(X) ; remove both leading and trailing blanks
 QCNT(RESULT,PLC,QUE) ; [MAGQ QCNT] Called from MagQueManSet.pas and MagSiteParameters.pas
  N CNT,DA,CQ,IA,X
  S X="ERR^MAGQBTM",@^%ZOSF("TRAP")
- ;CQ=Current Queue Pointer(#2006.03) 
+ ;CQ=Current Queue Pointer(#2006.03)
  ;QP=Queue file pointer(#2006.031)
  ;CNT=Queue type total, IA=Not failed total
  S IA="",RESULT=0
@@ -150,7 +154,7 @@ QCNT(RESULT,PLC,QUE) ; [MAGQ QCNT] Called from MagQueManSet.pas and MagSiteParam
  S QP=$S($D(^MAGQUEUE(2006.031,"C",PLC,QUE)):$O(^MAGQUEUE(2006.031,"C",PLC,QUE,"")),1:"")
  S CQ=$S('QP:0,1:$P($G(^MAGQUEUE(2006.031,QP,0)),U,2))
  F  S DA=$O(^MAGQUEUE(2006.03,"C",PLC,QUE,DA)) Q:'DA  D
- . I '$D(^MAGQUEUE(2006.03,DA,0)) K ^MAGQUEUE(2006.03,"C",PLC,QUE,DA) Q 
+ . I '$D(^MAGQUEUE(2006.03,DA,0)) K ^MAGQUEUE(2006.03,"C",PLC,QUE,DA) Q
  . S CNT=CNT+1
  . I CQ<DA S IA=IA+1
  . Q
@@ -234,7 +238,7 @@ CLRQ ; Clears the Queue file and Queue Pointer files
  K DIK,DA
  Q
  ; We add RPC to MAG WINDOWS Option this way instead of sending Option : MAG WINDOWS
- ; If we send MAG WINDOWS Option, the last one installed will overwrite others.
+ ; If we send MAG WINDOWS Option, the last one installed will overwriteothers.
  ; ADDRPC copied from Patch 51, added the call "D MES^XPDUTL(" instead of "W !"
 ADDRPC(RPCNAME,OPTNAME) ;
  N DA,DIC
@@ -304,4 +308,3 @@ TEST ;
  D KVAL(.RESULTS,"Q",.FDA)
  W !,"RESULTS: "_RESULTS
  Q
- ;

@@ -1,5 +1,5 @@
 YTQRQAD1 ;SLC/KCM - RESTful Calls to handle MHA assignments ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,141,178,182,181,187,199,207,204,223,240**;Dec 30, 1994;Build 10
+ ;;5.01;MENTAL HEALTH;**130,141,178,182,181,187,199,207,204,223,240,246**;Dec 30, 1994;Build 38
  ;
  ; Reference to VADPT in ICR #10061
  ; Reference to XLFDT in ICR #10103
@@ -182,7 +182,7 @@ DELIDX(ASMT,DFN,ORDBY) ; return true if able to remove "AC", "AD" indexes
  Q 1
  ;
 DELTEST(ARGS) ; remove an instrument from an assignment
- I $L($G(ARGS("assignmentId")))=32 G GETASMT^YTQRCRW ; CPRS DLL
+ ;I $L($G(ARGS("assignmentId")))=32 G GETASMT^YTQRCRW ; CPRS DLL  ;Function not used.
  ;
  N ASMT,TEST,TSLIST,II,DELFASGN
  S ASMT=$G(ARGS("assignmentId"))
@@ -248,7 +248,7 @@ ADMEXPD(ADMIN,TEST) ; return 1 if incomplete admin has expired
  S SAVED=$P(X0,U,5)                        ; DATE SAVED (#4)
  S RESTRT=$P($G(^YTT(601.71,TEST,8)),U,7)  ; DAYS TO RESTART (#27)
  QUIT:RESTRT=-1 0                          ; -1 is always restartable
- S:'RESTRT RESTRT=2                        ; default restart is 2
+ S:'RESTRT RESTRT=7                        ; default restart is 7
  I $$FMDIFF^XLFDT(YSNOW,SAVED,2)>((RESTRT+OFFSET)*86400) QUIT 1
  Q 0
  ;

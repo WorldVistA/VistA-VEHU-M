@@ -1,5 +1,5 @@
 XUSNPIE2 ;FO-OAKLAND/JLI - DATA ENTRY FOR INITIAL NPI VALUES ; Dec 16, 2021@08:24:28
- ;;8.0;KERNEL;**410,435,454,462,480,519,752,764**;Jul 10, 1995;Build 1
+ ;;8.0;KERNEL;**410,435,454,462,480,519,752,764,842**;Jul 10, 1995;Build 1
  ;;Per VHA Directive 2004-038, this routine should not be modified
  Q
  ;
@@ -20,7 +20,7 @@ PRINTOPT ;
  ; 
  S DIR(0)="Y",DIR("B")="NO",DIR("A")="Sort by DIVISION" D ^DIR K DIR Q:Y="^"  S XUSDIV=+Y
  S PRNTFRMT=1
- I XUSDIV S DIR(0)="N^1:2",DIR("A")="Output type (1=Printed text or 2=^-delimited)" D ^DIR K DIR Q:Y'>0  S PRNTFRMT=Y
+ S DIR(0)="N^1:2",DIR("A")="Output type (1=Printed text or 2=^-delimited)" D ^DIR K DIR Q:Y'>0  S PRNTFRMT=Y ;p842
  S DIR(0)="Y",DIR("B")="YES",DIR("A")="Sort by SERVICE/SECTION"_$S(XUSDIV>0:" (as well)",1:"") D ^DIR K DIR Q:Y="^"  S XUSSORT=+Y
  W !!,">>> Report processing time is approximately 10 minutes."
  W !,"    Recommend text output be queued to a network printer."

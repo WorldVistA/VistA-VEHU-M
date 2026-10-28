@@ -1,5 +1,6 @@
-YTQRQAD4 ;ISP/MJB - RESTful Calls to handle MHA lists ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,221,249,236**;Dec 30, 1994;Build 25
+YTQRQAD4 ;ISP/MJB - RESTful Calls to handle MHA lists ;Jun 18, 2025@08:52:30
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,221,249,236,246**;Dec 30, 1994;Build 38
+ ;
  ;
  ; Reference to PXRMINDX in ICR #4290
  ; Reference to ^SC in ICR 10040
@@ -28,8 +29,7 @@ GETLIST(ARGS,RESULTS) ; GET Insts for Pat
  ..S G=$G(^YTT(601.84,NM,0))
  ..S TST=$P(G,U,3),ORD=$P(G,U,6),RVW=$P(G,U,17),PNOT=$P(G,U,18)
  ..S SRC=$P(G,U,13) S:SRC'="" SRC=$P($G(^YTT(601.844,SRC,0)),U)
- ..I $P($G(^YTT(601.71,TST,2)),U,2)="C" QUIT
- ..S CMPL=$P(G,U,9) I CMPL="Y" D 
+ ..S CMPL=$P(G,U,9) I CMPL="Y" D
  ...S NAME=$P($G(^YTT(601.71,TST,0)),U,1)
  ...S ADMINID=$P(G,U,1),ADMINDT=$P($P(G,U,4),":",1,2),PAT=$P(G,U,2)
  ...S SAVEDT=$P($P(G,U,5),":",1,2)
@@ -106,13 +106,13 @@ GETCATA(DOCNAME,RESULTS) ; set ^TMP with doc named and cat
  . S HIT=1
  . S IENI="" S IENI=$O(^YTT(601.71,"B",NAME,IENI))
  . S OP=$P($G(^YTT(601.71,IENI,2)),"^",2)
- . I OP'="Y" Q
+ . I "YC"'[OP Q  ;Allow Yes and Clinical Reminders only
  . I $E(NAME,1,7)="CAT-CAD" Q  ;only used for interview
  . I $$GET^XPAR("ALL","YSCAT DISABLED",1,"Q") Q:$E(NAME,1,4)="CAT-"  Q:$E(NAME,1,4)="CAD-"
  . S STAFF=$P($G(^YTT(601.71,IENI,9)),U,4)
  . S STAFF=$S(STAFF="Y":"true",1:"false")
  . S ALWN=$$ALWN2^YTQRQAD3(IENI)  ;ALLOWNOTE function call
- . S STR="{""instrumentName"":"""_NAME_""", ""staffOnly"":"""_STAFF_""" , ""allowNote"":"""_ALWN_""" ,"
+ . S STR="{""instrumentName"":"""_NAME_""", ""staffOnly"":"""_STAFF_""" , ""allowNote"":"""_ALWN_""" , ""operational"":"""_OP_""" ,"
  . D SETRES(STR)
  . D GETDES(NAME,.DARR)
  . I $D(DARR) D
@@ -335,7 +335,7 @@ ASMTIDA(DFN,LSTINST) ; get admins by DFN/TSTIEN
  .I G="" S YSDATA(1)="[ERROR]",YSDATA(2)=YSIENS_" bad ien in 84"
  .S PAT=$P(G,U,2) Q:PAT'=DFN
  .S TST=$P(G,U,3)
- .S CMPL=$P(G,U,9) I CMPL="Y" D 
+ .S CMPL=$P(G,U,9) I CMPL="Y" D
  ..S NAME=$P($G(^YTT(601.71,TST,0)),U,1)
  ..S STAFF=$P($G(^YTT(601.71,TST,9)),U,4) S:STAFF="" STAFF="N"
  ..S STAFF=$S(STAFF="Y":"true",1:"false")

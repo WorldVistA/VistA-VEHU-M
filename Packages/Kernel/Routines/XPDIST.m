@@ -1,5 +1,5 @@
 XPDIST ;SFISC/RSD - site tracking ;03/05/2008
- ;;8.0;KERNEL;**66,108,185,233,350,393,486,539,547,672**;Jul 10, 1995;Build 28
+ ;;8.0;KERNEL;**66,108,185,233,350,393,486,539,547,672,831**;Jul 10, 1995;Build 5
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;Returns ""=failed, XMZ=sent
  ;D0=ien in file 9.7, XPY=national site tracking^address(optional)
@@ -16,7 +16,7 @@ EN(D0,XPY) ;EF. send message
  S XPZ(1)=$P(XPD1,U),XPZ(2)=$P(XPD1,U,3),XPZ(3)=$$FMDIFF^XLFDT(XPZ(2),XPZ(1),3),XPZ(1)=$$FMTE^XLFDT(XPZ(1)),XPZ(2)=$$FMTE^XLFDT(XPZ(2))
  D LOCAL
  S XPDTRACK=$$TRACK
- D REMEDY ;p350 -REM
+ ;D REMEDY ;p350 -REM ; p831 REMEDY is no longer used
  Q $$FORUM()
 LOCAL ;Send a message to local mail group
  N XMY,XPDTEXT,XMTEXT,XMDUZ,XMSUB,XMZ,XMMG
@@ -48,6 +48,7 @@ TRACK() ;EF. Should VA track the installation of this patch at a national level?
  I '$$PROD^XUPROD D BMES^XPDUTL(" Not a production UCI") Q 0
  Q 1
 REMEDY ;Send to Remedy Server - ESSRESOURCE@DOMAIN.EXT *p350 -REM
+ Q  ;p831 REMEDY is no longer used
  Q:'XPDTRACK
  N XMY,XPDTEXT,XMTEXT,XMDUZ,XMSUB,XMZ,XMMG
  K ^TMP($J)
@@ -98,7 +99,7 @@ CHKS(XPDPH,XPDTEXT) ;Get Checksum from Forum for patch XPDPH, XPDTEXT is passed 
  K ^TMP($J,"XPDTHC")
  Q:$G(XPDPH)=""
  N XPDCHK,XPDHDR,XPDURL,I,X,Y
- S XPDURL="http://127.0.0.1:82/cgi/PCHCSUM?PCH="_XPDPH,XPDCHK=0
+ S XPDURL="http://127.0.0.1:PORT/cgi/PCHCSUM?PCH="_XPDPH,XPDCHK=0
  S X=$$GETURL^XTHC10(XPDURL,,$NA(^TMP($J,"XPDTHC")),.XPDHDR)
  I X>0 D
  . S I=""

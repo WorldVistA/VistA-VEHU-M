@@ -1,5 +1,5 @@
-PSJORUT2 ;BIR/MLM-MISC. PROCEDURE CALLS FOR OE/RR 3.0 (CONT.) ;03 Aug 98 / 8:42 AM
- ;;5.0; INPATIENT MEDICATIONS ;**14,29,50,56,58,107,152,134**;16 DEC 97;Build 124
+PSJORUT2 ;BIR/MLM-MISC. PROCEDURE CALLS FOR OE/RR 3.0 (CONT.); Oct 9, 2025@13:27
+ ;;5.0;INPATIENT MEDICATIONS;**14,29,50,56,58,107,152,134,464**;16 DEC 97;Build 4
  ;
  ; Reference to ^PS(55 is supported by DBIA 2191
  ; Reference to ^PS(50.605 is supported by DBIA 2138,696.
@@ -112,7 +112,7 @@ PIV ;*** Get the dispense drugs for the Pending IV orders.
  S ON1=0 F  S ON1=$O(^PS(53.1,+ON,"SOL",ON1)) Q:'ON1  S X=+^PS(53.1,+ON,"SOL",ON1,0),DDRUG=$P($G(^PS(52.7,X,0)),U,2) S COD=+ON_"P" D DDRUG
  Q
 IV ;*** Get the dispense drugs for the IV orders.
- NEW X S X=^PS(55,DFN,"IV",ON,0),PSJORIEN=$P(X,U,21) Q:$P(X,U,17)="R"
+ NEW X S X=^PS(55,DFN,"IV",ON,0),PSJORIEN=$P(X,U,21) Q:$P(X,U,17)="R"&('$G(PSSPGXCK))  ;PSJ*5*464
  S ON1=0 F  S ON1=$O(^PS(55,DFN,"IV",ON,"AD",ON1)) Q:'ON1  S X=+^PS(55,DFN,"IV",ON,"AD",ON1,0),DDRUG=$P($G(^PS(52.6,X,0)),U,2) S COD=ON_"V" D DDRUG
  S ON1=0 F  S ON1=$O(^PS(55,DFN,"IV",ON,"SOL",ON1)) Q:'ON1  S X=+^PS(55,DFN,"IV",ON,"SOL",ON1,0),DDRUG=$P($G(^PS(52.7,X,0)),U,2) S COD=ON_"V" D DDRUG
  Q

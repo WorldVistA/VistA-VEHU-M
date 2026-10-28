@@ -1,5 +1,5 @@
 YTQREST ;SLC/KCM - RESTful API front controller ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,208,223,238,239,249,250,236**;Dec 30, 1994;Build 25
+ ;;5.01;MENTAL HEALTH;**158,178,182,181,187,199,202,204,208,223,238,239,249,250,236,246**;Dec 30, 1994;Build 38
  ;
  ; Reference to EN^XPAR in ICR #2263
  ; Reference to XUP in ICR #4409
@@ -84,12 +84,14 @@ QADMIN(HTTPRSP,HTTPREQ) ; questionnaire administration resources
  ;;GET /api/mha/cdb/timezone/ TZ^YTQRCDB2
  ;;GET /api/mha/cdb/instrument/list/:dfn?1.N GETLIST^YTQRCDB2
  ;;GET /api/mha/cdb/instrument/adminlist/:dfn/:instrumentName GETALST^YTQRCDB2
+ ;;GET /api/mha/cdb/administration/:adminId GETAD^YTQRCDB2
  ;;GET /api/mha/cdb/namelist/poi/:poilist GETPAT^YTQRCDB5
  ;;GET /api/mha/cdb/namelist/doc/:doclist GETDOC^YTQRCDB5
  ;;POST /api/mha/cdb/instrument/admin SAVEADM^YTQRCDB
  ;;POST /api/mha/cdb/instrument/admin/scores SCORADM^YTQRCDB
  ;;POST /api/mha/cdb/instrument/admin/reviewed RVW^YTQRCDB
  ;;POST /api/mha/cdb/instrument/note SETNOTE^YTQRCDB3
+ ;;DELETE /api/mha/cdb/instrument/mhadmin/:dfn DELADMS^YTQRCDB3
  ;;
  D HANDLE^YTQRUTL("QADMIN^YTQREST",.HTTPREQ,.HTTPRSP)
  Q

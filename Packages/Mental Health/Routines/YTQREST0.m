@@ -1,5 +1,6 @@
 YTQREST0 ;SLC/KCM - RESTful API front controller v0 ; 1/25/2017
- ;;5.01;MENTAL HEALTH;**130,178,182,187,223,239,224,236**;Dec 30, 1994;Build 25
+ ;;5.01;MENTAL HEALTH;**130,178,182,187,223,239,224,236,246**;Dec 30, 1994;Build 38
+ ;
  ;
  ; .HTTPREQ: HTTP-formatted request and JSON body (if present)
  ; .HTTPRSP: HTTP-formatted response and JSON body (if present)
@@ -35,6 +36,7 @@ QSTAFF(HTTPRSP,HTTPREQ) ; questionnaire administration resources
 QENTRY(HTTPRSP,HTTPREQ) ; questionnaire entry for patient
  ;;GET /api/mha/getconn/ GETCONN^YTQREST
  ;;GET /api/mha/patient/:dfn/identifiers PID^YTQRQAD
+ ;;GET /api/mha/user/:duz/name NM4DUZ^YTQRQAD
  ;;GET /api/mha/instrument/:instrumentName GETSPEC^YTQRQAD
  ;;GET /api/mha/assignment/:assignmentId?1.N ASMTBYID^YTQRQAD1
  ;;GET /api/mha/assignment/:assignmentId?36ANP ASMTBYID^YTQRQAD1
@@ -50,6 +52,11 @@ QENTRY(HTTPRSP,HTTPREQ) ; questionnaire entry for patient
  ;;POST /api/mha/cat/interview/:interviewId SETCATI^YTQRCAT
  ;;DELETE /api/mha/assignment/:assignmentId/:instrument/:delfrmassign DELTEST^YTQRQAD1
  ;;GET /api/mha/cdb/timezone/ TZ^YTQRCDB2
+ ;;GET /api/mha/cdb/patient/pid/:dfn PID2^YTQRCDB2
+ ;;GET /api/mha/cdb/user/:duz/name NM4DUZ^YTQRQAD
+ ;;GET /api/mha/cdb/location/name/:locId?1.N GETLNAM^YTQRQAD4
+ ;;GET /api/mha/cdb/patient/pid/:dfn PID2^YTQRCDB2
+ ;;GET /api/mha/cdb/instrument/note/:adminId?1.N GNOTE^YTQRCDB3
  ;;POST /api/mha/cdb/instrument/admin SAVEADM^YTQRCDB
  ;;POST /api/mha/cdb/instrument/admin/scores SCORADM^YTQRCDB
  ;;POST /api/mha/cdb/instrument/note PENOTE^YTQRCDB3

@@ -1,5 +1,5 @@
-YTQRQAD2 ;SLC/KCM - RESTful Calls to set/get MHA administrations ;Oct 31, 2024@13:37:11
- ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181,199,202,204,208,233,223,234,238,250,236**;Dec 30, 1994;Build 25
+YTQRQAD2 ;SLC/KCM - RESTful Calls to set/get MHA administrations ;Aug 19, 2025@10:47:04
+ ;;5.01;MENTAL HEALTH;**130,141,173,178,182,181,199,202,204,208,233,223,234,238,250,236,246**;Dec 30, 1994;Build 38
  ;
 SAVEADM(ARGS,DATA) ; save answers and return /ys/mha/admin/{adminId}
  I $G(DATA("assignmentId"))?36ANP G POSTADM^YTQRCRW
@@ -121,12 +121,12 @@ ETFM(YSDT) ;External to FM
  I Y<0 S Y=""  ;Invalid YSDT
  Q Y
 ADM4ASMT(NODE,TESTID) ; return adminId if one has been saved for assignment
- N I,CURADM
+ N I,CURADM,YSX
  S CURADM=0
  S I=0 F  S I=$O(^XTMP(NODE,1,"instruments",I)) Q:'I  D  Q:CURADM
  . I $G(^XTMP(NODE,1,"instruments",I,"id"))'=TESTID Q
- . I $G(^XTMP(NODE,1,"instruments",I,"adminId"))>0 S CURADM=^XTMP(NODE,1,"instruments",I,"adminId")
- I $L(CURADM,"-")>0 S CURADM=0  ; only "real" admins, not UUID's
+ . S YSX=$G(^XTMP(NODE,1,"instruments",I,"adminId"))
+ . I YSX'["-",YSX>0 S CURADM=YSX  ; only "real" admins, not UUID's
  Q CURADM
  ;
 GETADM(ARGS,RESULTS) ; get answers for administration identified by ARGS("adminId")

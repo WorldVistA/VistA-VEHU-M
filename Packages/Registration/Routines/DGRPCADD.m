@@ -1,5 +1,5 @@
 DGRPCADD ;ALB/MRL,BAJ,TDM,JAM,ARF,JAM - REGISTRATION SCREEN 1.1/CONFIDENTIAL ADDRESS INFORMATION ;19 Jul 2017  3:05 PM
- ;;5.3;Registration;**489,624,688,754,887,941,1056,1143**;Aug 13, 1993;Build 36
+ ;;5.3;Registration;**489,624,688,754,887,941,1056,1143,1167**;Aug 13, 1993;Build 7
  ;
  ;;**688 BAJ Jan 17,2006 Modifications to support Foreign addresses
  ;;**941 JAM Apr 18,2017 Reformat of screen 1.1 - new field layouts
@@ -196,10 +196,12 @@ LOADLOCAL ; DG*5.3*1143
  .S $P(DGRP(.115),"^",12)=$G(DGADDGRP1(.1156))
  .; CASS Indicator
  .S $P(DGRP(.115),"^",19)=$G(DGADDGRP1(.1159))
+ .; DG*5.3*1167 - Home and Office phone numbers are included with the Group 1 address data
+ .;  But only overwrite the DGRP array entry if the local array is defined for the field
  .; Home phone
- .S $P(DGRP(.13),"^",1)=$G(DGADDGRP1(.131))
+ .I $D(DGADDGRP1(.131)) S $P(DGRP(.13),"^",1)=DGADDGRP1(.131)
  .; Work phone
- .S $P(DGRP(.13),"^",2)=$G(DGADDGRP1(.132))
+ .I $D(DGADDGRP1(.132)) S $P(DGRP(.13),"^",2)=DGADDGRP1(.132)
  ;
  ; DGADDGRP2 is the local array holding data entered into group 2 - Mailing Address (see DGREGAED)
  I $D(DGADDGRP2(.111)) D

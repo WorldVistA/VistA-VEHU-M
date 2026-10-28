@@ -1,5 +1,5 @@
 HLCSIN ;ALB/JRP - INCOMING FILER;01-MAY-95 ;03/07/2011
- ;;1.6;HEALTH LEVEL SEVEN;**2,30,14,19,62,109,115,122,140,145,153,175**;Oct 13, 1995;Build 2
+ ;;1.6;HEALTH LEVEL SEVEN;**2,30,14,19,62,109,115,122,140,145,153,175,178**;Oct 13, 1995;Build 6
  ;Per VHA Directive 6402, this routine should not be modified.
  ;Supported ICR# 10063, for $$PSET^%ZTLOAD API to make task persistent 
 STARTIN ;Main entry point for incoming background filer
@@ -12,6 +12,9 @@ STARTIN ;Main entry point for incoming background filer
  ;; N HLDUZ,DUZ  ; patch HL*1.6*122 TEST v2: DUZ code removed
  N HLDUZ
  S HLDUZ=+$G(DUZ)
+ ;;patch HL*1.6*178 if DUZ that started Incoming Filer is POSTMASTER, notify Incoming Filer Recipients
+ I (HLDUZ=.5) D
+ . D NOTIFY^HLCSIN()
  ;
  ;;patch HL*1.6*175 adds the $$PSET^%ZTLOAD api to set filers to persistent
  N HLPERS
@@ -161,4 +164,31 @@ CHKUPD(HLPTRFLR,HLEXIT) ;
  D SETFLRDH^HLCSUTL1(HLPTRFLR,"IN") ; Update LAST KNOWN $H (field #.03) for filer
  S HLPTRFLR("LASTUP")=$H
  D CHK4STOP^HLCSUTL2(HLPTRFLR,"IN",.HLEXIT) Q:HLEXIT
+ Q
+NOTIFY() ;
+ ; If the Incoming Filer is started by POSTMASTER, send a notification message to the mail group defined in field 21 of file 869.3, HL COMMUNICATION SERVER PARAMETER file.
+ ; If no mail group is defined, or mail group has been deleted, then do not attempt to send the notification.
+ ; Returns the MailMan message number of the notification message that was sent, or 0 if no message was sent, or -1 if an unexpected error occurred.
+ N DUZ,SUBJECT,BODY,MSG,MAILGROUP,XMZ,SITE
+ ;
+ N $ETRAP,$ESTACK
+ S $ETRAP="D ERR^HLCSIN Q -1"
+ ;
+ S MAILGROUP=$$GET1^DIQ(869.3,1,21,"E") ; get mail group from field 21 of file 869.3
+ I MAILGROUP="" Q 0 ; quit if no mail group defined
+ S MAILGROUP="G."_MAILGROUP ; prepend "G." to mail group name
+ ;
+ S SITE=$$SITE^VASITE
+ S SUBJECT="Incoming Filer Started With DUZ=.5 POSTMASTER"
+ S BODY="MSG"
+ S MSG(1)="Incoming Filer Started With DUZ=.5 POSTMASTER"
+ S MSG(2)="TIME: "_$$HTE^XLFDT($H)
+ S MSG(3)="SITE: "_$P(SITE,U,2)_" [#"_$P(SITE,U,3)_"]"
+ S DUZ=.5 ; Send notification as POSTMASTER
+ ;
+ D SENDMSG^XMXAPI(DUZ,SUBJECT,BODY,MAILGROUP,,.XMZ)
+ Q $G(XMZ)
+ERR ;
+ D APPERROR^%ZTER("HLCSIN-Notification")
+ S $ECODE=""
  Q

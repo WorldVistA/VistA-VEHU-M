@@ -1,7 +1,8 @@
 YTQRCDB3 ;BAL/KTL - MHA CLOUD DATABASE REPORT/NOTE RPC CALLS; 1/25/2017
- ;;5.01;MENTAL HEALTH;**239,224,236**;Dec 30, 1994;Build 25
+ ;;5.01;MENTAL HEALTH;**239,224,236,246**;Dec 30, 1994;Build 38
  ;
  ; Reference to ^DPT in ICR #10035
+ ; Reference to ^XUSRB APIs supported by DBIA #3277
  ;
  Q
 PENOTE(ARGS,DATA) ;Patient Entry progress note
@@ -14,12 +15,14 @@ PENOTE(ARGS,DATA) ;Patient Entry progress note
  I $G(ADMERR) D SETERROR^YTQRUTL(404,"Administration IDs do not match patient "_ADMERR) W !,ADMERR
  I '$D(DATA("notes")) Q "/api/mha/cdb/instrument/note/0"  ;No valid admins
  D PRSNOTE(.ARGS,.DATA,.TXT,"PE")
+ I '$D(TXT) Q "/api/mha/cdb/instrument/note/0"  ;No valid note text
  S II=0 F  S II=$O(TXT(II)) Q:II=""  D
  . S TCNT=$G(TCNT)+1
  . I TCNT=1 S DARR("text")=TXT(II) Q
  . S CCNT=$G(CCNT)+1
  . S DARR("text","\",CCNT)=TXT(II)
  S II=$O(DATA("notes","")),DARR("adminId")=DATA("notes",II,"adminId")
+ I $$UP^XLFSTR($G(DATA("notes",II,"cosigner")))'="NULL",$G(DATA("notes",II,"cosigner"))]"" S DARR("cosigner")=DATA("notes",II,"cosigner")
  S NOTERSL=$$SETNOTE(.ARGS,.DARR)
  Q NOTERSL
  Q
@@ -38,20 +41,31 @@ PRSNOTE(ARGS,DATA,TXT,YSTYPE) ;Parse the incoming note JSON and branch according
  . I '$D(DATA("notes",I,"text"))!($G(DATA("notes",I,"text"))="null") D GETNOTE(ADMIN,COSIGNER,.RESULTS)  ;No text passed in, generate from VistA MH REPORT template
  . I $D(DATA("notes",I,"text")),(DATA("notes",I,"text")'="null") D  ;PE/SE and note body sent
  .. S NCNT=0
- .. I $G(YSTYPE)="PE" D  ;PE needs patient header added
- ... D BLDHDR^YTQRCDB4(.HDR,ADMIN,79)
- ... S J=0 F  S J=$O(HDR(J)) Q:J=""  D
- .... S NCNT=NCNT+1,RESULTS("text","\",NCNT)=HDR(J)
+ ..; I $G(YSTYPE)="PE" D  ;PE needs patient header added
+ ..;. D BLDHDR^YTQRCDB4(.HDR,ADMIN,79)
+ ..;. S J=0 F  S J=$O(HDR(J)) Q:J=""  D
+ ..;.. S NCNT=NCNT+1,RESULTS("text","\",NCNT)=HDR(J)
+ .. I $G(DATA("notes",I,"text"))'="" D
+ ... S NCNT=NCNT+1,RESULTS("text","\",NCNT)=DATA("notes",I,"text")
  .. S J=0 F  S J=$O(DATA("notes",I,"text",J)) Q:J=""  D
  ... S NCNT=NCNT+1,RESULTS("text","\",NCNT)=DATA("notes",I,"text",J)
  . I $G(RESULTS("text"))="null" Q
  . ;Now text is normalized in RESULTS whether sent in or generated through VistA.
  . I CNT'=0 D
  .. S CNT=CNT+1,$P(TXTARR(CNT),"_",75)="" ;Add Note Divider
+ . I $G(RESULTS("text"))'="" D  ;Include first line of TXTARR
+ .. S CNT=CNT+1,TXTARR(CNT)=RESULTS("text")
  . S J=0 F  S J=$O(RESULTS("text","\",J)) Q:J=""  D  ;RESULTS format back into sequential TXTARR array
  .. S CNT=CNT+1,TXTARR(CNT)=RESULTS("text","\",J)
  ;At this point all Cloud generated and VistA generated PNOTE text in TXTARR
  M TXT=TXTARR
+ Q
+GNOTE(ARGS,RESULTS) ;Get Note for PE  ;246
+ N ADMIN,COSIGNER
+ N ADMIN S ADMIN=$G(ARGS("adminId"))
+ S COSIGNER=$G(ARGS("cosigner"))
+ I ADMIN="" D SETERROR^YTQRUTL(404,"Admin not sent: "_ADMIN) QUIT
+ D GETNOTE(ADMIN,COSIGNER,.RESULTS)
  Q
 GETNOTE(ADMIN,COSIGNER,RESULTS) ; build note object based on ARGS("adminId")
  I '$D(^YTT(601.84,ADMIN,0)) D SETERROR^YTQRUTL(404,"Admin not found: "_ADMIN) QUIT
@@ -121,3 +135,12 @@ WRAP(OUT,MAX) ; Wrap text by space piece word MAX char width
  . I STR]"" S CNT=CNT+1,OUT(CNT)=$E(STR,1,$L(STR)-1)
  Q
  ;
+DELADMS(ARGS,DATA) ;Delete all admins for a patient
+ N RET,DFN,YSADM
+ I $$PROD^XUPROD Q "/api/mha/cdb/instrument/mhadmin/NOT ALLOWED-PROD" ;Cannot be done in prod
+ D OWNSKEY^XUSRB(.RET,"YSDEL")
+ I RET(0)'=1  Q "/api/mha/cdb/instrument/mhadmin/NOT ALLOWED-MISSINGKEY"  ;Must have YSDEL key
+ S DFN=+$G(ARGS("dfn")) I DFN=0 Q "/api/mha/cdb/instrument/mhadmin/NO DFN"
+ S YSADM=0 F  S YSADM=$O(^YTT(601.84,"C",DFN,YSADM)) Q:+YSADM=0  D
+ . D DELADMIN^YTQRQAD1(YSADM)
+ Q "/api/mha/cdb/instrument/mhadmin/OK"

@@ -1,5 +1,5 @@
-YTQRCDB2 ;BAL/KTL - MHA CLOUD DATABASE RPC CALLS; 1/25/2017
- ;;5.01;MENTAL HEALTH;**239,250,236**;Dec 30, 1994;Build 25
+YTQRCDB2 ;BAL/KTL - MHA CLOUD DATABASE RPC CALLS;Jun 18, 2025@08:53:54
+ ;;5.01;MENTAL HEALTH;**239,250,236,246**;Dec 30, 1994;Build 38
  ;
  ;
  ;Reference to VADPT APIs supported by ICR #10061
@@ -56,7 +56,6 @@ GETLIST(ARGS,RESULTS) ; GET Insts for Pat
  .S CMPL=$P(G,U,9) Q:CMPL'="Y"
  .S ADMINDT=$P(G,U,4) Q:ADMINDT=""
  .S TST=$P(G,U,3),NAME=$P($G(^YTT(601.71,TST,0)),U,1)
- .I $P($G(^YTT(601.71,TST,2)),U,2)="C" QUIT
  .S SRISK=$P(G,U,14) I SRISK="" S SRISK=0
  .Q:$G(NMARR(NAME))'=""&($G(NMARR(NAME))>ADMINDT)
  .I $D(NMARR(NAME)) K ADMINAR(-NMARR(NAME),NAME)
@@ -82,7 +81,22 @@ GETALST(ARGS,RESULTS) ; GET admins for Pat+Inst
  S INSTIEN=$O(^YTT(601.71,"B",TEST,0)) I +INSTIEN=0 D SETERROR^YTQRUTL(404,"Instrument Not Found: "_TEST) QUIT
  D SETRES("{""instruments"":[")
  S XDT=""
- F  S XDT=$O(^PXRMINDX(601.84,"PI",DFN,INSTIEN,XDT),-1) Q:XDT=""  D  ;Get list of instr IENs
+ I TEST="IMHOA" D  ;Only for IMHOA to find incomplete admins as well
+ . S ADM=0 F  S ADM=$O(^YTT(601.84,"C",DFN,ADM)) Q:ADM=""  D
+ .. S G=$G(^YTT(601.84,ADM,0))
+ .. I G="" Q
+ .. S CMPL=$P(G,U,9) Q:CMPL="Y"
+ .. S STR=""
+ .. S TST=$P(G,U,3),ORD=$P(G,U,6),RVW=$P(G,U,17)
+ .. S SRC=$P(G,U,13) S:SRC'="" SRC=$P($G(^YTT(601.844,SRC,0)),U)
+ .. S ADMINID=$P(G,U,1),ADMINDT=$P($P(G,U,4),":",1,2)
+ .. S SAVEDT=$P($P(G,U,5),":",1,2)
+ .. S SRISK=$P(G,U,14) I SRISK="" S SRISK=0
+ .. S STR="{""adminId"":"""_ADMINID_""", ""instrumentName"":"""_TEST_""" , ""instrumentIen"":"""_INSTIEN_""" , ""administrationDate"":"""_$P($$FMTE^XLFDT(ADMINDT),":",1,2)
+ .. S STR=STR_""" , ""saveDate"":"""_$P($$FMTE^XLFDT(SAVEDT),":",1,2)_""" , ""suicideRisk"":"""_SRISK_""", ""entrySource"":"""_SRC
+ .. S STR=STR_""" , ""orderedBy"":"""_ORD_""" , ""reviewed"":"""_RVW_""" , ""isComplete"":"""_CMPL_""" },"
+ .. D SETRES(STR) S HIT=1
+ I TEST'="IMHOA" F  S XDT=$O(^PXRMINDX(601.84,"PI",DFN,INSTIEN,XDT),-1) Q:XDT=""  D  ;Get list of instr IENs
  . S ADM=0 F  S ADM=$O(^PXRMINDX(601.84,"PI",DFN,INSTIEN,XDT,ADM)) Q:ADM=""  D
  .. S G=$G(^YTT(601.84,ADM,0))
  .. I G="" Q
@@ -90,13 +104,12 @@ GETALST(ARGS,RESULTS) ; GET admins for Pat+Inst
  .. S STR=""
  .. S TST=$P(G,U,3),ORD=$P(G,U,6),RVW=$P(G,U,17)
  .. S SRC=$P(G,U,13) S:SRC'="" SRC=$P($G(^YTT(601.844,SRC,0)),U)
- .. I $P($G(^YTT(601.71,TST,2)),U,2)="C" QUIT
  .. S ADMINID=$P(G,U,1),ADMINDT=$P($P(G,U,4),":",1,2)
  .. S SAVEDT=$P($P(G,U,5),":",1,2)
  .. S SRISK=$P(G,U,14) I SRISK="" S SRISK=0
  .. S STR="{""adminId"":"""_ADMINID_""", ""instrumentName"":"""_TEST_""" , ""instrumentIen"":"""_INSTIEN_""" , ""administrationDate"":"""_$P($$FMTE^XLFDT(ADMINDT),":",1,2)
  .. S STR=STR_""" , ""saveDate"":"""_$P($$FMTE^XLFDT(SAVEDT),":",1,2)_""" , ""suicideRisk"":"""_SRISK_""", ""entrySource"":"""_SRC
- .. S STR=STR_""" , ""orderedBy"":"""_ORD_""" , ""reviewed"":"""_RVW_""" },"
+ .. S STR=STR_""" , ""orderedBy"":"""_ORD_""" , ""reviewed"":"""_RVW_""" , ""isComplete"":"""_CMPL_""" },"
  .. D SETRES(STR) S HIT=1
  I HIT S STR=^TMP("YTQ-JSON",$J,CNT,0),STR=$E(STR,1,$L(STR)-1),^TMP("YTQ-JSON",$J,CNT,0)=STR
  D SETRES("]}")
@@ -104,4 +117,29 @@ GETALST(ARGS,RESULTS) ; GET admins for Pat+Inst
  Q
 SETRES(STR) ;
  S CNT=CNT+1,^TMP("YTQ-JSON",$J,CNT,0)=STR
+ Q
+GETAD(ARGS,RESULTS) ; GET properties for a single admin
+ N ADMIN,G,TST,TEST,ORD,RVW,SRC,ADMINID,ADMINDT,SAVEDT,SRISK
+ S ADMIN=+$G(ARGS("adminId"))
+ I ADMIN=0 D SETERROR^YTQRUTL(404,"Administration not sent.") QUIT
+ I '$D(^YTT(601.84,ADMIN)) D SETERROR^YTQRUTL(404,"Administration not found.") QUIT
+ S G=$G(^YTT(601.84,ADMIN,0))
+ I G="" Q
+ S CMPL=$P(G,U,9) Q:CMPL'="Y"
+ S STR=""
+ S TST=$P(G,U,3),ORD=$P(G,U,6),RVW=$P(G,U,17)
+ S TEST=$P($G(^YTT(601.71,TST,0)),U)
+ S SRC=$P(G,U,13) S:SRC'="" SRC=$P($G(^YTT(601.844,SRC,0)),U)
+ S ADMINID=$P(G,U,1),ADMINDT=$P($P(G,U,4),":",1,2)
+ S SAVEDT=$P($P(G,U,5),":",1,2)
+ S SRISK=$P(G,U,14) I SRISK="" S SRISK=0
+ S RESULTS("adminId")=ADMINID
+ S RESULTS("instrumentName")=TEST
+ S RESULTS("instrumentIen")=TST
+ S RESULTS("administrationDate")=$P($$FMTE^XLFDT(ADMINDT),":",1,2)
+ S RESULTS("saveDate")=$P($$FMTE^XLFDT(SAVEDT),":",1,2)
+ S RESULTS("suicideRisk")=SRISK
+ S RESULTS("entrySource")=SRC
+ S RESULTS("orderedBy")=ORD
+ S RESULTS("reviewed")=RVW
  Q

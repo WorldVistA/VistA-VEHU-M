@@ -1,5 +1,5 @@
 RMPVS925 ; OIT/JDA - SCAMP runtime support; Nov 17, 2024@23:35:37
- ;;1.0;PROSTHETICS VISION 4 SIGHT II;**2**;Jan 31, 2025;Build 38
+ ;;1.0;PROSTHETICS VISION 4 SIGHT II;**2,6**;Jan 31, 2025;Build 6
  ;
  ; Reference to file #660 supported by ICR #6496
  ; Reference to file 661.6, supported by ICR #6778
@@ -129,8 +129,12 @@ CPT ; Edit CPT prompt
  S X="N",Y=0
  Q
 VEND ; Vendor
- S (X,Y)=$G(DIC("B"))
+ S X=$G(DIC("B"))
+ S DIC="^PRC(440,",DIC(0)=""
+ D ^DIC
+ I Y=-1 D ERROR("Vendor "_X_" not found in VENDOR file.") Q
  Q
+ ;
 SOURCE ; Source
  S (X,Y)="C"
  Q

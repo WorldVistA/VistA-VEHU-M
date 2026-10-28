@@ -1,6 +1,17 @@
-XOBVSYSI ;; ld,mjk/alb - VistaLink Interface Implementation ; 07/27/2002  13:00
- ;;1.6;VistALink;;May 08, 2009;Build 15
+XOBVSYSI ;ID/MJK/ALB - VistaLink Interface Implementation ; 4/27/26 3:41pm
+ ;;1.6;VistALink;**9**;May 08, 2009;Build 19
  ;Per VHA directive 2004-038, this routine should not be modified.
+ ; Case sensitive, 3+ characters
+ ; ICR 10104 - ^XLFSTR
+ ; ICR 2051 - FIND^DIC
+ ; ICR 2171 - XUAF4
+ ; ICR 2541 - KSP^XUPARAM
+ ; ICR 7616 - INIT^XUTLS AND GKSPTLSCN^XUTLS
+ ; ICR 1052 - XUSCLEAN
+ ; ICR 10097 - GENTENV^%ZOSSV
+ ; ICR 4153 - MXMLUTL
+ ; ICR 4440 - PROD^XUPROD
+ ; ICR 2343 - $$NAME^XUSER
 CALLBACK(CB) ; -- init callbacks implementation
  SET CB("STARTELEMENT")="ELEST^XOBVSYSI"
  QUIT
@@ -22,12 +33,11 @@ READER(XOBUF,XOBDATA) ; -- proprietary format reader implementation
  QUIT
  ;
 REQHDLR(XOBDATA) ; -- request handler implementation
- NEW TYPE
+ NEW TYPE,XOBVR
  SET TYPE=$GET(XOBDATA("XOB SYSTEM","TYPE"),"unknown")
  ;
  ; -- initialize socket partition request
  IF TYPE="initializeSocket" DO INIT(.TYPE) GOTO REQHDLRQ
- ;
  ; -- set stop flag to close socket request
  IF TYPE="closeSocket" DO CLOSE(.TYPE) GOTO REQHDLRQ
  ;
@@ -40,6 +50,8 @@ REQHDLR(XOBDATA) ; -- request handler implementation
  ; --  system info request 
  IF TYPE="systemInfo" DO SYSINFO(.TYPE) GOTO REQHDLRQ
  ;
+ ; -- upgrade to TLS encryption -- XOBV*1.6*9
+ IF TYPE="upgradeToTLS" D TLSU(.TYPE) GOTO REQHDLRQ
  ; -- failure if processing get here
  DO RESPONSE(.TYPE,"failure")
  ;
@@ -57,11 +69,12 @@ PSTANUM ; -- set primary station number
  ;
 INIT(TYPE) ; -- handle initialize request
  KILL XOBSYS
+ S XOBVRTN1=0
  DO ENV
  DO PSTANUM
  ;
  IF "^j2se^j2ee^.net^"[(U_XOBSYS("ENV")_U) DO
- . DO RESPONSE(.TYPE,"success",$$RATE()_$$JOB()_$$RASTO())
+ . DO RESPONSE(.TYPE,"success",$$RATE()_$$JOB()_$$RASTO()_$$TLS(.RTN))  ;ADD $$TLS for XOBV*1.6*9
  ELSE  DO
  . DO RESPONSE(.TYPE,"failure")
  QUIT
@@ -69,6 +82,7 @@ INIT(TYPE) ; -- handle initialize request
 CLOSE(TYPE) ; -- handle close socket request
  SET XOBSTOP=1
  DO RESPONSE(.TYPE,"success")
+ K XOBVRTN1,XOBVRTN,XOBVARRAY
  QUIT
  ;
 CLEANUP(TYPE) ; -- handle cleanup partition request
@@ -125,7 +139,7 @@ RESPONSE(TYPE,STATUS,ATTRS) ; -- build xml response
  QUIT
  ;
 SYSINFO(TYPE) ; -- build system info response
- NEW XOBINFO,XOBELE,XOBDEFLT,XOBINTRO,XOBI
+ NEW XOBINFO,XOBELE,XOBDEFLT,XOBINTRO,XOBI,XOBVT,XOBVRTN
  ;
  ; -- set up default value
  SET XOBDEFLT="unknown"
@@ -134,6 +148,7 @@ SYSINFO(TYPE) ; -- build system info response
  DO GETSINFO(.XOBINFO)
  ;
  ; -- build <SystemInfo> element
+ S XOBVT=$$TLS()
  SET XOBELE="<SystemInfo"
  SET XOBELE=XOBELE_" vistalinkVersion="""_$GET(XOBINFO("version"),XOBDEFLT)_""""
  SET XOBELE=XOBELE_" vistalinkBuild="""_$GET(XOBINFO("build"),XOBDEFLT)_""""
@@ -148,6 +163,7 @@ SYSINFO(TYPE) ; -- build system info response
  SET XOBELE=XOBELE_" vistaProduction="""_$GET(XOBINFO("vistaProduction"),XOBDEFLT)_""""
  SET XOBELE=XOBELE_" defaultInstitution="""_$GET(XOBINFO("defaultInstitution"),XOBDEFLT)_""""
  SET XOBELE=XOBELE_" cpName="""_$GET(XOBINFO("cpName"),XOBDEFLT)_""""
+ SET XOBELE=XOBELE_XOBVT
  SET XOBELE=XOBELE_" />"
  ;
  SET XOBINTRO=$GET(XOBINFO("introductoryText"))
@@ -232,3 +248,21 @@ TRUNCCH(XOBSTR) ; truncate before first non-numeric char
  . IF "0123456789"'[$E(XOBSTR,XOBI) SET XOBSTOP=1 QUIT
  . SET XOBSTR1=XOBSTR1_$E(XOBSTR,XOBI)
  QUIT XOBSTR1
+TLS(RTN) ;TLS Contingency check XOBV*1.6*9
+ N XOBVNAME,XOBVTLS
+ S (XOBVRTN,XOBVRTN1)=0
+ S RTN=""
+ S XOBVTLS=$T(GKSPTLSCN^XUTLS)
+ I $L($G(XOBVTLS)) D
+ . S XOBVRTN=$$GKSPTLSCN^XUTLS() S XOBVRTN1=+XOBVRTN
+ . S RTN=" encryptionSupported="""_XOBVRTN1_""""
+ Q RTN
+TLSU(TYPE) ; TLS use check XOBV*1.6*9
+ ;extra piecing was required to send back the exact responses needed without quotes.
+ N XOBV1,XOBVR
+ S XOBV1=$P($$INIT^XUTLS("USE",$P),""":",2)_"""" ;this gets (::/TLS="tls_encrypt_server")"
+ S XOBV1=$P(XOBV1,"""",2)
+ S XOBVR="1^"_XOBPORT_":"_XOBV1_""""
+ I $G(XOBVR) D RESPONSE(.TYPE,"success"," result="""_XOBVR_"")
+ D USE^%ZISUTL(XOBPORT)
+ Q

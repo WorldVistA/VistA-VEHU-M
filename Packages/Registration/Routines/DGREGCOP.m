@@ -1,7 +1,6 @@
 DGREGCOP ;ALB/CLT,JAM - COPY RESIDENTIAL TO PERM AND PERM TO RESIDENTIAL ADDRESS ;23 May 2017  1:38 PM
- ;;5.3;Registration;**941,1127,1143**;Aug 13, 1993;Build 36
+ ;;5.3;Registration;**941,1127,1143,1167**;Aug 13, 1993;Build 7
  ;
- ; TOTDO - REMOVE 1143 CODE FROM HERE
 EN(DFN) ;PRIMARY ENTRY POINT
 R2P(DFN) ;RESIDENTIAL TO PERMANENT ADDRESS COPY
  N DGAR,I,DGZIP,IENS,FDA
@@ -177,8 +176,10 @@ P2RLOCAL(DFN) ; DG*5.3*1143 - PERMANENT TO RESIDENTIAL ADDRESS COPY with RTA act
  .S DGADDGRP1(.11591)=DGAR(19)
  ;
  ; If no phone number fields currently defined in the group 1 array, load them from the database into the Group 1 local array so they are preserved
- I '$D(DGADDGRP1(.131)) S DGADDGRP1(.131)=$P($G(^DPT(DFN,.13)),"^",1)
- I '$D(DGADDGRP1(.132)) S DGADDGRP1(.132)=$P($G(^DPT(DFN,.13)),"^",2)
+ ; DG*5.3*1167 - Do not include the phone numbers since they have not been validated and should
+ ;  not be part of an address copy.
+ ;I '$D(DGADDGRP1(.131)) S DGADDGRP1(.131)=$P($G(^DPT(DFN,.13)),"^",1)
+ ;I '$D(DGADDGRP1(.132)) S DGADDGRP1(.132)=$P($G(^DPT(DFN,.13)),"^",2)
  ;
  ; Set edit flag for group 1
  S DGADDEDIT(1)=1

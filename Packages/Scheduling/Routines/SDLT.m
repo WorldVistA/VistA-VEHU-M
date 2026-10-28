@@ -1,5 +1,5 @@
-SDLT ;ALB/LDB,GXT,TJB,TJB - CANCELLATION LETTERS ;OCT 20 2025
- ;;5.3;Scheduling;**185,213,281,330,398,523,441,555,622,641,680,705,917,922**;Aug 13, 1993;Build 7
+SDLT ;ALB/LDB,GXT,TJB,TJB,JHC - CANCELLATION LETTERS ;AUG 20, 2026
+ ;;5.3;Scheduling;**185,213,281,330,398,523,441,555,622,641,680,705,917,922,950**;Aug 13, 1993;Build 6
  ;;Per VHA Directive 6402, this routine should not be modified
  ;
  ;**************************************************************************
@@ -35,7 +35,12 @@ WRAPP ;WRITE APPOINTMENT INFORMATION
  N B
  ; SD*5.3*622 - re-arrange display of clinic name
  ;S:$D(SC)&'$D(SDC) SDC=SC S SDCL=$P(^SC(+SDC,0),"^",1),SDCL=SDCL_" Clinic" D FORM
- S:$D(SC)&'$D(SDC) SDC=SC S SDCL=$P(^SC(+SDC,0),"^",1),SDCL="   Clinic:  "_SDCL D FORM ; SD*5.3*622 end changes
+ I $G(SC)="",'+$G(S) Q
+ S:$G(SC)="" SC=+$G(S)
+ I $$GET1^DIQ(44,SC,60,"I")="" D
+ .S:$D(SC)&'$D(SDC) SDC=SC S SDCL=$P(^SC(+SDC,0),"^",1),SDCL="   Clinic:  "_SDCL D FORM ; SD*5.3*622 end changes
+ I $$GET1^DIQ(44,SC,60,"I")'="" D
+ .S:$D(SC)&'$D(SDC) SDC=SC S SDCL=$E($$GET1^DIQ(44,+SDC,60,"I"),1,60),SDCL="   Clinic:  "_SDCL D FORM ;
  ;
  S SDX1=$S($D(SDX):SDX,1:X) S:$D(SDS) S=SDS F B=3,4,5 I $P(S,"^",B)]"" S SDCL=$S(B=3:"LAB",B=4:"XRAY",1:"EKG"),SDX=$P(S,"^",B) D FORM
  S (SDX,X)=SDX1 Q

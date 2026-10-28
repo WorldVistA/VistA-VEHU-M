@@ -1,8 +1,9 @@
 PSOORFI6 ;BIR/SJA - finish cprs orders cont. ;Nov 30, 2021@08:00:07
- ;;7.0;OUTPATIENT PHARMACY;**225,505,441**;DEC 1997;Build 209
+ ;;7.0;OUTPATIENT PHARMACY;**225,505,441,760**;DEC 1997;Build 13
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External references PSOL, and PSOUL^PSSLOCK supported by DBIA 2789
  ;External reference to ^DPT supported by DBIA 10035
+ ;External reference to ^PSSUTLA1 supported by DBIA 3373   
  ;
 DC N ACTION,LST,PSI,PSODFLG,PSONOORS,PSOOPT
  N VALMCNT W ! K DIR,DUOUT,DIROUT,DTOUT,PSOELSE
@@ -124,11 +125,11 @@ PAT() ;
  I $D(DIRUT)!(SEL="E") Q U
 PRMT I SEL="S" D  Q PSOSORT
  .S PSOSORT=PSOSORT_U_"SINGLE"
- .S DIR(0)="FO^2:30",DIR("A")="Select Patient",DIR("?")="^D HELP^PSOORFI2" D ^DIR I $E(X)="?" S PSOSORT=0 Q
- .I $D(DIRUT) S PSOSORT=0 Q
+ .S DIR(0)="F^2:30",DIR("A")="Select Patient",DIR("?")="^D HELP^PSOORFI2" D ^DIR I $E(X)="?" S PSOSORT=0 Q
+ .I $D(DIRUT) S PSOSORT=U Q
  .S DIC(0)="EQM",DIC=2,DIC("S")="I $D(^PS(52.41,""AOR"",+Y,PSOPINST))"
  .D ^DIC K DIC
- .I "^"[X S PSOSORT=0 Q
+ .I "^"[X S PSOSORT=U Q
  .S (PSODFN,PAT)=+Y,PSOFINY=Y
  .I $P(Y,U)<1 G PRMT
  .I $P(Y,U) S PSOSORT=PSOSORT_U_$P(Y,U),(PSODFN,PAT)=+Y,PSOFINY=Y
@@ -237,6 +238,7 @@ CHKFLTR(IEN,FLTR,CNT) ; CHECK THE SECONDARY FILTER FOR PENDING ORDERS
  ; controlled substances
  S FLTRVAL=$P(FLTR,U,3)
  I FLTRTYP="CS" D  Q RES
+ .N PSRT ;p760
  .S PDEA=0,OR0=$G(^PS(52.41,IEN,0)),PSRT=FLTRVAL
  .D PDEA^PSOORFI5 I 'PDEA!(PDEA'=PSRT) S RES=0 Q
  .S RES=1
@@ -258,6 +260,55 @@ PDEA ;
  I PDEA=0,PSRT=5 S PDEA=5 Q
  I PDEA,PSRT=3 S PDEA=3
  Q
+PATSORT ;p760 sort by date, sub sort by patient
+ K ^TMP("PSOORFIN-SORT",$J),^TMP("PSOORFIN-PATIENT",$J) ;p760 start
+ N PSFINIDX,PSOPAT,PSOD1 S PSFINIDX=0
+ S LG=0 F  S LG=$O(^PS(52.41,"AD",LG)) Q:'LG  F PSOD=0:0 S PSOD=$O(^PS(52.41,"AD",LG,PSOPINST,PSOD)) Q:'PSOD  D
+ .S PSOPAT=$P($G(^PS(52.41,PSOD,0)),"^",2) Q:'PSOPAT  Q:$D(^TMP("PSOORFIN-PATIENT",$J,PSOPAT))
+ .S PSOD1=0 F  S PSOD1=$O(^PS(52.41,"P",PSOPAT,PSOD1)) Q:'PSOD1  D
+ ..I $P(^PS(52.41,PSOD1,0),"^",3)'="DC",$P(^(0),"^",3)'="DE" D
+ ...S PSFINIDX=PSFINIDX+1,^TMP("PSOORFIN-SORT",$J,PSFINIDX,PSOD1)="",^TMP("PSOORFIN-PATIENT",$J,PSOPAT)=""
+ K ^TMP("PSOORFIN-PATIENT",$J)
+ Q
+W ;moved from W^PSOORFIN
+ D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"W",ORD)) Q:'ORD!($G(POERR("QFLG")))  I $P(^PS(52.41,ORD,0),"^",3)'="DC",$P(^(0),"^",3)'="DE" D LK1,ORD S MAIL=1
+ Q:$G(POERR("QFLG"))  I $G(MAIL) S ORD=0 D
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"M",ORD)) Q:'ORD!($G(POERR("QFLG")))  D:$P(^PS(52.41,ORD,0),"^",3)'="DC"&($P(^(0),"^",3)'="DE") LK1,ORD
+ .Q:$G(POERR("QFLG"))
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"C",ORD)) Q:'ORD!($G(POERR("QFLG")))  D:$P(^PS(52.41,ORD,0),"^",3)'="DC"&($P(^(0),"^",3)'="DE") LK1,ORD
+ .Q:$G(POERR("QFLG"))     ;441 PAPI
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"P",ORD)) Q:'ORD!($G(POERR("QFLG")))  D:$P(^PS(52.41,ORD,0),"^",3)'="DC"&($P(^(0),"^",3)'="DE") LK1,ORD
+ Q
+M ;moved from M^PSOORFIN
+ D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"M",ORD)) Q:'ORD!($G(POERR("QFLG")))  I $P(^PS(52.41,ORD,0),"^",3)'="DC",$P(^(0),"^",3)'="DE" D LK1,ORD S WIN=1
+ Q:$G(POERR("QFLG"))  I $G(WIN) S ORD=0 D
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"W",ORD)) Q:'ORD!($G(POERR("QFLG")))  I $P(^PS(52.41,ORD,0),"^",3)'="DC",$P(^(0),"^",3)'="DE" D LK1,ORD
+ .Q:$G(POERR("QFLG"))
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"C",ORD)) Q:'ORD!($G(POERR("QFLG")))  D:$P(^PS(52.41,ORD,0),"^",3)'="DC"&($P(^(0),"^",3)'="DE") LK1,ORD
+ .Q:$G(POERR("QFLG"))    ;441 PAPI
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"P",ORD)) Q:'ORD!($G(POERR("QFLG")))  D:$P(^PS(52.41,ORD,0),"^",3)'="DC"&($P(^(0),"^",3)'="DE") LK1,ORD
+ Q
+C ;moved from C^PSOORFIN
+ D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"C",ORD)) Q:'ORD!($G(POERR("QFLG")))  I $P(^PS(52.41,ORD,0),"^",3)'="DC",$P(^(0),"^",3)'="DE" D LK1,ORD S CLI=1
+ Q:$G(POERR("QFLG"))  I $G(CLI) S ORD=0 D
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"M",ORD)) Q:'ORD!($G(POERR("QFLG")))  I $P(^PS(52.41,ORD,0),"^",3)'="DC",$P(^(0),"^",3)'="DE" D LK1,ORD
+ .Q:$G(POERR("QFLG"))
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"W",ORD)) Q:'ORD!($G(POERR("QFLG")))  D:$P(^PS(52.41,ORD,0),"^",3)'="DC"&($P(^(0),"^",3)'="DE") LK1,ORD
+ .Q:$G(POERR("QFLG"))   ;441 PAPI
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"P",ORD)) Q:'ORD!($G(POERR("QFLG")))  D:$P(^PS(52.41,ORD,0),"^",3)'="DC"&($P(^(0),"^",3)'="DE") LK1,ORD
+ Q
+P ;moved from P^PSOORFIN
+ D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"P",ORD)) Q:'ORD!($G(POERR("QFLG")))  I $P(^PS(52.41,ORD,0),"^",3)'="DC",$P(^(0),"^",3)'="DE" D LK1,ORD S PRK=1
+ Q:$G(POERR("QFLG"))  I $G(PRK) S ORD=0 D
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"W",ORD)) Q:'ORD!($G(POERR("QFLG")))  I $P(^PS(52.41,ORD,0),"^",3)'="DC",$P(^(0),"^",3)'="DE" D LK1,ORD
+ .Q:$G(POERR("QFLG"))
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"M",ORD)) Q:'ORD!($G(POERR("QFLG")))  D:$P(^PS(52.41,ORD,0),"^",3)'="DC"&($P(^(0),"^",3)'="DE") LK1,ORD
+ .Q:$G(POERR("QFLG"))
+ .D KQ F  S ORD=$O(^PS(52.41,"AC",PAT,"C",ORD)) Q:'ORD!($G(POERR("QFLG")))  D:$P(^PS(52.41,ORD,0),"^",3)'="DC"&($P(^(0),"^",3)'="DE") LK1,ORD
+ Q
+KQ K PSOQUIT,POERR("QFLG") Q
+LK1 D LOCK^PSOORFI1 Q
+ORD D ORD^PSOORFIN Q
 SCRIT ;
  ;;PA:PATIENT
  ;;RT:ROUTE

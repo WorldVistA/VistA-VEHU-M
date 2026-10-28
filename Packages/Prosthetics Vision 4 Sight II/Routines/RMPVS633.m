@@ -1,39 +1,20 @@
 RMPVS633 ; OIT/JDA - SCAMP runtime support; Nov 17, 2024@23:35:37
- ;;1.0;PROSTHETICS VISION 4 SIGHT II;**2**;Jan 31, 2025;Build 38
+ ;;1.0;PROSTHETICS VISION 4 SIGHT II;**2,6**;Jan 31, 2025;Build 6
  ;
  ; Reference to file #668 supported by ICR #6540
  ; Reference to file #665 supported by ICR #6537
  ; Reference to file #2 (^DPT) supported by ICR #7019
  ;
  Q
-TEST ;test tag
+ ;
+TEST3(barcode) ;test tag
  ;TSTART
  N REQ,RESP
- S REQ("consult_ien")=1396535
- S REQ("patient_ssn")=557635084
- S REQ("barcode_key")="V2100-3240916104909"
- D RUN(.REQ,.RESP)
- u $P
- ;zw RESP
- Q
-TEST2 ;test tag
- ;TSTART
- N REQ,RESP
- S REQ("consult_ien")=1397538
- S REQ("patient_ssn")=614659908
- S REQ("barcode_key")="A9300-324121253536"
- D RUN(.REQ,.RESP)
- U $P
- ;zw RESP
- Q
-TEST3 ;test tag
- ;TSTART
- N REQ,RESP
- S REQ("consult_ien")=282223
- S REQ("patient_ssn")=571366114
- S REQ("barcode_key")="A4500-3190723101447"
- S REQ("inventory_location")="4SIGHTTEST"
- S REQ("hcpcs")="A4500"
+ S REQ("consult_ien")=1669648
+ S REQ("patient_ssn")=541090411
+ S REQ("barcode_key")=barcode
+ S REQ("inventory_location")="4SIGHT TEST"
+ S REQ("hcpcs")="V2200"
  S REQ("type_of_transaction")="S"
  S REQ("issue_date")="Dec 17, 2024"
  S REQ("quantity")=1
@@ -92,15 +73,24 @@ RUN(REQUEST,RESPONSE) ; set up input/output vars and run
  I 'DFN D  Q
  .D ERROR("Could not locate a patient with a matching SSN.")
  .M RESPONSE=^TMP($J,"RMPV","OUT")
+ ; Prosthetics Patient?
+ I '$D(^RMPR(665,"B",DFN)) D  Q
+ .D ERROR("Patient is not a registered prosthetics patient.")
+ .M RESPONSE=^TMP($J,"RMPV","OUT")
+ ;
  N SUSP S SUSP=$$FINDSUSP(DFN,REQUEST("consult_ien"))
  I 'SUSP D  Q
  .D ERROR("Suspense record in desired status not found.")
  .M RESPONSE=^TMP($J,"RMPV","OUT")
- I '$$DISCHK(.REQUEST) D  Q
- . D ERROR("Failed to update; patient missing disability code.")
+ ; additional disability code checking, on top of legacy, for updates
+ S disChk=$$DISCHK(.REQUEST)
+ I disChk<0 D  Q
+ . I disChk=-1 D ERROR("AO/DIS is not a valid disability code.")
+ . E  D ERROR("Error adding AO/DIS disability code.")
  . S ^TMP($J,"RMPV","OUT","consult_ien")=REQUEST("consult_ien")
  . M RESPONSE=^TMP($J,"RMPV","OUT")
  . Q
+ ;
  S ^TMP($J,"RMPV","OUT","http_response","http_status_code")=200
  S ^TMP($J,"RMPV","OUT","http_response","message")=""
  S ^TMP($J,"RMPV","OUT","suspense_ien")=SUSP
@@ -164,10 +154,9 @@ INIT ; initialization
  S ^TMP($J,"RMPV","CB","LOT+3^RMPRPIYJ")="LOT^RMPVS633"
  S ^TMP($J,"RMPV","CB","REMA+3^RMPRPIYJ")="REMA^RMPVS633"
  S ^TMP($J,"RMPV","CB","LIST+9^RMPRPIYJ")="PED^RMPVS633"
- ;
  S ^TMP($J,"RMPV","CB","DIV4+7^RMPRSIT")="SITE^RMPVS633"
  S ^TMP($J,"RMPV","CB","GETPAT+12^RMPRUTIL")="DECEASED^RMPVS633"
- S ^TMP($J,"RMPV","CB","EN+3^RMPRDIS")="NOOP^RMPVS633"
+ S ^TMP($J,"RMPV","CB","EN+3^RMPRDIS")="YEP^RMPVS633"
  Q
  ; 
 SCREEN ; Select a screen "ASK1+12^RMPRPAT"
@@ -193,6 +182,8 @@ PDCE ; Edit prosthetic disability code "EDIT+1^RMPRDIS"
  S FDA(665.01,IENS,2)=2
  S FDA(665.01,IENS,3)=4
  S FDA(665.01,IENS,4)=8
+ S FDA(665.01,IENS,5)=1
+ S FDA(665.01,IENS,7)=DUZ
  D FILE^DIE(,"FDA","MSG")
  Q
 PDCS ; Select prosthetic disability code "SEL+2^RMPRDIS"
@@ -258,15 +249,56 @@ NOOP ; Never called in Legacy "EN+3^RMPRDIS"
  S X="N",Y=0 ; default to NO
  Q
  ;
+YEP ;Add a new disability code
+ S X="Y",Y=1 ; default to YES
+ ;
+ ;
+TSTDIS ; test for DISCHK
+ N REQ,disChk
+ S REQ("patient_ssn")=507859503
+ S disChk=$$DISCHK(.REQ)
+ I disChk>0 W "Success.",!
+ E  W "Failure "_disChk,!
+ Q
  ;
 DISCHK(REQ) ;disability code checker
+ ; Description: Lookup patient disability codes. Add AO/DIS if code(s) exist
+ ;              but are all deleted. Note: Legacy VistA handles the case where
+ ;              no disability codes exist and adds AO/DIS. See PDCA and PDCE tags.
+ ; input: REQ - request array
+ ; output: 1: valid disability code
+ ;         -1: invalid default disability code
+ ;         -2: error adding disability code
  ;
- N consultIEN,patientSSN,disabilityCodes
- S consultIEN=REQ("consult_ien")
+ N consultIEN,patientSSN,disI,dateCodeDeleted,goodCode,disabilityCodes
+ N DIC,DA,X,Y,patientIEN
+ S goodCode=1
  S patientSSN=REQ("patient_ssn")
  S patientIEN=$$FIND1^DIC(2,"","X",patientSSN,"SSN")
- D GETS^DIQ(665,patientIEN_",","10*","","disabilityCodes")
- Q $D(disabilityCodes)
+ D GETS^DIQ(665,patientIEN_",","10*","I","disabilityCodes")
+ ;
+ I $D(disabilityCodes) Do
+ . S goodCode=0
+ . S disI=""
+ . F  S disI=$O(disabilityCodes(665.01,disI)) Q:'+disI  D  Q:goodCode
+ . . S dateCodeDeleted=disabilityCodes(665.01,disI,10,"I")
+ . . I '+dateCodeDeleted S goodCode=1 Q
+ . ;
+ . I 'goodCode D
+ . . ; lookup the ien of AO/DIS in ^RMPR(662,
+ . . S DIC="^RMPR(662,",DIC(0)="X",X="AO/DIS" D ^DIC
+ . . I Y=-1 S goodCode=Y  Q
+ . . ; add a good code
+ . . S X=$P(Y,U)
+ . . S DA(1)=patientIEN
+ . . S DIC="^RMPR(665,"_DA(1)_",1,"
+ . . S DIC(0)="L"
+ . . S DIC("DR")="1///TODAY;2////2;3////4;4////8;5////1;7////"_DUZ
+ . . D FILE^DICN
+ . . I Y=-1 S goodCode=-2 Q
+ . . S goodCode=1
+ ;
+ Q goodCode
  ;
 %WRITE(EREF,ARG) ; WRITE handler
  ;I ARG="Posted to 2319..." K RMPR60("IEN")

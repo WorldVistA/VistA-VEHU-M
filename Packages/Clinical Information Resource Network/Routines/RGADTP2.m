@@ -1,9 +1,10 @@
 RGADTP2 ;BIR/DLR-ADT PROCESSOR TO RETRIGGER A08 or A04 MESSAGES WITH AL/AL (COMMIT/APPLICATION) ACKNOWLEDGEMENTS - CONTINUED ;8/17/21  15:36
- ;;1.0;CLINICAL INFO RESOURCE NETWORK;**27,20,45,44,47,48,49,52,54,58,59,64,66,67,71,72,76**;30 Apr 99;Build 1
+ ;;1.0;CLINICAL INFO RESOURCE NETWORK;**27,20,45,44,47,48,49,52,54,58,59,64,66,67,71,72,76,80**;30 Apr 99;Build 2
 DBIA ;
  ;Reference to $$ADD^VAFCEHU1 supported by IA #2753
  ;Reference to EDIT^VAFCPTED supported by IA #2784
  ;Reference to ^DPT(DFN,.105) supported by IA #10035
+ ;Reference to SITE^VASITE [10112] / NOW^XLFDT [10103] / STDNAME^XLFNAME [#3065] / NS^XUAF4 [2171]
  Q
 PROCIN(ARRAY,RGLOCAL,RGER,DFN,HL) ;
  N RGRSDFN,OTHSITE,NODE,ICN,CMORIEN,CMOR,SENSTVTY,RMTDOD,LOCDOD,VAFCA,VAFCA08,HERE,BOGUS,ARAY,REP
@@ -13,13 +14,13 @@ PROCIN(ARRAY,RGLOCAL,RGER,DFN,HL) ;
  Q:$G(ARRAY("MPISSITE"))=$G(HERE)
  S ARRAY(.097)=$P($$NOW^XLFDT,".")
  I $G(ARRAY("ICN"))'="" D
- .S RGRSDFN=$$GETDFN^MPIF001(+ARRAY("ICN")) I +RGRSDFN<1 S RGER=RGRSDFN_" ICN#"_$G(ARRAY("ICN")) Q  ;quit and return error msg
+ .S RGRSDFN=$$GETDFN^MPIF001(+ARRAY("ICN")) I +RGRSDFN<1 S RGER=RGRSDFN_" ICN#"_$G(ARRAY("ICN")) Q  ;quit and return error msg  Supported IA#2701
  .S OTHSITE=ARRAY("SENDING SITE") ;**40 REMOVED THE PLUS TO KEEP SUFFIX ON STATION# & CHANGED THE SITE TO BE SENDING SITE INSTEAD OF AUTHORITATIVE SOURCE
  I $G(RGRSDFN)="" S RGRSDFN=$G(DFN)
  I $G(RGRSDFN)="" S RGER="-1^DFN not defined"
  I $G(RGER) Q
  I $G(OTHSITE)="" S OTHSITE=""
- S NODE=$$MPINODE^MPIFAPI(RGRSDFN)
+ S NODE=$$MPINODE^MPIFAPI(RGRSDFN)  ;Supported IA#2702
  S ICN=$P(NODE,"^")
  S CMORIEN=$P(NODE,"^",3)
  ;
@@ -93,6 +94,7 @@ NOTLOC I 'RGLOCAL D
  ...I ARRAY("SSN")'="" S ARAY(2,.09)=$G(ARRAY("SSN")) ;**45 only set SSN to update if it isn't null
  ...S ARAY(2,.02)=$G(ARRAY("SEX"))
  ...S ARAY(2,.2403)=$G(ARRAY("MMN"))
+ ...S ARAY(2,.2405)=$G(ARRAY("PREFERREDNAME"))  ;**80 Story VAMPI-36397 (jfw)
  ...S ARAY(2,994)=$G(ARRAY("MBI"))
  ...I $D(ARRAY("ALIAS")) M ARAY(2,1)=ARRAY("ALIAS") ;**48 add alias to mix
  ...I $D(ARRAY("SexOr")) M ARAY(2,.025)=ARRAY("SexOr") ;**76, VAMPI-11114 (dri)
@@ -100,22 +102,28 @@ NOTLOC I 'RGLOCAL D
  ...D EDIT^VAFCPTED(RGRSDFN,"ARAY(2)",DR) ;file differences into patient file
  ...;
  ...;check to see if edits were successful, if not set RGER="why it failed"
- ...N NAME,SSN,PDOB,SEX,MMN,OLDNAME,OLDHLNAM,OLDMMN,OLDHLMMN,HLNAME,HLMMN,MBI
+ ...N NAME,SSN,PDOB,SEX,MMN,OLDNAME,OLDHLNAM,OLDMMN,OLDHLMMN,HLNAME,HLMMN,MBI,PREFNME
  ...S NAME=$$GET1^DIQ(2,+RGRSDFN_",",.01,"I")
  ...S PDOB=$$GET1^DIQ(2,+RGRSDFN_",",.03,"I")
  ...S SSN=$$GET1^DIQ(2,+RGRSDFN_",",.09,"I")
  ...S SEX=$$GET1^DIQ(2,+RGRSDFN_",",.02,"I")
  ...S MMN=$$GET1^DIQ(2,+RGRSDFN_",",.2403,"I")
+ ...S PREFNME=$$GET1^DIQ(2,+RGRSDFN_",",.2405,"I")  ;**80 Story VAMPI-36397 (jfw)
  ...S MBI=$$GET1^DIQ(2,+RGRSDFN_",",994,"I")
  ...;
  ...I PDOB'=$G(ARRAY("MPIDOB")) S RGER=$S($G(RGER)'="":$G(RGER)_REP,1:"-1^")_"DOB field failure"
  ...I SEX'=$G(ARRAY("SEX")) S RGER=$S($G(RGER)'="":$G(RGER)_REP,1:"-1^")_"SEX field failure"
+ ...;**80 Story VAMPI-36397 (jfw) - Return Error if NOT updated
+ ...I PREFNME'=$G(ARRAY("PREFERREDNAME")) D
+ ....I PREFNME=""&($G(ARRAY("PREFERREDNAME"))="@") Q
+ ....S RGER=$S($G(RGER)'="":$G(RGER)_REP,1:"-1^")_"PREFERRED NAME field failure"
+ ...;**80 End Changes
  ...I MBI'=$G(ARRAY("MBI")) D
  ....I MBI=""&($G(ARRAY("MBI"))="@") Q
  ....S RGER=$S($G(RGER)'="":$G(RGER)_REP,1:"-1^")_"MULTIPLE BIRTH INDICATOR field failure"
  ...D STDNAME^XLFNAME(.MMN,"F",.OLDMMN) S HLMMN=ARRAY("MMN") D STDNAME^XLFNAME(.HLMMN,"F",.OLDHLMMN) I MMN'=$G(HLMMN) S RGER=$S($G(RGER)'="":$G(RGER)_REP,1:"-1^")_"MOTHER'S MAIDEN NAME field failure"
  ...;
- ...;**71,Story 841921 (mko): Use this STDNAME method of checking that the name was updated only if the new Name Components flag is not set
+ ...;**71,Story 841921 (mko): Use this STDNAME method of checking that the name was updated only if the new Name Components flag is not set  IA#7004
  ...I '$$GETFLAG^MPIFNAMC D
  ....D STDNAME^XLFNAME(.NAME,"F",.OLDNAME) S HLNAME=ARRAY("NAME") D STDNAME^XLFNAME(.HLNAME,"F",.OLDHLNAM)
  ....I NAME'=$G(HLNAME) S RGER=$S($G(RGER)'="":$G(RGER)_REP,1:"-1^")_"Name field failure"

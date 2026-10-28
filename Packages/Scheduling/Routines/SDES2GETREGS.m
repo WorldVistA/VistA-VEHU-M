@@ -1,14 +1,10 @@
-SDES2GETREGS ;ALB/TJB,JAS,MCB - Get registration info JSON format ; July 17, 2025
- ;;5.3;SCHEDULING;**873,889,901,909**;AUG 13, 1993;Build 12
+SDES2GETREGS ;ALB/TJB,JAS,MCB,JAS - Get registration info JSON format ; July 31, 2026
+ ;;5.3;SCHEDULING;**873,889,901,909,952**;AUG 13, 1993;Build 4
  ;;Per VHA Directive 6402, this routine should not be modified
  ; Documented API's and Integration Agreements
  ; -------------------------------------------
- ; Reference to PATIENT in ICR #7030
- ; Reference to PATIENT in ICR #7029
- ; Reference to PATIENT in ICR #1476
- ; Reference to PATIENT in ICR #10035
+ ; Reference to PATIENT fields in ICRs: #1476, #7019, #7029, #7030, #10035
  ; Reference to SCHEDULED ADMISSION in ICR #4425
- ;
  ; Reference to DUZ^XUP is supported by IA #7487
  ;
  Q
@@ -19,6 +15,9 @@ GETPATINFO(JSON,SDCONTEXT,SDPARAM) ;return basic reg info/demographics for given
  ;Returns:
  ; JSON formatted output
  N RETURN,SDINFO,SDDFN,SDPATARR,SDDEMO,PRACE,PRACEN,PETH,PETHN,SDMHP,SDPCP,GAF,GAFR,SDZIP,SDDOD,ERRORS
+ ; Next line to address leaks from other APIs
+ N PRFLIST,VA,YSZ,Z0
+ ;
  D VALCONTEXT^SDES2VALCONTEXT(.ERRORS,.SDCONTEXT)
  I $D(ERRORS) S RETURN("Patient")="" M RETURN=ERRORS D BUILDJSON^SDES2JSON(.JSON,.RETURN) Q
  I $G(SDCONTEXT("USER DUZ"))'="" N DUZ D DUZ^XUP(SDCONTEXT("USER DUZ"))
@@ -48,7 +47,7 @@ GETDEMOGR(SDINFO,SDCONTEXT,SDPARAM) ;
  D RACELIST^SDES2UTIL1(.RACELIST,DFN)
  D ETHNLIST^SDES2UTIL1(.ETHNLIST,DFN)   ;get ethnicity
  S FIELDS=".01;.02;.05;.08;.1;.105;.111;.112;.113;.114;.115;.116;.1112;.2203;.2207;.301;.302;.331;.332;"
- S FIELDS=FIELDS_".333;.334;.335;.336;.337;.338;.339;.351;.39;.1219;.1151;.1152;.1153;.1154;.1155;.1156;"
+ S FIELDS=FIELDS_".333;.334;.335;.336;.337;.338;.339;.351;.39;.1219;.1151;.1152;.1153;.1154;.1155;.1156;.1157;.11573;"
  S FIELDS=FIELDS_".1173;.1223;.2201;.33011;27.01;1100.01"
  D GETS^DIQ(2,SDFN,FIELDS,"IE","SDPATARR")
  ;patient enrollment
@@ -58,15 +57,14 @@ GETDEMOGR(SDINFO,SDCONTEXT,SDPARAM) ;
  S CAT8GROUPFLG=$S($G(CAT8GROUPFLG)'="":CAT8GROUPFLG,1:0)
  S SDMHP=$$START^SCMCMHTC(DFN) ;Return Mental Health Provider
  S SDPCP=$$OUTPTPR^SDUTL3(DFN) ;Return Primary Care Provider
- D ASSIGNADDR(.SDDEMO,DFN) ;assign all values needed to build SDINFO array
+ D ASSIGNADDR(.SDDEMO,DFN) ;assign values to build SDINFO array
  ;
  ;person identification information
  S SDINFO("Patient","DataFileNumber")=DFN
  S SDINFO("Patient","ICN")=$$GETPATICN^SDESINPUTVALUTL(DFN)
- ;
- S SDINFO("Patient","Name")=$G(SDPATARR(2,SDFN,.01,"E")) ;SDDEMO("NAME")
+ S SDINFO("Patient","Name")=$G(SDPATARR(2,SDFN,.01,"E"))
  S SDINFO("Patient","SocialSecurityNumber")=$$LAST4SSN^SDESINPUTVALUTL(DFN)
- S SDINFO("Patient","DateOfBirth")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDFN,.03,"I")) ;vse-2500  IA 10035
+ S SDINFO("Patient","DateOfBirth")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDFN,.03,"I"))
  S SDINFO("Patient","Race","IEN")=$G(RACELIST("IENS"))
  S SDINFO("Patient","Race","Name")=$G(RACELIST("NAMES"))
  S SDINFO("Patient","Ethnicity","IEN")=$G(ETHNLIST("IENS"))
@@ -78,7 +76,6 @@ GETDEMOGR(SDINFO,SDCONTEXT,SDPARAM) ;
  S SDINFO("Patient","TimeStamp")=$$GETPREREGTIM(DFN)
  ;
  ;health information
- ;
  S SDINFO("Patient","PrimaryCareProvider")=$P(SDPCP,"^",2)
  S SDINFO("Patient","ServiceConnected")=$G(SDPATARR(2,SDFN,.301,"E"))
  S SDINFO("Patient","ServiceConnectedPercentage")=$G(SDPATARR(2,SDFN,.302,"E"))
@@ -87,7 +84,6 @@ GETDEMOGR(SDINFO,SDCONTEXT,SDPARAM) ;
  S SDINFO("Patient","MentalHealthProvider")=$P(SDMHP,"^",2)
  ;
  ;flags
- ;
  S SDINFO("Patient","FugitiveFlag")=$G(SDPATARR(2,SDFN,1100.01,"I"))
  S SDINFO("Patient","VeteranCatastrophicallyDisabled")=$G(SDPATARR(2,SDFN,.39,"I"))
  S SDINFO("Patient","NationalFlag")=$$FLAGS^SDES2UTIL1(DFN,26.15)
@@ -99,14 +95,15 @@ GETDEMOGR(SDINFO,SDCONTEXT,SDPARAM) ;
  S SDINFO("Patient","GAFRequired")=$$GETGAF^SDES2UTIL1(DFN)
  ;
  ;contact information
- ;
- S SDINFO("Patient","Cell")=SDDEMO("PCELL")
+ S SDINFO("Patient","Cell")=$S(SDDEMO("PCELL")["X":$P(SDDEMO("PCELL"),"X"),1:SDDEMO("PCELL"))
+ S SDINFO("Patient","CellExt")=$S(SDDEMO("PCELL")["X":$P(SDDEMO("PCELL"),"X",2),1:"")
  S SDINFO("Patient","Email")=SDDEMO("PEMAIL")
- S SDINFO("Patient","HomePhone")=SDDEMO("HPHONE")
- S SDINFO("Patient","OfficePhone")=SDDEMO("OPHONE")
+ S SDINFO("Patient","HomePhone")=$S(SDDEMO("HPHONE")["X":$P(SDDEMO("HPHONE"),"X"),1:SDDEMO("HPHONE"))
+ S SDINFO("Patient","OfficePhone")=$S(SDDEMO("OPHONE")["X":$P(SDDEMO("OPHONE"),"X"),1:SDDEMO("OPHONE"))
+ S SDINFO("Patient","HomePhoneExt")=$S(SDDEMO("HPHONE")["X":$P(SDDEMO("HPHONE"),"X",2),1:"")
+ S SDINFO("Patient","OfficePhoneExt")=$S(SDDEMO("OPHONE")["X":$P(SDDEMO("OPHONE"),"X",2),1:"")
  ;
  ;mail address information
- ;
  S SDINFO("Patient","MailingAddress","Street1")=SDDEMO("PADDRES1")
  S SDINFO("Patient","MailingAddress","Street2")=SDDEMO("PADDRES2")
  S SDINFO("Patient","MailingAddress","Street3")=SDDEMO("PADDRES3")
@@ -120,16 +117,18 @@ GETDEMOGR(SDINFO,SDCONTEXT,SDPARAM) ;
  S SDINFO("Patient","AddressIndicator")=SDDEMO("BADADD")
  ;
  ;Residential Address Info
- ;
  S SDINFO("Patient","ResidentialAddress","Address1")=$G(SDPATARR(2,SDFN,.1151,"E"))
  S SDINFO("Patient","ResidentialAddress","Address2")=$G(SDPATARR(2,SDFN,.1152,"E"))
  S SDINFO("Patient","ResidentialAddress","Address3")=$G(SDPATARR(2,SDFN,.1153,"E"))
  S SDINFO("Patient","ResidentialAddress","City")=$G(SDPATARR(2,SDFN,.1154,"E"))
  S SDINFO("Patient","ResidentialAddress","State")=$G(SDPATARR(2,SDFN,.1155,"E"))
+ S SDINFO("Patient","ResidentialAddress","County")=$G(SDPATARR(2,SDFN,.1157,"E"))
+ S SDINFO("Patient","ResidentialAddress","Country")=$G(SDPATARR(2,SDFN,.11573,"I"))
+ S SDINFO("Patient","ResidentialAddress","CountryName")=$G(SDPATARR(2,SDFN,.11573,"E"))
  S SDINFO("Patient","ResidentialAddress","Zip4")=$G(SDPATARR(2,SDFN,.1156,"E"))
+ S SDINFO("Patient","ResidentialAddress","Zip")=$E($G(SDPATARR(2,SDFN,.1156,"E")),1,5)
  ;
  ;Temp Address information
- ;
  S SDINFO("Patient","TemporaryAddress","Address1")=SDDEMO("PTADDRESS1")
  S SDINFO("Patient","TemporaryAddress","Address2")=SDDEMO("PTADDRESS2")
  S SDINFO("Patient","TemporaryAddress","Address3")=SDDEMO("PTADDRESS3")
@@ -141,12 +140,11 @@ GETDEMOGR(SDINFO,SDCONTEXT,SDPARAM) ;
  S SDINFO("Patient","TemporaryAddress","CountryName")=$G(SDPATARR(2,SDFN,.1223,"E"))
  S SDINFO("Patient","TemporaryAddress","County")=SDDEMO("PTCOUNTY")
  S SDINFO("Patient","TemporaryAddressActive")=$S($G(SDDEMO("PTACTIVE"))="Y":1,1:0)
- S SDINFO("Patient","TemporaryAddressStart")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDFN,.1217,"I")) ;vse-2500  IA 7019
- S SDINFO("Patient","TemporaryAddressEnd")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDFN,.1218,"I")) ;vse-2500  IA 7019
+ S SDINFO("Patient","TemporaryAddressStart")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDFN,.1217,"I"))
+ S SDINFO("Patient","TemporaryAddressEnd")=$$FMTISO^SDAMUTDT($$GET1^DIQ(2,SDFN,.1218,"I"))
  S SDINFO("Patient","TemporaryPhone")=$G(SDPATARR(2,SDFN,.1219,"E"))
  ;
  ;Primary Next Of Kin Information
- ;
  S SDINFO("Patient","PrimaryNextOfKin","Name")=SDDEMO("NOK")
  S SDINFO("Patient","PrimaryNextOfKin","Relationship")=SDDEMO("KREL")
  S SDINFO("Patient","PrimaryNextOfKin","Phone")=SDDEMO("KPHONE")
@@ -159,7 +157,6 @@ GETDEMOGR(SDINFO,SDCONTEXT,SDPARAM) ;
  S SDINFO("Patient","PrimaryNextOfKin","Address","Zip4")=$G(SDPATARR(2,SDFN,.2207,"E"))
  ;
  ;Secondary Next of Kin Information
- ;
  S SDINFO("Patient","SecondaryNextOfKin","Name")=SDDEMO("K2NAME")
  S SDINFO("Patient","SecondaryNextOfKin","Relationship")=SDDEMO("K2REL")
  S SDINFO("Patient","SecondaryNextOfKin","Phone")=SDDEMO("K2PHONE")
@@ -172,7 +169,6 @@ GETDEMOGR(SDINFO,SDCONTEXT,SDPARAM) ;
  S SDINFO("Patient","SecondaryNextOfKin","Address","Zip4")=$G(SDPATARR(2,SDFN,.2203,"E"))
  ;
  ; Emergency Contact
- ;
  S SDINFO("Patient","EmergencyContact","Name")=$G(SDPATARR(2,SDFN,.331,"E"))
  S SDINFO("Patient","EmergencyContact","Relationship")=$G(SDPATARR(2,SDFN,.332,"E"))
  S SDINFO("Patient","EmergencyContact","Phone")=$G(SDPATARR(2,SDFN,.339,"E"))
@@ -202,7 +198,7 @@ SIM(DFN)  ;get similar patient data
  S SIM=MSG_"|"_PATS
  Q SIM
  ;
-ASSIGNADDR(RET,DFN) ;assign values to be used to build output
+ASSIGNADDR(RET,DFN) ;build array for output
  N SDD,SDI,SDM,Z0
  N PCE,PCOUNTY,PTCOUNTY,PSTATE
  Q:'+$G(DFN)
@@ -214,65 +210,65 @@ ASSIGNADDR(RET,DFN) ;assign values to be used to build output
  ;
  ;get addresses
  K SDD,SDM D GETS^DIQ(2,DFN_",",".111:.135;.211:.2207","IE","SDD","SDM")
- S RET("PADDRES1")=$G(SDD(2,DFN_",",.111,"E"))  ; STREET ADDRESS [LINE 1]
- S RET("PADDRES2")=$G(SDD(2,DFN_",",.112,"E"))  ; STREET ADDRESS [LINE 2]
- S RET("PADDRES3")=$G(SDD(2,DFN_",",.113,"E"))  ; STREET ADDRESS [LINE 3]
- S RET("PZIP+4")=$G(SDD(2,DFN_",",.1112,"E"))    ; ZIP+4
- S RET("PCITY")=$G(SDD(2,DFN_",",.114,"E"))      ; CITY
+ S RET("PADDRES1")=$G(SDD(2,DFN_",",.111,"E"))
+ S RET("PADDRES2")=$G(SDD(2,DFN_",",.112,"E"))
+ S RET("PADDRES3")=$G(SDD(2,DFN_",",.113,"E"))
+ S RET("PZIP+4")=$G(SDD(2,DFN_",",.1112,"E"))
+ S RET("PCITY")=$G(SDD(2,DFN_",",.114,"E"))
  S PSTATE=$G(SDD(2,DFN_",",.115,"I"))
- S RET("PSTATE")=$G(SDD(2,DFN_",",.115,"E"))     ; STATE name
+ S RET("PSTATE")=$G(SDD(2,DFN_",",.115,"E"))
  I PSTATE'="" D
  .S PCOUNTY=$G(SDD(2,DFN_",",.117,"I"))
- .S:PCOUNTY'="" RET("PCOUNTY")=$P($G(^DIC(5,PSTATE,1,PCOUNTY,0)),U,1)  ;  - Patient County (.117)
- S RET("PCOUNTRY")=$G(SDD(2,DFN_",",.1173,"I"))  ; COUNTRY
+ .S:PCOUNTY'="" RET("PCOUNTY")=$P($G(^DIC(5,PSTATE,1,PCOUNTY,0)),U,1)
+ S RET("PCOUNTRY")=$G(SDD(2,DFN_",",.1173,"I"))
  I RET("PCOUNTRY")'="",'+RET("PCOUNTRY") S RET("PCOUNTRY")=$O(^HL(779.004,"B",RET("PCOUNTRY"),0))
- S RET("BADADD")=$G(SDD(2,DFN_",",.121,"I"))     ;bad address indicator
+ S RET("BADADD")=$G(SDD(2,DFN_",",.121,"I"))
  S RET("PTACTIVE")=$G(SDD(2,DFN_",",.12105,"I"))
  S RET("PTADDRESS1")=$G(SDD(2,DFN_",",.1211,"E"))
  S RET("PTADDRESS2")=$G(SDD(2,DFN_",",.1212,"E"))
  S RET("PTADDRESS3")=$G(SDD(2,DFN_",",.1213,"E"))
  S RET("PTCITY")=$G(SDD(2,DFN_",",.1214,"E"))
  N PTSTATE S PTSTATE=$G(SDD(2,DFN_",",.1215,"I"))
- S RET("PTSTATE")=$G(SDD(2,DFN_",",.1215,"E"))     ; Patient Temporary STATE name
- S RET("PTZIP")=$G(SDD(2,DFN_",",.1216,"E"))       ; Patient Temporary Zip (.1216)
- S RET("PTZIP+4")=$G(SDD(2,DFN_",",.12112,"E"))    ; Patient Temporary Zip+4 (.12112)
- S RET("PTCOUNTRY")=$G(SDD(2,DFN_",",.1223,"I"))   ; Patient Temp COUNTRY
+ S RET("PTSTATE")=$G(SDD(2,DFN_",",.1215,"E"))
+ S RET("PTZIP")=$G(SDD(2,DFN_",",.1216,"E"))
+ S RET("PTZIP+4")=$G(SDD(2,DFN_",",.12112,"E"))
+ S RET("PTCOUNTRY")=$G(SDD(2,DFN_",",.1223,"I"))
  I PTSTATE'="" D
  .S PTCOUNTY=$G(SDD(2,DFN_",",.12111,"I"))
- .S:PTCOUNTY'="" RET("PTCOUNTY")=$P($G(^DIC(5,PTSTATE,1,PTCOUNTY,0)),U,1)  ;  - Patient Temp County (.12111)
- S RET("PTSTART")=$G(SDD(2,DFN_",",.1217,"E"))   ; Patient Temporary Address Start Date (.1217)
- S RET("PTEND")=$G(SDD(2,DFN_",",.1218,"E"))     ; Patient Temporary Address End Date (.1218)
+ .S:PTCOUNTY'="" RET("PTCOUNTY")=$P($G(^DIC(5,PTSTATE,1,PTCOUNTY,0)),U,1)
+ S RET("PTSTART")=$G(SDD(2,DFN_",",.1217,"E"))
+ S RET("PTEND")=$G(SDD(2,DFN_",",.1218,"E"))
  ;
  ;get phones
- S RET("HPHONE")=$G(SDD(2,DFN_",",.131,"E"))     ; phone number (residence) (home phone)
- S RET("OPHONE")=$G(SDD(2,DFN_",",.132,"E"))     ; phone number (work) (office phone)
- S RET("PTPHONE")=$G(SDD(2,DFN_",",.1219,"E"))   ; Patient Temporary Phone (.1219)
- S RET("PCELL")=$G(SDD(2,DFN_",",.134,"E"))      ; Patient Cell Phone (.134)
- S RET("PPAGER")=$G(SDD(2,DFN_",",.135,"E"))     ; Patient Pager Number (.135)
- S RET("PEMAIL")=$G(SDD(2,DFN_",",.133,"E"))     ; Patient Email Address (.133)
+ S RET("HPHONE")=$G(SDD(2,DFN_",",.131,"E"))
+ S RET("OPHONE")=$G(SDD(2,DFN_",",.132,"E"))
+ S RET("PTPHONE")=$G(SDD(2,DFN_",",.1219,"E"))
+ S RET("PCELL")=$G(SDD(2,DFN_",",.134,"E"))
+ S RET("PPAGER")=$G(SDD(2,DFN_",",.135,"E"))
+ S RET("PEMAIL")=$G(SDD(2,DFN_",",.133,"E"))
  ;
- ; Return data to add:
- S RET("NOK")=$G(SDD(2,DFN_",",.211,"I"))       ;Primary Next of Kin  (.211)
- S RET("KNAME")=$G(SDD(2,DFN_",",.211,"E"))      ;Primary Next of Kin name  (.211)
- S RET("KREL")=$G(SDD(2,DFN_",",.212,"E"))    ;Primary Next of Kin Relationship to Patient (.212)
- S RET("KPHONE")=$G(SDD(2,DFN_",",.219,"E"))  ;Primary Next of Kin Phone (.219)
- S RET("KSTREET")=$G(SDD(2,DFN_",",.213,"E")) ;Primary Next of Kin Street Address [Line 1] (.213)
- S RET("KSTREET2")=$G(SDD(2,DFN_",",.214,"E")) ;Primary Next of Kin Street Address [Line 2] (.214)
- S RET("KSTREET3")=$G(SDD(2,DFN_",",.215,"E")) ;Primary Next of Kin Street Address [Line 3] (.215)
- S RET("KCITY")=$G(SDD(2,DFN_",",.216,"E"))    ;Primary Next of Kin City (.216)
- S RET("KSTATE")=$G(SDD(2,DFN_",",.217,"E"))   ;Primary Next of Kin State (.217)
- S RET("KZIP")=$G(SDD(2,DFN_",",.218,"E"))     ;Primary Next of Kin Zip (.218)
+ ;next of kin data:
+ S RET("NOK")=$G(SDD(2,DFN_",",.211,"I"))
+ S RET("KNAME")=$G(SDD(2,DFN_",",.211,"E"))
+ S RET("KREL")=$G(SDD(2,DFN_",",.212,"E"))
+ S RET("KPHONE")=$G(SDD(2,DFN_",",.219,"E"))
+ S RET("KSTREET")=$G(SDD(2,DFN_",",.213,"E"))
+ S RET("KSTREET2")=$G(SDD(2,DFN_",",.214,"E"))
+ S RET("KSTREET3")=$G(SDD(2,DFN_",",.215,"E"))
+ S RET("KCITY")=$G(SDD(2,DFN_",",.216,"E"))
+ S RET("KSTATE")=$G(SDD(2,DFN_",",.217,"E"))
+ S RET("KZIP")=$G(SDD(2,DFN_",",.218,"E"))
  ;
- S RET("NOK2")=$G(SDD(2,DFN_",",.2191,"I"))       ;Secondary Next of Kin  (.2191)
- S RET("K2NAME")=$G(SDD(2,DFN_",",.2191,"E"))      ;Secondary Next of Kin name  (.2191)
- S RET("K2REL")=$G(SDD(2,DFN_",",.2192,"E"))    ;Secondary Next of Kin Relationship to Patient (.2192)
- S RET("K2PHONE")=$G(SDD(2,DFN_",",.2199,"E"))  ;Secondary Next of Kin Phone (.2199)
- S RET("K2STREET")=$G(SDD(2,DFN_",",.2193,"E")) ;Secondary Next of Kin Street Address [Line 1] (.2193)
- S RET("K2STREET2")=$G(SDD(2,DFN_",",.2194,"E")) ;Secondary Next of Kin Street Address [Line 2] (.2194)
- S RET("K2STREET3")=$G(SDD(2,DFN_",",.2195,"E")) ;Secondary Next of Kin Street Address [Line 3] (.2195)
- S RET("K2CITY")=$G(SDD(2,DFN_",",.2196,"E"))    ;Secondary Next of Kin City (.2196)
- S RET("K2STATE")=$G(SDD(2,DFN_",",.2197,"E"))   ;Secondary Next of Kin State (.2197)
- S RET("K2ZIP")=$G(SDD(2,DFN_",",.2198,"E"))     ;Secondary Next of Kin Zip (.2198)
+ S RET("NOK2")=$G(SDD(2,DFN_",",.2191,"I"))
+ S RET("K2NAME")=$G(SDD(2,DFN_",",.2191,"E"))
+ S RET("K2REL")=$G(SDD(2,DFN_",",.2192,"E"))
+ S RET("K2PHONE")=$G(SDD(2,DFN_",",.2199,"E"))
+ S RET("K2STREET")=$G(SDD(2,DFN_",",.2193,"E"))
+ S RET("K2STREET2")=$G(SDD(2,DFN_",",.2194,"E"))
+ S RET("K2STREET3")=$G(SDD(2,DFN_",",.2195,"E"))
+ S RET("K2CITY")=$G(SDD(2,DFN_",",.2196,"E"))
+ S RET("K2STATE")=$G(SDD(2,DFN_",",.2197,"E"))
+ S RET("K2ZIP")=$G(SDD(2,DFN_",",.2198,"E"))
  ;
  Q
  ;
